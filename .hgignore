@@ -1,0 +1,18 @@
+syntax: glob
+
+dist
+build
+.installed.cfg
+*.egg-info
+*.swp
+*.pyc
+*.pyo
+*\#
+*.\#*
+*~
+*.orig
+
+parts/
+bin/
+etc/
+develop-eggs/
