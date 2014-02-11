@@ -12,7 +12,7 @@ class TestBlokManager(unittest.TestCase):
         BlokManager.bloks_groups = None
 
     def test_load_anyblok(self):
-        BlokManager.load('anyblok')
+        BlokManager.load('AnyBlok')
         if not BlokManager.list():
             self.fail('No blok load')
         if not BlokManager.has('anyblok-core'):
@@ -28,7 +28,7 @@ class TestBlokManager(unittest.TestCase):
             pass
 
     def test_reload(self):
-        BlokManager.load('anyblok')
+        BlokManager.load('AnyBlok')
         BlokManager.set('invalid blok', None)
         BlokManager.get('invalid blok')
         BlokManager.reload()
@@ -47,12 +47,12 @@ class TestBlokManager(unittest.TestCase):
 
     def test_get_invalid_blok(self):
         try:
-            BlokManager.load('anyblok')
+            BlokManager.load('AnyBlok')
             BlokManager.get('invalid blok')
             self.fail('No exception when get invalid blok')
         except BlokManagerException:
             pass
 
     def test_get_files_from(self):
-        BlokManager.load('anyblok')
+        BlokManager.load('AnyBlok')
         BlokManager.get_files_from('anyblok-core', 'imports')
