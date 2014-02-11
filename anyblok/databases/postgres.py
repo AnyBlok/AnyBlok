@@ -8,9 +8,11 @@ from contextlib import contextmanager
 
 @implementer(anyblok.AnyBlok.Interface.ISqlAlchemyDataBase)
 class SqlAlchemyPostgres(object):
+    """ Postgres adapteur """
 
     @contextmanager
     def cnx(self):
+        """ Context manager to get a connection to database """
         cnx = None
         try:
             postgres = anyblok.ArgsParseManager.get_url(dbname='postgres')
@@ -28,14 +30,17 @@ class SqlAlchemyPostgres(object):
                 cnx.close()
 
     def createdb(self, dbname):
+        """ Create a database """
         with self.cnx() as conn:
             conn.execute("""create database "%s";""" % dbname)
 
     def dropdb(self, dbname):
+        """ Drop a database """
         with self.cnx() as conn:
             conn.execute("""drop database "%s";""" % dbname)
 
     def listdb(self):
+        """ list database """
         select_clause = "select pg_db.datname"
         from_clause = " from pg_database pg_db"
         where_clause = " where pg_db.datname not in (%s)"

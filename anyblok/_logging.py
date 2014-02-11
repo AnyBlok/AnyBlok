@@ -142,6 +142,22 @@ def init_logger(level='info', mode='console',
 
 
 def log(level='info'):
+    """ decorator to log the entry of one method
+
+    They are 5 level of log
+    * debug
+    * info (default)
+    * warning
+    * error
+    * critical
+
+    example::
+
+        @log()
+        def foo(...):
+            ...
+
+    """
     if _logger is None:
         init_logger()
 

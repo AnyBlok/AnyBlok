@@ -56,6 +56,23 @@ class AnyBlok:
         else:
             return call_adapter
 
+    @classmethod
+    def remove_registry(cls, registry, cls_=None, **kwargs):
+
+        def call_adapter(self):
+            _interface = registry.__interface__
+
+            name = kwargs.get('name', self.__name__)
+            adapter = getUtility(AnyBlok.Interface.ICoreInterface, _interface)
+            adapter.remove_registry(registry, name, self)
+
+            return self
+
+        if cls_:
+            return call_adapter(cls_)
+        else:
+            return call_adapter
+
 
 from . import interface  # noqa
 from . import databases  # noqa
