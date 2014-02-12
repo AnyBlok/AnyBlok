@@ -29,11 +29,13 @@ class SqlAlchemyPostgres(object):
             if cnx:
                 cnx.close()
 
+    @anyblok.log(withargs=True)
     def createdb(self, dbname):
         """ Create a database """
         with self.cnx() as conn:
             conn.execute("""create database "%s";""" % dbname)
 
+    @anyblok.log(withargs=True)
     def dropdb(self, dbname):
         """ Drop a database """
         with self.cnx() as conn:
@@ -46,7 +48,7 @@ class SqlAlchemyPostgres(object):
         where_clause = " where pg_db.datname not in (%s)"
         values = ', '.join(["'template0'", "'template1'", "'postgres'"])
 
-        username = anyblok.BlokManager.get('dbusername')
+        username = anyblok.ArgsParseManager.get('dbusername')
         if username:
             from_clause += ", pg_user pg_u"
             where_clause += " and pg_u.username = %s"

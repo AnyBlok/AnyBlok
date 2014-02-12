@@ -141,7 +141,7 @@ def init_logger(level='info', mode='console',
     _logger.addHandler(handler)
 
 
-def log(level='info'):
+def log(level='info', withargs=False):
     """ decorator to log the entry of one method
 
     They are 5 level of log
@@ -164,8 +164,8 @@ def log(level='info'):
     def wrapper(function):
 
         def f(*args, **kwargs):
-            if level == 'debug':
-                _logger.debug("%r with args %r and kwargs %r" % (
+            if level == 'debug' or withargs:
+                getattr(_logger, level)("%s with args %r and kwargs %r" % (
                     function.__qualname__, args, kwargs))
             else:
                 getattr(_logger, level)(function.__qualname__)
