@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from pkg_resources import iter_entry_points
 import anyblok
+from anyblok.registry import RegistryManager
 from time import sleep
 from imp import reload, load_source
 from sys import modules
-from os.path import dirname, join, isdir, basename
+from os.path import dirname, join, isdir
 
 
 class BlokManagerException(Exception):
@@ -126,17 +127,18 @@ class BlokManager:
 
             cls.ordered_bloks.append(blok)
             anyblok.AnyBlok.current_blok = blok
-            anyblok.RegistryManager.init_blok(blok)
+            RegistryManager.init_blok(blok)
 
             for module in cls.get_files_from(blok, 'imports'):
-                modulename = module
                 if isdir(module):
-                    modulename = join(module, '__init__.py')
+                    raise BlokManagerException(
+                        "No imports package import only python module ",
+                        "You must select all the python file")
 
                 try:
-                    reload(modulename)
+                    reload(module)
                 except:
-                    load_source(modulename, modulename)
+                    load_source(module, module)
 
             return True
 

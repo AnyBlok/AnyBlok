@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import unittest
 import os
-from anyblok import ArgsParseManager, AnyBlok
+from anyblok import AnyBlok
+from anyblok._argsparse import ArgsParseManager
 from zope.component import getUtility
 from datetime import datetime
 

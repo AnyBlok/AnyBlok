@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from anyblok import AnyBlok
 
 
 class RegistryManager:
@@ -37,3 +38,24 @@ class RegistryManager:
             blok[de] = {}
 
         cls.loaded_bloks[blokname] = blok
+
+    @classmethod
+    def has_core_in_target_registry(cls, blok, core):
+        """ Return True if One Class exist in this blok for this core """
+        return len(cls.loaded_bloks[blok]['Core'][core]) > 0
+
+    @classmethod
+    def add_core_in_target_registry(cls, core, cls_):
+        """ Load core in blok
+
+        warning the global var AnyBlok.current_blok must be field on the
+        good blok
+        core: is the existing core
+        cls_: Class of the Core to save in loaded blok target registry
+        """
+        cls.loaded_bloks[AnyBlok.current_blok]['Core'][core].append(cls_)
+
+    @classmethod
+    def remove_core_in_target_registry(cls, blok, core, cls_):
+        """ Remove Class in blok and in core """
+        cls.loaded_bloks[blok]['Core'][core].remove(cls_)

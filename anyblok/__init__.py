@@ -4,14 +4,6 @@ from . import _logging
 log = _logging.log
 
 from . import release
-from . import blok
-from . import _argsparse
-from . import registry
-
-Blok = blok.Blok
-BlokManager = blok.BlokManager
-ArgsParseManager = _argsparse.ArgsParseManager
-RegistryManager = registry.RegistryManager
 
 
 PROMPT = "%(processName)s - %(version)s"
@@ -19,6 +11,8 @@ PROMPT = "%(processName)s - %(version)s"
 
 def start(processName, version=release.version, prompt=PROMPT,
           argsparse_group=None, parts_to_load=None, logger=None):
+    from .blok import BlokManager
+    from ._argsparse import ArgsParseManager
 
     if parts_to_load is None:
         parts_to_load = ['anyblok']
@@ -36,7 +30,7 @@ def start(processName, version=release.version, prompt=PROMPT,
 
 class AnyBlok:
 
-    __namespace__ = 'AnyBlok'
+    __registry_name__ = 'AnyBlok'
     current_blok = None
 
     @classmethod
@@ -68,7 +62,7 @@ class AnyBlok:
 
             name = kwargs.get('name', self.__name__)
             adapter = getUtility(AnyBlok.Interface.ICoreInterface, _interface)
-            adapter.remove_registry(registry, name, self)
+            adapter.remove_registry(registry, name, self, **kwargs)
 
             return self
 
@@ -80,5 +74,6 @@ class AnyBlok:
 
 from . import interface  # noqa
 from . import databases  # noqa
+from . import core  # noqa
 from . import model  # noqa
 from . import mixin  # noqa

@@ -213,6 +213,7 @@ class ArgsParseManager:
 
         init_logger(**kwargs)
 
+
 @ArgsParseManager.add('config')
 def add_configuration_file(parser, configuration):
     parser.add_argument('-c', dest='configfile', default='',

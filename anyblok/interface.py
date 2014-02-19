@@ -37,7 +37,6 @@ class CoreInterface(object):
 
         cls_.__interface__ = self.__interface__
         registry.__dict__[child] = cls_
-        #setattr(registry, child, cls_)
 
     def remove_registry(self, registry, child, cls_, **kwargs):
         if child in registry.__dict__:
