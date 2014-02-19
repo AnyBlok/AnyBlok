@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import anyblok
+from anyblok._logging import init_logger
 from argparse import ArgumentParser
 from configparser import ConfigParser
 
@@ -203,6 +204,14 @@ class ArgsParseManager:
             if not opt in cls.configuration or value:
                 cls.configuration[opt] = value
 
+    @classmethod
+    def init_logger(cls, **kwargs):
+        config_var = ['level', 'mode', 'filename', 'socket', 'facility']
+        for cv in config_var:
+            if cv not in kwargs:
+                kwargs[cv] = cls.get('logging_' + cv)
+
+        init_logger(**kwargs)
 
 @ArgsParseManager.add('config')
 def add_configuration_file(parser, configuration):
@@ -257,3 +266,22 @@ def add_load_bloks(parser, configuration):
 def add_interpreter(parser, configuration):
     parser.add_argument('--script', dest='python_script',
                         help="Python script to exec")
+
+
+@ArgsParseManager.add('logging', label="Logging options")
+def add_logging(group, configuration):
+    group.add_argument('--logging-level', dest='logging_level',
+                       default='info',
+                       help='debug, info, warning, error, critical')
+    group.add_argument('--logging-mode', dest='logging_mode',
+                       default='console',
+                       help='console, file, socket, syslog')
+    group.add_argument('--logging-filename', dest='logging_filename',
+                       help='filename of the log file')
+    configuration['logging_filename'] = None
+    group.add_argument('--logging-socket', dest='logging_socket',
+                       help='(host, port) or UNIX socket interface')
+    configuration['logging_socket'] = None
+    group.add_argument('--logging-facility', dest='logging_facility',
+                       help='Facility for unix socket')
+    configuration['logging_facility'] = None

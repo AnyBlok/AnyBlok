@@ -169,3 +169,23 @@ class TestArgsParseManager(unittest.TestCase):
             self.fail("Label doesn't remove")
         except:
             pass
+
+    def test_logging(self):
+        ArgsParseManager.configuration.update(dict(
+            logging_level='info',
+            logging_mode='console',
+            logging_filename=None,
+            logging_socket=None,
+            logging_facility=None,
+        ))
+        ArgsParseManager.init_logger()
+
+    def test_logging_with_kwargs(self):
+        ArgsParseManager.configuration.update(dict(
+            logging_level='info',
+            logging_mode='file',
+            logging_filename=None,
+            logging_socket=None,
+            logging_facility=None,
+        ))
+        ArgsParseManager.init_logger(mode='console')

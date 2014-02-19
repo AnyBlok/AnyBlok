@@ -13,6 +13,7 @@ def createdb():
                           argsparse_groups=[
                               'config', 'database', 'install-bloks'],
                           parts_to_load=['AnyBlok'])
+    ArgsParseManager.init_logger()
     drivername = ArgsParseManager.get('dbdrivername')
     dbname = ArgsParseManager.get('dbname')
     bloks = ArgsParseManager.get('install_bloks')
@@ -27,7 +28,7 @@ def createdb():
     if adapter:
         adapter.createdb(dbname)
 
-    registry = RegistryManager.create(dbname)
+    registry = RegistryManager.get(dbname)
     registry.update_blok(install_bloks=bloks)
     registry.commit()
     registry.close()

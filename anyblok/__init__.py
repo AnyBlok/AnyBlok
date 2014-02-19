@@ -18,7 +18,7 @@ PROMPT = "%(processName)s - %(version)s"
 
 
 def start(processName, version=release.version, prompt=PROMPT,
-          argsparse_group=None, parts_to_load=None):
+          argsparse_group=None, parts_to_load=None, logger=None):
 
     if parts_to_load is None:
         parts_to_load = ['anyblok']
@@ -28,6 +28,10 @@ def start(processName, version=release.version, prompt=PROMPT,
     ArgsParseManager.load(description=description,
                           argsparse_group=argsparse_group,
                           parts_to_load=parts_to_load)
+
+    if logger is None:
+        logger = {}
+    ArgsParseManager.init_logger(**logger)
 
 
 class AnyBlok:
@@ -76,3 +80,5 @@ class AnyBlok:
 
 from . import interface  # noqa
 from . import databases  # noqa
+from . import model  # noqa
+from . import mixin  # noqa

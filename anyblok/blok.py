@@ -2,9 +2,9 @@
 from pkg_resources import iter_entry_points
 import anyblok
 from time import sleep
-from imp import reload
-from sys import modules, path
-from os.path import dirname
+from imp import reload, load_source
+from sys import modules
+from os.path import dirname, join, isdir, basename
 
 
 class BlokManagerException(Exception):
@@ -129,10 +129,14 @@ class BlokManager:
             anyblok.RegistryManager.init_blok(blok)
 
             for module in cls.get_files_from(blok, 'imports'):
+                modulename = module
+                if isdir(module):
+                    modulename = join(module, '__init__.py')
+
                 try:
-                    reload(module)
+                    reload(modulename)
                 except:
-                    __import__(module)
+                    load_source(modulename, modulename)
 
             return True
 
@@ -160,7 +164,7 @@ class BlokManager:
             return []
 
         b_path = dirname(modules[blok.__module__].__file__)
-        return [path.join(b_path, x) for x in getattr(blok, attribute)]
+        return [join(b_path, x) for x in getattr(blok, attribute)]
 
 
 class Blok:
