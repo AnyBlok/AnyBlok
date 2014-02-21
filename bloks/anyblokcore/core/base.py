@@ -1,7 +1,7 @@
-from anyblok import AnyBlok
+from AnyBlok import target_registry, Core
 
 
-@AnyBlok.target_registry(AnyBlok.Core)
+@target_registry(Core)
 class Base:
 
     @classmethod

@@ -1,11 +1,13 @@
-import anyblok
+import AnyBlok
+from sys import modules
 from zope.interface import Interface, Attribute, implementer
 from zope.component import getGlobalSiteManager
 gsm = getGlobalSiteManager()
 
 
 Interface.__interface__ = 'Interface'
-anyblok.AnyBlok.Interface = Interface
+AnyBlok.Interface = Interface
+modules['AnyBlok.Interface'] = Interface
 
 
 class CoreInterfaceException(Exception):
@@ -29,23 +31,29 @@ class CoreInterface(object):
     """ Simple interface """
 
     __interface__ = 'Interface'
-    __exception__ = "The interface to add in registry is already existing"
 
     def target_registry(self, registry, child, cls_, **kwargs):
+        if registry is not AnyBlok.Interface:
+            raise CoreInterfaceException(
+                "The Interface must be add only under Interface")
+
         if hasattr(registry, child):
-            raise CoreInterfaceException(self.__exception__)
+            raise CoreInterfaceException(
+                "The interface to add in registry is already existing")
 
         cls_.__interface__ = self.__interface__
-        registry.__dict__[child] = cls_
+        setattr(registry, child, cls_)
+        modules['AnyBlok.Interface.' + child] = cls_
 
     def remove_registry(self, registry, child, cls_, **kwargs):
-        if child in registry.__dict__:
-            if registry.__dict__[child] == cls_:
-                del registry.__dict__[child]
+        if hasattr(registry, child):
+            if getattr(registry, child) == cls_:
+                delattr(registry, child)
 
 
 coreinterface = CoreInterface()
 gsm.registerUtility(coreinterface, ICoreInterface, 'Interface')
 
 
-anyblok.AnyBlok.Interface.ICoreInterface = ICoreInterface
+AnyBlok.Interface.ICoreInterface = ICoreInterface
+modules['AnyBlok.Interface.ICoreInterface'] = ICoreInterface

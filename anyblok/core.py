@@ -1,11 +1,14 @@
-from anyblok import AnyBlok
+import AnyBlok
+from AnyBlok.Interface import ICoreInterface
+from AnyBlok import target_registry
 from anyblok.registry import RegistryManager
+from sys import modules
 from zope.interface import implementer
 from zope.component import getGlobalSiteManager
 gsm = getGlobalSiteManager()
 
 
-@implementer(AnyBlok.Interface.ICoreInterface)
+@implementer(ICoreInterface)
 class ACore(object):
 
     __interface__ = 'Core'
@@ -17,7 +20,9 @@ class ACore(object):
                 '__registry_name__': _registryname,
                 '__interface__': self.__interface__,
             }
-            setattr(registry, child, type(child, tuple(), p))
+            core = type(child, tuple(), p)
+            setattr(registry, child, core)
+            modules[_registryname] = core
 
         if registry == AnyBlok:
             return
@@ -30,9 +35,9 @@ class ACore(object):
 
 
 core = ACore()
-gsm.registerUtility(core, AnyBlok.Interface.ICoreInterface, 'Core')
+gsm.registerUtility(core, ICoreInterface, 'Core')
 
 
-@AnyBlok.target_registry(AnyBlok)
+@target_registry(AnyBlok)
 class Core:
     pass

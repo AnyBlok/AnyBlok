@@ -72,6 +72,10 @@ class AnyBlok:
             return call_adapter
 
 
+from sys import modules
+modules['AnyBlok'] = AnyBlok
+
+
 from . import _imp  # noqa
 from . import interface  # noqa
 from . import databases  # noqa

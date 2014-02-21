@@ -1,5 +1,5 @@
-from anyblok import AnyBlok
+from AnyBlok import target_registry, Core
 from sqlalchemy.orm import Session
 
 
-AnyBlok.target_registry(AnyBlok.Core, name='Session', cls_=Session)
+target_registry(Core, name='Session', cls_=Session)

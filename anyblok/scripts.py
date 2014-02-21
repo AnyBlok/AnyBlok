@@ -1,8 +1,8 @@
 import anyblok
-from anyblok import BlokManager
-from anyblok import ArgsParseManager
+from anyblok.blok import BlokManager
+from anyblok._argsparse import ArgsParseManager
 from anyblok import release
-from anyblok import RegistryManager
+from anyblok.registry import RegistryManager
 from zope.component import getUtility
 
 

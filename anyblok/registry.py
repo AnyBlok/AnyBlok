@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from anyblok import AnyBlok
+import AnyBlok
 
 
 class RegistryManager:
