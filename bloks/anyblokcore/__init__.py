@@ -7,5 +7,5 @@ class AnyBlokCore(Blok):
     priority = 0
 
     imports = [
-        'core/base.py',
+        'core',
     ]

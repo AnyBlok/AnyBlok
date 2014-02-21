@@ -2,6 +2,7 @@
 from pkg_resources import iter_entry_points
 import anyblok
 from anyblok.registry import RegistryManager
+from anyblok._imp import ImportManager
 from time import sleep
 from imp import reload, load_source
 from sys import modules
@@ -129,16 +130,11 @@ class BlokManager:
             anyblok.AnyBlok.current_blok = blok
             RegistryManager.init_blok(blok)
 
-            for module in cls.get_files_from(blok, 'imports'):
-                if isdir(module):
-                    raise BlokManagerException(
-                        "No imports package import only python module ",
-                        "You must select all the python file")
-
-                try:
-                    reload(module)
-                except:
-                    load_source(module, module)
+            if not ImportManager.has(blok):
+                # Import only if not exist don't reload here
+                mod_path = dirname(modules[cls.bloks[blok].__module__].__file__)
+                mod = ImportManager.add(blok, mod_path)
+                mod.imports(*cls.bloks[blok].imports)
 
             return True
 
