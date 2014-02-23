@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import AnyBlok
-from anyblok.interface import ICoreInterface
-from AnyBlok import target_registry
+from AnyBlok.Interface import ICoreInterface
+from AnyBlok import target_registry, add_Adapter
 from sys import modules
 from zope.interface import implementer
 
@@ -29,7 +29,7 @@ class AField:
         raise FieldException("Remove a field is forbiden")
 
 
-AnyBlok.add_Adapter(ICoreInterface, AField)
+add_Adapter(ICoreInterface, AField)
 
 
 @target_registry(AnyBlok)
@@ -45,10 +45,6 @@ class Field:
         if self.__class__ is cls:
             raise FieldException(
                 "%r class must not be instanced use a sub class" % cls)
-
-    @classmethod
-    def is_sql_field(cls):
-        return False
 
     def get_sqlalchemy_mapping(self, registry, tablename, properties):
         return self

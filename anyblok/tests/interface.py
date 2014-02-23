@@ -2,18 +2,32 @@
 import unittest
 import AnyBlok
 from AnyBlok import target_registry, remove_registry
-from AnyBlok import Interface, Core, Field
+from AnyBlok import Interface, Core, Field, Column, RelationShip
 from AnyBlok.Interface import ICoreInterface
 from anyblok.interface import CoreInterfaceException
 from anyblok.registry import RegistryManager
 from anyblok.field import FieldException
+from sqlalchemy import Integer as SA_Integer
 
 
 class OneInterface:
     pass
 
+
 class OneField(Field):
     pass
+
+
+class OneColumn(Column):
+    sqlalchemy_type = SA_Integer
+
+
+class OneRelationShip(RelationShip):
+    pass
+
+
+class OneModel:
+    __tablename__ = 'test'
 
 
 class TestCoreInterface(unittest.TestCase):
@@ -181,7 +195,6 @@ class TestCoreInterfaceField(unittest.TestCase):
         self.assertEqual('Field', Field.OneField.__interface__)
         import AnyBlok.Field.OneField
         dir(AnyBlok.Field.OneField)
-        self.assertEqual(Field.OneField.is_sql_field(), False)
 
     def test_add_interface_with_decorator(self):
 
@@ -212,5 +225,138 @@ class TestCoreInterfaceField(unittest.TestCase):
         try:
             remove_registry(Field, cls_=OneField, name="Field2Remove")
             self.fail('No watch dog to remove field')
+        except FieldException:
+            pass
+
+
+class TestCoreInterfaceColumn(unittest.TestCase):
+
+    def test_import_Column(self):
+        import AnyBlok.Column
+        dir(AnyBlok.Column)
+
+    def test_MustNotBeInstanced(self):
+        try:
+            Column(label="Test")
+            self.fail("Column mustn't be instanced")
+        except FieldException:
+            pass
+
+    def test_must_have_label(self):
+        target_registry(Column, cls_=OneColumn, name='RealColumn')
+        field = Column.RealColumn(label='test')
+        try:
+            Column.RealColumn()
+            self.fail("No watchdog, the label must be required")
+        except FieldException:
+            pass
+
+    def test_add_interface(self):
+        target_registry(Column, cls_=OneColumn, name='OneColumn')
+        self.assertEqual('Column', Column.OneColumn.__interface__)
+        import AnyBlok.Column.OneColumn
+        dir(AnyBlok.Column.OneColumn)
+
+    def test_add_interface_with_decorator(self):
+
+        @target_registry(Column)
+        class OneDecoratorColumn(Column):
+            sqlalchemy_type = SA_Integer
+
+        self.assertEqual('Column', Column.OneDecoratorColumn.__interface__)
+        import AnyBlok.Column.OneDecoratorColumn
+        dir(AnyBlok.Column.OneDecoratorColumn)
+
+    def test_add_same_interface(self):
+
+        target_registry(Field, cls_=OneColumn, name="SameColumn")
+
+        try:
+            @target_registry(Column)
+            class SameColumn(Column):
+                sqlalchemy_type = SA_Integer
+
+            self.fail('No watch dog to add 2 same Column')
+        except FieldException:
+            pass
+
+    def test_remove_interface(self):
+
+        target_registry(Field, cls_=OneField, name="Column2Remove")
+        try:
+            remove_registry(Field, cls_=OneField, name="Column2Remove")
+            self.fail('No watch dog to remove Column')
+        except FieldException:
+            pass
+
+
+class TestCoreInterfaceRelationShip(unittest.TestCase):
+
+    def test_import_RelationShip(self):
+        import AnyBlok.RelationShip
+        dir(AnyBlok.RelationShip)
+
+    def test_MustNotBeInstanced(self):
+        try:
+            RelationShip(label="Test", model=OneModel)
+            self.fail("RelationShip mustn't be instanced")
+        except FieldException:
+            pass
+
+    def test_must_have_label_and_model(self):
+        target_registry(RelationShip, cls_=OneRelationShip,
+                        name="RealRelationShip")
+        field = RelationShip.RealRelationShip(label='test', model=OneModel)
+        try:
+            RelationShip.RealRelationShip(model=OneModel)
+            self.fail("No watchdog, the label must be required")
+        except FieldException:
+            pass
+        try:
+            RelationShip.RealRelationShip(label="test")
+            self.fail("No watchdog, the model must be required")
+        except FieldException:
+            pass
+
+    def test_add_interface(self):
+        target_registry(RelationShip, cls_=OneRelationShip)
+        self.assertEqual('RelationShip',
+                         RelationShip.OneRelationShip.__interface__)
+        import AnyBlok.RelationShip.OneRelationShip
+        dir(AnyBlok.RelationShip.OneRelationShip)
+
+    def test_add_interface_with_decorator(self):
+
+        @target_registry(RelationShip)
+        class OneDecoratorRelationShip(RelationShip):
+            pass
+
+        self.assertEqual('RelationShip',
+                         RelationShip.OneDecoratorRelationShip.__interface__)
+        import AnyBlok.RelationShip.OneDecoratorRelationShip
+        dir(AnyBlok.RelationShip.OneDecoratorRelationShip)
+
+    def test_add_same_interface(self):
+
+        target_registry(RelationShip, cls_=OneRelationShip,
+                        name="SameRelationShip")
+
+        try:
+            @target_registry(RelationShip)
+            class SameRelationShip(RelationShip):
+                pass
+
+            self.fail('No watch dog to add 2 same relation ship')
+        except FieldException:
+            pass
+
+    def test_remove_interface(self):
+
+        target_registry(RelationShip, cls_=OneRelationShip,
+                        name="RelationShip2Remove")
+        try:
+            remove_registry(RelationShip, cls_=OneRelationShip,
+                            name="RelationShip2Remove")
+            self.fail('No watch dog to remove relation ship')
         except FieldException:
             pass
