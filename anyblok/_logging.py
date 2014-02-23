@@ -16,6 +16,7 @@ FORMATTER = '%(asctime)s:%(levelname)s:%(name)s:%(database)s - %(message)s'
 
 PROCESS = ''
 _logger = None
+logging.basicConfig()
 
 
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, _N, DEFAULT = range(10)

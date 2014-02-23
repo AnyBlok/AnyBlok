@@ -4,6 +4,8 @@ from AnyBlok.Interface import ICoreInterface
 from AnyBlok import target_registry, add_Adapter
 from sys import modules
 from zope.interface import implementer
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class FieldException(Exception):
@@ -24,6 +26,7 @@ class AField:
         setattr(cls_, '__interface__', self.__interface__)
         setattr(registry, child, cls_)
         modules[_registryname] = cls_
+        logger.info("Add new type field : %r" % _registryname)
 
     def remove_registry(self, registry, child, cls_, **kwargs):
         raise FieldException("Remove a field is forbiden")

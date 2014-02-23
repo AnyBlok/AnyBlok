@@ -7,5 +7,8 @@ class AnyBlokCore(Blok):
     priority = 0
 
     imports = [
+        'fields',
+        'columns',
+        'relationship',
         'core',
     ]
