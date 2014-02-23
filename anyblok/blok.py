@@ -128,9 +128,10 @@ class BlokManager:
 
             cls.ordered_bloks.append(blok)
             anyblok.AnyBlok.current_blok = blok
-            RegistryManager.init_blok(blok)
 
             if not ImportManager.has(blok):
+                # Init only if the blok aren't loaded
+                RegistryManager.init_blok(blok)
                 # Import only if not exist don't reload here
                 mod_path = dirname(modules[cls.bloks[blok].__module__].__file__)
                 mod = ImportManager.add(blok, mod_path)
