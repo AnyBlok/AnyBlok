@@ -1,8 +1,6 @@
 import AnyBlok
 from sys import modules
 from zope.interface import Interface, Attribute, implementer
-from zope.component import getGlobalSiteManager
-gsm = getGlobalSiteManager()
 
 
 Interface.__interface__ = 'Interface'
@@ -27,7 +25,7 @@ class ICoreInterface(Interface):
 
 
 @implementer(ICoreInterface)
-class CoreInterface(object):
+class ACoreInterface(object):
     """ Simple interface """
 
     __interface__ = 'Interface'
@@ -51,8 +49,7 @@ class CoreInterface(object):
                 delattr(registry, child)
 
 
-coreinterface = CoreInterface()
-gsm.registerUtility(coreinterface, ICoreInterface, 'Interface')
+AnyBlok.add_Adapter(ICoreInterface, ACoreInterface)
 
 
 AnyBlok.Interface.ICoreInterface = ICoreInterface

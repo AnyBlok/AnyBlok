@@ -2,13 +2,17 @@
 import unittest
 import AnyBlok
 from AnyBlok import target_registry, remove_registry
-from AnyBlok import Interface, Core
+from AnyBlok import Interface, Core, Field
 from AnyBlok.Interface import ICoreInterface
 from anyblok.interface import CoreInterfaceException
 from anyblok.registry import RegistryManager
+from anyblok.field import FieldException
 
 
 class OneInterface:
+    pass
+
+class OneField(Field):
     pass
 
 
@@ -147,3 +151,66 @@ class TestCoreInterfaceCoreBase(unittest.TestCase):
         blokname = 'testCore' + self._corename
         remove_registry(Core, cls_=OneInterface, name="Base", blok=blokname)
         self.assertInCore(Base)
+
+
+class TestCoreInterfaceField(unittest.TestCase):
+
+    def test_import_Field(self):
+        import AnyBlok.Field
+        dir(AnyBlok.Field)
+
+    def test_MustNotBeInstanced(self):
+        try:
+            Field(label="Test")
+            self.fail("Field mustn't be instanced")
+        except FieldException:
+            pass
+
+    def test_must_have_label(self):
+        target_registry(Field, cls_=OneField, name='RealField')
+        field = Field.RealField(label='test')
+        try:
+            Field.RealField()
+            self.fail("No watchdog, the label must be required")
+        except FieldException:
+            pass
+        self.assertEqual(field.get_sqlalchemy_mapping(None, None, None), field)
+
+    def test_add_interface(self):
+        target_registry(Field, cls_=OneField, name='OneField')
+        self.assertEqual('Field', Field.OneField.__interface__)
+        import AnyBlok.Field.OneField
+        dir(AnyBlok.Field.OneField)
+        self.assertEqual(Field.OneField.is_sql_field(), False)
+
+    def test_add_interface_with_decorator(self):
+
+        @target_registry(Field)
+        class OneDecoratorField(OneField):
+            pass
+
+        self.assertEqual('Field', Field.OneDecoratorField.__interface__)
+        import AnyBlok.Field.OneDecoratorField
+        dir(AnyBlok.Field.OneDecoratorField)
+
+    def test_add_same_interface(self):
+
+        target_registry(Field, cls_=OneField, name="SameField")
+
+        try:
+            @target_registry(Field)
+            class SameField(OneField):
+                pass
+
+            self.fail('No watch dog to add 2 same field')
+        except FieldException:
+            pass
+
+    def test_remove_interface(self):
+
+        target_registry(Field, cls_=OneField, name="Field2Remove")
+        try:
+            remove_registry(Field, cls_=OneField, name="Field2Remove")
+            self.fail('No watch dog to remove field')
+        except FieldException:
+            pass

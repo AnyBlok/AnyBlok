@@ -4,12 +4,10 @@ from AnyBlok import target_registry
 from anyblok.registry import RegistryManager
 from sys import modules
 from zope.interface import implementer
-from zope.component import getGlobalSiteManager
-gsm = getGlobalSiteManager()
 
 
 @implementer(ICoreInterface)
-class ACore(object):
+class ACore:
 
     __interface__ = 'Core'
 
@@ -34,8 +32,7 @@ class ACore(object):
         RegistryManager.remove_core_in_target_registry(blok, child, cls_)
 
 
-core = ACore()
-gsm.registerUtility(core, ICoreInterface, 'Core')
+AnyBlok.add_Adapter(ICoreInterface, ACore)
 
 
 @target_registry(AnyBlok)

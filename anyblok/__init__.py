@@ -2,6 +2,8 @@
 from zope.component import getUtility
 from . import _logging
 log = _logging.log
+from zope.component import getGlobalSiteManager
+gsm = getGlobalSiteManager()
 
 from . import release
 
@@ -71,6 +73,11 @@ class AnyBlok:
         else:
             return call_adapter
 
+    @classmethod
+    def add_Adapter(cls, interface, cls_):
+        instance = cls_()
+        gsm.registerUtility(instance, interface, cls_.__interface__)
+
 
 from sys import modules
 modules['AnyBlok'] = AnyBlok
@@ -80,5 +87,6 @@ from . import _imp  # noqa
 from . import interface  # noqa
 from . import databases  # noqa
 from . import core  # noqa
+from . import field  # noqa
 from . import model  # noqa
 from . import mixin  # noqa
