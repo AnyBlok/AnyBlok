@@ -1,6 +1,20 @@
-.. toctree::
-    README.rst
-    CHANGES.rst
-    ROADMAP.rst
+.. AnyBlok documentation master file, created by
+   sphinx-quickstart on Mon Feb 24 10:12:33 2014.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-.. automodule:: anyblok
+Welcome to AnyBlok's documentation!
+===================================
+
+.. include:: README.rst
+.. include:: CHANGES.rst
+.. include:: ROADMAP.rst
+.. include:: CODE.rst
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

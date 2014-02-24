@@ -24,9 +24,7 @@ setup(
     description="Anyblok is a dynamic injection blok framework",
     license="GPL",
     long_description='\n'.join((
-        open('README.rst').read(),
-        open('CHANGES.rst').read(),
-        open('ROADMAP.rst').read(),
+        open('index.rst').read(),
     )),
     url="https://bitbucket.org/anybox/erpblok",
     packages=find_packages(),

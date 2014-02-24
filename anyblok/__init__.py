@@ -31,12 +31,29 @@ def start(processName, version=release.version, prompt=PROMPT,
 
 
 class AnyBlok:
+    """ Main Class use to work on the registry
+
+        This class is known in the ``sys.modules``::
+
+            import AnyBlok
+            from AnyBlok import target_registry
+
+    """
 
     __registry_name__ = 'AnyBlok'
     current_blok = None
 
     @classmethod
     def target_registry(cls, registry, cls_=None, **kwargs):
+        """ Method to add in registry
+
+            Locate on one registry, this method use the ZCA to know which
+            ``Adapter.target_registry`` use
+
+            :param registry: An existing AnyBlok registry
+            :param cls_: The ``class`` object to add in the registry
+            :rtype: cls_
+        """
 
         def call_adapter(self):
             _interface = ''
@@ -52,12 +69,21 @@ class AnyBlok:
             return self
 
         if cls_:
-            call_adapter(cls_)
+            return call_adapter(cls_)
         else:
             return call_adapter
 
     @classmethod
     def remove_registry(cls, registry, cls_=None, **kwargs):
+        """ Method to remove in registry
+
+            Locate on one registry, this method use the ZCA to know which
+            ``Adapter.remove_registry`` use
+
+            :param registry: An existing AnyBlok registry
+            :param cls_: The ``class`` object to remove in the registry
+            :rtype: cls_
+        """
 
         def call_adapter(self):
             _interface = registry.__interface__
@@ -75,6 +101,11 @@ class AnyBlok:
 
     @classmethod
     def add_Adapter(cls, interface, cls_):
+        """ Method to add a adapter
+
+        :param interface: The ZCA interface
+        :param cls_: The ``class`` object to add this interface
+        """
         instance = cls_()
         gsm.registerUtility(instance, interface, cls_.__interface__)
 

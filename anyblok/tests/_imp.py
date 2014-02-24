@@ -6,6 +6,9 @@ from os.path import join
 
 
 tests_path = join(anyblok.__path__[0], 'tests')
+fp = open(join(tests_path, 'mockfile.py'), 'r')
+initial_file = fp.read()
+fp.cloase()
 
 
 class TestImportManager(unittest.TestCase):
@@ -17,16 +20,16 @@ class TestImportManager(unittest.TestCase):
             del ImportManager.modules['blokTest']
 
         fp = open(join(tests_path, 'mockfile.py'), 'w')
-        fp.write("""foo = 'bar'""")
+        fp.write(initial_file)
         fp.close()
 
         fp = open(join(tests_path, 'mockpackage', 'mockfile1.py'), 'w')
-        fp.write("""foo = 'bar'""")
+        fp.write(initial_file)
         fp.close()
 
         fp = open(join(tests_path, 'mockpackage', 'submockpackage',
                        'mockfile2.py'), 'w')
-        fp.write("""foo = 'bar'""")
+        fp.write(initial_file)
         fp.close()
 
     def test_bloks_exist(self):
