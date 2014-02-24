@@ -3,7 +3,6 @@ import unittest
 import AnyBlok
 from AnyBlok import target_registry, remove_registry
 from AnyBlok import Interface, Core, Field, Column, RelationShip
-from AnyBlok.Interface import ICoreInterface
 from anyblok.interface import CoreInterfaceException
 from anyblok.registry import RegistryManager
 from anyblok.field import FieldException
@@ -244,7 +243,7 @@ class TestCoreInterfaceColumn(unittest.TestCase):
 
     def test_must_have_label(self):
         target_registry(Column, cls_=OneColumn, name='RealColumn')
-        field = Column.RealColumn(label='test')
+        Column.RealColumn(label='test')
         try:
             Column.RealColumn()
             self.fail("No watchdog, the label must be required")
@@ -306,7 +305,7 @@ class TestCoreInterfaceRelationShip(unittest.TestCase):
     def test_must_have_label_and_model(self):
         target_registry(RelationShip, cls_=OneRelationShip,
                         name="RealRelationShip")
-        field = RelationShip.RealRelationShip(label='test', model=OneModel)
+        RelationShip.RealRelationShip(label='test', model=OneModel)
         try:
             RelationShip.RealRelationShip(model=OneModel)
             self.fail("No watchdog, the label must be required")

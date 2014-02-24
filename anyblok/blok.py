@@ -4,9 +4,8 @@ import anyblok
 from anyblok.registry import RegistryManager
 from anyblok._imp import ImportManager
 from time import sleep
-from imp import reload, load_source
 from sys import modules
-from os.path import dirname, join, isdir
+from os.path import dirname, join
 
 
 class BlokManagerException(Exception):
@@ -133,7 +132,8 @@ class BlokManager:
                 # Init only if the blok aren't loaded
                 RegistryManager.init_blok(blok)
                 # Import only if not exist don't reload here
-                mod_path = dirname(modules[cls.bloks[blok].__module__].__file__)
+                mod_path = modules[cls.bloks[blok].__module__].__file__
+                mod_path = dirname(mod_path)
                 mod = ImportManager.add(blok, mod_path)
                 mod.imports(*cls.bloks[blok].imports)
 

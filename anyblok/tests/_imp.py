@@ -29,7 +29,6 @@ class TestImportManager(unittest.TestCase):
         fp.write("""foo = 'bar'""")
         fp.close()
 
-
     def test_bloks_exist(self):
         from anyblok import bloks
         dir(bloks)
@@ -56,7 +55,7 @@ class TestImportManager(unittest.TestCase):
 
     def test_get_unexisting_blok(self):
         try:
-            blok = ImportManager.get('blokTest')
+            ImportManager.get('blokTest')
             self.fail('No watchdog for inexisting blok module')
         except ImportManagerException:
             pass
