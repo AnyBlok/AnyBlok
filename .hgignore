@@ -2,7 +2,8 @@ syntax: glob
 
 dist
 build
-_build
+doc/_build
+
 .installed.cfg
 *.egg-info
 *.swp
