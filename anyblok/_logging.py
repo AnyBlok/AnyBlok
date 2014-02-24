@@ -16,6 +16,7 @@ FORMATTER = '%(asctime)s:%(levelname)s:%(name)s:%(database)s - %(message)s'
 
 PROCESS = ''
 _logger = None
+logger = logging.getLogger(__name__)
 logging.basicConfig()
 
 
@@ -159,17 +160,18 @@ def log(level='info', withargs=False):
             ...
 
     """
+    log = _logger
     if _logger is None:
-        init_logger()
+        log = logger
 
     def wrapper(function):
 
         def f(*args, **kwargs):
             if level == 'debug' or withargs:
-                getattr(_logger, level)("%s with args %r and kwargs %r" % (
+                getattr(log, level)("%s with args %r and kwargs %r" % (
                     function.__qualname__, args, kwargs))
             else:
-                getattr(_logger, level)(function.__qualname__)
+                getattr(log, level)(function.__qualname__)
 
             return function(*args, **kwargs)
 
