@@ -6,17 +6,36 @@ from os.path import join, isdir
 
 
 class ImportManagerException(Exception):
+    """ Simple inheritance of Exception class """
     pass
 
 
 class ImportManager:
-    """ Use to import blok or reload the blok import"""
+    """ Use to import blok or reload the blok import
+
+        Add a blok and imports these modules::
+
+            blok = ImportManager.add('new blok', 'path of the blok')
+            blok.imports(*(modules to import in the blok))
+
+        Reload the modules of one blok::
+
+            if ImportManager.has('my blok'):
+                blok = ImportManager.get('my blok')
+                blok.reload()
+
+    """
 
     modules = {}
 
     @classmethod
     def add(cls, blok, path):
-        """ Add new module in sys.modules """
+        """ Add new module in sys.modules
+
+        :param blok: name of the blok to add
+        :param path: path of this blok
+        :rtype: blok module
+        """
         if cls.has(blok):
             return cls.get(blok)
 
@@ -66,14 +85,22 @@ class ImportManager:
 
     @classmethod
     def get(cls, blok):
-        """ Return the module imported for this blok """
+        """ Return the module imported for this blok
+
+        :param blok: name of the blok to add
+        :rtype: blok module
+        """
         if not cls.has(blok):
             raise ImportManagerException('Unexisting blok %r' % blok)
         return cls.modules[blok]
 
     @classmethod
     def has(cls, blok):
-        """ Return True if the blok was imported """
+        """ Return True if the blok was imported
+
+        :param blok: name of the blok to add
+        :rtype: boolean
+        """
         return blok in cls.modules
 
 

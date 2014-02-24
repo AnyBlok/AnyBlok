@@ -2,6 +2,7 @@
 
 import logging
 from syslog import LOG_USER
+from functools import wraps
 
 
 LEVELS = {
@@ -165,7 +166,7 @@ def log(level='info', withargs=False):
         log = logger
 
     def wrapper(function):
-
+        @wraps(function)
         def f(*args, **kwargs):
             if level == 'debug' or withargs:
                 getattr(log, level)("%s with args %r and kwargs %r" % (

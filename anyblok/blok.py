@@ -23,6 +23,11 @@ class BlokManager:
     by property bloks_groups in the first load
 
     the property bloks, is a dict with all the entry point load
+
+    Use this class to import all the blok in the entrypoint::
+
+        BlokManager.load('AnyBlok')
+
     """
 
     bloks = {}
@@ -31,17 +36,28 @@ class BlokManager:
 
     @classmethod
     def list(cls):
-        """ Return the ordered bloks """
+        """ Return the ordered bloks
+
+        :rtype: list of blok name ordered by loading
+        """
         return cls.ordered_bloks
 
     @classmethod
     def has(cls, blok):
-        """ Return True if the blok has loaded """
+        """ Return True if the blok has loaded
+
+        :param blok: blok name
+        :rtype: bool
+        """
         return blok and blok in cls.ordered_bloks or False
 
     @classmethod
     def get(cls, blok):
-        """ Return the loaded blok """
+        """ Return the loaded blok
+
+        :param blok: blok name
+        :rtype: blok instance
+        """
         if not cls.has(blok):
             raise BlokManagerException('%r not found' % blok)
 
@@ -49,7 +65,11 @@ class BlokManager:
 
     @classmethod
     def set(cls, blokname, blok):
-        """ Add new blok """
+        """ Add new blok
+
+        :param blokname: blok name
+        :param blok: blok instance
+        """
         if cls.has(blokname):
             raise BlokManagerException('%r already add' % blokname)
 
@@ -76,7 +96,7 @@ class BlokManager:
     def load(cls, *bloks_groups):
         """ Load all the blok and import it
 
-        bloks_groups is use by iter_entry_points to get the blok
+        :param bloks_groups: Use by iter_entry_points to get the blok
         """
         if not isinstance(bloks_groups, (list, tuple)):
             raise BlokManagerException(
@@ -153,10 +173,11 @@ class BlokManager:
     def get_files_from(cls, blok, attribute):
         """ Return a files list with absolute path
 
-        blok is the blok name in ordered_bloks
-        attribute must be a list property of this blok
+        :param blok: blok name in ordered_bloks
+        :param attribute: must be a list of property of this blok
 
-        if attribute doesn't exist then return []
+        :rtype: list of file with absolute path
+                if attribute doesn't exist then return []
         """
         blok = cls.get(blok)
         if not hasattr(blok, attribute):
@@ -169,7 +190,8 @@ class BlokManager:
 class Blok:
     """ Super class for all the blok
 
-    define the default value for
+    define the default value for:
+
     * priority: order to load blok
     * required: list of the blok need to install this blok
     * optional: list of bloks to install if present in the blok list

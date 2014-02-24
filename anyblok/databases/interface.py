@@ -4,7 +4,13 @@ from anyblok import AnyBlok
 
 @AnyBlok.target_registry(AnyBlok.Interface)
 class ISqlAlchemyDataBase(Interface):
-    """ Interface use to define database adapteur """
+    """ Interface use to define database adapter
+
+    The methods are:
+        * createdb
+        * dropdb
+        * listdb
+    """
 
     def createdb(db):
         """Implement the create db for this proxy"""

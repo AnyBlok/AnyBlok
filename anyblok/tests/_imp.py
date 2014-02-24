@@ -8,7 +8,7 @@ from os.path import join
 tests_path = join(anyblok.__path__[0], 'tests')
 fp = open(join(tests_path, 'mockfile.py'), 'r')
 initial_file = fp.read()
-fp.cloase()
+fp.close()
 
 
 class TestImportManager(unittest.TestCase):

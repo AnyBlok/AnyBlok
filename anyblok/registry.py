@@ -3,7 +3,24 @@ import AnyBlok
 
 
 class RegistryManager:
-    """
+    """ Manage the global registry
+
+    Add new entry::
+
+        RegistryManager.declare_entry('newEntry')
+        RegistryManager.init_blok('newBlok')
+        AnyBlok.current_blok = 'newBlok'
+        RegistryManager.add_entry_in_target_registry(
+            'newEntry', 'oneKey', cls_)
+        AnyBlok.current_blok = None
+
+    Remove an existing entry::
+
+        if RegistryManager.has_entry_in_target_registry('newBlok', 'newEntry',
+                                                        'oneKey'):
+            RegistryManager.remove_entry_in_target_registry(
+                'newBlok', 'newEntry', 'oneKey', cls_)
+
     """
 
     loaded_bloks = {}
@@ -13,7 +30,13 @@ class RegistryManager:
 
     @classmethod
     def declare_entry(cls, entry, mustbeload=False, callback=None):
-        """ Add new entry in the declared entry """
+        """ Add new entry in the declared entry
+
+        :param entry: entry name
+        :param mustbeload: If true the The registry must be load the entry
+        :type mustbeload: bool
+        :param callback: function callback to call to load it
+        """
         if entry not in cls.declared_entries:
             cls.declared_entries.append(entry)
 
@@ -30,6 +53,8 @@ class RegistryManager:
 
         All bloks loaded must be initialize because the registry will be create
         with this information
+
+        :param blokname: name of the blok
         """
         blok = {
             'Core': {
@@ -45,7 +70,11 @@ class RegistryManager:
 
     @classmethod
     def has_core_in_target_registry(cls, blok, core):
-        """ Return True if One Class exist in this blok for this core """
+        """ Return True if One Class exist in this blok for this core
+
+        :param blok: name of the blok
+        :param core: is the existing core name
+        """
         return len(cls.loaded_bloks[blok]['Core'][core]) > 0
 
     @classmethod
@@ -54,19 +83,30 @@ class RegistryManager:
 
         warning the global var AnyBlok.current_blok must be field on the
         good blok
-        core: is the existing core
-        cls_: Class of the Core to save in loaded blok target registry
+
+        :param core: is the existing core name
+        :param cls_: Class of the Core to save in loaded blok target registry
         """
         cls.loaded_bloks[AnyBlok.current_blok]['Core'][core].append(cls_)
 
     @classmethod
     def remove_core_in_target_registry(cls, blok, core, cls_):
-        """ Remove Class in blok and in core """
+        """ Remove Class in blok and in core
+
+        :param blok: name of the blok
+        :param core: is the existing core name
+        :param cls_: Class of the Core to remove in loaded blok target registry
+        """
         cls.loaded_bloks[blok]['Core'][core].remove(cls_)
 
     @classmethod
     def has_entry_in_target_registry(cls, blok, entry, key):
-        """ Return True if One Class exist in this blok for this entry """
+        """ Return True if One Class exist in this blok for this entry
+
+        :param blok: name of the blok
+        :param entry: is the existing entry name
+        :param key: is the existing key in the entry
+        """
         if entry not in cls.loaded_bloks[blok]:
             return False
 
@@ -81,8 +121,9 @@ class RegistryManager:
 
         warning the global var AnyBlok.current_blok must be field on the
         good blok
-        entry: is the existing entry
-        cls_: Class of the Core to save in loaded blok target registry
+        :param entry: is the existing entry name
+        :param key: is the existing key in the entry
+        :param cls_: Class of the entry / key to remove in loaded blok
         """
         if key not in cls.loaded_bloks[AnyBlok.current_blok][entry]:
             cls.loaded_bloks[AnyBlok.current_blok][entry][key] = []
@@ -91,5 +132,11 @@ class RegistryManager:
 
     @classmethod
     def remove_entry_in_target_registry(cls, blok, entry, key, cls_):
-        """ Remove Class in blok and in entry """
+        """ Remove Class in blok and in entry
+
+        :param blok: name of the blok
+        :param entry: is the existing entry name
+        :param key: is the existing key in the entry
+        :param cls_: Class of the entry / key to remove in loaded blok
+        """
         cls.loaded_bloks[blok][entry][key].remove(cls_)

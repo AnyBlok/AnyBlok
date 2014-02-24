@@ -9,7 +9,7 @@ modules['AnyBlok.Interface'] = Interface
 
 
 class CoreInterfaceException(Exception):
-    pass
+    """ Simple Exception for CoreInterface """
 
 
 class ICoreInterface(Interface):
@@ -26,11 +26,32 @@ class ICoreInterface(Interface):
 
 @implementer(ICoreInterface)
 class ACoreInterface(object):
-    """ Simple interface """
+    """ Adapter to add a new interface on the registry
+
+        Add new interface::
+
+            @AnyBlok.target_registry(AnyBlok.Interface)
+            class NewInterface:
+                pass
+
+        Remove the existing interface::
+
+            AnyBlok.remove_registry(AnyBlok.Interface, 'NewInterface',
+                                    cls_=NewInterface)
+
+    """
 
     __interface__ = 'Interface'
 
     def target_registry(self, registry, child, cls_, **kwargs):
+        """ add new sub registry in the registry and add it in the
+        sys.modules
+
+        :param registry: Existing global registry
+        :param child: Name of the new registry to add it
+        :param cls_: Class Interface to add in registry
+        """
+
         if registry is not AnyBlok.Interface:
             raise CoreInterfaceException(
                 "The Interface must be add only under Interface")
@@ -44,6 +65,13 @@ class ACoreInterface(object):
         modules['AnyBlok.Interface.' + child] = cls_
 
     def remove_registry(self, registry, child, cls_, **kwargs):
+        """ Remove the Interface in the registry
+
+        :param registry: Existing global registry
+        :param child: Name of the new registry to add it
+        :param cls_: Class Interface to remove in registry
+        """
+
         if hasattr(registry, child):
             if getattr(registry, child) == cls_:
                 delattr(registry, child)

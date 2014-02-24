@@ -7,9 +7,9 @@ Welcome to AnyBlok's documentation!
 ===================================
 
 .. include:: README.rst
+.. include:: CODE.rst
 .. include:: CHANGES.rst
 .. include:: ROADMAP.rst
-.. include:: CODE.rst
 
 Indices and tables
 ==================

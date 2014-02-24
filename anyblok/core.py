@@ -8,10 +8,32 @@ from zope.interface import implementer
 
 @implementer(ICoreInterface)
 class ACore:
+    """ Adapter to Core Class
+
+    The Core class are the base of all the AnyBlok model
+
+    Add new core model::
+
+        @target_registry(Core)
+        class Base:
+            pass
+
+    Remove the core model::
+
+        remove_registry(Core, 'Base', Base)
+
+   """
 
     __interface__ = 'Core'
 
     def target_registry(self, registry, child, cls_, **kwargs):
+        """ add new sub registry in the registry and add it in the
+        sys.modules
+
+        :param registry: Existing global registry
+        :param child: Name of the new registry to add it
+        :param cls_: Class Interface to add in registry
+        """
         _registryname = registry.__registry_name__ + '.' + child
         if not hasattr(registry, child):
             p = {
@@ -28,6 +50,12 @@ class ACore:
         RegistryManager.add_core_in_target_registry(child, cls_)
 
     def remove_registry(self, registry, child, cls_, **kwargs):
+        """ Remove the Interface in the registry
+
+        :param registry: Existing global registry
+        :param child: Name of the new registry to add it
+        :param cls_: Class Interface to remove in registry
+        """
         blok = kwargs.pop('blok')
         RegistryManager.remove_core_in_target_registry(blok, child, cls_)
 
