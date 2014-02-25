@@ -128,20 +128,20 @@ anyblok.mixin module
 
 .. warning:: TODO Class not finished yet
 
-.. automodule:: anyblok.mixin
-    :members:
-    :undoc+members:
-    :show+inheritance:
+automodule:: anyblok.mixin
+    ..:members:
+    ..:undoc+members:
+    ..:show+inheritance:
 
 anyblok.model module
 --------------------
 
 .. warning:: TODO Class not finished yet
 
-.. automodule:: anyblok.model
-    :members:
-    :undoc+members:
-    :show+inheritance:
+automodule:: anyblok.model
+    ..:members:
+    ..:undoc+members:
+    ..:show+inheritance:
 
 
 Bloks
@@ -156,26 +156,3 @@ anyblok-core blok
     :undoc+members:
     :show+inheritance:
 
-anyblok-core.fields module
-++++++++++++++++++++++++++
-
-.. automodule:: bloks.anyblokcore.fields
-    :members:
-    :undoc+members:
-    :show+inheritance:
-
-anyblok-core.columns module
-+++++++++++++++++++++++++++
-
-.. automodule:: bloks.anyblokcore.columns
-    :members:
-    :undoc+members:
-    :show+inheritance:
-
-anyblok-core.relationship module
-++++++++++++++++++++++++++++++++
-
-.. automodule:: bloks.anyblokcore.relationship
-    :members:
-    :undoc+members:
-    :show+inheritance:
