@@ -6,33 +6,40 @@ anyblok module
 
 .. automodule:: anyblok
 .. autoclass:: AnyBlok
-    :members:
+    :members: 
+    :undoc-members:
+    :noindex:
 
 anyblok._imp module
 -------------------
 
 .. automodule:: anyblok._imp
 
-.. autoclass:: ImportManagerException
+.. autoexception:: ImportManagerException
     :show-inheritance:
+    :noindex:
 
 .. autoclass:: ImportManager
     :members:
+    :noindex:
 
 anyblok.blok module
 -------------------
 
 .. automodule:: anyblok.blok
 
-.. autoclass:: BlokManagerException
+.. autoexception:: BlokManagerException
     :show-inheritance:
     :members:
+    :noindex:
 
 .. autoclass:: BlokManager
     :members:
+    :noindex:
 
 .. autoclass:: Blok
     :members:
+    :noindex:
 
 anyblok.registry module
 -----------------------
@@ -43,34 +50,26 @@ anyblok.registry module
 
 .. autoclass:: RegistryManager
     :members:
+    :noindex:
 
 anyblok.interface module
 ------------------------
 
 .. automodule:: anyblok.interface
 
-.. autoclass:: CoreInterfaceException
+.. autoexception:: CoreInterfaceException
     :show-inheritance:
     :members:
-
-.. autoclass:: ICoreInterface
-    :members:
-    :show-inheritance:
+    :noindex:
 
 .. autoclass:: ACoreInterface
     :members:
+    :noindex:
 
 anyblok.databases module
 ------------------------
 
 Management of the database
-
-anyblok.databases.interface module
-++++++++++++++++++++++++++++++++++
-
-.. automodule:: anyblok.databases.interface
-.. autoclass:: ISqlAlchemyDataBase
-    :members:
 
 anyblok.databases.postgres module
 +++++++++++++++++++++++++++++++++
@@ -78,28 +77,29 @@ anyblok.databases.postgres module
 .. automodule:: anyblok.databases.postgres
 .. autoclass:: ASqlAlchemyPostgres
     :members:
+    :noindex:
 
 anyblok.core module
 -------------------
 
 .. automodule:: anyblok.core
 .. autoclass:: ACore
-    :members:
+    :members: target_registry, remove_registry
+    :noindex:
 
 anyblok.field module
 --------------------
 
 .. automodule:: anyblok.field
 
-.. autoclass:: FieldException
+.. autoexception:: FieldException
     :members:
     :show-inheritance:
+    :noindex:
 
 .. autoclass:: AField
-    :members:
-
-.. autoclass:: Field
-    :members:
+    :members: target_registry, remove_registry
+    :noindex:
 
 anyblok.column module
 ---------------------
@@ -107,35 +107,37 @@ anyblok.column module
 .. automodule:: anyblok.column
 
 .. autoclass:: AColumn
-    :members:
+    :members: target_registry, remove_registry
     :show-inheritance:
-
-.. autoclass:: Column
-    :members:
-    :show-inheritance:
+    :noindex:
 
 anyblok.relationship module
 ---------------------------
 
 .. automodule:: anyblok.relationship
 
-.. autoclass:: RelationShip
-    :members:
+.. autoclass:: ARelationShip
+    :members: target_registry, remove_registry
     :show-inheritance:
+    :noindex:
 
 anyblok.mixin module
 --------------------
 
 .. automodule:: anyblok.mixin
+
 .. autoclass:: AMixin
-    :members:
+    :members: target_registry, remove_registry
+    :noindex:
 
 anyblok.model module
 --------------------
 
 .. automodule:: anyblok.model
+
 .. autoclass:: AModel
-    :members:
+    :members: target_registry, remove_registry
+    :noindex:
 
 
 Bloks
@@ -147,5 +149,7 @@ anyblok-core blok
 .. automodule:: bloks.anyblokcore
 .. autoclass:: AnyBlokCore
     :members:
+    :undoc-members:
     :show-inheritance:
+    :noindex:
 

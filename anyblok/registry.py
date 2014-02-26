@@ -85,7 +85,7 @@ class RegistryManager:
         good blok
 
         :param core: is the existing core name
-        :param cls_: Class of the Core to save in loaded blok target registry
+        :param ``cls_``: Class of the Core to save in loaded blok target registry
         """
         cls.loaded_bloks[AnyBlok.current_blok]['Core'][core].append(cls_)
 
@@ -95,7 +95,8 @@ class RegistryManager:
 
         :param blok: name of the blok
         :param core: is the existing core name
-        :param cls_: Class of the Core to remove in loaded blok target registry
+        :param ``cls_``: Class of the Core to remove in loaded blok target
+                        registry
         """
         cls.loaded_bloks[blok]['Core'][core].remove(cls_)
 
@@ -123,7 +124,7 @@ class RegistryManager:
         good blok
         :param entry: is the existing entry name
         :param key: is the existing key in the entry
-        :param cls_: Class of the entry / key to remove in loaded blok
+        :param ``cls_``: Class of the entry / key to remove in loaded blok
         """
         cb = AnyBlok.current_blok
 
@@ -148,7 +149,7 @@ class RegistryManager:
         :param blok: name of the blok
         :param entry: is the existing entry name
         :param key: is the existing key in the entry
-        :param cls_: Class of the entry / key to remove in loaded blok
+        :param ``cls_``: Class of the entry / key to remove in loaded blok
         """
         cls.loaded_bloks[blok][entry][key]['bases'].remove(cls_)
         cls.loaded_bloks[blok][entry][key]['properties'].update(kwargs)

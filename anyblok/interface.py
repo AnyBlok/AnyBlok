@@ -25,7 +25,7 @@ class ICoreInterface(Interface):
 
 
 @implementer(ICoreInterface)
-class ACoreInterface(object):
+class ACoreInterface:
     """ Adapter to add a new interface on the registry
 
         Add new interface::

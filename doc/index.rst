@@ -6,6 +6,14 @@
 Welcome to AnyBlok's documentation!
 ===================================
 
+.. toctree::
+    :hidden:
+
+    README.rst
+    CODE.rst
+    CHANGES.rst
+    ROADMAP.rst
+
 .. include:: README.rst
 .. include:: CODE.rst
 .. include:: CHANGES.rst

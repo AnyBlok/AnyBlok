@@ -51,8 +51,8 @@ class AnyBlok:
             ``Adapter.target_registry`` use
 
             :param registry: An existing AnyBlok registry
-            :param cls_: The ``class`` object to add in the registry
-            :rtype: cls_
+            :param ``cls_``: The ``class`` object to add in the registry
+            :rtype: ``cls_``
         """
 
         def call_adapter(self):
@@ -81,8 +81,8 @@ class AnyBlok:
             ``Adapter.remove_registry`` use
 
             :param registry: An existing AnyBlok registry
-            :param cls_: The ``class`` object to remove in the registry
-            :rtype: cls_
+            :param ``cls_``: The ``class`` object to remove in the registry
+            :rtype: ``cls_``
         """
 
         def call_adapter(self):
