@@ -71,7 +71,7 @@ class TestRegistryManager(unittest.TestCase):
         self.assertEqual(len(anyblokcore['Core']['Base']), 1)
         self.assertEqual(len(anyblokcore['Core']['SqlBase']), 1)
         self.assertEqual(len(anyblokcore['Core']['Session']), 1)
-        is_exist = 'AnyBlok.System' in anyblokcore['Model']
+        is_exist = 'AnyBlok.Model.System' in anyblokcore['Model']
         self.assertEqual(is_exist, True)
 
     def test_add_mustbeload(self):

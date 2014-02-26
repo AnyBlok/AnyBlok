@@ -46,7 +46,7 @@ class AMixin:
             modules[_registryname] = ns
             kwargs['__registry_name__'] = _registryname
 
-        if registry == AnyBlok:
+        if registry is AnyBlok:
             return
 
         RegistryManager.add_entry_in_target_registry(

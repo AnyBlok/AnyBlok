@@ -11,8 +11,5 @@ class AnyBlokCore(Blok):
         'columns',
         'relationship',
         'core',
-    ]
-
-    tests = [
-        'tests/columns.py',
+        'system',
     ]
