@@ -126,22 +126,16 @@ anyblok.relationship module
 anyblok.mixin module
 --------------------
 
-.. warning:: TODO Class not finished yet
-
-automodule:: anyblok.mixin
-    ..:members:
-    ..:undoc-members:
-    ..:show-inheritance:
+.. automodule:: anyblok.mixin
+.. autoclass:: AMixin
+    :members:
 
 anyblok.model module
 --------------------
 
-.. warning:: TODO Class not finished yet
-
-automodule:: anyblok.model
-    ..:members:
-    ..:undoc-members:
-    ..:show-inheritance:
+.. automodule:: anyblok.model
+.. autoclass:: AModel
+    :members:
 
 
 Bloks
