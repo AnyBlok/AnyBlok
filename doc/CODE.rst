@@ -14,7 +14,7 @@ anyblok._imp module
 .. automodule:: anyblok._imp
 
 .. autoclass:: ImportManagerException
-    :show+inheritance:
+    :show-inheritance:
 
 .. autoclass:: ImportManager
     :members:
@@ -25,7 +25,7 @@ anyblok.blok module
 .. automodule:: anyblok.blok
 
 .. autoclass:: BlokManagerException
-    :show+inheritance:
+    :show-inheritance:
     :members:
 
 .. autoclass:: BlokManager
@@ -50,12 +50,12 @@ anyblok.interface module
 .. automodule:: anyblok.interface
 
 .. autoclass:: CoreInterfaceException
-    :show+inheritance:
+    :show-inheritance:
     :members:
 
 .. autoclass:: ICoreInterface
     :members:
-    :show+inheritance:
+    :show-inheritance:
 
 .. autoclass:: ACoreInterface
     :members:
@@ -93,7 +93,7 @@ anyblok.field module
 
 .. autoclass:: FieldException
     :members:
-    :show+inheritance:
+    :show-inheritance:
 
 .. autoclass:: AField
     :members:
@@ -108,11 +108,11 @@ anyblok.column module
 
 .. autoclass:: AColumn
     :members:
-    :show+inheritance:
+    :show-inheritance:
 
 .. autoclass:: Column
     :members:
-    :show+inheritance:
+    :show-inheritance:
 
 anyblok.relationship module
 ---------------------------
@@ -121,7 +121,7 @@ anyblok.relationship module
 
 .. autoclass:: RelationShip
     :members:
-    :show+inheritance:
+    :show-inheritance:
 
 anyblok.mixin module
 --------------------
@@ -131,7 +131,7 @@ anyblok.mixin module
 automodule:: anyblok.mixin
     ..:members:
     ..:undoc+members:
-    ..:show+inheritance:
+    ..:show-inheritance:
 
 anyblok.model module
 --------------------
@@ -141,7 +141,7 @@ anyblok.model module
 automodule:: anyblok.model
     ..:members:
     ..:undoc+members:
-    ..:show+inheritance:
+    ..:show-inheritance:
 
 
 Bloks
@@ -153,6 +153,5 @@ anyblok-core blok
 .. automodule:: bloks.anyblokcore
 .. autoclass:: AnyBlokCore
     :members:
-    :undoc+members:
-    :show+inheritance:
+    :show-inheritance:
 
