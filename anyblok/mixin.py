@@ -44,13 +44,13 @@ class AMixin:
             ns = type(child, tuple(), p)
             setattr(registry, child, ns)
             modules[_registryname] = ns
-            kwargs['__namespace__'] = _registryname
+            kwargs['__registry_name__'] = _registryname
 
         if registry == AnyBlok:
             return
 
         RegistryManager.add_entry_in_target_registry(
-            'Mixin', _registryname, cls_)
+            'Mixin', _registryname, cls_, **kwargs)
 
     def remove_registry(self, registry, child, cls_, **kwargs):
         """ Remove the Interface in the registry
@@ -62,7 +62,8 @@ class AMixin:
         blok = kwargs.pop('blok')
         _registryname = registry.__registry_name__ + '.' + child
         RegistryManager.remove_entry_in_target_registry(blok, 'Mixin',
-                                                        _registryname, cls_)
+                                                        _registryname, cls_,
+                                                        **kwargs)
 
 add_Adapter(ICoreInterface, AMixin)
 RegistryManager.declare_entry('Mixin')

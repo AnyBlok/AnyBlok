@@ -130,7 +130,7 @@ anyblok.mixin module
 
 automodule:: anyblok.mixin
     ..:members:
-    ..:undoc+members:
+    ..:undoc-members:
     ..:show-inheritance:
 
 anyblok.model module
@@ -140,7 +140,7 @@ anyblok.model module
 
 automodule:: anyblok.model
     ..:members:
-    ..:undoc+members:
+    ..:undoc-members:
     ..:show-inheritance:
 
 

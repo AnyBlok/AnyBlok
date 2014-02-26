@@ -64,7 +64,7 @@ class RegistryManager:
             }
         }
         for de in cls.declared_entries:
-            blok[de] = {}
+            blok[de] = {'registry_names': []}
 
         cls.loaded_bloks[blokname] = blok
 
@@ -113,10 +113,10 @@ class RegistryManager:
         if key not in cls.loaded_bloks[blok][entry]:
             return False
 
-        return len(cls.loaded_bloks[blok][entry][key]) > 0
+        return len(cls.loaded_bloks[blok][entry][key]['bases']) > 0
 
     @classmethod
-    def add_entry_in_target_registry(cls, entry, key, cls_):
+    def add_entry_in_target_registry(cls, entry, key, cls_, **kwargs):
         """ Load entry in blok
 
         warning the global var AnyBlok.current_blok must be field on the
@@ -125,13 +125,24 @@ class RegistryManager:
         :param key: is the existing key in the entry
         :param cls_: Class of the entry / key to remove in loaded blok
         """
-        if key not in cls.loaded_bloks[AnyBlok.current_blok][entry]:
-            cls.loaded_bloks[AnyBlok.current_blok][entry][key] = []
+        cb = AnyBlok.current_blok
 
-        cls.loaded_bloks[AnyBlok.current_blok][entry][key].append(cls_)
+        if key not in cls.loaded_bloks[cb][entry]:
+            cls.loaded_bloks[cb][entry][key] = {
+                'bases': [],
+                'properties': {},
+            }
+
+        cls.loaded_bloks[cb][entry][key]['properties'].update(kwargs)
+        # Add before in registry because it is the same order than the
+        # inheritance __bases__ and __mro__
+        cls.loaded_bloks[cb][entry][key]['bases'].insert(0, cls_)
+
+        if key not in cls.loaded_bloks[cb][entry]['registry_names']:
+            cls.loaded_bloks[cb][entry]['registry_names'].append(key)
 
     @classmethod
-    def remove_entry_in_target_registry(cls, blok, entry, key, cls_):
+    def remove_entry_in_target_registry(cls, blok, entry, key, cls_, **kwargs):
         """ Remove Class in blok and in entry
 
         :param blok: name of the blok
@@ -139,4 +150,5 @@ class RegistryManager:
         :param key: is the existing key in the entry
         :param cls_: Class of the entry / key to remove in loaded blok
         """
-        cls.loaded_bloks[blok][entry][key].remove(cls_)
+        cls.loaded_bloks[blok][entry][key]['bases'].remove(cls_)
+        cls.loaded_bloks[blok][entry][key]['properties'].update(kwargs)

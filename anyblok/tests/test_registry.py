@@ -40,8 +40,8 @@ class TestRegistryManager(unittest.TestCase):
                                  'SqlBase': [],
                                  'Session': [],
                              },
-                             'Model': {},
-                             'Mixin': {},
+                             'Model': {'registry_names': []},
+                             'Mixin': {'registry_names': []},
                          })
 
     def test_init_blok_with_other_entry(self):
@@ -58,9 +58,9 @@ class TestRegistryManager(unittest.TestCase):
                                  'SqlBase': [],
                                  'Session': [],
                              },
-                             'Model': {},
-                             'Mixin': {},
-                             'Other': {},
+                             'Model': {'registry_names': []},
+                             'Mixin': {'registry_names': []},
+                             'Other': {'registry_names': []},
                          })
 
     def test_anyblok_core_loaded(self):
@@ -90,9 +90,9 @@ class TestRegistryManager(unittest.TestCase):
                                  'SqlBase': [],
                                  'Session': [],
                              },
-                             'Model': {},
-                             'Mixin': {},
-                             'Other': {},
+                             'Model': {'registry_names': []},
+                             'Mixin': {'registry_names': []},
+                             'Other': {'registry_names': []},
                          })
 
     def test_add_callback(self):
@@ -117,9 +117,9 @@ class TestRegistryManager(unittest.TestCase):
                                  'SqlBase': [],
                                  'Session': [],
                              },
-                             'Model': {},
-                             'Mixin': {},
-                             'Other': {},
+                             'Model': {'registry_names': []},
+                             'Mixin': {'registry_names': []},
+                             'Other': {'registry_names': []},
                          })
 
 
@@ -198,9 +198,9 @@ class TestRegistryEntry(unittest.TestCase):
     def assertInEntry(self, entry, *args):
         blokname = 'testEntry'
         blok = RegistryManager.loaded_bloks[blokname]
-        self.assertEqual(len(blok['Other'][entry]), len(args))
+        self.assertEqual(len(blok['Other'][entry]['bases']), len(args))
         for cls_ in args:
-            hasCls = cls_ in blok['Other'][entry]
+            hasCls = cls_ in blok['Other'][entry]['bases']
             self.assertEqual(hasCls, True)
 
     def test_add_core(self):

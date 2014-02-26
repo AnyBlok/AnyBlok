@@ -2,7 +2,7 @@
 import unittest
 import AnyBlok
 from AnyBlok import target_registry, remove_registry
-from AnyBlok import Interface, Core, Field, Column, RelationShip, Mixin
+from AnyBlok import Interface, Core, Field, Column, RelationShip, Mixin, Model
 from anyblok.interface import CoreInterfaceException
 from anyblok.registry import RegistryManager
 from anyblok.field import FieldException
@@ -378,15 +378,16 @@ class TestCoreInterfaceMixin(unittest.TestCase):
     def setUp(self):
         super(TestCoreInterfaceMixin, self).setUp()
         blokname = 'testMixin'
-        RegistryManager.loaded_bloks[blokname]['Mixin'] = {}
+        RegistryManager.loaded_bloks[blokname]['Mixin'] = {
+            'registry_names': []}
 
     def assertInMixin(self, *args):
         blokname = 'testMixin'
         blok = RegistryManager.loaded_bloks[blokname]
-        self.assertEqual(len(blok['Mixin']['AnyBlok.Mixin.MyMixin']),
+        self.assertEqual(len(blok['Mixin']['AnyBlok.Mixin.MyMixin']['bases']),
                          len(args))
         for cls_ in args:
-            hasCls = cls_ in blok['Mixin']['AnyBlok.Mixin.MyMixin']
+            hasCls = cls_ in blok['Mixin']['AnyBlok.Mixin.MyMixin']['bases']
             self.assertEqual(hasCls, True)
 
     def test_import_Interface1(self):
@@ -444,3 +445,89 @@ class TestCoreInterfaceMixin(unittest.TestCase):
         remove_registry(Mixin, cls_=OneInterface, name="MyMixin",
                         blok=blokname)
         self.assertInMixin(MyMixin)
+
+
+class TestCoreInterfaceModel(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestCoreInterfaceModel, cls).setUpClass()
+        RegistryManager.init_blok('testModel')
+        AnyBlok.current_blok = 'testModel'
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestCoreInterfaceModel, cls).tearDownClass()
+        AnyBlok.current_blok = None
+        del RegistryManager.loaded_bloks['testModel']
+
+    def setUp(self):
+        super(TestCoreInterfaceModel, self).setUp()
+        blokname = 'testModel'
+        RegistryManager.loaded_bloks[blokname]['Model'] = {
+            'registry_names': []}
+
+    def assertInModel(self, *args):
+        blokname = 'testModel'
+        blok = RegistryManager.loaded_bloks[blokname]
+        self.assertEqual(len(blok['Model']['AnyBlok.Model.MyModel']['bases']),
+                         len(args))
+        for cls_ in args:
+            hasCls = cls_ in blok['Model']['AnyBlok.Model.MyModel']['bases']
+            self.assertEqual(hasCls, True)
+
+    def test_import_Interface1(self):
+        import AnyBlok.Model
+        dir(AnyBlok.Model)
+
+    def test_add_interface(self):
+        target_registry(Model, cls_=OneInterface, name='MyModel')
+        self.assertEqual('Model', Model.MyModel.__interface__)
+        self.assertInModel(OneInterface)
+        import AnyBlok.Model.MyModel
+        dir(AnyBlok.Model.MyModel)
+
+    def test_add_interface_with_decorator(self):
+
+        @target_registry(Model)
+        class MyModel:
+            pass
+
+        self.assertEqual('Model', Model.MyModel.__interface__)
+        self.assertInModel(MyModel)
+
+    def test_add_two_interface(self):
+
+        target_registry(Model, cls_=OneInterface, name="MyModel")
+
+        @target_registry(Model)
+        class MyModel:
+            pass
+
+        self.assertInModel(OneInterface, MyModel)
+
+    def test_remove_interface_with_1_cls_in_registry(self):
+
+        target_registry(Model, cls_=OneInterface, name="MyModel")
+        self.assertInModel(OneInterface)
+        blokname = 'testModel'
+        remove_registry(Model, cls_=OneInterface, name="MyModel",
+                        blok=blokname)
+
+        blokname = 'testModel'
+        self.assertEqual(hasattr(Model, blokname), False)
+        self.assertInModel()
+
+    def test_remove_interface_with_2_cls_in_registry(self):
+
+        target_registry(Model, cls_=OneInterface, name="MyModel")
+
+        @target_registry(Model)
+        class MyModel:
+            pass
+
+        self.assertInModel(OneInterface, MyModel)
+        blokname = 'testModel'
+        remove_registry(Model, cls_=OneInterface, name="MyModel",
+                        blok=blokname)
+        self.assertInModel(MyModel)
