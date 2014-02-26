@@ -1,4 +1,3 @@
-import AnyBlok
 from AnyBlok import add_Adapter
 from AnyBlok.Interface import ISqlAlchemyDataBase
 from anyblok import log
@@ -61,7 +60,7 @@ class ASqlAlchemyPostgres:
         where_clause = " where pg_db.datname not in (%s)"
         values = ', '.join(["'template0'", "'template1'", "'postgres'"])
 
-        username = anyblok.ArgsParseManager.get('dbusername')
+        username = ArgsParseManager.get('dbusername')
         if username:
             from_clause += ", pg_user pg_u"
             where_clause += " and pg_u.username = %s"

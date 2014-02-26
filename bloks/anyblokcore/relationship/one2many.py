@@ -12,4 +12,5 @@ class One2Many(RelationShip):
                 primaryjoin += self.model + '.' + tocolumn
                 self.kwargs['primaryjoin'] = primaryjoin
 
-        return super(One2Many, self).get_sqlalchemy_mapping(registry, tablename)
+        return super(One2Many, self).get_sqlalchemy_mapping(registry,
+                                                            tablename)

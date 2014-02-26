@@ -1,6 +1,7 @@
 from anyblok.field import FieldException
 from AnyBlok import target_registry, RelationShip
 
+
 @target_registry(RelationShip)
 class Many2One(RelationShip):
 

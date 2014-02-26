@@ -7,7 +7,8 @@ class Many2Many(RelationShip):
 
     def get_sqlalchemy_mapping(self, registry, tablename):
         if 'columnjoined' in self.kwargs:
-            jointablename, fromcolumn, tocolumn = self.kwargs.pop('columnjoined')
+            jointablename, fromcolumn, tocolumn = self.kwargs.pop(
+                'columnjoined')
             if not hasattr(registry, 'many2many_tables'):
                 setattr(registry, 'many2many_tables', {})
 
@@ -23,9 +24,9 @@ class Many2Many(RelationShip):
                           Column(
                               self.model + '_' + tocolumn[1],
                               tocolumn[0].sqlalchemy_type,
-                              ForeignKey(self.model + '.' + tocolumn[1])),
-                         )
+                              ForeignKey(self.model + '.' + tocolumn[1])))
                 self.kwargs['secondary'] = t
-                registry.many2many_tables[jointablename]= t
+                registry.many2many_tables[jointablename] = t
 
-        return super(Many2Many, self).get_sqlalchemy_mapping(registry, tablename)
+        return super(Many2Many, self).get_sqlalchemy_mapping(registry,
+                                                             tablename)
