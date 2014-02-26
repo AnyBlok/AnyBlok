@@ -5,7 +5,7 @@ from anyblok._imp import ImportManager, ImportManagerException
 from os.path import join
 
 
-tests_path = join(anyblok.__path__[0], 'tests')
+tests_path = join(anyblok.__path__[0], 'tests', 'mockblok')
 fp = open(join(tests_path, 'mockfile.py'), 'r')
 initial_file = fp.read()
 fp.close()
@@ -16,7 +16,14 @@ class TestImportManager(unittest.TestCase):
     def tearDown(self):
         super(TestImportManager, self).tearDown()
         if 'anyblok.bloks.blokTest' in modules:
-            del modules['anyblok.bloks.blokTest']
+            mod_2_del = []
+            for mod in modules.keys():
+                if 'anyblok.bloks.blokTest' in mod:
+                    mod_2_del.append(mod)
+
+            for mod in mod_2_del:
+                del modules[mod]
+
             del ImportManager.modules['blokTest']
 
         fp = open(join(tests_path, 'mockfile.py'), 'w')
@@ -110,9 +117,9 @@ class TestImportManager(unittest.TestCase):
         self.assertEqual(submockpackage.mockfile1.foo, 'bar')
         self.assertEqual(submockpackage.mockfile2.foo, 'reload')
 
-    def test_import(self):
+    def test_imports(self):
         blok = ImportManager.add('blokTest', tests_path)
-        blok.imports('mockfile.py', 'mockpackage')
+        blok.imports()
         from anyblok.bloks.blokTest.mockfile import foo
         self.assertEqual(foo, 'bar')
         from anyblok.bloks.blokTest.mockpackage import mockfile1, mockfile2
