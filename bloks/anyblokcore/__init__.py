@@ -6,10 +6,6 @@ class AnyBlokCore(Blok):
 
     priority = 0
 
-    imports = [
-        'fields',
-        'columns',
-        'relationship',
-        'core',
-        'system',
+    css = [
+        'static/css/core.css',
     ]

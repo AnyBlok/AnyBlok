@@ -54,4 +54,4 @@ class TestBlokManager(unittest.TestCase):
 
     def test_get_files_from(self):
         BlokManager.load('AnyBlok')
-        BlokManager.get_files_from('anyblok-core', 'imports')
+        BlokManager.get_files_from('anyblok-core', 'css')

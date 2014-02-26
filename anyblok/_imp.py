@@ -2,7 +2,8 @@
 import imp
 import anyblok
 from sys import modules
-from os.path import join, isdir
+from os.path import join, isdir, isfile
+from os import listdir
 
 
 class ImportManagerException(Exception):
@@ -62,11 +63,13 @@ class ImportManager:
                 module_name + '.' + packagename, join(path, packagename))
             setattr(module, packagename, mod)
 
-        def mod_imports(*args):
-            """ Imports modules and / or packages list """
-            for mod in args:
+        def mod_imports():
+            """ Imports modules and / or packages listed in the blok path"""
+            mods = [x for x in listdir(path) if '__' != x[:2] and x != 'tests']
+            for mod in mods:
                 if isdir(join(path, mod)):
-                    mod_import_package(mod)
+                    if isfile(join(path, mod, '__init__.py')):
+                        mod_import_package(mod)
                 else:
                     mod_import_module(mod)
 

@@ -161,7 +161,7 @@ class BlokManager:
                 mod_path = modules[cls.bloks[blok].__module__].__file__
                 mod_path = dirname(mod_path)
                 mod = ImportManager.add(blok, mod_path)
-                mod.imports(*cls.bloks[blok].imports)
+                mod.imports()
 
             return True
 
