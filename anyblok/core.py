@@ -20,7 +20,7 @@ class ACore:
 
     Remove the core model::
 
-        remove_registry(Core, 'Base', Base)
+        remove_registry(Core, 'Base', Base, blok='MyBlok')
 
    """
 

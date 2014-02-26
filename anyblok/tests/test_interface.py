@@ -2,7 +2,7 @@
 import unittest
 import AnyBlok
 from AnyBlok import target_registry, remove_registry
-from AnyBlok import Interface, Core, Field, Column, RelationShip
+from AnyBlok import Interface, Core, Field, Column, RelationShip, Mixin
 from anyblok.interface import CoreInterfaceException
 from anyblok.registry import RegistryManager
 from anyblok.field import FieldException
@@ -359,3 +359,88 @@ class TestCoreInterfaceRelationShip(unittest.TestCase):
             self.fail('No watch dog to remove relation ship')
         except FieldException:
             pass
+
+
+class TestCoreInterfaceMixin(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestCoreInterfaceMixin, cls).setUpClass()
+        RegistryManager.init_blok('testMixin')
+        AnyBlok.current_blok = 'testMixin'
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestCoreInterfaceMixin, cls).tearDownClass()
+        AnyBlok.current_blok = None
+        del RegistryManager.loaded_bloks['testMixin']
+
+    def setUp(self):
+        super(TestCoreInterfaceMixin, self).setUp()
+        blokname = 'testMixin'
+        RegistryManager.loaded_bloks[blokname]['Mixin'] = {}
+
+    def assertInMixin(self, *args):
+        blokname = 'testMixin'
+        blok = RegistryManager.loaded_bloks[blokname]
+        self.assertEqual(len(blok['Mixin']['AnyBlok.Mixin.MyMixin']),
+                         len(args))
+        for cls_ in args:
+            hasCls = cls_ in blok['Mixin']['AnyBlok.Mixin.MyMixin']
+            self.assertEqual(hasCls, True)
+
+    def test_import_Interface1(self):
+        import AnyBlok.Mixin
+        dir(AnyBlok.Mixin)
+
+    def test_add_interface(self):
+        target_registry(Mixin, cls_=OneInterface, name='MyMixin')
+        self.assertEqual('Mixin', Mixin.MyMixin.__interface__)
+        self.assertInMixin(OneInterface)
+        import AnyBlok.Mixin.MyMixin
+        dir(AnyBlok.Mixin.MyMixin)
+
+    def test_add_interface_with_decorator(self):
+
+        @target_registry(Mixin)
+        class MyMixin:
+            pass
+
+        self.assertEqual('Mixin', Mixin.MyMixin.__interface__)
+        self.assertInMixin(MyMixin)
+
+    def test_add_two_interface(self):
+
+        target_registry(Mixin, cls_=OneInterface, name="MyMixin")
+
+        @target_registry(Mixin)
+        class MyMixin:
+            pass
+
+        self.assertInMixin(OneInterface, MyMixin)
+
+    def test_remove_interface_with_1_cls_in_registry(self):
+
+        target_registry(Mixin, cls_=OneInterface, name="MyMixin")
+        self.assertInMixin(OneInterface)
+        blokname = 'testMixin'
+        remove_registry(Mixin, cls_=OneInterface, name="MyMixin",
+                        blok=blokname)
+
+        blokname = 'testMixin'
+        self.assertEqual(hasattr(Mixin, blokname), False)
+        self.assertInMixin()
+
+    def test_remove_interface_with_2_cls_in_registry(self):
+
+        target_registry(Mixin, cls_=OneInterface, name="MyMixin")
+
+        @target_registry(Mixin)
+        class MyMixin:
+            pass
+
+        self.assertInMixin(OneInterface, MyMixin)
+        blokname = 'testMixin'
+        remove_registry(Mixin, cls_=OneInterface, name="MyMixin",
+                        blok=blokname)
+        self.assertInMixin(MyMixin)
