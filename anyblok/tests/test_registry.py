@@ -73,6 +73,7 @@ class TestRegistryManager(unittest.TestCase):
         self.assertEqual(len(anyblokcore['Core']['Session']), 1)
         is_exist = 'AnyBlok.Model.System' in anyblokcore['Model']
         self.assertEqual(is_exist, True)
+        BlokManager.unload()
 
     def test_add_mustbeload(self):
         RegistryManager.declare_entry('Other', mustbeload=True)

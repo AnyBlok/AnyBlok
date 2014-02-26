@@ -87,9 +87,15 @@ class BlokManager:
             raise BlokManagerException(
                 "You must use the load classmethod before use reload")
 
+        cls.unload()
+        cls.load(*cls.bloks_groups)
+
+    @classmethod
+    @anyblok.log()
+    def unload(cls):
+        """ Unload all the blok but not the registry """
         cls.bloks = {}
         cls.ordered_bloks = []
-        cls.load(*cls.bloks_groups)
 
     @classmethod
     @anyblok.log()

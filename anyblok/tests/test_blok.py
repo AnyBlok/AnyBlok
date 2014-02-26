@@ -5,10 +5,9 @@ from anyblok.blok import BlokManager, BlokManagerException
 
 class TestBlokManager(unittest.TestCase):
 
-    def setUp(self):
-        super(TestBlokManager, self).setUp()
-        BlokManager.bloks = {}
-        BlokManager.ordered_bloks = []
+    def tearDown(self):
+        super(TestBlokManager, self).tearDown()
+        BlokManager.unload()
         BlokManager.bloks_groups = None
 
     def test_load_anyblok(self):

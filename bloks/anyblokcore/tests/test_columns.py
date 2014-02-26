@@ -1,9 +1,20 @@
 import unittest
+from anyblok.blok import BlokManager
 
 #TODO Make launcher of test on a base
 
 
-class Testcolumns(unittest.TestCase):
+class TestColumns(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestColumns, cls).setUpClass()
+        BlokManager.load('AnyBlok')
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestColumns, cls).tearDownClass()
+        BlokManager.unload()
 
     def test_integer(self):
         from AnyBlok.Column import Integer
