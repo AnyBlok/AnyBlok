@@ -5,6 +5,7 @@ from anyblok._imp import ImportManager
 from time import sleep
 from sys import modules
 from os.path import dirname, join
+import imp
 
 
 class BlokManagerException(Exception):
@@ -156,12 +157,14 @@ class BlokManager:
             cls.ordered_bloks.append(blok)
             anyblok.AnyBlok.current_blok = blok
 
+            module = modules[cls.bloks[blok].__module__]
             if not ImportManager.has(blok):
                 # Import only if not exist don't reload here
-                mod_path = modules[cls.bloks[blok].__module__].__file__
-                mod_path = dirname(mod_path)
+                mod_path = dirname(module.__file__)
                 mod = ImportManager.add(blok, mod_path)
                 mod.imports()
+            else:
+                imp.reload(module)
 
             return True
 

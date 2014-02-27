@@ -1,5 +1,6 @@
 import unittest
 import anyblok
+from anyblok.blok import BlokManager, Blok
 from sys import modules
 from anyblok._imp import ImportManager, ImportManagerException
 from os.path import join
@@ -11,7 +12,16 @@ initial_file = fp.read()
 fp.close()
 
 
+class OneBlok(Blok):
+    pass
+
+
 class TestImportManager(unittest.TestCase):
+
+    def setUp(self):
+        super(TestImportManager, self).setUp()
+        BlokManager.bloks['blokTest'] = OneBlok
+        BlokManager.ordered_bloks.append('blokTest')
 
     def tearDown(self):
         super(TestImportManager, self).tearDown()
@@ -38,6 +48,9 @@ class TestImportManager(unittest.TestCase):
                        'mockfile2.py'), 'w')
         fp.write(initial_file)
         fp.close()
+
+        del BlokManager.bloks['blokTest']
+        BlokManager.ordered_bloks.remove('blokTest')
 
     def test_bloks_exist(self):
         from anyblok import bloks

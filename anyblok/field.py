@@ -39,7 +39,7 @@ class AField:
         """
         _registryname = registry.__registry_name__ + '.' + child
         if hasattr(registry, child):
-            raise FieldException("The Field %r already exist")
+            raise FieldException("The Field %r already exist" % _registryname)
 
         setattr(cls_, '__registry_name__', _registryname)
         setattr(cls_, '__interface__', self.__interface__)

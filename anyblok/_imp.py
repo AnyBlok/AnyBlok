@@ -73,6 +73,7 @@ class ImportManager:
             RegistryManager.init_blok(blok)
             mods = [x for x in listdir(path) if '_' != x[0]]
             for mod in mods:
+                print(mod)
                 if mod == 'tests':
                     continue
 
@@ -87,15 +88,11 @@ class ImportManager:
 
         def mod_reload():
             """ Reload all the import for this module """
-            mod2reload = []
+            BlokManager.get(blok).clean_before_reload()
+            RegistryManager.init_blok(blok)
             for mod_name, mod in modules.items():
                 if module_name + '.' in mod_name:
-                    mod2reload.append(mod_name)
-
-            for mod in mod2reload:
-                del modules[mod]
-
-            mod_imports()
+                    imp.reload(mod)
 
         setattr(module, 'import_module', mod_import_module)
         setattr(module, 'import_package', mod_import_package)

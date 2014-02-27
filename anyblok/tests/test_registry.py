@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import unittest
-from anyblok.registry import RegistryManager
+from anyblok.registry import RegistryManager, Registry
 from anyblok.blok import BlokManager
+from anyblok._argsparse import ArgsParseManager
 from anyblok import AnyBlok
 
 
@@ -123,6 +124,51 @@ class TestRegistryManager(unittest.TestCase):
                              'Other': {'registry_names': []},
                          })
 
+    def test_reload_blok(self):
+        BlokManager.load('AnyBlok')
+        try:
+            RegistryManager.reload('anyblok-core')
+        finally:
+            BlokManager.unload()
+
+    def load_db(self):
+        env = {
+            'dbname': 'anyblok',
+            'dbdrivername': 'postgres',
+            'dbusername': '',
+            'dbpassword': '',
+            'dbhost': '',
+            'dbport': '',
+        }
+        ArgsParseManager.configuration = env
+        BlokManager.load('AnyBlok')
+
+    def test_get(self):
+        self.load_db()
+        try:
+            RegistryManager.get('anyblok')
+        finally:
+            BlokManager.unload()
+
+    def test_get_the_same_registry(self):
+        self.load_db()
+        try:
+            registry1 = RegistryManager.get('anyblok')
+            registry2 = RegistryManager.get('anyblok')
+            self.assertEqual(registry1, registry2)
+        finally:
+            BlokManager.unload()
+
+    def test_get_the_same_registry_after_reload(self):
+        self.load_db()
+        try:
+            registry1 = RegistryManager.get('anyblok')
+            RegistryManager.reload('anyblok-core')
+            registry2 = RegistryManager.get('anyblok')
+            self.assertEqual(registry1, registry2)
+        finally:
+            BlokManager.unload()
+
 
 class TestRegistryCore(unittest.TestCase):
 
@@ -234,4 +280,39 @@ class TestRegistryEntry(unittest.TestCase):
 
 
 class TestRegistry(unittest.TestCase):
-    pass
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestRegistry, cls).setUpClass()
+        env = {
+            'dbname': 'anyblok',
+            'dbdrivername': 'postgres',
+            'dbusername': '',
+            'dbpassword': '',
+            'dbhost': '',
+            'dbport': '',
+        }
+        ArgsParseManager.configuration = env
+        BlokManager.load('AnyBlok')
+
+    def setUp(self):
+        super(TestRegistry, self).setUp()
+        self.registry = Registry('anyblok')
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestRegistry, cls).tearDownClass()
+        BlokManager.unload()
+
+    def tearDown(self):
+        super(TestRegistry, self).tearDown()
+        RegistryManager.clear()
+
+    def test_has_blok(self):
+        installed = self.registry.installed_bloks()
+        self.assertEqual(installed, None)
+
+    def test_install_blok(self):
+        self.registry.update(install='anyblok-core')
+        installed = self.registry.installed_bloks()
+        self.assertEqual(installed, ['anyblok-core'])

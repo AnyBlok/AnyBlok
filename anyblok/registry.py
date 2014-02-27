@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 import AnyBlok
+from anyblok._argsparse import ArgsParseManager
+from anyblok._imp import ImportManager
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 
 
 class RegistryManager:
@@ -27,6 +31,67 @@ class RegistryManager:
     declared_entries = []
     mustbeload_declared_entries = []
     callback_declared_entries = {}
+    registries = {}
+    scoped_fnct = None
+
+    @classmethod
+    def has_blok(cls, blok):
+        """ Return True if the blok is already loaded
+
+        :param blok: name of the blok
+        :rtype: boolean
+        """
+        return blok in cls.loaded_bloks
+
+    @classmethod
+    def clear(cls):
+        """ Clear the registry dict to forced the creation of new registry """
+        cls.registries = {}
+
+    @classmethod
+    def get(cls, dbname):
+        """ Return an existing Registry
+
+        If the Registry does'nt exist then the Registry are created and add to
+        registries dict
+
+        :param dbname: the name of the database link with this registry
+        :rtype: ``Registry``
+        """
+        if dbname in cls.registries:
+            return cls.registries[dbname]
+
+        registry = Registry(dbname, cls.scoped_fnct)
+        cls.registries[dbname] = registry
+        return registry
+
+    @classmethod
+    def reload(cls, blok):
+        """ Reload the blok
+
+        The purpose is to reload python module to get change in python file
+
+        :param blok: the name of the blok to reload
+        """
+        mod = ImportManager.get(blok)
+        AnyBlok.current_blok = blok
+        try:
+            mod.reload()
+        finally:
+            AnyBlok.current_blok = None
+
+        registry2remove = []
+        for dbname, registry in cls.registries.items():
+            installed = registry.installed_bloks()
+
+            if not installed:
+                continue
+
+            if blok in installed:
+                registry2remove.append(dbname)
+
+        for dbname in registry2remove:
+            del cls.registries[dbname]
 
     @classmethod
     def declare_entry(cls, entry, mustbeload=False, callback=None):
@@ -153,3 +218,34 @@ class RegistryManager:
         """
         cls.loaded_bloks[blok][entry][key]['bases'].remove(cls_)
         cls.loaded_bloks[blok][entry][key]['properties'].update(kwargs)
+
+
+class Registry:
+    """ Define one registry
+
+    A registry is link with a database, a have the definition of the installed
+    Blok, Model, Mixin for this database::
+
+        registry = Registry.get('My database')
+    """
+
+    def __init__(self, dbname, scoped_fnct=None):
+        self.dbname = dbname
+        self.scoped_fnct = scoped_fnct
+        url = ArgsParseManager.get_url(dbname=dbname)
+        self.engine = create_engine(url)
+        self.declarative_base = declarative_base(class_registry=dict(
+            registry=self))
+
+    def installed_bloks(self):
+        """ Return the list of the installed blok
+
+        :rtype: Return the list or None if anyblok-core not installed
+        """
+        if not hasattr(self, 'System'):
+            return None
+
+        if not hasattr(self.System, 'Blok'):
+            return None
+
+        return self.System.Blok.list_by_state('installed')
