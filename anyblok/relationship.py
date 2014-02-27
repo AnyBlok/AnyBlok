@@ -53,11 +53,13 @@ class RelationShip(Field):
         """
         pass
 
-    def get_sqlalchemy_mapping(self, registry, tablename, properties):
+    def get_sqlalchemy_mapping(self, registry, tablename, fieldname,
+                               properties):
         """ Return the instance of the real field
 
         :param registry: current registry
         :param tablename: table name of the model
+        :param fieldname: name of the field
         :param properties: properties known of the model
         """
         if 'foreign_keys' in self.kwargs:

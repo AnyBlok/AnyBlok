@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
+import os
 from anyblok.registry import RegistryManager, Registry
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
@@ -284,13 +285,14 @@ class TestRegistry(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(TestRegistry, cls).setUpClass()
+        env = os.environ
         env = {
-            'dbname': 'anyblok',
+            'dbname': env.get('postgres_dbname', 'anyblok'),
             'dbdrivername': 'postgres',
-            'dbusername': '',
-            'dbpassword': '',
-            'dbhost': '',
-            'dbport': '',
+            'dbusername': env.get('postgres_dbusername'),
+            'dbpassword': env.get('postgres_dbpassword'),
+            'dbhost': env.get('postgres_dbhost', 'localhost'),
+            'dbport': env.get('postgres_dbport'),
         }
         ArgsParseManager.configuration = env
         BlokManager.load('AnyBlok')
@@ -310,9 +312,5 @@ class TestRegistry(unittest.TestCase):
 
     def test_has_blok(self):
         installed = self.registry.installed_bloks()
-        self.assertEqual(installed, None)
-
-    def test_install_blok(self):
-        self.registry.update(install='anyblok-core')
-        installed = self.registry.installed_bloks()
+        self.assertEqual(hasattr(self.registry, 'System'), True)
         self.assertEqual(installed, ['anyblok-core'])

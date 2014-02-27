@@ -73,7 +73,6 @@ class ImportManager:
             RegistryManager.init_blok(blok)
             mods = [x for x in listdir(path) if '_' != x[0]]
             for mod in mods:
-                print(mod)
                 if mod == 'tests':
                     continue
 

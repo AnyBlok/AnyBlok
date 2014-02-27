@@ -33,6 +33,7 @@ class BlokManager:
     bloks = {}
     bloks_groups = None
     ordered_bloks = []
+    auto_install = []
 
     @classmethod
     def list(cls):
@@ -99,6 +100,7 @@ class BlokManager:
         cls.bloks = {}
         cls.ordered_bloks = []
         cls.bloks_groups = None
+        cls.auto_install = []
 
     @classmethod
     @anyblok.log()
@@ -166,6 +168,9 @@ class BlokManager:
             else:
                 imp.reload(module)
 
+            if cls.bloks[blok].autoinstall:
+                cls.auto_install.append(blok)
+
             return True
 
         try:
@@ -206,6 +211,7 @@ class Blok:
     * imports: list of the python file to import
     """
 
+    autoinstall = False
     priority = 100
     required = []
     optional = []
@@ -214,6 +220,9 @@ class Blok:
     html = []
     js = []
     css = []
+
+    def __init__(self, registry):
+        self.registry = registry
 
     @classmethod
     def clean_before_reload(cls):

@@ -2,8 +2,14 @@
 import AnyBlok
 from anyblok._argsparse import ArgsParseManager
 from anyblok._imp import ImportManager
+from anyblok.blok import BlokManager
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, scoped_session
+
+
+class RegistryManagerException(Exception):
+    """ Simple Exception for Registry """
 
 
 class RegistryManager:
@@ -191,6 +197,14 @@ class RegistryManager:
         :param key: is the existing key in the entry
         :param ``cls_``: Class of the entry / key to remove in loaded blok
         """
+        bases = []
+
+        for base in cls_.__bases__:
+            if base is not object:
+                bases.append(base)
+
+        setattr(cls_, '__anyblok_bases__', bases)
+
         cb = AnyBlok.current_blok
 
         if key not in cls.loaded_bloks[cb][entry]:
@@ -234,10 +248,10 @@ class Registry:
         self.scoped_fnct = scoped_fnct
         url = ArgsParseManager.get_url(dbname=dbname)
         self.engine = create_engine(url)
-        self.declarative_base = declarative_base(class_registry=dict(
-            registry=self))
 
-    def installed_bloks(self):
+        self.load()
+
+    def installed_bloks(self, gettoinstall=False):
         """ Return the list of the installed blok
 
         :rtype: Return the list or None if anyblok-core not installed
@@ -248,4 +262,198 @@ class Registry:
         if not hasattr(self.System, 'Blok'):
             return None
 
-        return self.System.Blok.list_by_state('installed')
+        states = ['installed']
+        if gettoinstall:
+            states.extend(['to install', 'to_update'])
+
+        return self.System.Blok.list_by_state(*states)
+
+    def load(self):
+        declarativebase = declarative_base(class_registry=dict(
+            registry=self))
+        toload = self.installed_bloks(gettoinstall=True)
+        if toload is None:
+            toload = set()
+
+        toload.update(BlokManager.auto_install)
+
+        loaded_registries = {'model_names': []}
+        loaded_cores = {'Base': [], 'SqlBase': [], 'Session': []}
+        ordered_loaded_bloks = []
+        loaded_bloks = {}
+        registry_base = type("RegistryBase", tuple(), {'registry': self})
+        loaded_namespaces = {}
+
+        def load_entry(blok, entry):
+            _entry = RegistryManager.loaded_bloks[blok][entry]
+            for key in _entry['registry_names']:
+                v = _entry[key]
+                if key not in loaded_registries:
+                    loaded_registries[key] = {'properties': {}, 'bases': []}
+
+                loaded_registries[key]['properties'].update(v['properties'])
+                old_bases = [] + loaded_registries[key]['bases']
+                loaded_registries[key]['bases'] = v['bases']
+                loaded_registries[key]['bases'] += old_bases
+
+                if entry in RegistryManager.mustbeload_declared_entries:
+                    if entry == 'Model':
+                        loaded_registries['model_names'].append(key)
+                    elif entry in RegistryManager.callback_declared_entries:
+                        #TODO
+                        pass
+
+        def load_core(blok, core):
+            bases = RegistryManager.loaded_bloks[blok]['Core'][core]
+            bases.reverse()
+            for base in bases:
+                loaded_cores[core].insert(0, base)
+
+        def load_blok(blok):
+            if blok in ordered_loaded_bloks:
+                return True
+
+            if blok not in BlokManager.bloks:
+                return False
+
+            b = BlokManager.bloks[blok](self)
+            for required in b.required:
+                if not load_blok(required):
+                    raise RegistryManagerException(
+                        "Required blok not found")
+
+            for optional in b.optional:
+                load_blok(optional)
+
+            for core in ('Base', 'SqlBase', 'Session'):
+                load_core(blok, core)
+
+            for entry in RegistryManager.declared_entries:
+                load_entry(blok, entry)
+
+            loaded_bloks[blok] = b
+            ordered_loaded_bloks.append(b)
+            return True
+
+        def has_sql_fields(bases):
+            from AnyBlok import Field
+            for base in bases:
+                for p in dir(base):
+                    if hasattr(getattr(base, p), '__class__'):
+                        if Field in getattr(base, p).__class__.__mro__:
+                            return True
+
+            return False
+
+        def get_fields(base):
+            from AnyBlok import Field
+            fields = {}
+            for p in dir(base):
+                if hasattr(getattr(base, p), '__class__'):
+                    if Field in getattr(base, p).__class__.__mro__:
+                        fields[p] = getattr(base, p)
+            return fields
+
+        def declare_field(name, field, tablename, properties):
+            if name in properties:
+                return
+
+            from sqlalchemy.ext.declarative import declared_attr
+
+            def wrapper(cls):
+                return field.get_sqlalchemy_mapping(
+                    self, tablename, name, properties)
+
+            properties[name] = declared_attr(wrapper)
+
+        def add_in_registry(namespace, base):
+            namespace = namespace.split('.')[2:]
+
+            def update_namespace(parent, child):
+                if hasattr(parent, 'children_namespaces'):
+                    parent.children_namespaces.append(child)
+                elif hasattr(parent, child):
+                    other_base = get_namespace(parent, child)
+                    setattr(parent, child, base)
+                    for cns in other_base.children_namespaces:
+                        setattr(child, cns.__name__, cns)
+                else:
+                    setattr(parent, child, base)
+
+            def get_namespace(parent, child):
+                if hasattr(parent, child):
+                    return getattr(parent, child)
+
+                child = type(child, tuple(), {'children_namespaces': []})
+                setattr(parent, child.__name__, child)
+                return child
+
+            def update_namespaces(parent, namespaces):
+                if len(namespaces) == 1:
+                    update_namespace(parent, namespaces[0])
+                else:
+                    new_parent = get_namespace(parent, namespaces[0])
+                    update_namespaces(new_parent, namespaces[1:])
+
+            update_namespaces(self, namespace)
+
+        def load_namespace(namespace):
+            if namespace in loaded_namespaces:
+                return [loaded_namespaces[namespace]], {}
+
+            bases = []
+            properties = {}
+            ns = loaded_registries[namespace]
+
+            for b in ns['bases']:
+                bases.append(b)
+                p = ns['properties']
+                p.update(properties)
+                properties.update(p)
+
+                for b_ns in b.__anyblok_bases__:
+                    bs, ps = load_namespace(b_ns.__registry_name__)
+                    bases += bs
+                    ps.update(properties)
+                    properties.update(ps)
+
+            if namespace in loaded_registries['model_names']:
+                tablename = properties['__tablename__']
+                if has_sql_fields(bases):
+                    bases += loaded_cores['SqlBase']
+                    bases += [declarativebase]
+
+                bases += loaded_cores['Base'] + [registry_base]
+                for b in bases:
+                    for p, f in get_fields(b).items():
+                        declare_field(p, f, tablename, properties)
+
+                bases = [type(tablename, tuple(bases), properties)]
+                properties = {}
+                add_in_registry(namespace, bases[0])
+
+            return bases, properties
+
+        for blok in toload:
+            load_blok(blok)
+
+        for namespace in loaded_registries['model_names']:
+            load_namespace(namespace)
+
+        declarativebase.metadata.create_all(self.engine)
+
+        Session = type('Session', tuple(loaded_cores['Session']), {})
+        self.Session = scoped_session(
+            sessionmaker(bind=self.engine, class_=Session), self.scoped_fnct)
+
+        Blok = self.System.Blok
+        Blok.update_list()
+        Blok.apply_state(*ordered_loaded_bloks)
+
+    def upgrade(self, install=None, update=None, remove=None):
+        """ Upgrade the current registry
+
+        :param install: list of the blok to install
+        :param update: list of the blok to update
+        """
+        #TODO

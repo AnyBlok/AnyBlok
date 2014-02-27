@@ -187,7 +187,8 @@ class TestCoreInterfaceField(unittest.TestCase):
             self.fail("No watchdog, the label must be required")
         except FieldException:
             pass
-        self.assertEqual(field.get_sqlalchemy_mapping(None, None, None), field)
+        self.assertEqual(field.get_sqlalchemy_mapping(None, None, None, None),
+                         field)
 
     def test_add_interface(self):
         target_registry(Field, cls_=OneField, name='OneField')

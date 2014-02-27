@@ -5,6 +5,7 @@ from . import _fields, _columns, _relationship  # noqa
 
 class AnyBlokCore(Blok):
 
+    autoinstall = True
     priority = 0
 
     css = [
