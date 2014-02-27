@@ -12,9 +12,10 @@ PROMPT = "%(processName)s - %(version)s"
 
 
 def start(processName, version=release.version, prompt=PROMPT,
-          argsparse_group=None, parts_to_load=None, logger=None):
+          argsparse_groups=None, parts_to_load=None, logger=None):
     from .blok import BlokManager
     from ._argsparse import ArgsParseManager
+    from .registry import RegistryManager
 
     if parts_to_load is None:
         parts_to_load = ['anyblok']
@@ -22,12 +23,17 @@ def start(processName, version=release.version, prompt=PROMPT,
     BlokManager.load(*parts_to_load)
     description = prompt % {'processName': processName, 'version': version}
     ArgsParseManager.load(description=description,
-                          argsparse_group=argsparse_group,
+                          argsparse_groups=argsparse_groups,
                           parts_to_load=parts_to_load)
 
     if logger is None:
         logger = {}
     ArgsParseManager.init_logger(**logger)
+    dbname = ArgsParseManager.get('dbname')
+    if not dbname:
+        return None
+
+    return RegistryManager.get(dbname)
 
 
 class AnyBlok:

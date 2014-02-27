@@ -4,6 +4,7 @@ from anyblok._argsparse import ArgsParseManager
 from anyblok import release
 from anyblok.registry import RegistryManager
 from zope.component import getUtility
+import code
 
 
 def createdb():
@@ -32,3 +33,15 @@ def createdb():
     registry.update_blok(install_bloks=bloks)
     registry.commit()
     registry.close()
+
+
+def interpreter():
+    registry = anyblok.start(
+        'Interpreter', release.version,
+        argsparse_groups=['config', 'database', 'interpreter'],
+        parts_to_load=['AnyBlok'])
+    python_script = ArgsParseManager.get('python_script')
+    if python_script:
+        execfile(python_script)
+    else:
+        code.interact(local=locals())
