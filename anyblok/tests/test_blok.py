@@ -8,7 +8,6 @@ class TestBlokManager(unittest.TestCase):
     def tearDown(self):
         super(TestBlokManager, self).tearDown()
         BlokManager.unload()
-        BlokManager.bloks_groups = None
 
     def test_load_anyblok(self):
         BlokManager.load('AnyBlok')

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from pkg_resources import iter_entry_points
 import anyblok
-from anyblok.registry import RegistryManager
 from anyblok._imp import ImportManager
 from time import sleep
 from sys import modules
@@ -87,8 +86,10 @@ class BlokManager:
             raise BlokManagerException(
                 "You must use the load classmethod before use reload")
 
+        bloks_groups = []
+        bloks_groups += cls.bloks_groups
         cls.unload()
-        cls.load(*cls.bloks_groups)
+        cls.load(*bloks_groups)
 
     @classmethod
     @anyblok.log()
@@ -96,6 +97,7 @@ class BlokManager:
         """ Unload all the blok but not the registry """
         cls.bloks = {}
         cls.ordered_bloks = []
+        cls.bloks_groups = None
 
     @classmethod
     @anyblok.log()
@@ -155,8 +157,6 @@ class BlokManager:
             anyblok.AnyBlok.current_blok = blok
 
             if not ImportManager.has(blok):
-                # Init only if the blok aren't loaded
-                RegistryManager.init_blok(blok)
                 # Import only if not exist don't reload here
                 mod_path = modules[cls.bloks[blok].__module__].__file__
                 mod_path = dirname(mod_path)
@@ -170,10 +170,8 @@ class BlokManager:
                 blok = bloks.pop(0)[1]
                 get_need_blok(blok)
 
-        except Exception as e:
-            raise BlokManagerException(str(e))
-
-        anyblok.AnyBlok.current_blok = None
+        finally:
+            anyblok.AnyBlok.current_blok = None
 
     @classmethod
     def get_files_from(cls, blok, attribute):
@@ -209,4 +207,11 @@ class Blok:
     required = []
     optional = []
     conditional = []
-    imports = []
+
+    html = []
+    js = []
+    css = []
+
+    @classmethod
+    def clean_before_reload(cls):
+        pass

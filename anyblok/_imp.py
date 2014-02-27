@@ -37,6 +37,8 @@ class ImportManager:
         :param path: path of this blok
         :rtype: blok module
         """
+        from anyblok.registry import RegistryManager
+        from anyblok.blok import BlokManager
         if cls.has(blok):
             return cls.get(blok)
 
@@ -65,19 +67,35 @@ class ImportManager:
 
         def mod_imports():
             """ Imports modules and / or packages listed in the blok path"""
-            mods = [x for x in listdir(path) if '__' != x[:2] and x != 'tests']
+            if RegistryManager.has_blok(blok):
+                BlokManager.get(blok).clean_before_reload()
+
+            RegistryManager.init_blok(blok)
+            mods = [x for x in listdir(path) if '_' != x[0]]
             for mod in mods:
+                if mod == 'tests':
+                    continue
+
                 if isdir(join(path, mod)):
                     if isfile(join(path, mod, '__init__.py')):
                         mod_import_package(mod)
                 else:
+                    if mod[-3:] != '.py':
+                        continue
+
                     mod_import_module(mod)
 
         def mod_reload():
             """ Reload all the import for this module """
+            mod2reload = []
             for mod_name, mod in modules.items():
                 if module_name + '.' in mod_name:
-                    imp.reload(mod)
+                    mod2reload.append(mod_name)
+
+            for mod in mod2reload:
+                del modules[mod]
+
+            mod_imports()
 
         setattr(module, 'import_module', mod_import_module)
         setattr(module, 'import_package', mod_import_package)
