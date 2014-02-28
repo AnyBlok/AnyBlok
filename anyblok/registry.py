@@ -383,14 +383,16 @@ class Registry:
         def add_in_registry(namespace, base):
             namespace = namespace.split('.')[2:]
 
-            def update_namespace(parent, child):
+            def final_namespace(parent, child):
                 if hasattr(parent, 'children_namespaces'):
-                    parent.children_namespaces.append(child)
+                    parent.children_namespaces[child] = base
                 elif hasattr(parent, child):
                     other_base = get_namespace(parent, child)
+                    other_base = other_base.children_namespaces.copy()
+                    for ns, cns in other_base.items():
+                        setattr(base, ns, cns)
+
                     setattr(parent, child, base)
-                    for cns in other_base.children_namespaces:
-                        setattr(child, cns.__name__, cns)
                 else:
                     setattr(parent, child, base)
 
@@ -398,13 +400,16 @@ class Registry:
                 if hasattr(parent, child):
                     return getattr(parent, child)
 
-                child = type(child, tuple(), {'children_namespaces': []})
-                setattr(parent, child.__name__, child)
-                return child
+                tmpns = type(child, tuple(), {'children_namespaces': {}})
+                if hasattr(parent, 'children_namespaces'):
+                    parent.children_namespaces[child] = tmpns
+                else:
+                    setattr(parent, child, tmpns)
+                return tmpns
 
             def update_namespaces(parent, namespaces):
                 if len(namespaces) == 1:
-                    update_namespace(parent, namespaces[0])
+                    final_namespace(parent, namespaces[0])
                 else:
                     new_parent = get_namespace(parent, namespaces[0])
                     update_namespaces(new_parent, namespaces[1:])
