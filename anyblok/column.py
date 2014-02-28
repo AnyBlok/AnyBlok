@@ -60,6 +60,11 @@ class Column(Field):
         self.kwargs = kwargs
         super(Column, self).__init__(label=label)
 
+    @classmethod
+    def native_type(cls):
+        """ Return the native SqlAlchemy type """
+        return cls.sqlalchemy_type
+
     def get_sqlalchemy_mapping(self, registry, tablename, fieldname,
                                properties):
         """ Return the instance of the real field

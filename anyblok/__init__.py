@@ -33,7 +33,9 @@ def start(processName, version=release.version, prompt=PROMPT,
     if not dbname:
         return None
 
-    return RegistryManager.get(dbname)
+    registry = RegistryManager.get(dbname)
+    registry.commit()
+    return registry
 
 
 class AnyBlok:

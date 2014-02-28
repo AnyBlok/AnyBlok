@@ -52,6 +52,8 @@ class RegistryManager:
     @classmethod
     def clear(cls):
         """ Clear the registry dict to forced the creation of new registry """
+        for registry in cls.registries.values():
+            registry.close()
         cls.registries = {}
 
     @classmethod
@@ -82,6 +84,7 @@ class RegistryManager:
         mod = ImportManager.get(blok)
         AnyBlok.current_blok = blok
         try:
+            mod.imports()
             mod.reload()
         finally:
             AnyBlok.current_blok = None
@@ -97,6 +100,7 @@ class RegistryManager:
                 registry2remove.append(dbname)
 
         for dbname in registry2remove:
+            cls.registries[dbname].close()
             del cls.registries[dbname]
 
     @classmethod
@@ -248,8 +252,17 @@ class Registry:
         self.scoped_fnct = scoped_fnct
         url = ArgsParseManager.get_url(dbname=dbname)
         self.engine = create_engine(url)
+        self.loaded_namespaces = {}
+        self.Session = None
 
         self.load()
+
+    def get(self, namespace):
+        if namespace not in self.loaded_namespaces:
+            raise RegistryManagerException(
+                "No namespace %r loaded" % namespace)
+
+        return self.loaded_namespaces[namespace]
 
     def installed_bloks(self, gettoinstall=False):
         """ Return the list of the installed blok
@@ -278,11 +291,12 @@ class Registry:
         toload.update(BlokManager.auto_install)
 
         loaded_registries = {'model_names': []}
-        loaded_cores = {'Base': [], 'SqlBase': [], 'Session': []}
+        registry_base = type("RegistryBase", tuple(), {'registry': self})
+        loaded_cores = {'Base': [], 'SqlBase': [], 'Session': [
+            registry_base]}
         ordered_loaded_bloks = []
         loaded_bloks = {}
-        registry_base = type("RegistryBase", tuple(), {'registry': self})
-        loaded_namespaces = {}
+        self.loaded_namespaces = {}
 
         def load_entry(blok, entry):
             _entry = RegistryManager.loaded_bloks[blok][entry]
@@ -398,8 +412,8 @@ class Registry:
             update_namespaces(self, namespace)
 
         def load_namespace(namespace):
-            if namespace in loaded_namespaces:
-                return [loaded_namespaces[namespace]], {}
+            if namespace in self.loaded_namespaces:
+                return [self.loaded_namespaces[namespace]], {}
 
             bases = []
             properties = {}
@@ -431,6 +445,7 @@ class Registry:
                 bases = [type(tablename, tuple(bases), properties)]
                 properties = {}
                 add_in_registry(namespace, bases[0])
+                self.loaded_namespaces[namespace] = bases[0]
 
             return bases, properties
 
@@ -450,10 +465,30 @@ class Registry:
         Blok.update_list()
         Blok.apply_state(*ordered_loaded_bloks)
 
-    def upgrade(self, install=None, update=None, remove=None):
+    def close(self):
+        """Release the session, connection and engin"""
+
+        session = self.Session()
+        session.rollback()
+        session.close_all()
+        self.engine.dispose()
+
+    def __getattr__(self, attribute):
+        if self.Session:
+            session = self.Session()
+            if attribute == 'session':
+                return session
+            if hasattr(session, attribute):
+                return getattr(session, attribute)
+
+        else:
+            super(Registry, self).__getattr__(attribute)
+
+    def upgrade(self, install=None, update=None, uninstall=None):
         """ Upgrade the current registry
 
         :param install: list of the blok to install
         :param update: list of the blok to update
+        :param uninstall: list of the blok to uninstall
         """
         #TODO

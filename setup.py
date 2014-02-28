@@ -37,6 +37,7 @@ setup(
     entry_points={
         'console_scripts': [
             'anyblok_createdb=anyblok.scripts:createdb',
+            'anyblok_updatedb=anyblok.scripts:updatedb',
             'anyblok_interpreter=anyblok.scripts:interpreter',
         ],
         'AnyBlok': [

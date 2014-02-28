@@ -92,3 +92,8 @@ class Field:
         :param properties: properties known of the model
         """
         return self
+
+    @classmethod
+    def native_type(cls):
+        """ Return the native SqlAlchemy type """
+        raise FieldException("No native type for this field")

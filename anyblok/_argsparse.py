@@ -257,12 +257,6 @@ def add_update_bloks(parser, configuration):
                         help="blok to update")
 
 
-@ArgsParseManager.add('load-bloks')
-def add_load_bloks(parser, configuration):
-    parser.add_argument('--load-bloks', dest='load_bloks', default='',
-                        help="blok to install")
-
-
 @ArgsParseManager.add('interpreter')
 def add_interpreter(parser, configuration):
     parser.add_argument('--script', dest='python_script',

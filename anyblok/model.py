@@ -35,17 +35,16 @@ class AModel:
         :param cls_: Class Interface to add in registry
         """
         _registryname = registry.__registry_name__ + '.' + child
+        if 'tablename' in kwargs:
+            tablename = kwargs.pop('tablename')
+        else:
+            if registry is AnyBlok:
+                tablename = child.lower()
+            elif hasattr(registry, '__tablename__'):
+                tablename = registry.__tablename__
+                tablename += '_' + child.lower()
 
         if not hasattr(registry, child):
-            if 'tablename' in kwargs:
-                tablename = kwargs.pop('tablename')
-            else:
-                if registry is AnyBlok:
-                    tablename = ''
-                elif hasattr(registry, '__tablename__'):
-                    tablename = registry.__tablename__
-
-                tablename += '_' + child.lower()
 
             p = {
                 '__registry_name__': _registryname,
@@ -55,11 +54,12 @@ class AModel:
             ns = type(child, tuple(), p)
             setattr(registry, child, ns)
             modules[_registryname] = ns
-            kwargs['__registry_name__'] = _registryname
-            kwargs['__tablename__'] = tablename
 
         if registry is AnyBlok:
             return
+
+        kwargs['__registry_name__'] = _registryname
+        kwargs['__tablename__'] = tablename
 
         RegistryManager.add_entry_in_target_registry(
             'Model', _registryname, cls_, **kwargs)

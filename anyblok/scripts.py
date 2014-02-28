@@ -7,6 +7,16 @@ from zope.component import getUtility
 import code
 
 
+def format_bloks(bloks):
+    if bloks == '':
+        bloks = None
+
+    if bloks is not None:
+        bloks = bloks.split(',')
+
+    return bloks
+
+
 def createdb():
     BlokManager.load('AnyBlok')
     description = '%s - %s : Create database' % ('AnyBlok', release.version)
@@ -17,12 +27,7 @@ def createdb():
     ArgsParseManager.init_logger()
     drivername = ArgsParseManager.get('dbdrivername')
     dbname = ArgsParseManager.get('dbname')
-    bloks = ArgsParseManager.get('install_bloks')
-    if bloks == '':
-        bloks = None
-
-    if bloks is not None:
-        bloks = bloks.split(',')
+    bloks = format_bloks(ArgsParseManager.get('install_bloks'))
 
     adapter = getUtility(anyblok.AnyBlok.Interface.ISqlAlchemyDataBase,
                          drivername)
@@ -30,9 +35,23 @@ def createdb():
         adapter.createdb(dbname)
 
     registry = RegistryManager.get(dbname)
-    registry.update_blok(install_bloks=bloks)
+    registry.upgrade(install=bloks)
     registry.commit()
     registry.close()
+
+
+def updatedb():
+    registry = anyblok.start(
+        'Update data base', release.version,
+        argsparse_groups=['config', 'database', 'install-bloks',
+                          'uninstall-bloks', 'update-bloks'],
+        parts_to_load=['AnyBlok'])
+
+    install_bloks = format_bloks(ArgsParseManager.get('install_bloks'))
+    uninstall_bloks = format_bloks(ArgsParseManager.get('uninstall_bloks'))
+    update_bloks = format_bloks(ArgsParseManager.get('update_bloks'))
+    registry.upgrade(install=install_bloks, update=update_bloks,
+                     uninstall=uninstall_bloks)
 
 
 def interpreter():
