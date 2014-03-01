@@ -40,7 +40,7 @@ class Column(Field):
     foreign_key_code = None
     sqlalchemy_type = None
 
-    def __init__(self, label=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """ Initialise the column
 
         :param label: label of this field
@@ -49,8 +49,14 @@ class Column(Field):
         self.MustNotBeInstanced(Column)
         assert self.sqlalchemy_type
 
+        label = None
+
+        if 'label' in kwargs:
+            label = kwargs.pop('label')
+
         if 'type_' in kwargs:
             del kwargs['type_']
+
         if 'foreign_key' in kwargs:
             model, col = kwargs.pop('foreign_key')
             self.foreign_key = model.__tablename__ + '.' + col

@@ -5,8 +5,6 @@ from AnyBlok import target_registry, Column
 @target_registry(Column)
 class Enum(Column):
 
-        sqlalchemy_type = SA_Enum
-
         def __init__(self, *args, **kwargs):
+            self.sqlalchemy_type = SA_Enum(*args)
             super(Enum, self).__init__(**kwargs)
-            self.args = args
