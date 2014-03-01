@@ -227,3 +227,12 @@ class Blok:
     @classmethod
     def clean_before_reload(cls):
         pass
+
+    def install(self):
+        pass
+
+    def update(self):
+        pass
+
+    def uninstall(self):
+        pass

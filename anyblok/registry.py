@@ -254,6 +254,8 @@ class Registry:
         self.engine = create_engine(url)
         self.loaded_namespaces = {}
         self.Session = None
+        self.declarativebase = None
+        self.loaded_bloks = {}
 
         self.load()
 
@@ -282,7 +284,7 @@ class Registry:
         return self.System.Blok.list_by_state(*states)
 
     def load(self):
-        declarativebase = declarative_base(class_registry=dict(
+        self.declarativebase = declarative_base(class_registry=dict(
             registry=self))
         toload = self.installed_bloks(gettoinstall=True)
         if toload is None:
@@ -295,7 +297,6 @@ class Registry:
         loaded_cores = {'Base': [], 'SqlBase': [], 'Session': [
             registry_base]}
         ordered_loaded_bloks = []
-        loaded_bloks = {}
         self.loaded_namespaces = {}
 
         def load_entry(blok, entry):
@@ -345,8 +346,8 @@ class Registry:
             for entry in RegistryManager.declared_entries:
                 load_entry(blok, entry)
 
-            loaded_bloks[blok] = b
-            ordered_loaded_bloks.append(b)
+            self.loaded_bloks[blok] = b
+            ordered_loaded_bloks.append(blok)
             return True
 
         def has_sql_fields(bases):
@@ -440,7 +441,7 @@ class Registry:
                 tablename = properties['__tablename__']
                 if has_sql_fields(bases):
                     bases += loaded_cores['SqlBase']
-                    bases += [declarativebase]
+                    bases += [self.declarativebase]
 
                 bases += loaded_cores['Base'] + [registry_base]
                 for b in bases:
@@ -460,7 +461,7 @@ class Registry:
         for namespace in loaded_registries['model_names']:
             load_namespace(namespace)
 
-        declarativebase.metadata.create_all(self.engine)
+        self.declarativebase.metadata.create_all(self.engine)
 
         Session = type('Session', tuple(loaded_cores['Session']), {})
         self.Session = scoped_session(

@@ -60,7 +60,7 @@ class Column(Field):
         if 'foreign_key' in kwargs:
             model, col = kwargs.pop('foreign_key')
             self.foreign_key = model.__tablename__ + '.' + col
-            self.foreign_key_code = model.__namespace__ + ' - ' + col
+            self.foreign_key_code = model.__registry_name__ + ' - ' + col
 
         self.args = args
         self.kwargs = kwargs

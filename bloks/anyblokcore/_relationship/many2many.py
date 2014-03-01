@@ -5,7 +5,8 @@ from sqlalchemy import Table, Column, ForeignKey
 @target_registry(RelationShip)
 class Many2Many(RelationShip):
 
-    def get_sqlalchemy_mapping(self, registry, tablename):
+    def get_sqlalchemy_mapping(self, registry, tablename, fieldname,
+                               properties):
         if 'columnjoined' in self.kwargs:
             jointablename, fromcolumn, tocolumn = self.kwargs.pop(
                 'columnjoined')
@@ -16,17 +17,18 @@ class Many2Many(RelationShip):
                 self.kwargs['secondary'] = registry.many2many_tables[
                     jointablename]
             else:
-                t = Table(jointablename, registry.declarative_base.metadata,
+                t = Table(jointablename, registry.declarativebase.metadata,
                           Column(
-                              tablename + '_' + fromcolumn[1],
+                              fromcolumn[2],
                               fromcolumn[0].sqlalchemy_type,
                               ForeignKey(tablename + '.' + fromcolumn[1])),
                           Column(
-                              self.model + '_' + tocolumn[1],
+                              tocolumn[2],
                               tocolumn[0].sqlalchemy_type,
                               ForeignKey(self.model + '.' + tocolumn[1])))
                 self.kwargs['secondary'] = t
                 registry.many2many_tables[jointablename] = t
+                self.kwargs['foreign_keys'] = jointablename + '.' + fromcolumn[2]
 
-        return super(Many2Many, self).get_sqlalchemy_mapping(registry,
-                                                             tablename)
+        return super(Many2Many, self).get_sqlalchemy_mapping(
+            registry, tablename, fieldname, properties)
