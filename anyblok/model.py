@@ -40,6 +40,8 @@ class AModel:
         else:
             if registry is AnyBlok:
                 tablename = child.lower()
+            elif registry is AnyBlok.Model:
+                tablename = child.lower()
             elif hasattr(registry, '__tablename__'):
                 tablename = registry.__tablename__
                 tablename += '_' + child.lower()
