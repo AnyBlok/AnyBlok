@@ -49,7 +49,7 @@ class Blok:
         for order, blok in enumerate(BlokManager.ordered_bloks):
             b = cls.query().filter(cls.name == blok)
             if b.count():
-                b.update(order=order)
+                b.order = order
             else:
                 cls.insert(name=blok, order=order)
 

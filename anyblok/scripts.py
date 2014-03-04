@@ -61,6 +61,7 @@ def interpreter():
         parts_to_load=['AnyBlok'])
     python_script = ArgsParseManager.get('python_script')
     if python_script:
-        execfile(python_script)
+        with open(python_script, "r") as fh:
+            exec(fh.read(), None, locals())
     else:
         code.interact(local=locals())
