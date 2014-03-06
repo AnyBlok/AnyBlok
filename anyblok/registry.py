@@ -164,7 +164,8 @@ class RegistryManager:
         good blok
 
         :param core: is the existing core name
-        :param ``cls_``: Class of the Core to save in loaded blok target registry
+        :param ``cls_``: Class of the Core to save in loaded blok target
+            registry
         """
         cls.loaded_bloks[AnyBlok.current_blok]['Core'][core].append(cls_)
 

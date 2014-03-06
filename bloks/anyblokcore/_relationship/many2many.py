@@ -28,7 +28,8 @@ class Many2Many(RelationShip):
                               ForeignKey(self.model + '.' + tocolumn[1])))
                 self.kwargs['secondary'] = t
                 registry.many2many_tables[jointablename] = t
-                self.kwargs['foreign_keys'] = jointablename + '.' + fromcolumn[2]
+                self.kwargs['foreign_keys'] = jointablename + '.'
+                self.kwargs['foreign_keys'] += fromcolumn[2]
 
         return super(Many2Many, self).get_sqlalchemy_mapping(
             registry, tablename, fieldname, properties)

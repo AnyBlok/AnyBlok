@@ -100,6 +100,7 @@ class Association:
 
     blok = String(label="Blok", foreign_key=(System.Blok, 'name'),
                   nullable=False, primary_key=True)
-    linked_blok = String(label="Linked blok", foreign_key=(System.Blok, 'name'),
+    linked_blok = String(label="Linked blok",
+                         foreign_key=(System.Blok, 'name'),
                          nullable=False, primary_key=True)
     mode = String(label="Mode of linked", nullable=False, primary_key=True)
