@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-import os
 from anyblok.registry import RegistryManager, Registry
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
@@ -247,21 +246,20 @@ class TestRegistry(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(TestRegistry, cls).setUpClass()
-        env = os.environ
         env = {
-            'dbname': env.get('postgres_dbname', 'anyblok2'),
-            'dbdrivername': 'postgres',
-            'dbusername': env.get('postgres_dbusername'),
-            'dbpassword': env.get('postgres_dbpassword'),
-            'dbhost': env.get('postgres_dbhost', 'localhost'),
-            'dbport': env.get('postgres_dbport'),
+            'dbname': '',
+            'dbdrivername': 'sqlite',
+            'dbusername': '',
+            'dbpassword': '',
+            'dbhost': '',
+            'dbport': '',
         }
         ArgsParseManager.configuration = env
         BlokManager.load('AnyBlok')
 
     def setUp(self):
         super(TestRegistry, self).setUp()
-        self.registry = Registry('anyblok')
+        self.registry = Registry(':memory:')
 
     @classmethod
     def tearDownClass(cls):
@@ -272,22 +270,22 @@ class TestRegistry(unittest.TestCase):
         super(TestRegistry, self).tearDown()
         RegistryManager.clear()
 
-#    def test_get(self):
-#        self.registry.close()
-#        self.registry = RegistryManager.get('anyblok')
-#
-#    def test_get_the_same_registry(self):
-#        self.registry.close()
-#        registry1 = RegistryManager.get('anyblok')
-#        registry2 = RegistryManager.get('anyblok')
-#        self.assertEqual(registry1, registry2)
-#
-#    def test_get_the_same_registry_after_reload(self):
-#        self.registry.close()
-#        registry1 = RegistryManager.get('anyblok')
-#        RegistryManager.reload('anyblok-core')
-#        registry2 = RegistryManager.get('anyblok')
-#        self.assertNotEqual(registry1, registry2)
+    def test_get(self):
+        self.registry.close()
+        self.registry = RegistryManager.get(':memory:')
+
+    def test_get_the_same_registry(self):
+        self.registry.close()
+        registry1 = RegistryManager.get(':memory:')
+        registry2 = RegistryManager.get(':memory:')
+        self.assertEqual(registry1, registry2)
+
+    def test_get_the_same_registry_after_reload(self):
+        self.registry.close()
+        registry1 = RegistryManager.get(':memory:')
+        RegistryManager.reload('anyblok-core')
+        registry2 = RegistryManager.get(':memory:')
+        self.assertNotEqual(registry1, registry2)
 
     def test_has_blok(self):
         installed = self.registry.installed_bloks()
