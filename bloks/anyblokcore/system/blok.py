@@ -18,8 +18,8 @@ class Blok:
             return None
 
         res = {state: [] for state in states}
-        bloks = cls.query().filter(cls.state in states).order(cls.order).all()
-        for blok in bloks:
+        bloks = cls.query().filter(cls.state.in_(states)).order_by(cls.order)
+        for blok in bloks.all():
             res[blok.state].append(blok.name)
 
         if len(states) == 1:

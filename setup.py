@@ -11,9 +11,10 @@ if sys.version_info < (3, 3):
 
 requires = [
     'zope.component',
-    'sqlalchemy >= 0.8.3',
+    'sqlalchemy',
     'argparse',
     'nose',
+    'alembic',
 ]
 
 setup(

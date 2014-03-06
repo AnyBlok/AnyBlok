@@ -37,7 +37,6 @@ class Column(Field):
     """
 
     foreign_key = None
-    foreign_key_code = None
     sqlalchemy_type = None
 
     def __init__(self, *args, **kwargs):
@@ -60,7 +59,6 @@ class Column(Field):
         if 'foreign_key' in kwargs:
             model, col = kwargs.pop('foreign_key')
             self.foreign_key = model.__tablename__ + '.' + col
-            self.foreign_key_code = model.__registry_name__ + ' - ' + col
 
         self.args = args
         self.kwargs = kwargs
@@ -72,7 +70,7 @@ class Column(Field):
         return cls.sqlalchemy_type
 
     def get_sqlalchemy_mapping(self, registry, tablename, fieldname,
-                               properties):
+                               properties, forceaddname=False):
         """ Return the instance of the real field
 
         :param registry: current registry
@@ -81,7 +79,18 @@ class Column(Field):
         :param properties: properties known of the model
         """
         args = self.args
+
+        kwargs = self.kwargs.copy()
+        if 'info' not in kwargs:
+            kwargs['info'] = {}
+
+        kwargs['info']['label'] = self.label
+
         if self.foreign_key:
             args = args + (ForeignKey(self.foreign_key),)
+            kwargs['info']['foreign_key'] = self.foreign_key
 
-        return SA_Column(self.sqlalchemy_type, *args, **self.kwargs)
+        if forceaddname:
+            return SA_Column(fieldname, self.sqlalchemy_type, *args, **kwargs)
+
+        return SA_Column(self.sqlalchemy_type, *args, **kwargs)

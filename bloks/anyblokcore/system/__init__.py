@@ -5,4 +5,6 @@ from AnyBlok import target_registry, Model
 class System:
     pass
 
-from . import blok
+from . import model  # noqa
+from . import column  # noqa
+from . import blok  # noqa
