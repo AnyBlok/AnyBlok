@@ -6,7 +6,7 @@ anyblok module
 
 .. automodule:: anyblok
 .. autoclass:: AnyBlok
-    :members: 
+    :members:
     :undoc-members:
     :noindex:
 
@@ -48,7 +48,16 @@ anyblok.registry module
 
 .. warning:: TODO Class not finished yet
 
+.. autoexception:: RegistryManagerException
+    :show-inheritance:
+    :members:
+    :noindex:
+
 .. autoclass:: RegistryManager
+    :members:
+    :noindex:
+
+.. autoclass:: Registry
     :members:
     :noindex:
 

@@ -264,6 +264,11 @@ class Registry:
         self.load()
 
     def get(self, namespace):
+        """ Return the namespace Class
+
+        :param namespace: namespace to get from the registry str
+        :rtype: namespace cls
+        """
         if namespace not in self.loaded_namespaces:
             raise RegistryManagerException(
                 "No namespace %r loaded" % namespace)
@@ -273,6 +278,8 @@ class Registry:
     def installed_bloks(self, gettoinstall=False):
         """ Return the list of the installed blok
 
+        :param gettoinstall: bool, if True add ``toinstall``and ``toupdate``
+            in search critrerion
         :rtype: Return the list or None if anyblok-core not installed
         """
         if not hasattr(self, 'System'):
@@ -283,11 +290,16 @@ class Registry:
 
         states = ['installed']
         if gettoinstall:
-            states.extend(['to install', 'to_update'])
+            states.extend(['toinstall', 'toupdate'])
 
         return self.System.Blok.list_by_state(*states)
 
     def load(self):
+        """ Load all the namespace of the registry
+
+        Create all the table, make the shema migration
+        Update Blok, Model, Column rows
+        """
         self.declarativebase = declarative_base(class_registry=dict(
             registry=self))
         toload = self.installed_bloks(gettoinstall=True)
