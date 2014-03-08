@@ -20,4 +20,6 @@ class SqlBase:
 
     @classmethod
     def insert(cls, **kwargs):
-        return cls.registry.add(cls(**kwargs))
+        instance = cls(**kwargs)
+        cls.registry.add(instance)
+        return instance
