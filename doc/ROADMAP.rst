@@ -22,3 +22,4 @@ Library to include
 * full text search: https://pypi.python.org/pypi/SQLAlchemy-FullText-Search/0.2
 * internationalisation: https://pypi.python.org/pypi/SQLAlchemy-i18n/0.8.2
 * shematisation of https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/SchemaDisplay
+* sqltap http://sqltap.inconshreveable.com, profiling and introspection for SQLAlchemy applications

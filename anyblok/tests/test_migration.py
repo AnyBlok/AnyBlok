@@ -95,9 +95,6 @@ class TestMigration(unittest.TestCase):
     def test_alter_column_nullable(self):
         self.fail('Not Implemented yet')
 
-    def test_alter_column_autoincrement(self):
-        self.fail('Not Implemented yet')
-
     def test_alter_column_default(self):
         self.fail('Not Implemented yet')
 
@@ -138,9 +135,6 @@ class TestMigration(unittest.TestCase):
         report = self.registry.migration.detect_changed()
         self.assertEqual(
             report.log_has("Alter system_column.autoincrement"), True)
-        self.fail('Not Implemented yet')
-
-    def test_detect_autoincrement(self):
         self.fail('Not Implemented yet')
 
     def test_detect_default(self):
