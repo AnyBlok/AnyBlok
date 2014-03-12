@@ -3,8 +3,9 @@ import unittest
 from anyblok.registry import Registry
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
+from anyblok.migration import MigrationException
 from contextlib import contextmanager
-from sqlalchemy import Column, Integer
+from sqlalchemy import Column, Integer, TEXT
 from zope.component import getUtility
 
 
@@ -56,62 +57,112 @@ class TestMigration(unittest.TestCase):
 
     def tearDown(self):
         super(TestMigration, self).tearDown()
+        for table in ('test', 'test2', 'othername'):
+            try:
+                self.registry.migration.table(table).drop()
+            except:
+                pass
+
+        self.registry.migration.conn.close()
         self.registry.close()
 
     @contextmanager
     def cnx(self):
-        cnx = None
+        cnx = self.registry.session.connection()
         try:
-            cnx = self.registry.engine.connect()
             yield cnx
         except Exception:
-            if cnx:
-                cnx.execute("rollback")
+            cnx.execute("rollback")
             raise
         finally:
-            if cnx:
-                cnx.close()
+            cnx.close()
+
+    def test_add_table(self):
+        self.registry.migration.table().add('test2')
+        self.registry.migration.table('test2')
 
     def test_add_column(self):
-        self.registry.migration.add_column(
-            'test', Column('new_column', Integer))
-        with self.cnx() as conn:
-            conn.execute("select new_column from test")
+        t = self.registry.migration.table('test')
+        t.column().add(Column('new_column', Integer))
+        t.column('new_column')
 
-    def test_remove_column(self):
-        self.registry.migration.add_column(
-            'test', Column('new_column', Integer))
-        self.registry.migration.remove_column('test', 'new_column')
+    def test_drop_table(self):
+        self.registry.migration.table('test').drop()
         try:
-            with self.cnx() as conn:
-                conn.execute("select new_column from test")
-            self.fail("Column not remove")
-        except:
+            self.registry.migration.table('Test')
+            self.fail("Table not drop")
+        except MigrationException:
+            pass
+
+    def test_drop_column(self):
+        t = self.registry.migration.table('test')
+        t.column('other').drop()
+        try:
+            t.column('other')
+            self.fail("Column not drop")
+        except MigrationException:
+            pass
+
+    def test_alter_table_name(self):
+        t = self.registry.migration.table('test')
+        t.alter(name='othername')
+        self.registry.migration.table('othername')
+        try:
+            self.registry.migration.table('test')
+            self.fail("table not rename")
+        except MigrationException:
             pass
 
     def test_alter_column_name(self):
-        self.fail('Not Implemented yet')
+        t = self.registry.migration.table('test')
+        t.column('other').alter(name='othername')
+        t.column('othername')
+        try:
+            t.column('other')
+            self.fail("Column not rename")
+        except MigrationException:
+            pass
 
     def test_alter_column_nullable(self):
-        self.fail('Not Implemented yet')
+        t = self.registry.migration.table('test')
+        c = t.column('other').alter(nullable=False)
+        self.assertEqual(c.nullable(), False)
 
     def test_alter_column_default(self):
-        self.fail('Not Implemented yet')
+        t = self.registry.migration.table('test')
+        c = t.column('other').alter(server_default='test')
+        self.assertEqual(c.server_default(), "'test'::character varying")
 
-    def test_alter_column_index(self):
-        self.fail('Not Implemented yet')
+    def test_index(self):
+        t = self.registry.migration.table('test')
+        t.index().add(t.column('integer'))
+        t.index(t.column('integer')).drop()
 
     def test_alter_column_type(self):
-        self.fail('Not Implemented yet')
+        t = self.registry.migration.table('test')
+        c = t.column('other').alter(type_=TEXT)
+        self.assertEqual(c.type().__class__, TEXT)
 
     def test_alter_column_primary_key(self):
-        self.fail('Not Implemented yet')
+        t = self.registry.migration.table('test')
+        t.primarykey().drop().add(t.column('other'))
 
     def test_alter_column_foreign_key(self):
-        self.fail('Not Implemented yet')
+        c = self.registry.migration.table('test').column('other')
+        c.foreign_key().add(self.registry.System.Blok.name)
+        c.foreign_key().drop()
 
-    def test_alter_column_constrainte(self):
-        self.fail('Not Implemented yet')
+    def test_constraint_unique(self):
+        t = self.registry.migration.table('test')
+        t.unique().add(t.column('other'))
+        t.unique(t.column('other')).drop()
+
+    def test_constraint_check(self):
+        t = self.registry.migration.table('test')
+        Test = self.registry.Test
+        name = 'chk_name_on_test'
+        t.check().add(name, Test.other != 'test')
+        t.check(name).drop()
 
     def test_detect_column_added(self):
         # Remove a column on the table force the detection to found new column
@@ -121,8 +172,7 @@ class TestMigration(unittest.TestCase):
             conn.execute(
                 """CREATE TABLE test(integer INT PRIMARY KEY NOT NULL);""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(
-            report.log_has("Add system_column.autoincrement"), True)
+        self.assertEqual(report.log_has("Add test.other"), True)
 
     def test_detect_nullable(self):
         with self.cnx() as conn:
@@ -133,15 +183,24 @@ class TestMigration(unittest.TestCase):
                     other CHAR(64) NOT NULL
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(
-            report.log_has("Alter system_column.autoincrement"), True)
-        self.fail('Not Implemented yet')
+        self.assertEqual(report.log_has("Alter test.other"), True)
 
-    def test_detect_default(self):
-        self.fail('Not Implemented yet')
+    def test_detect_server_default(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) DEFAULT 9.99
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertEqual(report.log_has("Alter test.other"), True)
 
     def test_detect_index(self):
-        self.fail('Not Implemented yet')
+        with self.cnx() as conn:
+            conn.execute("""CREATE INDEX other_idx ON test (other);""")
+        report = self.registry.migration.detect_changed()
+        self.assertEqual(report.log_has("add index 'other_idx' on test"), True)
 
     def test_detect_type(self):
         with self.cnx() as conn:
@@ -152,15 +211,38 @@ class TestMigration(unittest.TestCase):
                     other INT
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(
-            report.log_has("Alter system_column.autoincrement"), True)
-        self.fail('Not Implemented yet')
+        self.assertEqual(report.log_has("Alter test.other"), True)
 
     def test_detect_primary_key(self):
-        self.fail('Not Implemented yet')
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT NOT NULL,
+                    other CHAR(64) PRIMARY KEY NOT NULL
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertEqual(report.log_has("Alter test.integer"), True)
+        self.assertEqual(report.log_has("Alter test.other"), True)
 
     def test_detect_foreign_key(self):
-        self.fail('Not Implemented yet')
+        #with self.cnx() as conn:
+        #    conn.execute("DROP TABLE test")
+        #    conn.execute(
+        #        """CREATE TABLE test(
+        #            integer INT PRIMARY KEY NOT NULL,
+        #            other CHAR(64) references system_blok(name)
+        #        );""")
+        report = self.registry.migration.detect_changed()
+        self.assertEqual(report.log_has("Alter test.other"), True)
 
     def test_detect_constrainte(self):
-        self.fail('Not Implemented yet')
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) CONSTRAINT unique_other UNIQUE
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertEqual(report.log_has("Alter test.other"), True)

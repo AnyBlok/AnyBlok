@@ -482,12 +482,13 @@ class Registry:
             load_namespace(namespace)
 
         self.declarativebase.metadata.create_all(self.engine)
-        self.migration = Migration(self.engine, self.declarativebase.metadata)
-        self.migration.auto_upgrade_database()
 
         Session = type('Session', tuple(loaded_cores['Session']), {})
         self.Session = scoped_session(
             sessionmaker(bind=self.engine, class_=Session), self.scoped_fnct)
+
+        self.migration = Migration(self.session, self.declarativebase.metadata)
+        self.migration.auto_upgrade_database()
 
         Model = self.System.Model
         Model.update_list()
