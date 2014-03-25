@@ -1,39 +1,9 @@
 # -*- coding: utf-8 -*-
 from alembic.migration import MigrationContext
-#from alembic.autogenerate import compare_metadata
+from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from sqlalchemy import schema
 from contextlib import contextmanager
-#        opts = {
-#            'compare_type': True,
-#            'compare_server_default': True,
-#        }
-#        mc = MigrationContext.configure(self.engine.connect(), opts=opts)
-#        diff = compare_metadata(mc, self.declarativebase.metadata)
-#
-#        op = Operations(mc)
-#
-#        for d in diff:
-#            if d[0] == 'add_column':
-#                op.impl.add_column(d[2], d[3])
-#                t = self.declarativebase.metadata.tables[d[2]]
-#                for constraint in t.constraints:
-#                    if not isinstance(constraint, schema.PrimaryKeyConstraint):
-#                        op.impl.add_constraint(constraint)
-#            elif isinstance(d[0], tuple):
-#                for x in d:
-#                    if x[0] == 'modify_type':
-#                        op.alter_column(x[2], x[3], type_=x[6],
-#                                        existing_type=x[5], **x[4])
-#                    elif x[0] == 'modify_nullable':
-#                        op.alter_column(x[2], x[3], nullable=x[6],
-#                                        existing_nullable=x[5], **x[4])
-#                    else:
-#                        print(x)
-#
-#            else:
-#                print(d)
-#
 
 
 @contextmanager
@@ -53,8 +23,75 @@ class MigrationException(Exception):
 
 class MigrationReport:
 
+    def __init__(self, migration, diffs):
+        self.migration = migration
+        self.logs = []
+        self.actions = []
+        self.diffs = diffs
+        log_names = []
+        for diff in diffs:
+            if isinstance(diff, list):
+                for change in diff:
+                    _, _, table, column, _, _, _ = change
+                    log_names.append('Alter %s.%s' % (table, column))
+                    self.actions.append(change)
+            else:
+                name = diff[0]
+                if name == 'add_column':
+                    _, _, table, column = diff
+                    log_names.append('Add %s.%s' % (table, column.name))
+                elif name == 'remove_constraint':
+                    _, constraint = diff
+                    log_names.append('Drop constraint %s on %s' % (
+                        constraint.name, constraint.table))
+                elif name == 'remove_index':
+                    _, index = diff
+                    log_names.append('Drop index %s on %s' % (
+                        index.name, index.table))
+                else:
+                    raise Exception('Not implemented yet')
+
+                self.actions.append(diff)
+
+        for log_name in log_names:
+            if log_name and not self.log_has(log_name):
+                self.logs.append(log_name)
+
     def log_has(self, log):
-        return False
+        return log in self.logs
+
+    def apply_change(self):
+        for action in self.actions:
+            if action[0] == 'add_column':
+                _, _, table, column = action
+                self.migration.table(table).column().add(column)
+            elif action[0] == 'modify_nullable':
+                _, _, table, column, kwargs, oldvalue, newvalue = action
+                self.migration.table(table).column(column).alter(
+                    nullable=newvalue, existing_nullable=oldvalue, **kwargs)
+            elif action[0] == 'modify_type':
+                _, _, table, column, kwargs, oldvalue, newvalue = action
+                self.migration.table(table).column(column).alter(
+                    type_=newvalue, existing_type=oldvalue, **kwargs)
+            elif action[0] == 'modify_default':
+                _, _, table, column, kwargs, oldvalue, newvalue = action
+                self.migration.table(table).column(column).alter(
+                    server_default=newvalue, existing_server_default=oldvalue,
+                    **kwargs)
+            elif action[0] == 'remove_constraint':
+                _, constraint = action
+                if constraint.__class__ is schema.UniqueConstraint:
+                    table = self.migration.table(constraint.table)
+                    table.unique(name=constraint.name).drop()
+                else:
+                    raise Exception('Not implemented yet')
+            elif action[0] == 'remove_index':
+                _, index = action
+                if not index.unique:
+                    table = self.migration.table(index.table.name)
+                    table.index(name=index.name).drop()
+            else:
+                raise Exception('Not implemented yet')
 
 
 class MigrationConstraintForeignKey:
@@ -166,9 +203,12 @@ class MigrationConstraintCheck:
 
 class MigrationConstraintUnique:
 
-    def __init__(self, table, *columns):
+    def __init__(self, table, *columns, **kwargs):
         self.table = table
-        self.name = self.format_name(*columns)
+        if 'name' in kwargs:
+            self.name = kwargs['name']
+        else:
+            self.name = self.format_name(*columns)
         self.exist = False
 
         if self.name is not None:
@@ -239,9 +279,12 @@ class MigrationConstraintPrimaryKey:
 
 class MigrationIndex:
 
-    def __init__(self, table, *columns):
+    def __init__(self, table, *columns, **kwargs):
         self.table = table
-        self.name = self.format_name(*columns)
+        if 'name' in kwargs:
+            self.name = kwargs['name']
+        else:
+            self.name = self.format_name(*columns)
         self.exist = False
 
         if self.name is not None:
@@ -306,11 +349,11 @@ class MigrationTable:
     def drop(self):
         self.migration.operation.drop_table(self.name)
 
-    def index(self, *columns):
-        return MigrationIndex(self, *columns)
+    def index(self, *columns, **kwargs):
+        return MigrationIndex(self, *columns, **kwargs)
 
-    def unique(self, *columns):
-        return MigrationConstraintUnique(self, *columns)
+    def unique(self, *columns, **kwargs):
+        return MigrationConstraintUnique(self, *columns, **kwargs)
 
     def check(self, name=None):
         return MigrationConstraintCheck(self, name)
@@ -337,8 +380,8 @@ class Migration:
             'compare_type': True,
             'compare_server_default': True,
         }
-        context = MigrationContext.configure(self.conn, opts=opts)
-        self.operation = Operations(context)
+        self.context = MigrationContext.configure(self.conn, opts=opts)
+        self.operation = Operations(self.context)
 
     def table(self, name=None):
         return MigrationTable(self, name)
@@ -348,6 +391,5 @@ class Migration:
         pass
 
     def detect_changed(self):
-        report = MigrationReport()
-
-        return report
+        diff = compare_metadata(self.context, self.metadata)
+        return MigrationReport(self, diff)
