@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import unittest
+from .anybloktestcase import AnyBlokTestCase
 from anyblok.registry import Registry
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
@@ -9,7 +9,7 @@ from sqlalchemy import Column, Integer, TEXT
 from zope.component import getUtility
 
 
-class TestMigration(unittest.TestCase):
+class TestMigration(AnyBlokTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -238,6 +238,9 @@ class TestMigration(unittest.TestCase):
         self.assertEqual(report.log_has("Alter test.other"), False)
 
     def test_detect_primary_key(self):
+        if not self.check_module_version('alembic', '>',  '0.6.3'):
+            return
+
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
             conn.execute(
@@ -254,6 +257,9 @@ class TestMigration(unittest.TestCase):
         self.assertEqual(report.log_has("Alter test.other"), False)
 
     def test_detect_add_foreign_key(self):
+        if not self.check_module_version('alembic', '>',  '0.6.3'):
+            return
+
         with self.cnx() as conn:
             conn.execute("DROP TABLE testfk")
             conn.execute(
@@ -268,6 +274,9 @@ class TestMigration(unittest.TestCase):
         self.assertEqual(report.log_has("Alter test.other"), False)
 
     def test_detect_drop_foreign_key(self):
+        if not self.check_module_version('alembic', '>',  '0.6.3'):
+            return
+
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
             conn.execute(

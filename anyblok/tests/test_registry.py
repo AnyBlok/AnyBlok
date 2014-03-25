@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import unittest
+from .anybloktestcase import AnyBlokTestCase
 from anyblok.registry import RegistryManager, Registry
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
@@ -14,7 +14,7 @@ old_mustbeload_declared_entries += RegistryManager.mustbeload_declared_entries
 old_callback_declared_entries = RegistryManager.callback_declared_entries
 
 
-class TestRegistryManager(unittest.TestCase):
+class TestRegistryManager(AnyBlokTestCase):
 
     def setUp(self):
         super(TestRegistryManager, self).setUp()
@@ -132,7 +132,7 @@ class TestRegistryManager(unittest.TestCase):
             BlokManager.unload()
 
 
-class TestRegistryCore(unittest.TestCase):
+class TestRegistryCore(AnyBlokTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -185,7 +185,7 @@ class TestRegistryCore(unittest.TestCase):
             False)
 
 
-class TestRegistryEntry(unittest.TestCase):
+class TestRegistryEntry(AnyBlokTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -241,7 +241,7 @@ class TestRegistryEntry(unittest.TestCase):
             False)
 
 
-class TestRegistry(unittest.TestCase):
+class TestRegistry(AnyBlokTestCase):
 
     @classmethod
     def setUpClass(cls):

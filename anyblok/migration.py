@@ -48,8 +48,6 @@ class MigrationReport:
                     _, index = diff
                     log_names.append('Drop index %s on %s' % (
                         index.name, index.table))
-                else:
-                    raise Exception('Not implemented yet')
 
                 self.actions.append(diff)
 
@@ -83,15 +81,11 @@ class MigrationReport:
                 if constraint.__class__ is schema.UniqueConstraint:
                     table = self.migration.table(constraint.table)
                     table.unique(name=constraint.name).drop()
-                else:
-                    raise Exception('Not implemented yet')
             elif action[0] == 'remove_index':
                 _, index = action
                 if not index.unique:
                     table = self.migration.table(index.table.name)
                     table.index(name=index.name).drop()
-            else:
-                raise Exception('Not implemented yet')
 
 
 class MigrationConstraintForeignKey:

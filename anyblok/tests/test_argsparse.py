@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import unittest
 from anyblok._argsparse import ArgsParseManagerException, ArgsParseManager
+from .anybloktestcase import AnyBlokTestCase
 
 
 def fnct_argsparse(parser, default):
@@ -11,7 +11,7 @@ def fnct_other_argsparse(parser, default):
     default.update({'test': None})
 
 
-class TestArgsParseManager(unittest.TestCase):
+class TestArgsParseManager(AnyBlokTestCase):
 
     def setUp(self):
         super(TestArgsParseManager, self).setUp()
