@@ -61,6 +61,57 @@ anyblok.registry module
     :members:
     :noindex:
 
+anyblok.migration module
+------------------------
+
+.. automodule:: anyblok.migration
+
+.. warning::
+    AnyBlok use Alembic to do the dynamic migration, but Alembic does'nt detect
+    all the change (Foreifn key, primary key), we must wait the Alembic or
+    implement it in Alembic project before use it in AnyBlok
+
+.. autoexception:: MigrationException
+    :show-inheritance:
+    :members:
+    :noindex:
+
+.. autoclass:: MigrationReport
+    :members:
+    :noindex:
+
+.. autoclass:: MigrationConstraintForeignKey
+    :members:
+    :noindex:
+
+.. autoclass:: MigrationColumn
+    :members:
+    :noindex:
+
+.. autoclass:: MigrationConstraintCheck
+    :members:
+    :noindex:
+
+.. autoclass:: MigrationConstraintUnique
+    :members:
+    :noindex:
+
+.. autoclass:: MigrationConstraintPrimaryKey
+    :members:
+    :noindex:
+
+.. autoclass:: MigrationIndex
+    :members:
+    :noindex:
+
+.. autoclass:: MigrationTable
+    :members:
+    :noindex:
+
+.. autoclass:: Migration
+    :members:
+    :noindex:
+
 anyblok.interface module
 ------------------------
 
