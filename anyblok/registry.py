@@ -412,9 +412,7 @@ class Registry:
                     for ns, cns in other_base.items():
                         setattr(base, ns, cns)
 
-                    setattr(parent, child, base)
-                else:
-                    setattr(parent, child, base)
+                setattr(parent, child, base)
 
             def get_namespace(parent, child):
                 if hasattr(parent, child):

@@ -8,6 +8,12 @@ Add Migration Class with Unittest: see alembic: http://alembic.readthedocs.org/e
 A first step implement this migration
 
 
+To implement
+------------
+
+* core.query : implement a method to subclass one method for automaticly where
+    clause in model
+
 Fix me
 ------
 
