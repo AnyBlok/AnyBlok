@@ -28,8 +28,8 @@ class Blok:
 
     @classmethod
     def update_list(cls):
-        #Do not remove blok because 2 or More AnyBlok api may use the same
-        #Database
+        # Do not remove blok because 2 or More AnyBlok api may use the same
+        # Database
 
         Association = cls.registry.System.Blok.Association
 
@@ -45,7 +45,7 @@ class Blok:
                 if not query.count():
                     Association.insert(blok=blok, linked_blok=link, mode=mode)
 
-        #Create blok if not exist
+        # Create blok if not exist
         for order, blok in enumerate(BlokManager.ordered_bloks):
             b = cls.query().filter(cls.name == blok)
             if b.count():
@@ -53,7 +53,7 @@ class Blok:
             else:
                 cls.insert(name=blok, order=order)
 
-        #Update required, optional, conditional
+        # Update required, optional, conditional
         for blok in BlokManager.ordered_bloks:
             entry = BlokManager.bloks[blok]
 
@@ -67,7 +67,7 @@ class Blok:
     def apply_state(cls, *bloks):
         Association = cls.registry.System.Blok.Association
         for blok in bloks:
-            #Make the query in the loop to be sure to keep order
+            # Make the query in the loop to be sure to keep order
             b = cls.query().filter(cls.name == blok).first()
             entry = cls.registry.loaded_bloks[blok]
             if b.state in ('undefined', 'uninstalled', 'toinstall'):

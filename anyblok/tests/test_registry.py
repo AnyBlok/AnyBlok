@@ -42,8 +42,7 @@ class TestRegistryManager(AnyBlokTestCase):
                                  'Session': [],
                              },
                              'Model': {'registry_names': []},
-                             'Mixin': {'registry_names': []},
-                         })
+                             'Mixin': {'registry_names': []}})
 
     def test_init_blok_with_other_entry(self):
         RegistryManager.declare_entry('Other')
@@ -61,8 +60,7 @@ class TestRegistryManager(AnyBlokTestCase):
                              },
                              'Model': {'registry_names': []},
                              'Mixin': {'registry_names': []},
-                             'Other': {'registry_names': []},
-                         })
+                             'Other': {'registry_names': []}})
 
     def test_anyblok_core_loaded(self):
         BlokManager.load('AnyBlok')
@@ -94,8 +92,7 @@ class TestRegistryManager(AnyBlokTestCase):
                              },
                              'Model': {'registry_names': []},
                              'Mixin': {'registry_names': []},
-                             'Other': {'registry_names': []},
-                         })
+                             'Other': {'registry_names': []}})
 
     def test_add_callback(self):
 
@@ -121,8 +118,7 @@ class TestRegistryManager(AnyBlokTestCase):
                              },
                              'Model': {'registry_names': []},
                              'Mixin': {'registry_names': []},
-                             'Other': {'registry_names': []},
-                         })
+                             'Other': {'registry_names': []}})
 
     def test_reload_blok(self):
         BlokManager.load('AnyBlok')

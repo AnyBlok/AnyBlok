@@ -184,7 +184,7 @@ class ArgsParseManager:
                 g = parser
 
             for function in groups[group]:
-                #TODO create group here and passe it
+                # TODO create group here and passe it
                 function(g, cls.configuration)
 
         args = parser.parse_args()
@@ -201,7 +201,7 @@ class ArgsParseManager:
                         cls.configuration[opt] = value
 
         for opt, value in args._get_kwargs():
-            if not opt in cls.configuration or value:
+            if opt not in cls.configuration or value:
                 cls.configuration[opt] = value
 
     @classmethod

@@ -137,7 +137,7 @@ class BlokManager:
                 raise BlokManagerException(
                     "Invalid bloks group %r" % bloks_group)
 
-        #Empty the orderred blok to reload it in function of priority
+        # Empty the orderred blok to reload it in function of priority
         cls.ordered_bloks = []
         bloks.sort()
 

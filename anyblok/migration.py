@@ -281,7 +281,7 @@ class MigrationConstraintCheck:
     def __init__(self, table, name):
         self.table = table
         self.name = name
-        #TODO dialect not have method to check if constraint exist
+        # TODO dialect not have method to check if constraint exist
 
     def add(self, name, condition):
         """ Add the constraint

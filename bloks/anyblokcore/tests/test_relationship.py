@@ -1,7 +1,7 @@
 import unittest
 from anyblok.blok import BlokManager
 
-#TODO Make launcher of test on a base
+# TODO Make launcher of test on a base
 
 
 class TestRelationShip(unittest.TestCase):

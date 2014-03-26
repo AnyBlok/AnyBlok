@@ -333,7 +333,7 @@ class Registry:
                     if entry == 'Model':
                         loaded_registries['model_names'].append(key)
                     elif entry in RegistryManager.callback_declared_entries:
-                        #TODO
+                        # TODO
                         pass
 
         def load_core(blok, core):
@@ -523,4 +523,4 @@ class Registry:
         :param update: list of the blok to update
         :param uninstall: list of the blok to uninstall
         """
-        #TODO
+        # TODO
