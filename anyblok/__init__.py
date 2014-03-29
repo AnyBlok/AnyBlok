@@ -92,6 +92,7 @@ class AnyBlok:
             :param ``cls_``: The ``class`` object to remove in the registry
             :rtype: ``cls_``
         """
+        assert cls_
 
         def call_adapter(self):
             _interface = registry.__interface__
@@ -102,10 +103,7 @@ class AnyBlok:
 
             return self
 
-        if cls_:
-            return call_adapter(cls_)
-        else:
-            return call_adapter
+        return call_adapter(cls_)
 
     @classmethod
     def add_Adapter(cls, interface, cls_):

@@ -240,7 +240,7 @@ def add_database(group, configuration):
 
 
 @ArgsParseManager.add('install-bloks')
-def add_instal_bloks(parser, configuration):
+def add_install_bloks(parser, configuration):
     parser.add_argument('--install-bloks', dest='install_bloks', default='',
                         help="blok to install")
 

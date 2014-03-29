@@ -22,11 +22,9 @@ class TestDataBase(AnyBlokTestCase):
             return
 
         env = os.environ
-        if not bool(env.get(self.drivername)):
-            return
 
         env = {
-            'dbname': env.get(self.drivername + '_dbname', 'anyblok'),
+            'dbname': env.get(self.drivername + '_dbname', 'test_db_anyblok'),
             'dbdrivername': self.drivername,
             'dbusername': env.get(self.drivername + '_dbusername'),
             'dbpassword': env.get(self.drivername + '_dbpassword'),

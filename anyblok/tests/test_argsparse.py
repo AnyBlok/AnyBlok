@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 from anyblok._argsparse import ArgsParseManagerException, ArgsParseManager
+from anyblok._argsparse import add_configuration_file
+from anyblok._argsparse import add_database
+from anyblok._argsparse import add_install_bloks
+from anyblok._argsparse import add_uninstall_bloks
+from anyblok._argsparse import add_update_bloks
+from anyblok._argsparse import add_interpreter
+from anyblok._argsparse import add_logging
 from .anybloktestcase import AnyBlokTestCase
+from argparse import ArgumentParser
 
 
 def fnct_argsparse(parser, default):
@@ -189,3 +197,44 @@ class TestArgsParseManager(AnyBlokTestCase):
             logging_facility=None,
         ))
         ArgsParseManager.init_logger(mode='console')
+
+
+class TestArgsParseOption(AnyBlokTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestArgsParseOption, cls).setUpClass()
+        cls.parser = ArgumentParser()
+        cls.group = cls.parser.add_argument_group('label')
+        cls.configuration = {}
+        cls.function = {
+            'add_configuration_file': add_configuration_file,
+            'add_database': add_database,
+            'add_install_bloks': add_install_bloks,
+            'add_uninstall_bloks': add_uninstall_bloks,
+            'add_update_bloks': add_update_bloks,
+            'add_interpreter': add_interpreter,
+            'add_logging': add_logging,
+        }
+
+    def test_add_configuration_file(self):
+        self.function['add_configuration_file'](self.parser,
+                                                self.configuration)
+
+    def test_add_database(self):
+        self.function['add_database'](self.group, self.configuration)
+
+    def test_add_install_bloks(self):
+        self.function['add_install_bloks'](self.parser, self.configuration)
+
+    def test_add_uninstall_bloks(self):
+        self.function['add_uninstall_bloks'](self.parser, self.configuration)
+
+    def test_add_update_bloks(self):
+        self.function['add_update_bloks'](self.parser, self.configuration)
+
+    def test_add_interpreter(self):
+        self.function['add_interpreter'](self.parser, self.configuration)
+
+    def test_add_logging(self):
+        self.function['add_logging'](self.group, self.configuration)
