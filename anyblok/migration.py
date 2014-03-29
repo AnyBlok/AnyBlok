@@ -62,6 +62,8 @@ class MigrationReport:
                     _, index = diff
                     log_names.append('Drop index %s on %s' % (
                         index.name, index.table))
+                else:
+                    print(diff)
 
                 self.actions.append(diff)
 

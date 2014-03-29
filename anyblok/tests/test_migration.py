@@ -238,7 +238,7 @@ class TestMigration(AnyBlokTestCase):
         self.assertEqual(report.log_has("Alter test.other"), False)
 
     def test_detect_primary_key(self):
-        if not self.check_module_version('alembic', '>',  '0.6.3'):
+        if not self.check_module_version('alembic', '>',  '0.6.4'):
             return
 
         with self.cnx() as conn:
@@ -257,7 +257,7 @@ class TestMigration(AnyBlokTestCase):
         self.assertEqual(report.log_has("Alter test.other"), False)
 
     def test_detect_add_foreign_key(self):
-        if not self.check_module_version('alembic', '>',  '0.6.3'):
+        if not self.check_module_version('alembic', '>',  '0.6.4'):
             return
 
         with self.cnx() as conn:
@@ -274,7 +274,7 @@ class TestMigration(AnyBlokTestCase):
         self.assertEqual(report.log_has("Alter test.other"), False)
 
     def test_detect_drop_foreign_key(self):
-        if not self.check_module_version('alembic', '>',  '0.6.3'):
+        if not self.check_module_version('alembic', '>',  '0.6.4'):
             return
 
         with self.cnx() as conn:
