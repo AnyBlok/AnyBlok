@@ -11,11 +11,15 @@ Welcome to AnyBlok's documentation!
 
     README.rst
     CODE.rst
+    UNITTEST.rst
+    BLOKS.rst
     CHANGES.rst
     ROADMAP.rst
 
 .. include:: README.rst
 .. include:: CODE.rst
+.. include:: UNITTEST.rst
+.. include:: BLOKS.rst
 .. include:: CHANGES.rst
 .. include:: ROADMAP.rst
 

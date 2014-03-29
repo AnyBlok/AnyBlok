@@ -198,18 +198,3 @@ anyblok.model module
 .. autoclass:: AModel
     :members: target_registry, remove_registry
     :noindex:
-
-
-Bloks
-=====
-
-anyblok-core blok
------------------
-
-.. automodule:: bloks.anyblokcore
-.. autoclass:: AnyBlokCore
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    :noindex:
-
