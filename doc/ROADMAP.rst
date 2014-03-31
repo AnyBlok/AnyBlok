@@ -4,8 +4,11 @@ ROADMAP
 Next step
 ---------
 
-Add Migration Class with Unittest: see alembic: http://alembic.readthedocs.org/en/latest/
-A first step implement this migration
+* Add Migration Class with Unittest: see alembic: http://alembic.readthedocs.org/en/latest/
+* Add Blok group as "Category" or "Blok group"
+* Do documentation
+* Add method to create database for unittest
+* Add method to get registry(without argparse but add before env) for unittest
 
 
 To implement

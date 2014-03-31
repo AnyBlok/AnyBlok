@@ -12,8 +12,7 @@ The web server need to give acces to the user, but a profiler need another
 access with another access rule, or another application need to follow one part
 of the functionnality.
 
-We will write a simple application which connect to an existing database
-With existing tables:
+We will write a simple application which connect to an existing database:
 
 * Boss
     - Have worker

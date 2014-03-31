@@ -42,8 +42,8 @@ class ImportManager:
         if cls.has(blok):
             return cls.get(blok)
 
-        bloks = modules['anyblok.bloks']
-        module_name = 'anyblok.bloks.' + blok
+        bloks = modules['AnyBlok.bloks']
+        module_name = 'AnyBlok.bloks.' + blok
         module = imp.new_module(module_name)
 
         # add import registry
@@ -122,5 +122,5 @@ class ImportManager:
 
 
 bloks = imp.new_module('bloks')
-modules['anyblok.bloks'] = bloks
+modules['AnyBlok.bloks'] = bloks
 anyblok.bloks = bloks

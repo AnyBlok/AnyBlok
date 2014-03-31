@@ -62,6 +62,10 @@ class MigrationReport:
                     _, index = diff
                     log_names.append('Drop index %s on %s' % (
                         index.name, index.table))
+                elif name in ('remove_table', 'remove_column'):
+                    # No save remove table or column
+                    # Remove table or column is
+                    continue
                 else:
                     print(diff)
 
