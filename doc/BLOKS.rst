@@ -4,7 +4,7 @@ Bloks
 anyblok-core blok
 -----------------
 
-.. automodule:: bloks.anyblokcore
+.. automodule:: anyblok.bloks.anyblokcore
 .. autoclass:: AnyBlokCore
     :members:
     :undoc-members:

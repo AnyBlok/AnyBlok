@@ -106,14 +106,14 @@ class AnyBlok:
         return call_adapter(cls_)
 
     @classmethod
-    def add_Adapter(cls, interface, cls_):
+    def add_Adapter(cls, _interface, cls_):
         """ Method to add a adapter
 
         :param interface: The ZCA interface
         :param cls_: The ``class`` object to add this interface
         """
         instance = cls_()
-        gsm.registerUtility(instance, interface, cls_.__interface__)
+        gsm.registerUtility(instance, _interface, cls_.__interface__)
 
 
 from sys import modules
