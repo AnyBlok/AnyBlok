@@ -433,7 +433,8 @@ class Registry:
             namespace = namespace.split('.')[2:]
 
             def final_namespace(parent, child):
-                if hasattr(parent, 'children_namespaces') and parent is not self:
+                if hasattr(parent,
+                           'children_namespaces') and parent is not self:
                     parent.children_namespaces[child] = base
                 elif hasattr(parent, child) and getattr(parent, child):
                     other_base = get_namespace(parent, child)

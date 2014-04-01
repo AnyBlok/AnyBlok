@@ -287,3 +287,11 @@ class TestRegistry(AnyBlokTestCase):
         installed = self.registry.installed_bloks()
         self.assertEqual(hasattr(self.registry, 'System'), True)
         self.assertEqual(installed, ['anyblok-core'])
+
+    def test_reload(self):
+        bloks_before_reload = self.registry.System.Blok.query('name').filter(
+            self.registry.System.Blok.state == 'installed').all()
+        self.registry.reload()
+        bloks_after_reload = self.registry.System.Blok.query('name').filter(
+            self.registry.System.Blok.state == 'installed').all()
+        self.assertEqual(bloks_before_reload, bloks_after_reload)
