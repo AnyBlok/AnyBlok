@@ -14,21 +14,22 @@ of the functionnality.
 
 We will write a simple application which connect to an existing database:
 
-* Boss
-    - Have worker
-    - Have a desk
-* worker
-    - Have a boss
-    - Have a desk
+* Worker
+    - Have a name
+    - Have a desk(Room)
+    - Can have a position
 * Room
-    - Have desk
-* desk
-    - Have a room
-    - have a worker or a boss
+    - Have a number
+    - Have an address
+* Adress
+    - Have a street
+    - have a zipcode
+    - have a city
+* Position
+    - Have a name
 
-
-Create Your application
------------------------
+Create your Blok group
+----------------------
 
 .. warning:: TODO
 
@@ -44,5 +45,10 @@ Create Your Model
 
 Update an existing Model
 ------------------------
+
+.. warning:: TODO
+
+Create Your application
+-----------------------
 
 .. warning:: TODO

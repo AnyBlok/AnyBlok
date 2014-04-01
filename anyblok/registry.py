@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from anyblok.migration import Migration
+from sqlalchemy.exc import ProgrammingError, OperationalError
 
 
 class RegistryManagerException(Exception):
@@ -258,12 +259,14 @@ class Registry:
         self.scoped_fnct = scoped_fnct
         url = ArgsParseManager.get_url(dbname=dbname)
         self.engine = create_engine(url)
-        self.loaded_namespaces = {}
+        self.ini_var()
         self.Session = None
+        self.load()
+
+    def ini_var(self):
+        self.loaded_namespaces = {}
         self.declarativebase = None
         self.loaded_bloks = {}
-
-        self.load()
 
     def get(self, namespace):
         """ Return the namespace Class
@@ -284,17 +287,43 @@ class Registry:
             in search critrerion
         :rtype: Return the list or None if anyblok-core not installed
         """
-        if not hasattr(self, 'System'):
-            return None
-
-        if not hasattr(self.System, 'Blok'):
-            return None
-
+        # FIXME is no System of no blok not return None but try to get
+        # the install blok by another method
         states = ['installed']
         if gettoinstall:
             states.extend(['toinstall', 'toupdate'])
 
-        return self.System.Blok.list_by_state(*states)
+        def make_query():
+
+            try:
+                conn = self.engine.connect()
+                res = conn.execute("""
+                    select name
+                    from system_blok
+                    where state in ('%s')""" % "', '".join(states)).fetchall()
+                return set(x[0] for x in res)
+            except (ProgrammingError, OperationalError):
+                pass
+            finally:
+                if conn:
+                    conn.close()
+
+        if not hasattr(self, 'System'):
+            return make_query()
+
+        if not hasattr(self.System, 'Blok'):
+            return make_query()
+
+        res = self.System.Blok.list_by_state(*states)
+
+        if gettoinstall:
+            result = set()
+            result.update(res['installed'])
+            result.update(res['toinstall'])
+            result.update(res['toupdate'])
+            return result
+
+        return res
 
     def load(self):
         """ Load all the namespace of the registry
@@ -404,9 +433,9 @@ class Registry:
             namespace = namespace.split('.')[2:]
 
             def final_namespace(parent, child):
-                if hasattr(parent, 'children_namespaces'):
+                if hasattr(parent, 'children_namespaces') and parent is not self:
                     parent.children_namespaces[child] = base
-                elif hasattr(parent, child):
+                elif hasattr(parent, child) and getattr(parent, child):
                     other_base = get_namespace(parent, child)
                     other_base = other_base.children_namespaces.copy()
                     for ns, cns in other_base.items():
@@ -504,6 +533,7 @@ class Registry:
         self.engine.dispose()
 
     def __getattr__(self, attribute):
+        # TODO safe the call of session for reload
         if self.Session:
             session = self.Session()
             if attribute == 'session':
@@ -514,6 +544,17 @@ class Registry:
         else:
             super(Registry, self).__getattr__(attribute)
 
+    def clean_model(self):
+        for model in self.loaded_namespaces.keys():
+            name = model.split('.')[2]
+            if hasattr(self, name) and getattr(self, name):
+                setattr(self, name, None)
+
+    def reload(self):
+        self.clean_model()
+        self.ini_var()
+        self.load()
+
     def upgrade(self, install=None, update=None, uninstall=None):
         """ Upgrade the current registry
 
@@ -521,4 +562,18 @@ class Registry:
         :param update: list of the blok to update
         :param uninstall: list of the blok to uninstall
         """
-        # TODO
+        Blok = self.System.Blok
+
+        def upgrade_state_bloks(bloks, state):
+            if not bloks:
+                return
+
+            for blok in bloks:
+                Blok.query().filter(Blok.name == blok).first().state = state
+
+        upgrade_state_bloks(install, 'toinstall')
+        upgrade_state_bloks(update, 'toupdate')
+        upgrade_state_bloks(uninstall, 'touninstall')
+
+        self.commit()
+        self.reload()

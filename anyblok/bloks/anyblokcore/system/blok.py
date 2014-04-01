@@ -12,6 +12,9 @@ class Blok:
     state = String(label="State", default='uninstalled', nullable=False)
     order = Integer(label="Order of loading", default=-1, nullable=False)
 
+    def __repr__(self):
+        return "%s (%s)" % (self.name, self.state)
+
     @classmethod
     def list_by_state(cls, *states):
         if not states:
@@ -74,6 +77,7 @@ class Blok:
                 entry.install()
                 b.state = 'installed'
             elif b.state == 'toupdate':
+                # FIXME look wrong
                 entry.update()
                 bloks = cls.query('name').filter(cls.state == 'installed')
                 bloks = bloks.all()
@@ -83,9 +87,10 @@ class Blok:
                 associate.update(state='toupdate')
                 b.state = 'installed'
             elif b.state == 'touninstall':
+                # FIXME look wrong
                 entry.uninstall()
                 bloks = cls.query('name')
-                bloks = bloks.filter(cls.state in ('installed', 'toupdate'))
+                bloks = bloks.filter(cls.state.in_(('installed', 'toupdate')))
                 bloks = bloks.all()
                 associate = Association.query()
                 associate = associate.filter(Association.blok == blok)
@@ -93,6 +98,27 @@ class Blok:
                 associate = associate.filter(associate.mode == 'required')
                 associate.update(state='touninstall')
                 b.state = 'uninstalled'
+
+        uninstalled_bloks = cls.query('name').filter(
+            cls.state == 'uninstalled').all()
+        installed_bloks = cls.query('name').filter(
+            cls.state == 'installed').all()
+
+        conditional_bloks_to_install = []
+        for blok in uninstalled_bloks:
+            total_association_count = Association.query().filter(
+                Association.blok == blok,
+                Association.mode == 'conditional').count()
+            association_count = Association.query().filter(
+                Association.blok == blok,
+                Association.mode == 'conditional',
+                Association.linked_blok.in_(installed_bloks)).count()
+            if total_association_count:
+                if total_association_count == association_count:
+                    conditional_bloks_to_install.append(blok[0])
+
+        if conditional_bloks_to_install:
+            cls.registry.upgrade(install=conditional_bloks_to_install)
 
 
 @target_registry(System.Blok)

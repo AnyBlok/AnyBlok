@@ -4,11 +4,14 @@ ROADMAP
 Next step
 ---------
 
+* Add RelationShip model in anyblok-core
 * Add Migration Class with Unittest: see alembic: http://alembic.readthedocs.org/en/latest/
 * Add Blok group as "Category" or "Blok group"
 * Do documentation
 * Add method to create database for unittest
 * Add method to get registry(without argparse but add before env) for unittest
+* Make a registry reload to update registry without destroy the curent registry and create a new(Protect the session)
+* Fix in migration add the posibility to add a nullable column
 
 
 To implement
