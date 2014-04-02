@@ -178,17 +178,179 @@ Worker blok::
 Some blok can be auto installed because other blok are installed, it is the 
 conditional blok.
 
-.. warning:: TODO worker_position_blok
+WorkerPosition blok::
+
+    # tree
+
+    worker_position_blok
+    ├── __init__.py
+    └── worker.py
+
+    # __init__.py
+
+    from anyblok.blok import Blok
+
+
+    class WorkerPositionBlok(Blok):
+
+        priority = 200
+
+        conditional = [
+            'worker',
+            'position',
+        ]
+
+        def install(self):
+            Worker = self.registry.Worker
+
+            position_by_worker = {
+                'Georges Racinet': 'DG',
+                'Christophe Combelles': 'Comercial',
+                'Sandrine Chaufournais': u"Secrétaire",
+                'Pierre Verkest': 'Chef de projet',
+                u"Simon André": 'Developper',
+                'Florent Jouatte': 'Developper',
+                'Clovis Nzouendjou': 'Developper',
+                u"Jean-Sébastien Suzanne": 'Developper',
+            }
+
+            for worker, position in position_by_worker.items():
+                Worker.query().filter(Worker.name == worker).update({
+                    'position_name': position})
+
+.. warning:: 
+    They are not strongly dependancies linked between conditional bloks and 
+    the blok, so the priority must be increase, The blok are load by dependencie 
+    and priority a blok with small dependancie will be loaded before a blok with
+    higth dependancie
 
 Create Your Model
 -----------------
 
-.. warning:: TODO
+The Model must be added under the node Model of the registry with the 
+class decorator ``AnyBlok.target_registry``::
+
+    from AnyBlok import target_registry, Model
+
+    @target_registry(Model)
+    class AAnyBlokModel:
+        """ The first Model of our application """
+
+
+They are two type of Model:
+
+* SQL: Génerate a table in database
+* No SQL: No table but the model exist in the registry and can be used.
+
+A SQL model can define the column by adding a column::
+
+    from AnyBlok import target_registry, Model
+    from AnyBlok.Column import String
+
+    @target_registry(Model)
+    class ASQLModel:
+
+        acolumn = String(label="The first column", primary_key=True)
+
+.. warning::
+    All SQL Model must have one or more primary_key
+
+.. warning::
+    The table name depend of the registry tree, here the table is ``asqlcolumn``.
+    If a new model are define under ASQLModel (example UnderModel: 
+    ``asqlcolumn_undermodel``)
+
+desk_blok.desk::
+
+    from AnyBlok import target_registry, Model
+    from AnyBlok.Column import String, Integer
+    from AnyBlok.RelationShip import Many2One
+
+
+    @target_registry(Model)
+    class Address:
+
+        id = Integer(label="Identifying", primary_key=True)
+        street = String(label="Street", nullable=False)
+        zip = String(label="Zip", nullable=False)
+        city = String(label="City", nullable=False)
+
+        def __str__(self):
+            return "%s %s %s" % (self.street, self.zip, self.city)
+
+
+    @target_registry(Model)
+    class Room:
+
+        id = Integer(label="Identifying", primary_key=True)
+        number = Integer(label="Number of the room", nullable=False)
+        address_id = Integer(label="Address", nullable=False,
+                             foreign_key=(Model.Address, 'id'))
+        address = Many2One(label="Address", model=Model.Address,
+                           foreign_keys="address_id")
+
+        def __str__(self):
+            return "Room %d at %s" % (self.number, self.address)
+
+position_blok.position::
+
+    from AnyBlok import target_registry, Model
+    from AnyBlok.Column import String
+
+
+    @target_registry(Model)
+    class Position:
+
+        name = String(label="Position", primary_key=True)
+
+        def __str__(self):
+            return self.name
+
+worker_blok.worker::
+
+    from AnyBlok import target_registry, Model
+    from AnyBlok.Column import String, Integer
+    from AnyBlok.RelationShip import Many2One
+
+
+    @target_registry(Model)
+    class Worker:
+
+        name = String(label="Number of the room", primary_key=True)
+        room_id = Integer(label="Desk", nullable=False,
+                          foreign_key=(Model.Room, 'id'))
+        room = Many2One(label="Desk", model=Model.Room,
+                        foreign_keys="room_id")
+
+        def __str__(self):
+            return "%s in %s" % (self.name, self.room)
+
 
 Update an existing Model
 ------------------------
 
 .. warning:: TODO
+
+
+worker_position_blok.worker::
+
+    from AnyBlok import target_registry, Model
+    from AnyBlok.Column import String
+    from AnyBlok.RelationShip import Many2One
+
+
+    @target_registry(Model)
+    class Worker:
+
+        position_name = String(label="Position name",
+                               foreign_key=(Model.Position, 'name'))
+        position = Many2One(label="Position", model=Model.Position,
+                            foreign_keys="position_name")
+
+        def __str__(self):
+            res = super(Worker, self).__str__()
+            return "%s (%s)" % (res, self.position)
+
 
 Create Your application
 -----------------------

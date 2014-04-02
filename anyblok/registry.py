@@ -3,11 +3,15 @@ import AnyBlok
 from anyblok._argsparse import ArgsParseManager
 from anyblok._imp import ImportManager
 from anyblok.blok import BlokManager
+from anyblok import log
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from anyblok.migration import Migration
 from sqlalchemy.exc import ProgrammingError, OperationalError
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class RegistryManagerException(Exception):
@@ -269,6 +273,7 @@ class Registry:
 
         return self.loaded_namespaces[namespace]
 
+    @log()
     def load(self):
         """ Load all the namespace of the registry
 
@@ -354,6 +359,7 @@ class Registry:
 
             self.loaded_bloks[blok] = b
             ordered_loaded_bloks.append(blok)
+            logger.info("Blok %r loaded" % blok)
             return True
 
         def has_sql_fields(bases):
@@ -511,11 +517,13 @@ class Registry:
             if hasattr(self, name) and getattr(self, name):
                 setattr(self, name, None)
 
+    @log()
     def reload(self):
         self.clean_model()
         self.ini_var()
         self.load()
 
+    @log()
     def upgrade(self, install=None, update=None, uninstall=None):
         """ Upgrade the current registry
 

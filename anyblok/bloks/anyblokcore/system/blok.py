@@ -3,6 +3,9 @@ from anyblok.blok import BlokManager
 from AnyBlok import target_registry
 from AnyBlok.Model import System
 from AnyBlok.Column import String, Integer
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 @target_registry(System)
@@ -74,6 +77,7 @@ class Blok:
             b = cls.query().filter(cls.name == blok).first()
             entry = cls.registry.loaded_bloks[blok]
             if b.state in ('undefined', 'uninstalled', 'toinstall'):
+                logger.info("Install the blok %r" % blok)
                 entry.install()
                 b.state = 'installed'
             elif b.state == 'toupdate':

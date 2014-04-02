@@ -24,6 +24,7 @@ Fix me
 * Enum Column doesn't work, see http://techspot.zzzeek.org/2011/01/14/the-enum-recipe/
   or https://pypi.python.org/pypi/SQLAlchemy-Enum-Dict/0.1.2
 * Add the posibility to add a nullable column by migration
+* dedoublone the log
 
 Library to include
 ------------------
