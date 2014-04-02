@@ -449,7 +449,8 @@ class Registry:
                     return getattr(parent, child)
 
                 tmpns = type(child, tuple(), {'children_namespaces': {}})
-                if hasattr(parent, 'children_namespaces'):
+                if hasattr(parent,
+                           'children_namespaces') and parent is not self:
                     parent.children_namespaces[child] = tmpns
                 else:
                     setattr(parent, child, tmpns)
