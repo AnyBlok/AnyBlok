@@ -445,7 +445,7 @@ class Registry:
                 setattr(parent, child, base)
 
             def get_namespace(parent, child):
-                if hasattr(parent, child):
+                if hasattr(parent, child) and getattr(parent, child):
                     return getattr(parent, child)
 
                 tmpns = type(child, tuple(), {'children_namespaces': {}})
