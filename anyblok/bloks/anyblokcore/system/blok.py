@@ -84,7 +84,7 @@ class Blok:
                 associate = Association.query()
                 associate = associate.filter(Association.blok == blok)
                 associate = associate.filter(associate.linked_blok.in_(bloks))
-                associate.update(state='toupdate')
+                associate.update({'state': 'toupdate'})
                 b.state = 'installed'
             elif b.state == 'touninstall':
                 # FIXME look wrong
@@ -96,7 +96,7 @@ class Blok:
                 associate = associate.filter(Association.blok == blok)
                 associate = associate.filter(associate.linked_blok.in_(bloks))
                 associate = associate.filter(associate.mode == 'required')
-                associate.update(state='touninstall')
+                associate.update({'state': 'touninstall'})
                 b.state = 'uninstalled'
 
         uninstalled_bloks = cls.query('name').filter(

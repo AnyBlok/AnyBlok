@@ -530,7 +530,7 @@ class Registry:
                 return
 
             for blok in bloks:
-                Blok.query().filter(Blok.name == blok).first().state = state
+                Blok.query().filter(Blok.name == blok).update({'state': state})
 
         upgrade_state_bloks(install, 'toinstall')
         upgrade_state_bloks(update, 'toupdate')
