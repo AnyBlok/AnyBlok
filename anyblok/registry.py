@@ -95,19 +95,8 @@ class RegistryManager:
         finally:
             AnyBlok.current_blok = None
 
-        registry2remove = []
-        for dbname, registry in cls.registries.items():
-            installed = registry.installed_bloks()
-
-            if not installed:
-                continue
-
-            if blok in installed:
-                registry2remove.append(dbname)
-
-        for dbname in registry2remove:
-            cls.registries[dbname].close()
-            del cls.registries[dbname]
+        for registry in cls.registries.values():
+            registry.reload()
 
     @classmethod
     def declare_entry(cls, entry, mustbeload=False, callback=None):
@@ -280,51 +269,6 @@ class Registry:
 
         return self.loaded_namespaces[namespace]
 
-    def installed_bloks(self, gettoinstall=False):
-        """ Return the list of the installed blok
-
-        :param gettoinstall: bool, if True add ``toinstall``and ``toupdate``
-            in search critrerion
-        :rtype: Return the list or None if anyblok-core not installed
-        """
-        # FIXME is no System of no blok not return None but try to get
-        # the install blok by another method
-        states = ['installed']
-        if gettoinstall:
-            states.extend(['toinstall', 'toupdate'])
-
-        def make_query():
-
-            try:
-                conn = self.engine.connect()
-                res = conn.execute("""
-                    select name
-                    from system_blok
-                    where state in ('%s')""" % "', '".join(states)).fetchall()
-                return set(x[0] for x in res)
-            except (ProgrammingError, OperationalError):
-                pass
-            finally:
-                if conn:
-                    conn.close()
-
-        if not hasattr(self, 'System'):
-            return make_query()
-
-        if not hasattr(self.System, 'Blok'):
-            return make_query()
-
-        res = self.System.Blok.list_by_state(*states)
-
-        if gettoinstall:
-            result = set()
-            result.update(res['installed'])
-            result.update(res['toinstall'])
-            result.update(res['toupdate'])
-            return result
-
-        return res
-
     def load(self):
         """ Load all the namespace of the registry
 
@@ -333,11 +277,26 @@ class Registry:
         """
         self.declarativebase = declarative_base(class_registry=dict(
             registry=self))
-        toload = self.installed_bloks(gettoinstall=True)
-        if toload is None:
-            toload = set()
 
-        toload.update(BlokManager.auto_install)
+        states = ['installed', 'toinstall', 'toupdate']
+        try:
+            conn = self.engine.connect()
+            res = conn.execute("""
+                select system_blok.name
+                from system_blok
+                where system_blok.state in ('%s')
+                order by system_blok.order""" % "', '".join(
+                states)).fetchall()
+            toload = [x[0] for x in res]
+        except (ProgrammingError, OperationalError):
+            toload = []
+        finally:
+            if conn:
+                conn.close()
+
+        for blok in BlokManager.auto_install:
+            if blok not in toload:
+                toload.append(blok)
 
         loaded_registries = {'model_names': []}
         registry_base = type("RegistryBase", tuple(), {'registry': self})

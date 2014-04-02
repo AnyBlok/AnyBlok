@@ -277,16 +277,12 @@ class TestRegistry(AnyBlokTestCase):
         self.assertEqual(registry1, registry2)
 
     def test_get_the_same_registry_after_reload(self):
-        self.registry.close()
-        registry1 = RegistryManager.get(':memory:')
+        bloks_before_reload = self.registry.System.Blok.query('name').filter(
+            self.registry.System.Blok.state == 'installed').all()
         RegistryManager.reload('anyblok-core')
-        registry2 = RegistryManager.get(':memory:')
-        self.assertNotEqual(registry1, registry2)
-
-    def test_has_blok(self):
-        installed = self.registry.installed_bloks()
-        self.assertEqual(hasattr(self.registry, 'System'), True)
-        self.assertEqual(installed, ['anyblok-core'])
+        bloks_after_reload = self.registry.System.Blok.query('name').filter(
+            self.registry.System.Blok.state == 'installed').all()
+        self.assertEqual(bloks_before_reload, bloks_after_reload)
 
     def test_reload(self):
         bloks_before_reload = self.registry.System.Blok.query('name').filter(
