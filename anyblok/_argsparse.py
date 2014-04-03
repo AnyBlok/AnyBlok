@@ -31,12 +31,6 @@ class ArgsParseManager:
     def add(cls, group, part='AnyBlok', label=None, function_=None):
         """ Add a function, each function are added in part and group.
 
-        * part: ConfigParser group or process name
-        * group: group is a set of parser option
-        * label: If the group have a label then all function in group are put
-                 in group parser
-        * function_: function to add
-
         exemple ::
 
             def foo(parser, default):
@@ -48,6 +42,11 @@ class ArgsParseManager:
             def bar(parser, defaul):
                 pass
 
+        :param part: ConfigParser group or process name
+        :param group: group is a set of parser option
+        :param label: If the group have a label then all function in group are put
+                 in group parser
+        :param function_: function to add
         """
         if part not in cls.groups:
             cls.groups[part] = {group: []}

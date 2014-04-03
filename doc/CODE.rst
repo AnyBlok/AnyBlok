@@ -10,6 +10,19 @@ anyblok module
     :undoc-members:
     :noindex:
 
+anyblok._argsparse module
+-------------------------
+
+.. automodule:: anyblok._argsparse
+
+.. autoexception:: ArgsParseManagerException
+    :show-inheritance:
+    :noindex:
+
+.. autoclass:: ArgsParseManager
+    :members:
+    :noindex:
+
 anyblok._imp module
 -------------------
 
@@ -20,6 +33,14 @@ anyblok._imp module
     :noindex:
 
 .. autoclass:: ImportManager
+    :members:
+    :noindex:
+
+anyblok._logging module
+-----------------------
+
+.. automodule:: anyblok._logging
+    :show-inheritance:
     :members:
     :noindex:
 

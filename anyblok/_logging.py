@@ -33,8 +33,14 @@ LEVEL_COLOR_MAPPING = {
 
 
 class Formatter(logging.Formatter):
+    """ Define the format for  console logging """
 
     def format(self, record):
+        """ Add color  at the message
+
+        :param record: logging record instance
+        :rtype: logging record formatted
+        """
         fg_color, bg_color = LEVEL_COLOR_MAPPING[record.levelno]
         record.levelname = COLOR_PATTERN % (
             30 + fg_color, 40 + bg_color, record.levelname)
@@ -109,6 +115,11 @@ def init_logger(level='info', mode='console',
             init_logger(mode='syslog', socket='/dev/log',
                         facility=syslog.LOG_SYSLOG)
 
+    :param level: level define by anyblok
+    :param mode: Output mode
+    :param filename: Out put file
+    :param socket: Socket or UnixSocket
+    :param facility:
     """
     level = LEVELS.get(level, logging.INFO)
 
@@ -155,6 +166,8 @@ def log(level='info', withargs=False):
         def foo(...):
             ...
 
+    :param level: AnyBlok log level
+    :param withargs: If True, add args and kwargs in the log message
     """
     log = logger
 
