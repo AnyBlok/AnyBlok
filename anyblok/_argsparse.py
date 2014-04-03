@@ -44,8 +44,8 @@ class ArgsParseManager:
 
         :param part: ConfigParser group or process name
         :param group: group is a set of parser option
-        :param label: If the group have a label then all function in group are put
-                 in group parser
+        :param label: If the group have a label then all function in group are
+            put in group parser
         :param function_: function to add
         """
         if part not in cls.groups:
