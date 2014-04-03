@@ -15,10 +15,7 @@ LEVELS = {
 
 FORMATTER = '%(asctime)s:%(levelname)s:%(name)s:%(database)s - %(message)s'
 
-PROCESS = ''
-_logger = None
-logger = logging.getLogger(__name__)
-logging.basicConfig()
+logger = logging.getLogger('')
 
 
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, _N, DEFAULT = range(10)
@@ -115,9 +112,7 @@ def init_logger(level='info', mode='console',
     """
     level = LEVELS.get(level, logging.INFO)
 
-    global _logger
-    _logger = logging.getLogger(PROCESS)
-    _logger.setLevel(level)
+    logger.setLevel(level)
 
     Formatter_fnct = logging.Formatter
 
@@ -141,7 +136,7 @@ def init_logger(level='info', mode='console',
 
     formatter = Formatter_fnct(fmt=FORMATTER, datefmt='%Y-%m%d %H:%M:%S')
     handler.setFormatter(formatter)
-    _logger.addHandler(handler)
+    logger.addHandler(handler)
 
 
 def log(level='info', withargs=False):
@@ -161,9 +156,7 @@ def log(level='info', withargs=False):
             ...
 
     """
-    log = _logger
-    if _logger is None:
-        log = logger
+    log = logger
 
     def wrapper(function):
         @wraps(function)
