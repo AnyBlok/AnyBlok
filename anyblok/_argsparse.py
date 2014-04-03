@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import anyblok
-from anyblok._logging import init_logger
+from anyblok._logging import init_logger, log
 from argparse import ArgumentParser
 from configparser import ConfigParser
 
@@ -161,7 +160,7 @@ class ArgsParseManager:
                    port=port, database=database)
 
     @classmethod
-    @anyblok.log()
+    @log()
     def load(cls, description='AnyBlok :', argsparse_groups=None,
              parts_to_load=None):
         parser = ArgumentParser(description=description)

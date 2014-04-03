@@ -44,6 +44,24 @@ anyblok._logging module
     :members:
     :noindex:
 
+
+anyblok.environment module
+--------------------------
+
+.. automodule:: anyblok.environment
+
+.. autoexception:: EnvironmentException
+    :show-inheritance:
+    :noindex:
+
+.. autoclass:: EnvironmentManager
+    :members:
+    :noindex:
+
+.. autoclass:: ThreadEnvironment
+    :members:
+    :noindex:
+
 anyblok.blok module
 -------------------
 

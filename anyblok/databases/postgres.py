@@ -1,6 +1,6 @@
 from AnyBlok import add_Adapter
 from AnyBlok.Interface import ISqlAlchemyDataBase
-from anyblok import log
+from anyblok._logging import log
 from anyblok._argsparse import ArgsParseManager
 from zope.interface import implementer
 from sqlalchemy import create_engine

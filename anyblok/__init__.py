@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 from zope.component import getUtility
-from . import _logging
-log = _logging.log
 from zope.component import getGlobalSiteManager
 gsm = getGlobalSiteManager()
 

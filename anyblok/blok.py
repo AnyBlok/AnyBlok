@@ -2,6 +2,7 @@
 from pkg_resources import iter_entry_points
 import anyblok
 from anyblok._imp import ImportManager
+from anyblok._logging import log
 from time import sleep
 from sys import modules
 from os.path import dirname, join
@@ -78,7 +79,7 @@ class BlokManager:
         cls.ordered_bloks.append(blokname)
 
     @classmethod
-    @anyblok.log()
+    @log()
     def reload(cls):
         """ Reload the entry points
 
@@ -94,7 +95,7 @@ class BlokManager:
         cls.load(*bloks_groups)
 
     @classmethod
-    @anyblok.log()
+    @log()
     def unload(cls):
         """ Unload all the blok but not the registry """
         cls.bloks = {}
@@ -103,7 +104,7 @@ class BlokManager:
         cls.auto_install = []
 
     @classmethod
-    @anyblok.log()
+    @log()
     def load(cls, *bloks_groups):
         """ Load all the blok and import it
 

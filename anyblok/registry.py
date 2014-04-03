@@ -3,7 +3,8 @@ import AnyBlok
 from anyblok._argsparse import ArgsParseManager
 from anyblok._imp import ImportManager
 from anyblok.blok import BlokManager
-from anyblok._logging import log, DataBaseLogging
+from anyblok._logging import log
+from anyblok.environment import EnvironmentManager
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -48,7 +49,6 @@ class RegistryManager:
     mustbeload_declared_entries = []
     callback_declared_entries = {}
     registries = {}
-    scoped_fnct = None
 
     @classmethod
     def has_blok(cls, blok):
@@ -76,11 +76,11 @@ class RegistryManager:
         :param dbname: the name of the database link with this registry
         :rtype: ``Registry``
         """
-        DataBaseLogging.set(dbname)
+        EnvironmentManager.set('dbname', dbname)
         if dbname in cls.registries:
             return cls.registries[dbname]
 
-        registry = Registry(dbname, cls.scoped_fnct)
+        registry = Registry(dbname)
         cls.registries[dbname] = registry
         return registry
 
@@ -248,9 +248,8 @@ class Registry:
         registry = Registry('My database')
     """
 
-    def __init__(self, dbname, scoped_fnct=None):
+    def __init__(self, dbname):
         self.dbname = dbname
-        self.scoped_fnct = scoped_fnct
         url = ArgsParseManager.get_url(dbname=dbname)
         self.engine = create_engine(url)
         self.ini_var()
@@ -480,7 +479,8 @@ class Registry:
 
         Session = type('Session', tuple(loaded_cores['Session']), {})
         self.Session = scoped_session(
-            sessionmaker(bind=self.engine, class_=Session), self.scoped_fnct)
+            sessionmaker(bind=self.engine, class_=Session),
+            EnvironmentManager.scoped_function_for_session)
 
         self.migration = Migration(self.session, self.declarativebase.metadata)
         self.migration.auto_upgrade_database()
@@ -524,7 +524,7 @@ class Registry:
         self.ini_var()
         self.load()
 
-    @log()
+    @log(withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):
         """ Upgrade the current registry
 
