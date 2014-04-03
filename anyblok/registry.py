@@ -3,7 +3,7 @@ import AnyBlok
 from anyblok._argsparse import ArgsParseManager
 from anyblok._imp import ImportManager
 from anyblok.blok import BlokManager
-from anyblok import log
+from anyblok._logging import log, DataBaseLogging
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -76,6 +76,7 @@ class RegistryManager:
         :param dbname: the name of the database link with this registry
         :rtype: ``Registry``
         """
+        DataBaseLogging.set(dbname)
         if dbname in cls.registries:
             return cls.registries[dbname]
 

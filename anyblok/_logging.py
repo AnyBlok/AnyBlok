@@ -13,7 +13,7 @@ LEVELS = {
     'critical': logging.CRITICAL,
 }
 
-FORMATTER = '%(asctime)s:%(levelname)s:%(name)s:%(database)s - %(message)s'
+FORMATTER = '%(asctime)s %(levelname)s - %(database)s:%(name)s - %(message)s'
 
 logger = logging.getLogger('')
 
@@ -44,8 +44,9 @@ class Formatter(logging.Formatter):
         fg_color, bg_color = LEVEL_COLOR_MAPPING[record.levelno]
         record.levelname = COLOR_PATTERN % (
             30 + fg_color, 40 + bg_color, record.levelname)
-        if not hasattr(record, 'database'):
-            record.database = 'None'
+        fg_color, bg_color = CYAN, DEFAULT
+        record.database = COLOR_PATTERN % (
+            30 + fg_color, 40 + bg_color, DataBaseLogging.get('No database'))
 
         return logging.Formatter.format(self, record)
 
@@ -185,3 +186,89 @@ def log(level='info', withargs=False):
         return f
 
     return wrapper
+
+
+class DataBaseLoggingException(Exception):
+    """ Simple Exception """
+
+
+class DataBaseLogging:
+    """ Get / Set the database name for logging
+
+    you can choose your implementation of setter and getter method with the
+    class method:
+
+    * define_setter
+    * define_getter
+
+    """
+
+    setter = None
+    getter = None
+
+    @classmethod
+    def define_setter(cls, setter):
+        """ Define the setter to apply to save the data base name
+
+        :param setter: function setter to apply
+        """
+        cls.setter = setter
+
+    @classmethod
+    def define_getter(cls, getter):
+        """ Define the getter to apply to save the data base name
+
+        :param getter: function getter to apply
+        """
+        cls.getter = getter
+
+    @classmethod
+    def set(cls, dbname):
+        """ Save the database name
+
+        :param dbname: the name of the database
+        """
+        if cls.setter is None:
+            raise DataBaseLoggingException("No setter function define")
+
+        try:
+            cls.setter(dbname)
+        except Exception as e:
+            raise DataBaseLoggingException(str(e))
+
+    @classmethod
+    def get(cls, default=None):
+        """ Save the database name
+
+        :param default: default value if dbname not found
+        """
+        if cls.getter is None:
+            raise DataBaseLoggingException("No getter function define")
+
+        try:
+            return cls.getter(default)
+        except Exception as e:
+            raise DataBaseLoggingException(str(e))
+
+
+import threading
+
+
+def setter(dbname):
+    """ Save the dbname in the current thread
+
+        :param dbname: the name of the database
+    """
+    threading.current_thread().dbname = dbname
+
+
+def getter(default):
+    """ Load the dbname from the current thread
+
+        :param default: default value if dbname not found
+    """
+    return getattr(threading.currentThread(), 'dbname', default)
+
+
+DataBaseLogging.define_setter(setter)
+DataBaseLogging.define_getter(getter)
