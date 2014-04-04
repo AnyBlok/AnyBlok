@@ -90,7 +90,6 @@ class Field:
         :param fieldname: name of the field
         :param properties: properties known of the model
         """
-        return self
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -100,11 +99,10 @@ class Field:
         :param namespace: name of the model
         :param fieldname: name of the field
         :param properties: properties known of the model
+        :rtype: instance of Field
         """
         return self
 
-
-    @classmethod
     def native_type(cls):
         """ Return the native SqlAlchemy type """
         raise FieldException("No native type for this field")

@@ -53,5 +53,6 @@ class RelationShip(Field):
         :param namespace: name of the model
         :param fieldname: name of the field
         :param properties: properties known of the model
+        :rtype: sqlalchemy relation ship instance
         """
         return relationship(self.model.__tablename__, **self.kwargs)
