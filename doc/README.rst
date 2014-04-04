@@ -88,7 +88,7 @@ package in this package will be import by anyblok.
     The modules and package start with ``_`` aren't imported, the package tests
     are not imported to because the test haven't to import with blok
 
-Desk blok::
+**Desk blok**::
 
     # tree
 
@@ -111,7 +111,7 @@ Desk blok::
 
     # desk.py describe the models Address and Room
 
-Position blok::
+**Position blok**::
 
     # tree
 
@@ -141,7 +141,7 @@ Some blok can have requirement. Each blok define this dependences:
 A blok can be declared ``autoinstall`` if the blok is not install at the load
 of the registry, then this blok will be loaded and installed
 
-Worker blok::
+**Worker blok**::
 
     # tree
 
@@ -180,7 +180,7 @@ Worker blok::
 Some blok can be auto installed because other blok are installed, it is the 
 conditional blok.
 
-WorkerPosition blok::
+**WorkerPosition blok**::
 
     # tree
 
@@ -262,7 +262,7 @@ A SQL model can define the column by adding a column::
     If a new model are define under ASQLModel (example UnderModel: 
     ``asqlcolumn_undermodel``)
 
-desk_blok.desk::
+**desk_blok.desk**::
 
     from AnyBlok import target_registry, Model
     from AnyBlok.Column import String, Integer
@@ -301,7 +301,7 @@ attribute is missing then the value is "'model.table'.'remote_column'"
 If the column linked doesn't exist then the relationship create the 
 column with the same type of the remote_column
 
-position_blok.position::
+**position_blok.position**::
 
     from AnyBlok import target_registry, Model
     from AnyBlok.Column import String
@@ -315,7 +315,7 @@ position_blok.position::
         def __str__(self):
             return self.name
 
-worker_blok.worker::
+**worker_blok.worker**::
 
     from AnyBlok import target_registry, Model
     from AnyBlok.Column import String, Integer
@@ -336,7 +336,11 @@ worker_blok.worker::
 Update an existing Model
 ------------------------
 
-worker_position_blok.worker::
+If you create 2 models with the same registry position, the same name, then the
+second model subclass the first model. And the two models will be merge to 
+get the real model
+
+**worker_position_blok.worker**::
 
     from AnyBlok import target_registry, Model
     from AnyBlok.Column import String
