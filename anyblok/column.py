@@ -64,19 +64,21 @@ class Column(Field):
         self.kwargs = kwargs
         super(Column, self).__init__(label=label)
 
-    @classmethod
+    #@classmethod
     def native_type(cls):
         """ Return the native SqlAlchemy type """
         return cls.sqlalchemy_type
 
-    def get_sqlalchemy_mapping(self, registry, tablename, fieldname,
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties, forceaddname=False):
         """ Return the instance of the real field
 
         :param registry: current registry
-        :param tablename: table name of the model
+        :param namespace: name of the model
         :param fieldname: name of the field
         :param properties: properties known of the model
+        "param forceaddname: boolean if True the name of the field will be put
+            on the declaration of the column
         """
         args = self.args
 

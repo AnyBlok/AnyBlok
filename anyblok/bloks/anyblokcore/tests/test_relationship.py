@@ -26,11 +26,13 @@ class TestRelationShip(unittest.TestCase):
 
     def test_one2one(self):
         from AnyBlok.RelationShip import One2One
-        One2One(label="One One2One", model=self.TestModel, backref="test")
+        One2One(label="One One2One", model=self.TestModel,
+                remote_column="test", backref="other")
 
     def test_many2one(self):
         from AnyBlok.RelationShip import Many2One
-        Many2One(label="One Many2One", model=self.TestModel)
+        Many2One(label="One Many2One", model=self.TestModel,
+                 remote_column="test")
 
     def test_one2many(self):
         from AnyBlok.RelationShip import One2Many

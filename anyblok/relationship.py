@@ -42,27 +42,16 @@ class RelationShip(Field):
         if model is None:
             raise FieldException("model is required attribut")
 
-        self.model = model.__tablename__
+        self.model = model
         self.kwargs = kwargs
 
-    def format_foreign_key(self, registry, tablename):
-        """ Format the foreign key
-
-        :param registry: current registry
-        :param tablename: table name of the model
-        """
-        pass
-
-    def get_sqlalchemy_mapping(self, registry, tablename, fieldname,
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Return the instance of the real field
 
         :param registry: current registry
-        :param tablename: table name of the model
+        :param namespace: name of the model
         :param fieldname: name of the field
         :param properties: properties known of the model
         """
-        if 'foreign_keys' in self.kwargs:
-            self.format_foreign_key(registry, tablename)
-
-        return relationship(self.model, **self.kwargs)
+        return relationship(self.model.__tablename__, **self.kwargs)

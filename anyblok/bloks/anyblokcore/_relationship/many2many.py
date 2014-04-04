@@ -1,6 +1,8 @@
 from AnyBlok import RelationShip, target_registry
 from sqlalchemy import Table, Column, ForeignKey
 
+# FIXME cause of refactore relation ship api
+
 
 @target_registry(RelationShip)
 class Many2Many(RelationShip):

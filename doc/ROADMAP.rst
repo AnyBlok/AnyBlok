@@ -16,8 +16,6 @@ To implement
 * Add method to get registry(without argparse but add before env) for unittest
 * Make a registry reload to update registry without destroy the curent registry and create a new(Protect the session)
 * Add RelationShip model in anyblok-core and refatore the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
-* Autogeneration of intermediare column by m2o http://techspot.zzzeek.org/2011/05/17/magic-a-new-orm/
-* Refactor the m2m, autodetect the type of the column and the primary key and foreign_key
 
 Fix me
 ------
@@ -25,6 +23,7 @@ Fix me
 * Enum Column doesn't work, see http://techspot.zzzeek.org/2011/01/14/the-enum-recipe/
   or https://pypi.python.org/pypi/SQLAlchemy-Enum-Dict/0.1.2
 * Add the posibility to add a nullable column by migration
+* FIX Refactor the m2m, o2m, autodetect the type of the column and the primary key and foreign_key
 
 Library to include
 ------------------

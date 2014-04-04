@@ -82,16 +82,27 @@ class Field:
             raise FieldException(
                 "%r class must not be instanced use a sub class" % cls)
 
-    def get_sqlalchemy_mapping(self, registry, tablename, fieldname,
-                               properties):
-        """ Return the instance of the real field
+    def update_properties(self, registry, namespace, fieldname, properties):
+        """ Update the propertie use to add new column
 
         :param registry: current registry
-        :param tablename: table name of the model
+        :param namespace: name of the model
         :param fieldname: name of the field
         :param properties: properties known of the model
         """
         return self
+
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
+                               properties):
+        """ Return the instance of the real field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known of the model
+        """
+        return self
+
 
     @classmethod
     def native_type(cls):

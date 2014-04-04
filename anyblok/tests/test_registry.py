@@ -270,6 +270,10 @@ class TestRegistry(AnyBlokTestCase):
         self.registry.close()
         self.registry = RegistryManager.get(':memory:')
 
+    def test_get_model(self):
+        System = self.registry.get('AnyBlok.Model.System')
+        self.assertEqual(self.registry.System, System)
+
     def test_get_the_same_registry(self):
         self.registry.close()
         registry1 = RegistryManager.get(':memory:')

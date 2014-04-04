@@ -21,10 +21,12 @@ We will write a simple application which connect to an existing database:
 * Room
     - Have a number
     - Have an address
+    - have workers
 * Adress
     - Have a street
     - have a zipcode
     - have a city
+    - have rooms
 * Position
     - Have a name
 
@@ -284,13 +286,20 @@ desk_blok.desk::
 
         id = Integer(label="Identifying", primary_key=True)
         number = Integer(label="Number of the room", nullable=False)
-        address_id = Integer(label="Address", nullable=False,
-                             foreign_key=(Model.Address, 'id'))
-        address = Many2One(label="Address", model=Model.Address,
-                           foreign_keys="address_id")
+        address = Many2One(label="Address", model=Model.Address, nullable=False,
+                           remote_column="id", one2many="rooms")
 
         def __str__(self):
             return "Room %d at %s" % (self.number, self.address)
+
+The relationships can also define the opposite relation, here the Many2One
+declare the One2Many rooms on the Address Model
+
+A relationship Many2One or One2One must have an existing column.
+The attribute ``column_name`` alow to choose the column linked, if this
+attribute is missing then the value is "'model.table'.'remote_column'"
+If the column linked doesn't exist then the relationship create the 
+column with the same type of the remote_column
 
 position_blok.position::
 
@@ -317,10 +326,8 @@ worker_blok.worker::
     class Worker:
 
         name = String(label="Number of the room", primary_key=True)
-        room_id = Integer(label="Desk", nullable=False,
-                          foreign_key=(Model.Room, 'id'))
-        room = Many2One(label="Desk", model=Model.Room,
-                        foreign_keys="room_id")
+        room = Many2One(label="Desk", model=Model.Room, remote_column="id"
+                        one2many="workers")
 
         def __str__(self):
             return "%s in %s" % (self.name, self.room)
@@ -328,9 +335,6 @@ worker_blok.worker::
 
 Update an existing Model
 ------------------------
-
-.. warning:: TODO
-
 
 worker_position_blok.worker::
 
@@ -342,10 +346,8 @@ worker_position_blok.worker::
     @target_registry(Model)
     class Worker:
 
-        position_name = String(label="Position name",
-                               foreign_key=(Model.Position, 'name'))
         position = Many2One(label="Position", model=Model.Position,
-                            foreign_keys="position_name")
+                            remote_column="name")
 
         def __str__(self):
             res = super(Worker, self).__str__()
