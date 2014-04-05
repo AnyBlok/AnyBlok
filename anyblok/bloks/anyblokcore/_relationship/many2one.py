@@ -9,6 +9,7 @@ class Many2One(RelationShip):
     """ Define a relation ship attribute on the model
 
     ::
+
         @target_registry(Model)
         class TheModel:
 
