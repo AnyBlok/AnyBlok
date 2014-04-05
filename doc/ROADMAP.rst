@@ -16,6 +16,7 @@ To implement
 * Add method to get registry(without argparse but add before env) for unittest
 * Make a registry reload to update registry without destroy the curent registry and create a new(Protect the session)
 * Add RelationShip model in anyblok-core and refatore the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
+* Add fonctionnality on m2o and o2o, remote column haven't be rquired, only the model, search in the column the primary key and use it 
 
 Fix me
 ------

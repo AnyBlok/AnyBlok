@@ -147,6 +147,7 @@ of the registry, then this blok will be loaded and installed
 
     worker_blok
     ├── __init__.py
+    ├── argsparse.py
     └── worker.py
 
     # __init__.py
@@ -358,7 +359,176 @@ get the real model
             return "%s (%s)" % (res, self.position)
 
 
+Add entries in the argsparse configuration
+------------------------------------------
+
+For somme application somme option can be needed. Options are grouped by 
+category. And the application choose the category of option to display.
+
+**worker_blok.arsparse**::
+
+    from anyblok._argsparse import ArgsParseManager
+
+
+    @ArgsParseManager.add('message', label="This is the group message")
+    def add_interpreter(parser, configuration):
+        parser.add_argument('--message-before', dest='message_before')
+        parser.add_argument('--message-after', dest='message_after')
+
+
 Create Your application
 -----------------------
 
-.. warning:: TODO
+The application can be a simple script or a setuptools script. For a setuptools
+script add in setup::
+
+    setup(
+        ...
+        entry_points={
+            'console_scripts': ['exampleblok=exampleblok.scripts:exampleblok'],
+            'WorkBlok': WorkBlok,
+        },
+    )
+
+The script must display:
+
+* the ``message_before`` is filled
+* the lists of the worker by address and by room
+* the ``message_after`` is filled
+
+**script**::
+
+    import anyblok
+    from logging import getLogger
+    from anyblok._argsparse import ArgsParseManager
+
+    logger = getLogger(__name__)
+
+
+    def exampleblok():
+        # Initialise the application, with a name and a version number
+        # select the groupe of options to display
+        # select the groups of bloks availlable
+        # return a registry if the database are selected
+        registry = anyblok.start(
+            'Example Blok', '1.0',
+            argsparse_groups=['config', 'database', 'message'],
+            parts_to_load=['AnyBlok', 'WorkBlok'])
+
+        if not registry:
+            return
+
+        message_before = ArgsParseManager.get('message_before')
+        message_after = ArgsParseManager.get('message_after')
+
+        if message_before:
+            logger.info(message_before)
+
+        for address in registry.Address.query().all():
+            for room in address.rooms:
+                for worker in room.workers:
+                    logger.info(worker)
+
+        if message_after:
+            logger.info(message_after)
+
+
+**Get the help of your application**::
+
+    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -h
+    usage: exampleblok [-h] [-c CONFIGFILE] [--message-before MESSAGE_BEFORE]
+                       [--message-after MESSAGE_AFTER] [--db_name DBNAME]
+                       [--db_drivername DBDRIVERNAME] [--db_username DBUSERNAME]
+                       [--db_password DBPASSWORD] [--db_host DBHOST]
+                       [--db_port DBPORT]
+
+    Example Blok - 1.0
+
+    optional arguments:
+        -h, --help            show this help message and exit
+        -c CONFIGFILE         Relative path of the config file
+
+    This is the group message:
+        --message-before MESSAGE_BEFORE
+        --message-after MESSAGE_AFTER
+
+    Database:
+        --db_name DBNAME      Name of the data base
+        --db_drivername DBDRIVERNAME
+                              the name of the database backend. This name will
+                              correspond to a module in sqlalchemy/databases or a
+                              third party plug-in
+        --db_username DBUSERNAME
+    The user name
+        --db_password DBPASSWORD
+    database password
+        --db_host DBHOST      The name of the host
+        --db_port DBPORT      The port number
+
+**Create an empty database and call the script**::
+
+    jssuzanne:anyblok jssuzanne$ createdb anyblok
+    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -c anyblok.cfg --message-before "Get the worker ..." --message-after "End ..."
+    2014-0405 23:54:32 INFO - anyblok:root - Registry.load
+    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
+    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'position' loaded
+    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
+    2014-0405 23:54:32 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
+    2014-0405 23:54:32 INFO - anyblok:alembic.migration - Will assume transactional DDL.
+    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'anyblok-core'
+    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'desk'
+    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'position'
+    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'worker'
+    2014-0405 23:54:32 INFO - anyblok:root - Registry.upgrade with args (<anyblok.registry.Registry object at 0x10867bcd0>,) and kwargs {'install': ['worker-position']}
+    2014-0405 23:54:32 INFO - anyblok:root - Registry.reload
+    2014-0405 23:54:32 INFO - anyblok:root - Registry.load
+    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
+    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'position' loaded
+    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
+    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'worker-position' loaded
+    2014-0405 23:54:32 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
+    2014-0405 23:54:32 INFO - anyblok:alembic.migration - Will assume transactional DDL.
+    2014-0405 23:54:32 INFO - anyblok:alembic.autogenerate.compare - Detected added column 'worker.position_name'
+    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'worker-position'
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Get the worker ...
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Florent Jouatte in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Georges Racinet in Room 308 at 14-16 rue Soleillet 75020 Paris (DG)
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Pierre Verkest in Room 308 at 14-16 rue Soleillet 75020 Paris (Chef de projet)
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Sandrine Chaufournais in Room 308 at 14-16 rue Soleillet 75020 Paris (Secrétaire)
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Clovis Nzouendjou in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Jean-Sébastien Suzanne in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Christophe Combelles in Room 308 at 14-16 rue Soleillet 75020 Paris (Comercial)
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Simon André in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - End ...
+
+
+The registry is loaded two time:
+
+* First load install the bloks ``anyblok-core``, ``desk``, ``position`` and ``worker``
+* Second load install the conditional blok ``worker-position`` and make a migration to add the field ``worker_name``
+
+**Recall the script**::
+
+    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -c anyblok.cfg --message-before "Get the worker ..." --message-after "End ..."
+    2014-0405 23:58:10 INFO - anyblok:root - Registry.load
+    2014-0405 23:58:10 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
+    2014-0405 23:58:10 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-0405 23:58:10 INFO - anyblok:anyblok.registry - Blok 'position' loaded
+    2014-0405 23:58:10 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
+    2014-0405 23:58:10 INFO - anyblok:anyblok.registry - Blok 'worker-position' loaded
+    2014-0405 23:58:10 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
+    2014-0405 23:58:10 INFO - anyblok:alembic.migration - Will assume transactional DDL.
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - Get the worker ...
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - Florent Jouatte in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - Georges Racinet in Room 308 at 14-16 rue Soleillet 75020 Paris (DG)
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - Pierre Verkest in Room 308 at 14-16 rue Soleillet 75020 Paris (Chef de projet)
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - Sandrine Chaufournais in Room 308 at 14-16 rue Soleillet 75020 Paris (Secrétaire)
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - Clovis Nzouendjou in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - Jean-Sébastien Suzanne in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - Christophe Combelles in Room 308 at 14-16 rue Soleillet 75020 Paris (Comercial)
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - Simon André in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - End ...
+
+The registry is loaded only one time, because the bloks are already installed

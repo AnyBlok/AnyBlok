@@ -59,11 +59,13 @@ class ArgsParseManager:
                 cls.labels[part][group] = label
 
         if function_:
-            cls.groups[part][group].append(function_)
+            if function_ not in cls.groups[part][group]:
+                cls.groups[part][group].append(function_)
         else:
 
             def wraper(function):
-                cls.groups[part][group].append(function)
+                if function not in cls.groups[part][group]:
+                    cls.groups[part][group].append(function)
                 return function
 
             return wraper
@@ -175,6 +177,9 @@ class ArgsParseManager:
         labels = cls.merge_labels(*parts_to_load)
 
         for group in groups:
+            if group not in argsparse_groups:
+                continue
+
             label = labels.get(group)
             if label:
                 g = parser.add_argument_group(label)
@@ -207,7 +212,9 @@ class ArgsParseManager:
         config_var = ['level', 'mode', 'filename', 'socket', 'facility']
         for cv in config_var:
             if cv not in kwargs:
-                kwargs[cv] = cls.get('logging_' + cv)
+                val = cls.get('logging_' + cv)
+                if val is not None:
+                    kwargs[cv] = cls.get('logging_' + cv)
 
         init_logger(**kwargs)
 

@@ -5,6 +5,10 @@ anyblok module
 --------------
 
 .. automodule:: anyblok
+
+.. autofunction:: start
+    :noindex:
+
 .. autoclass:: AnyBlok
     :members:
     :undoc-members:
@@ -169,6 +173,13 @@ anyblok.databases module
 ------------------------
 
 Management of the database
+
+::
+
+    adapter = getUtility(ISqlAlchemyDataBase, drivername)
+    adapter.createdb(dbname)
+    logger.info(adapter.listdb())
+    adapter.dropdb(dbname)
 
 anyblok.databases.postgres module
 +++++++++++++++++++++++++++++++++

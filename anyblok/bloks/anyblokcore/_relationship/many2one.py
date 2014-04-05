@@ -6,6 +6,30 @@ from sqlalchemy.schema import ForeignKey
 
 @target_registry(RelationShip)
 class Many2One(RelationShip):
+    """ Define a relation ship attribute on the model
+
+    ::
+        @target_registry(Model)
+        class TheModel:
+
+            relationship = Many2One(label="The relation ship",
+                                    model=Model.RemoteModel,
+                                    remote_column="The remote column",
+                                    column_name="The column which have the "
+                                                "foreigh key",
+                                    nullable=False,
+                                    one2many="themodels")
+
+    :param model: the remote model
+    :param remote_column: the column name on the remote model
+    :param column_name: the column on the model which have the foreign key to
+        the remote column, if the column doesn't exist, then the column will be
+        create, if the name has not filled then the name is
+        "'remote table'_'remote colum,'"
+    :param nullable: If the column_name doesn't exist, use nullable to create
+        the column
+    :param one2many: create the one2many link with this many2one
+    """
 
     def __init__(self, **kwargs):
         super(Many2One, self).__init__(**kwargs)
@@ -28,7 +52,14 @@ class Many2One(RelationShip):
                                           self.remote_column)
 
     def update_properties(self, registry, namespace, fieldname, properties):
+        """ Create the column which have the foreign key if the column doesn't
+        exist
 
+        :param registry: the registry which load the relation ship
+        :param namespace: the name space of the model
+        :param fieldname: fieldname of the relation ship
+        ;param propertie: the properties known
+        """
         self_properties = registry.loaded_namespaces_first_step.get(namespace)
         if self.column_name not in self_properties:
             from sqlalchemy.ext.declarative import declared_attr
@@ -48,7 +79,14 @@ class Many2One(RelationShip):
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
+        """ Create the relation ship
 
+        :param registry: the registry which load the relation ship
+        :param namespace: the name space of the model
+        :param fieldname: fieldname of the relation ship
+        ;param propertie: the properties known
+        :rtype: Many2One relation ship
+        """
         self.kwargs['foreign_keys'] = "%s.%s" % (properties['__tablename__'],
                                                  self.column_name)
 
