@@ -21,6 +21,9 @@ class Many2One(RelationShip):
                                     nullable=False,
                                     one2many="themodels")
 
+    If the remote_column are not define then, the system take the primary key
+    of the remote model
+
     If the column doesn't exist, then the column will be create. Use the
     nullable option.
     If the name has not filled then the name is "'remote table'_'remote colum'"
@@ -34,10 +37,10 @@ class Many2One(RelationShip):
 
     def __init__(self, **kwargs):
         super(Many2One, self).__init__(**kwargs)
-        if kwargs.get('remote_column', None) is None:
-            raise FieldException("remote_column is a required argument")
 
-        self.remote_column = self.kwargs.pop('remote_column')
+        self.remote_column = None
+        if 'remote_column' in kwargs:
+            self.remote_column = self.kwargs.pop('remote_column')
 
         self.nullable = True
         if 'nullable' in kwargs:
@@ -46,11 +49,9 @@ class Many2One(RelationShip):
         if 'one2many' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('one2many')
 
+        self.column_name = None
         if 'column_name' in kwargs:
             self.column_name = self.kwargs.pop('column_name')
-        else:
-            self.column_name = "%s_%s" % (self.model.__tablename__,
-                                          self.remote_column)
 
     def update_properties(self, registry, namespace, fieldname, properties):
         """ Create the column which have the foreign key if the column doesn't
@@ -61,11 +62,27 @@ class Many2One(RelationShip):
         :param fieldname: fieldname of the relation ship
         :param propertie: the properties known
         """
+        remote_properties = registry.loaded_namespaces_first_step.get(
+            self.model.__registry_name__)
+
+        if self.remote_column is None:
+            pks = []
+            for f, p in remote_properties.items():
+                if 'primary_key' in p.kwargs:
+                    pks.append(f)
+
+            if len(pks) != 1:
+                raise FieldException(
+                    "We must have one and only one primary key")
+            self.remote_column = pks[0]
+
+        if self.column_name is None:
+            self.column_name = "%s_%s" % (self.model.__tablename__,
+                                          self.remote_column)
+
         self_properties = registry.loaded_namespaces_first_step.get(namespace)
         if self.column_name not in self_properties:
             from sqlalchemy.ext.declarative import declared_attr
-            remote_properties = registry.loaded_namespaces_first_step.get(
-                self.model.__registry_name__)
             remote_type = remote_properties[self.remote_column].native_type()
             foreign_key = '%s.%s' % (self.model.__tablename__,
                                      self.remote_column)

@@ -288,7 +288,7 @@ A SQL model can define the column by adding a column::
         id = Integer(label="Identifying", primary_key=True)
         number = Integer(label="Number of the room", nullable=False)
         address = Many2One(label="Address", model=Model.Address, nullable=False,
-                           remote_column="id", one2many="rooms")
+                           one2many="rooms")
 
         def __str__(self):
             return "Room %d at %s" % (self.number, self.address)
@@ -327,8 +327,7 @@ column with the same type of the remote_column
     class Worker:
 
         name = String(label="Number of the room", primary_key=True)
-        room = Many2One(label="Desk", model=Model.Room, remote_column="id"
-                        one2many="workers")
+        room = Many2One(label="Desk", model=Model.Room, one2many="workers")
 
         def __str__(self):
             return "%s in %s" % (self.name, self.room)
@@ -351,8 +350,7 @@ get the real model
     @target_registry(Model)
     class Worker:
 
-        position = Many2One(label="Position", model=Model.Position,
-                            remote_column="name")
+        position = Many2One(label="Position", model=Model.Position)
 
         def __str__(self):
             res = super(Worker, self).__str__()
