@@ -191,19 +191,24 @@ class ArgsParseManager:
                 function(g, cls.configuration)
 
         args = parser.parse_args()
+        cls.parse_options(args, parts_to_load)
 
-        if args._get_args():
-            raise Exception('Positionnal args is forbiden')
+    @classmethod
+    def parse_options(cls, arguments, parts_to_load):
 
-        if args.configfile:
+        if arguments._get_args():
+            raise ArgsParseManagerException(
+                'Positionnal arguments is forbiden')
+
+        if arguments.configfile:
             cparser = ConfigParser()
-            cparser.read(args.configfile)
+            cparser.read(arguments.configfile)
             for section in parts_to_load:
                 if cparser.has_section(section):
                     for opt, value in cparser.items(section):
                         cls.configuration[opt] = value
 
-        for opt, value in args._get_kwargs():
+        for opt, value in arguments._get_kwargs():
             if opt not in cls.configuration or value:
                 cls.configuration[opt] = value
 

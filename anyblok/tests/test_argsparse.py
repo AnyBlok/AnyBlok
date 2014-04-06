@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import anyblok
+from os.path import join
 from anyblok._argsparse import ArgsParseManagerException, ArgsParseManager
 from anyblok._argsparse import add_configuration_file
 from anyblok._argsparse import add_database
@@ -17,6 +19,26 @@ def fnct_argsparse(parser, default):
 
 def fnct_other_argsparse(parser, default):
     default.update({'test': None})
+
+
+class MockArgParseArguments:
+
+    def __init__(self, configfile=None, args=None, kwargs=None):
+        if configfile:
+            cfile = join(anyblok.__path__[0], 'tests', configfile)
+            self.configfile = cfile
+        else:
+            self.configfile = None
+        self.args = args
+        self.kwargs = kwargs
+
+    def _get_args(self):
+        return self.args
+
+    def _get_kwargs(self):
+        if self.kwargs is None:
+            return tuple()
+        return self.kwargs.items()
 
 
 class TestArgsParseManager(AnyBlokTestCase):
@@ -77,8 +99,27 @@ class TestArgsParseManager(AnyBlokTestCase):
         ArgsParseManager.configuration.update(dict(
             dbname='anyblok',
             dbdrivername='postgres',
-            dbhost='localhost'))
+            dbhost='localhost',
+            dbusername=None,
+            dbpassword=None,
+            dbport=None,
+        ))
         ArgsParseManager.get_url()
+
+    def test_get_url_without_drivername(self):
+        ArgsParseManager.configuration.update(dict(
+            dbname=None,
+            dbdrivername=None,
+            dbhost=None,
+            dbusername=None,
+            dbpassword=None,
+            dbport=None,
+        ))
+        try:
+            ArgsParseManager.get_url()
+            self.fail("No watchdog found for no drivername")
+        except ArgsParseManagerException:
+            pass
 
     def test_merge_for_one_part(self):
         ArgsParseManager.add('new-group', function_=fnct_argsparse)
@@ -197,6 +238,58 @@ class TestArgsParseManager(AnyBlokTestCase):
             logging_facility=None,
         ))
         ArgsParseManager.init_logger(mode='console')
+
+    def test_load(self):
+        self.assertEqual(ArgsParseManager.load(), None)
+
+    def test_empty_parse_option(self):
+        args = MockArgParseArguments()
+        ArgsParseManager.parse_options(args, ['AnyBlok'])
+        self.assertEqual(ArgsParseManager.configuration, {})
+
+    def test_parse_option(self):
+        kwargs = {'test': 'value'}
+        args = MockArgParseArguments(configfile="mock_configuration_file.cfg",
+                                     kwargs=kwargs)
+        ArgsParseManager.parse_options(args, ['AnyBlok'])
+        kwargs.update({
+            'dbname': 'anyblok',
+            'dbdrivername': 'postgres',
+            'dbusername': '',
+            'dbpassword': '',
+            'dbhost': 'localhost',
+            'dbport': '',
+            'wsgi_port': '8080',
+        })
+        self.assertEqual(ArgsParseManager.configuration, kwargs)
+
+    def test_parse_option_configuration(self):
+        args = MockArgParseArguments(configfile="mock_configuration_file.cfg")
+        ArgsParseManager.parse_options(args, ['AnyBlok'])
+        self.assertEqual(ArgsParseManager.configuration, {
+            'dbname': 'anyblok',
+            'dbdrivername': 'postgres',
+            'dbusername': '',
+            'dbpassword': '',
+            'dbhost': 'localhost',
+            'dbport': '',
+            'wsgi_port': '8080',
+        })
+
+    def test_parse_option_kwargs(self):
+        kwargs = {'test': 'value'}
+        args = MockArgParseArguments(kwargs=kwargs)
+        ArgsParseManager.parse_options(args, ['AnyBlok'])
+        self.assertEqual(ArgsParseManager.configuration, kwargs)
+
+    def test_parse_option_args(self):
+        args = ('test',)
+        args = MockArgParseArguments(args=args)
+        try:
+            ArgsParseManager.parse_options(args, ['AnyBlok'])
+            self.fail("No watchdog for positionnal arguments")
+        except ArgsParseManagerException:
+            pass
 
 
 class TestArgsParseOption(AnyBlokTestCase):
