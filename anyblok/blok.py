@@ -110,9 +110,8 @@ class BlokManager:
 
         :param bloks_groups: Use by iter_entry_points to get the blok
         """
-        if not isinstance(bloks_groups, (list, tuple)):
-            raise BlokManagerException(
-                'The bloks_groups must be a list or a tuple')
+        if not bloks_groups:
+            raise BlokManagerException("The bloks_groups mustn't be empty")
 
         cls.bloks_groups = bloks_groups
 

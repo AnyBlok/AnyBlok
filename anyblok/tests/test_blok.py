@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from anyblok.blok import BlokManager, BlokManagerException
+from anyblok.blok import BlokManager, BlokManagerException, Blok
 from .anybloktestcase import AnyBlokTestCase
 
 
@@ -22,6 +22,13 @@ class TestBlokManager(AnyBlokTestCase):
         try:
             BlokManager.load('Invalid blok group')
             self.fail('Load with invalid blok group')
+        except BlokManagerException:
+            pass
+
+    def test_load_without_blok_group(self):
+        try:
+            BlokManager.load()
+            self.fail('No watchdog to load without blok groups')
         except BlokManagerException:
             pass
 
@@ -54,3 +61,17 @@ class TestBlokManager(AnyBlokTestCase):
     def test_get_files_from(self):
         BlokManager.load('AnyBlok')
         BlokManager.get_files_from('anyblok-core', 'css')
+
+    def test_set(self):
+        blok_name = 'ABlok'
+        BlokManager.set(blok_name, Blok)
+        self.assertEqual(BlokManager.has(blok_name), True)
+
+    def test_set_two_time(self):
+        blok_name = 'ABlok'
+        BlokManager.set(blok_name, Blok)
+        try:
+            BlokManager.set(blok_name, Blok)
+            self.fail("No watch dog for set two time the same blok")
+        except BlokManagerException:
+            pass
