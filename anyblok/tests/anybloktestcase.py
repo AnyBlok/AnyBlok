@@ -53,7 +53,11 @@ class AnyBlokTestCase(unittest.TestCase):
         """
         adapter = getUtility(ISqlAlchemyDataBase,
                              ArgsParseManager.get('dbdrivername'))
-        adapter.createdb(ArgsParseManager.get('dbname'))
+        dbname = ArgsParseManager.get('dbname')
+        if dbname in adapter.listdb():
+            adapter.dropdb(dbname)
+
+        adapter.createdb(dbname)
 
     @classmethod
     def dropdb(cls):

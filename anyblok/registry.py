@@ -85,6 +85,13 @@ class RegistryManager:
         return registry
 
     @classmethod
+    def unload(cls):
+        """ Unload the registry bloks """
+
+        for blok in cls.loaded_bloks.keys():
+            cls.init_blok(blok)
+
+    @classmethod
     def reload(cls, blok):
         """ Reload the blok
 
@@ -92,6 +99,7 @@ class RegistryManager:
 
         :param blok: the name of the blok to reload
         """
+        cls.unload()
         mod = ImportManager.get(blok)
         AnyBlok.current_blok = blok
         try:

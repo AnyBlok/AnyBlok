@@ -6,7 +6,6 @@ from anyblok._logging import log
 from time import sleep
 from sys import modules
 from os.path import dirname, join
-import imp
 
 
 class BlokManagerException(Exception):
@@ -98,6 +97,9 @@ class BlokManager:
     @log()
     def unload(cls):
         """ Unload all the blok but not the registry """
+        from anyblok.registry import RegistryManager
+
+        RegistryManager.unload()
         cls.bloks = {}
         cls.ordered_bloks = []
         cls.bloks_groups = None
@@ -166,7 +168,8 @@ class BlokManager:
                 mod = ImportManager.add(blok, mod_path)
                 mod.imports()
             else:
-                imp.reload(module)
+                mod = ImportManager.get(blok)
+                mod.reload()
 
             if cls.bloks[blok].autoinstall:
                 cls.auto_install.append(blok)
