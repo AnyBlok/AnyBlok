@@ -6,7 +6,6 @@ from anyblok._argsparse import ArgsParseManager
 from anyblok.migration import MigrationException
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
-from zope.component import getUtility
 
 
 class TestMigration(AnyBlokTestCase):
@@ -14,15 +13,8 @@ class TestMigration(AnyBlokTestCase):
     @classmethod
     def setUpClass(cls):
         super(TestMigration, cls).setUpClass()
-        env = {
-            'dbname': 'test_anyblok',  # TODO use os.env
-            'dbdrivername': 'postgres',
-            'dbusername': '',
-            'dbpassword': '',
-            'dbhost': '',
-            'dbport': '',
-        }
-        ArgsParseManager.configuration = env
+        cls.init_argsparse_manager()
+        cls.createdb()
         BlokManager.load('AnyBlok')
 
         import AnyBlok
@@ -47,10 +39,6 @@ class TestMigration(AnyBlokTestCase):
                         'integer'))
 
         AnyBlok.current_blok = None
-        from AnyBlok.Interface import ISqlAlchemyDataBase
-
-        adapter = getUtility(ISqlAlchemyDataBase, 'postgres')
-        adapter.createdb(ArgsParseManager.get('dbname'))
 
     def setUp(self):
         super(TestMigration, self).setUp()
@@ -60,10 +48,7 @@ class TestMigration(AnyBlokTestCase):
     def tearDownClass(cls):
         super(TestMigration, cls).tearDownClass()
         BlokManager.unload()
-        from AnyBlok.Interface import ISqlAlchemyDataBase
-
-        adapter = getUtility(ISqlAlchemyDataBase, 'postgres')
-        adapter.dropdb(ArgsParseManager.get('dbname'))
+        cls.dropdb()
 
     def tearDown(self):
         super(TestMigration, self).tearDown()

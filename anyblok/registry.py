@@ -62,9 +62,9 @@ class RegistryManager:
     @classmethod
     def clear(cls):
         """ Clear the registry dict to forced the creation of new registry """
-        for registry in cls.registries.values():
+        registries = [r for r in cls.registries.values()]
+        for registry in registries:
             registry.close()
-        cls.registries = {}
 
     @classmethod
     def get(cls, dbname):
@@ -285,6 +285,7 @@ class Registry:
             registry=self))
 
         states = ['installed', 'toinstall', 'toupdate']
+        conn = None
         try:
             conn = self.engine.connect()
             res = conn.execute("""
@@ -526,13 +527,21 @@ class Registry:
         Blok.update_list()
         Blok.apply_state(*ordered_loaded_bloks)
 
-    def close(self):
-        """Release the session, connection and engin"""
-
+    def close_session(self):
+        """ Close only the session, not the registry
+        After the call of this method the registry won't be usable
+        you should use close method which call this method
+        """
         session = self.Session()
         session.rollback()
         session.close_all()
+
+    def close(self):
+        """Release the session, connection and engin"""
+        self.close_session()
         self.engine.dispose()
+        if self.dbname in RegistryManager.registries:
+            del RegistryManager.registries[self.dbname]
 
     def __getattr__(self, attribute):
         # TODO safe the call of session for reload
@@ -554,6 +563,7 @@ class Registry:
 
     @log()
     def reload(self):
+        self.close_session()
         self.clean_model()
         self.ini_var()
         self.load()
