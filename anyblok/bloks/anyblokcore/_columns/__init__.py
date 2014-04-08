@@ -9,10 +9,8 @@ from . import string
 from . import ustring
 from . import text
 from . import utext
-from . import enum
 from . import date
 from . import _datetime
 from . import interval
 from . import _time
-from . import binary
 from . import large_binary

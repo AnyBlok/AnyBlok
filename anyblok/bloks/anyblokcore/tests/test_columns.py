@@ -1,81 +1,146 @@
-import unittest
-from anyblok.blok import BlokManager
-
-# TODO Make launcher of test on a base
+from anyblok.tests.anyblokfieldtestcase import AnyBlokFieldTestCase
 
 
-class TestColumns(unittest.TestCase):
+def simple_column(ColumnType=None, **kwargs):
 
-    @classmethod
-    def setUpClass(cls):
-        super(TestColumns, cls).setUpClass()
-        BlokManager.load('AnyBlok')
+    from AnyBlok import target_registry, Model
+    from AnyBlok.Column import Integer
 
-    @classmethod
-    def tearDownClass(cls):
-        super(TestColumns, cls).tearDownClass()
-        BlokManager.unload()
+    @target_registry(Model)
+    class Test:
+
+        id = Integer(label='id', primary_key=True)
+        col = ColumnType(label="col", **kwargs)
+
+
+class TestColumns(AnyBlokFieldTestCase):
 
     def test_integer(self):
         from AnyBlok.Column import Integer
-        Integer(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=Integer)
+        test = registry.Test.insert(col=1)
+        self.assertEqual(test.col, 1)
 
     def test_big_integer(self):
         from AnyBlok.Column import BigInteger
-        BigInteger(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=BigInteger)
+        test = registry.Test.insert(col=1)
+        self.assertEqual(test.col, 1)
 
     def test_small_integer(self):
         from AnyBlok.Column import SmallInteger
-        SmallInteger(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=SmallInteger)
+        test = registry.Test.insert(col=1)
+        self.assertEqual(test.col, 1)
 
     def test_Float(self):
         from AnyBlok.Column import Float
-        Float(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=Float)
+        test = registry.Test.insert(col=1.0)
+        self.assertEqual(test.col, 1.0)
 
     def test_decimal(self):
         from AnyBlok.Column import Decimal
-        Decimal(label="One Integer")
+        from decimal import Decimal as D
+
+        registry = self.init_registry(simple_column, ColumnType=Decimal)
+        test = registry.Test.insert(col=D('1.0'))
+        self.assertEqual(test.col, D('1.0'))
 
     def test_boolean(self):
         from AnyBlok.Column import Boolean
-        Boolean(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=Boolean)
+        test = registry.Test.insert(col=True)
+        self.assertEqual(test.col, True)
 
     def test_string(self):
         from AnyBlok.Column import String
-        String(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=String)
+        test = registry.Test.insert(col='col')
+        self.assertEqual(test.col, 'col')
+
+    def test_string_with_size(self):
+        from AnyBlok.Column import String
+
+        registry = self.init_registry(simple_column, ColumnType=String,
+                                      size=100)
+        test = registry.Test.insert(col='col')
+        self.assertEqual(test.col, 'col')
 
     def test_text(self):
         from AnyBlok.Column import Text
-        Text(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=Text)
+        test = registry.Test.insert(col='col')
+        self.assertEqual(test.col, 'col')
 
     def test_ustring(self):
         from AnyBlok.Column import uString
-        uString(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=uString)
+        test = registry.Test.insert(col=u'col')
+        self.assertEqual(test.col, u'col')
+
+    def test_ustring_with_size(self):
+        from AnyBlok.Column import uString
+
+        registry = self.init_registry(simple_column, ColumnType=uString,
+                                      size=100)
+        test = registry.Test.insert(col=u'col')
+        self.assertEqual(test.col, u'col')
 
     def test_utext(self):
         from AnyBlok.Column import uText
-        uText(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=uText)
+        test = registry.Test.insert(col=u'col')
+        self.assertEqual(test.col, u'col')
 
     def test_date(self):
         from AnyBlok.Column import Date
-        Date(label="One Integer")
+        from datetime import date
+
+        now = date.today()
+        registry = self.init_registry(simple_column, ColumnType=Date)
+        test = registry.Test.insert(col=now)
+        self.assertEqual(test.col, now)
 
     def test_datetime(self):
         from AnyBlok.Column import DateTime
-        DateTime(label="One Integer")
+        import datetime
+
+        now = datetime.datetime.now()
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=now)
+        self.assertEqual(test.col, now)
 
     def test_interval(self):
         from AnyBlok.Column import Interval
-        Interval(label="One Integer")
+        from datetime import timedelta
+
+        dt = timedelta(days=5)
+        registry = self.init_registry(simple_column, ColumnType=Interval)
+        test = registry.Test.insert(col=dt)
+        self.assertEqual(test.col, dt)
 
     def test_time(self):
         from AnyBlok.Column import Time
-        Time(label="One Integer")
+        from time import time
 
-    def test_binary(self):
-        from AnyBlok.Column import Binary
-        Binary(label="One Integer")
+        now = time()
+        registry = self.init_registry(simple_column, ColumnType=Time)
+        test = registry.Test.insert(col=now)
+        self.assertEqual(test.col, now)
 
     def test_large_binary(self):
         from AnyBlok.Column import LargeBinary
-        LargeBinary(label="One Integer")
+
+        registry = self.init_registry(simple_column, ColumnType=LargeBinary)
+        test = registry.Test.insert(col='')
+        self.assertEqual(test.col, '')
