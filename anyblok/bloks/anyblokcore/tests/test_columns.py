@@ -32,6 +32,11 @@ def column_with_foreign_key():
 
 class TestColumns(AnyBlokFieldTestCase):
 
+    def test_column_with_type_in_kwargs(self):
+        from AnyBlok.Column import Integer
+
+        self.init_registry(simple_column, ColumnType=Integer, type_=Integer)
+
     def test_column_with_foreign_key(self):
         registry = self.init_registry(column_with_foreign_key)
         registry.Test.insert(name='test')

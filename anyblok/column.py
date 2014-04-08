@@ -69,15 +69,13 @@ class Column(Field):
         return cls.sqlalchemy_type
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
-                               properties, forceaddname=False):
+                               properties):
         """ Return the instance of the real field
 
         :param registry: current registry
         :param namespace: name of the model
         :param fieldname: name of the field
         :param properties: properties known of the model
-        :param forceaddname: boolean if True the name of the field will be put
-            on the declaration of the column
         :rtype: sqlalchemy column instance
         """
         args = self.args
@@ -91,8 +89,5 @@ class Column(Field):
         if self.foreign_key:
             args = args + (ForeignKey(self.foreign_key),)
             kwargs['info']['foreign_key'] = self.foreign_key
-
-        if forceaddname:
-            return SA_Column(fieldname, self.sqlalchemy_type, *args, **kwargs)
 
         return SA_Column(self.sqlalchemy_type, *args, **kwargs)
