@@ -13,9 +13,26 @@ class AnyBlokFieldTestCase(AnyBlokTestCase):
         from anyblok.tests.anyblokfieldtestcase import AnyBlokFieldTestCase
 
 
-        class TestMyField(AnyBlokFieldTestCase):
+        def simple_column(ColumnType=None, **kwargs):
 
-            ...
+            from AnyBlok import target_registry, Model
+            from AnyBlok.Column import Integer
+
+            @target_registry(Model)
+            class Test:
+
+                id = Integer(label='id', primary_key=True)
+                col = ColumnType(label="col", **kwargs)
+
+
+        class TestColumns(AnyBlokFieldTestCase):
+
+            def test_integer(self):
+                from AnyBlok.Column import Integer
+
+                registry = self.init_registry(simple_column, ColumnType=Integer)
+                test = registry.Test.insert(col=1)
+                self.assertEqual(test.col, 1)
 
     .. warning::
 
