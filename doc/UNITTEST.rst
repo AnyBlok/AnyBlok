@@ -18,3 +18,20 @@ AnyBlokTestCase
     :undoc-members:
     :show-inheritance:
     :noindex:
+
+
+AnyBlokFieldTestCase
+--------------------
+
+::
+
+    from anyblok.tests.anyblokfieldtestcase import AnyBlokFieldTestCase
+
+
+.. automodule:: anyblok.tests.anyblokfieldtestcase
+
+.. autoclass:: AnyBlokFieldTestCase
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :noindex:
