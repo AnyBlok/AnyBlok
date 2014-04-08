@@ -82,7 +82,7 @@ def _minimum_one2one_with_one2many(**kwargs):
                           backref="person", one2many="persons")
 
 
-class TestMany2One(AnyBlokFieldTestCase):
+class TestOne2One(AnyBlokFieldTestCase):
 
     def test_complete_one2one(self):
         registry = self.init_registry(_complete_one2one)

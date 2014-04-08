@@ -210,5 +210,3 @@ class TestMany2One(AnyBlokFieldTestCase):
         from AnyBlok.Column import Time
 
         self.check_autodetect_type(Time)
-
-# TODO anyblok.bloks.anyblokcore._columns.enum

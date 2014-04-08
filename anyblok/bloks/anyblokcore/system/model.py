@@ -24,23 +24,29 @@ class Model:
                 raise Exception('Not implemented yet')
 
         for model in cls.registry.loaded_namespaces.keys():
-            m = cls.registry.loaded_namespaces[model]
-            table = m.__tablename__
-            if cls.query('name').filter(cls.name == model).count():
-                for cname in m.loaded_columns:
-                    field = getattr(m, cname)
-                    Field = get_field_model(field)
-                    query = Field.query()
-                    query = query.filter(Field.model == model)
-                    query = query.filter(Field.name == cname)
-                    if query.count():
-                        Field.alter_field(query.first(), field)
-                    else:
+            try:
+                # TODO need refactor, then try except pass whenever refactor
+                # not apply
+                m = cls.registry.loaded_namespaces[model]
+                table = m.__tablename__
+                if cls.query('name').filter(cls.name == model).count():
+                    for cname in m.loaded_columns:
+                        field = getattr(m, cname)
+                        Field = get_field_model(field)
+                        query = Field.query()
+                        query = query.filter(Field.model == model)
+                        query = query.filter(Field.name == cname)
+                        if query.count():
+                            Field.alter_field(query.first(), field)
+                        else:
+                            Field.add_field(cname, field, model, table)
+                else:
+                    is_sql_model = len(m.loaded_columns) > 0
+                    cls.insert(name=model, table=table,
+                               is_sql_model=is_sql_model)
+                    for cname in m.loaded_columns:
+                        field = getattr(m, cname)
+                        Field = get_field_model(field)
                         Field.add_field(cname, field, model, table)
-            else:
-                is_sql_model = len(m.loaded_columns) > 0
-                cls.insert(name=model, table=table, is_sql_model=is_sql_model)
-                for cname in m.loaded_columns:
-                    field = getattr(m, cname)
-                    Field = get_field_model(field)
-                    Field.add_field(cname, field, model, table)
+            except:
+                pass

@@ -30,7 +30,8 @@ class AnyBlokFieldTestCase(AnyBlokTestCase):
             def test_integer(self):
                 from AnyBlok.Column import Integer
 
-                registry = self.init_registry(simple_column, ColumnType=Integer)
+                registry = self.init_registry(simple_column,
+                                              ColumnType=Integer)
                 test = registry.Test.insert(col=1)
                 self.assertEqual(test.col, 1)
 

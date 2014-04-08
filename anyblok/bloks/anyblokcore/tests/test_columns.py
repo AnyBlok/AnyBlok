@@ -13,7 +13,29 @@ def simple_column(ColumnType=None, **kwargs):
         col = ColumnType(label="col", **kwargs)
 
 
+def column_with_foreign_key():
+
+    from AnyBlok import target_registry, Model
+    from AnyBlok.Column import Integer, String
+
+    @target_registry(Model)
+    class Test:
+
+        name = String(label='id', primary_key=True)
+
+    @target_registry(Model)
+    class Test2:
+
+        id = Integer(label='id', primary_key=True)
+        test = String(label='test_id', foreign_key=(Model.Test, 'name'))
+
+
 class TestColumns(AnyBlokFieldTestCase):
+
+    def test_column_with_foreign_key(self):
+        registry = self.init_registry(column_with_foreign_key)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
 
     def test_integer(self):
         from AnyBlok.Column import Integer
