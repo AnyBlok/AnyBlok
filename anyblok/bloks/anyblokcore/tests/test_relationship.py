@@ -24,11 +24,6 @@ class TestRelationShip(unittest.TestCase):
         super(TestRelationShip, cls).tearDownClass()
         BlokManager.unload()
 
-    def test_many2one(self):
-        from AnyBlok.RelationShip import Many2One
-        Many2One(label="One Many2One", model=self.TestModel,
-                 remote_column="test")
-
     def test_one2many(self):
         from AnyBlok.RelationShip import One2Many
         One2Many(label="One One2Many", model=self.TestModel)

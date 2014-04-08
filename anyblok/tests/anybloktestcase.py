@@ -13,6 +13,15 @@ class AnyBlokTestCase(unittest.TestCase):
     """ Unittest class add helper for unit test in anyblok """
     @classmethod
     def init_argsparse_manager(cls, env=None):
+        """ Initialise the argsparse manager with environ variable
+        to launch the test
+
+        .. warning::
+
+            For the moment we not use the environ variable juste constante
+
+        :param env: add another dict to merge with environ variable
+        """
         if env is None:
             env = {}
         env.update({
@@ -74,4 +83,12 @@ class AnyBlokTestCase(unittest.TestCase):
         adapter.dropdb(ArgsParseManager.get('dbname'))
 
     def getRegistry(self):
+        """ Return the registry for the database in argsparse i
+
+        ::
+
+            registry = self.getRegistry()
+
+        :rtype: registry instance
+        """
         return RegistryManager.get(ArgsParseManager.get('dbname'))

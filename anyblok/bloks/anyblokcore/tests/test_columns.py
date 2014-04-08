@@ -56,10 +56,6 @@ class TestColumns(unittest.TestCase):
         from AnyBlok.Column import uText
         uText(label="One Integer")
 
-    def test_enum(self):
-        from AnyBlok.Column import Enum
-        Enum(label="One Integer")
-
     def test_date(self):
         from AnyBlok.Column import Date
         Date(label="One Integer")

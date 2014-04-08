@@ -326,17 +326,20 @@ class Registry:
                 for key in _entry['registry_names']:
                     v = _entry[key]
                     if key not in loaded_registries:
-                        loaded_registries[key] = {'properties': {}, 'bases': []}
+                        loaded_registries[key] = {'properties': {},
+                                                  'bases': []}
 
-                    loaded_registries[key]['properties'].update(v['properties'])
+                    loaded_registries[key]['properties'].update(
+                        v['properties'])
                     old_bases = [] + loaded_registries[key]['bases']
                     loaded_registries[key]['bases'] = v['bases']
                     loaded_registries[key]['bases'] += old_bases
 
                     if entry in RegistryManager.mustbeload_declared_entries:
+                        declared_e = RegistryManager.callback_declared_entries
                         if entry == 'Model':
                             loaded_registries['model_names'].append(key)
-                        elif entry in RegistryManager.callback_declared_entries:
+                        elif entry in declared_e:
                             # TODO
                             pass
 
@@ -484,7 +487,8 @@ class Registry:
                     properties.update(p)
 
                     for b_ns in b.__anyblok_bases__:
-                        bs, ps = load_namespace_second_step(b_ns.__registry_name__)
+                        bs, ps = load_namespace_second_step(
+                            b_ns.__registry_name__)
                         bases += bs
                         ps.update(properties)
                         properties.update(ps)
@@ -515,7 +519,8 @@ class Registry:
             for namespace in loaded_registries['model_names']:
                 load_namespace_first_step(namespace)
 
-            # create the namespace with all the information come from first step
+            # create the namespace with all the information come from first
+            # step
             for namespace in loaded_registries['model_names']:
                 load_namespace_second_step(namespace)
 
@@ -526,7 +531,8 @@ class Registry:
                 sessionmaker(bind=self.engine, class_=Session),
                 EnvironmentManager.scoped_function_for_session)
 
-            self.migration = Migration(self.session, self.declarativebase.metadata)
+            self.migration = Migration(self.session,
+                                       self.declarativebase.metadata)
             self.migration.auto_upgrade_database()
 
             Model = self.System.Model

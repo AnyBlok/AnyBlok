@@ -44,6 +44,24 @@ def _minimum_many2one(**kwargs):
         address = Many2One(label="Address", model=Model.Address)
 
 
+def _minimum_many2one_without_model(**kwargs):
+
+    from AnyBlok import target_registry, Model
+    from AnyBlok.Column import Integer, String
+    from AnyBlok.RelationShip import Many2One
+
+    @target_registry(Model)
+    class Address:
+
+        id = Integer(label='Id', primary_key=True)
+
+    @target_registry(Model)
+    class Person:
+
+        name = String(label='Name', primary_key=True)
+        address = Many2One(label="Address")
+
+
 def _auto_detect_type(ColumnType=None, **kwargs):
     if ColumnType is None:
         raise Exception("Test invalid")
@@ -118,6 +136,13 @@ class TestMany2One(AnyBlokFieldTestCase):
 
         self.assertEqual(person.address, address)
 
+    def test_minimum_many2one_without_model(self):
+        try:
+            self.init_registry(_minimum_many2one_without_model)
+            self.fail("No watch dog when more no model")
+        except FieldException:
+            pass
+
     def test_two_remote_primary_keys(self):
         try:
             self.init_registry(_two_remote_primary_keys)
@@ -136,7 +161,54 @@ class TestMany2One(AnyBlokFieldTestCase):
 
         self.check_autodetect_type(Integer)
 
+    def test_autodetect_type_small_integer(self):
+        from AnyBlok.Column import SmallInteger
+
+        self.check_autodetect_type(SmallInteger)
+
+    def test_autodetect_type_big_integer(self):
+        from AnyBlok.Column import BigInteger
+
+        self.check_autodetect_type(BigInteger)
+
+    def test_autodetect_type_float(self):
+        from AnyBlok.Column import Float
+
+        self.check_autodetect_type(Float)
+
+    def test_autodetect_type_decimal(self):
+        from AnyBlok.Column import Decimal
+
+        self.check_autodetect_type(Decimal)
+
     def test_autodetect_type_string(self):
         from AnyBlok.Column import String
 
         self.check_autodetect_type(String)
+
+    def test_autodetect_type_ustring(self):
+        from AnyBlok.Column import uString
+
+        self.check_autodetect_type(uString)
+
+    def test_autodetect_type_boolean(self):
+        from AnyBlok.Column import Boolean
+
+        self.check_autodetect_type(Boolean)
+
+    def test_autodetect_type_datetime(self):
+        from AnyBlok.Column import DateTime
+
+        self.check_autodetect_type(DateTime)
+
+    def test_autodetect_type_date(self):
+        from AnyBlok.Column import Date
+
+        self.check_autodetect_type(Date)
+
+    def test_autodetect_type_time(self):
+        from AnyBlok.Column import Time
+
+        self.check_autodetect_type(Time)
+
+# TODO anyblok.bloks.anyblokcore._columns.enum
