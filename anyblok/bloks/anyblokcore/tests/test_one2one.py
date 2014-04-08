@@ -63,6 +63,25 @@ def _minimum_one2one_without_backref(**kwargs):
         address = One2One(label="Address", model=Model.Address)
 
 
+def _minimum_one2one_with_one2many(**kwargs):
+
+    from AnyBlok import target_registry, Model
+    from AnyBlok.Column import Integer, String
+    from AnyBlok.RelationShip import One2One
+
+    @target_registry(Model)
+    class Address:
+
+        id = Integer(label='Id', primary_key=True)
+
+    @target_registry(Model)
+    class Person:
+
+        name = String(label='Name', primary_key=True)
+        address = One2One(label="Address", model=Model.Address,
+                          backref="person", one2many="persons")
+
+
 class TestMany2One(AnyBlokFieldTestCase):
 
     def test_complete_one2one(self):
@@ -102,5 +121,12 @@ class TestMany2One(AnyBlokFieldTestCase):
         try:
             self.init_registry(_minimum_one2one_without_backref)
             self.fail("No watch dog when no backref")
+        except FieldException:
+            pass
+
+    def test_minimum_one2one_with_one2many(self):
+        try:
+            self.init_registry(_minimum_one2one_with_one2many)
+            self.fail("No watch dog when one2many")
         except FieldException:
             pass
