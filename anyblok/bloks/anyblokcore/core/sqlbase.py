@@ -22,4 +22,5 @@ class SqlBase:
     def insert(cls, **kwargs):
         instance = cls(**kwargs)
         cls.registry.add(instance)
+        cls.registry.flush()
         return instance

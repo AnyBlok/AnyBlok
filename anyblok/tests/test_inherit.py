@@ -318,7 +318,6 @@ class TestInherit(AnyBlokDBTestCase):
         t = registry.Test.insert(name=1)
         t2 = registry.Test.query().first()
         self.assertEqual(t2, t)
-        registry.commit()
         self.assertEqual(t.name, 1)
 
     def test_simple_subclass_model_change_type_and_subclass_add_field(self):
@@ -328,7 +327,6 @@ class TestInherit(AnyBlokDBTestCase):
         t = registry.Test.insert(name=1, other='other')
         t2 = registry.Test.query().first()
         self.assertEqual(t2, t)
-        registry.commit()
         self.assertEqual(t.name, 1)
 
     def test_mixin_one_model(self):
@@ -353,7 +351,6 @@ class TestInherit(AnyBlokDBTestCase):
 
         val = 'test'
         registry.TestFk.insert(name=val)
-        # registry.commit()
         t = registry.Test.insert(name=val)
         t2 = registry.Test.query().first()
         self.assertEqual(t2, t)
