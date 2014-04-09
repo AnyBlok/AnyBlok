@@ -13,7 +13,6 @@ requires = [
     'zope.component',
     'sqlalchemy',
     'argparse',
-    'nose',
     'alembic',
 ]
 

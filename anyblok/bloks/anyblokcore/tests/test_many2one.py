@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from anyblok.tests.anyblokfieldtestcase import AnyBlokFieldTestCase
+from anyblok.tests.anybloktestcase import AnyBlokDBTestCase
 from anyblok.field import FieldException
 
 
@@ -101,7 +101,7 @@ def _two_remote_primary_keys(**kwargs):
         address = Many2One(label="Address", model=Model.Address)
 
 
-class TestMany2One(AnyBlokFieldTestCase):
+class TestMany2One(AnyBlokDBTestCase):
 
     def test_complete_many2one(self):
         registry = self.init_registry(_complete_many2one)

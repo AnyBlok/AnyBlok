@@ -1,4 +1,4 @@
-from anyblok.tests.anyblokfieldtestcase import AnyBlokFieldTestCase
+from anyblok.tests.anybloktestcase import AnyBlokDBTestCase
 
 
 def simple_column(ColumnType=None, **kwargs):
@@ -30,7 +30,7 @@ def column_with_foreign_key():
         test = String(label='test_id', foreign_key=(Model.Test, 'name'))
 
 
-class TestColumns(AnyBlokFieldTestCase):
+class TestColumns(AnyBlokDBTestCase):
 
     def test_column_with_type_in_kwargs(self):
         from AnyBlok.Column import Integer
