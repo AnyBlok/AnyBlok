@@ -3,15 +3,15 @@ Helper for unittest
 
 For unittest classes are available to have some fonctionnality
 
+.. automodule:: anyblok.tests.anybloktestcase
+
+
 AnyBlokTestCase
 ---------------
 
 ::
 
     from anyblok.tests.anybloktestcase import AnyBlokTestCase
-
-
-.. automodule:: anyblok.tests.anybloktestcase
 
 .. autoclass:: AnyBlokTestCase
     :members:
@@ -23,14 +23,7 @@ AnyBlokTestCase
 AnyBlokFieldTestCase
 --------------------
 
-::
-
-    from anyblok.tests.anyblokfieldtestcase import AnyBlokFieldTestCase
-
-
-.. automodule:: anyblok.tests.anyblokfieldtestcase
-
-.. autoclass:: AnyBlokFieldTestCase
+.. autoclass:: AnyBlokDBTestCase
     :members:
     :undoc-members:
     :show-inheritance:
