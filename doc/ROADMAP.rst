@@ -12,11 +12,10 @@ To implement
 
 * core.query : implement a method to subclass one method for automaticly where clause in model https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/PreFilteredQuery
 * Add Blok group as "Category" or "Blok group"
-* Add method to create database for unittest
-* Add method to get registry(without argparse but add before env) for unittest
 * Make a registry reload to update registry without destroy the curent registry and create a new(Protect the session)
 * Add RelationShip model in anyblok-core and refatore the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
-* Add fonctionnality on m2o and o2o, remote column haven't be rquired, only the model, search in the column the primary key and use it 
+* Refactor the m2m, o2m, m2o, o2o. Allow to have more than one primary key
+* Refactor split load method of registry and unit test all part
 
 Fix me
 ------
@@ -24,7 +23,6 @@ Fix me
 * Enum Column doesn't work, see http://techspot.zzzeek.org/2011/01/14/the-enum-recipe/
   or https://pypi.python.org/pypi/SQLAlchemy-Enum-Dict/0.1.2
 * Add the posibility to add a nullable column by migration
-* FIX Refactor the m2m, o2m, autodetect the type of the column and the primary key and foreign_key
 
 Library to include
 ------------------

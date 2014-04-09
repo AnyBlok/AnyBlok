@@ -1,4 +1,3 @@
-from anyblok.field import FieldException
 from AnyBlok import target_registry, RelationShip
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.schema import ForeignKey
@@ -66,15 +65,7 @@ class Many2One(RelationShip):
             self.model.__registry_name__)
 
         if self.remote_column is None:
-            pks = []
-            for f, p in remote_properties.items():
-                if 'primary_key' in p.kwargs:
-                    pks.append(f)
-
-            if len(pks) != 1:
-                raise FieldException(
-                    "We must have one and only one primary key")
-            self.remote_column = pks[0]
+            self.remote_column = self.find_primary_key(remote_properties)
 
         if self.column_name is None:
             self.column_name = "%s_%s" % (self.model.__tablename__,

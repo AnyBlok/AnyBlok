@@ -67,16 +67,7 @@ class Many2Many(RelationShip):
 
     def get_m2m_column_info(self, tablename, properties, column, m2m_column):
         if column is None:
-            pks = []
-            for f, p in properties.items():
-                if 'primary_key' in p.kwargs:
-                    pks.append(f)
-
-            if len(pks) != 1:
-                raise FieldException(
-                    "We must have one and only one primary key")
-
-            column = pks[0]
+            column = self.find_primary_key(properties)
         elif column not in properties:
             raise FieldException("%r does not exist in %r" % (column,
                                                               tablename))
@@ -130,8 +121,6 @@ class Many2Many(RelationShip):
 
             self.kwargs['secondary'] = t
             registry.many2many_tables[self.join_table] = t
-
-        print(self.kwargs)
 
         return super(Many2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)

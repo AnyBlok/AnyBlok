@@ -45,6 +45,23 @@ class RelationShip(Field):
         self.model = model
         self.kwargs = kwargs
 
+    def find_primary_key(self, properties):
+        """ Return the primary key come from the first step property
+
+        :param properties: first step properties for the model
+        :rtype: column name of the primary key
+        """
+        pks = []
+        for f, p in properties.items():
+            if 'primary_key' in p.kwargs:
+                pks.append(f)
+
+        if len(pks) != 1:
+            raise FieldException(
+                "We must have one and only one primary key")
+
+        return pks[0]
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Return the instance of the real field
