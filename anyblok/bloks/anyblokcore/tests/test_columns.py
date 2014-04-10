@@ -158,7 +158,7 @@ class TestColumns(AnyBlokDBTestCase):
 
     def test_time(self):
         from AnyBlok.Column import Time
-        from time import time
+        from datetime import time
 
         now = time()
         registry = self.init_registry(simple_column, ColumnType=Time)
@@ -167,7 +167,11 @@ class TestColumns(AnyBlokDBTestCase):
 
     def test_large_binary(self):
         from AnyBlok.Column import LargeBinary
+        from os import urandom
+
+        blob = urandom(100000)
 
         registry = self.init_registry(simple_column, ColumnType=LargeBinary)
-        test = registry.Test.insert(col='')
-        self.assertEqual(test.col, '')
+
+        test = registry.Test.insert(col=blob)
+        self.assertEqual(test.col, blob)

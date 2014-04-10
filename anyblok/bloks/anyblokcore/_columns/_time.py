@@ -4,5 +4,18 @@ from AnyBlok import target_registry, Column
 
 @target_registry(Column)
 class Time(Column):
+    """ Time column
 
-        sqlalchemy_type = SA_Time
+    ::
+
+        from datetime import time
+        from AnyBlok import target_registry, Model
+        from AnyBlok.Column import Time
+
+        @target_registry(Model)
+        class Test:
+
+            x = Time(label="Time", default=time())
+
+    """
+    sqlalchemy_type = SA_Time
