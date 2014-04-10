@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .anybloktestcase import AnyBlokTestCase
+from anyblok.tests.testcase import TestCase
 import os
 from anyblok import AnyBlok
 from anyblok._argsparse import ArgsParseManager
@@ -7,7 +7,7 @@ from zope.component import getUtility
 from datetime import datetime
 
 
-class TestDataBase(AnyBlokTestCase):
+class TestDataBase(TestCase):
 
     drivername = None
     ready_to_test = False

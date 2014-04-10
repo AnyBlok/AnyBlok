@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .anybloktestcase import AnyBlokTestCase
+from anyblok.tests.testcase import TestCase
 from anyblok.registry import Registry
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
 
 
-class TestMigration(AnyBlokTestCase):
+class TestMigration(TestCase):
 
     @classmethod
     def setUpClass(cls):

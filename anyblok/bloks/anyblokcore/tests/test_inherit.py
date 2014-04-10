@@ -1,4 +1,4 @@
-from .anybloktestcase import AnyBlokDBTestCase
+from anyblok.tests.testcase import DBTestCase
 
 
 def simple_subclass_model():
@@ -301,7 +301,7 @@ def inherit_by_another_model_and_subclass_mainmodel():
         other = String(label="Other")
 
 
-class TestInherit(AnyBlokDBTestCase):
+class TestInherit(DBTestCase):
 
     def check_registry(self, Model):
         t = Model.insert(name="test", other="other")

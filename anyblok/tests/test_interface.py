@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .anybloktestcase import AnyBlokTestCase
+from anyblok.tests.testcase import TestCase
 import AnyBlok
 from AnyBlok import target_registry, remove_registry
 from AnyBlok import Interface, Core, Field, Column, RelationShip, Mixin, Model
@@ -29,7 +29,7 @@ class OneModel:
     __tablename__ = 'test'
 
 
-class TestCoreInterface(AnyBlokTestCase):
+class TestCoreInterface(TestCase):
 
     def test_add_interface(self):
 
@@ -82,7 +82,7 @@ class TestCoreInterface(AnyBlokTestCase):
         self.assertEqual(hasattr(Interface, "InterfaceToRemove"), False)
 
 
-class TestCoreInterfaceCoreBase(AnyBlokTestCase):
+class TestCoreInterfaceCoreBase(TestCase):
 
     _corename = 'Base'
 
@@ -166,7 +166,7 @@ class TestCoreInterfaceCoreBase(AnyBlokTestCase):
         self.assertInCore(Base)
 
 
-class TestCoreInterfaceField(AnyBlokTestCase):
+class TestCoreInterfaceField(TestCase):
 
     def test_import_Field(self):
         import AnyBlok.Field
@@ -229,7 +229,7 @@ class TestCoreInterfaceField(AnyBlokTestCase):
             pass
 
 
-class TestCoreInterfaceColumn(AnyBlokTestCase):
+class TestCoreInterfaceColumn(TestCase):
 
     def test_import_Column(self):
         import AnyBlok.Column
@@ -290,7 +290,7 @@ class TestCoreInterfaceColumn(AnyBlokTestCase):
             pass
 
 
-class TestCoreInterfaceRelationShip(AnyBlokTestCase):
+class TestCoreInterfaceRelationShip(TestCase):
 
     def test_import_RelationShip(self):
         import AnyBlok.RelationShip
@@ -362,7 +362,7 @@ class TestCoreInterfaceRelationShip(AnyBlokTestCase):
             pass
 
 
-class TestCoreInterfaceMixin(AnyBlokTestCase):
+class TestCoreInterfaceMixin(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -448,7 +448,7 @@ class TestCoreInterfaceMixin(AnyBlokTestCase):
         self.assertInMixin(MyMixin)
 
 
-class TestCoreInterfaceModel(AnyBlokTestCase):
+class TestCoreInterfaceModel(TestCase):
 
     @classmethod
     def setUpClass(cls):

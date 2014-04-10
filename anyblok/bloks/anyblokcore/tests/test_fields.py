@@ -1,4 +1,4 @@
-from anyblok.tests.anybloktestcase import AnyBlokDBTestCase
+from anyblok.tests.testcase import DBTestCase
 from anyblok.field import FieldException
 from AnyBlok import target_registry, Model
 from AnyBlok import Field
@@ -32,7 +32,7 @@ def field_without_name():
         field = OneFieldForTest()
 
 
-class TestField(AnyBlokDBTestCase):
+class TestField(DBTestCase):
 
     def test_field_with_name(self):
         self.init_registry(field_with_name)

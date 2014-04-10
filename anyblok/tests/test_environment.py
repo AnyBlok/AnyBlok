@@ -1,4 +1,4 @@
-from .anybloktestcase import AnyBlokTestCase
+from anyblok.tests.testcase import TestCase
 from anyblok.environment import EnvironmentManager, EnvironmentException
 from anyblok.environment import ThreadEnvironment
 
@@ -20,7 +20,7 @@ class MockEnvironment:
         return cls.values.get(key, default)
 
 
-class TestEnvironment(AnyBlokTestCase):
+class TestEnvironment(TestCase):
 
     def setUp(self):
         super(TestEnvironment, self).setUp()
@@ -147,7 +147,7 @@ class TestEnvironment(AnyBlokTestCase):
         self.check_bad_define_environment(Env)
 
 
-class TestThreadEnvironment(AnyBlokTestCase):
+class TestThreadEnvironment(TestCase):
 
     def test_set_and_get_variable(self):
         dbname = 'test db name'

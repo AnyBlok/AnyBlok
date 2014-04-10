@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .anybloktestcase import AnyBlokTestCase
+from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
 from anyblok import AnyBlok
 
@@ -12,7 +12,7 @@ old_mustbeload_declared_entries += RegistryManager.mustbeload_declared_entries
 old_callback_declared_entries = RegistryManager.callback_declared_entries
 
 
-class TestRegistryCore(AnyBlokTestCase):
+class TestRegistryCore(TestCase):
 
     @classmethod
     def setUpClass(cls):

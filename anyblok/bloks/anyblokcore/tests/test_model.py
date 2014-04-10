@@ -1,4 +1,4 @@
-from .anybloktestcase import AnyBlokDBTestCase
+from anyblok.tests.testcase import DBTestCase
 
 
 def simple_model():
@@ -29,7 +29,7 @@ def model_with_foreign_key():
         name = String(label="Name", foreign_key=(Model.TestFk, 'name'))
 
 
-class TestInherit(AnyBlokDBTestCase):
+class TestInherit(DBTestCase):
 
     def check_registry(self, Model):
         t = Model.insert(name="test")

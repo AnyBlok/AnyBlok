@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from anyblok.tests.anybloktestcase import AnyBlokDBTestCase
+from anyblok.tests.testcase import DBTestCase
 from anyblok.field import FieldException
 
 
@@ -82,7 +82,7 @@ def _minimum_one2one_with_one2many(**kwargs):
                           backref="person", one2many="persons")
 
 
-class TestOne2One(AnyBlokDBTestCase):
+class TestOne2One(DBTestCase):
 
     def test_complete_one2one(self):
         registry = self.init_registry(_complete_one2one)

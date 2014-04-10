@@ -11,7 +11,7 @@ import AnyBlok
 logger = getLogger(__name__)
 
 
-class AnyBlokTestCase(unittest.TestCase):
+class TestCase(unittest.TestCase):
     """ Unittest class add helper for unit test in anyblok """
     @classmethod
     def init_argsparse_manager(cls, env=None):
@@ -96,12 +96,12 @@ class AnyBlokTestCase(unittest.TestCase):
         return RegistryManager.get(ArgsParseManager.get('dbname'))
 
 
-class AnyBlokDBTestCase(AnyBlokTestCase):
+class DBTestCase(TestCase):
     """ Test case for all the Field, Column, RelationShip
 
     ::
 
-        from anyblok.tests.anybloktestcase import AnyBlokDBTestCase
+        from anyblok.tests.testcase import DBTestCase
 
 
         def simple_column(ColumnType=None, **kwargs):
@@ -116,7 +116,7 @@ class AnyBlokDBTestCase(AnyBlokTestCase):
                 col = ColumnType(label="col", **kwargs)
 
 
-        class TestColumns(AnyBlokDBTestCase):
+        class TestColumns(DBTestCase):
 
             def test_integer(self):
                 from AnyBlok.Column import Integer
@@ -140,12 +140,12 @@ class AnyBlokDBTestCase(AnyBlokTestCase):
     @classmethod
     def setUpClass(cls):
         """ Intialialise the argsparse manager """
-        super(AnyBlokDBTestCase, cls).setUpClass()
+        super(DBTestCase, cls).setUpClass()
         cls.init_argsparse_manager()
 
     def setUp(self):
         """ Create a database and load the blok manager """
-        super(AnyBlokDBTestCase, self).setUp()
+        super(DBTestCase, self).setUp()
         self.createdb()
         BlokManager.load(*self.part_to_load)
 
@@ -155,7 +155,7 @@ class AnyBlokDBTestCase(AnyBlokTestCase):
         RegistryManager.clear()
         BlokManager.unload()
         self.dropdb()
-        super(AnyBlokDBTestCase, self).tearDown()
+        super(DBTestCase, self).tearDown()
 
     def init_registry(self, function, **kwargs):
         """ call a function to filled the blok manager with new model
@@ -170,3 +170,7 @@ class AnyBlokDBTestCase(AnyBlokTestCase):
         finally:
             AnyBlok.current_blok = None
         return self.getRegistry()
+
+
+class BlokTestCase(TestCase):
+    pass

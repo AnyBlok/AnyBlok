@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from anyblok.tests.anybloktestcase import AnyBlokDBTestCase
+from anyblok.tests.testcase import DBTestCase
 from anyblok.field import FieldException
 
 
@@ -113,7 +113,7 @@ def reuse_many2many_table(**kwargs):
                             join_table='join_person_and_address')
 
 
-class TestMany2Many(AnyBlokDBTestCase):
+class TestMany2Many(DBTestCase):
 
     def test_complete_many2many(self):
         registry = self.init_registry(_complete_many2many)

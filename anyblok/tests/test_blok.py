@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from anyblok.blok import BlokManager, BlokManagerException, Blok
-from .anybloktestcase import AnyBlokTestCase
+from anyblok.tests.testcase import TestCase
 
 
-class TestBlokManager(AnyBlokTestCase):
+class TestBlokManager(TestCase):
 
     def tearDown(self):
         super(TestBlokManager, self).tearDown()

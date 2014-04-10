@@ -9,7 +9,7 @@ from anyblok._argsparse import add_uninstall_bloks
 from anyblok._argsparse import add_update_bloks
 from anyblok._argsparse import add_interpreter
 from anyblok._argsparse import add_logging
-from .anybloktestcase import AnyBlokTestCase
+from anyblok.tests.testcase import TestCase
 from argparse import ArgumentParser
 
 
@@ -41,7 +41,7 @@ class MockArgParseArguments:
         return self.kwargs.items()
 
 
-class TestArgsParseManager(AnyBlokTestCase):
+class TestArgsParseManager(TestCase):
 
     def setUp(self):
         super(TestArgsParseManager, self).setUp()
@@ -292,7 +292,7 @@ class TestArgsParseManager(AnyBlokTestCase):
             pass
 
 
-class TestArgsParseOption(AnyBlokTestCase):
+class TestArgsParseOption(TestCase):
 
     @classmethod
     def setUpClass(cls):

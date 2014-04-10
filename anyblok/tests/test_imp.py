@@ -1,5 +1,5 @@
 import anyblok
-from .anybloktestcase import AnyBlokTestCase
+from anyblok.tests.testcase import TestCase
 from anyblok.blok import BlokManager, Blok
 from sys import modules
 from anyblok._imp import ImportManager, ImportManagerException
@@ -16,7 +16,7 @@ class OneBlok(Blok):
     pass
 
 
-class TestImportManager(AnyBlokTestCase):
+class TestImportManager(TestCase):
 
     def setUp(self):
         super(TestImportManager, self).setUp()

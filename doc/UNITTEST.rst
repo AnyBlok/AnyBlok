@@ -3,27 +3,37 @@ Helper for unittest
 
 For unittest classes are available to have some fonctionnality
 
-.. automodule:: anyblok.tests.anybloktestcase
+.. automodule:: anyblok.tests.testcase
 
 
-AnyBlokTestCase
----------------
+TestCase
+--------
 
 ::
 
     from anyblok.tests.anybloktestcase import AnyBlokTestCase
 
-.. autoclass:: AnyBlokTestCase
+.. autoclass:: TestCase
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
 
-AnyBlokFieldTestCase
---------------------
+DBTestCase
+----------
 
-.. autoclass:: AnyBlokDBTestCase
+.. autoclass:: DBTestCase
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :noindex:
+
+
+BlokDBTestCase
+--------------
+
+.. autoclass:: BlokTestCase
     :members:
     :undoc-members:
     :show-inheritance:

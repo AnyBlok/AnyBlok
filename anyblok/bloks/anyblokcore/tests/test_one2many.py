@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from anyblok.tests.anybloktestcase import AnyBlokDBTestCase
+from anyblok.tests.testcase import DBTestCase
 from anyblok.field import FieldException
 
 
@@ -91,7 +91,7 @@ def _autodetect_two_foreign_key(**kwargs):
         persons = One2Many(label="Persons", model=Model.Person)
 
 
-class TestOne2One(AnyBlokDBTestCase):
+class TestOne2One(DBTestCase):
 
     def test_complete_one2one(self):
         registry = self.init_registry(_complete_one2many)
