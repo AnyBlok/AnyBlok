@@ -15,6 +15,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
+@AnyBlok.target_registry(AnyBlok.Exception)
 class RegistryManagerException(Exception):
     """ Simple Exception for Registry """
 

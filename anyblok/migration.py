@@ -4,6 +4,7 @@ from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from sqlalchemy import schema
 from contextlib import contextmanager
+import AnyBlok
 
 
 @contextmanager
@@ -18,6 +19,7 @@ def cnx(migration):
         raise
 
 
+@AnyBlok.target_registry(AnyBlok.Exception)
 class MigrationException(Exception):
     """ Simple Exception class for Migration """
 

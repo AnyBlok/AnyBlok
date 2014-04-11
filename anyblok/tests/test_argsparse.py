@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import anyblok
 from os.path import join
-from anyblok._argsparse import ArgsParseManagerException, ArgsParseManager
+from anyblok._argsparse import ArgsParseManager
 from anyblok._argsparse import add_configuration_file
 from anyblok._argsparse import add_database
 from anyblok._argsparse import add_install_bloks
@@ -11,6 +11,7 @@ from anyblok._argsparse import add_interpreter
 from anyblok._argsparse import add_logging
 from anyblok.tests.testcase import TestCase
 from argparse import ArgumentParser
+from AnyBlok.Exception import ArgsParseManagerException
 
 
 def fnct_argsparse(parser, default):

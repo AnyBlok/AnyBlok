@@ -1,7 +1,8 @@
 import AnyBlok
 from AnyBlok import target_registry, add_Adapter, Field
 from AnyBlok.Interface import ICoreInterface
-from anyblok.field import FieldException, AField
+from anyblok.field import AField
+from AnyBlok.Exception import FieldException
 from sqlalchemy.orm import relationship
 from zope.interface import implementer
 

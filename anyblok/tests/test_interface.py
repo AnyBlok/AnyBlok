@@ -3,9 +3,8 @@ from anyblok.tests.testcase import TestCase
 import AnyBlok
 from AnyBlok import target_registry, remove_registry
 from AnyBlok import Interface, Core, Field, Column, RelationShip, Mixin, Model
-from anyblok.interface import CoreInterfaceException
+from AnyBlok.Exception import CoreInterfaceException, FieldException
 from anyblok.registry import RegistryManager
-from anyblok.field import FieldException
 from sqlalchemy import Integer as SA_Integer
 
 
@@ -532,3 +531,57 @@ class TestCoreInterfaceModel(TestCase):
         remove_registry(Model, cls_=OneInterface, name="MyModel",
                         blok=blokname)
         self.assertInModel(MyModel)
+
+
+class TestCoreInterfaceException(TestCase):
+
+    def test_import_exception(self):
+        import AnyBlok.Exception
+        dir(AnyBlok.Exception)
+
+    def test_add_interface(self):
+        import AnyBlok
+
+        target_registry(AnyBlok.Exception, cls_=OneInterface,
+                        name='OneException')
+        self.assertEqual('Exception',
+                         AnyBlok.Exception.OneException.__interface__)
+        import AnyBlok.Exception.OneException
+        dir(AnyBlok.Exception.OneException)
+
+    def test_add_interface_with_decorator(self):
+        import AnyBlok
+
+        @target_registry(AnyBlok.Exception)
+        class OneDecoratorException:
+            pass
+
+        self.assertEqual('Exception',
+                         AnyBlok.Exception.OneDecoratorException.__interface__)
+        import AnyBlok.Exception.OneDecoratorException
+        dir(AnyBlok.Exception.OneDecoratorException)
+
+    def test_add_same_interface(self):
+
+        target_registry(AnyBlok.Exception, cls_=OneInterface,
+                        name="SameException")
+
+        try:
+            @target_registry(AnyBlok.Exception)
+            class SameException:
+                pass
+
+            self.fail('No watch dog to add 2 same field')
+        except AnyBlok.Exception.AnyBlokException:
+            pass
+
+    def test_remove_interface(self):
+
+        target_registry(AnyBlok.Exception, cls_=OneInterface,
+                        name="Exception2Remove")
+        try:
+            remove_registry(AnyBlok.Exception, cls_=OneInterface,
+                            name="Exception2Remove")
+            self.fail('No watch dog to remove field')
+        except AnyBlok.Exception.AnyBlokException:
+            pass

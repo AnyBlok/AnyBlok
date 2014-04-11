@@ -135,8 +135,9 @@ from sys import modules
 modules['AnyBlok'] = AnyBlok
 
 
-from . import _imp  # noqa
 from . import interface  # noqa
+from . import exception  # noqa
+from . import _imp  # noqa
 from . import databases  # noqa
 from . import core  # noqa
 from . import field  # noqa

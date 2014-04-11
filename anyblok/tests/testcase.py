@@ -76,7 +76,7 @@ class TestCase(unittest.TestCase):
         dbname = ArgsParseManager.get('dbname')
         if dbname in adapter.listdb():
             if keep_existing:
-                return
+                return True
 
             adapter.dropdb(dbname)
 

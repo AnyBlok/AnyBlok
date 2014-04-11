@@ -2,8 +2,9 @@ import anyblok
 from anyblok.tests.testcase import TestCase
 from anyblok.blok import BlokManager, Blok
 from sys import modules
-from anyblok._imp import ImportManager, ImportManagerException
+from anyblok._imp import ImportManager
 from os.path import join
+from AnyBlok.Exception import ImportManagerException
 
 
 tests_path = join(anyblok.__path__[0], 'tests', 'mockblok')

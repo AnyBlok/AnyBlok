@@ -1,5 +1,5 @@
 from anyblok.tests.testcase import DBTestCase
-from anyblok.field import FieldException
+from AnyBlok.Exception import FieldException
 from AnyBlok import target_registry, Model
 from AnyBlok import Field
 from AnyBlok.Column import Integer

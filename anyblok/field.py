@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import AnyBlok
 from AnyBlok.Interface import ICoreInterface
 from AnyBlok import target_registry, add_Adapter
@@ -8,6 +7,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
+@target_registry(AnyBlok.Exception)
 class FieldException(Exception):
     """ Simple Exception for Field Adapter """
 

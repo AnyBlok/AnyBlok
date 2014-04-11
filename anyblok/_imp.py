@@ -6,6 +6,7 @@ from os.path import join, isdir, isfile
 from os import listdir
 
 
+@anyblok.AnyBlok.target_registry(anyblok.AnyBlok.Exception)
 class ImportManagerException(Exception):
     """ Simple inheritance of Exception class """
     pass

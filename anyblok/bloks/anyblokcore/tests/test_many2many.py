@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from anyblok.tests.testcase import DBTestCase
-from anyblok.field import FieldException
+from AnyBlok.Exception import FieldException
 
 
 def _complete_many2many(**kwargs):

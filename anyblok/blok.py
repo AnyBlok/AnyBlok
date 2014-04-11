@@ -8,6 +8,7 @@ from sys import modules
 from os.path import dirname, join
 
 
+@anyblok.AnyBlok.target_registry(anyblok.AnyBlok.Exception)
 class BlokManagerException(Exception):
     """ Simple exception to BlokManager """
 

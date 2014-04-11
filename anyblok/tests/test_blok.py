@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from anyblok.blok import BlokManager, BlokManagerException, Blok
+from anyblok.blok import BlokManager, Blok
 from anyblok.tests.testcase import TestCase
+from AnyBlok.Exception import BlokManagerException
 
 
 class TestBlokManager(TestCase):

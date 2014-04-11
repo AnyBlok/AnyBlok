@@ -3,7 +3,7 @@ from anyblok.tests.testcase import TestCase
 from anyblok.registry import Registry
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
-from anyblok.migration import MigrationException
+from AnyBlok.Exception import MigrationException
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
 
