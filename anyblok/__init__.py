@@ -32,13 +32,14 @@ def start(processName, version=release.version, prompt=PROMPT,
     from .registry import RegistryManager
 
     if parts_to_load is None:
-        parts_to_load = ['anyblok']
+        parts_to_load = ['AnyBlok']
 
     BlokManager.load(*parts_to_load)
     description = prompt % {'processName': processName, 'version': version}
-    ArgsParseManager.load(description=description,
-                          argsparse_groups=argsparse_groups,
-                          parts_to_load=parts_to_load)
+    if argsparse_groups is not None:
+        ArgsParseManager.load(description=description,
+                              argsparse_groups=argsparse_groups,
+                              parts_to_load=parts_to_load)
 
     if logger is None:
         logger = {}

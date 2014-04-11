@@ -7,6 +7,7 @@ from zope.component import getUtility
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 import AnyBlok
+from anyblok import start
 
 logger = getLogger(__name__)
 
@@ -14,7 +15,7 @@ logger = getLogger(__name__)
 class TestCase(unittest.TestCase):
     """ Unittest class add helper for unit test in anyblok """
     @classmethod
-    def init_argsparse_manager(cls, env=None):
+    def init_argsparse_manager(cls, prefix=None, **env):
         """ Initialise the argsparse manager with environ variable
         to launch the test
 
@@ -22,12 +23,19 @@ class TestCase(unittest.TestCase):
 
             For the moment we not use the environ variable juste constante
 
+        :param prefix: prefix the database name
         :param env: add another dict to merge with environ variable
         """
+
+        dbname = 'test_anyblok'
+
+        if prefix:
+            dbname = prefix + '_' + dbname
+
         if env is None:
             env = {}
         env.update({
-            'dbname': 'test_anyblok',  # TODO use os.env
+            'dbname': dbname,  # TODO use os.env
             'dbdrivername': 'postgres',
             'dbusername': '',
             'dbpassword': '',
@@ -53,7 +61,7 @@ class TestCase(unittest.TestCase):
         return eval(test)
 
     @classmethod
-    def createdb(cls):
+    def createdb(cls, keep_existing=False):
         """ Create a database in fonction of variable of environment
 
         ::
@@ -61,11 +69,15 @@ class TestCase(unittest.TestCase):
             cls.init_argsparse_manager()
             cls.createdb()
 
+        :param keep_existing: If false drop the previous db before create it
         """
         adapter = getUtility(ISqlAlchemyDataBase,
                              ArgsParseManager.get('dbdrivername'))
         dbname = ArgsParseManager.get('dbname')
         if dbname in adapter.listdb():
+            if keep_existing:
+                return
+
             adapter.dropdb(dbname)
 
         adapter.createdb(dbname)
@@ -132,7 +144,7 @@ class DBTestCase(TestCase):
 
     """
 
-    part_to_load = ['AnyBlok']
+    parts_to_load = ['AnyBlok']
     """ blok group to load """
     current_blok = 'anyblok-core'
     """ In the blok to add the new model """
@@ -141,13 +153,13 @@ class DBTestCase(TestCase):
     def setUpClass(cls):
         """ Intialialise the argsparse manager """
         super(DBTestCase, cls).setUpClass()
-        cls.init_argsparse_manager()
+        cls.init_argsparse_manager(prefix='db_testcase')
 
     def setUp(self):
         """ Create a database and load the blok manager """
         super(DBTestCase, self).setUp()
         self.createdb()
-        BlokManager.load(*self.part_to_load)
+        BlokManager.load(*self.parts_to_load)
 
     def tearDown(self):
         """ Clear the registry, unload the blok manager and  drop the database
@@ -173,4 +185,55 @@ class DBTestCase(TestCase):
 
 
 class BlokTestCase(TestCase):
-    pass
+    """ Use to test bloks without have to create new database for each test
+
+    ::
+
+        from anyblok.tests.testcase import BlokTestCase
+
+
+        class MyBlokTest(BlokTestCase):
+
+            parts_to_load = ['AnyBlok']
+            need_blok = ['blok 1', 'blok 2', ..., 'blok n']
+
+            def test_1(self):
+                ...
+
+    """
+
+    parts_to_load = None
+    """ Group of blok to load """
+
+    need_blok = ['anyblok-core']
+    """ List of the blok need for this test """
+
+    @classmethod
+    def setUpClass(cls):
+        """ Intialialise the argsparse manager """
+        super(BlokTestCase, cls).setUpClass()
+        cls.init_argsparse_manager()
+        cls.createdb(keep_existing=True)
+        registry = start('BlokTestCase', parts_to_load=cls.parts_to_load)
+        cls.registry = registry
+
+        query = registry.System.Blok.query('name')
+        query = query.filter(registry.System.Blok.name.in_(cls.need_blok),
+                             registry.System.Blok.state == 'uninstalled')
+
+        bloks = [x[0] for x in query.all()]
+
+        if bloks:
+            registry.upgrade(install=bloks)
+
+    def tearDown(self):
+        """ Roll back the session """
+        self.registry.rollback()
+
+    @classmethod
+    def tearDownClass(self):
+        """ Clear the registry, unload the blok manager
+        """
+        RegistryManager.clear()
+        BlokManager.unload()
+        super(BlokTestCase, self).tearDownClass()

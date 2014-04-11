@@ -11,7 +11,7 @@ TestCase
 
 ::
 
-    from anyblok.tests.anybloktestcase import AnyBlokTestCase
+    from anyblok.tests.testcase import TestCase
 
 .. autoclass:: TestCase
     :members:
@@ -30,8 +30,8 @@ DBTestCase
     :noindex:
 
 
-BlokDBTestCase
---------------
+BlokTestCase
+------------
 
 .. autoclass:: BlokTestCase
     :members:

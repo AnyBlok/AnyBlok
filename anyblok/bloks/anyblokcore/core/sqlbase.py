@@ -1,6 +1,10 @@
 from AnyBlok import target_registry, Core
 
 
+class SqlBaseException(Exception):
+    """ Simple Exception for sql base """
+
+
 @target_registry(Core)
 class SqlBase:
 
@@ -24,3 +28,19 @@ class SqlBase:
         cls.registry.add(instance)
         cls.registry.flush()
         return instance
+
+    @classmethod
+    def inserts(cls, *args):
+        instances = []
+        for kwargs in args:
+            if not isinstance(kwargs, dict):
+                raise SqlBaseException("inserts method wait list of dict")
+
+            instance = cls(**kwargs)
+            cls.registry.add(instance)
+            instances.append(instance)
+
+        if instances:
+            cls.registry.flush()
+
+        return instances
