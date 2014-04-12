@@ -19,10 +19,6 @@ anyblok._argsparse module
 
 .. automodule:: anyblok._argsparse
 
-.. autoexception:: ArgsParseManagerException
-    :show-inheritance:
-    :noindex:
-
 .. autoclass:: ArgsParseManager
     :members:
     :noindex:
@@ -31,10 +27,6 @@ anyblok._imp module
 -------------------
 
 .. automodule:: anyblok._imp
-
-.. autoexception:: ImportManagerException
-    :show-inheritance:
-    :noindex:
 
 .. autoclass:: ImportManager
     :members:
@@ -54,10 +46,6 @@ anyblok.environment module
 
 .. automodule:: anyblok.environment
 
-.. autoexception:: EnvironmentException
-    :show-inheritance:
-    :noindex:
-
 .. autoclass:: EnvironmentManager
     :members:
     :noindex:
@@ -70,11 +58,6 @@ anyblok.blok module
 -------------------
 
 .. automodule:: anyblok.blok
-
-.. autoexception:: BlokManagerException
-    :show-inheritance:
-    :members:
-    :noindex:
 
 .. autoclass:: BlokManager
     :members:
@@ -90,11 +73,6 @@ anyblok.registry module
 .. automodule:: anyblok.registry
 
 .. warning:: TODO Class not finished yet
-
-.. autoexception:: RegistryManagerException
-    :show-inheritance:
-    :members:
-    :noindex:
 
 .. autoclass:: RegistryManager
     :members:
@@ -113,11 +91,6 @@ anyblok.migration module
     AnyBlok use Alembic to do the dynamic migration, but Alembic does'nt detect
     all the change (Foreifn key, primary key), we must wait the Alembic or
     implement it in Alembic project before use it in AnyBlok
-
-.. autoexception:: MigrationException
-    :show-inheritance:
-    :members:
-    :noindex:
 
 .. autoclass:: MigrationReport
     :members:
@@ -160,11 +133,6 @@ anyblok.interface module
 
 .. automodule:: anyblok.interface
 
-.. autoexception:: CoreInterfaceException
-    :show-inheritance:
-    :members:
-    :noindex:
-
 .. autoclass:: ACoreInterface
     :members:
     :noindex:
@@ -201,11 +169,6 @@ anyblok.field module
 --------------------
 
 .. automodule:: anyblok.field
-
-.. autoexception:: FieldException
-    :members:
-    :show-inheritance:
-    :noindex:
 
 .. autoclass:: AField
     :members: target_registry, remove_registry
