@@ -15,20 +15,20 @@ of the functionnality.
 We will write a simple application which connect to an existing database:
 
 * Worker
-    - Have a name
-    - Have a desk(Room)
-    - Can have a position
+    - name: worker name
+    - desk (Room): the room where the worker works
+    - position: worker position (manager, employee...)
 * Room
-    - Have a number
-    - Have an address
-    - have workers
-* Adress
-    - Have a street
-    - have a zipcode
-    - have a city
-    - have rooms
+    - number: discribe the room in the office
+    - address: postal address
+    - workers: men and women working in that room
+* Address
+    - street
+    - zipcode
+    - city
+    - rooms: room list
 * Position
-    - Have a name
+    - name: position name
 
 Create your Blok group
 ----------------------
