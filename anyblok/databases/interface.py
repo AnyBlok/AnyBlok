@@ -1,9 +1,7 @@
 from zope.interface import Interface
-from anyblok import AnyBlok
 
 
-@AnyBlok.target_registry(AnyBlok.Interface)
-class ISqlAlchemyDataBase(Interface):
+class ISqlAlchemyDataBaseType(Interface):
     """ Interface use to define database adapter
 
     The methods are:

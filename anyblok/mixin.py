@@ -1,74 +1,55 @@
-# -*- coding: utf-8 -*-
 from anyblok.registry import RegistryManager
-import AnyBlok
-from AnyBlok.Interface import ICoreInterface
-from AnyBlok import add_Adapter, target_registry
-from zope.interface import implementer
-from sys import modules
+from anyblok import Declarations
 
 
-@implementer(ICoreInterface)
-class AMixin:
-    """ Adapter to Mixin Class
-
-    The Mixin class are used to define a behaviour one one or more model:
+@Declarations.add_declaration_type(isAnEntry=True)
+class Mixin:
+    """ The Mixin class are used to define a behaviour one one or more model:
 
     Add new mixin class::
 
-        @target_registry(Mixin)
+        @Declarations.target_registry(Declarations.Mixin)
         class MyMixinclass:
             pass
 
     Remove a mixin class::
 
-        remove_registry(Mixin, 'MyMixinclass', MyMixinclass, blok='MyBlok')
+        Declarations.remove_registry(Declarations.Mixin, 'MyMixinclass',
+                                     MyMixinclass, blok='MyBlok')
     """
 
-    __interface__ = 'Mixin'
-
-    def target_registry(self, registry, child, cls_, **kwargs):
+    @classmethod
+    def target_registry(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry and add it in the
         sys.modules
 
-        :param registry: Existing global registry
-        :param child: Name of the new registry to add it
+        :param parent: Existing global registry
+        :param name: Name of the new registry to add it
         :param cls_: Class Interface to add in registry
         """
-        _registryname = registry.__registry_name__ + '.' + child
+        _registryname = parent.__registry_name__ + '.' + name
 
-        if not hasattr(registry, child):
-            p = {
-                '__registry_name__': _registryname,
-                '__interface__': self.__interface__,
-            }
-            ns = type(child, tuple(), p)
-            setattr(registry, child, ns)
-            modules[_registryname] = ns
+        if not hasattr(parent, name):
+            ns = type(name, tuple(), {})
+            setattr(parent, name, ns)
             kwargs['__registry_name__'] = _registryname
 
-        if registry is AnyBlok:
+        if parent is Declarations:
             return
 
         RegistryManager.add_entry_in_target_registry(
             'Mixin', _registryname, cls_, **kwargs)
 
-    def remove_registry(self, registry, child, cls_, **kwargs):
+    @classmethod
+    def remove_registry(self, parent, name, cls_, **kwargs):
         """ Remove the Interface in the registry
 
-        :param registry: Existing global registry
-        :param child: Name of the new registry to add it
+        :param parent: Existing global registry
+        :param name: Name of the new registry to add it
         :param cls_: Class Interface to remove in registry
         """
         blok = kwargs.pop('blok')
-        _registryname = registry.__registry_name__ + '.' + child
+        _registryname = parent.__registry_name__ + '.' + name
         RegistryManager.remove_entry_in_target_registry(blok, 'Mixin',
                                                         _registryname, cls_,
                                                         **kwargs)
-
-add_Adapter(ICoreInterface, AMixin)
-RegistryManager.declare_entry('Mixin')
-
-
-@target_registry(AnyBlok)
-class Mixin:
-    pass

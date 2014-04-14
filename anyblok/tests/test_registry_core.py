@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
-from anyblok import AnyBlok
+from anyblok import Declarations
 
 
 old_loaded_bloks = RegistryManager.loaded_bloks
@@ -18,12 +18,12 @@ class TestRegistryCore(TestCase):
     def setUpClass(cls):
         super(TestRegistryCore, cls).setUpClass()
         RegistryManager.init_blok('testCore')
-        AnyBlok.current_blok = 'testCore'
+        Declarations.current_blok = 'testCore'
 
     @classmethod
     def tearDownClass(cls):
         super(TestRegistryCore, cls).tearDownClass()
-        AnyBlok.current_blok = None
+        Declarations.current_blok = None
         del RegistryManager.loaded_bloks['testCore']
 
     def setUp(self):

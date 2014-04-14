@@ -32,7 +32,7 @@ class TestRegistry(TestCase):
         self.registry = self.getRegistry()
 
     def test_get_model(self):
-        System = self.registry.get('AnyBlok.Model.System')
+        System = self.registry.get('Model.System')
         self.assertEqual(self.registry.System, System)
 
     def test_get_the_same_registry(self):

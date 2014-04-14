@@ -1,28 +1,24 @@
-import AnyBlok
-from AnyBlok.Interface import ICoreInterface
-from AnyBlok import target_registry, add_Adapter
-from sys import modules
-from zope.interface import implementer
+from anyblok import Declarations
+from .declarations import DeclarationsException
 
 
-@implementer(ICoreInterface)
-class AException:
+@Declarations.add_declaration_type()
+class Exception:
     """ Adapter to Exception Class
 
-    The Exception class are used to define type of AnyBlok Exception
+    The Exception class are used to define type of Declarations Exception
 
     Add new Exception type::
 
-        @target_registry(AnyBlok.Exception)
+        @Declarations.target_registry(Declarations.Exception)
         class MyException:
             pass
 
     the remove exception are forbidden because this exception can be used
     """
 
-    __interface__ = 'Exception'
-
-    def target_registry(self, registry, child, cls_, **kwargs):
+    @classmethod
+    def target_registry(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry and add it in the
         sys.modules
 
@@ -30,33 +26,20 @@ class AException:
         :param child: Name of the new registry to add it
         :param cls_: Class Interface to add in registry
         """
-        _registryname = registry.__registry_name__ + '.' + child
-        if hasattr(registry, child):
-            raise AnyBlokException(
+        _registryname = parent.__registry_name__ + '.' + name
+        if hasattr(parent, name):
+            raise DeclarationsException(
                 "The Exception %r already exist" % _registryname)
 
         setattr(cls_, '__registry_name__', _registryname)
-        setattr(cls_, '__interface__', self.__interface__)
-        setattr(registry, child, cls_)
-        modules[_registryname] = cls_
+        setattr(cls_, '__declaration_type__', parent.__declaration_type__)
+        setattr(parent, name, cls_)
 
+    @classmethod
     def remove_registry(self, registry, child, cls_, **kwargs):
         """ Forbidden method """
-        raise AnyBlokException("Remove an exception is forbiden")
+        raise DeclarationsException("Remove an exception is forbiden")
 
 
-add_Adapter(ICoreInterface, AException)
-
-
-@target_registry(AnyBlok)
-class Exception(Exception):
-    __interface__ = 'Exception'
-
-
-@target_registry(AnyBlok.Exception)
-class AnyBlokException(Exception):
-    """ Simple Exception """
-
-
-from .interface import CoreInterfaceException
-target_registry(AnyBlok.Exception, cls_=CoreInterfaceException)
+Declarations.target_registry(Declarations.Exception,
+                             cls_=DeclarationsException)

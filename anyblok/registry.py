@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import AnyBlok
+from anyblok import Declarations
 from anyblok._argsparse import ArgsParseManager
 from anyblok._imp import ImportManager
 from anyblok.blok import BlokManager
@@ -15,7 +15,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
-@AnyBlok.target_registry(AnyBlok.Exception)
+@Declarations.target_registry(Declarations.Exception)
 class RegistryManagerException(Exception):
     """ Simple Exception for Registry """
 
@@ -27,10 +27,10 @@ class RegistryManager:
 
         RegistryManager.declare_entry('newEntry')
         RegistryManager.init_blok('newBlok')
-        AnyBlok.current_blok = 'newBlok'
+        Declarations.current_blok = 'newBlok'
         RegistryManager.add_entry_in_target_registry(
             'newEntry', 'oneKey', cls_)
-        AnyBlok.current_blok = None
+        Declarations.current_blok = None
 
     Remove an existing entry::
 
@@ -102,12 +102,12 @@ class RegistryManager:
         """
         cls.unload()
         mod = ImportManager.get(blok)
-        AnyBlok.current_blok = blok
+        Declarations.current_blok = blok
         try:
             mod.imports()
             mod.reload()
         finally:
-            AnyBlok.current_blok = None
+            Declarations.current_blok = None
 
         for registry in cls.registries.values():
             registry.reload()
@@ -165,14 +165,14 @@ class RegistryManager:
     def add_core_in_target_registry(cls, core, cls_):
         """ Load core in blok
 
-        warning the global var AnyBlok.current_blok must be field on the
+        warning the global var Declarations.current_blok must be field on the
         good blok
 
         :param core: is the existing core name
         :param ``cls_``: Class of the Core to save in loaded blok target
             registry
         """
-        cls.loaded_bloks[AnyBlok.current_blok]['Core'][core].append(cls_)
+        cls.loaded_bloks[Declarations.current_blok]['Core'][core].append(cls_)
 
     @classmethod
     def remove_core_in_target_registry(cls, blok, core, cls_):
@@ -205,7 +205,7 @@ class RegistryManager:
     def add_entry_in_target_registry(cls, entry, key, cls_, **kwargs):
         """ Load entry in blok
 
-        warning the global var AnyBlok.current_blok must be field on the
+        warning the global var Declarations.current_blok must be field on the
         good blok
         :param entry: is the existing entry name
         :param key: is the existing key in the entry
@@ -219,7 +219,7 @@ class RegistryManager:
 
         setattr(cls_, '__anyblok_bases__', bases)
 
-        cb = AnyBlok.current_blok
+        cb = Declarations.current_blok
 
         if key not in cls.loaded_bloks[cb][entry]:
             cls.loaded_bloks[cb][entry][key] = {
@@ -378,7 +378,7 @@ class Registry:
                 return True
 
             def has_sql_fields(bases):
-                from AnyBlok import Field
+                Field = Declarations.Field
                 for base in bases:
                     for p in dir(base):
                         if hasattr(getattr(base, p), '__class__'):
@@ -388,7 +388,7 @@ class Registry:
                 return False
 
             def get_fields(base):
-                from AnyBlok import Field
+                Field = Declarations.Field
                 fields = {}
                 for p in dir(base):
                     if hasattr(getattr(base, p), '__class__'):
@@ -411,7 +411,7 @@ class Registry:
                 properties['loaded_columns'].append(name)
 
             def add_in_registry(namespace, base):
-                namespace = namespace.split('.')[2:]
+                namespace = namespace.split('.')[1:]
 
                 def final_namespace(parent, child):
                     if hasattr(parent,
@@ -577,7 +577,7 @@ class Registry:
 
     def clean_model(self):
         for model in self.loaded_namespaces.keys():
-            name = model.split('.')[2]
+            name = model.split('.')[1]
             if hasattr(self, name) and getattr(self, name):
                 setattr(self, name, None)
 

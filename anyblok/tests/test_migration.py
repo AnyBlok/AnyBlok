@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import Registry
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
-from AnyBlok.Exception import MigrationException
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
+from anyblok import Declarations
+MigrationException = Declarations.Exception.MigrationException
 
 
 class TestMigration(TestCase):
@@ -17,11 +17,12 @@ class TestMigration(TestCase):
         cls.createdb()
         BlokManager.load('AnyBlok')
 
-        import AnyBlok
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import Integer as Int, String as Str
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        Int = Declarations.Column.Integer
+        Str = Declarations.Column.String
 
-        AnyBlok.current_blok = 'anyblok-core'
+        Declarations.current_blok = 'anyblok_core'
 
         @target_registry(Model)
         class Test:
@@ -38,7 +39,7 @@ class TestMigration(TestCase):
             other = Int(label="Test", foreign_key=(Model.TestFKTarget,
                         'integer'))
 
-        AnyBlok.current_blok = None
+        Declarations.current_blok = None
 
     def setUp(self):
         super(TestMigration, self).setUp()

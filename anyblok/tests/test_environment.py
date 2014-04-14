@@ -1,7 +1,8 @@
 from anyblok.tests.testcase import TestCase
 from anyblok.environment import EnvironmentManager
 from anyblok.environment import ThreadEnvironment
-from AnyBlok.Exception import EnvironmentException
+from anyblok import Declarations
+EnvironmentException = Declarations.Exception.EnvironmentException
 
 
 class MockEnvironment:

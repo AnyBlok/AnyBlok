@@ -41,7 +41,7 @@ setup(
             'anyblok_interpreter=anyblok.scripts:interpreter',
         ],
         'AnyBlok': [
-            'anyblok-core=anyblok.bloks.anyblokcore:AnyBlokCore',
+            'anyblok_core=anyblok.bloks.anyblok_core:AnyBlokCore',
         ],
     },
     extras_require={},

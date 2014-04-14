@@ -1,36 +1,10 @@
-import AnyBlok
-from AnyBlok.Interface import ICoreInterface
-from AnyBlok import target_registry, add_Adapter, Field
-from anyblok.field import AField
+from anyblok import Declarations
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.schema import ForeignKey
-from zope.interface import implementer
 
 
-@implementer(ICoreInterface)
-class AColumn(AField):
-    """ Adapter to Field Class
-
-    The Column class are used to define type of AnyBlok SQL field
-
-    Add new column type::
-
-        @target_registry(Column)
-        class Integer:
-
-            sqlalchemy_type = sqlalchemy.Integer
-
-    the remove column are forbidden because the model can be used on the model
-    """
-
-    __interface__ = 'Column'
-
-
-add_Adapter(ICoreInterface, AColumn)
-
-
-@target_registry(AnyBlok)
-class Column(Field):
+@Declarations.add_declaration_type()
+class Column(Declarations.Field):
     """ Column class
 
     This class can't be instancied

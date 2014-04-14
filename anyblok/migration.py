@@ -4,7 +4,7 @@ from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from sqlalchemy import schema
 from contextlib import contextmanager
-import AnyBlok
+from anyblok import Declarations
 
 
 @contextmanager
@@ -19,7 +19,7 @@ def cnx(migration):
         raise
 
 
-@AnyBlok.target_registry(AnyBlok.Exception)
+@Declarations.target_registry(Declarations.Exception)
 class MigrationException(Exception):
     """ Simple Exception class for Migration """
 
@@ -90,7 +90,7 @@ class MigrationReport:
         """ Apply the migration
 
         this methode parse the changment detected and call the Migration
-        system to apply changment with the api of AnyBlok
+        system to apply changment with the api of Declarations
         """
         for action in self.actions:
             if action[0] == 'add_column':

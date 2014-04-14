@@ -2,10 +2,10 @@
 from anyblok._logging import init_logger, log
 from argparse import ArgumentParser
 from configparser import ConfigParser
-import AnyBlok
+from anyblok import Declarations
 
 
-@AnyBlok.target_registry(AnyBlok.Exception)
+@Declarations.target_registry(Declarations.Exception)
 class ArgsParseManagerException(Exception):
     """ Simple Exception for ArgsParse """
     pass

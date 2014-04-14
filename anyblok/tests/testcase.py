@@ -1,13 +1,13 @@
 import unittest
 from sys import modules
 from logging import getLogger
-from AnyBlok.Interface import ISqlAlchemyDataBase
 from anyblok._argsparse import ArgsParseManager
-from zope.component import getUtility
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
-import AnyBlok
+from anyblok import Declarations
 from anyblok import start
+from anyblok.databases.interface import ISqlAlchemyDataBaseType
+from zope.component import getUtility
 
 logger = getLogger(__name__)
 
@@ -71,7 +71,7 @@ class TestCase(unittest.TestCase):
 
         :param keep_existing: If false drop the previous db before create it
         """
-        adapter = getUtility(ISqlAlchemyDataBase,
+        adapter = getUtility(ISqlAlchemyDataBaseType,
                              ArgsParseManager.get('dbdrivername'))
         dbname = ArgsParseManager.get('dbname')
         if dbname in adapter.listdb():
@@ -92,7 +92,7 @@ class TestCase(unittest.TestCase):
             cls.dropdb()
 
         """
-        adapter = getUtility(ISqlAlchemyDataBase,
+        adapter = getUtility(ISqlAlchemyDataBaseType,
                              ArgsParseManager.get('dbdrivername'))
         adapter.dropdb(ArgsParseManager.get('dbname'))
 
@@ -118,20 +118,17 @@ class DBTestCase(TestCase):
 
         def simple_column(ColumnType=None, **kwargs):
 
-            from AnyBlok import target_registry, Model
-            from AnyBlok.Column import Integer
-
-            @target_registry(Model)
+            @Declarations.target_registry(Declarations.Model)
             class Test:
 
-                id = Integer(label='id', primary_key=True)
+                id = Declarations.Column.Integer(label='id', primary_key=True)
                 col = ColumnType(label="col", **kwargs)
 
 
         class TestColumns(DBTestCase):
 
             def test_integer(self):
-                from AnyBlok.Column import Integer
+                Integer = Declarations.Column.Integer
 
                 registry = self.init_registry(simple_column,
                                               ColumnType=Integer)
@@ -146,7 +143,7 @@ class DBTestCase(TestCase):
 
     parts_to_load = ['AnyBlok']
     """ blok group to load """
-    current_blok = 'anyblok-core'
+    current_blok = 'anyblok_core'
     """ In the blok to add the new model """
 
     @classmethod
@@ -176,11 +173,11 @@ class DBTestCase(TestCase):
         :param kwargs: kwargs for the function
         :rtype: registry instance
         """
-        AnyBlok.current_blok = self.current_blok
+        Declarations.current_blok = self.current_blok
         try:
             function(**kwargs)
         finally:
-            AnyBlok.current_blok = None
+            Declarations.current_blok = None
         return self.getRegistry()
 
 
@@ -205,7 +202,7 @@ class BlokTestCase(TestCase):
     parts_to_load = None
     """ Group of blok to load """
 
-    need_blok = ['anyblok-core']
+    need_blok = ['anyblok_core']
     """ List of the blok need for this test """
 
     @classmethod

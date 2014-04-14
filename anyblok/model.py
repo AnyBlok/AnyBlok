@@ -1,63 +1,53 @@
-# -*- coding: utf-8 -*-
 from anyblok.registry import RegistryManager
-import AnyBlok
-from AnyBlok import add_Adapter, target_registry
-from AnyBlok.Interface import ICoreInterface
-from zope.interface import implementer
-from sys import modules
+from anyblok import Declarations
 
 
-@implementer(ICoreInterface)
-class AModel:
-    """ Adapter to Model Class
-
-    The Model class are used to define or inherit a SQL table.
+@Declarations.add_declaration_type(isAnEntry=True, mustbeload=True)
+class Model:
+    """ The Model class are used to define or inherit a SQL table.
 
     Add new model class::
 
-        @target_registry(Model)
+        @Declarations.target_registry(Declarations.Model)
         class MyModelclass:
             pass
 
     Remove a model class::
 
-        remove_registry(Model, 'MyModelclass', MyModelclass, blok='MyBlok')
+        Declarations.remove_registry(Declarations.Model, 'MyModelclass',
+                                     MyModelclass, blok='MyBlok')
     """
 
-    __interface__ = 'Model'
-
-    def target_registry(self, registry, child, cls_, **kwargs):
+    @classmethod
+    def target_registry(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry and add it in the
         sys.modules
 
-        :param registry: Existing global registry
-        :param child: Name of the new registry to add it
+        :param parent: Existing global registry
+        :param name: Name of the new registry to add it
         :param cls_: Class Interface to add in registry
         """
-        _registryname = registry.__registry_name__ + '.' + child
+        _registryname = parent.__registry_name__ + '.' + name
         if 'tablename' in kwargs:
             tablename = kwargs.pop('tablename')
         else:
-            if registry is AnyBlok:
-                tablename = child.lower()
-            elif registry is AnyBlok.Model:
-                tablename = child.lower()
-            elif hasattr(registry, '__tablename__'):
-                tablename = registry.__tablename__
-                tablename += '_' + child.lower()
+            if parent is Declarations:
+                tablename = name.lower()
+            elif parent is Declarations.Model:
+                tablename = name.lower()
+            elif hasattr(parent, '__tablename__'):
+                tablename = parent.__tablename__
+                tablename += '_' + name.lower()
 
-        if not hasattr(registry, child):
+        if not hasattr(parent, name):
 
             p = {
-                '__registry_name__': _registryname,
-                '__interface__': self.__interface__,
                 '__tablename__': tablename,
             }
-            ns = type(child, tuple(), p)
-            setattr(registry, child, ns)
-            modules[_registryname] = ns
+            ns = type(name, tuple(), p)
+            setattr(parent, name, ns)
 
-        if registry is AnyBlok:
+        if parent is Declarations:
             return
 
         kwargs['__registry_name__'] = _registryname
@@ -66,23 +56,16 @@ class AModel:
         RegistryManager.add_entry_in_target_registry(
             'Model', _registryname, cls_, **kwargs)
 
-    def remove_registry(self, registry, child, cls_, **kwargs):
+    @classmethod
+    def remove_registry(self, parent, name, cls_, **kwargs):
         """ Remove the Interface in the registry
 
         :param registry: Existing global registry
-        :param child: Name of the new registry to add it
+        :param name: Name of the new registry to add it
         :param cls_: Class Interface to remove in registry
         """
         blok = kwargs.pop('blok')
-        _registryname = registry.__registry_name__ + '.' + child
+        _registryname = parent.__registry_name__ + '.' + name
         RegistryManager.remove_entry_in_target_registry(blok, 'Model',
                                                         _registryname, cls_,
                                                         **kwargs)
-
-add_Adapter(ICoreInterface, AModel)
-RegistryManager.declare_entry('Model', mustbeload=True)
-
-
-@target_registry(AnyBlok)
-class Model:
-    pass

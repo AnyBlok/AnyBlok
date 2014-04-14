@@ -6,7 +6,7 @@ from os.path import join, isdir, isfile
 from os import listdir
 
 
-@anyblok.AnyBlok.target_registry(anyblok.AnyBlok.Exception)
+@anyblok.Declarations.target_registry(anyblok.Declarations.Exception)
 class ImportManagerException(Exception):
     """ Simple inheritance of Exception class """
     pass
@@ -14,6 +14,11 @@ class ImportManagerException(Exception):
 
 class ImportManager:
     """ Use to import blok or reload the blok import
+
+
+        ..warning
+
+            use the namespace to declare your each of your blok
 
         Add a blok and imports these modules::
 
@@ -43,13 +48,10 @@ class ImportManager:
         if cls.has(blok):
             return cls.get(blok)
 
-        bloks = modules['AnyBlok.bloks']
-        module_name = 'AnyBlok.bloks.' + blok
-        module = imp.new_module(module_name)
+        module_name = 'anyblok.bloks.' + blok
 
         # add import registry
-        modules[module_name] = module  # for import anyblok.bloks.blok
-        setattr(bloks, blok, module)  # for from anyblok.bloks import blok
+        module = modules[module_name]
         cls.modules[blok] = module  # just for ImportManager.get/has
 
         # add function of module
@@ -92,7 +94,8 @@ class ImportManager:
             RegistryManager.init_blok(blok)
             for mod_name, mod in modules.items():
                 if module_name + '.' in mod_name:
-                    imp.reload(mod)
+                    if mod_name[len(module_name) + 1] != '_':
+                        imp.reload(mod)
 
         setattr(module, 'import_module', mod_import_module)
         setattr(module, 'import_package', mod_import_package)
@@ -120,8 +123,3 @@ class ImportManager:
         :rtype: boolean
         """
         return blok in cls.modules
-
-
-bloks = imp.new_module('bloks')
-modules['AnyBlok.bloks'] = bloks
-anyblok.bloks = bloks

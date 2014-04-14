@@ -1,66 +1,40 @@
-import AnyBlok
-from AnyBlok.Interface import ICoreInterface
-from AnyBlok import target_registry, add_Adapter
-from sys import modules
-from zope.interface import implementer
+from anyblok import Declarations
 from logging import getLogger
 logger = getLogger(__name__)
 
 
-@target_registry(AnyBlok.Exception)
+@Declarations.target_registry(Declarations.Exception)
 class FieldException(Exception):
     """ Simple Exception for Field Adapter """
 
 
-@implementer(ICoreInterface)
-class AField:
-    """ Adapter to Field Class
-
-    The Field class are used to define type of AnyBlok field
-
-    Add new field type::
-
-        @target_registry(Field)
-        class Function:
-            pass
-
-    the remove field are forbidden because the model can be used on the model
-    """
-
-    __interface__ = 'Field'
-
-    def target_registry(self, registry, child, cls_, **kwargs):
-        """ add new sub registry in the registry and add it in the
-        sys.modules
-
-        :param registry: Existing global registry
-        :param child: Name of the new registry to add it
-        :param cls_: Class Interface to add in registry
-        """
-        _registryname = registry.__registry_name__ + '.' + child
-        if hasattr(registry, child):
-            raise FieldException("The Field %r already exist" % _registryname)
-
-        setattr(cls_, '__registry_name__', _registryname)
-        setattr(cls_, '__interface__', self.__interface__)
-        setattr(registry, child, cls_)
-        modules[_registryname] = cls_
-        logger.info("Add new type field : %r" % _registryname)
-
-    def remove_registry(self, registry, child, cls_, **kwargs):
-        """ Forbidden method """
-        raise FieldException("Remove a field is forbiden")
-
-
-add_Adapter(ICoreInterface, AField)
-
-
-@target_registry(AnyBlok)
+@Declarations.add_declaration_type()
 class Field:
     """ Field class
 
     This class can't be instancied
     """
+
+    @classmethod
+    def target_registry(self, parent, name, cls_, **kwargs):
+        """ add new sub registry in the registry and add it in the
+        sys.modules
+
+        :param parent: Existing in the declaration
+        :param name: Name of the new field to add it
+        :param cls_: Class Interface to add
+        """
+        _registryname = parent.__registry_name__ + '.' + name
+        if hasattr(parent, name):
+            raise FieldException("The Field %r already exist" % _registryname)
+
+        setattr(parent, name, cls_)
+        logger.info("Add new type field : %r" % _registryname)
+
+    @classmethod
+    def remove_registry(self, registry, child, cls_, **kwargs):
+        """ Forbidden method """
+        raise FieldException("Remove a field is forbiden")
 
     def __init__(self, label=None):
         """ Initialise the field

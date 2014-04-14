@@ -8,12 +8,12 @@ from sys import modules
 from os.path import dirname, join
 
 
-@anyblok.AnyBlok.target_registry(anyblok.AnyBlok.Exception)
+@anyblok.Declarations.target_registry(anyblok.Declarations.Exception)
 class BlokManagerException(Exception):
     """ Simple exception to BlokManager """
 
     def __init__(self, *args, **kwargs):
-        anyblok.AnyBlok.current_blok = None
+        anyblok.Declarations.current_blok = None
         super(BlokManagerException, self).__init__(*args, **kwargs)
 
 
@@ -118,11 +118,11 @@ class BlokManager:
 
         cls.bloks_groups = bloks_groups
 
-        if anyblok.AnyBlok.current_blok:
-            while anyblok.AnyBlok.current_blok:
+        if anyblok.Declarations.current_blok:
+            while anyblok.Declarations.current_blok:
                 sleep(0.1)
 
-        anyblok.AnyBlok.current_blok = 'start'
+        anyblok.Declarations.current_blok = 'start'
 
         bloks = []
         for bloks_group in bloks_groups:
@@ -160,7 +160,7 @@ class BlokManager:
                 get_need_blok(optional)
 
             cls.ordered_bloks.append(blok)
-            anyblok.AnyBlok.current_blok = blok
+            anyblok.Declarations.current_blok = blok
 
             module = modules[cls.bloks[blok].__module__]
             if not ImportManager.has(blok):
@@ -183,7 +183,7 @@ class BlokManager:
                 get_need_blok(blok)
 
         finally:
-            anyblok.AnyBlok.current_blok = None
+            anyblok.Declarations.current_blok = None
 
     @classmethod
     def get_files_from(cls, blok, attribute):

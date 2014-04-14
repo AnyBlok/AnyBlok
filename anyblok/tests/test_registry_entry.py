@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
-from anyblok import AnyBlok
-
-
-old_loaded_bloks = RegistryManager.loaded_bloks
-old_declared_entries = []
-old_declared_entries += RegistryManager.declared_entries
-old_mustbeload_declared_entries = []
-old_mustbeload_declared_entries += RegistryManager.mustbeload_declared_entries
-old_callback_declared_entries = RegistryManager.callback_declared_entries
+from anyblok import Declarations
 
 
 class TestRegistryEntry(TestCase):
@@ -19,12 +11,12 @@ class TestRegistryEntry(TestCase):
         super(TestRegistryEntry, cls).setUpClass()
         RegistryManager.declare_entry('Other')
         RegistryManager.init_blok('testEntry')
-        AnyBlok.current_blok = 'testEntry'
+        Declarations.current_blok = 'testEntry'
 
     @classmethod
     def tearDownClass(cls):
         super(TestRegistryEntry, cls).tearDownClass()
-        AnyBlok.current_blok = None
+        Declarations.current_blok = None
         del RegistryManager.loaded_bloks['testEntry']
 
     def tearDown(self):

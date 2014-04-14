@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from anyblok.tests.testcase import TestCase
+from anyblok.databases.interface import ISqlAlchemyDataBaseType
 import os
-from anyblok import AnyBlok
 from anyblok._argsparse import ArgsParseManager
 from zope.component import getUtility
 from datetime import datetime
@@ -45,8 +45,7 @@ class TestPostgres(TestDataBase):
 
         dbname = ArgsParseManager.get('dbname') + datetime.strftime(
             datetime.today(), '%Y-%m-%d_%H:%M:%S')
-        adapter = getUtility(
-            AnyBlok.Interface.ISqlAlchemyDataBase, self.drivername)
+        adapter = getUtility(ISqlAlchemyDataBaseType, self.drivername)
 
         adapter.createdb(dbname)
         has_dblist = dbname in adapter.listdb()

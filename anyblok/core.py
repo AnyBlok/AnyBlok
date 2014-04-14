@@ -1,32 +1,26 @@
-import AnyBlok
-from AnyBlok.Interface import ICoreInterface
-from AnyBlok import target_registry
 from anyblok.registry import RegistryManager
-from sys import modules
-from zope.interface import implementer
+from anyblok import Declarations
 
 
-@implementer(ICoreInterface)
-class ACore:
-    """ Adapter to Core Class
-
-    The Core class are the base of all the AnyBlok model
+@Declarations.add_declaration_type()
+class Core:
+    """ The Core class are the base of all the AnyBlok model
 
     Add new core model::
 
-        @target_registry(Core)
+        @Declarations.target_registry(Declarations.Core)
         class Base:
             pass
 
     Remove the core model::
 
-        remove_registry(Core, 'Base', Base, blok='MyBlok')
+        Declarations.remove_registry(Declarations.Core, 'Base', Base,
+                                     blok='MyBlok')
 
-   """
+    """
 
-    __interface__ = 'Core'
-
-    def target_registry(self, registry, child, cls_, **kwargs):
+    @classmethod
+    def target_registry(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry and add it in the
         sys.modules
 
@@ -34,21 +28,16 @@ class ACore:
         :param child: Name of the new registry to add it
         :param cls_: Class Interface to add in registry
         """
-        _registryname = registry.__registry_name__ + '.' + child
-        if not hasattr(registry, child):
-            p = {
-                '__registry_name__': _registryname,
-                '__interface__': self.__interface__,
-            }
-            core = type(child, tuple(), p)
-            setattr(registry, child, core)
-            modules[_registryname] = core
+        if not hasattr(parent, name):
+            core = type(name, tuple(), {})
+            setattr(parent, name, core)
 
-        if registry == AnyBlok:
+        if parent == Declarations:
             return
 
-        RegistryManager.add_core_in_target_registry(child, cls_)
+        RegistryManager.add_core_in_target_registry(name, cls_)
 
+    @classmethod
     def remove_registry(self, registry, child, cls_, **kwargs):
         """ Remove the Interface in the registry
 
@@ -58,11 +47,3 @@ class ACore:
         """
         blok = kwargs.pop('blok')
         RegistryManager.remove_core_in_target_registry(blok, child, cls_)
-
-
-AnyBlok.add_Adapter(ICoreInterface, ACore)
-
-
-@target_registry(AnyBlok)
-class Core:
-    pass

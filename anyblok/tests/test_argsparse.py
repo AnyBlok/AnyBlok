@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import anyblok
 from os.path import join
 from anyblok._argsparse import ArgsParseManager
@@ -11,7 +10,10 @@ from anyblok._argsparse import add_interpreter
 from anyblok._argsparse import add_logging
 from anyblok.tests.testcase import TestCase
 from argparse import ArgumentParser
-from AnyBlok.Exception import ArgsParseManagerException
+from anyblok import Declarations
+
+
+ArgsParseManagerException = Declarations.Exception.ArgsParseManagerException
 
 
 def fnct_argsparse(parser, default):

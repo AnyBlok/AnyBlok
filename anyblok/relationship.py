@@ -1,39 +1,24 @@
-import AnyBlok
-from AnyBlok import target_registry, add_Adapter, Field
-from AnyBlok.Interface import ICoreInterface
-from anyblok.field import AField
-from AnyBlok.Exception import FieldException
+from anyblok import Declarations
 from sqlalchemy.orm import relationship
-from zope.interface import implementer
 
 
-@implementer(ICoreInterface)
-class ARelationShip(AField):
-    """ Adapter to Field Class
+FieldException = Declarations.Exception.FieldException
 
-    The RelationShip class are used to define type of AnyBlok SQL field
+
+@Declarations.add_declaration_type()
+class RelationShip(Declarations.Field):
+    """ Relation Ship class
+
+    The RelationShip class are used to define type of Declarations SQL field
 
     Add new relation ship type::
 
-        @target_registry(RelationShip)
+        @Declarations.target_registry(Declarations.RelationShip)
         class Many2one:
             pass
 
     the relation ship column are forbidden because the model can be used on
     the model
-    """
-
-    __interface__ = 'RelationShip'
-
-
-add_Adapter(ICoreInterface, ARelationShip)
-
-
-@target_registry(AnyBlok)
-class RelationShip(Field):
-    """ Relation Ship class
-
-    This class can't be instancied
     """
 
     def __init__(self, label=None, model=None, **kwargs):

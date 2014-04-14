@@ -1,9 +1,9 @@
 import threading
 from inspect import ismethod
-import AnyBlok
+from anyblok import Declarations
 
 
-@AnyBlok.target_registry(AnyBlok.Exception)
+@Declarations.target_registry(Declarations.Exception)
 class EnvironmentException(Exception):
     """ Simple Exception for environment """
 
