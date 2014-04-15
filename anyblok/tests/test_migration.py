@@ -2,6 +2,7 @@ from anyblok.tests.testcase import TestCase
 from anyblok.registry import Registry
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
+from anyblok.environment import EnvironmentManager
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
 from anyblok import Declarations
@@ -22,7 +23,7 @@ class TestMigration(TestCase):
         Int = Declarations.Column.Integer
         Str = Declarations.Column.String
 
-        Declarations.current_blok = 'anyblok_core'
+        EnvironmentManager.set('current_blok', 'anyblok-core')
 
         @target_registry(Model)
         class Test:
@@ -39,7 +40,7 @@ class TestMigration(TestCase):
             other = Int(label="Test", foreign_key=(Model.TestFKTarget,
                         'integer'))
 
-        Declarations.current_blok = None
+        EnvironmentManager.set('current_blok', None)
 
     def setUp(self):
         super(TestMigration, self).setUp()

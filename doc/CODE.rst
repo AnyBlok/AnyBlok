@@ -9,9 +9,13 @@ anyblok module
 .. autofunction:: start
     :noindex:
 
-.. autoclass:: AnyBlok
+anyblok.declarations module
+---------------------------
+
+.. automodule:: anyblok.declarations
+
+.. autoclass:: Declarations
     :members:
-    :undoc-members:
     :noindex:
 
 anyblok._argsparse module
@@ -128,15 +132,6 @@ anyblok.migration module
     :members:
     :noindex:
 
-anyblok.interface module
-------------------------
-
-.. automodule:: anyblok.interface
-
-.. autoclass:: ACoreInterface
-    :members:
-    :noindex:
-
 anyblok.databases module
 ------------------------
 
@@ -155,59 +150,4 @@ anyblok.databases.postgres module
 .. automodule:: anyblok.databases.postgres
 .. autoclass:: ASqlAlchemyPostgres
     :members:
-    :noindex:
-
-anyblok.core module
--------------------
-
-.. automodule:: anyblok.core
-.. autoclass:: ACore
-    :members: target_registry, remove_registry
-    :noindex:
-
-anyblok.field module
---------------------
-
-.. automodule:: anyblok.field
-
-.. autoclass:: AField
-    :members: target_registry, remove_registry
-    :noindex:
-
-anyblok.column module
----------------------
-
-.. automodule:: anyblok.column
-
-.. autoclass:: AColumn
-    :members: target_registry, remove_registry
-    :show-inheritance:
-    :noindex:
-
-anyblok.relationship module
----------------------------
-
-.. automodule:: anyblok.relationship
-
-.. autoclass:: ARelationShip
-    :members: target_registry, remove_registry
-    :show-inheritance:
-    :noindex:
-
-anyblok.mixin module
---------------------
-
-.. automodule:: anyblok.mixin
-
-.. autoclass:: AMixin
-    :members: target_registry, remove_registry
-    :noindex:
-
-anyblok.model module
---------------------
-
-.. automodule:: anyblok.model
-
-.. autoclass:: AModel
-    :members: target_registry, remove_registry
     :noindex:

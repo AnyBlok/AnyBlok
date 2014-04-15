@@ -1,5 +1,6 @@
 from anyblok import Declarations
 from .declarations import DeclarationsException
+from anyblok.environment import EnvironmentManager, EnvironmentException
 
 
 @Declarations.add_declaration_type()
@@ -27,7 +28,8 @@ class Exception:
         :param cls_: Class Interface to add in registry
         """
         _registryname = parent.__registry_name__ + '.' + name
-        if hasattr(parent, name):
+        if hasattr(parent, name) and not EnvironmentManager.get('reload',
+                                                                False):
             raise DeclarationsException(
                 "The Exception %r already exist" % _registryname)
 
@@ -43,3 +45,5 @@ class Exception:
 
 Declarations.target_registry(Declarations.Exception,
                              cls_=DeclarationsException)
+Declarations.target_registry(Declarations.Exception,
+                             cls_=EnvironmentException)

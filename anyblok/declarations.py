@@ -10,9 +10,6 @@ class Declarations:
         from anyblok import MetaData
 
     """
-
-    current_blok = None
-
     declaration_types = {}
 
     @classmethod
@@ -61,7 +58,8 @@ class Declarations:
         return cls_
 
     @classmethod
-    def add_declaration_type(cls, cls_=None, isAnEntry=False, mustbeload=False):
+    def add_declaration_type(cls, cls_=None, isAnEntry=False,
+                             mustbeload=False):
         """ Method to add a adapter
 
         :param cls_: The ``class`` object to add as a world of the MetaData

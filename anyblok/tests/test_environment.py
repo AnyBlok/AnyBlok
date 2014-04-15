@@ -63,8 +63,7 @@ class TestEnvironment(TestCase):
         try:
             EnvironmentManager.define_environment_cls(env)
             self.fail("Bad environment class")
-        except EnvironmentException as e:
-            print(e)
+        except EnvironmentException:
             pass
 
     def test_bad_define_environment_scoped_function_session(self):

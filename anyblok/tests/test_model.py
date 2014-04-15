@@ -1,5 +1,6 @@
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
+from anyblok.environment import EnvironmentManager
 from anyblok import Declarations
 target_registry = Declarations.target_registry
 remove_registry = Declarations.remove_registry
@@ -16,12 +17,12 @@ class TestCoreInterfaceModel(TestCase):
     def setUpClass(cls):
         super(TestCoreInterfaceModel, cls).setUpClass()
         RegistryManager.init_blok('testModel')
-        Declarations.current_blok = 'testModel'
+        EnvironmentManager.set('current_blok', 'testModel')
 
     @classmethod
     def tearDownClass(cls):
         super(TestCoreInterfaceModel, cls).tearDownClass()
-        Declarations.current_blok = None
+        EnvironmentManager.set('current_blok', None)
         del RegistryManager.loaded_bloks['testModel']
 
     def setUp(self):

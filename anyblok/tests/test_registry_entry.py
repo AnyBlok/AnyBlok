@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
-from anyblok import Declarations
+from anyblok.environment import EnvironmentManager
 
 
 class TestRegistryEntry(TestCase):
@@ -11,12 +11,12 @@ class TestRegistryEntry(TestCase):
         super(TestRegistryEntry, cls).setUpClass()
         RegistryManager.declare_entry('Other')
         RegistryManager.init_blok('testEntry')
-        Declarations.current_blok = 'testEntry'
+        EnvironmentManager.set('current_blok', 'testEntry')
 
     @classmethod
     def tearDownClass(cls):
         super(TestRegistryEntry, cls).tearDownClass()
-        Declarations.current_blok = None
+        EnvironmentManager.set('current_blok', None)
         del RegistryManager.loaded_bloks['testEntry']
 
     def tearDown(self):

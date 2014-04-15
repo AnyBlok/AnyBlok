@@ -1,5 +1,4 @@
 import anyblok
-import imp
 from anyblok.tests.testcase import TestCase
 from anyblok.blok import BlokManager, Blok
 from sys import modules
@@ -22,8 +21,6 @@ class TestImportManager(TestCase):
 
     def setUp(self):
         super(TestImportManager, self).setUp()
-        module_name = 'anyblok.bloks.blokTest'
-        modules[module_name] = imp.new_module(module_name)
         BlokManager.bloks['blokTest'] = OneBlok
         BlokManager.ordered_bloks.append('blokTest')
 
@@ -34,11 +31,6 @@ class TestImportManager(TestCase):
             for mod in modules.keys():
                 if 'AnyBlok.bloks.blokTest' in mod:
                     mod_2_del.append(mod)
-
-            for mod in mod_2_del:
-                del modules[mod]
-
-            del ImportManager.modules['blokTest']
 
         fp = open(join(tests_path, 'mockfile.py'), 'w')
         fp.write(initial_file)
@@ -55,17 +47,16 @@ class TestImportManager(TestCase):
 
         del BlokManager.bloks['blokTest']
         BlokManager.ordered_bloks.remove('blokTest')
-        del modules['anyblok.bloks.blokTest']
 
     def test_has_blok(self):
-        ImportManager.add('blokTest', tests_path)
+        ImportManager.add('blokTest', join(tests_path, '__init__.py'))
         self.assertEqual(ImportManager.has('blokTest'), True)
         self.assertEqual(ImportManager.has('blokTest2'), False)
 
     def test_get_blok(self):
-        ImportManager.add('blokTest', tests_path)
+        ImportManager.add('blokTest', join(tests_path, '__init__.py'))
         blok = ImportManager.get('blokTest')
-        self.assertEqual(modules['anyblok.bloks.blokTest'], blok)
+        self.assertEqual(blok.path, tests_path)
 
     def test_get_unexisting_blok(self):
         try:
@@ -74,37 +65,12 @@ class TestImportManager(TestCase):
         except ImportManagerException:
             pass
 
-    def test_import_module(self):
-        blok = ImportManager.add('blokTest', tests_path)
-        blok.import_module('mockfile.py')
-        from anyblok.bloks.blokTest.mockfile import foo
-        self.assertEqual(foo, 'bar')
-
-    def test_reload_module(self):
-        blok = ImportManager.add('blokTest', tests_path)
-        blok.import_module('mockfile.py')
+    def test_reload(self):
+        blok = ImportManager.add('blokTest', join(tests_path, '__init__.py'))
+        blok.imports()
+        from anyblok.bloks.blokTest.mockpackage import mockfile1, mockfile2
+        from anyblok.bloks.blokTest.mockpackage import submockpackage
         from anyblok.bloks.blokTest import mockfile
-        fp = open(join(tests_path, 'mockfile.py'), 'w')
-        fp.write("""foo = 'reload'""")
-        fp.close()
-        blok.reload()
-        self.assertEqual(mockfile.foo, 'reload')
-
-    def test_import_package(self):
-        blok = ImportManager.add('blokTest', tests_path)
-        blok.import_package('mockpackage')
-        from anyblok.bloks.blokTest.mockpackage import mockfile1, mockfile2
-        from anyblok.bloks.blokTest.mockpackage import submockpackage
-        self.assertEqual(mockfile1.foo, 'bar')
-        self.assertEqual(mockfile2.foo, 'bar')
-        self.assertEqual(submockpackage.mockfile1.foo, 'bar')
-        self.assertEqual(submockpackage.mockfile2.foo, 'bar')
-
-    def test_reload_package(self):
-        blok = ImportManager.add('blokTest', tests_path)
-        blok.import_package('mockpackage')
-        from anyblok.bloks.blokTest.mockpackage import mockfile1, mockfile2
-        from anyblok.bloks.blokTest.mockpackage import submockpackage
 
         fp = open(join(tests_path, 'mockpackage', 'mockfile1.py'), 'w')
         fp.write("""foo = 'reload'""")
@@ -115,14 +81,19 @@ class TestImportManager(TestCase):
         fp.write("""foo = 'reload'""")
         fp.close()
 
+        fp = open(join(tests_path, 'mockfile.py'), 'w')
+        fp.write("""foo = 'reload'""")
+        fp.close()
+
         blok.reload()
         self.assertEqual(mockfile1.foo, 'reload')
         self.assertEqual(mockfile2.foo, 'bar')
         self.assertEqual(submockpackage.mockfile1.foo, 'bar')
         self.assertEqual(submockpackage.mockfile2.foo, 'reload')
+        self.assertEqual(mockfile.foo, 'reload')
 
     def test_imports(self):
-        blok = ImportManager.add('blokTest', tests_path)
+        blok = ImportManager.add('blokTest', join(tests_path, '__init__.py'))
         blok.imports()
         from anyblok.bloks.blokTest.mockfile import foo
         self.assertEqual(foo, 'bar')

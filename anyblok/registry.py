@@ -27,10 +27,10 @@ class RegistryManager:
 
         RegistryManager.declare_entry('newEntry')
         RegistryManager.init_blok('newBlok')
-        Declarations.current_blok = 'newBlok'
+        EnvironmentManager.set('current_blok', 'newBlok')
         RegistryManager.add_entry_in_target_registry(
             'newEntry', 'oneKey', cls_)
-        Declarations.current_blok = None
+        EnvironmentManager.set('current_blok', None)
 
     Remove an existing entry::
 
@@ -102,12 +102,14 @@ class RegistryManager:
         """
         cls.unload()
         mod = ImportManager.get(blok)
-        Declarations.current_blok = blok
+        EnvironmentManager.set('current_blok', blok)
         try:
+            EnvironmentManager.set('reload', True)
             mod.imports()
             mod.reload()
         finally:
-            Declarations.current_blok = None
+            EnvironmentManager.set('reload', False)
+            EnvironmentManager.set('current_blok', None)
 
         for registry in cls.registries.values():
             registry.reload()
@@ -165,14 +167,14 @@ class RegistryManager:
     def add_core_in_target_registry(cls, core, cls_):
         """ Load core in blok
 
-        warning the global var Declarations.current_blok must be field on the
-        good blok
+        warning the global var current_blok must be filled on the good blok
 
         :param core: is the existing core name
         :param ``cls_``: Class of the Core to save in loaded blok target
             registry
         """
-        cls.loaded_bloks[Declarations.current_blok]['Core'][core].append(cls_)
+        current_blok = EnvironmentManager.get('current_blok')
+        cls.loaded_bloks[current_blok]['Core'][core].append(cls_)
 
     @classmethod
     def remove_core_in_target_registry(cls, blok, core, cls_):
@@ -205,8 +207,7 @@ class RegistryManager:
     def add_entry_in_target_registry(cls, entry, key, cls_, **kwargs):
         """ Load entry in blok
 
-        warning the global var Declarations.current_blok must be field on the
-        good blok
+        warning the global var current_blok must be filled on the good blok
         :param entry: is the existing entry name
         :param key: is the existing key in the entry
         :param ``cls_``: Class of the entry / key to remove in loaded blok
@@ -219,7 +220,7 @@ class RegistryManager:
 
         setattr(cls_, '__anyblok_bases__', bases)
 
-        cb = Declarations.current_blok
+        cb = EnvironmentManager.get('current_blok')
 
         if key not in cls.loaded_bloks[cb][entry]:
             cls.loaded_bloks[cb][entry][key] = {

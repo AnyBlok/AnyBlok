@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
-from anyblok import Declarations
-
-
-old_loaded_bloks = RegistryManager.loaded_bloks
-old_declared_entries = []
-old_declared_entries += RegistryManager.declared_entries
-old_mustbeload_declared_entries = []
-old_mustbeload_declared_entries += RegistryManager.mustbeload_declared_entries
-old_callback_declared_entries = RegistryManager.callback_declared_entries
+from anyblok.environment import EnvironmentManager
 
 
 class TestRegistryCore(TestCase):
@@ -18,12 +10,12 @@ class TestRegistryCore(TestCase):
     def setUpClass(cls):
         super(TestRegistryCore, cls).setUpClass()
         RegistryManager.init_blok('testCore')
-        Declarations.current_blok = 'testCore'
+        EnvironmentManager.set('current_blok', 'testCore')
 
     @classmethod
     def tearDownClass(cls):
         super(TestRegistryCore, cls).tearDownClass()
-        Declarations.current_blok = None
+        EnvironmentManager.set('current_blok', None)
         del RegistryManager.loaded_bloks['testCore']
 
     def setUp(self):

@@ -28,8 +28,9 @@ class TestCoreInterfaceException(TestCase):
         class OneDecoratorException:
             pass
 
-        self.assertEqual('Exception',
-                         Declarations.Exception.OneDecoratorException.__declaration_type__)
+        self.assertEqual(
+            'Exception',
+            Declarations.Exception.OneDecoratorException.__declaration_type__)
         dir(Declarations.Exception.OneDecoratorException)
 
     def test_add_same_interface(self):

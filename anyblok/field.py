@@ -1,4 +1,5 @@
 from anyblok import Declarations
+from anyblok.environment import EnvironmentManager
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -25,7 +26,8 @@ class Field:
         :param cls_: Class Interface to add
         """
         _registryname = parent.__registry_name__ + '.' + name
-        if hasattr(parent, name):
+        if hasattr(parent, name) and not EnvironmentManager.get('reload',
+                                                                False):
             raise FieldException("The Field %r already exist" % _registryname)
 
         setattr(parent, name, cls_)

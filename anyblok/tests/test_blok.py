@@ -17,10 +17,10 @@ class TestBlokManager(TestCase):
         BlokManager.load('AnyBlok')
         if not BlokManager.list():
             self.fail('No blok load')
-        if not BlokManager.has('anyblok_core'):
-            self.fail("The blok 'anyblok_core' is missing")
+        if not BlokManager.has('anyblok-core'):
+            self.fail("The blok 'anyblok-core' is missing")
 
-        BlokManager.get('anyblok_core')
+        BlokManager.get('anyblok-core')
 
     def test_load_with_invalid_blok_group(self):
         try:
@@ -64,7 +64,7 @@ class TestBlokManager(TestCase):
 
     def test_get_files_from(self):
         BlokManager.load('AnyBlok')
-        BlokManager.get_files_from('anyblok_core', 'css')
+        BlokManager.get_files_from('anyblok-core', 'css')
 
     def test_set(self):
         blok_name = 'ABlok'

@@ -62,9 +62,9 @@ class TestRegistryManager(TestCase):
 
     def test_anyblok_core_loaded(self):
         BlokManager.load('AnyBlok')
-        is_exist = 'anyblok_core' in RegistryManager.loaded_bloks
+        is_exist = 'anyblok-core' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
-        anyblokcore = RegistryManager.loaded_bloks['anyblok_core']
+        anyblokcore = RegistryManager.loaded_bloks['anyblok-core']
         self.assertEqual(len(anyblokcore['Core']['Base']), 1)
         self.assertEqual(len(anyblokcore['Core']['SqlBase']), 1)
         self.assertEqual(len(anyblokcore['Core']['Session']), 1)
@@ -121,6 +121,6 @@ class TestRegistryManager(TestCase):
     def test_reload_blok(self):
         BlokManager.load('AnyBlok')
         try:
-            RegistryManager.reload('anyblok_core')
+            RegistryManager.reload('anyblok-core')
         finally:
             BlokManager.unload()

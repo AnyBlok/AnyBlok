@@ -1,5 +1,9 @@
 from anyblok import Declarations
-SqlBaseException = Declarations.Exception.SqlBaseException
+
+
+@Declarations.target_registry(Declarations.Exception)
+class SqlBaseException(Exception):
+    """ Simple Exception for sql base """
 
 
 @Declarations.target_registry(Declarations.Core)

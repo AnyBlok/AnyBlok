@@ -4,7 +4,7 @@ from logging import getLogger
 from anyblok._argsparse import ArgsParseManager
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
-from anyblok import Declarations
+from anyblok.environment import EnvironmentManager
 from anyblok import start
 from anyblok.databases.interface import ISqlAlchemyDataBaseType
 from zope.component import getUtility
@@ -143,7 +143,7 @@ class DBTestCase(TestCase):
 
     parts_to_load = ['AnyBlok']
     """ blok group to load """
-    current_blok = 'anyblok_core'
+    current_blok = 'anyblok-core'
     """ In the blok to add the new model """
 
     @classmethod
@@ -173,11 +173,11 @@ class DBTestCase(TestCase):
         :param kwargs: kwargs for the function
         :rtype: registry instance
         """
-        Declarations.current_blok = self.current_blok
+        EnvironmentManager.set('current_blok', self.current_blok)
         try:
             function(**kwargs)
         finally:
-            Declarations.current_blok = None
+            EnvironmentManager.set('current_blok', None)
         return self.getRegistry()
 
 
@@ -202,7 +202,7 @@ class BlokTestCase(TestCase):
     parts_to_load = None
     """ Group of blok to load """
 
-    need_blok = ['anyblok_core']
+    need_blok = ['anyblok-core']
     """ List of the blok need for this test """
 
     @classmethod

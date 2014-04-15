@@ -3,6 +3,7 @@ from pkg_resources import iter_entry_points
 import anyblok
 from anyblok._imp import ImportManager
 from anyblok._logging import log
+from anyblok.environment import EnvironmentManager
 from time import sleep
 from sys import modules
 from os.path import dirname, join
@@ -13,7 +14,7 @@ class BlokManagerException(Exception):
     """ Simple exception to BlokManager """
 
     def __init__(self, *args, **kwargs):
-        anyblok.Declarations.current_blok = None
+        EnvironmentManager.set('current_blok', None)
         super(BlokManagerException, self).__init__(*args, **kwargs)
 
 
@@ -118,11 +119,11 @@ class BlokManager:
 
         cls.bloks_groups = bloks_groups
 
-        if anyblok.Declarations.current_blok:
-            while anyblok.Declarations.current_blok:
+        if EnvironmentManager.get('current_blok'):
+            while EnvironmentManager.get('current_blok'):
                 sleep(0.1)
 
-        anyblok.Declarations.current_blok = 'start'
+        EnvironmentManager.set('current_blok', 'start')
 
         bloks = []
         for bloks_group in bloks_groups:
@@ -160,13 +161,12 @@ class BlokManager:
                 get_need_blok(optional)
 
             cls.ordered_bloks.append(blok)
-            anyblok.Declarations.current_blok = blok
+            EnvironmentManager.set('current_blok', blok)
 
-            module = modules[cls.bloks[blok].__module__]
             if not ImportManager.has(blok):
                 # Import only if not exist don't reload here
-                mod_path = dirname(module.__file__)
-                mod = ImportManager.add(blok, mod_path)
+                module = modules[cls.bloks[blok].__module__]
+                mod = ImportManager.add(blok, module.__file__)
                 mod.imports()
             else:
                 mod = ImportManager.get(blok)
@@ -183,7 +183,7 @@ class BlokManager:
                 get_need_blok(blok)
 
         finally:
-            anyblok.Declarations.current_blok = None
+            EnvironmentManager.set('current_blok', None)
 
     @classmethod
     def get_files_from(cls, blok, attribute):

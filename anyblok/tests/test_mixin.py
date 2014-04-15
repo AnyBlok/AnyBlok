@@ -1,6 +1,7 @@
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
 from anyblok import Declarations
+from anyblok.environment import EnvironmentManager
 target_registry = Declarations.target_registry
 remove_registry = Declarations.remove_registry
 Mixin = Declarations.Mixin
@@ -16,12 +17,12 @@ class TestCoreInterfaceMixin(TestCase):
     def setUpClass(cls):
         super(TestCoreInterfaceMixin, cls).setUpClass()
         RegistryManager.init_blok('testMixin')
-        Declarations.current_blok = 'testMixin'
+        EnvironmentManager.set('current_blok', 'testMixin')
 
     @classmethod
     def tearDownClass(cls):
         super(TestCoreInterfaceMixin, cls).tearDownClass()
-        Declarations.current_blok = None
+        EnvironmentManager.set('current_blok', None)
         del RegistryManager.loaded_bloks['testMixin']
 
     def setUp(self):
