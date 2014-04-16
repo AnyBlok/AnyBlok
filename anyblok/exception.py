@@ -23,9 +23,9 @@ class Exception:
         """ add new sub registry in the registry and add it in the
         sys.modules
 
-        :param registry: Existing global registry
-        :param child: Name of the new registry to add it
-        :param cls_: Class Interface to add in registry
+        :param parent: Existing declaration
+        :param name: Name of the new declaration to add it
+        :param cls_: Class to add in the declaration
         """
         _registryname = parent.__registry_name__ + '.' + name
         if hasattr(parent, name) and not EnvironmentManager.get('reload',

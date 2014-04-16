@@ -24,9 +24,9 @@ class Core:
         """ add new sub registry in the registry and add it in the
         sys.modules
 
-        :param registry: Existing global registry
-        :param child: Name of the new registry to add it
-        :param cls_: Class Interface to add in registry
+        :param parent: Existing declaration
+        :param name: Name of the new declaration to add it
+        :param cls_: Class Interface to add in the declaration
         """
         if not hasattr(parent, name):
             core = type(name, tuple(), {})
@@ -38,12 +38,12 @@ class Core:
         RegistryManager.add_core_in_target_registry(name, cls_)
 
     @classmethod
-    def remove_registry(self, registry, child, cls_, **kwargs):
+    def remove_registry(self, parent, name, cls_, **kwargs):
         """ Remove the Interface in the registry
 
-        :param registry: Existing global registry
-        :param child: Name of the new registry to add it
-        :param cls_: Class Interface to remove in registry
+        :param parent: Existing declaration (not use here)
+        :param name: Name of the new declaration to remove it
+        :param cls_: Class Interface to remove in the declaration
         """
         blok = kwargs.pop('blok')
-        RegistryManager.remove_core_in_target_registry(blok, child, cls_)
+        RegistryManager.remove_core_in_target_registry(blok, name, cls_)

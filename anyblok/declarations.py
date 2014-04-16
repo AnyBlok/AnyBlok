@@ -1,24 +1,29 @@
 class DeclarationsException(Exception):
-    """ Simple Exception for MetaData """
+    """ Simple Exception for Declarations """
 
 
 class Declarations:
-    """ Represente the ``Univers`` of all the data loaded by AnyBlok
+    """ Represente all the declarations done by the bloks
+
+    .. warning::
+        It is a global information, during the execution you must use the
+        registry. The registry is the real assembler of the python classes
+        in function of the installed bloks
 
     ::
 
-        from anyblok import MetaData
+        from anyblok import Declarations
 
     """
     declaration_types = {}
 
     @classmethod
     def target_registry(cls, parent, cls_=None, **kwargs):
-        """ Method to add in a world of the MetaData
+        """ Method to add in a type of declaration
 
-            :param parent: An existing AnyBlok class in the Declaration
-            :param ``cls_``: The ``class`` object to add in the Declaration
-            :rtype: ``cls_``
+        :param parent: An existing anyblok class in the Declaration
+        :param ``cls_``: The ``class`` object to add in the Declaration
+        :rtype: ``cls_``
         """
 
         def wrapper(self):
@@ -44,9 +49,9 @@ class Declarations:
 
     @classmethod
     def remove_registry(cls, parent, cls_, **kwargs):
-        """ Method to remove from a world of the MetaData
+        """ Method to remove from a type of declaration
 
-            :param parent: An existing AnyBlok class in the Declaration
+            :param parent: An existing anyblok class in the Declaration
             :param ``cls_``: The ``class`` object to remove from the
                 Declaration
             :rtype: ``cls_``
@@ -60,9 +65,12 @@ class Declarations:
     @classmethod
     def add_declaration_type(cls, cls_=None, isAnEntry=False,
                              mustbeload=False):
-        """ Method to add a adapter
+        """ Method to add a type of declaration
 
         :param cls_: The ``class`` object to add as a world of the MetaData
+        :param isAnEntry: if true the type will be assembling by the registry
+        :param mustbeload: Define if the type must be load during
+                the assembling
         """
 
         def wrapper(self):

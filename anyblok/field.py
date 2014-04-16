@@ -6,7 +6,7 @@ logger = getLogger(__name__)
 
 @Declarations.target_registry(Declarations.Exception)
 class FieldException(Exception):
-    """ Simple Exception for Field Adapter """
+    """ Simple Exception for Field """
 
 
 @Declarations.add_declaration_type()
@@ -23,7 +23,7 @@ class Field:
 
         :param parent: Existing in the declaration
         :param name: Name of the new field to add it
-        :param cls_: Class Interface to add
+        :param cls_: Class to add in declaration
         """
         _registryname = parent.__registry_name__ + '.' + name
         if hasattr(parent, name) and not EnvironmentManager.get('reload',
