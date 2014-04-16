@@ -1,14 +1,14 @@
 README
 ======
 
-AnyBlok is a framework to include dynamicly Python source. It is the reference 
+AnyBlok is a framework to include dynamicly Python source. It is the reference
 documentation.
 
-This first part present How create an application with his own code. Why have 
+This first part present How create an application with his own code. Why have
 you to create an application? Because AnyBlok is an framework not an application
 
 And the goal more than one application use the same database for diferent goal.
-The web server need to give acces to the user, but a profiler need another 
+The web server need to give acces to the user, but a profiler need another
 access with another access rule, or another application need to follow one part
 of the functionnality.
 
@@ -44,7 +44,7 @@ For this example, the blok group ``WorkBlok`` will be used
 Create Your Blok
 ----------------
 
-A blok is a set of AnyBlok:
+A blok is a set of Declaration
 
 * Model: Python class usable by the application and linked in the registry
 * Mixin: Python class to extend Model
@@ -56,7 +56,7 @@ The blok name must be declare in the blok group of the distribution::
 
     # declare 4 bloks
     # desk: is the location
-    * worker: is the person 
+    * worker: is the person
     * position: is the position type
     * worker-position: link a person with a position
     WorkBlok = [
@@ -64,7 +64,7 @@ The blok name must be declare in the blok group of the distribution::
         'worker=exampleblok.worker_blok:WorkerBlok',
         'position=exampleblok.position_blok:PositionBlok',
         'worker-position=exampleblok.worker_position_blok:WorkerPositionBlok',
-    ],                                            
+    ],
 
     setup(
         # ...
@@ -73,7 +73,7 @@ The blok name must be declare in the blok group of the distribution::
         },
     )
 
-And the blok must inherit of the Blok class of anyblok in the ``__init__.py`` 
+And the blok must inherit of the Blok class of anyblok in the ``__init__.py``
 file of a package::
 
     from anyblok.blok import Blok
@@ -127,11 +127,13 @@ package in this package will be import by anyblok.
     class PositionBlok(Blok):
 
         def install(self):
-            for position in ('DG', 'Cormercial', 'Secrétaire', 'Chef de projet',
-                             'Developper'):
-                self.registry.Position.insert(name=position)
+            self.registry.Position.multi_insert({'name': 'DG'},
+                                                {'name': 'Comercial'},
+                                                {'name': 'Secrétaire'},
+                                                {'name': 'Chef de projet'},
+                                                {'name': 'Developper'})
 
-    # position.py describe the model Position 
+    # position.py describe the model Position
 
 Some blok can have requirement. Each blok define this dependences:
 
@@ -170,15 +172,17 @@ of the registry, then this blok will be loaded and installed
         def install(self):
             room = self.registry.Room.query().filter(
                 self.registry.Room.number == 308).first()
-            for worker in ('Georges Racinet', 'Christophe Combelles',
-                           'Sandrine Chaufournais', 'Pierre Verkest',
-                           u"Simon André", 'Florent Jouatte', 'Clovis Nzouendjou',
-                           u"Jean-Sébastien Suzanne"):
-                self.registry.Worker.insert(name=worker, room=room)
+            workers = [dict(name=worker, room=room)
+                       for worker in ('Georges Racinet', 'Christophe Combelles',
+                                      'Sandrine Chaufournais', 'Pierre Verkest',
+                                      u"Simon André", 'Florent Jouatte',
+                                      'Clovis Nzouendjou',
+                                      u"Jean-Sébastien Suzanne")]
+            self.registry.Worker.multi_insert(*workers)
 
     # worker.py describe the model Worker
 
-Some blok can be auto installed because other blok are installed, it is the 
+Some blok can be auto installed because other blok are installed, it is the
 conditional blok.
 
 **WorkerPosition blok**::
@@ -221,34 +225,40 @@ conditional blok.
                 Worker.query().filter(Worker.name == worker).update({
                     'position_name': position})
 
-.. warning:: 
-    They are not strongly dependancies linked between conditional bloks and 
-    the blok, so the priority must be increase, The blok are load by dependencie 
+.. warning::
+    They are not strongly dependancies linked between conditional bloks and
+    the blok, so the priority must be increase, The blok are load by dependencie
     and priority a blok with small dependancie will be loaded before a blok with
     higth dependancie
 
 Create Your Model
 -----------------
 
-The Model must be added under the node Model of the registry with the 
-class decorator ``AnyBlok.target_registry``::
+The Model must be added under the node Model of the declaration with the
+class decorator ``Declarations.target_registry``::
 
-    from AnyBlok import target_registry, Model
+    from anyblok import Declarations
 
-    @target_registry(Model)
+    @Declarations.target_registry(Declarations.Model)
     class AAnyBlokModel:
         """ The first Model of our application """
 
 
 They are two type of Model:
 
-* SQL: Génerate a table in database
-* No SQL: No table but the model exist in the registry and can be used.
+* SQL: Génerate a table in database (inherit SqlBase and Base)
+* No SQL: No table but the model exist in the registry and can be used (inherit Base).
+
+SqlBase and Base are core model, Call them directly is now allowed, too low level,
+but they are subclassable and each subclasses are propagated at all the anyblok
+model. this example use ``insert`` and ``multi_insert`` adding by ``anyblok-core`` blok.
 
 A SQL model can define the column by adding a column::
 
-    from AnyBlok import target_registry, Model
-    from AnyBlok.Column import String
+    from anyblok import Declarations
+    target_registry = Declarations.target_registry
+    Model = Declarations.Model
+    String = Declarations.Column.String
 
     @target_registry(Model)
     class ASQLModel:
@@ -260,14 +270,17 @@ A SQL model can define the column by adding a column::
 
 .. warning::
     The table name depend of the registry tree, here the table is ``asqlcolumn``.
-    If a new model are define under ASQLModel (example UnderModel: 
-    ``asqlcolumn_undermodel``)
+    If a new model are define under ASQLModel (example UnderModel:
+    ``asqlcolumn_undermodel``) and the registry model is Model.ASQLModel.UnderModel
 
 **desk_blok.desk**::
 
-    from AnyBlok import target_registry, Model
-    from AnyBlok.Column import String, Integer
-    from AnyBlok.RelationShip import Many2One
+    from anyblok import Declarations
+    target_registry = Declarations.target_registry
+    Model = Declarations.Model
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+    Many2One = Declarations.RelationShip.Many2One
 
 
     @target_registry(Model)
@@ -299,13 +312,15 @@ declare the One2Many rooms on the Address Model
 A relationship Many2One or One2One must have an existing column.
 The attribute ``column_name`` alow to choose the column linked, if this
 attribute is missing then the value is "'model.table'.'remote_column'"
-If the column linked doesn't exist then the relationship create the 
+If the column linked doesn't exist then the relationship create the
 column with the same type of the remote_column
 
 **position_blok.position**::
 
-    from AnyBlok import target_registry, Model
-    from AnyBlok.Column import String
+    from anyblok import Declarations
+    target_registry = Declarations.target_registry
+    Model = Declarations.Model
+    String = Declarations.Column.String
 
 
     @target_registry(Model)
@@ -318,9 +333,11 @@ column with the same type of the remote_column
 
 **worker_blok.worker**::
 
-    from AnyBlok import target_registry, Model
-    from AnyBlok.Column import String, Integer
-    from AnyBlok.RelationShip import Many2One
+    from anyblok import Declarations
+    target_registry = Declarations.target_registry
+    Model = Declarations.Model
+    String = Declarations.Column.String
+    Many2One = Declarations.RelationShip.Many2One
 
 
     @target_registry(Model)
@@ -336,15 +353,16 @@ column with the same type of the remote_column
 Update an existing Model
 ------------------------
 
-If you create 2 models with the same registry position, the same name, then the
-second model subclass the first model. And the two models will be merge to 
+If you create 2 models with the same declaration position, the same name, then the
+second model subclass the first model. And the two models will be merge to
 get the real model
 
 **worker_position_blok.worker**::
 
-    from AnyBlok import target_registry, Model
-    from AnyBlok.Column import String
-    from AnyBlok.RelationShip import Many2One
+    from anyblok import Declarations
+    target_registry = Declarations.target_registry
+    Model = Declarations.Model
+    Many2One = Declarations.RelationShip.Many2One
 
 
     @target_registry(Model)
@@ -360,7 +378,7 @@ get the real model
 Add entries in the argsparse configuration
 ------------------------------------------
 
-For somme application somme option can be needed. Options are grouped by 
+For somme application somme option can be needed. Options are grouped by
 category. And the application choose the category of option to display.
 
 **worker_blok.arsparse**::
