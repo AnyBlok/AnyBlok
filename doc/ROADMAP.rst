@@ -15,6 +15,7 @@ To implement
 ------------
 
 * core.query : implement a method to subclass one method for automaticly where clause in model https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/PreFilteredQuery
+    http://stackoverflow.com/questions/15936111/sqlalchemy-can-you-add-custom-methods-to-the-query-object
 * Add Blok group as "Category" or "Blok group"
 * Make a registry reload to update registry without destroy the curent registry and create a new(Protect the session)
 * Add RelationShip model in anyblok-core and refatore the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
@@ -41,7 +42,7 @@ Library to include
 * shematisation of https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/SchemaDisplay
 * sqltap http://sqltap.inconshreveable.com, profiling and introspection for SQLAlchemy applications
 * SchemaDisplay: not realy a library, just a poc for the moment https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/SchemaDisplay
-* SQL View https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
+* SQL View https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views, http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy, http://stackoverflow.com/questions/20518521/is-possible-to-mapping-view-with-class-using-mapper-in-sqlalchemy
 * Ajouter automatiquement m2o et o2m lors de la declaration d'une foreign key https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/AutoRelationships
 * Crypt https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/DatabaseCrypt
 * profiling https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Profiling
