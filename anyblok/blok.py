@@ -165,8 +165,7 @@ class BlokManager:
 
             if not ImportManager.has(blok):
                 # Import only if not exist don't reload here
-                module = modules[cls.bloks[blok].__module__]
-                mod = ImportManager.add(blok, module.__file__)
+                mod = ImportManager.add(blok)
                 mod.imports()
             else:
                 mod = ImportManager.get(blok)

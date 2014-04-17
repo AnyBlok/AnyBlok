@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 import anyblok
 from sys import modules
-from os.path import join, splitext, basename, isdir
+from os.path import splitext, split
 from os import listdir
-from importlib.machinery import SourceFileLoader
+from importlib import import_module
 
 
 @anyblok.Declarations.target_registry(anyblok.Declarations.Exception)
 class ImportManagerException(Exception):
     """ Simple inheritance of Exception class """
-    pass
 
 
 class ImportManager:
@@ -26,13 +25,14 @@ class ImportManager:
             if ImportManager.has('my blok'):
                 blok = ImportManager.get('my blok')
                 blok.reload()
+                # import the unimported module
 
     """
 
     modules = {}
 
     @classmethod
-    def add(cls, blok, path):
+    def add(cls, blok):
         """ Add new module in sys.modules
 
         :param blok: name of the blok to add
@@ -45,7 +45,7 @@ class ImportManager:
         if not BlokManager.has(blok):
             raise ImportManagerException("Unexisting blok")
 
-        loader = Loader(blok, path)
+        loader = Loader(blok)
         cls.modules[blok] = loader
         return loader
 
@@ -72,64 +72,76 @@ class ImportManager:
 
 class Loader:
 
-    def __init__(self, blok, path):
+    def __init__(self, blok):
         self.blok = blok
-        self.path = '/' + join(*path.split('/')[:-1])
-        self.module = basename(path)
+        self.import_known = []
 
     def imports(self):
         """ Imports modules and / or packages listed in the blok path"""
-        from anyblok.registry import RegistryManager
         from anyblok.blok import BlokManager
-
-        if RegistryManager.has_blok(self.blok):
-            BlokManager.get(self.blok).clean_before_reload()
+        from anyblok.registry import RegistryManager
 
         RegistryManager.init_blok(self.blok)
-        module_name = 'anyblok.bloks.' + self.blok
-        module_path = join(self.path, self.module)
-        loader = SourceFileLoader(module_name, module_path)
-        mainmodule = loader.load_module(module_name)
+        b = BlokManager.get(self.blok)
+        main_path = modules[b.__module__].__file__
+        path, init = split(main_path)
 
-        mods = [x for x in listdir(self.path)
-                if x != self.module and x[0] != '.']
+        mods = [x for x in listdir(path) if x != init and x[0] != '.']
         for module in mods:
-            module_name = 'anyblok.bloks.' + self.blok + '.'
-            module_name += splitext(module)[0]
-            module_path = join(self.path, module)
-            if isdir(module_path):
-                module_path = join(module_path, '__init__.py')
-
-            loader = SourceFileLoader(module_name, module_path)
+            module_name = b.__module__ + '.' + splitext(module)[0]
             try:
-                mod = loader.load_module(module_name)
-                setattr(mainmodule, splitext(module)[0], mod)
-            except FileNotFoundError:
+                import_module(module_name)
+            except ImportError as e:
+                print(e)
                 pass
+
+        self.import_known = [x for x in modules.keys()
+                             if b.__module__ + '.' in x]
 
     def reload(self):
         """ Reload all the import for this module """
-        isimportlib = isimp = False
+        isimp = False
         try:
-            from importlib import reload as _reload
-            isimportlib = True
+            from importlib import reload as reload_module
         except ImportError:
-            from imp import reload as _reload
             isimp = True
+            from imp import reload as reload_module
 
         from anyblok.blok import BlokManager
         from anyblok.registry import RegistryManager
         from anyblok.environment import EnvironmentManager
-        BlokManager.get(self.blok).clean_before_reload()
+
+        b = BlokManager.get(self.blok)
+        b.clean_before_reload()
         RegistryManager.init_blok(self.blok)
-        module_name = 'anyblok.bloks.' + self.blok
+        main_path = modules[b.__module__].__file__
+        path, init = split(main_path)
+        mods = [x for x in listdir(path) if x != init and x[0] != '.']
+
         try:
             EnvironmentManager.set('reload', True)
-            for mod_name, mod in modules.items():
-                if module_name + '.' in mod_name:
-                    if isimportlib:
-                        _reload(mod_name)
-                    elif isimp:
-                        _reload(mod)
+
+            for module in mods:
+                module_name = b.__module__ + '.' + splitext(module)[0]
+                if module_name in self.import_known:
+                    continue
+
+                try:
+                    import_module(module_name)
+                except ImportError:
+                    pass
+
+            self.import_known.sort()
+            for module in self.import_known:
+                try:
+                    if isimp:
+                        module = modules[module]
+
+                    reload_module(module)
+                except ImportError:
+                    pass
         finally:
             EnvironmentManager.set('reload', False)
+
+        self.import_known = [x for x in modules.keys()
+                             if b.__module__ + '.' in x]
