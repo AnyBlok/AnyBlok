@@ -9,7 +9,7 @@ Next step
 * ADD unittest:
     - core inheritance
     - anyblok_core system
-* Move the declaration type (Mixin, Model, Field, Column, RelationShip) in anyblok-core .. warning:: Need refactor of registry for model
+* Refactor split load method of registry and unit test all part, and add unit test for each split
 
 To implement
 ------------
@@ -20,8 +20,8 @@ To implement
 * Make a registry reload to update registry without destroy the curent registry and create a new(Protect the session)
 * Add RelationShip model in anyblok-core and refatore the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
 * Refactor the m2m, o2m, m2o, o2o. Allow to have more than one primary key
-* Refactor split load method of registry and unit test all part
 * Put postgres databas in this own distribution with the good import
+* order by in model (and the possibility to change the in relation ship)
 
 Fix me
 ------
@@ -29,7 +29,6 @@ Fix me
 * Enum Column doesn't work, see http://techspot.zzzeek.org/2011/01/14/the-enum-recipe/
   or https://pypi.python.org/pypi/SQLAlchemy-Enum-Dict/0.1.2
 * Add the posibility to add a nullable column by migration
-* ArgsParse decoratormust be change by declarations.target_registry
 * Don't load two time the logging configuration
 
 Library to include
@@ -51,8 +50,9 @@ Library to include
 Functionnality which need a sprint
 ----------------------------------
 
+* Back Task
 * Cron
+* Tasks Management
 * Event
 * Event by messaging bus
-* Task Management
 * Import / Export 

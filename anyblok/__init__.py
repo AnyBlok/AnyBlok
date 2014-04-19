@@ -53,7 +53,6 @@ from .declarations import Declarations  # noqa
 from . import exception  # noqa
 from . import databases  # noqa
 from . import core  # noqa
-# TODO Move in the blok anyblok-core
 from . import field  # noqa
 from . import column  # noqa
 from . import relationship  # noqa

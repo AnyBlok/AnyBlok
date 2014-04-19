@@ -3,6 +3,7 @@ from anyblok import Declarations
 target_registry = Declarations.target_registry
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+Core = Declarations.Core
 
 
 def simple_subclass_model():
@@ -291,6 +292,106 @@ def inherit_by_another_model_and_subclass_mainmodel():
         other = String(label="Other")
 
 
+def inherit_base_and_add_method():
+
+    @target_registry(Core)
+    class Base:
+
+        def method_from_base(self, x):
+            return x * 2
+
+    @target_registry(Model)
+    class Test:
+        pass
+
+
+def inherit_base_and_add_method_after_create_model():
+
+    @target_registry(Model)
+    class Test:
+        pass
+
+    @target_registry(Core)
+    class Base:
+
+        def method_from_base(self, x):
+            return x * 2
+
+
+def inherit_base_and_add_method_sub_classes():
+
+    @target_registry(Core)
+    class Base:
+
+        def method_from_base(self, x):
+            return x * 2
+
+    @target_registry(Model)
+    class Test:
+
+        def method_from_base(self, x):
+            return super(Test, self).method_from_base(x) + 3
+
+
+def inherit_base_and_add_method_sub_classes_by_mixin():
+
+    @target_registry(Core)
+    class Base:
+
+        def method_from_base(self, x):
+            return x * 2
+
+    @target_registry(Mixin)
+    class TestMixin:
+
+        def method_from_base(self, x):
+            return super(TestMixin, self).method_from_base(x) + 3
+
+    @target_registry(Model)
+    class Test(Mixin.TestMixin):
+        pass
+
+
+def inherit_sql_base_on_simple_model():
+
+    @target_registry(Core)
+    class Base:
+
+        def is_sql_base(self):
+            return False
+
+    @target_registry(Core)
+    class SqlBase:
+
+        def is_sql_base(self):
+            return True
+
+    @target_registry(Model)
+    class Test:
+        pass
+
+
+def inherit_sql_base_on_sql_model():
+    Integer = Declarations.Column.Integer
+
+    @target_registry(Core)
+    class Base:
+
+        def is_sql_base(self):
+            return False
+
+    @target_registry(Core)
+    class SqlBase:
+
+        def is_sql_base(self):
+            return True
+
+    @target_registry(Model)
+    class Test:
+
+        id = Integer(label='ID', primary_key=True)
+
+
 class TestInherit(DBTestCase):
 
     def check_registry(self, Model):
@@ -381,3 +482,33 @@ class TestInherit(DBTestCase):
         registry = self.init_registry(
             inherit_by_another_model_and_subclass_mainmodel)
         self.check_registry(registry.Test)
+
+    def check_inherit_base(self, function, value):
+        registry = self.init_registry(function)
+        test = registry.Test()
+        self.assertEqual(test.method_from_base(2), value)
+
+    def test_inherit_base_and_add_method(self):
+        self.check_inherit_base(inherit_base_and_add_method, 4)
+
+    def test_inherit_base_and_add_method_after_create_model(self):
+        self.check_inherit_base(inherit_base_and_add_method_after_create_model,
+                                4)
+
+    def test_inherit_base_and_add_method_sub_classes(self):
+        self.check_inherit_base(inherit_base_and_add_method_sub_classes, 7)
+
+    def test_inherit_base_and_add_method_sub_classes_by_mixin(self):
+        self.check_inherit_base(
+            inherit_base_and_add_method_sub_classes_by_mixin, 7)
+
+    def check_inherit_sql_base(self, function, value):
+        registry = self.init_registry(function)
+        test = registry.Test()
+        self.assertEqual(test.is_sql_base(), value)
+
+    def test_inherit_sql_base_on_simple_model(self):
+        self.check_inherit_sql_base(inherit_sql_base_on_simple_model, False)
+
+    def test_inherit_sql_base_on_sql_model(self):
+        self.check_inherit_sql_base(inherit_sql_base_on_sql_model, True)
