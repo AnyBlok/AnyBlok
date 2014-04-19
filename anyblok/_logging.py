@@ -122,6 +122,11 @@ def init_logger(level='info', mode='console',
     :param socket: Socket or UnixSocket
     :param facility:
     """
+    if logger.hasHandlers():
+        for h in logger.handlers:
+            if h.get_name() == mode:
+                return
+
     level = LEVELS.get(level, logging.INFO)
 
     logger.setLevel(level)
@@ -148,6 +153,7 @@ def init_logger(level='info', mode='console',
 
     formatter = Formatter_fnct(fmt=FORMATTER, datefmt='%Y-%m%d %H:%M:%S')
     handler.setFormatter(formatter)
+    handler.set_name(mode)
     logger.addHandler(handler)
 
 
