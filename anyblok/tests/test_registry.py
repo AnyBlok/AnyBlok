@@ -46,3 +46,28 @@ class TestRegistry(TestCase):
         bloks_after_reload = self.registry.System.Blok.query('name').filter(
             self.registry.System.Blok.state == 'installed').all()
         self.assertEqual(bloks_before_reload, bloks_after_reload)
+
+    def test_get_bloks_to_load(self):
+        bloks = self.registry.get_bloks_to_load()
+        have_anyblokcore = 'anyblok-core' in bloks
+        self.assertEqual(have_anyblokcore, True)
+
+    def test_load_entry(self):
+        RegistryManager.loaded_bloks['blok'] = {
+            'entry': {
+                'registry_names': ['key'],
+                'key': {'properties': {'property': True}, 'bases': [TestCase]},
+            },
+        }
+        self.registry.load_entry('blok', 'entry')
+        self.assertEqual(self.registry.loaded_registries['key'],
+                         {'properties': {'property': True},
+                          'bases': [TestCase]})
+
+    def test_load_core(self):
+        RegistryManager.loaded_bloks['blok'] = {
+            'Core': {'Session': [TestCase]},
+        }
+        self.registry.load_core('blok', 'Session')
+        have_session = TestCase in self.registry.loaded_cores['Session']
+        self.assertEqual(have_session, True)

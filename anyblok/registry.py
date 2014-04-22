@@ -262,15 +262,27 @@ class Registry:
         self.dbname = dbname
         url = ArgsParseManager.get_url(dbname=dbname)
         self.engine = create_engine(url)
+        self.registry_base = type("RegistryBase", tuple(), {'registry': self})
         self.ini_var()
         self.Session = None
         self.load()
 
     def ini_var(self):
+        """ Initialize the var to load the  registry """
         self.loaded_namespaces_first_step = {}
         self.loaded_namespaces = {}
         self.declarativebase = None
         self.loaded_bloks = {}
+        self.loaded_registries = {
+            x + '_names': []
+            for x in RegistryManager.mustbeload_declared_entries}
+        self.loaded_cores = {
+            'Base': [],
+            'SqlBase': [],
+            'Session': [self.registry_base],
+        }
+        self.ordered_loaded_bloks = []
+        self.loaded_namespaces = {}
 
     def get(self, namespace):
         """ Return the namespace Class
@@ -284,6 +296,66 @@ class Registry:
 
         return self.loaded_namespaces[namespace]
 
+    def get_bloks_to_load(self):
+        """ Return the bloks to load by the registry, this bloks are installed,
+        or will be installed
+
+        :rtype: list of blok's name
+        """
+        conn = None
+        try:
+            conn = self.engine.connect()
+            res = conn.execute("""
+                select system_blok.name
+                from system_blok
+                where system_blok.state in ('installed',
+                                            'toinstall',
+                                            'toupdate')
+                order by system_blok.order""").fetchall()
+            toload = [x[0] for x in res]
+        except (ProgrammingError, OperationalError):
+            toload = []
+        finally:
+            if conn:
+                conn.close()
+
+        for blok in BlokManager.auto_install:
+            if blok not in toload:
+                toload.append(blok)
+
+        return toload
+
+    def load_entry(self, blok, entry):
+        """ load one entry type for one blok
+
+        :param blok: name of the blok
+        :param entry: declaration type to load
+        """
+        _entry = RegistryManager.loaded_bloks[blok][entry]
+        for key in _entry['registry_names']:
+            v = _entry[key]
+            if key not in self.loaded_registries:
+                self.loaded_registries[key] = {'properties': {}, 'bases': []}
+
+            self.loaded_registries[key]['properties'].update(v['properties'])
+            old_bases = [] + self.loaded_registries[key]['bases']
+            self.loaded_registries[key]['bases'] = v['bases']
+            self.loaded_registries[key]['bases'] += old_bases
+
+            if entry in RegistryManager.mustbeload_declared_entries:
+                self.loaded_registries[entry + '_names'].append(key)
+
+    def load_core(self, blok, core):
+        """ load one core type for one blok
+
+        :param blok: name of the blok
+        :param core: the core name to load
+        """
+        bases = RegistryManager.loaded_bloks[blok]['Core'][core]
+        bases.reverse()
+        for base in bases:
+            self.loaded_cores[core].insert(0, base)
+
     @log()
     def load(self):
         """ Load all the namespace of the registry
@@ -294,65 +366,10 @@ class Registry:
         try:
             self.declarativebase = declarative_base(class_registry=dict(
                 registry=self))
-
-            states = ['installed', 'toinstall', 'toupdate']
-            conn = None
-            try:
-                conn = self.engine.connect()
-                res = conn.execute("""
-                    select system_blok.name
-                    from system_blok
-                    where system_blok.state in ('%s')
-                    order by system_blok.order""" % "', '".join(
-                    states)).fetchall()
-                toload = [x[0] for x in res]
-            except (ProgrammingError, OperationalError):
-                toload = []
-            finally:
-                if conn:
-                    conn.close()
-
-            for blok in BlokManager.auto_install:
-                if blok not in toload:
-                    toload.append(blok)
-
-            loaded_registries = {'model_names': []}
-            registry_base = type("RegistryBase", tuple(), {'registry': self})
-            loaded_cores = {'Base': [], 'SqlBase': [], 'Session': [
-                registry_base]}
-            ordered_loaded_bloks = []
-            self.loaded_namespaces = {}
-
-            def load_entry(blok, entry):
-                _entry = RegistryManager.loaded_bloks[blok][entry]
-                for key in _entry['registry_names']:
-                    v = _entry[key]
-                    if key not in loaded_registries:
-                        loaded_registries[key] = {'properties': {},
-                                                  'bases': []}
-
-                    loaded_registries[key]['properties'].update(
-                        v['properties'])
-                    old_bases = [] + loaded_registries[key]['bases']
-                    loaded_registries[key]['bases'] = v['bases']
-                    loaded_registries[key]['bases'] += old_bases
-
-                    if entry in RegistryManager.mustbeload_declared_entries:
-                        declared_e = RegistryManager.callback_declared_entries
-                        if entry == 'Model':
-                            loaded_registries['model_names'].append(key)
-                        elif entry in declared_e:
-                            # TODO
-                            pass
-
-            def load_core(blok, core):
-                bases = RegistryManager.loaded_bloks[blok]['Core'][core]
-                bases.reverse()
-                for base in bases:
-                    loaded_cores[core].insert(0, base)
+            toload = self.get_bloks_to_load()
 
             def load_blok(blok):
-                if blok in ordered_loaded_bloks:
+                if blok in self.ordered_loaded_bloks:
                     return True
 
                 if blok not in BlokManager.bloks:
@@ -368,13 +385,13 @@ class Registry:
                     load_blok(optional)
 
                 for core in ('Base', 'SqlBase', 'Session'):
-                    load_core(blok, core)
+                    self.load_core(blok, core)
 
                 for entry in RegistryManager.declared_entries:
-                    load_entry(blok, entry)
+                    self.load_entry(blok, entry)
 
                 self.loaded_bloks[blok] = b
-                ordered_loaded_bloks.append(blok)
+                self.ordered_loaded_bloks.append(blok)
                 logger.info("Blok %r loaded" % blok)
                 return True
 
@@ -453,7 +470,7 @@ class Registry:
 
                 bases = []
                 properties = {}
-                ns = loaded_registries[namespace]
+                ns = self.loaded_registries[namespace]
 
                 for b in ns['bases']:
                     bases.append(b)
@@ -463,7 +480,7 @@ class Registry:
                         ps.update(properties)
                         properties.update(ps)
 
-                if namespace in loaded_registries['model_names']:
+                if namespace in self.loaded_registries['Model_names']:
                     for b in bases:
                         fields = get_fields(b)
                         for p, f in fields.items():
@@ -480,7 +497,7 @@ class Registry:
 
                 bases = []
                 properties = {}
-                ns = loaded_registries[namespace]
+                ns = self.loaded_registries[namespace]
 
                 for b in ns['bases']:
                     bases.append(b)
@@ -495,14 +512,14 @@ class Registry:
                         ps.update(properties)
                         properties.update(ps)
 
-                if namespace in loaded_registries['model_names']:
+                if namespace in self.loaded_registries['Model_names']:
                     properties['loaded_columns'] = []
                     tablename = properties['__tablename__']
                     if has_sql_fields(bases):
-                        bases += loaded_cores['SqlBase']
+                        bases += self.loaded_cores['SqlBase']
                         bases += [self.declarativebase]
 
-                    bases += loaded_cores['Base'] + [registry_base]
+                    bases += self.loaded_cores['Base'] + [self.registry_base]
                     for b in bases:
                         for p, f in get_fields(b).items():
                             declare_field(p, f, namespace, properties)
@@ -518,17 +535,17 @@ class Registry:
                 load_blok(blok)
 
             # get all the information to create a namespace
-            for namespace in loaded_registries['model_names']:
+            for namespace in self.loaded_registries['Model_names']:
                 load_namespace_first_step(namespace)
 
             # create the namespace with all the information come from first
             # step
-            for namespace in loaded_registries['model_names']:
+            for namespace in self.loaded_registries['Model_names']:
                 load_namespace_second_step(namespace)
 
             self.declarativebase.metadata.create_all(self.engine)
 
-            Session = type('Session', tuple(loaded_cores['Session']), {})
+            Session = type('Session', tuple(self.loaded_cores['Session']), {})
             self.Session = scoped_session(
                 sessionmaker(bind=self.engine, class_=Session),
                 EnvironmentManager.scoped_function_for_session)
@@ -542,7 +559,7 @@ class Registry:
 
             Blok = self.System.Blok
             Blok.update_list()
-            Blok.apply_state(*ordered_loaded_bloks)
+            Blok.apply_state(*self.ordered_loaded_bloks)
         except:
             self.close()
             raise
