@@ -2,6 +2,7 @@
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
+from anyblok.model import Model
 
 
 old_loaded_bloks = RegistryManager.loaded_bloks
@@ -99,7 +100,8 @@ class TestRegistryManager(TestCase):
         self.assertEqual(RegistryManager.callback_assemble_entries,
                          {'Other': callback})
         self.assertEqual(RegistryManager.callback_initialize_entries,
-                         {'Other': callback})
+                         {'Model': Model.initialize_callback,
+                          'Other': callback})
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)

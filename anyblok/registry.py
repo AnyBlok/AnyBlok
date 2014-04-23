@@ -576,12 +576,10 @@ class Registry:
                                        self.declarativebase.metadata)
             self.migration.auto_upgrade_database()
 
-            Model = self.System.Model
-            Model.update_list()
+            for entry in RegistryManager.callback_initialize_entries.keys():
+                logger.info('Initialize %r entry' % entry)
+                RegistryManager.callback_initialize_entries[entry](self)
 
-            Blok = self.System.Blok
-            Blok.update_list()
-            Blok.apply_state(*self.ordered_loaded_bloks)
         except:
             self.close()
             raise

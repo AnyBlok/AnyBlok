@@ -2,7 +2,8 @@ from anyblok.registry import RegistryManager
 from anyblok import Declarations
 
 
-@Declarations.add_declaration_type(isAnEntry=True)
+@Declarations.add_declaration_type(isAnEntry=True,
+                                   initialize='initialize_callback')
 class Model:
     """ The Model class are used to define or inherit a SQL table.
 
@@ -69,3 +70,22 @@ class Model:
         RegistryManager.remove_entry_in_target_registry(blok, 'Model',
                                                         _registryname, cls_,
                                                         **kwargs)
+
+    @classmethod
+    def initialize_callback(cls, registry):
+        """ initialize callback call after assembling all entries
+
+        This callback update the database information about
+
+        * Model
+        * Column
+        * RelationShip
+
+        :param registry: registry to update
+        """
+        Model = registry.System.Model
+        Model.update_list()
+
+        Blok = registry.System.Blok
+        Blok.update_list()
+        Blok.apply_state(*registry.ordered_loaded_bloks)
