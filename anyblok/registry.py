@@ -277,12 +277,13 @@ class Registry:
             x + '_names': []
             for x in RegistryManager.mustbeload_declared_entries}
         self.loaded_cores = {
-            'Base': [],
+            'Base': [self.registry_base],
             'SqlBase': [],
-            'Session': [self.registry_base],
+            'Session': [],
         }
         self.ordered_loaded_bloks = []
         self.loaded_namespaces = {}
+        self.children_namespaces = {}
 
     def get(self, namespace):
         """ Return the namespace Class
@@ -356,6 +357,81 @@ class Registry:
         for base in bases:
             self.loaded_cores[core].insert(0, base)
 
+    def load_blok(self, blok):
+        """ load on blok, load all the core and all the entry for one blok
+
+        :param blok: name of the blok
+        """
+        if blok in self.ordered_loaded_bloks:
+            return True
+
+        if blok not in BlokManager.bloks:
+            return False
+
+        b = BlokManager.bloks[blok](self)
+        for required in b.required:
+            if not self.load_blok(required):
+                raise RegistryManagerException(
+                    "Required blok not found")
+
+        for optional in b.optional:
+            self.load_blok(optional)
+
+        for core in ('Base', 'SqlBase', 'Session'):
+            self.load_core(blok, core)
+
+        for entry in RegistryManager.declared_entries:
+            self.load_entry(blok, entry)
+
+        self.loaded_bloks[blok] = b
+        self.ordered_loaded_bloks.append(blok)
+        logger.info("Blok %r loaded" % blok)
+        return True
+
+    def add_in_registry(self, namespace, base):
+        """ Add a class as an attribute of the registry
+
+        :param namespace: tree path of the attribute
+        :param base: class to add
+        """
+        namespace = namespace.split('.')[1:]
+
+        def final_namespace(parent, child):
+            if hasattr(parent, child) and getattr(parent, child):
+                other_base = get_namespace(parent, child)
+                other_base = other_base.children_namespaces.copy()
+                for ns, cns in other_base.items():
+                    setattr(base, ns, cns)
+
+                if hasattr(parent, 'children_namespaces'):
+                    if child in parent.children_namespaces:
+                        parent.children_namespaces[child] = base
+
+            elif hasattr(parent, 'children_namespaces'):
+                parent.children_namespaces[child] = base
+
+            setattr(parent, child, base)
+
+        def get_namespace(parent, child):
+            if hasattr(parent, child) and getattr(parent, child):
+                return getattr(parent, child)
+
+            tmpns = type(child, tuple(), {'children_namespaces': {}})
+            if hasattr(parent, 'children_namespaces'):
+                parent.children_namespaces[child] = tmpns
+
+            setattr(parent, child, tmpns)
+            return tmpns
+
+        def update_namespaces(parent, namespaces):
+            if len(namespaces) == 1:
+                final_namespace(parent, namespaces[0])
+            else:
+                new_parent = get_namespace(parent, namespaces[0])
+                update_namespaces(new_parent, namespaces[1:])
+
+        update_namespaces(self, namespace)
+
     @log()
     def load(self):
         """ Load all the namespace of the registry
@@ -367,33 +443,6 @@ class Registry:
             self.declarativebase = declarative_base(class_registry=dict(
                 registry=self))
             toload = self.get_bloks_to_load()
-
-            def load_blok(blok):
-                if blok in self.ordered_loaded_bloks:
-                    return True
-
-                if blok not in BlokManager.bloks:
-                    return False
-
-                b = BlokManager.bloks[blok](self)
-                for required in b.required:
-                    if not load_blok(required):
-                        raise RegistryManagerException(
-                            "Required blok not found")
-
-                for optional in b.optional:
-                    load_blok(optional)
-
-                for core in ('Base', 'SqlBase', 'Session'):
-                    self.load_core(blok, core)
-
-                for entry in RegistryManager.declared_entries:
-                    self.load_entry(blok, entry)
-
-                self.loaded_bloks[blok] = b
-                self.ordered_loaded_bloks.append(blok)
-                logger.info("Blok %r loaded" % blok)
-                return True
 
             def has_sql_fields(bases):
                 Field = Declarations.Field
@@ -427,42 +476,6 @@ class Registry:
                 field.update_properties(self, namespace, name, properties)
                 properties[name] = declared_attr(wrapper)
                 properties['loaded_columns'].append(name)
-
-            def add_in_registry(namespace, base):
-                namespace = namespace.split('.')[1:]
-
-                def final_namespace(parent, child):
-                    if hasattr(parent,
-                               'children_namespaces') and parent is not self:
-                        parent.children_namespaces[child] = base
-                    elif hasattr(parent, child) and getattr(parent, child):
-                        other_base = get_namespace(parent, child)
-                        other_base = other_base.children_namespaces.copy()
-                        for ns, cns in other_base.items():
-                            setattr(base, ns, cns)
-
-                    setattr(parent, child, base)
-
-                def get_namespace(parent, child):
-                    if hasattr(parent, child) and getattr(parent, child):
-                        return getattr(parent, child)
-
-                    tmpns = type(child, tuple(), {'children_namespaces': {}})
-                    if hasattr(parent,
-                               'children_namespaces') and parent is not self:
-                        parent.children_namespaces[child] = tmpns
-                    else:
-                        setattr(parent, child, tmpns)
-                    return tmpns
-
-                def update_namespaces(parent, namespaces):
-                    if len(namespaces) == 1:
-                        final_namespace(parent, namespaces[0])
-                    else:
-                        new_parent = get_namespace(parent, namespaces[0])
-                        update_namespaces(new_parent, namespaces[1:])
-
-                update_namespaces(self, namespace)
 
             def load_namespace_first_step(namespace):
                 if namespace in self.loaded_namespaces_first_step:
@@ -519,20 +532,20 @@ class Registry:
                         bases += self.loaded_cores['SqlBase']
                         bases += [self.declarativebase]
 
-                    bases += self.loaded_cores['Base'] + [self.registry_base]
+                    bases += self.loaded_cores['Base']
                     for b in bases:
                         for p, f in get_fields(b).items():
                             declare_field(p, f, namespace, properties)
 
                     bases = [type(tablename, tuple(bases), properties)]
                     properties = {}
-                    add_in_registry(namespace, bases[0])
+                    self.add_in_registry(namespace, bases[0])
                     self.loaded_namespaces[namespace] = bases[0]
 
                 return bases, properties
 
             for blok in toload:
-                load_blok(blok)
+                self.load_blok(blok)
 
             # get all the information to create a namespace
             for namespace in self.loaded_registries['Model_names']:

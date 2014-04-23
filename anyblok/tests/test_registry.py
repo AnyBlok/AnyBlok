@@ -1,7 +1,19 @@
 # -*- coding: utf-8 -*-
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
-from anyblok.blok import BlokManager
+from anyblok.blok import BlokManager, Blok
+
+
+class Test:
+    pass
+
+
+class TestTest:
+    pass
+
+
+class TestTestTest:
+    pass
 
 
 class TestRegistry(TestCase):
@@ -26,6 +38,9 @@ class TestRegistry(TestCase):
     def tearDown(self):
         super(TestRegistry, self).tearDown()
         RegistryManager.clear()
+        for cls in (Test, TestTest):
+            if hasattr(cls, 'Test'):
+                delattr(cls, 'Test')
 
     def test_get(self):
         self.registry.close()
@@ -71,3 +86,67 @@ class TestRegistry(TestCase):
         self.registry.load_core('blok', 'Session')
         have_session = TestCase in self.registry.loaded_cores['Session']
         self.assertEqual(have_session, True)
+
+    def test_load_blok(self):
+
+        class BlokTest(Blok):
+            pass
+
+        BlokManager.bloks['blok'] = BlokTest
+        RegistryManager.loaded_bloks['blok'] = {
+            'Core': {'Session': [TestCase], 'Base': [], 'SqlBase': []},
+        }
+        for entry in RegistryManager.declared_entries:
+            RegistryManager.loaded_bloks['blok'][entry] = {
+                'registry_names': []}
+
+        self.registry.load_blok('blok')
+        have_session = TestCase in self.registry.loaded_cores['Session']
+        self.assertEqual(have_session, True)
+
+    def check_added_in_regisry(self):
+        self.assertEqual(self.registry.Test, Test)
+        self.assertEqual(self.registry.Test.Test, TestTest)
+        self.assertEqual(self.registry.Test.Test.Test, TestTestTest)
+
+    def test_add_in_registry_1(self):
+        self.registry.add_in_registry('Declarations.Test', Test)
+        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
+        self.registry.add_in_registry('Declarations.Test.Test.Test',
+                                      TestTestTest)
+        self.check_added_in_regisry()
+
+    def test_add_in_registry_2(self):
+        self.registry.add_in_registry('Declarations.Test', Test)
+        self.registry.add_in_registry('Declarations.Test.Test.Test',
+                                      TestTestTest)
+        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
+        self.check_added_in_regisry()
+
+    def test_add_in_registry_3(self):
+        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
+        self.registry.add_in_registry('Declarations.Test', Test)
+        self.registry.add_in_registry('Declarations.Test.Test.Test',
+                                      TestTestTest)
+        self.check_added_in_regisry()
+
+    def test_add_in_registry_4(self):
+        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
+        self.registry.add_in_registry('Declarations.Test.Test.Test',
+                                      TestTestTest)
+        self.registry.add_in_registry('Declarations.Test', Test)
+        self.check_added_in_regisry()
+
+    def test_add_in_registry_5(self):
+        self.registry.add_in_registry('Declarations.Test.Test.Test',
+                                      TestTestTest)
+        self.registry.add_in_registry('Declarations.Test', Test)
+        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
+        self.check_added_in_regisry()
+
+    def test_add_in_registry_6(self):
+        self.registry.add_in_registry('Declarations.Test.Test.Test',
+                                      TestTestTest)
+        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
+        self.registry.add_in_registry('Declarations.Test', Test)
+        self.check_added_in_regisry()
