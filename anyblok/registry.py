@@ -47,8 +47,8 @@ class RegistryManager:
 
     loaded_bloks = {}
     declared_entries = []
-    mustbeload_declared_entries = []
-    callback_declared_entries = {}
+    callback_assemble_entries = {}
+    callback_initialize_entries = {}
     registries = {}
 
     @classmethod
@@ -115,23 +115,35 @@ class RegistryManager:
             registry.reload()
 
     @classmethod
-    def declare_entry(cls, entry, mustbeload=False, callback=None):
+    def declare_entry(cls, entry, assemble_callback=None,
+                      initialize_callback=None):
         """ Add new entry in the declared entry
 
+        ::
+
+            def assemble_callback(registry):
+                ...
+
+            def initialize_callback(registry):
+                ...
+
+            RegistryManager.declare_entry(
+                'Entry name', assemble_callback=assemble_callback,
+                initialize_callback=initialize_callback)
+
         :param entry: entry name
-        :param mustbeload: If true the The registry must be load the entry
-        :type mustbeload: bool
-        :param callback: function callback to call to load it
+        :param assemble_callback: function callback to call to assemble
+        :param intialize_callback: function callback to call to init after
+            assembling
         """
         if entry not in cls.declared_entries:
             cls.declared_entries.append(entry)
 
-            if mustbeload:
-                if entry not in cls.mustbeload_declared_entries:
-                    cls.mustbeload_declared_entries.append(entry)
+            if assemble_callback:
+                cls.callback_assemble_entries[entry] = assemble_callback
 
-            if callback:
-                cls.callback_declared_entries[entry] = callback
+            if initialize_callback:
+                cls.callback_initialize_entries[entry] = initialize_callback
 
     @classmethod
     def init_blok(cls, blokname):
@@ -273,9 +285,8 @@ class Registry:
         self.loaded_namespaces = {}
         self.declarativebase = None
         self.loaded_bloks = {}
-        self.loaded_registries = {
-            x + '_names': []
-            for x in RegistryManager.mustbeload_declared_entries}
+        self.loaded_registries = {x + '_names': []
+                                  for x in RegistryManager.declared_entries}
         self.loaded_cores = {
             'Base': [self.registry_base],
             'SqlBase': [],
@@ -342,9 +353,7 @@ class Registry:
             old_bases = [] + self.loaded_registries[key]['bases']
             self.loaded_registries[key]['bases'] = v['bases']
             self.loaded_registries[key]['bases'] += old_bases
-
-            if entry in RegistryManager.mustbeload_declared_entries:
-                self.loaded_registries[entry + '_names'].append(key)
+            self.loaded_registries[entry + '_names'].append(key)
 
     def load_core(self, blok, core):
         """ load one core type for one blok

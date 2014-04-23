@@ -7,9 +7,8 @@ from anyblok.blok import BlokManager
 old_loaded_bloks = RegistryManager.loaded_bloks
 old_declared_entries = []
 old_declared_entries += RegistryManager.declared_entries
-old_mustbeload_declared_entries = []
-old_mustbeload_declared_entries += RegistryManager.mustbeload_declared_entries
-old_callback_declared_entries = RegistryManager.callback_declared_entries
+old_callback_assemble_entries = RegistryManager.callback_assemble_entries
+old_callback_initialize_entries = RegistryManager.callback_initialize_entries
 
 
 class TestRegistryManager(TestCase):
@@ -18,15 +17,13 @@ class TestRegistryManager(TestCase):
         super(TestRegistryManager, self).setUp()
         RegistryManager.loaded_bloks = old_loaded_bloks.copy()
         RegistryManager.declared_entries = [] + old_declared_entries
-        mde = [] + old_mustbeload_declared_entries
-        RegistryManager.mustbeload_declared_entries = mde
-        cde = old_callback_declared_entries.copy()
-        RegistryManager.callback_declared_entries = cde
+        cae = old_callback_assemble_entries.copy()
+        RegistryManager.callback_assemble_entries = cae
+        cie = old_callback_initialize_entries.copy()
+        RegistryManager.callback_initialize_entries = cie
 
     def test_declared_entries(self):
         self.assertEqual(RegistryManager.declared_entries, ['Model', 'Mixin'])
-        self.assertEqual(RegistryManager.mustbeload_declared_entries,
-                         ['Model'])
 
     def test_init_blok(self):
         RegistryManager.init_blok('newblok')
@@ -72,12 +69,10 @@ class TestRegistryManager(TestCase):
         self.assertEqual(is_exist, True)
         BlokManager.unload()
 
-    def test_add_mustbeload(self):
-        RegistryManager.declare_entry('Other', mustbeload=True)
+    def test_add_entry(self):
+        RegistryManager.declare_entry('Other')
         self.assertEqual(RegistryManager.declared_entries,
                          ['Model', 'Mixin', 'Other'])
-        self.assertEqual(RegistryManager.mustbeload_declared_entries,
-                         ['Model', 'Other'])
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
@@ -97,12 +92,13 @@ class TestRegistryManager(TestCase):
         def callback():
             pass
 
-        RegistryManager.declare_entry('Other', callback=callback)
+        RegistryManager.declare_entry('Other', assemble_callback=callback,
+                                      initialize_callback=callback)
         self.assertEqual(RegistryManager.declared_entries,
                          ['Model', 'Mixin', 'Other'])
-        self.assertEqual(RegistryManager.mustbeload_declared_entries,
-                         ['Model'])
-        self.assertEqual(RegistryManager.callback_declared_entries,
+        self.assertEqual(RegistryManager.callback_assemble_entries,
+                         {'Other': callback})
+        self.assertEqual(RegistryManager.callback_initialize_entries,
                          {'Other': callback})
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks

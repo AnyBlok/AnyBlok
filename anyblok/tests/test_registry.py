@@ -68,6 +68,7 @@ class TestRegistry(TestCase):
         self.assertEqual(have_anyblokcore, True)
 
     def test_load_entry(self):
+        self.registry.loaded_registries['entry_names'] = []
         RegistryManager.loaded_bloks['blok'] = {
             'entry': {
                 'registry_names': ['key'],

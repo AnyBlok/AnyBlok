@@ -2,7 +2,7 @@ from anyblok.registry import RegistryManager
 from anyblok import Declarations
 
 
-@Declarations.add_declaration_type(isAnEntry=True, mustbeload=True)
+@Declarations.add_declaration_type(isAnEntry=True)
 class Model:
     """ The Model class are used to define or inherit a SQL table.
 
