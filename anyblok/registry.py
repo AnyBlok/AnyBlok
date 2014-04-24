@@ -281,7 +281,6 @@ class Registry:
 
     def ini_var(self):
         """ Initialize the var to load the  registry """
-        self.loaded_namespaces_first_step = {}
         self.loaded_namespaces = {}
         self.declarativebase = None
         self.loaded_bloks = {}
@@ -453,117 +452,12 @@ class Registry:
                 registry=self))
             toload = self.get_bloks_to_load()
 
-            def has_sql_fields(bases):
-                Field = Declarations.Field
-                for base in bases:
-                    for p in dir(base):
-                        if hasattr(getattr(base, p), '__class__'):
-                            if Field in getattr(base, p).__class__.__mro__:
-                                return True
-
-                return False
-
-            def get_fields(base):
-                Field = Declarations.Field
-                fields = {}
-                for p in dir(base):
-                    if hasattr(getattr(base, p), '__class__'):
-                        if Field in getattr(base, p).__class__.__mro__:
-                            fields[p] = getattr(base, p)
-                return fields
-
-            def declare_field(name, field, namespace, properties):
-                if name in properties:
-                    return
-
-                from sqlalchemy.ext.declarative import declared_attr
-
-                def wrapper(cls):
-                    return field.get_sqlalchemy_mapping(
-                        self, namespace, name, properties)
-
-                field.update_properties(self, namespace, name, properties)
-                properties[name] = declared_attr(wrapper)
-                properties['loaded_columns'].append(name)
-
-            def load_namespace_first_step(namespace):
-                if namespace in self.loaded_namespaces_first_step:
-                    return self.loaded_namespaces_first_step[namespace]
-
-                bases = []
-                properties = {}
-                ns = self.loaded_registries[namespace]
-
-                for b in ns['bases']:
-                    bases.append(b)
-
-                    for b_ns in b.__anyblok_bases__:
-                        ps = load_namespace_first_step(b_ns.__registry_name__)
-                        ps.update(properties)
-                        properties.update(ps)
-
-                if namespace in self.loaded_registries['Model_names']:
-                    for b in bases:
-                        fields = get_fields(b)
-                        for p, f in fields.items():
-                            properties[p] = f
-
-                    self.loaded_namespaces_first_step[namespace] = properties
-                    properties = {}
-
-                return properties
-
-            def load_namespace_second_step(namespace):
-                if namespace in self.loaded_namespaces:
-                    return [self.loaded_namespaces[namespace]], {}
-
-                bases = []
-                properties = {}
-                ns = self.loaded_registries[namespace]
-
-                for b in ns['bases']:
-                    bases.append(b)
-                    p = ns['properties']
-                    p.update(properties)
-                    properties.update(p)
-
-                    for b_ns in b.__anyblok_bases__:
-                        bs, ps = load_namespace_second_step(
-                            b_ns.__registry_name__)
-                        bases += bs
-                        ps.update(properties)
-                        properties.update(ps)
-
-                if namespace in self.loaded_registries['Model_names']:
-                    properties['loaded_columns'] = []
-                    tablename = properties['__tablename__']
-                    if has_sql_fields(bases):
-                        bases += self.loaded_cores['SqlBase']
-                        bases += [self.declarativebase]
-
-                    bases += self.loaded_cores['Base']
-                    for b in bases:
-                        for p, f in get_fields(b).items():
-                            declare_field(p, f, namespace, properties)
-
-                    bases = [type(tablename, tuple(bases), properties)]
-                    properties = {}
-                    self.add_in_registry(namespace, bases[0])
-                    self.loaded_namespaces[namespace] = bases[0]
-
-                return bases, properties
-
             for blok in toload:
                 self.load_blok(blok)
 
-            # get all the information to create a namespace
-            for namespace in self.loaded_registries['Model_names']:
-                load_namespace_first_step(namespace)
-
-            # create the namespace with all the information come from first
-            # step
-            for namespace in self.loaded_registries['Model_names']:
-                load_namespace_second_step(namespace)
+            for entry in RegistryManager.callback_assemble_entries.keys():
+                logger.info('Assemble %r entry' % entry)
+                RegistryManager.callback_assemble_entries[entry](self)
 
             self.declarativebase.metadata.create_all(self.engine)
 
@@ -579,7 +473,6 @@ class Registry:
             for entry in RegistryManager.callback_initialize_entries.keys():
                 logger.info('Initialize %r entry' % entry)
                 RegistryManager.callback_initialize_entries[entry](self)
-
         except:
             self.close()
             raise
@@ -614,6 +507,7 @@ class Registry:
             super(Registry, self).__getattr__(attribute)
 
     def clean_model(self):
+        """ Clean the registry of all the namespace """
         for model in self.loaded_namespaces.keys():
             name = model.split('.')[1]
             if hasattr(self, name) and getattr(self, name):
@@ -621,6 +515,7 @@ class Registry:
 
     @log()
     def reload(self):
+        """ Reload the registry, close session, clean registry, reinit var """
         self.close_session()
         self.clean_model()
         self.ini_var()

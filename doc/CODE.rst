@@ -76,8 +76,6 @@ anyblok.registry module
 
 .. automodule:: anyblok.registry
 
-.. warning:: TODO Class not finished yet
-
 .. autoclass:: RegistryManager
     :members:
     :noindex:

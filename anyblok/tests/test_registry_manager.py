@@ -98,7 +98,8 @@ class TestRegistryManager(TestCase):
         self.assertEqual(RegistryManager.declared_entries,
                          ['Model', 'Mixin', 'Other'])
         self.assertEqual(RegistryManager.callback_assemble_entries,
-                         {'Other': callback})
+                         {'Model': Model.assemble_callback,
+                          'Other': callback})
         self.assertEqual(RegistryManager.callback_initialize_entries,
                          {'Model': Model.initialize_callback,
                           'Other': callback})
