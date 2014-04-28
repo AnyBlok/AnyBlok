@@ -7,9 +7,7 @@ Next step
 * Add Migration Class with Unittest: see alembic: http://alembic.readthedocs.org/en/latest/
 * Do documentation
 * ADD unittest:
-    - core inheritance
     - anyblok_core system
-* Refactor split load method of registry and unit test all part, and add unit test for each split
 
 To implement
 ------------
@@ -29,7 +27,6 @@ Fix me
 * Enum Column doesn't work, see http://techspot.zzzeek.org/2011/01/14/the-enum-recipe/
   or https://pypi.python.org/pypi/SQLAlchemy-Enum-Dict/0.1.2
 * Add the posibility to add a nullable column by migration
-* Don't load two time the logging configuration
 
 Library to include
 ------------------
@@ -38,11 +35,9 @@ Library to include
 * gevent https://pypi.python.org/pypi/sqlalchemy-gevent/0.1
 * full text search: https://pypi.python.org/pypi/SQLAlchemy-FullText-Search/0.2
 * internationalisation: https://pypi.python.org/pypi/SQLAlchemy-i18n/0.8.2
-* shematisation of https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/SchemaDisplay
 * sqltap http://sqltap.inconshreveable.com, profiling and introspection for SQLAlchemy applications
 * SchemaDisplay: not realy a library, just a poc for the moment https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/SchemaDisplay
 * SQL View https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views, http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy, http://stackoverflow.com/questions/20518521/is-possible-to-mapping-view-with-class-using-mapper-in-sqlalchemy
-* Ajouter automatiquement m2o et o2m lors de la declaration d'une foreign key https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/AutoRelationships
 * Crypt https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/DatabaseCrypt
 * profiling https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Profiling
 * json column https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/JSONColumn

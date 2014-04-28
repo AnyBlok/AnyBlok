@@ -149,3 +149,17 @@ anyblok.databases.postgres module
 .. autoclass:: ASqlAlchemyPostgres
     :members:
     :noindex:
+
+anyblok.scripts module
+----------------------
+
+.. automodule:: anyblok.scripts
+
+.. autofunction:: createdb
+    :noindex:
+
+.. autofunction:: updatedb
+    :noindex:
+
+.. autofunction:: interpreter
+    :noindex:

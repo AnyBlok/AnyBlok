@@ -392,7 +392,7 @@ category. And the application choose the category of option to display.
         parser.add_argument('--message-after', dest='message_after')
 
 
-Create Your application
+Create your application
 -----------------------
 
 The application can be a simple script or a setuptools script. For a setuptools
@@ -548,3 +548,43 @@ The registry is loaded two time:
     2014-0405 23:58:11 INFO - anyblok:exampleblok.scripts - End ...
 
 The registry is loaded only one time, because the bloks are already installed
+
+
+Create an interpreter
+---------------------
+
+Anyblok give some function to help to create application:
+
+* createdb
+* updatedb
+* interpreter
+
+::
+
+    from anyblok.scripts import interpreter
+
+
+    def exampleblok_interpreter():
+        anyblok_interpreter(
+            'Interpreter', '1.0',
+            argsparse_groups=['config', 'database', 'interpreter'],
+            parts_to_load=['AnyBlok', 'WorkBlok'])
+
+::
+
+    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok_interpretor -c anyblok.cfg
+    2014-0428 20:57:38 INFO - anyblok:root - Registry.load
+    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
+    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'position' loaded
+    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
+    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'worker-position' loaded
+    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
+    2014-0428 20:57:39 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
+    2014-0428 20:57:39 INFO - anyblok:alembic.migration - Will assume transactional DDL.
+    2014-0428 20:57:39 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
+    Python 3.3.5 (default, Mar 12 2014, 15:18:42)
+    [GCC 4.2.1 Compatible Apple LLVM 5.1 (clang-503.0.38)] on darwin
+    Type "help", "copyright", "credits" or "license" for more information.
+    (InteractiveConsole)
+    >>>
