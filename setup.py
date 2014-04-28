@@ -35,11 +35,6 @@ setup(
     classifiers=[
     ],
     entry_points={
-        'console_scripts': [
-            'anyblok_createdb=anyblok.scripts:createdb',
-            'anyblok_updatedb=anyblok.scripts:updatedb',
-            'anyblok_interpreter=anyblok.scripts:interpreter',
-        ],
         'AnyBlok': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
         ],

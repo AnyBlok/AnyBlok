@@ -1,7 +1,6 @@
 import anyblok
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
-from anyblok import release
 from anyblok.registry import RegistryManager
 from zope.component import getUtility
 import code
@@ -17,13 +16,26 @@ def format_bloks(bloks):
     return bloks
 
 
-def createdb():
-    BlokManager.load('AnyBlok')
-    description = '%s - %s : Create database' % ('AnyBlok', release.version)
+def format_argsparse(argsparse_groups, *confs):
+    if argsparse_groups is None:
+        argsparse_groups = []
+
+    for conf in confs:
+        if conf not in argsparse_groups:
+            argsparse_groups.append(conf)
+
+
+def createdb(description, argsparse_groups, parts_to_load):
+    """ Create a database and install blok from config
+
+    :param description: description of argsparse
+    :param argsparse_groups: list argsparse groupe to load
+    :param parts_to_load: group of blok to load
+    """
+    BlokManager.load(*parts_to_load)
     ArgsParseManager.load(description=description,
-                          argsparse_groups=[
-                              'config', 'database', 'install-bloks'],
-                          parts_to_load=['AnyBlok'])
+                          argsparse_groups=argsparse_groups,
+                          parts_to_load=parts_to_load)
     ArgsParseManager.init_logger()
     drivername = ArgsParseManager.get('dbdrivername')
     dbname = ArgsParseManager.get('dbname')
@@ -40,12 +52,20 @@ def createdb():
     registry.close()
 
 
-def updatedb():
-    registry = anyblok.start(
-        'Update data base', release.version,
-        argsparse_groups=['config', 'database', 'install-bloks',
-                          'uninstall-bloks', 'update-bloks'],
-        parts_to_load=['AnyBlok'])
+def updatedb(description, version, argsparse_groups, parts_to_load):
+    """ Update an existing database
+
+    :param description: description of argsparse
+    :param version: version of script for argparse
+    :param argsparse_groups: list argsparse groupe to load
+    :param parts_to_load: group of blok to load
+    """
+    format_argsparse(argsparse_groups, 'install-bloks', 'uninstall-bloks',
+                     'update-bloks')
+
+    registry = anyblok.start(description, version,
+                             argsparse_groups=argsparse_groups,
+                             parts_to_load=parts_to_load)
 
     install_bloks = format_bloks(ArgsParseManager.get('install_bloks'))
     uninstall_bloks = format_bloks(ArgsParseManager.get('uninstall_bloks'))
@@ -54,11 +74,18 @@ def updatedb():
                      uninstall=uninstall_bloks)
 
 
-def interpreter():
-    registry = anyblok.start(
-        'Interpreter', release.version,
-        argsparse_groups=['config', 'database', 'interpreter'],
-        parts_to_load=['AnyBlok'])
+def interpreter(description, version, argsparse_groups, parts_to_load):
+    """ Execute a script of give an interpreter
+
+    :param description: description of argsparse
+    :param version: version of script for argparse
+    :param argsparse_groups: list argsparse groupe to load
+    :param parts_to_load: group of blok to load
+    """
+    format_argsparse(argsparse_groups, 'interpreter')
+    registry = anyblok.start(description, version,
+                             argsparse_groups=argsparse_groups,
+                             parts_to_load=parts_to_load)
     python_script = ArgsParseManager.get('python_script')
     if python_script:
         with open(python_script, "r") as fh:
