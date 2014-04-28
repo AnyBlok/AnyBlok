@@ -1,19 +1,20 @@
 import anyblok
 from os.path import join
-from anyblok._argsparse import ArgsParseManager
-from anyblok._argsparse import add_configuration_file
-from anyblok._argsparse import add_database
-from anyblok._argsparse import add_install_bloks
-from anyblok._argsparse import add_uninstall_bloks
-from anyblok._argsparse import add_update_bloks
-from anyblok._argsparse import add_interpreter
-from anyblok._argsparse import add_logging
+from anyblok import _argsparse
+from anyblok._argsparse import (ArgsParseManager,
+                                add_configuration_file,
+                                add_database,
+                                add_install_bloks,
+                                add_uninstall_bloks,
+                                add_update_bloks,
+                                add_interpreter,
+                                add_logging)
 from anyblok.tests.testcase import TestCase
-from argparse import ArgumentParser
 from anyblok import Declarations
 
 
 ArgsParseManagerException = Declarations.Exception.ArgsParseManagerException
+old_getParser = _argsparse.getParser
 
 
 def fnct_argsparse(parser, default):
@@ -44,7 +45,50 @@ class MockArgParseArguments:
         return self.kwargs.items()
 
 
+class MockArguments:
+
+    configfile = None
+    vals = {'var1': 'val1',
+            'var2': 'val2',
+            'var3': 'val3'}
+
+    def _get_kwargs(self):
+        return self.vals.items()
+
+    def _get_args(self):
+        return False
+
+
+class MockArgumentParser:
+
+    def __init__(self, *args, **kwargs):
+        self.args = MockArguments()
+
+    def add_argument_group(self, *args, **kwargs):
+        return MockArgumentParser()
+
+    def parse_args(self, *args, **kwargs):
+        return self.args
+
+    def add_argument(self, *args, **kwargs):
+        pass
+
+
 class TestArgsParseManager(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestArgsParseManager, cls).setUpClass()
+
+        def getParser(*args, **kwargs):
+            return MockArgumentParser()
+
+        _argsparse.getParser = getParser
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestArgsParseManager, cls).tearDownClass()
+        _argsparse.getParser = old_getParser
 
     def setUp(self):
         super(TestArgsParseManager, self).setUp()
@@ -242,7 +286,7 @@ class TestArgsParseManager(TestCase):
         ))
         ArgsParseManager.init_logger(mode='console')
 
-    def test_load(self):
+    def test_load_without_argsparse_groupes(self):
         self.assertEqual(ArgsParseManager.load(), None)
 
     def test_empty_parse_option(self):
@@ -294,13 +338,21 @@ class TestArgsParseManager(TestCase):
         except ArgsParseManagerException:
             pass
 
+    def test_load_with_argsparse_groupes(self):
+        ArgsParseManager.load(argsparse_groups=['install-bloks'])
+        self.assertEqual(ArgsParseManager.configuration, MockArguments.vals)
+
+    def test_load_with_bad_argsparse_groupes(self):
+        ArgsParseManager.load(argsparse_groups=['bad-groups'])
+        self.assertEqual(ArgsParseManager.configuration, MockArguments.vals)
+
 
 class TestArgsParseOption(TestCase):
 
     @classmethod
     def setUpClass(cls):
         super(TestArgsParseOption, cls).setUpClass()
-        cls.parser = ArgumentParser()
+        cls.parser = MockArgumentParser()
         cls.group = cls.parser.add_argument_group('label')
         cls.configuration = {}
         cls.function = {

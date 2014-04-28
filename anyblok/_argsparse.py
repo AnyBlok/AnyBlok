@@ -5,6 +5,15 @@ from configparser import ConfigParser
 from anyblok import Declarations
 
 
+def getParser(description):
+    """ Return a parser
+
+    :param description: label of the configuration help
+    :rtype: instance of ArgsParseManagerException
+    """
+    return ArgumentParser(description=description)
+
+
 @Declarations.target_registry(Declarations.Exception)
 class ArgsParseManagerException(Exception):
     """ Simple Exception for ArgsParse """
@@ -167,7 +176,7 @@ class ArgsParseManager:
     @log()
     def load(cls, description='AnyBlok :', argsparse_groups=None,
              parts_to_load=None):
-        parser = ArgumentParser(description=description)
+        parser = getParser(description)
 
         if argsparse_groups is None:
             return
@@ -189,7 +198,6 @@ class ArgsParseManager:
                 g = parser
 
             for function in groups[group]:
-                # TODO create group here and passe it
                 function(g, cls.configuration)
 
         args = parser.parse_args()
