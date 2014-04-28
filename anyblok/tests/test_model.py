@@ -11,22 +11,22 @@ class OneModel:
     __tablename__ = 'test'
 
 
-class TestCoreInterfaceModel(TestCase):
+class TestModel(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(TestCoreInterfaceModel, cls).setUpClass()
+        super(TestModel, cls).setUpClass()
         RegistryManager.init_blok('testModel')
         EnvironmentManager.set('current_blok', 'testModel')
 
     @classmethod
     def tearDownClass(cls):
-        super(TestCoreInterfaceModel, cls).tearDownClass()
+        super(TestModel, cls).tearDownClass()
         EnvironmentManager.set('current_blok', None)
         del RegistryManager.loaded_bloks['testModel']
 
     def setUp(self):
-        super(TestCoreInterfaceModel, self).setUp()
+        super(TestModel, self).setUp()
         blokname = 'testModel'
         RegistryManager.loaded_bloks[blokname]['Model'] = {
             'registry_names': []}

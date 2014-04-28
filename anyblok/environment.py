@@ -36,7 +36,6 @@ class EnvironmentManager:
         check_classmethod('scoped_function_for_session', acceptNone=True)
         check_classmethod('setter')
         check_classmethod('getter')
-        # TODO do vérification
 
         cls.environment = Environment
 

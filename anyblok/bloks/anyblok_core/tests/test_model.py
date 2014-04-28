@@ -1,4 +1,5 @@
-from anyblok.tests.testcase import DBTestCase
+from anyblok.tests.testcase import TestCase, DBTestCase
+from anyblok.model import has_sql_fields, get_fields
 from anyblok import Declarations
 target_registry = Declarations.target_registry
 Model = Declarations.Model
@@ -30,7 +31,7 @@ def model_with_foreign_key():
         name = String(label="Name", foreign_key=(Model.TestFk, 'name'))
 
 
-class TestInherit(DBTestCase):
+class TestModel(DBTestCase):
 
     def check_registry(self, Model):
         t = Model.insert(name="test")
@@ -61,3 +62,27 @@ class TestInherit(DBTestCase):
         registry = self.init_registry(model_with_foreign_key)
         registry.TestFk.insert(name='test')
         self.check_registry(registry.Test)
+
+
+class TestModelAssembling(TestCase):
+
+    def test_has_sql_fields_ok(self):
+
+        class MyModel:
+            one_field = Declarations.Column.String(label="Label")
+
+        self.assertEqual(has_sql_fields([MyModel]), True)
+
+    def test_has_sql_fields_ko(self):
+
+        class MyModel:
+            one_field = None
+
+        self.assertEqual(has_sql_fields([MyModel]), False)
+
+    def test_get_fields(self):
+
+        class MyModel:
+            one_field = Declarations.Column.String(label="Label")
+
+        self.assertEqual(get_fields(MyModel), {'one_field': MyModel.one_field})

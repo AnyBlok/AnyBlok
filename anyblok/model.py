@@ -3,7 +3,11 @@ from anyblok import Declarations
 
 
 def has_sql_fields(bases):
-    # TODO unit test
+    """ Indicate if the model as field or not
+
+    :param bases: list of Model's Class
+    :rtype: boolean
+    """
     Field = Declarations.Field
     for base in bases:
         for p in dir(base):
@@ -15,7 +19,11 @@ def has_sql_fields(bases):
 
 
 def get_fields(base):
-    # TODO unit test
+    """ Return the fields for one model
+
+    :param base: Model Class
+    :rtype: dict with name of the field in key and instance of Field in value
+    """
     Field = Declarations.Field
     fields = {}
     for p in dir(base):
@@ -97,7 +105,6 @@ class Model:
 
     @classmethod
     def declare_field(self, registry, name, field, namespace, properties):
-        # TODO unit test
         if name in properties:
             return
 
@@ -113,7 +120,6 @@ class Model:
 
     @classmethod
     def load_namespace_first_step(cls, registry, namespace):
-        # TODO unit test
         if namespace in registry.loaded_namespaces_first_step:
             return registry.loaded_namespaces_first_step[namespace]
 
@@ -143,7 +149,6 @@ class Model:
 
     @classmethod
     def load_namespace_second_step(cls, registry, namespace):
-        # TODO unit test
         if namespace in registry.loaded_namespaces:
             return [registry.loaded_namespaces[namespace]], {}
 
