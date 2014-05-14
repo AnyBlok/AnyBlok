@@ -130,6 +130,31 @@ anyblok.migration module
     :members:
     :noindex:
 
+anyblok._graphviz module
+------------------------
+
+.. automodule:: anyblok._graphviz
+
+.. autoclass:: BaseSchema
+    :members:
+    :noindex:
+
+.. autoclass:: SQLSchema
+    :members:
+    :noindex:
+
+.. autoclass:: TableSchema
+    :members:
+    :noindex:
+
+.. autoclass:: ModelSchema
+    :members:
+    :noindex:
+
+.. autoclass:: ClassSchema
+    :members:
+    :noindex:
+
 anyblok.databases module
 ------------------------
 
@@ -162,4 +187,10 @@ anyblok.scripts module
     :noindex:
 
 .. autofunction:: interpreter
+    :noindex:
+
+.. autofunction:: sqlschema
+    :noindex:
+
+.. autofunction:: modelschema
     :noindex:

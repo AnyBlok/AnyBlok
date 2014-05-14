@@ -17,7 +17,6 @@ To implement
 * Add Blok group as "Category" or "Blok group"
 * Make a registry reload to update registry without destroy the curent registry and create a new(Protect the session)
 * Add RelationShip model in anyblok-core and refatore the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
-* Refactor the m2m, o2m, m2o, o2o. Allow to have more than one primary key
 * Put postgres databas in this own distribution with the good import
 * order by in model (and the possibility to change the in relation ship)
 
@@ -36,7 +35,6 @@ Library to include
 * full text search: https://pypi.python.org/pypi/SQLAlchemy-FullText-Search/0.2
 * internationalisation: https://pypi.python.org/pypi/SQLAlchemy-i18n/0.8.2
 * sqltap http://sqltap.inconshreveable.com, profiling and introspection for SQLAlchemy applications
-* SchemaDisplay: not realy a library, just a poc for the moment https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/SchemaDisplay
 * SQL View https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views, http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy, http://stackoverflow.com/questions/20518521/is-possible-to-mapping-view-with-class-using-mapper-in-sqlalchemy
 * Crypt https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/DatabaseCrypt
 * profiling https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Profiling

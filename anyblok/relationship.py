@@ -28,6 +28,12 @@ class RelationShip(Declarations.Field):
         if model is None:
             raise FieldException("model is required attribut")
 
+        if 'info' not in kwargs:
+            kwargs['info'] = {}
+
+        kwargs['info']['label'] = self.label
+        kwargs['info']['remote_model'] = model.__registry_name__
+
         self.model = model
         self.kwargs = kwargs
 
@@ -58,4 +64,5 @@ class RelationShip(Declarations.Field):
         :param properties: properties known of the model
         :rtype: sqlalchemy relation ship instance
         """
+        self.kwargs['info']['rtype'] = self.__class__.__name__
         return relationship(self.model.__tablename__, **self.kwargs)

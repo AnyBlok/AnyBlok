@@ -2,10 +2,18 @@ from anyblok import Declarations
 target_registry = Declarations.target_registry
 System = Declarations.Model.System
 Mixin = Declarations.Mixin
+String = Declarations.Column.String
+Boolean = Declarations.Column.Boolean
 
 
 @target_registry(System)
 class Column(Mixin.Field):
+
+    autoincrement = Boolean(label="Auto increment")
+    foreign_key = String(label="Foreign key")
+    primary_key = Boolean(label="Primary key")
+    ctype = String(label="Type")
+    unique = Boolean(label="Unique")
 
     @classmethod
     def add_field(cls, cname, column, model, table):

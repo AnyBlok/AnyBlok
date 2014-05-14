@@ -286,11 +286,11 @@ def add_interpreter(parser, configuration):
 @ArgsParseManager.add('logging', label="Logging options")
 def add_logging(group, configuration):
     group.add_argument('--logging-level', dest='logging_level',
-                       default='info',
-                       help='debug, info, warning, error, critical')
+                       default='info', choices=('debug', 'info', 'warning',
+                                                'error', 'critical'))
     group.add_argument('--logging-mode', dest='logging_mode',
                        default='console',
-                       help='console, file, socket, syslog')
+                       choices=('console', 'file', 'socket', 'syslog'))
     group.add_argument('--logging-filename', dest='logging_filename',
                        help='filename of the log file')
     configuration['logging_filename'] = None
@@ -300,3 +300,14 @@ def add_logging(group, configuration):
     group.add_argument('--logging-facility', dest='logging_facility',
                        help='Facility for unix socket')
     configuration['logging_facility'] = None
+
+
+@ArgsParseManager.add('schema', label="Schema options")
+def add_schema(group, configuration):
+    from graphviz.files import FORMATS
+    group.add_argument('--schema-format', dest='schema_format',
+                       default='png', choices=tuple(FORMATS))
+    group.add_argument('--schema-output', dest='schema_output',
+                       default='anyblok-schema')
+    group.add_argument('--schema-models', dest='schema_model',
+                       help='Detail only these models separate by ","')

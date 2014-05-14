@@ -14,6 +14,7 @@ requires = [
     'sqlalchemy',
     'argparse',
     'alembic',
+    'graphviz',
 ]
 
 setup(

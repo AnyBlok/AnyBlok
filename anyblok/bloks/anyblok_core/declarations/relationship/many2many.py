@@ -51,6 +51,7 @@ class Many2Many(Declarations.RelationShip):
         self.remote_column = None
         if 'remote_column' in kwargs:
             self.remote_column = self.kwargs.pop('remote_column')
+            self.kwargs['info']['remote_column'] = self.remote_column
 
         self.m2m_remote_column = None
         if 'm2m_remote_column' in kwargs:
@@ -59,6 +60,7 @@ class Many2Many(Declarations.RelationShip):
         self.local_column = None
         if 'local_column' in kwargs:
             self.local_column = self.kwargs.pop('local_column')
+            self.kwargs['info']['local_column'] = self.local_column
 
         self.m2m_local_column = None
         if 'm2m_local_column' in kwargs:
@@ -66,6 +68,7 @@ class Many2Many(Declarations.RelationShip):
 
         if 'many2many' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('many2many')
+            self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
     def get_m2m_column_info(self, tablename, properties, column, m2m_column):
         if column is None:

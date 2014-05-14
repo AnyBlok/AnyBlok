@@ -44,9 +44,11 @@ class Many2One(Declarations.RelationShip):
         self.nullable = True
         if 'nullable' in kwargs:
             self.nullable = self.kwargs.pop('nullable')
+            self.kwargs['info']['nullable'] = self.nullable
 
         if 'one2many' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('one2many')
+            self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
         self.column_name = None
         if 'column_name' in kwargs:
@@ -67,9 +69,13 @@ class Many2One(Declarations.RelationShip):
         if self.remote_column is None:
             self.remote_column = self.find_primary_key(remote_properties)
 
+        self.kwargs['info']['remote_column'] = self.remote_column
+
         if self.column_name is None:
             self.column_name = "%s_%s" % (self.model.__tablename__,
                                           self.remote_column)
+
+        self.kwargs['info']['local_column'] = self.column_name
 
         self_properties = registry.loaded_namespaces_first_step.get(namespace)
         if self.column_name not in self_properties:

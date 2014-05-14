@@ -2,8 +2,10 @@ import anyblok
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
 from anyblok.registry import RegistryManager
+from anyblok._graphviz import ModelSchema, SQLSchema
 from zope.component import getUtility
 import code
+import inspect
 
 
 def format_bloks(bloks):
@@ -72,6 +74,8 @@ def updatedb(description, version, argsparse_groups, parts_to_load):
     update_bloks = format_bloks(ArgsParseManager.get('update_bloks'))
     registry.upgrade(install=install_bloks, update=update_bloks,
                      uninstall=uninstall_bloks)
+    registry.commit()
+    registry.close()
 
 
 def interpreter(description, version, argsparse_groups, parts_to_load):
@@ -92,3 +96,183 @@ def interpreter(description, version, argsparse_groups, parts_to_load):
             exec(fh.read(), None, locals())
     else:
         code.interact(local=locals())
+
+
+def sqlschema(description, version, argsparse_groups, parts_to_load):
+    """ Create a Table model schema of the registry
+
+    :param description: description of argsparse
+    :param version: version of script for argparse
+    :param argsparse_groups: list argsparse groupe to load
+    :param parts_to_load: group of blok to load
+    """
+    format_argsparse(argsparse_groups, 'schema')
+    registry = anyblok.start(description, version,
+                             argsparse_groups=argsparse_groups,
+                             parts_to_load=parts_to_load)
+    if registry is None:
+        return
+
+    format_ = ArgsParseManager.get('schema_format')
+    name_ = ArgsParseManager.get('schema_output')
+    models_ = format_bloks(ArgsParseManager.get('schema_model'))
+    models_ = [] if models_ is None else models_
+
+    Column = registry.System.Column
+
+    dot = SQLSchema(name_, format=format_)
+
+    # add all the class
+    for model, cls in registry.loaded_namespaces.items():
+        if not models_:
+            dot.add_table(cls.__tablename__)
+        elif model in models_:
+            dot.add_table(cls.__tablename__)
+        else:
+            dot.add_label(cls.__tablename__)
+
+    for model, cls in registry.loaded_namespaces.items():
+        if models_ and model not in models_:
+            continue
+
+        t = dot.get_table(cls.__tablename__)
+
+        columns = Column.query('name', 'ctype', 'foreign_key', 'primary_key',
+                               'nullable')
+        columns = columns.filter(Column.model == model)
+        columns = columns.order_by(Column.primary_key.desc())
+        columns = {x[0]: x[1:] for x in columns.all()}
+
+        for k, v in columns.items():
+            ctype, foreign_key, primary_key, nullable = v
+            if foreign_key:
+                t2 = dot.get_table(foreign_key.split('.')[0])
+                t.add_foreign_key(t2, label=k, nullable=nullable)
+            else:
+                t.add_column(k, ctype, primary_key=primary_key)
+
+    dot.save()
+    registry.rollback()
+    registry.close()
+
+
+def modelschema(description, version, argsparse_groups, parts_to_load):
+    """ Create a UML model schema of the registry
+
+    :param description: description of argsparse
+    :param version: version of script for argparse
+    :param argsparse_groups: list argsparse groupe to load
+    :param parts_to_load: group of blok to load
+    """
+    format_argsparse(argsparse_groups, 'schema')
+    registry = anyblok.start(description, version,
+                             argsparse_groups=argsparse_groups,
+                             parts_to_load=parts_to_load)
+    if registry is None:
+        return
+
+    format_ = ArgsParseManager.get('schema_format')
+    name_ = ArgsParseManager.get('schema_output')
+    models_ = format_bloks(ArgsParseManager.get('schema_model'))
+    models_ = [] if models_ is None else models_
+
+    models_by_table = {}
+    Column = registry.System.Column
+    RelationShip = registry.System.RelationShip
+
+    dot = ModelSchema(name_, format=format_)
+
+    # add all the class
+    for model, cls in registry.loaded_namespaces.items():
+        if not models_:
+            dot.add_class(model)
+        elif model in models_:
+            dot.add_class(model)
+        else:
+            dot.add_label(model)
+        models_by_table[cls.__tablename__] = model
+
+    for model, cls in registry.loaded_namespaces.items():
+        if models_ and model not in models_:
+            continue
+
+        m = dot.get_class(model)
+
+        columns = Column.query('name', 'ctype', 'foreign_key', 'primary_key',
+                               'nullable')
+        columns = columns.filter(Column.model == model)
+        columns = columns.order_by(Column.primary_key.desc())
+        columns = {x[0]: x[1:] for x in columns.all()}
+
+        for k, v in columns.items():
+            ctype, foreign_key, primary_key, nullable = v
+            if foreign_key:
+                multiplicity = "1"
+                if nullable:
+                    multiplicity = '0..1'
+                m2 = models_by_table.get(foreign_key.split('.')[0])
+                if m2:
+                    m.agregate(m2, label_from=k,
+                               multiplicity_from=multiplicity)
+            elif primary_key:
+                m.add_column('+PK+ %s (%s)' % (k, ctype))
+            else:
+                m.add_column('%s (%s)' % (k, ctype))
+
+        relations = RelationShip.query('name', 'rtype', 'remote_model',
+                                       'remote_name', 'remote')
+        relations = relations.filter(RelationShip.model == model)
+        relations = {x[0]: x[1:] for x in relations.all()}
+
+        for k, v in relations.items():
+            rtype, remote_model, remote_name, remote = v
+            if remote:
+                continue
+
+            multiplicity_to = None
+            if rtype == 'Many2One':
+                multiplicity = "m2o"
+                if remote_name:
+                    multiplicity_to = 'o2m'
+            elif rtype == 'Many2Many':
+                multiplicity = "m2m"
+                if remote_name:
+                    multiplicity_to = 'm2m'
+            elif rtype == 'One2Many':
+                multiplicity = "o2m"
+                if remote_name:
+                    multiplicity_to = 'm2o'
+            elif rtype == 'One2One':
+                multiplicity = "o2o"
+                multiplicity_to = 'o2o'
+
+            m.associate(remote_model, label_from=k, label_to=remote_name,
+                        multiplicity_from=multiplicity,
+                        multiplicity_to=multiplicity_to)
+
+        for k, v in inspect.getmembers(cls):
+            if k.startswith('__'):
+                continue
+
+            if k in ('registry', 'metadata', 'loaded_columns',
+                     '_decl_class_registry', '_sa_class_manager'):
+                # all the object have the registry
+                continue
+
+            if inspect.isclass(v):
+                if registry.registry_base in v.__bases__:
+                    # no display internal registry
+                    continue
+            elif k in columns.keys():
+                continue
+            elif k in relations.keys():
+                continue
+            elif type(v) is classmethod:
+                m.add_method(k)
+                continue
+
+            m.add_property(k)
+
+    dot.save()
+    registry.rollback()
+    registry.close()

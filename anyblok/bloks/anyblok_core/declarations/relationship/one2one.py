@@ -45,5 +45,7 @@ class One2One(Declarations.RelationShip.Many2One):
         if 'one2many' in kwargs:
             raise FieldException("Unknow argmument 'one2many'")
 
+        self.kwargs['info']['remote_name'] = self.kwargs['backref']
+
         self.kwargs['backref'] = backref(
             self.kwargs['backref'], uselist=False)

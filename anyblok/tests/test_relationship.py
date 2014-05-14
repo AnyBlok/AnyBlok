@@ -18,6 +18,7 @@ class OneRelationShip(RelationShip):
 
 class OneModel:
     __tablename__ = 'test'
+    __registry_name__ = 'One.Model'
 
 
 class TestRelationShip(TestCase):

@@ -36,6 +36,7 @@ class One2Many(Declarations.RelationShip):
 
         if 'many2one' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('many2one')
+            self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
     def find_foreign_key(self, properties, tablename):
         """ Return the primary key come from the first step property
@@ -73,6 +74,8 @@ class One2Many(Declarations.RelationShip):
         if self.remote_column is None:
             self.remote_column = self.find_foreign_key(remote_properties,
                                                        tablename)
+
+        self.kwargs['info']['remote_column'] = self.remote_column
 
         if 'primaryjoin' not in self.kwargs:
             local_column = self.find_primary_key(self_properties)
