@@ -40,6 +40,14 @@ Library to include
 * profiling https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Profiling
 * json column https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/JSONColumn
 
+Web client
+----------
+
+* load / unload dynamically js/css/html: http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml
+* http://www.javascriptkit.com/javatutors/closuresleak/index.shtml
+* http://www.javascriptkit.com/javatutors/crossmenu.shtml
+* cms https://github.com/Kotti/Kotti
+
 Functionnality which need a sprint
 ----------------------------------
 

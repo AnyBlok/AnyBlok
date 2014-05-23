@@ -6,7 +6,7 @@ from anyblok._logging import log
 from anyblok.environment import EnvironmentManager
 from time import sleep
 from sys import modules
-from os.path import dirname, join
+from os.path import dirname
 
 
 @anyblok.Declarations.target_registry(anyblok.Declarations.Exception)
@@ -185,21 +185,14 @@ class BlokManager:
             EnvironmentManager.set('current_blok', None)
 
     @classmethod
-    def get_files_from(cls, blok, attribute):
-        """ Return a files list with absolute path
+    def getPath(cls, blok):
+        """ Return the path of the blok
 
         :param blok: blok name in ordered_bloks
-        :param attribute: must be a list of property of this blok
-
-        :rtype: list of file with absolute path
-                if attribute doesn't exist then return []
+        :rtype: absolute path
         """
         blok = cls.get(blok)
-        if not hasattr(blok, attribute):
-            return []
-
-        b_path = dirname(modules[blok.__module__].__file__)
-        return [join(b_path, x) for x in getattr(blok, attribute)]
+        return dirname(modules[blok.__module__].__file__)
 
 
 class Blok:

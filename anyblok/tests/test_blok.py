@@ -62,10 +62,6 @@ class TestBlokManager(TestCase):
         except BlokManagerException:
             pass
 
-    def test_get_files_from(self):
-        BlokManager.load('AnyBlok')
-        BlokManager.get_files_from('anyblok-core', 'css')
-
     def test_set(self):
         blok_name = 'ABlok'
         BlokManager.set(blok_name, Blok)
