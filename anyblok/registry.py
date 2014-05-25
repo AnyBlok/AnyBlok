@@ -455,9 +455,10 @@ class Registry:
             for blok in toload:
                 self.load_blok(blok)
 
-            for entry in RegistryManager.callback_assemble_entries.keys():
-                logger.info('Assemble %r entry' % entry)
-                RegistryManager.callback_assemble_entries[entry](self)
+            for entry in RegistryManager.declared_entries:
+                if entry in RegistryManager.callback_assemble_entries:
+                    logger.info('Assemble %r entry' % entry)
+                    RegistryManager.callback_assemble_entries[entry](self)
 
             self.declarativebase.metadata.create_all(self.engine)
 
@@ -470,9 +471,10 @@ class Registry:
                                        self.declarativebase.metadata)
             self.migration.auto_upgrade_database()
 
-            for entry in RegistryManager.callback_initialize_entries.keys():
-                logger.info('Initialize %r entry' % entry)
-                RegistryManager.callback_initialize_entries[entry](self)
+            for entry in RegistryManager.declared_entries:
+                if entry in RegistryManager.callback_initialize_entries:
+                    logger.info('Initialize %r entry' % entry)
+                    RegistryManager.callback_initialize_entries[entry](self)
         except:
             self.close()
             raise
