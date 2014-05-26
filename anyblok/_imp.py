@@ -91,8 +91,7 @@ class Loader:
             module_name = b.__module__ + '.' + splitext(module)[0]
             try:
                 import_module(module_name)
-            except ImportError as e:
-                print(e)
+            except ImportError:
                 pass
 
         self.import_known = [x for x in modules.keys()
