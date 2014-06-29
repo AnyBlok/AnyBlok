@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+from sqlalchemy.exc import IntegrityError
 from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from sqlalchemy import schema
 from contextlib import contextmanager
 from anyblok import Declarations
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 @contextmanager
@@ -201,10 +205,24 @@ class MigrationColumn:
     def add(self, column):
         """ Add a new column
 
+        The column is added in two phase, the last phase is only for the
+        the nullable, if nullable can not be apply then a warning was logged
+
         :param column: sqlalchemy column
         :rtype: MigrationColumn instance
         """
+        nullable = column.nullable
+        if not nullable:
+            column.nullable = True
+
         self.table.migration.operation.impl.add_column(self.table.name, column)
+        if not nullable:
+            c = MigrationColumn(self.table, column.name)
+            c.alter(existing_type=column.type,
+                    existing_server_default=column.server_default,
+                    existing_autoincrement=column.autoincrement,
+                    existing_nullable=True, nullable=False)
+
         t = self.table.migration.metadata.tables[self.table.name]
         for constraint in t.constraints:
             if not isinstance(constraint, schema.PrimaryKeyConstraint):
@@ -214,6 +232,9 @@ class MigrationColumn:
 
     def alter(self, **kwargs):
         """ Alter an existing column
+
+        Alter the column in two time, because the nullable column have not
+        lock the migration
 
         .. warning::
             See Alembic alter_column, the existing_* param are used for some
@@ -236,7 +257,7 @@ class MigrationColumn:
 
         for k in ('existing_type', 'existing_server_default',
                   'existing_nullable', 'existing_autoincrement',
-                  'autoincrement', 'nullable', 'server_default', 'type_'):
+                  'autoincrement', 'server_default', 'type_'):
             if k in kwargs:
                 vals[k] = kwargs[k]
 
@@ -247,6 +268,19 @@ class MigrationColumn:
         if vals:
             self.table.migration.operation.alter_column(
                 self.table.name, self.name, **vals)
+
+        if 'nullable' in kwargs:
+            nullable = kwargs['nullable']
+            savepoint = '%s_not_null' % name
+            try:
+                self.table.migration.savepoint(savepoint)
+                self.table.migration.operation.alter_column(
+                    self.table.name, self.name, nullable=nullable, **vals)
+            except IntegrityError as e:
+                self.table.migration.rollback_savepoint(savepoint)
+                logger.warn(str(e))
+            finally:
+                self.table.migration.release_savepoint(savepoint)
 
         return MigrationColumn(self.table, name)
 
@@ -621,3 +655,25 @@ class Migration:
         """
         diff = compare_metadata(self.context, self.metadata)
         return MigrationReport(self, diff)
+
+    def savepoint(self, name=None):
+        """ Add a save point
+
+        :param name: name of the save point
+        :rtype: return the name of the save point
+        """
+        return self.conn._savepoint_impl(name=name)
+
+    def rollback_savepoint(self, name):
+        """ Rollback to the save point
+
+        :param name: name of the save point
+        """
+        self.conn._rollback_to_savepoint_impl(name, None)
+
+    def release_savepoint(self, name):
+        """ Release the save point
+
+        :param name: name of the save point
+        """
+        self.conn._release_savepoint_impl(name, None)

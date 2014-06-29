@@ -6,6 +6,7 @@ from anyblok.environment import EnvironmentManager
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
 from anyblok import Declarations
+from sqlalchemy.exc import InternalError
 MigrationException = Declarations.Exception.MigrationException
 
 
@@ -76,9 +77,38 @@ class TestMigration(TestCase):
         self.registry.migration.table().add('test2')
         self.registry.migration.table('test2')
 
+    def fill_test_table(self):
+        Test = self.registry.Test
+        vals = [{'other': 'test %d' % x} for x in range(10)]
+        Test.multi_insert(*vals)
+
     def test_add_column(self):
         t = self.registry.migration.table('test')
         t.column().add(Column('new_column', Integer))
+        t.column('new_column')
+
+    def test_add_column_in_filled_table(self):
+        self.fill_test_table()
+        t = self.registry.migration.table('test')
+        t.column().add(Column('new_column', Integer))
+        t.column('new_column')
+
+    def test_add_not_null_column(self):
+        t = self.registry.migration.table('test')
+        t.column().add(Column('new_column', Integer, nullable=False))
+        t.column('new_column')
+
+    def test_add_not_null_column_in_filled_table(self):
+        self.fill_test_table()
+        t = self.registry.migration.table('test')
+        t.column().add(Column('new_column', Integer, nullable=False))
+        t.column('new_column')
+
+    def test_add_not_null_column_in_filled_table_with_default_value(self):
+        self.fill_test_table()
+        t = self.registry.migration.table('test')
+        t.column().add(Column('new_column', Integer, nullable=False,
+                       server_default="1"))
         t.column('new_column')
 
     def test_drop_table(self):
@@ -122,6 +152,14 @@ class TestMigration(TestCase):
         t = self.registry.migration.table('test')
         c = t.column('other').alter(nullable=False)
         self.assertEqual(c.nullable(), False)
+
+    def test_alter_column_nullable_in_filled_table(self):
+        t = self.registry.migration.table('test')
+        t.column().add(Column('new_column', Integer))
+        self.fill_test_table()
+        c = t.column('new_column').alter(nullable=False)
+        # the column doesn't change of nullable to not lock the migration
+        self.assertEqual(c.nullable(), True)
 
     def test_alter_column_default(self):
         t = self.registry.migration.table('test')
@@ -292,3 +330,22 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertEqual(
             report.log_has("Drop constraint unique_other on test"), False)
+
+    def test_savepoint(self):
+        Test = self.registry.Test
+        self.fill_test_table()
+        self.registry.migration.savepoint('test')
+        self.fill_test_table()
+        self.assertEqual(Test.query().count(), 20)
+        self.registry.migration.rollback_savepoint('test')
+        self.assertEqual(Test.query().count(), 10)
+        self.registry.migration.release_savepoint('test')
+
+    def test_savepoint_without_rollback(self):
+        self.registry.migration.savepoint('test')
+        self.registry.migration.release_savepoint('test')
+        try:
+            self.registry.migration.rollback_savepoint('test')
+            self.fail("save point must be release")
+        except InternalError:
+            pass
