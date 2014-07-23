@@ -8,13 +8,22 @@ logger = getLogger(__name__)
 target_registry = Declarations.target_registry
 System = Declarations.Model.System
 String = Declarations.Column.String
+Text = Declarations.Column.Text
 Boolean = Declarations.Column.Boolean
 
 
 @target_registry(System)
 class Model:
+    """Models assembled"""
+
+    def __str__(self):
+        if self.description:
+            return self.description
+
+        return self.name
 
     name = String(label="Name of the model", size=256, primary_key=True)
+    description = Text(label="Description")
     table = String(label="Name of the table", size=256)
     is_sql_model = Boolean(label="Is a SQL model")
 
@@ -41,7 +50,9 @@ class Model:
                 # not apply
                 m = cls.registry.loaded_namespaces[model]
                 table = m.__tablename__
-                if cls.query('name').filter(cls.name == model).count():
+                _m = cls.query('name').filter(cls.name == model)
+                if _m.count():
+                    _m.update({'description': m.__doc__})
                     for cname in get_fields(m):
                         field = getattr(m, cname)
                         Field = get_field_model(field)
@@ -55,7 +66,8 @@ class Model:
                 else:
                     is_sql_model = len(m.loaded_columns) > 0
                     cls.insert(name=model, table=table,
-                               is_sql_model=is_sql_model)
+                               is_sql_model=is_sql_model,
+                               description=m.__doc__)
                     for cname in get_fields(m):
                         field = getattr(m, cname)
                         Field = get_field_model(field)

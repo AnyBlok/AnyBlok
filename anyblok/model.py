@@ -76,6 +76,7 @@ class Model:
 
             p = {
                 '__tablename__': tablename,
+                '__registry_name__': _registryname,
             }
             ns = type(name, tuple(), p)
             setattr(parent, name, ns)
@@ -157,8 +158,14 @@ class Model:
         ns = registry.loaded_registries[namespace]
 
         for b in ns['bases']:
+            if b in bases:
+                continue
+
             bases.append(b)
-            p = ns['properties']
+            p = ns['properties'].copy()
+            if b.__doc__:
+                p['__doc__'] = b.__doc__
+
             p.update(properties)
             properties.update(p)
 
