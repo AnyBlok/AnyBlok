@@ -9,6 +9,8 @@ class SqlBaseException(Exception):
 @Declarations.target_registry(Declarations.Core)
 class SqlBase:
 
+    is_sql = True
+
     @classmethod
     def query(cls, *fields):
         res = []
