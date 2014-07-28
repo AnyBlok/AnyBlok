@@ -249,6 +249,14 @@ class RegistryManager:
             cls.loaded_bloks[cb][entry]['registry_names'].append(key)
 
     @classmethod
+    def get_entry_properties_in_target_registry(cls, entry, key):
+        cb = EnvironmentManager.get('current_blok')
+        if key not in cls.loaded_bloks[cb][entry]:
+            return {}
+
+        return cls.loaded_bloks[cb][entry][key]['properties'].copy()
+
+    @classmethod
     def remove_entry_in_target_registry(cls, blok, entry, key, cls_, **kwargs):
         """ Remove Class in blok and in entry
 

@@ -58,3 +58,16 @@ class TestRegistryEntry(TestCase):
             RegistryManager.has_entry_in_target_registry('testEntry', 'Other',
                                                          'test'),
             False)
+
+    def test_get_entry_properties_in_target_registry(self):
+        class test:
+            pass
+
+        RegistryManager.add_entry_in_target_registry('Other', 'test', test,
+                                                     property1='test')
+        properties = RegistryManager.get_entry_properties_in_target_registry(
+            'Other', 'test')
+
+        hasproperty1 = 'property1' in properties
+        self.assertEqual(hasproperty1, True)
+        self.assertEqual(properties['property1'], 'test')
