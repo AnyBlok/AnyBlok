@@ -122,7 +122,7 @@ class TestMany2Many(DBTestCase):
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
         self.assertEqual(m2m_tables_exist, True)
 
-        jt = registry.many2many_tables
+        jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_addresses_by_persons' in jt
         self.assertEqual(join_table_exist, True)
 
@@ -144,7 +144,7 @@ class TestMany2Many(DBTestCase):
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
         self.assertEqual(m2m_tables_exist, True)
 
-        jt = registry.many2many_tables
+        jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_person_and_address' in jt
         self.assertEqual(join_table_exist, True)
 

@@ -232,4 +232,4 @@ class Model:
 
         Blok = registry.System.Blok
         Blok.update_list()
-        Blok.apply_state(*registry.ordered_loaded_bloks)
+        return Blok.apply_state(*registry.ordered_loaded_bloks)

@@ -46,6 +46,7 @@ class TestMigration(TestCase):
     def setUp(self):
         super(TestMigration, self).setUp()
         self.registry = Registry(ArgsParseManager.get('dbname'))
+        self.registry.init_migration()
 
     @classmethod
     def tearDownClass(cls):

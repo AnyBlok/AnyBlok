@@ -104,14 +104,7 @@ class Many2Many(Declarations.RelationShip):
             self.join_table = 'join_%s_and_%s' % (local_tablename,
                                                   remote_tablename)
 
-        if not hasattr(registry, 'many2many_tables'):
-            setattr(registry, 'many2many_tables', {})
-
-        if self.join_table in registry.many2many_tables:
-            self.kwargs['secondary'] = registry.many2many_tables[
-                self.join_table]
-
-        else:
+        if self.join_table not in registry.declarativebase.metadata.tables:
             rname, rtype, rfk = self.get_m2m_column_info(
                 remote_tablename, remote_properties, self.remote_column,
                 self.m2m_remote_column)
@@ -120,12 +113,11 @@ class Many2Many(Declarations.RelationShip):
                 local_tablename, local_properties, self.local_column,
                 self.m2m_local_column)
 
-            t = Table(self.join_table, registry.declarativebase.metadata,
-                      Column(lname, ltype, ForeignKey(lfk)),
-                      Column(rname, rtype, ForeignKey(rfk)))
+            Table(self.join_table, registry.declarativebase.metadata,
+                  Column(lname, ltype, ForeignKey(lfk)),
+                  Column(rname, rtype, ForeignKey(rfk)))
 
-            self.kwargs['secondary'] = t
-            registry.many2many_tables[self.join_table] = t
+        self.kwargs['secondary'] = self.join_table
 
         return super(Many2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)

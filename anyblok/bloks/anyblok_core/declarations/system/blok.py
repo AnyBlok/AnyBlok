@@ -123,7 +123,13 @@ class Blok:
                     conditional_bloks_to_install.append(blok[0])
 
         if conditional_bloks_to_install:
-            cls.registry.upgrade(install=conditional_bloks_to_install)
+            for b in conditional_bloks_to_install:
+                query = cls.query().filter(cls.name == b)
+                query.update({'state': 'toinstall'})
+
+            return True
+
+        return False
 
 
 @target_registry(System.Blok)

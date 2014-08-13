@@ -315,22 +315,22 @@ class Registry:
 
         return self.loaded_namespaces[namespace]
 
-    def get_bloks_to_load(self):
-        """ Return the bloks to load by the registry, this bloks are installed,
-        or will be installed
+    def get_bloks_by_states(self, *states):
+        """ Return the bloks in fonction of this state
 
+        :param states: list of the states
         :rtype: list of blok's name
         """
+        if not states:
+            return []
         conn = None
         try:
             conn = self.engine.connect()
             res = conn.execute("""
                 select system_blok.name
                 from system_blok
-                where system_blok.state in ('installed',
-                                            'toinstall',
-                                            'toupdate')
-                order by system_blok.order""").fetchall()
+                where system_blok.state in ('%s')
+                order by system_blok.order""" % "', '".join(states)).fetchall()
             toload = [x[0] for x in res]
         except (ProgrammingError, OperationalError):
             toload = []
@@ -338,11 +338,26 @@ class Registry:
             if conn:
                 conn.close()
 
-        for blok in BlokManager.auto_install:
-            if blok not in toload:
-                toload.append(blok)
-
         return toload
+
+    def get_bloks_to_load(self):
+        """ Return the bloks to load by the registry
+
+        :rtype: list of blok's name
+        """
+        return self.get_bloks_by_states('installed', 'toupdate')
+
+    def get_bloks_to_install(self, loaded):
+        """ Return the bloks to install in the registry
+
+        :rtype: list of blok's name
+        """
+        toinstall = self.get_bloks_by_states('toinstall')
+        for blok in BlokManager.auto_install:
+            if blok not in (toinstall + loaded):
+                toinstall.append(blok)
+
+        return toinstall
 
     def load_entry(self, blok, entry):
         """ load one entry type for one blok
@@ -404,6 +419,53 @@ class Registry:
         logger.info("Blok %r loaded" % blok)
         return True
 
+    def update_to_install_blok_dependencies_state(self, toinstall):
+        dependencies_to_install = []
+
+        def check_dependencies(blok):
+            if blok in dependencies_to_install:
+                return True
+
+            if blok not in BlokManager.bloks:
+                return False
+
+            b = BlokManager.bloks[blok](self)
+            for required in b.required:
+                if not check_dependencies(required):
+                    raise RegistryManagerException(
+                        "%r: Required blok not found %r" % (blok, required))
+
+            for optional in b.optional:
+                check_dependencies(optional)
+
+            if blok not in toinstall:
+                dependencies_to_install.append(blok)
+
+            return True
+
+        for blok in toinstall:
+            check_dependencies(blok)
+
+        if dependencies_to_install:
+            conn = None
+            try:
+                conn = self.engine.connect()
+                conn.execute("""
+                    update system_blok
+                    set state='toinstall'
+                    where name in ('%s')
+                    and state = 'uninstalled'""" % "', '".join(
+                    dependencies_to_install))
+            except (ProgrammingError, OperationalError):
+                pass
+            finally:
+                if conn:
+                    conn.close()
+
+            return True
+
+        return False
+
     def add_in_registry(self, namespace, base):
         """ Add a class as an attribute of the registry
 
@@ -455,13 +517,20 @@ class Registry:
         Create all the table, make the shema migration
         Update Blok, Model, Column rows
         """
+        mustreload = False
         try:
             self.declarativebase = declarative_base(class_registry=dict(
                 registry=self))
             toload = self.get_bloks_to_load()
+            toinstall = self.get_bloks_to_install(toload)
+            if self.update_to_install_blok_dependencies_state(toinstall):
+                toinstall = self.get_bloks_to_install(toload)
 
             for blok in toload:
                 self.load_blok(blok)
+
+            if toinstall:
+                self.load_blok(toinstall[0])
 
             for entry in RegistryManager.declared_entries:
                 if entry in RegistryManager.callback_assemble_entries:
@@ -475,17 +544,27 @@ class Registry:
                 sessionmaker(bind=self.engine, class_=Session),
                 EnvironmentManager.scoped_function_for_session)
 
-            self.migration = Migration(self.session,
-                                       self.declarativebase.metadata)
+            self.init_migration()
             self.migration.auto_upgrade_database()
 
             for entry in RegistryManager.declared_entries:
                 if entry in RegistryManager.callback_initialize_entries:
                     logger.info('Initialize %r entry' % entry)
-                    RegistryManager.callback_initialize_entries[entry](self)
+                    r = RegistryManager.callback_initialize_entries[entry](
+                        self)
+                    mustreload = mustreload or r
+
+            self.commit()
         except:
             self.close()
             raise
+
+        if len(toinstall) > 1 or mustreload:
+            self.reload()
+
+    def init_migration(self):
+        self.migration = Migration(self.session,
+                                   self.declarativebase.metadata)
 
     def close_session(self):
         """ Close only the session, not the registry
