@@ -5,58 +5,40 @@ from anyblok.blok import BlokManager
 from anyblok.model import Model
 
 
-old_loaded_bloks = RegistryManager.loaded_bloks
-old_declared_entries = []
-old_declared_entries += RegistryManager.declared_entries
-old_callback_assemble_entries = RegistryManager.callback_assemble_entries
-old_callback_initialize_entries = RegistryManager.callback_initialize_entries
-
-
 class TestRegistryManager(TestCase):
 
-    def setUp(self):
-        super(TestRegistryManager, self).setUp()
-        RegistryManager.loaded_bloks = old_loaded_bloks.copy()
-        RegistryManager.declared_entries = [] + old_declared_entries
-        cae = old_callback_assemble_entries.copy()
-        RegistryManager.callback_assemble_entries = cae
-        cie = old_callback_initialize_entries.copy()
-        RegistryManager.callback_initialize_entries = cie
-
     def test_declared_entries(self):
-        self.assertEqual(RegistryManager.declared_entries, ['Model', 'Mixin'])
+        hasModel = 'Model' in RegistryManager.declared_entries
+        hasMixin = 'Mixin' in RegistryManager.declared_entries
+        self.assertEqual(hasModel, True)
+        self.assertEqual(hasMixin, True)
 
     def test_init_blok(self):
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
-        self.assertEqual(RegistryManager.loaded_bloks['newblok'],
-                         {
-                             'Core': {
-                                 'Base': [],
-                                 'SqlBase': [],
-                                 'Session': [],
-                             },
-                             'Model': {'registry_names': []},
-                             'Mixin': {'registry_names': []}})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Core'],
+                         {'Base': [], 'SqlBase': [], 'Session': []})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Model'],
+                         {'registry_names': []})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Mixin'],
+                         {'registry_names': []})
 
     def test_init_blok_with_other_entry(self):
         RegistryManager.declare_entry('Other')
-        self.assertEqual(RegistryManager.declared_entries,
-                         ['Model', 'Mixin', 'Other'])
+        hasOther = 'Other' in RegistryManager.declared_entries
+        self.assertEqual(hasOther, True)
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
-        self.assertEqual(RegistryManager.loaded_bloks['newblok'],
-                         {
-                             'Core': {
-                                 'Base': [],
-                                 'SqlBase': [],
-                                 'Session': [],
-                             },
-                             'Model': {'registry_names': []},
-                             'Mixin': {'registry_names': []},
-                             'Other': {'registry_names': []}})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Core'],
+                         {'Base': [], 'SqlBase': [], 'Session': []})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Model'],
+                         {'registry_names': []})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Mixin'],
+                         {'registry_names': []})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Other'],
+                         {'registry_names': []})
 
     def test_anyblok_core_loaded(self):
         BlokManager.load('AnyBlok')
@@ -72,21 +54,17 @@ class TestRegistryManager(TestCase):
 
     def test_add_entry(self):
         RegistryManager.declare_entry('Other')
-        self.assertEqual(RegistryManager.declared_entries,
-                         ['Model', 'Mixin', 'Other'])
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
-        self.assertEqual(RegistryManager.loaded_bloks['newblok'],
-                         {
-                             'Core': {
-                                 'Base': [],
-                                 'SqlBase': [],
-                                 'Session': [],
-                             },
-                             'Model': {'registry_names': []},
-                             'Mixin': {'registry_names': []},
-                             'Other': {'registry_names': []}})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Core'],
+                         {'Base': [], 'SqlBase': [], 'Session': []})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Model'],
+                         {'registry_names': []})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Mixin'],
+                         {'registry_names': []})
+        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Other'],
+                         {'registry_names': []})
 
     def test_add_callback(self):
 
@@ -95,27 +73,38 @@ class TestRegistryManager(TestCase):
 
         RegistryManager.declare_entry('Other', assemble_callback=callback,
                                       initialize_callback=callback)
-        self.assertEqual(RegistryManager.declared_entries,
-                         ['Model', 'Mixin', 'Other'])
-        self.assertEqual(RegistryManager.callback_assemble_entries,
-                         {'Model': Model.assemble_callback,
-                          'Other': callback})
-        self.assertEqual(RegistryManager.callback_initialize_entries,
-                         {'Model': Model.initialize_callback,
-                          'Other': callback})
+        hasModel = 'Model' in RegistryManager.declared_entries
+        hasMixin = 'Mixin' in RegistryManager.declared_entries
+        hasOther = 'Other' in RegistryManager.declared_entries
+        self.assertEqual(hasModel, True)
+        self.assertEqual(hasMixin, True)
+        self.assertEqual(hasOther, True)
+
+        cb = Model.assemble_callback
+        hasModelCb = cb == RegistryManager.callback_assemble_entries['Model']
+        cb = callback
+        hasOtherCb = cb == RegistryManager.callback_assemble_entries['Other']
+        self.assertEqual(hasModelCb, True)
+        self.assertEqual(hasOtherCb, True)
+
+        cb = Model.initialize_callback
+        hasModelCb = cb == RegistryManager.callback_initialize_entries['Model']
+        cb = callback
+        hasOtherCb = cb == RegistryManager.callback_initialize_entries['Other']
+        self.assertEqual(hasModelCb, True)
+        self.assertEqual(hasOtherCb, True)
+
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
-        self.assertEqual(RegistryManager.loaded_bloks['newblok'],
-                         {
-                             'Core': {
-                                 'Base': [],
-                                 'SqlBase': [],
-                                 'Session': [],
-                             },
-                             'Model': {'registry_names': []},
-                             'Mixin': {'registry_names': []},
-                             'Other': {'registry_names': []}})
+        hasCore = 'Core' in RegistryManager.loaded_bloks['newblok']
+        hasModel = 'Model' in RegistryManager.loaded_bloks['newblok']
+        hasMixin = 'Mixin' in RegistryManager.loaded_bloks['newblok']
+        hasOther = 'Other' in RegistryManager.loaded_bloks['newblok']
+        self.assertEqual(hasCore, True)
+        self.assertEqual(hasModel, True)
+        self.assertEqual(hasMixin, True)
+        self.assertEqual(hasOther, True)
 
     def test_reload_blok(self):
         BlokManager.load('AnyBlok')

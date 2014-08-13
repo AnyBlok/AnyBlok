@@ -486,8 +486,6 @@ class Registry:
         except:
             self.close()
             raise
-        finally:
-            self.commit()
 
     def close_session(self):
         """ Close only the session, not the registry
