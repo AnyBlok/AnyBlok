@@ -1,15 +1,15 @@
 README
 ======
 
-AnyBlok is a framework to include dynamicly Python source. It is the reference
+AnyBlok is a framework to dynamically include Python sources. It is the reference
 documentation.
 
-This first part present How create an application with his own code. Why have
-you to create an application? Because AnyBlok is an framework not an application
+This first part presents how to create an application with his own code. Why do we have to
+create an application ? Because AnyBlok is just a framework not an application.
 
-And the goal more than one application use the same database for diferent goal.
-The web server need to give acces to the user, but a profiler need another
-access with another access rule, or another application need to follow one part
+And the goal more than one application use the same database for different goal.
+The web server need to give access to the user, but a profiler need another
+access with another access rule, or another application needs to follow one part
 of the functionnality.
 
 We will write a simple application which connect to an existing database:
@@ -34,10 +34,10 @@ Create your Blok group
 ----------------------
 
 A blok group is a ``setuptools`` entry point. Separate the project by group
-allow to select the bloks needed by the application. And multiply the posiibility
-A blok come from more than 1 blok group, it is not the same blok but they have
-the same name. You can have two implementation for the same thing and use the
-good implementation in the context.
+allows to select the bloks needed by the application. This separation also allows
+a blok to come from more than one blok group, it is not the same blok but they have
+the same name. You can have two implementations for the same thing and use the
+good implementation depending on the context.
 
 For this example, the blok group ``WorkBlok`` will be used
 
@@ -52,7 +52,7 @@ A blok is a set of Declaration
 * RelationShip: Python class, allow to surh on the join on the model data
 * ...
 
-The blok name must be declare in the blok group of the distribution::
+The blok name must be declared in the blok group of the distribution::
 
     # declare 4 bloks
     # desk: is the location
@@ -73,7 +73,7 @@ The blok name must be declare in the blok group of the distribution::
         },
     )
 
-And the blok must inherit of the Blok class of anyblok in the ``__init__.py``
+And the blok must inherits of the Blok class of anyblok in the ``__init__.py``
 file of a package::
 
     from anyblok.blok import Blok
@@ -135,12 +135,12 @@ package in this package will be import by anyblok.
 
     # position.py describe the model Position
 
-Some blok can have requirement. Each blok define this dependences:
+Some blok can have requirement. Each blok define this dependencies:
 
 * required: the blok must be loaded before
 * optional: If the blok exist, it will be loaded
 
-A blok can be declared ``autoinstall`` if the blok is not install at the load
+A blok can be declared ``autoinstall`` if the blok is not installed upon the loading
 of the registry, then this blok will be loaded and installed
 
 **Worker blok**::
@@ -246,14 +246,14 @@ class decorator ``Declarations.target_registry``::
 
 They are two type of Model:
 
-* SQL: Génerate a table in database (inherit SqlBase and Base)
+* SQL: Generate a table in the database (inherit SqlBase and Base)
 * No SQL: No table but the model exist in the registry and can be used (inherit Base).
 
-SqlBase and Base are core model, Call them directly is now allowed, too low level,
-but they are subclassable and each subclasses are propagated at all the anyblok
-model. this example use ``insert`` and ``multi_insert`` adding by ``anyblok-core`` blok.
+SqlBase and Base are core models, directly call them is now allowed, too low level,
+but they are subclassable and each subclasses are propagated to all the anyblok
+models. this example use ``insert`` and ``multi_insert`` adding by ``anyblok-core`` blok.
 
-A SQL model can define the column by adding a column::
+A SQL model can define the columns by adding a column::
 
     from anyblok import Declarations
     target_registry = Declarations.target_registry
@@ -310,7 +310,7 @@ The relationships can also define the opposite relation, here the Many2One
 declare the One2Many rooms on the Address Model
 
 A relationship Many2One or One2One must have an existing column.
-The attribute ``column_name`` alow to choose the column linked, if this
+The attribute ``column_name`` allow to choose the column linked, if this
 attribute is missing then the value is "'model.table'.'remote_column'"
 If the column linked doesn't exist then the relationship create the
 column with the same type of the remote_column
@@ -354,7 +354,7 @@ Update an existing Model
 ------------------------
 
 If you create 2 models with the same declaration position, the same name, then the
-second model subclass the first model. And the two models will be merge to
+second model subclass the first model. And the two models will be merged to
 get the real model
 
 **worker_position_blok.worker**::
@@ -378,8 +378,8 @@ get the real model
 Add entries in the argsparse configuration
 ------------------------------------------
 
-For somme application somme option can be needed. Options are grouped by
-category. And the application choose the category of option to display.
+For some application some option can be needed. Options are grouped by
+category. And the application choose the category option to display.
 
 **worker_blok.arsparse**::
 
