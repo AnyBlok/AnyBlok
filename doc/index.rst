@@ -9,14 +9,14 @@ Welcome to AnyBlok's documentation!
 .. toctree::
     :hidden:
 
-    README.rst
+    ../README.rst
     CODE.rst
     UNITTEST.rst
     BLOKS.rst
     CHANGES.rst
     ROADMAP.rst
 
-.. include:: README.rst
+.. include:: ../README.rst
 .. include:: CODE.rst
 .. include:: UNITTEST.rst
 .. include:: BLOKS.rst
