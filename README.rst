@@ -19,7 +19,7 @@ We will write a simple application which connect to an existing database:
     - desk (Room): the room where the worker works
     - position: worker position (manager, employee...)
 * Room
-    - number: discribe the room in the office
+    - number: describe the room in the office
     - address: postal address
     - workers: men and women working in that room
 * Address
@@ -48,7 +48,7 @@ A blok is a set of Declaration
 
 * Model: Python class usable by the application and linked in the registry
 * Mixin: Python class to extend Model
-* Column: Python class, describe a type of sql column
+* Column: Python class, describe a sql column type
 * RelationShip: Python class, allow to surh on the join on the model data
 * ...
 
