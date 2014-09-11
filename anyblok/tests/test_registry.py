@@ -95,7 +95,11 @@ class TestRegistry(TestCase):
 
         BlokManager.bloks['blok'] = BlokTest
         RegistryManager.loaded_bloks['blok'] = {
-            'Core': {'Session': [TestCase], 'Base': [], 'SqlBase': []},
+            'Core': {'Session': [TestCase],
+                     'Base': [],
+                     'SqlBase': [],
+                     'Query': [],
+                     'InstrumentedList': []},
         }
         for entry in RegistryManager.declared_entries:
             RegistryManager.loaded_bloks['blok'][entry] = {

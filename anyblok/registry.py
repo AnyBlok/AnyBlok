@@ -159,6 +159,8 @@ class RegistryManager:
                 'Base': [],
                 'SqlBase': [],
                 'Session': [],
+                'Query': [],
+                'InstrumentedList': [],
             }
         }
         for de in cls.declared_entries:
@@ -298,6 +300,8 @@ class Registry:
             'Base': [self.registry_base],
             'SqlBase': [],
             'Session': [],
+            'Query': [],
+            'InstrumentedList': [],
         }
         self.ordered_loaded_bloks = []
         self.loaded_namespaces = {}
@@ -408,7 +412,8 @@ class Registry:
         for optional in b.optional:
             self.load_blok(optional)
 
-        for core in ('Base', 'SqlBase', 'Session'):
+        for core in ('Base', 'SqlBase', 'Session', 'Query',
+                     'InstrumentedList'):
             self.load_core(blok, core)
 
         for entry in RegistryManager.declared_entries:
@@ -532,6 +537,11 @@ class Registry:
             if toinstall:
                 self.load_blok(toinstall[0])
 
+            instrumentedlist_base = [] + self.loaded_cores['InstrumentedList']
+            instrumentedlist_base += [list]
+            self.InstrumentedList = type(
+                'InstrumentedList', tuple(instrumentedlist_base), {})
+
             for entry in RegistryManager.declared_entries:
                 if entry in RegistryManager.callback_assemble_entries:
                     logger.info('Assemble %r entry' % entry)
@@ -539,7 +549,11 @@ class Registry:
 
             self.declarativebase.metadata.create_all(self.engine)
 
-            Session = type('Session', tuple(self.loaded_cores['Session']), {})
+            query_bases = [] + self.loaded_cores['Query']
+            query_bases += [self.registry_base]
+            Query = type('Query', tuple(query_bases), {})
+            Session = type('Session', tuple(self.loaded_cores['Session']), {
+                'registry_query': Query})
             self.Session = scoped_session(
                 sessionmaker(bind=self.engine, class_=Session),
                 EnvironmentManager.scoped_function_for_session)

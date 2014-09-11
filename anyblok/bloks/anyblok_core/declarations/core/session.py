@@ -6,5 +6,5 @@ from anyblok import Declarations
 class Session(SA_Session):
 
     def __init__(self, *args, **kwargs):
-        # kwargs['query_cls'] = self.registry.Query
+        kwargs['query_cls'] = self.registry_query
         super(Session, self).__init__(*args, **kwargs)

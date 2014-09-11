@@ -37,6 +37,18 @@ class RelationShip(Declarations.Field):
         self.model = model
         self.kwargs = kwargs
 
+    def apply_instrumentedlist(self, registry):
+        self.kwargs['collection_class'] = registry.InstrumentedList
+        backref = self.kwargs.get('backref')
+        if not backref:
+            return
+
+        if not isinstance(backref, (list, tuple)):
+            backref = (backref, {})
+
+        backref[1]['collection_class'] = registry.InstrumentedList
+        self.kwargs['backref'] = backref
+
     def find_primary_key(self, properties):
         """ Return the primary key come from the first step property
 
@@ -65,4 +77,5 @@ class RelationShip(Declarations.Field):
         :rtype: sqlalchemy relation ship instance
         """
         self.kwargs['info']['rtype'] = self.__class__.__name__
+        self.apply_instrumentedlist(registry)
         return relationship(self.model.__tablename__, **self.kwargs)
