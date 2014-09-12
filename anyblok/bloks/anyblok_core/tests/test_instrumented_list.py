@@ -62,7 +62,7 @@ class TestInstrumentedList(DBTestCase):
                 test2 = Integer(label="Test2", foreign_key=(
                     Model.Test2, 'id'))
 
-            @Declarations.target_registry(Model)
+            @Declarations.target_registry(Model)  # noqa
             class Test2:
                 tests = One2Many(label="Tests", model=Model.Test)
 
