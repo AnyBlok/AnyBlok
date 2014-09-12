@@ -23,11 +23,14 @@ class SqlBase:
     def get_on_model_methods(cls):
         return ['update', 'delete']
 
-    delete = query_method('delete')
+    sqlalchemy_query_delete = query_method('delete')
+    sqlalchemy_query_update = query_method('update')
 
-    @classmethod
-    def update(cls, query, **kwargs):
-        return query.sqlalchemy_query_method('update', kwargs)
+    def update(self, *args, **kwargs):
+        pks = [c.name for c in self.__table__.primary_key.columns.values()]
+        where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
+                        for pk in pks]
+        self.__class__.query().filter(*where_clause).update(*args, **kwargs)
 
     @classmethod
     def query(cls, *fields):

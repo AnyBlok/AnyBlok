@@ -19,15 +19,22 @@ class TestCoreQuery(DBTestCase):
             class Test:
 
                 id = Integer(label="ID", primary_key=True)
+                id2 = Integer(label="ID2")
 
                 @classmethod
-                def update(cls, query, **kwargs):
+                def sqlalchemy_query_update(cls, query, *args, **kwargs):
                     raise TestException('test')
 
         registry = self.init_registry(inherit_update)
         try:
-            registry.Test.query().update()
+            registry.Test.query().update({'id2': 1})
             self.fail('Update must fail')
+        except TestException:
+            pass
+
+        try:
+            t = registry.System.Blok.query().first()
+            t.update({'state': 'plop'})
         except TestException:
             pass
 

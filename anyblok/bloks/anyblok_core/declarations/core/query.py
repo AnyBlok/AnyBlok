@@ -23,6 +23,8 @@ class Query(query.Query):
 
     def __getattribute__(self, name):
         validate = False
+        model_function = "sqlalchemy_query_" + name
+
         if name in Query.get_on_model_methods():
             try:
                 entity = self._primary_entity.mapper.entity
@@ -30,14 +32,15 @@ class Query(query.Query):
                 pass
             else:
                 if name in entity.get_on_model_methods():
-                    if hasattr(entity, name):
+                    if hasattr(entity, model_function):
                         validate = True
 
         if validate:
 
             def wrapper(*args, **kwargs):
-                if ismethod(getattr(entity, name)):
-                    return getattr(entity, name)(self, *args, **kwargs)
+                if ismethod(getattr(entity, model_function)):
+                    return getattr(entity, model_function)(
+                        self, *args, **kwargs)
                 else:
                     raise QueryException("%s.%s must be a classmethod" % (
                         entity, name))
