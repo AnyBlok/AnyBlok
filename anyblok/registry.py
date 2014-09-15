@@ -133,7 +133,7 @@ class RegistryManager:
 
         :param entry: entry name
         :param assemble_callback: function callback to call to assemble
-        :param intialize_callback: function callback to call to init after
+        :param initialize_callback: function callback to call to init after
             assembling
         """
         if entry not in cls.declared_entries:
@@ -144,6 +144,17 @@ class RegistryManager:
 
             if initialize_callback:
                 cls.callback_initialize_entries[entry] = initialize_callback
+
+    @classmethod
+    def undeclare_entry(cls, entry):
+        if entry in cls.declared_entries:
+            cls.declared_entries.remove(entry)
+
+            if entry in cls.callback_assemble_entries:
+                del cls.callback_assemble_entries[entry]
+
+            if entry in cls.callback_initialize_entries:
+                del cls.callback_initialize_entries[entry]
 
     @classmethod
     def init_blok(cls, blokname):

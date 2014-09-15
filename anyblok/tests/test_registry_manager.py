@@ -7,6 +7,11 @@ from anyblok.model import Model
 
 class TestRegistryManager(TestCase):
 
+    @classmethod
+    def tearDownClass(cls):
+        super(TestRegistryManager, cls).tearDownClass()
+        RegistryManager.undeclare_entry('Other')
+
     def test_declared_entries(self):
         hasModel = 'Model' in RegistryManager.declared_entries
         hasMixin = 'Mixin' in RegistryManager.declared_entries

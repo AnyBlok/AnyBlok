@@ -18,6 +18,7 @@ class TestRegistryEntry(TestCase):
         super(TestRegistryEntry, cls).tearDownClass()
         EnvironmentManager.set('current_blok', None)
         del RegistryManager.loaded_bloks['testEntry']
+        RegistryManager.undeclare_entry('Other')
 
     def tearDown(self):
         super(TestRegistryEntry, self).tearDown()
