@@ -14,24 +14,7 @@ def query_method(name):
     return classmethod(wrapper)
 
 
-@Declarations.target_registry(Declarations.Core)
-class SqlBase:
-
-    is_sql = True
-
-    @classmethod
-    def get_on_model_methods(cls):
-        return ['update', 'delete']
-
-    sqlalchemy_query_delete = query_method('delete')
-    sqlalchemy_query_update = query_method('update')
-
-    def update(self, *args, **kwargs):
-        pks = [c.name for c in self.__table__.primary_key.columns.values()]
-        where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
-                        for pk in pks]
-        self.__class__.query().filter(*where_clause).update(*args, **kwargs)
-
+class SqlMixin:
     @classmethod
     def query(cls, *fields):
         res = []
@@ -45,6 +28,25 @@ class SqlBase:
             return cls.registry.query(*res)
 
         return cls.registry.query(cls)
+
+    is_sql = True
+
+    @classmethod
+    def get_on_model_methods(cls):
+        return ['update', 'delete']
+
+
+@Declarations.target_registry(Declarations.Core)
+class SqlBase(SqlMixin):
+
+    sqlalchemy_query_delete = query_method('delete')
+    sqlalchemy_query_update = query_method('update')
+
+    def update(self, *args, **kwargs):
+        pks = [c.name for c in self.__table__.primary_key.columns.values()]
+        where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
+                        for pk in pks]
+        self.__class__.query().filter(*where_clause).update(*args, **kwargs)
 
     @classmethod
     def insert(cls, **kwargs):

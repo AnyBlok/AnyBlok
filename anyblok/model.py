@@ -1,5 +1,31 @@
 from anyblok.registry import RegistryManager
 from anyblok import Declarations
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.schema import DDLElement
+from sqlalchemy.sql import table
+from sqlalchemy.orm import Query, mapper
+
+
+class CreateView(DDLElement):
+    def __init__(self, name, selectable):
+        self.name = name
+        self.selectable = selectable
+
+
+class DropView(DDLElement):
+    def __init__(self, name):
+        self.name = name
+
+
+@compiles(CreateView)
+def compile_create_view(element, compiler, **kw):
+    return "CREATE VIEW %s AS %s" % (
+        element.name, compiler.sql_compiler.process(element.selectable))
+
+
+@compiles(DropView)
+def compile_drop_view(element, compiler, **kw):
+    return "DROP VIEW IF EXISTS %s" % (element.name)
 
 
 def has_sql_fields(bases):
@@ -154,20 +180,19 @@ class Model:
             return [registry.loaded_namespaces[namespace]], {}
 
         bases = []
-        properties = {}
         ns = registry.loaded_registries[namespace]
+        properties = ns['properties'].copy()
+
+        if 'is_sql_view' not in properties:
+            properties['is_sql_view'] = False
 
         for b in ns['bases']:
             if b in bases:
                 continue
 
             bases.append(b)
-            p = ns['properties'].copy()
-            if b.__doc__:
-                p['__doc__'] = b.__doc__
-
-            p.update(properties)
-            properties.update(p)
+            if b.__doc__ and '__doc__' not in properties:
+                properties['__doc__'] = b.__doc__
 
             for b_ns in b.__anyblok_bases__:
                 bs, ps = cls.load_namespace_second_step(
@@ -180,7 +205,9 @@ class Model:
         if namespace in registry.loaded_registries['Model_names']:
             properties['loaded_columns'] = []
             tablename = properties['__tablename__']
-            if has_sql_fields(bases):
+            if properties['is_sql_view']:
+                bases += registry.loaded_cores['SqlViewBase']
+            elif has_sql_fields(bases):
                 bases += registry.loaded_cores['SqlBase']
                 bases += [registry.declarativebase]
 
@@ -191,6 +218,40 @@ class Model:
                         registry, p, f, namespace, properties)
 
             bases = [type(tablename, tuple(bases), properties)]
+
+            if properties['is_sql_view']:
+                if not hasattr(bases[0], 'sqlalchemy_view_declaration'):
+                    raise Declarations.Exception.ViewException(
+                        "%r.'sqlalchemy_view_declaration' is required to "
+                        "define the query to apply of the view" % namespace)
+                pks = []
+                for col in properties['loaded_columns']:
+                    if getattr(bases[0], col).primary_key:
+                        pks.append(col)
+
+                if not pks:
+                    raise Declarations.Exception.ViewException(
+                        "%r have any primary key defined" % namespace)
+
+                view = table(tablename)
+                selectable = getattr(bases[0], 'sqlalchemy_view_declaration')()
+
+                if isinstance(selectable, Query):
+                    selectable = selectable.subquery()
+
+                for c in selectable.c:
+                    c._make_proxy(view)
+
+                DropView(tablename).execute_at(
+                    'before-create', registry.declarativebase.metadata)
+                CreateView(tablename, selectable).execute_at(
+                    'after-create', registry.declarativebase.metadata)
+                DropView(tablename).execute_at(
+                    'before-drop', registry.declarativebase.metadata)
+
+                pks = [getattr(view.c, x) for x in pks]
+                mapper(bases[0], view, primary_key=pks)
+
             properties = {}
             registry.add_in_registry(namespace, bases[0])
             registry.loaded_namespaces[namespace] = bases[0]

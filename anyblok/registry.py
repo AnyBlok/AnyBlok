@@ -158,6 +158,7 @@ class RegistryManager:
             'Core': {
                 'Base': [],
                 'SqlBase': [],
+                'SqlViewBase': [],
                 'Session': [],
                 'Query': [],
                 'InstrumentedList': [],
@@ -299,6 +300,7 @@ class Registry:
         self.loaded_cores = {
             'Base': [self.registry_base],
             'SqlBase': [],
+            'SqlViewBase': [],
             'Session': [],
             'Query': [],
             'InstrumentedList': [],
@@ -412,7 +414,7 @@ class Registry:
         for optional in b.optional:
             self.load_blok(optional)
 
-        for core in ('Base', 'SqlBase', 'Session', 'Query',
+        for core in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
                      'InstrumentedList'):
             self.load_core(blok, core)
 

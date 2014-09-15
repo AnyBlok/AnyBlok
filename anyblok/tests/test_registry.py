@@ -98,6 +98,7 @@ class TestRegistry(TestCase):
             'Core': {'Session': [TestCase],
                      'Base': [],
                      'SqlBase': [],
+                     'SqlViewBase': [],
                      'Query': [],
                      'InstrumentedList': []},
         }

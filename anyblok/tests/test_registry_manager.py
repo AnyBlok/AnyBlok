@@ -20,6 +20,7 @@ class TestRegistryManager(TestCase):
         self.assertEqual(RegistryManager.loaded_bloks['newblok']['Core'],
                          {'Base': [],
                           'SqlBase': [],
+                          'SqlViewBase': [],
                           'Session': [],
                           'Query': [],
                           'InstrumentedList': []})
@@ -38,6 +39,7 @@ class TestRegistryManager(TestCase):
         self.assertEqual(RegistryManager.loaded_bloks['newblok']['Core'],
                          {'Base': [],
                           'SqlBase': [],
+                          'SqlViewBase': [],
                           'Session': [],
                           'Query': [],
                           'InstrumentedList': []})
@@ -55,6 +57,7 @@ class TestRegistryManager(TestCase):
         anyblokcore = RegistryManager.loaded_bloks['anyblok-core']
         self.assertEqual(len(anyblokcore['Core']['Base']), 1)
         self.assertEqual(len(anyblokcore['Core']['SqlBase']), 1)
+        self.assertEqual(len(anyblokcore['Core']['SqlViewBase']), 1)
         self.assertEqual(len(anyblokcore['Core']['Session']), 1)
         self.assertEqual(len(anyblokcore['Core']['Query']), 1)
         self.assertEqual(len(anyblokcore['Core']['InstrumentedList']), 1)
@@ -70,6 +73,7 @@ class TestRegistryManager(TestCase):
         self.assertEqual(RegistryManager.loaded_bloks['newblok']['Core'],
                          {'Base': [],
                           'SqlBase': [],
+                          'SqlViewBase': [],
                           'Session': [],
                           'Query': [],
                           'InstrumentedList': []})
