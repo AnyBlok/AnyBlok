@@ -121,8 +121,8 @@ class DBTestCase(TestCase):
             @Declarations.target_registry(Declarations.Model)
             class Test:
 
-                id = Declarations.Column.Integer(label='id', primary_key=True)
-                col = ColumnType(label="col", **kwargs)
+                id = Declarations.Column.Integer(primary_key=True)
+                col = ColumnType(**kwargs)
 
 
         class TestColumns(DBTestCase):

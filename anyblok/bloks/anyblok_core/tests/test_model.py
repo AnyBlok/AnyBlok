@@ -11,8 +11,8 @@ def simple_model():
 
     @target_registry(Model)
     class Test:
-        id = Integer(label="id", primary_key=True)
-        name = String(label="Name")
+        id = Integer(primary_key=True)
+        name = String()
 
 
 def model_with_foreign_key():
@@ -22,13 +22,13 @@ def model_with_foreign_key():
     @target_registry(Model)
     class TestFk:
 
-        name = String(label="Name", primary_key=True)
+        name = String(primary_key=True)
 
     @target_registry(Model)
     class Test:
 
-        id = Integer(label="id", primary_key=True)
-        name = String(label="Name", foreign_key=(Model.TestFk, 'name'))
+        id = Integer(primary_key=True)
+        name = String(foreign_key=(Model.TestFk, 'name'))
 
 
 class TestModel(DBTestCase):
@@ -69,7 +69,7 @@ class TestModelAssembling(TestCase):
     def test_has_sql_fields_ok(self):
 
         class MyModel:
-            one_field = Declarations.Column.String(label="Label")
+            one_field = Declarations.Column.String()
 
         self.assertEqual(has_sql_fields([MyModel]), True)
 
@@ -83,6 +83,6 @@ class TestModelAssembling(TestCase):
     def test_get_fields(self):
 
         class MyModel:
-            one_field = Declarations.Column.String(label="Label")
+            one_field = Declarations.Column.String()
 
         self.assertEqual(get_fields(MyModel), {'one_field': MyModel.one_field})

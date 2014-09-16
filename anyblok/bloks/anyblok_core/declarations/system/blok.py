@@ -12,9 +12,9 @@ Integer = Declarations.Column.Integer
 @target_registry(System)
 class Blok:
 
-    name = String(label="Name", primary_key=True, nullable=False)
-    state = String(label="State", default='uninstalled', nullable=False)
-    order = Integer(label="Order of loading", default=-1, nullable=False)
+    name = String(primary_key=True, nullable=False)
+    state = String(default='uninstalled', nullable=False)
+    order = Integer(default=-1, nullable=False)
 
     def __repr__(self):
         return "%s (%s)" % (self.name, self.state)
@@ -135,9 +135,8 @@ class Blok:
 @target_registry(System.Blok)
 class Association:
 
-    blok = String(label="Blok", foreign_key=(System.Blok, 'name'),
+    blok = String(foreign_key=(System.Blok, 'name'),
                   nullable=False, primary_key=True)
-    linked_blok = String(label="Linked blok",
-                         foreign_key=(System.Blok, 'name'),
+    linked_blok = String(foreign_key=(System.Blok, 'name'),
                          nullable=False, primary_key=True)
-    mode = String(label="Mode of linked", nullable=False, primary_key=True)
+    mode = String(nullable=False, primary_key=True)

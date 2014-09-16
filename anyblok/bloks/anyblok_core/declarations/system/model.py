@@ -22,9 +22,9 @@ class Model:
 
         return self.name
 
-    name = String(label="Name of the model", size=256, primary_key=True)
-    description = Text(label="Description")
-    table = String(label="Name of the table", size=256)
+    name = String(size=256, primary_key=True)
+    description = Text()
+    table = String(size=256)
     is_sql_model = Boolean(label="Is a SQL model")
 
     @classmethod

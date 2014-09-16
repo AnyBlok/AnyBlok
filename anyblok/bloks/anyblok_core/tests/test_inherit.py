@@ -12,12 +12,12 @@ def simple_subclass_model():
 
     @target_registry(Model)
     class Test:
-        id = Integer(label="id", primary_key=True)
-        name = String(label="Name")
+        id = Integer(primary_key=True)
+        name = String()
 
     @target_registry(Model)  # noqa
     class Test:
-        other = String(label="Other")
+        other = String()
 
 
 def simple_subclass_model_change_type():
@@ -26,12 +26,12 @@ def simple_subclass_model_change_type():
 
     @target_registry(Model)
     class Test:
-        id = Integer(label="id", primary_key=True)
-        name = String(label="Name")
+        id = Integer(primary_key=True)
+        name = String()
 
     @target_registry(Model)  # noqa
     class Test:
-        name = Integer(label="Name")
+        name = Integer()
 
 
 def simple_subclass_model_change_type_and_subclass_add_field():
@@ -40,16 +40,16 @@ def simple_subclass_model_change_type_and_subclass_add_field():
 
     @target_registry(Model)
     class Test:
-        id = Integer(label="id", primary_key=True)
-        name = String(label="Name")
+        id = Integer(primary_key=True)
+        name = String()
 
     @target_registry(Model)  # noqa
     class Test:
-        name = Integer(label="Name")
+        name = Integer()
 
     @target_registry(Model)  # noqa
     class Test:
-        other = String(label="Other")
+        other = String()
 
 
 def mixin_one_model():
@@ -59,13 +59,13 @@ def mixin_one_model():
     @target_registry(Mixin)
     class MixinName:
 
-        name = String(label="Name")
+        name = String()
 
     @target_registry(Model)
     class Test(Mixin.MixinName):
 
-        id = Integer(label="id", primary_key=True)
-        other = String(label='Other')
+        id = Integer(primary_key=True)
+        other = String()
 
 
 def mixin_two_model():
@@ -75,19 +75,19 @@ def mixin_two_model():
     @target_registry(Mixin)
     class MixinName:
 
-        name = String(label="Name")
+        name = String()
 
     @target_registry(Model)
     class Test(Mixin.MixinName):
 
-        id = Integer(label="id", primary_key=True)
-        other = String(label='Other')
+        id = Integer(primary_key=True)
+        other = String()
 
     @target_registry(Model)
     class Test2(Mixin.MixinName):
 
-        id = Integer(label="id", primary_key=True)
-        other = String(label='Other')
+        id = Integer(primary_key=True)
+        other = String()
 
 
 def mixin_one_model_with_subclass():
@@ -97,17 +97,17 @@ def mixin_one_model_with_subclass():
     @target_registry(Mixin)
     class MixinName:
 
-        name = String(label="Name")
+        name = String()
 
     @target_registry(Model)
     class Test(Mixin.MixinName):
 
-        id = Integer(label="id", primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)  # noqa
     class Test:
 
-        other = String(label="Other")
+        other = String()
 
 
 def mixin_one_model_by_subclass():
@@ -117,17 +117,17 @@ def mixin_one_model_by_subclass():
     @target_registry(Mixin)
     class MixinName:
 
-        name = String(label="Name")
+        name = String()
 
     @target_registry(Model)
     class Test:
 
-        id = Integer(label="id", primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)  # noqa
     class Test(Mixin.MixinName):
 
-        other = String(label='Other')
+        other = String()
 
 
 def mixin_with_foreign_key_one_model():
@@ -137,17 +137,17 @@ def mixin_with_foreign_key_one_model():
     @target_registry(Model)
     class TestFk:
 
-        name = String(label="Name", primary_key=True)
+        name = String(primary_key=True)
 
     @target_registry(Mixin)
     class MixinName:
 
-        name = String(label="Name", foreign_key=(Model.TestFk, 'name'))
+        name = String(foreign_key=(Model.TestFk, 'name'))
 
     @target_registry(Model)
     class Test(Mixin.MixinName):
 
-        id = Integer(label="id", primary_key=True)
+        id = Integer(primary_key=True)
 
 
 def mixin_with_foreign_key_two_model():
@@ -157,22 +157,22 @@ def mixin_with_foreign_key_two_model():
     @target_registry(Model)
     class TestFk:
 
-        name = String(label="Name", primary_key=True)
+        name = String(primary_key=True)
 
     @target_registry(Mixin)
     class MixinName:
 
-        name = String(label="Name", foreign_key=(Model.TestFk, 'name'))
+        name = String(foreign_key=(Model.TestFk, 'name'))
 
     @target_registry(Model)
     class Test(Mixin.MixinName):
 
-        id = Integer(label="id", primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)
     class Test2(Mixin.MixinName):
 
-        id = Integer(label="id", primary_key=True)
+        id = Integer(primary_key=True)
 
 
 def mixin_one_model_by_subclass_and_with():
@@ -182,12 +182,12 @@ def mixin_one_model_by_subclass_and_with():
     @target_registry(Mixin)
     class MixinName:
 
-        name = String(label="Name")
+        name = String()
 
     @target_registry(Model)
     class Test:
 
-        id = Integer(label="id", primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)  # noqa
     class Test(Mixin.MixinName):
@@ -196,7 +196,7 @@ def mixin_one_model_by_subclass_and_with():
     @target_registry(Model)  # noqa
     class Test:
 
-        other = String(label="Other")
+        other = String()
 
 
 def mixin_one_model_with_subclass_and_subclass_mixin():
@@ -206,12 +206,12 @@ def mixin_one_model_with_subclass_and_subclass_mixin():
     @target_registry(Mixin)
     class MixinName:
 
-        name = String(label="Name")
+        name = String()
 
     @target_registry(Model)
     class Test:
 
-        id = Integer(label="id", primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)  # noqa
     class Test(Mixin.MixinName):
@@ -220,7 +220,7 @@ def mixin_one_model_with_subclass_and_subclass_mixin():
     @target_registry(Mixin)  # noqa
     class MixinName:
 
-        other = String(label="Other")
+        other = String()
 
 
 def inherit_by_another_model():
@@ -230,16 +230,15 @@ def inherit_by_another_model():
     @target_registry(Model)
     class MainModel:
 
-        id = Integer(label="Id", primary_key=True)
-        name = String(label="Name")
+        id = Integer(primary_key=True)
+        name = String()
 
     @target_registry(Model)
     class Test(Model.MainModel):
 
-        id = Integer(label="id", primary_key=True)
-        mainmodel = Integer(label="Main model", foreign_key=(Model.MainModel,
-                                                             'id'))
-        other = String(label="Other")
+        id = Integer(primary_key=True)
+        mainmodel = Integer(foreign_key=(Model.MainModel, 'id'))
+        other = String()
 
 
 def inherit_by_two_another_model():
@@ -249,24 +248,22 @@ def inherit_by_two_another_model():
     @target_registry(Model)
     class MainModel:
 
-        id = Integer(label="Id", primary_key=True)
-        name = String(label="Name")
+        id = Integer(primary_key=True)
+        name = String()
 
     @target_registry(Model)
     class Test(Model.MainModel):
 
-        id = Integer(label="id", primary_key=True)
-        mainmodel = Integer(label="Main model", foreign_key=(Model.MainModel,
-                                                             'id'))
-        other = String(label="Other")
+        id = Integer(primary_key=True)
+        mainmodel = Integer(foreign_key=(Model.MainModel, 'id'))
+        other = String()
 
     @target_registry(Model)
     class Test2(Model.MainModel):
 
-        id = Integer(label="id", primary_key=True)
-        mainmodel = Integer(label="Main model", foreign_key=(Model.MainModel,
-                                                             'id'))
-        other = String(label="Other")
+        id = Integer(primary_key=True)
+        mainmodel = Integer(foreign_key=(Model.MainModel, 'id'))
+        other = String()
 
 
 def inherit_by_another_model_and_subclass_mainmodel():
@@ -276,20 +273,19 @@ def inherit_by_another_model_and_subclass_mainmodel():
     @target_registry(Model)
     class MainModel:
 
-        id = Integer(label="Id", primary_key=True)
-        name = String(label="Name")
+        id = Integer(primary_key=True)
+        name = String()
 
     @target_registry(Model)
     class Test(Model.MainModel):
 
-        id = Integer(label="id", primary_key=True)
-        mainmodel = Integer(label="Main model", foreign_key=(Model.MainModel,
-                                                             'id'))
+        id = Integer(primary_key=True)
+        mainmodel = Integer(foreign_key=(Model.MainModel, 'id'))
 
     @target_registry(Model)  # noqa
     class MainModel:
 
-        other = String(label="Other")
+        other = String()
 
 
 def inherit_base_and_add_method():
@@ -389,7 +385,7 @@ def inherit_sql_base_on_sql_model():
     @target_registry(Model)
     class Test:
 
-        id = Integer(label='ID', primary_key=True)
+        id = Integer(primary_key=True)
 
 
 class TestInherit(DBTestCase):

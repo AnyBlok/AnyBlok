@@ -21,21 +21,19 @@ class RelationShip(Declarations.Field):
     the model
     """
 
-    def __init__(self, label=None, model=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.MustNotBeInstanced(RelationShip)
-        super(RelationShip, self).__init__(label=label)
-
-        if model is None:
+        if 'model' in kwargs:
+            self.model = kwargs.pop('model')
+        else:
             raise FieldException("model is required attribut")
 
-        if 'info' not in kwargs:
-            kwargs['info'] = {}
+        super(RelationShip, self).__init__(*args, **kwargs)
 
-        kwargs['info']['label'] = self.label
-        kwargs['info']['remote_model'] = model.__registry_name__
+        if 'info' not in self.kwargs:
+            self.kwargs['info'] = {}
 
-        self.model = model
-        self.kwargs = kwargs
+        self.kwargs['info']['remote_model'] = self.model.__registry_name__
 
     def apply_instrumentedlist(self, registry):
         self.kwargs['collection_class'] = registry.InstrumentedList
@@ -76,6 +74,8 @@ class RelationShip(Declarations.Field):
         :param properties: properties known of the model
         :rtype: sqlalchemy relation ship instance
         """
+        self.format_label(fieldname)
+        self.kwargs['info']['label'] = self.label
         self.kwargs['info']['rtype'] = self.__class__.__name__
         self.apply_instrumentedlist(registry)
         return relationship(self.model.__tablename__, **self.kwargs)

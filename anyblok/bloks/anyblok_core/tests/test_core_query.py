@@ -18,8 +18,8 @@ class TestCoreQuery(DBTestCase):
             @Declarations.target_registry(Model)
             class Test:
 
-                id = Integer(label="ID", primary_key=True)
-                id2 = Integer(label="ID2")
+                id = Integer(primary_key=True)
+                id2 = Integer()
 
                 @classmethod
                 def sqlalchemy_query_update(cls, query, *args, **kwargs):

@@ -14,16 +14,16 @@ def _complete_many2many(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        street = String(label='Street')
-        zip = String(label='Zip')
-        city = String(label='City')
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2Many(label="Address", model=Model.Address,
+        name = String(primary_key=True)
+        address = Many2Many(model=Model.Address,
                             join_table="join_addresses_by_persons",
                             remote_column="id", local_column="name",
                             m2m_remote_column='a_id',
@@ -39,16 +39,16 @@ def _minimum_many2many(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        street = String(label='Street')
-        zip = String(label='Zip')
-        city = String(label='City')
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2Many(label="Address", model=Model.Address)
+        name = String(primary_key=True)
+        address = Many2Many(model=Model.Address)
 
 
 def auto_detect_two_primary_keys(**kwargs):
@@ -59,14 +59,14 @@ def auto_detect_two_primary_keys(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        id2 = Integer(label='Id', primary_key=True)
+        id = Integer(primary_key=True)
+        id2 = Integer(primary_key=True)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2Many(label="Address", model=Model.Address)
+        name = String(primary_key=True)
+        address = Many2Many(model=Model.Address)
 
 
 def unexisting_remote_column(**kwargs):
@@ -77,14 +77,13 @@ def unexisting_remote_column(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2Many(label="Address", model=Model.Address,
-                            remote_column="id2")
+        name = String(primary_key=True)
+        address = Many2Many(model=Model.Address, remote_column="id2")
 
 
 def reuse_many2many_table(**kwargs):
@@ -95,19 +94,19 @@ def reuse_many2many_table(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2Many(label="Address", model=Model.Address)
+        name = String(primary_key=True)
+        address = Many2Many(model=Model.Address)
 
     @target_registry(Model)  # noqa
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        persons = Many2Many(label="Persons", model=Model.Person,
+        id = Integer(primary_key=True)
+        persons = Many2Many(model=Model.Person,
                             join_table='join_person_and_address')
 
 

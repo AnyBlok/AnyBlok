@@ -16,22 +16,21 @@ def _complete_one2many(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        street = String(label='Street')
-        zip = String(label='Zip')
-        city = String(label='City')
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address_id = Integer(label="Address", foreign_key=(
-            Model.Address, 'id'))
+        name = String(primary_key=True)
+        address_id = Integer(foreign_key=(Model.Address, 'id'))
 
     @target_registry(Model)  # noqa
     class Address:
 
-        persons = One2Many(label="Persons", model=Model.Person,
+        persons = One2Many(model=Model.Person,
                            remote_column="address_id",
                            primaryjoin=primaryjoin,
                            many2one="address")
@@ -45,22 +44,21 @@ def _minimum_one2many(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        street = String(label='Street')
-        zip = String(label='Zip')
-        city = String(label='City')
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address_id = Integer(label="Address", foreign_key=(
-            Model.Address, 'id'))
+        name = String(primary_key=True)
+        address_id = Integer(foreign_key=(Model.Address, 'id'))
 
     @target_registry(Model)  # noqa
     class Address:
 
-        persons = One2Many(label="Persons", model=Model.Person)
+        persons = One2Many(model=Model.Person)
 
 
 def _autodetect_two_foreign_key(**kwargs):
@@ -71,24 +69,22 @@ def _autodetect_two_foreign_key(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        street = String(label='Street')
-        zip = String(label='Zip')
-        city = String(label='City')
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address_id = Integer(label="Address", foreign_key=(
-            Model.Address, 'id'))
-        address2_id = Integer(label="Address", foreign_key=(
-            Model.Address, 'id'))
+        name = String(primary_key=True)
+        address_id = Integer(foreign_key=(Model.Address, 'id'))
+        address2_id = Integer(foreign_key=(Model.Address, 'id'))
 
     @target_registry(Model)  # noqa
     class Address:
 
-        persons = One2Many(label="Persons", model=Model.Person)
+        persons = One2Many(model=Model.Person)
 
 
 class TestOne2One(DBTestCase):

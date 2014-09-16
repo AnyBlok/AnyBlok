@@ -11,8 +11,8 @@ def simple_column(ColumnType=None, **kwargs):
     @target_registry(Model)
     class Test:
 
-        id = Integer(label='id', primary_key=True)
-        col = ColumnType(label="col", **kwargs)
+        id = Integer(primary_key=True)
+        col = ColumnType(**kwargs)
 
 
 def column_with_foreign_key():
@@ -23,13 +23,13 @@ def column_with_foreign_key():
     @target_registry(Model)
     class Test:
 
-        name = String(label='id', primary_key=True)
+        name = String(primary_key=True)
 
     @target_registry(Model)
     class Test2:
 
-        id = Integer(label='id', primary_key=True)
-        test = String(label='test_id', foreign_key=(Model.Test, 'name'))
+        id = Integer(primary_key=True)
+        test = String(foreign_key=(Model.Test, 'name'))
 
 
 class TestColumns(DBTestCase):

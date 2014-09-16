@@ -11,21 +11,21 @@ def simple_view():
 
     @target_registry(Model)
     class T1:
-        id = Integer(label="id", primary_key=True)
-        code = String(label="Code")
-        val = Integer(label="Val")
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
 
     @target_registry(Model)
     class T2:
-        id = Integer(label="id", primary_key=True)
-        code = String(label="Code")
-        val = Integer(label="Val")
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
 
     @target_registry(Model, is_sql_view=True)
     class TestView:
-        code = String(label="Code", primary_key=True)
-        val1 = Integer(label="Val1")
-        val2 = Integer(label="Val2")
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
@@ -43,21 +43,21 @@ def simple_view_without_primary_key():
 
     @target_registry(Model)
     class T1:
-        id = Integer(label="id", primary_key=True)
-        code = String(label="Code")
-        val = Integer(label="Val")
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
 
     @target_registry(Model)
     class T2:
-        id = Integer(label="id", primary_key=True)
-        code = String(label="Code")
-        val = Integer(label="Val")
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
 
     @target_registry(Model, is_sql_view=True)
     class TestView:
-        code = String(label="Code")
-        val1 = Integer(label="Val1")
-        val2 = Integer(label="Val2")
+        code = String()
+        val1 = Integer()
+        val2 = Integer()
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
@@ -75,21 +75,21 @@ def simple_view_without_view_declaration():
 
     @target_registry(Model)
     class T1:
-        id = Integer(label="id", primary_key=True)
-        code = String(label="Code")
-        val = Integer(label="Val")
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
 
     @target_registry(Model)
     class T2:
-        id = Integer(label="id", primary_key=True)
-        code = String(label="Code")
-        val = Integer(label="Val")
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
 
     @target_registry(Model, is_sql_view=True)
     class TestView:
-        code = String(label="Code", primary_key=True)
-        val1 = Integer(label="Val1")
-        val2 = Integer(label="Val2")
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
 
 
 class TestView(DBTestCase):

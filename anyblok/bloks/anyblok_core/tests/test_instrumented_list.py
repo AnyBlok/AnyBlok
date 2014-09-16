@@ -24,13 +24,12 @@ class TestInstrumentedList(DBTestCase):
 
             @Declarations.target_registry(Model)
             class Test:
-                id = Integer(label="ID", primary_key=True)
+                id = Integer(primary_key=True)
 
             @Declarations.target_registry(Model)
             class Test2:
-                id = Integer(label="ID", primary_key=True)
-                tests = Many2Many(label="Tests", model=Model.Test,
-                                  many2many="tests2")
+                id = Integer(primary_key=True)
+                tests = Many2Many(model=Model.Test, many2many="tests2")
 
         registry = self.init_registry(m2m_with_instrumentedlist)
 
@@ -54,17 +53,16 @@ class TestInstrumentedList(DBTestCase):
 
             @Declarations.target_registry(Model)
             class Test2:
-                id = Integer(label="ID", primary_key=True)
+                id = Integer(primary_key=True)
 
             @Declarations.target_registry(Model)
             class Test:
-                id = Integer(label="ID", primary_key=True)
-                test2 = Integer(label="Test2", foreign_key=(
-                    Model.Test2, 'id'))
+                id = Integer(primary_key=True)
+                test2 = Integer(foreign_key=(Model.Test2, 'id'))
 
             @Declarations.target_registry(Model)  # noqa
             class Test2:
-                tests = One2Many(label="Tests", model=Model.Test)
+                tests = One2Many(model=Model.Test)
 
         registry = self.init_registry(o2m_with_instrumentedlist)
 
@@ -85,13 +83,12 @@ class TestInstrumentedList(DBTestCase):
 
             @Declarations.target_registry(Model)
             class Test:
-                id = Integer(label="ID", primary_key=True)
+                id = Integer(primary_key=True)
 
             @Declarations.target_registry(Model)
             class Test2:
-                id = Integer(label="ID", primary_key=True)
-                test = Many2One(label="Tests", model=Model.Test,
-                                one2many="tests2")
+                id = Integer(primary_key=True)
+                test = Many2One(model=Model.Test, one2many="tests2")
 
         registry = self.init_registry(o2m_with_instrumentedlist)
 
@@ -111,7 +108,7 @@ class TestInstrumentedList(DBTestCase):
 
             @Declarations.target_registry(Model)
             class Test:
-                id = Integer(label="ID", primary_key=True)
+                id = Integer(primary_key=True)
 
         registry = self.init_registry(call_column)
 
@@ -128,7 +125,7 @@ class TestInstrumentedList(DBTestCase):
 
             @Declarations.target_registry(Model)
             class Test:
-                id = Integer(label="ID", primary_key=True)
+                id = Integer(primary_key=True)
 
                 def foo(self):
                     return self.id

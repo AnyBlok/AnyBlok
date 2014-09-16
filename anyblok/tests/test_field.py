@@ -16,21 +16,16 @@ class TestField(TestCase):
 
     def test_MustNotBeInstanced(self):
         try:
-            Field(label="Test")
+            Field()
             self.fail("Field mustn't be instanced")
         except FieldException:
             pass
 
-    def test_must_have_label(self):
+    def test_without_label(self):
         target_registry(Field, cls_=OneField, name_='RealField')
-        field = Field.RealField(label='test')
-        try:
-            Field.RealField()
-            self.fail("No watchdog, the label must be required")
-        except FieldException:
-            pass
-        self.assertEqual(field.get_sqlalchemy_mapping(None, None, None, None),
-                         field)
+        field = Field.RealField()
+        field.get_sqlalchemy_mapping(None, None, 'a_field', None)
+        self.assertEqual(field.label, 'A field')
 
     def test_add_interface(self):
         target_registry(Field, cls_=OneField, name_='OneField')

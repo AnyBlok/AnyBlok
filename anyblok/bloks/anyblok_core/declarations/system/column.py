@@ -10,10 +10,10 @@ Boolean = Declarations.Column.Boolean
 class Column(Mixin.Field):
 
     autoincrement = Boolean(label="Auto increment")
-    foreign_key = String(label="Foreign key")
-    primary_key = Boolean(label="Primary key")
+    foreign_key = String()
+    primary_key = Boolean()
     ctype = String(label="Type")
-    unique = Boolean(label="Unique")
+    unique = Boolean()
 
     @classmethod
     def add_field(cls, cname, column, model, table):

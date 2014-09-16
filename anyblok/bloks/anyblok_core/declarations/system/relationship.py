@@ -10,11 +10,11 @@ Boolean = Declarations.Column.Boolean
 class RelationShip(Mixin.Field):
 
     rtype = String(label="Type", nullable=False)
-    local_column = String(label="Local column")
-    remote_column = String(label="Remote column")
-    remote_name = String(label="Remote name")
-    remote_model = String(label="Remote model", nullable=False)
-    remote = Boolean(label="Remote", default=False)
+    local_column = String()
+    remote_column = String()
+    remote_name = String()
+    remote_model = String(nullable=False)
+    remote = Boolean(default=False)
 
     @classmethod
     def add_field(cls, rname, relation, model, table):

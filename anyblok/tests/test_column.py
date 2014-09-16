@@ -17,19 +17,16 @@ class TestColumn(TestCase):
 
     def test_MustNotBeInstanced(self):
         try:
-            Column(label="Test")
+            Column()
             self.fail("Column mustn't be instanced")
         except FieldException:
             pass
 
-    def test_must_have_label(self):
+    def test_without_label(self):
         target_registry(Column, cls_=OneColumn, name_='RealColumn')
-        Column.RealColumn(label='test')
-        try:
-            Column.RealColumn()
-            self.fail("No watchdog, the label must be required")
-        except FieldException:
-            pass
+        column = Column.RealColumn()
+        column.get_sqlalchemy_mapping(None, None, 'a_column', None)
+        self.assertEqual(column.label, 'A column')
 
     def test_add_interface(self):
         target_registry(Column, cls_=OneColumn, name_='OneColumn')

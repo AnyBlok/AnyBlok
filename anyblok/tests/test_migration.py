@@ -28,18 +28,17 @@ class TestMigration(TestCase):
 
         @target_registry(Model)
         class Test:
-            integer = Int(label="Integer", primary_key=True)
-            other = Str(label="Other")
+            integer = Int(primary_key=True)
+            other = Str()
 
         @target_registry(Model)
         class TestFKTarget:
-            integer = Int(label="Integer", primary_key=True)
+            integer = Int(primary_key=True)
 
         @target_registry(Model)
         class TestFK:
-            integer = Int(label="Integer", primary_key=True)
-            other = Int(label="Test", foreign_key=(Model.TestFKTarget,
-                        'integer'))
+            integer = Int(primary_key=True)
+            other = Int(foreign_key=(Model.TestFKTarget, 'integer'))
 
         EnvironmentManager.set('current_blok', None)
 

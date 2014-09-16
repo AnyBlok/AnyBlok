@@ -14,16 +14,16 @@ def _complete_one2one(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        street = String(label='Street')
-        zip = String(label='Zip')
-        city = String(label='City')
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = One2One(label="Address", model=Model.Address,
+        name = String(primary_key=True)
+        address = One2One(model=Model.Address,
                           remote_column="id", column_name="id_of_address",
                           backref="person", nullable=False)
 
@@ -36,14 +36,13 @@ def _minimum_one2one(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = One2One(label="Address", model=Model.Address,
-                          backref="person")
+        name = String(primary_key=True)
+        address = One2One(model=Model.Address, backref="person")
 
 
 def _minimum_one2one_without_backref(**kwargs):
@@ -54,13 +53,13 @@ def _minimum_one2one_without_backref(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = One2One(label="Address", model=Model.Address)
+        name = String(primary_key=True)
+        address = One2One(model=Model.Address)
 
 
 def _minimum_one2one_with_one2many(**kwargs):
@@ -71,13 +70,13 @@ def _minimum_one2one_with_one2many(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = One2One(label="Address", model=Model.Address,
+        name = String(primary_key=True)
+        address = One2One(model=Model.Address,
                           backref="person", one2many="persons")
 
 

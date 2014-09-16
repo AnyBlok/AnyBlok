@@ -14,16 +14,16 @@ def _complete_many2one(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        street = String(label='Street')
-        zip = String(label='Zip')
-        city = String(label='City')
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2One(label="Address", model=Model.Address,
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
                            remote_column="id", column_name="id_of_address",
                            one2many="persons", nullable=False)
 
@@ -36,13 +36,13 @@ def _minimum_many2one(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2One(label="Address", model=Model.Address)
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address)
 
 
 def _minimum_many2one_without_model(**kwargs):
@@ -53,13 +53,13 @@ def _minimum_many2one_without_model(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
+        id = Integer(primary_key=True)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2One(label="Address")
+        name = String(primary_key=True)
+        address = Many2One()
 
 
 def _auto_detect_type(ColumnType=None, **kwargs):
@@ -69,13 +69,13 @@ def _auto_detect_type(ColumnType=None, **kwargs):
     @target_registry(Model)
     class Address:
 
-        id = ColumnType(label='Id', primary_key=True, **kwargs)
+        id = ColumnType(primary_key=True, **kwargs)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2One(label="Address", model=Model.Address)
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address)
 
 
 def _two_remote_primary_keys(**kwargs):
@@ -86,14 +86,14 @@ def _two_remote_primary_keys(**kwargs):
     @target_registry(Model)
     class Address:
 
-        id = Integer(label='Id', primary_key=True)
-        id2 = Integer(label='Id2', primary_key=True)
+        id = Integer(primary_key=True)
+        id2 = Integer(primary_key=True)
 
     @target_registry(Model)
     class Person:
 
-        name = String(label='Name', primary_key=True)
-        address = Many2One(label="Address", model=Model.Address)
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address)
 
 
 class TestMany2One(DBTestCase):

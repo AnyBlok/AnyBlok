@@ -8,11 +8,11 @@ Boolean = Declarations.Column.Boolean
 @target_registry(Mixin)
 class Field:
 
-    name = String(label="Name", primary_key=True)
-    code = String(label="Code", unique=True)
-    model = String(label="Model", primary_key=True)
-    label = String(label="Label")
-    nullable = Boolean(label="Nullable")
+    name = String(primary_key=True)
+    code = String(unique=True)
+    model = String(primary_key=True)
+    label = String()
+    nullable = Boolean()
 
     @classmethod
     def add_field(cls, name, field, model, table):

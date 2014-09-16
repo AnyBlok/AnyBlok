@@ -22,11 +22,6 @@ class Column(Declarations.Field):
         self.MustNotBeInstanced(Column)
         assert self.sqlalchemy_type
 
-        label = None
-
-        if 'label' in kwargs:
-            label = kwargs.pop('label')
-
         if 'type_' in kwargs:
             del kwargs['type_']
 
@@ -34,9 +29,7 @@ class Column(Declarations.Field):
             model, col = kwargs.pop('foreign_key')
             self.foreign_key = model.__tablename__ + '.' + col
 
-        self.args = args
-        self.kwargs = kwargs
-        super(Column, self).__init__(label=label)
+        super(Column, self).__init__(*args, **kwargs)
 
     def native_type(cls):
         """ Return the native SqlAlchemy type """
@@ -52,6 +45,7 @@ class Column(Declarations.Field):
         :param properties: properties known of the model
         :rtype: sqlalchemy column instance
         """
+        self.format_label(fieldname)
         args = self.args
 
         kwargs = self.kwargs.copy()

@@ -21,26 +21,34 @@ class OneModel:
     __registry_name__ = 'One.Model'
 
 
+class MockRegistry:
+
+    InstrumentedList = []
+
+
 class TestRelationShip(TestCase):
 
     def test_MustNotBeInstanced(self):
         try:
-            RelationShip(label="Test", model=OneModel)
+            RelationShip(model=OneModel)
             self.fail("RelationShip mustn't be instanced")
         except FieldException:
             pass
 
-    def test_must_have_label_and_model(self):
+    def test_without_label(self):
+        target_registry(RelationShip, cls_=OneRelationShip,
+                        name_='NoLabelRelationShip')
+        relation = RelationShip.NoLabelRelationShip(model=OneModel)
+        relation.get_sqlalchemy_mapping(MockRegistry(), None,
+                                        'a_relation_ship', None)
+        self.assertEqual(relation.label, 'A relation ship')
+
+    def test_must_have_a_model(self):
         target_registry(RelationShip, cls_=OneRelationShip,
                         name_="RealRelationShip")
-        RelationShip.RealRelationShip(label='test', model=OneModel)
+        RelationShip.RealRelationShip(model=OneModel)
         try:
-            RelationShip.RealRelationShip(model=OneModel)
-            self.fail("No watchdog, the label must be required")
-        except FieldException:
-            pass
-        try:
-            RelationShip.RealRelationShip(label="test")
+            RelationShip.RealRelationShip()
             self.fail("No watchdog, the model must be required")
         except FieldException:
             pass

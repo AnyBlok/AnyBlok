@@ -38,16 +38,20 @@ class Field:
         """ Forbidden method """
         raise FieldException("Remove a field is forbiden")
 
-    def __init__(self, label=None):
+    def __init__(self, *args, **kwargs):
         """ Initialise the field
 
         :param label: label of this field
         :type label: str
         """
         self.MustNotBeInstanced(Field)
-        if label is None:
-            raise FieldException("Label argument are required")
-        self.label = label
+        self.label = None
+
+        if 'label' in kwargs:
+            self.label = kwargs.pop('label')
+
+        self.args = args
+        self.kwargs = kwargs
 
     def MustNotBeInstanced(self, cls):
         """ Raise an exception if the cls is an instance of this __class__
@@ -77,8 +81,14 @@ class Field:
         :param properties: properties known of the model
         :rtype: instance of Field
         """
+        self.format_label(fieldname)
         return self
 
-    def native_type(cls):
+    def format_label(self, fieldname):
+        if not self.label:
+            label = fieldname.replace('_', ' ')
+            self.label = label.capitalize()
+
+    def native_type(self):
         """ Return the native SqlAlchemy type """
         raise FieldException("No native type for this field")
