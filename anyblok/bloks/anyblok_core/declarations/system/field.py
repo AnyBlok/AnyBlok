@@ -9,7 +9,7 @@ Boolean = Declarations.Column.Boolean
 class Field:
 
     name = String(primary_key=True)
-    code = String(unique=True)
+    code = String()
     model = String(primary_key=True)
     label = String()
     nullable = Boolean()

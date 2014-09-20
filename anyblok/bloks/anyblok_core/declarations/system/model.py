@@ -49,7 +49,10 @@ class Model:
                 # TODO need refactor, then try except pass whenever refactor
                 # not apply
                 m = cls.registry.loaded_namespaces[model]
-                table = m.__tablename__
+                table = ''
+                if hasattr(m, '__tablename__'):
+                    table = m.__tablename__
+
                 _m = cls.query('name').filter(cls.name == model)
                 if _m.count():
                     _m.update({'description': m.__doc__})

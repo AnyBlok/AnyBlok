@@ -89,6 +89,9 @@ class Model:
         _registryname = parent.__registry_name__ + '.' + name
         if 'tablename' in kwargs:
             tablename = kwargs.pop('tablename')
+            if not isinstance(tablename, str):
+                tablename = tablename.__tablename__
+
         else:
             if parent is Declarations:
                 tablename = name.lower()
@@ -199,8 +202,6 @@ class Model:
                     registry,
                     b_ns.__registry_name__)
                 bases += bs
-                ps.update(properties)
-                properties.update(ps)
 
         if namespace in registry.loaded_registries['Model_names']:
             properties['loaded_columns'] = []
@@ -210,12 +211,28 @@ class Model:
             elif has_sql_fields(bases):
                 bases += registry.loaded_cores['SqlBase']
                 bases += [registry.declarativebase]
+            else:
+                # remove tablename to inherit from a sqlmodel
+                del properties['__tablename__']
 
             bases += registry.loaded_cores['Base']
-            for b in bases:
-                for p, f in get_fields(b).items():
-                    cls.declare_field(
-                        registry, p, f, namespace, properties)
+
+            if tablename in registry.declarativebase.metadata.tables:
+                if '__tablename__' in properties:
+                    del properties['__tablename__']
+
+                for t in registry.loaded_namespaces.keys():
+                    m = registry.loaded_namespaces[t]
+                    if m.is_sql:
+                        if getattr(m, '__tablename__'):
+                            if m.__tablename__ == tablename:
+                                properties['__table__'] = m.__table__
+                                tablename = namespace.replace('.', '_').lower()
+            else:
+                for b in bases:
+                    for p, f in get_fields(b).items():
+                        cls.declare_field(
+                            registry, p, f, namespace, properties)
 
             bases = [type(tablename, tuple(bases), properties)]
 
