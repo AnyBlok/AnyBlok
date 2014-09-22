@@ -16,14 +16,16 @@ def getParser(description):
 
 @Declarations.target_registry(Declarations.Exception)
 class ArgsParseManagerException(Exception):
-    """ Simple Exception for ArgsParse """
+    """ Simple Exception for ArgsParseManager"""
     pass
 
 
 class ArgsParseManager:
-    """ ArgsParse is use to define the option of argparse and default value
+    """ ArgsParse is use to define the options of the real argparse
+    and theses defaults values, each application or blok can declare there
+    options needed.
 
-    * groups: list of option by part, a part is a ConfigParser group, or
+    * groups: list of options by part, a part is a ConfigParser group, or
               a process name
 
     * labels: if a group has got a label then all the option in group are put
@@ -41,15 +43,32 @@ class ArgsParseManager:
     def add(cls, group, part='AnyBlok', label=None, function_=None):
         """ Add a function, each function are added in part and group.
 
-        exemple ::
+        The function have to have got two argument:
+
+        * ``parser``: the parser instance of argparse
+        * ``default``: A dict with the default value
+
+        This function is called to know what the options of this  must do.
+        You can declare this group by:
+
+        * call the add method as a function::
 
             def foo(parser, default):
                 pass
 
             ArgsParseManager.add('create-db', function_=foo)
 
+        * call th add method as a decorator
+
             @ArgsParseManager.add('create-db')
-            def bar(parser, defaul):
+            def bar(parser, default):
+                pass
+
+        By default the group is unnamed, if you want a named group, you must
+        fill the attribute label::
+
+            @ArgsParseManager.add('create-db', label="Name of the group")
+            def bar(parser, default):
                 pass
 
         :param part: ConfigParser group or process name
@@ -83,7 +102,23 @@ class ArgsParseManager:
 
     @classmethod
     def get(self, opt, default=None):
-        """ get a value in configuration dict after load """
+        """ Get a value in configuration dict after load
+
+        After the loading of the application, all the options are saved in the
+        ArgsParseManager. And all the application have got a freelly access to
+        this options::
+
+            from anyblok._argsparse import ArgsParseManager
+
+            database = ArgsParseManager.get('dbname')
+
+        ..warning::
+
+            Some options is used as default value not real value, as the dbname
+
+        :param opt: name of the option
+        :param default: default value if the option doesn't exist
+        """
         res = self.configuration.get(opt)
         if res:
             return res
@@ -94,14 +129,41 @@ class ArgsParseManager:
 
     @classmethod
     def remove_label(cls, group, part='AnyBlok'):
-        """ remove existing label """
+        """ Remove an existing label
+
+        The goal of this function is to remove anexisting label of a specific
+        group::
+
+            @ArgsParseManager.add('create-db', label="Name of the group")
+            def bar(parser, defaul):
+                pass
+
+            ArgsParseManager.remove_label('create-db')
+
+        :param part: ConfigParser group or process name
+        :param group: group is a set of parser option
+        """
         if part in cls.labels:
             if group in cls.labels[part]:
                 del cls.labels[part][group]
 
     @classmethod
     def remove(cls, group, function_, part='AnyBlok'):
-        """ remove existing function """
+        """ Remove an existing function
+
+        If your application inherit some unwanted options from a specific
+        function, you can unlink this function::
+
+            def foo(opt, default):
+                pass
+
+            ArgsParseManager.add('create-db', function_=foo)
+            ArgsParseManager.remove('create-db', function_=foo)
+
+        :param part: ConfigParser group or process name
+        :param group: group is a set of parser option
+        :param function_: function to add
+        """
         if part in cls.groups:
             if group in cls.groups[part]:
                 if function_ in cls.groups[part][group]:
@@ -109,7 +171,7 @@ class ArgsParseManager:
 
     @classmethod
     def merge_groups(cls, *parts):
-        """ Merge groups in function of parts """
+        """ Internal method to merge groups in function of parts """
         if not parts:
             raise ArgsParseManagerException("No parts to merge")
 
@@ -129,7 +191,7 @@ class ArgsParseManager:
 
     @classmethod
     def merge_labels(cls, *parts):
-        """ Merge labels in function of parts """
+        """ Internal method to merge labels in function of parts """
         if not parts:
             raise ArgsParseManagerException("No parts to merge")
 
@@ -146,7 +208,16 @@ class ArgsParseManager:
 
     @classmethod
     def get_url(cls, dbname=None):
-        """ Return an URL sqlalchemy for database """
+        """ Return an URL sqlalchemy for database
+
+        Get the options of the database, the only option which can be overload
+        is the name of the database::
+
+            url = ArgsParseManagerException.get_url(dbname='Mydb')
+
+        :param dbname: Name of the database
+        :rtype: SqlAlchemy URL
+        """
         config = cls.configuration
         drivername = username = password = host = port = database = None
         if config.get('dbdrivername'):

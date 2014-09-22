@@ -17,6 +17,7 @@ Welcome to AnyBlok's documentation!
     ROADMAP.rst
 
 .. include:: ../README.rst
+.. include:: MEMENTO.rst
 .. include:: CODE.rst
 .. include:: UNITTEST.rst
 .. include:: BLOKS.rst

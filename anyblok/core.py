@@ -21,8 +21,7 @@ class Core:
 
     @classmethod
     def target_registry(self, parent, name, cls_, **kwargs):
-        """ add new sub registry in the registry and add it in the
-        sys.modules
+        """ add new sub registry in the registry
 
         :param parent: Existing declaration
         :param name: Name of the new declaration to add it

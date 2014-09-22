@@ -75,12 +75,31 @@ class Model:
 
         Declarations.remove_registry(Declarations.Model, 'MyModelclass',
                                      MyModelclass, blok='MyBlok')
+
+    They are thee familly of Model:
+
+    * No SQL Model: These models have got any field, so any table
+    * SQL Model:
+    * SQL View Model: it is a model mapped with a SQL View, the insert, update
+        delete method are forbidden by the database
+
+    each model have a:
+
+    * registry name: compose by the parent + . + class model name
+    * table name: compose by the parent + '_' + class model name
+
+    the table name can be overload by the attribute tablename. the wanted value
+    are a string (name of the table) of a model in the declaration.
+
+    ..warning::
+
+        Two models can have got the same table name, both models are mapped on
+        the table. But they must have the same column.
     """
 
     @classmethod
     def target_registry(self, parent, name, cls_, **kwargs):
-        """ add new sub registry in the registry and add it in the
-        sys.modules
+        """ add new sub registry in the registry
 
         :param parent: Existing global registry
         :param name: Name of the new registry to add it

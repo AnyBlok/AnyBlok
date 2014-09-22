@@ -33,7 +33,8 @@ class ImportManager:
 
     @classmethod
     def add(cls, blok):
-        """ Add new module in sys.modules
+        """ Save blok to know which bloak are load when we want reload the
+        blok
 
         :param blok: name of the blok to add
         :rtype: loader instance

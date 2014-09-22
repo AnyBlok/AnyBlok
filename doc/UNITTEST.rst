@@ -23,6 +23,8 @@ TestCase
 DBTestCase
 ----------
 
+.. warning:: this testcase destroy the test database for each unittest
+
 .. autoclass:: DBTestCase
     :members:
     :undoc-members:
@@ -38,9 +40,3 @@ BlokTestCase
     :undoc-members:
     :show-inheritance:
     :noindex:
-
-
-.. warning:: 
-    The unit test in the framework cann't be working with other eggs like
-    ``anyblok_web_server`` because this blok add new entry declaration and 
-    the test are not made to be so flexible

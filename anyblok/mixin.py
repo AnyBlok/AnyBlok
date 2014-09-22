@@ -4,15 +4,15 @@ from anyblok import Declarations
 
 @Declarations.add_declaration_type(isAnEntry=True)
 class Mixin:
-    """ The Mixin class are used to define a behaviour one one or more model:
+    """ The Mixin class are used to define a behaviour on an one or more model:
 
-    Add new mixin class::
+    * Add new mixin class::
 
         @Declarations.target_registry(Declarations.Mixin)
         class MyMixinclass:
             pass
 
-    Remove a mixin class::
+    * Remove a mixin class::
 
         Declarations.remove_registry(Declarations.Mixin, 'MyMixinclass',
                                      MyMixinclass, blok='MyBlok')
@@ -20,8 +20,7 @@ class Mixin:
 
     @classmethod
     def target_registry(self, parent, name, cls_, **kwargs):
-        """ add new sub registry in the registry and add it in the
-        sys.modules
+        """ add new sub registry in the registry
 
         :param parent: Existing global registry
         :param name: Name of the new registry to add it

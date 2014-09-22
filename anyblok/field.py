@@ -18,8 +18,7 @@ class Field:
 
     @classmethod
     def target_registry(self, parent, name, cls_, **kwargs):
-        """ add new sub registry in the registry and add it in the
-        sys.modules
+        """ add new sub registry in the registry
 
         :param parent: Existing in the declaration
         :param name: Name of the new field to add it

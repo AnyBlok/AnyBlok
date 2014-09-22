@@ -4,8 +4,9 @@ README
 AnyBlok is a framework to dynamically include Python sources. It is the reference
 documentation.
 
-This first part presents how to create an application with his own code. Why do we have to
-create an application ? Because AnyBlok is just a framework not an application.
+This first part presents how to create an application with his own code. 
+Why do we have to create an application ? Because AnyBlok is just a framework 
+not an application.
 
 And the goal more than one application use the same database for different goal.
 The web server need to give access to the user, but a profiler need another

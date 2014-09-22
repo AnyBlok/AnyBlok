@@ -7,7 +7,7 @@ PROMPT = "%(processName)s - %(version)s"
 
 def start(processName, version=release.version, prompt=PROMPT,
           argsparse_groups=None, parts_to_load=None, logger=None):
-    """ Initialise the application
+    """ Function which initialize the application
 
     ::
 
@@ -21,7 +21,7 @@ def start(processName, version=release.version, prompt=PROMPT,
     :param argsparse_groups: list of the group of option for argparse
     :param parts_to_load: group of blok to load
     :param logger: option to configure  logging
-    :rtype: registry if the database is configurate
+    :rtype: registry if the database name is in the configuration
     """
     from .blok import BlokManager
     from ._argsparse import ArgsParseManager
