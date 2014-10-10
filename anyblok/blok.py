@@ -213,11 +213,6 @@ class Blok:
     optional = []
     conditional = []
 
-    html = []
-    js = []
-    css = []
-    template = []
-
     def __init__(self, registry):
         self.registry = registry
 

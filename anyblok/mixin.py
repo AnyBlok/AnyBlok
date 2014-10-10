@@ -29,9 +29,9 @@ class Mixin:
         _registryname = parent.__registry_name__ + '.' + name
 
         if not hasattr(parent, name):
-            ns = type(name, tuple(), {})
-            setattr(parent, name, ns)
             kwargs['__registry_name__'] = _registryname
+            ns = type(name, tuple(), kwargs)
+            setattr(parent, name, ns)
 
         if parent is Declarations:
             return

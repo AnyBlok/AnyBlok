@@ -10,6 +10,7 @@ Welcome to AnyBlok's documentation!
     :hidden:
 
     ../README.rst
+    MEMENTO.rst
     CODE.rst
     UNITTEST.rst
     BLOKS.rst

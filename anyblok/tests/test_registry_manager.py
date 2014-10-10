@@ -3,6 +3,7 @@ from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.model import Model
+from anyblok.environment import EnvironmentManager
 
 
 class TestRegistryManager(TestCase):
@@ -135,3 +136,23 @@ class TestRegistryManager(TestCase):
             RegistryManager.reload('anyblok-core')
         finally:
             BlokManager.unload()
+
+    def test_global_property(self):
+        RegistryManager.declare_entry('Other')
+        blok = 'newblok'
+        RegistryManager.init_blok(blok)
+        try:
+            oldblok = EnvironmentManager.get('current_blok')
+            EnvironmentManager.set('current_blok', blok)
+            self.assertEqual(RegistryManager.has_blok_property('myproperty'),
+                             False)
+            RegistryManager.add_or_replace_blok_property('myproperty', 2)
+            self.assertEqual(RegistryManager.has_blok_property('myproperty'), True)
+            self.assertEqual(RegistryManager.get_blok_property('myproperty'), 2)
+            RegistryManager.add_or_replace_blok_property('myproperty', 3)
+            self.assertEqual(RegistryManager.get_blok_property('myproperty'), 3)
+            RegistryManager.remove_blok_property('myproperty')
+            self.assertEqual(RegistryManager.has_blok_property('myproperty'),
+                             False)
+        finally:
+            EnvironmentManager.set('current_blok', oldblok)

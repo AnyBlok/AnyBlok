@@ -168,7 +168,7 @@ Management of the database
     adapter.dropdb(dbname)
 
 anyblok.databases.postgres module
-+++++++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: anyblok.databases.postgres
 .. autoclass:: ASqlAlchemyPostgres

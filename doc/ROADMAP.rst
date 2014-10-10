@@ -5,6 +5,7 @@ Next step
 ---------
 
 * Improve Migration Class with Unittest: see alembic: http://alembic.readthedocs.org/en/latest/
+* Sql view Model can use an existing view
 * Do documentation
 * ADD unittest:
     - anyblok_core system
@@ -46,4 +47,4 @@ Functionnality which need a sprint
 * Tasks Management
 * Event
 * Event by messaging bus
-* Import / Export 
+* Import / Export

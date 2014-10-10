@@ -58,7 +58,7 @@ class ArgsParseManager:
 
             ArgsParseManager.add('create-db', function_=foo)
 
-        * call th add method as a decorator
+        * call th add method as a decorator::
 
             @ArgsParseManager.add('create-db')
             def bar(parser, default):

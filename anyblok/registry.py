@@ -173,7 +173,8 @@ class RegistryManager:
                 'Session': [],
                 'Query': [],
                 'InstrumentedList': [],
-            }
+            },
+            'properties': {},
         }
         for de in cls.declared_entries:
             blok[de] = {'registry_names': []}
@@ -241,7 +242,7 @@ class RegistryManager:
         bases = []
 
         for base in cls_.__bases__:
-            if base is not object:
+            if hasattr(base, '__registry_name__'):
                 bases.append(base)
 
         setattr(cls_, '__anyblok_bases__', bases)
@@ -281,6 +282,49 @@ class RegistryManager:
         """
         cls.loaded_bloks[blok][entry][key]['bases'].remove(cls_)
         cls.loaded_bloks[blok][entry][key]['properties'].update(kwargs)
+
+    @classmethod
+    def has_blok_property(cls, property_):
+        """ Return True if the property exit in blok
+
+        :param property\_: name of the property
+        """
+        blok = EnvironmentManager.get('current_blok')
+
+        if property_ in cls.loaded_bloks[blok]['properties']:
+            return True
+
+        return False
+
+    @classmethod
+    def add_or_replace_blok_property(cls, property_, value):
+        """ Save the value in the properties
+
+        :param property\_: name of the property
+        ;param value: the value to save, the type is not important
+        """
+        blok = EnvironmentManager.get('current_blok')
+        cls.loaded_bloks[blok]['properties'][property_] = value
+
+    @classmethod
+    def get_blok_property(cls, property_, default=None):
+        """ Return the value in the properties
+
+        :param property\_: name of the property
+        ;param default: return default If not entry in the property
+        """
+        blok = EnvironmentManager.get('current_blok')
+        return cls.loaded_bloks[blok]['properties'].get(property_, default)
+
+    @classmethod
+    def remove_blok_property(cls, property_):
+        """ Remove the property if exist
+
+        :param property\_: name of the property
+        """
+        blok = EnvironmentManager.get('current_blok')
+        if cls.has_blok_property(property_):
+            del cls.loaded_bloks[blok]['properties'][property_]
 
 
 class Registry:
