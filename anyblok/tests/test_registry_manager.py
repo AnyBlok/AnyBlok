@@ -147,10 +147,13 @@ class TestRegistryManager(TestCase):
             self.assertEqual(RegistryManager.has_blok_property('myproperty'),
                              False)
             RegistryManager.add_or_replace_blok_property('myproperty', 2)
-            self.assertEqual(RegistryManager.has_blok_property('myproperty'), True)
-            self.assertEqual(RegistryManager.get_blok_property('myproperty'), 2)
+            self.assertEqual(
+                RegistryManager.has_blok_property('myproperty'), True)
+            self.assertEqual(
+                RegistryManager.get_blok_property('myproperty'), 2)
             RegistryManager.add_or_replace_blok_property('myproperty', 3)
-            self.assertEqual(RegistryManager.get_blok_property('myproperty'), 3)
+            self.assertEqual(
+                RegistryManager.get_blok_property('myproperty'), 3)
             RegistryManager.remove_blok_property('myproperty')
             self.assertEqual(RegistryManager.has_blok_property('myproperty'),
                              False)
