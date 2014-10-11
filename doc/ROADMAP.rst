@@ -9,11 +9,13 @@ Next step
 * Do documentation
 * ADD unittest:
     - anyblok_core system
+* PUT the state of the blok on other table to have have more than one application on the same table
+  blok, Application, state
+* classic redirection must depend of the database, so put in the registry
 
 To implement
 ------------
 
-* Add Blok group as "Category" or "Blok group"
 * Make a registry reload to update registry without destroy the curent registry and create a new(Protect the session)
 * Add RelationShip model in anyblok-core and refatore the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
 * Put postgres databas in this own distribution with the good import

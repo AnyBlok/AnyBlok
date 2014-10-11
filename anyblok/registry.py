@@ -50,6 +50,7 @@ class RegistryManager:
     callback_assemble_entries = {}
     callback_initialize_entries = {}
     registries = {}
+    needed_bloks = []
 
     @classmethod
     def has_blok(cls, blok):
@@ -326,6 +327,16 @@ class RegistryManager:
         if cls.has_blok_property(property_):
             del cls.loaded_bloks[blok]['properties'][property_]
 
+    @classmethod
+    def add_needed_bloks(cls, *bloks):
+        for blok in bloks:
+            if blok not in cls.needed_bloks:
+                cls.needed_bloks.append(blok)
+
+    @classmethod
+    def get_needed_bloks(cls):
+        return cls.needed_bloks
+
 
 class Registry:
     """ Define one registry
@@ -415,6 +426,10 @@ class Registry:
         """
         toinstall = self.get_bloks_by_states('toinstall')
         for blok in BlokManager.auto_install:
+            if blok not in (toinstall + loaded):
+                toinstall.append(blok)
+
+        for blok in RegistryManager.get_needed_bloks():
             if blok not in (toinstall + loaded):
                 toinstall.append(blok)
 
