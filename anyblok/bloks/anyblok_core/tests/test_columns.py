@@ -164,3 +164,19 @@ class TestColumns(DBTestCase):
 
         test = registry.Test.insert(col=blob)
         self.assertEqual(test.col, blob)
+
+    def test_selection(self):
+        SELECTIONS = [
+            (u'admin', u'Admin'),
+            (u'regular-user', u'Regular user')
+        ]
+
+        Selection = Declarations.Column.Selection
+        registry = self.init_registry(
+            simple_column, ColumnType=Selection, selections=SELECTIONS)
+        registry.Test.insert(col=SELECTIONS[0][0])
+        test = registry.Test.query().first()
+        self.assertEqual(test.col, SELECTIONS[0][0])
+        self.assertEqual(str(test.col), SELECTIONS[0][1])
+        self.assertEqual(repr(test.col), 'Selection : %s(%r)' % (
+            SELECTIONS[0][1], SELECTIONS[0][0]))
