@@ -186,3 +186,17 @@ class TestColumns(DBTestCase):
             self.fail('No watchdog to check if the value is on the selection')
         except FieldException:
             pass
+
+    def test_selection_key_other_than_str(self):
+        SELECTIONS = [
+            (0, u'Admin'),
+            (1, u'Regular user')
+        ]
+
+        Selection = Declarations.Column.Selection
+        try:
+            self.init_registry(
+                simple_column, ColumnType=Selection, selections=SELECTIONS)
+            self.fail('No watchdog to check if the key is not a str')
+        except FieldException:
+            pass

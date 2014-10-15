@@ -33,6 +33,8 @@ class SelectionType(types.UserDefinedType):
                 "selection wainting 'dict', get %r" % type(selections))
 
         for k in self.selections.keys():
+            if not isinstance(k, str):
+                raise FieldException('The key must be a str')
             if len(k) > 64:
                 raise Exception(
                     '%r is too long %r, waiting max %s or use size arg' % (
