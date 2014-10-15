@@ -8,13 +8,17 @@ class String(Declarations.Column):
 
     ::
 
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import String
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        String = Declarations.String
 
         @target_registry(Model)
         class Test:
 
-            x = String(label="String", default='test')
+            x = String(default='test')
 
     """
     def __init__(self, *args, **kwargs):

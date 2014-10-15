@@ -8,13 +8,17 @@ class Float(Declarations.Column):
 
     ::
 
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import Float
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        Float = Declarations.Float
 
         @target_registry(Model)
         class Test:
 
-            x = Float(label="Float", default=1.0)
+            x = Float(default=1.0)
 
     """
     sqlalchemy_type = SA_Float

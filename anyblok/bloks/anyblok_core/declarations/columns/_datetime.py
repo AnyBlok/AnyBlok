@@ -4,18 +4,22 @@ from anyblok import Declarations
 
 @Declarations.target_registry(Declarations.Column)
 class DateTime(Declarations.Column):
-    """ DataTime column
+    """ DateTime column
 
     ::
 
         from datetime import datetime
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import DateTime
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        DateTime = Declarations.DateTime
 
         @target_registry(Model)
         class Test:
 
-            x = DateTime(label="Date time", default=datetime.now())
+            x = DateTime(default=datetime.now())
 
     """
     sqlalchemy_type = SA_DateTime

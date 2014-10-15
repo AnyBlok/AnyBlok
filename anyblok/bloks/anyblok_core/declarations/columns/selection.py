@@ -1,24 +1,22 @@
 from anyblok import Declarations
 from sqlalchemy import types
+from sqlalchemy.ext.hybrid import hybrid_property
+
+
+FieldException = Declarations.Exception.FieldException
 
 
 class StrSelection(str):
     selections = {}
 
-    #def __eq__(self, other):
-    #    return other == self
-
-    #def __ne__(self, other):
-    #    return not (self == other)
-
-    def __str__(self):
+    def validate(self):
         a = super(StrSelection, self).__str__()
-        return dict(self.selections)[a]
+        return a in self.selections.keys()
 
-    def __repr__(self):
+    @property
+    def label(self):
         a = super(StrSelection, self).__str__()
-        b = self.selections[a]
-        return "Selection : %s(%r)" % (b, a)
+        return self.selections[a]
 
 
 class SelectionType(types.UserDefinedType):
@@ -31,35 +29,20 @@ class SelectionType(types.UserDefinedType):
         elif isinstance(selections, (list, tuple)):
             self.selections = dict(selections)
         else:
-            raise Exception('Bad value')
+            raise FieldException(
+                "selection wainting 'dict', get %r" % type(selections))
 
         for k in self.selections.keys():
             if len(k) > 64:
-                raise Exception('taille trop grande')
+                raise Exception(
+                    '%r is too long %r, waiting max %s or use size arg' % (
+                        k, len(k), size))
 
         self._StrSelection = type('StrSelection', (StrSelection,),
                                   {'selections': self.selections})
 
     def get_col_spec(self):
         return "VARCHAR(%r)" % self.size
-
-    def bind_processor(self, dialect):
-        def process(value):
-            if value in self.selections.keys():
-                #if not isinstance(value, self._StrSelection):
-                #    value = self._StrSelection(value)
-
-                return value
-            else:
-                raise Exception('Bad value 2')
-
-        return process
-
-    def result_processor(self, dialect, coltype):
-        def process(value):
-            return self._StrSelection(value)
-
-        return process
 
     @property
     def python_type(self):
@@ -101,3 +84,24 @@ class Selection(Declarations.Column):
         self.sqlalchemy_type = SelectionType(selections, size)
 
         super(Selection, self).__init__(*args, **kwargs)
+
+    def update_properties(self, registry, namespace, fieldname, properties):
+        field = properties[fieldname]
+        if '_' + fieldname in properties.keys():
+            raise Exception('Exception')
+
+        properties['_' + fieldname] = field
+
+        def selection_get(model_self):
+            return self.sqlalchemy_type.python_type(
+                getattr(model_self, '_' + fieldname))
+
+        def selection_set(model_self, value):
+            val = self.sqlalchemy_type.python_type(value)
+            if not val.validate():
+                raise FieldException('%r is not in the selections (%s)' % (
+                    value, ', '.join(val.selections)))
+
+            setattr(model_self, '_' + fieldname, value)
+
+        properties[fieldname] = hybrid_property(selection_get, selection_set)

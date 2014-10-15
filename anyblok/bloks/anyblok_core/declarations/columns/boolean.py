@@ -8,13 +8,17 @@ class Boolean(Declarations.Column):
 
     ::
 
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import Boolean
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        Boolean = Declarations.Boolean
 
         @target_registry(Model)
         class Test:
 
-            x = Boolean(label="Boolean", default=True)
+            x = Boolean(default=True)
 
     """
     sqlalchemy_type = SA_Boolean

@@ -8,16 +8,20 @@ class LargeBinary(Declarations.Column):
 
     ::
 
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import LargeBinary
         from os import urandom
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        LargeBinary = Declarations.LargeBinary
 
         blob = urandom(100000)
 
         @target_registry(Model)
         class Test:
 
-            x = LargeBinary(label="Integer", default=blob)
+            x = LargeBinary(default=blob)
 
     """
     sqlalchemy_type = SA_LargeBinary

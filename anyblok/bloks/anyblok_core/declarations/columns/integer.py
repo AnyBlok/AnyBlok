@@ -8,13 +8,17 @@ class Integer(Declarations.Column):
 
     ::
 
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import Integer
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        Integer = Declarations.Integer
 
         @target_registry(Model)
         class Test:
 
-            x = Integer(label="Integer", default=1)
+            x = Integer(default=1)
 
     """
     sqlalchemy_type = SA_Integer

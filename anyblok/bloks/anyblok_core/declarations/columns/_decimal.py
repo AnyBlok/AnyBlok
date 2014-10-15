@@ -9,13 +9,17 @@ class Decimal(Declarations.Column):
     ::
 
         from dedimal import Decimal as D
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import Decimal
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        Decimal = Declarations.Decimal
 
         @target_registry(Model)
         class Test:
 
-            x = Decimal(label="Decimal", default=D('1.1'))
+            x = Decimal(default=D('1.1'))
 
     """
     sqlalchemy_type = SA_Decimal

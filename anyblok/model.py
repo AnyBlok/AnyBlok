@@ -163,9 +163,9 @@ class Model:
             return field.get_sqlalchemy_mapping(
                 registry, namespace, name, properties)
 
-        field.update_properties(registry, namespace, name, properties)
         properties[name] = declared_attr(wrapper)
         properties['loaded_columns'].append(name)
+        field.update_properties(registry, namespace, name, properties)
 
     @classmethod
     def load_namespace_first_step(cls, registry, namespace):

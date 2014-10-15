@@ -8,13 +8,17 @@ class Text(Declarations.Column):
 
     ::
 
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import Text
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        Text = Declarations.Text
 
         @target_registry(Model)
         class Test:
 
-            x = Text(label="Text", default='test')
+            x = Text(default='test')
 
     """
     sqlalchemy_type = SA_Text

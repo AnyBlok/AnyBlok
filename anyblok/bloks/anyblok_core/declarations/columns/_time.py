@@ -9,13 +9,17 @@ class Time(Declarations.Column):
     ::
 
         from datetime import time
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import Time
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        Time = Declarations.Time
 
         @target_registry(Model)
         class Test:
 
-            x = Time(label="Time", default=time())
+            x = Time(default=time())
 
     """
     sqlalchemy_type = SA_Time

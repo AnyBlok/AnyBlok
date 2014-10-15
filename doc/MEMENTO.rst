@@ -315,6 +315,7 @@ List of the ``Déclaration`` of the column type
  * ``Text``
  * ``uString``
  * ``uText``
+ * ``Selection``
 
  All the column have got the same params
 

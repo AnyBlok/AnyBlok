@@ -8,13 +8,17 @@ class SmallInteger(Declarations.Column):
 
     ::
 
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import SmallInteger
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        SmallInteger = Declarations.SmallInteger
 
         @target_registry(Model)
         class Test:
 
-            x = SmallInteger(label="Small integer", default=1)
+            x = SmallInteger(default=1)
 
     """
     sqlalchemy_type = SA_SmallInteger

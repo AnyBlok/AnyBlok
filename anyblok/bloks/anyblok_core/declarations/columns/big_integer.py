@@ -9,12 +9,17 @@ class BigInteger(Declarations.Column):
     ::
 
         from AnyBlok import target_registry, Model
-        from AnyBlok.Column import BigInteger
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        BigInteger = Declarations.BigInteger
 
         @target_registry(Model)
         class Test:
 
-            x = BigInteger(label="Big integer", default=1)
+            x = BigInteger(default=1)
 
     """
     sqlalchemy_type = SA_BigInteger

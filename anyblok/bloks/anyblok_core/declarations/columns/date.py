@@ -9,13 +9,17 @@ class Date(Declarations.Column):
     ::
 
         from datetime import date
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import Date
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        Date = Declarations.Date
 
         @target_registry(Model)
         class Test:
 
-            x = Date(label="Date", default=date.today())
+            x = Date(default=date.today())
 
     """
     sqlalchemy_type = SA_Date

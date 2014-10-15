@@ -8,13 +8,17 @@ class uText(Declarations.Column):
 
     ::
 
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import uText
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        uText = Declarations.uText
 
         @target_registry(Model)
         class Test:
 
-            x = uText(label="Unicode text", default=u'test')
+            x = uText(default=u'test')
 
     """
     sqlalchemy_type = UnicodeText

@@ -8,13 +8,17 @@ class uString(Declarations.Column):
 
     ::
 
-        from AnyBlok import target_registry, Model
-        from AnyBlok.Column import uString
+        from AnyBlok.declarations import Declarations
+
+
+        target_registry = Declarations.target_registry
+        Model = Declarations.Model
+        uString = Declarations.uString
 
         @target_registry(Model)
         class Test:
 
-            x = uString(label="Unicode", default=u'test')
+            x = uString(de", default=u'test')
 
     """
     def __init__(self, *args, **kwargs):
