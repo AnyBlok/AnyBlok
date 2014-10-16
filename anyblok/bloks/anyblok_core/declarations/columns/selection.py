@@ -106,4 +106,8 @@ class Selection(Declarations.Column):
 
             setattr(model_self, '_' + fieldname, value)
 
-        properties[fieldname] = hybrid_property(selection_get, selection_set)
+        def selection_expression(model_self):
+            return getattr(model_self, '_' + fieldname)
+
+        properties[fieldname] = hybrid_property(
+            selection_get, selection_set, expr=selection_expression)

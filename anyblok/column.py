@@ -58,4 +58,4 @@ class Column(Declarations.Field):
             args = args + (ForeignKey(self.foreign_key),)
             kwargs['info']['foreign_key'] = self.foreign_key
 
-        return SA_Column(self.sqlalchemy_type, *args, **kwargs)
+        return SA_Column(fieldname, self.sqlalchemy_type, *args, **kwargs)

@@ -200,3 +200,16 @@ class TestColumns(DBTestCase):
             self.fail('No watchdog to check if the key is not a str')
         except FieldException:
             pass
+
+    def test_selection_comparator(self):
+        SELECTIONS = [
+            (u'admin', u'Admin'),
+            (u'regular-user', u'Regular user')
+        ]
+
+        Selection = Declarations.Column.Selection
+        registry = self.init_registry(
+            simple_column, ColumnType=Selection, selections=SELECTIONS)
+        registry.Test.insert(col=SELECTIONS[0][0])
+        registry.Test.query().filter(
+            registry.Test.col.in_(['admin', 'regular-user'])).first()

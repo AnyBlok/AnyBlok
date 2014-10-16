@@ -7,13 +7,24 @@ target_registry = Declarations.target_registry
 System = Declarations.Model.System
 String = Declarations.Column.String
 Integer = Declarations.Column.Integer
+Selection = Declarations.Column.Selection
 
 
 @target_registry(System)
 class Blok:
 
+    STATES = {
+        'uninstalled': 'Uninstalled',
+        'installed': 'Installed',
+        'toinstall': 'To install',
+        'touninstall': 'To update',
+        'touninstall': 'To uninstall',
+        'undefined': 'Uninstalled',
+    }
+
     name = String(primary_key=True, nullable=False)
-    state = String(default='uninstalled', nullable=False)
+    #state = String(default='uninstalled', nullable=False)
+    state = Selection(selections=STATES, default='uninstalled', nullable=False)
     order = Integer(default=-1, nullable=False)
 
     def __repr__(self):
