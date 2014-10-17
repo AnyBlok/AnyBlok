@@ -9,7 +9,7 @@ class TestException(Exception):
 
 class TestCoreQuery(DBTestCase):
 
-    @skipIf(sqlalchemy.__version__ <= "0.9.7",
+    @skipIf(sqlalchemy.__version__ <= "0.9.8",
             "https://bitbucket.org/zzzeek/sqlalchemy/issue/3228")
     def test_update(self):
         def inherit_update():

@@ -62,7 +62,7 @@ class TestField(DBTestCase):
         t = registry.Test.query().first()
         self.assertEqual(t.name, 'Jean-Sebastien SUZANNE')
 
-    @skipIf(sqlalchemy.__version__ <= "0.9.7",
+    @skipIf(sqlalchemy.__version__ <= "0.9.8",
             "https://bitbucket.org/zzzeek/sqlalchemy/issue/3228")
     def test_field_function_fset(self):
         registry = self.init_registry(self.define_field_function)
