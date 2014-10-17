@@ -4,13 +4,11 @@ ROADMAP
 Next step
 ---------
 
-* Improve Migration Class with Unittest: see alembic: http://alembic.readthedocs.org/en/latest/
-* Sql view Model can use an existing view
+* Improve Migration Class: see alembic: http://alembic.readthedocs.org/en/latest/
 * Do documentation
 * ADD unittest:
     - anyblok_core system
-* PUT the state of the blok on other table to have have more than one application on the same table
-  blok, Application, state
+* Sql view Model can use an existing view
 * classic redirection must depend of the database, so put in the registry
 
 To implement
@@ -30,8 +28,6 @@ Library to include
 * Crypt https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/DatabaseCrypt
 * profiling https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Profiling
 * json column https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/JSONColumn
-* Enum Column doesn't work, see http://techspot.zzzeek.org/2011/01/14/the-enum-recipe/
-  or https://pypi.python.org/pypi/SQLAlchemy-Enum-Dict/0.1.2
 
 
 Web client
