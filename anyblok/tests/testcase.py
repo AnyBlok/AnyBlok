@@ -1,5 +1,4 @@
 import unittest
-from sys import modules
 from logging import getLogger
 from anyblok._argsparse import ArgsParseManager
 from anyblok.registry import RegistryManager
@@ -43,22 +42,6 @@ class TestCase(unittest.TestCase):
             'dbport': '',
         })
         ArgsParseManager.configuration = env
-
-    def check_package_version(self, package, operator, version):
-        """ Check the version of one package
-
-        ::
-
-            self.check_package_version('alembic', '>', '0.6.4')
-
-        :param package: Name of the package
-        :param operator: Operator for the validation
-        :param version: the referential version
-        :rtype: boolean
-        """
-        test = "%r %s %r" % (modules[package].__version__, operator, version)
-        logger.warning('check the module version : %s' % test)
-        return eval(test)
 
     @classmethod
     def createdb(cls, keep_existing=False):

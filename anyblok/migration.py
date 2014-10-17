@@ -632,6 +632,8 @@ class Migration:
         opts = {
             'compare_type': True,
             'compare_server_default': True,
+            'render_item': self.render_item,
+            'compare_type': self.compare_type,
         }
         self.context = MigrationContext.configure(self.conn, opts=opts)
         self.operation = Operations(self.context)
@@ -677,3 +679,14 @@ class Migration:
         :param name: name of the save point
         """
         self.conn._release_savepoint_impl(name, None)
+
+    def render_item(self, type_, obj, autogen_context):
+        logger.info("%r, %r, %r" % (type_, obj, autogen_context))
+        return False
+
+    def compare_type(self, context, inspected_column,
+                     metadata_column, inspected_type, metadata_type):
+        if hasattr(metadata_type, 'compare_type'):
+            return metadata_type.compare_type(inspected_type)
+
+        return None

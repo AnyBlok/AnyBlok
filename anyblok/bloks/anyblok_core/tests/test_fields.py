@@ -1,6 +1,8 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from sqlalchemy import func
+from unittest import skipIf
+import sqlalchemy
 target_registry = Declarations.target_registry
 Field = Declarations.Field
 Model = Declarations.Model
@@ -60,12 +62,18 @@ class TestField(DBTestCase):
         t = registry.Test.query().first()
         self.assertEqual(t.name, 'Jean-Sebastien SUZANNE')
 
+    @skipIf(sqlalchemy.__version__ <= "0.9.7",
+            "https://bitbucket.org/zzzeek/sqlalchemy/issue/3228")
     def test_field_function_fset(self):
         registry = self.init_registry(self.define_field_function)
-        #t = registry.Test.insert(name='Jean-Sebastien SUZANNE')
-        registry.Test.insert()
+        t = registry.Test.insert(name='Jean-Sebastien SUZANNE')
+        self.assertEqual(t.first_name, 'Jean-Sebastien')
+        self.assertEqual(t.last_name, 'SUZANNE')
         t = registry.Test.query().first()
         t.name = 'Mister ANYBLOK'
+        self.assertEqual(t.first_name, 'Mister')
+        self.assertEqual(t.last_name, 'ANYBLOK')
+        t.update({'name': 'Jean-Sebastien SUZANNE'})
         self.assertEqual(t.first_name, 'Mister')
         self.assertEqual(t.last_name, 'ANYBLOK')
 

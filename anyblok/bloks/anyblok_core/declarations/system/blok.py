@@ -23,7 +23,6 @@ class Blok:
     }
 
     name = String(primary_key=True, nullable=False)
-    #state = String(default='uninstalled', nullable=False)
     state = Selection(selections=STATES, default='uninstalled', nullable=False)
     order = Integer(default=-1, nullable=False)
 

@@ -1,5 +1,6 @@
 from anyblok import Declarations
 from sqlalchemy import types
+from sqlalchemy.sql import sqltypes
 from sqlalchemy.ext.hybrid import hybrid_property
 
 
@@ -42,6 +43,16 @@ class SelectionType(types.UserDefinedType):
 
         self._StrSelection = type('StrSelection', (StrSelection,),
                                   {'selections': self.selections})
+
+    def compare_type(self, other):
+        """ return True if the types are different,
+            False if not, or None to allow the default implementation
+            to compare these types
+        """
+        if isinstance(other, sqltypes.VARCHAR):
+            return False
+
+        return None
 
     def get_col_spec(self):
         return "VARCHAR(%r)" % self.size

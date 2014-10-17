@@ -7,6 +7,8 @@ from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
 from anyblok import Declarations
 from sqlalchemy.exc import InternalError
+from unittest import skipIf
+import alembic
 MigrationException = Declarations.Exception.MigrationException
 
 
@@ -262,10 +264,8 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertEqual(report.log_has("Alter test.other"), False)
 
+    @skipIf(alembic.__version__ <= "0.6.7", "Alembic doesn't implement yet")
     def test_detect_primary_key(self):
-        if not self.check_package_version('alembic', '>',  '0.6.7'):
-            return
-
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
             conn.execute(
@@ -281,10 +281,8 @@ class TestMigration(TestCase):
         self.assertEqual(report.log_has("Alter test.integer"), False)
         self.assertEqual(report.log_has("Alter test.other"), False)
 
+    @skipIf(alembic.__version__ <= "0.6.7", "Alembic doesn't implement yet")
     def test_detect_add_foreign_key(self):
-        if not self.check_package_version('alembic', '>',  '0.6.7'):
-            return
-
         with self.cnx() as conn:
             conn.execute("DROP TABLE testfk")
             conn.execute(
@@ -298,10 +296,8 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertEqual(report.log_has("Alter test.other"), False)
 
+    @skipIf(alembic.__version__ <= "0.6.7", "Alembic doesn't implement yet")
     def test_detect_drop_foreign_key(self):
-        if not self.check_package_version('alembic', '>',  '0.6.7'):
-            return
-
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
             conn.execute(

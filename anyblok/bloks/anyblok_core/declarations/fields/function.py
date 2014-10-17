@@ -25,5 +25,6 @@ class Function(Declarations.Field):
         fdel = wrap('fdel')
         fexpr = wrap('fexpr')
 
+        properties['loaded_columns'].remove(fieldname)
         properties[fieldname] = hybrid_property(
             fget, fset, fdel=fdel, expr=fexpr)
