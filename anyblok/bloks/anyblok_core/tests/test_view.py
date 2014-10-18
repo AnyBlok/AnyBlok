@@ -37,6 +37,120 @@ def simple_view():
             return query.where(T1.code == T2.code)
 
 
+def simple_view_with_same_table_by_declaration_model():
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+
+    @target_registry(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @target_registry(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @target_registry(Model, is_sql_view=True)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            T1 = cls.registry.T1
+            T2 = cls.registry.T2
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T2.val.label('val2')])
+            return query.where(T1.code == T2.code)
+
+    @target_registry(Model, is_sql_view=True, tablename=Model.TestView)
+    class TestView2:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+
+def simple_view_with_same_table_by_name():
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+
+    @target_registry(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @target_registry(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @target_registry(Model, is_sql_view=True)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            T1 = cls.registry.T1
+            T2 = cls.registry.T2
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T2.val.label('val2')])
+            return query.where(T1.code == T2.code)
+
+    @target_registry(Model, is_sql_view=True, tablename='testview')
+    class TestView2:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+
+def simple_view_with_same_table_by_inherit():
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+
+    @target_registry(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @target_registry(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @target_registry(Model, is_sql_view=True)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            T1 = cls.registry.T1
+            T2 = cls.registry.T2
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T2.val.label('val2')])
+            return query.where(T1.code == T2.code)
+
+    @target_registry(Model, is_sql_view=True)
+    class TestView2(Model.TestView):
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+
 def simple_view_without_primary_key():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
@@ -109,6 +223,35 @@ class TestView(DBTestCase):
         self.assertEqual(v1.val2, 2)
         self.assertEqual(v2.val1, 3)
         self.assertEqual(v2.val2, 4)
+
+    def check_same_view(self, registry):
+        registry.T1.insert(code='test1', val=1)
+        registry.T2.insert(code='test1', val=2)
+        registry.T1.insert(code='test2', val=3)
+        registry.T2.insert(code='test2', val=4)
+
+        TestView = registry.TestView
+        TestView2 = registry.TestView2
+        self.assertEqual(
+            registry.TestView.__view__, registry.TestView2.__view__)
+        v1 = TestView.query().filter(TestView.code == 'test1').first()
+        v2 = TestView.query().filter(TestView2.code == 'test1').first()
+
+        self.assertEqual(v1.val1, v2.val1)
+        self.assertEqual(v1.val2, v2.val2)
+
+    def test_same_view_by_declaration_model(self):
+        registry = self.init_registry(
+            simple_view_with_same_table_by_declaration_model)
+        self.check_same_view(registry)
+
+    def test_same_view_by_name(self):
+        registry = self.init_registry(simple_view_with_same_table_by_name)
+        self.check_same_view(registry)
+
+    def test_same_view_by_inherit(self):
+        registry = self.init_registry(simple_view_with_same_table_by_inherit)
+        self.check_same_view(registry)
 
     def test_view_update_method(self):
         registry = self.init_registry(simple_view)

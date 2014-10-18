@@ -256,43 +256,56 @@ class Model:
             bases = [type(tablename, tuple(bases), properties)]
 
             if properties['is_sql_view']:
-                if not hasattr(bases[0], 'sqlalchemy_view_declaration'):
-                    raise Declarations.Exception.ViewException(
-                        "%r.'sqlalchemy_view_declaration' is required to "
-                        "define the query to apply of the view" % namespace)
-                pks = []
-                for col in properties['loaded_columns']:
-                    if getattr(bases[0], col).primary_key:
-                        pks.append(col)
-
-                if not pks:
-                    raise Declarations.Exception.ViewException(
-                        "%r have any primary key defined" % namespace)
-
-                view = table(tablename)
-                selectable = getattr(bases[0], 'sqlalchemy_view_declaration')()
-
-                if isinstance(selectable, Query):
-                    selectable = selectable.subquery()
-
-                for c in selectable.c:
-                    c._make_proxy(view)
-
-                DropView(tablename).execute_at(
-                    'before-create', registry.declarativebase.metadata)
-                CreateView(tablename, selectable).execute_at(
-                    'after-create', registry.declarativebase.metadata)
-                DropView(tablename).execute_at(
-                    'before-drop', registry.declarativebase.metadata)
-
-                pks = [getattr(view.c, x) for x in pks]
-                mapper(bases[0], view, primary_key=pks)
+                cls.apply_view(namespace, tablename, bases[0], registry,
+                               properties)
 
             properties = {}
             registry.add_in_registry(namespace, bases[0])
             registry.loaded_namespaces[namespace] = bases[0]
 
         return bases, properties
+
+    @classmethod
+    def apply_view(cls, namespace, tablename, base, registry, properties):
+        if hasattr(base, '__view__'):
+            view = base.__view__
+        elif tablename in registry.loaded_views:
+            view = registry.loaded_views[tablename]
+        else:
+            if not hasattr(base, 'sqlalchemy_view_declaration'):
+                raise Declarations.Exception.ViewException(
+                    "%r.'sqlalchemy_view_declaration' is required to "
+                    "define the query to apply of the view" % namespace)
+
+            view = table(tablename)
+            registry.loaded_views[tablename] = view
+            selectable = getattr(base, 'sqlalchemy_view_declaration')()
+
+            if isinstance(selectable, Query):
+                selectable = selectable.subquery()
+
+            for c in selectable.c:
+                c._make_proxy(view)
+
+            DropView(tablename).execute_at(
+                'before-create', registry.declarativebase.metadata)
+            CreateView(tablename, selectable).execute_at(
+                'after-create', registry.declarativebase.metadata)
+            DropView(tablename).execute_at(
+                'before-drop', registry.declarativebase.metadata)
+
+        pks = []
+        for col in properties['loaded_columns']:
+            if getattr(base, col).primary_key:
+                pks.append(col)
+
+        if not pks:
+            raise Declarations.Exception.ViewException(
+                "%r have any primary key defined" % namespace)
+
+        pks = [getattr(view.c, x) for x in pks]
+        mapper(base, view, primary_key=pks)
+        setattr(base, '__view__', view)
 
     @classmethod
     def assemble_callback(cls, registry):
@@ -302,6 +315,7 @@ class Model:
         :param registry: registry to update
         """
         registry.loaded_namespaces_first_step = {}
+        registry.loaded_views = {}
 
         # get all the information to create a namespace
         for namespace in registry.loaded_registries['Model_names']:

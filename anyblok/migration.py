@@ -681,7 +681,7 @@ class Migration:
         self.conn._release_savepoint_impl(name, None)
 
     def render_item(self, type_, obj, autogen_context):
-        logger.info("%r, %r, %r" % (type_, obj, autogen_context))
+        logger.debug("%r, %r, %r" % (type_, obj, autogen_context))
         return False
 
     def compare_type(self, context, inspected_column,

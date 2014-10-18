@@ -8,7 +8,6 @@ Next step
 * Do documentation
 * ADD unittest:
     - anyblok_core system
-* Sql view Model can use an existing view
 * classic redirection must depend of the database, so put in the registry
 
 To implement
