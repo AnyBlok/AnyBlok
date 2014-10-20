@@ -1,6 +1,7 @@
 from anyblok.blok import BlokManager
 from anyblok import Declarations
 from logging import getLogger
+from os.path import join, isfile
 
 logger = getLogger(__name__)
 target_registry = Declarations.target_registry
@@ -8,6 +9,7 @@ System = Declarations.Model.System
 String = Declarations.Column.String
 Integer = Declarations.Column.Integer
 Selection = Declarations.Column.Selection
+Function = Declarations.Field.Function
 
 
 @target_registry(System)
@@ -25,6 +27,31 @@ class Blok:
     name = String(primary_key=True, nullable=False)
     state = Selection(selections=STATES, default='uninstalled', nullable=False)
     order = Integer(default=-1, nullable=False)
+    short_description = Function(fget='get_short_description')
+    long_description = Function(fget='get_long_description')
+
+    def get_short_description(self):
+        blok = BlokManager.get(self.name)
+        if hasattr(blok, '__doc__'):
+            return blok.__doc__
+
+        return ''
+
+    def get_long_description(self):
+        blok = BlokManager.get(self.name)
+        path = BlokManager.getPath(self.name)
+        readme = 'README.rst'
+        if hasattr(blok, 'readme'):
+            readme = blok.readme
+
+        file_path = join(path, readme)
+        description = ''
+        if isfile(file_path):
+            fp = open(file_path, 'r')
+            description = fp.read()
+            fp.close()
+
+        return description
 
     def __repr__(self):
         return "%s (%s)" % (self.name, self.state)
