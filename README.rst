@@ -486,39 +486,70 @@ The script must display:
 
     jssuzanne:anyblok jssuzanne$ createdb anyblok
     jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -c anyblok.cfg --message-before "Get the worker ..." --message-after "End ..."
-    2014-0405 23:54:32 INFO - anyblok:root - Registry.load
-    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
-    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
-    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'position' loaded
-    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
-    2014-0405 23:54:32 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
-    2014-0405 23:54:32 INFO - anyblok:alembic.migration - Will assume transactional DDL.
-    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'anyblok-core'
-    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'desk'
-    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'position'
-    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'worker'
-    2014-0405 23:54:32 INFO - anyblok:root - Registry.upgrade with args (<anyblok.registry.Registry object at 0x10867bcd0>,) and kwargs {'install': ['worker-position']}
-    2014-0405 23:54:32 INFO - anyblok:root - Registry.reload
-    2014-0405 23:54:32 INFO - anyblok:root - Registry.load
-    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
-    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
-    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'position' loaded
-    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
-    2014-0405 23:54:32 INFO - anyblok:anyblok.registry - Blok 'worker-position' loaded
-    2014-0405 23:54:32 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
-    2014-0405 23:54:32 INFO - anyblok:alembic.migration - Will assume transactional DDL.
-    2014-0405 23:54:32 INFO - anyblok:alembic.autogenerate.compare - Detected added column 'worker.position_name'
-    2014-0405 23:54:32 INFO - anyblok:AnyBlok.bloks.anyblok-core.system.blok - Install the blok 'worker-position'
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Get the worker ...
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Florent Jouatte in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Georges Racinet in Room 308 at 14-16 rue Soleillet 75020 Paris (DG)
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Pierre Verkest in Room 308 at 14-16 rue Soleillet 75020 Paris (Chef de projet)
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Sandrine Chaufournais in Room 308 at 14-16 rue Soleillet 75020 Paris (Secrétaire)
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Clovis Nzouendjou in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Jean-Sébastien Suzanne in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Christophe Combelles in Room 308 at 14-16 rue Soleillet 75020 Paris (Comercial)
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - Simon André in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-0405 23:54:32 INFO - anyblok:exampleblok.scripts - End ...
+    2014-1021 09:46:05 INFO - anyblok:root - Registry.load
+    2014-1021 09:46:05 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
+    2014-1021 09:46:05 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
+    2014-1021 09:46:05 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
+    2014-1021 09:46:05 INFO - anyblok:alembic.migration - Will assume transactional DDL.
+    2014-1021 09:46:05 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
+    2014-1021 09:46:06 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'anyblok-core'
+    2014-1021 09:46:06 INFO - anyblok:root - Registry.reload
+    2014-1021 09:46:06 INFO - anyblok:root - Registry.load
+    2014-1021 09:46:06 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
+    2014-1021 09:46:06 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-1021 09:46:06 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
+    2014-1021 09:46:06 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
+    2014-1021 09:46:06 INFO - anyblok:alembic.migration - Will assume transactional DDL.
+    2014-1021 09:46:06 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
+    2014-1021 09:46:06 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'desk'
+    2014-1021 09:46:06 INFO - anyblok:root - Registry.reload
+    2014-1021 09:46:06 INFO - anyblok:root - Registry.load
+    2014-1021 09:46:06 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
+    2014-1021 09:46:06 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-1021 09:46:06 INFO - anyblok:anyblok.registry - Blok 'position' loaded
+    2014-1021 09:46:06 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
+    2014-1021 09:46:06 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
+    2014-1021 09:46:06 INFO - anyblok:alembic.migration - Will assume transactional DDL.
+    2014-1021 09:46:06 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
+    2014-1021 09:46:07 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'position'
+    2014-1021 09:46:07 INFO - anyblok:root - Registry.reload
+    2014-1021 09:46:07 INFO - anyblok:root - Registry.load
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Blok 'position' loaded
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
+    2014-1021 09:46:07 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
+    2014-1021 09:46:07 INFO - anyblok:alembic.migration - Will assume transactional DDL.
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
+    2014-1021 09:46:07 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'worker'
+    2014-1021 09:46:07 INFO - anyblok:root - Registry.reload
+    2014-1021 09:46:07 INFO - anyblok:root - Registry.load
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Blok 'position' loaded
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Blok 'worker-position' loaded
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
+    2014-1021 09:46:07 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
+    2014-1021 09:46:07 INFO - anyblok:alembic.migration - Will assume transactional DDL.
+    2014-1021 09:46:07 INFO - anyblok:alembic.autogenerate.compare - Detected added column 'worker.position_name'
+    /Users/jssuzanne/.buildout/eggs/alembic-0.6.7-py3.3.egg/alembic/util.py:205: UserWarning: autoincrement and existing_autoincrement only make sense for MySQL
+      warnings.warn(msg)
+    2014-1021 09:46:07 WARNING - anyblok:anyblok.migration - (IntegrityError) column "position_name" contains null values
+       'ALTER TABLE worker ALTER COLUMN position_name SET NOT NULL' {}
+    2014-1021 09:46:07 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
+    2014-1021 09:46:08 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'worker-position'
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - Get the worker ...
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - Georges Racinet in Room 308 at 14-16 rue Soleillet 75020 Paris (DG)
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - Pierre Verkest in Room 308 at 14-16 rue Soleillet 75020 Paris (Chef de projet)
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - Jean-Sébastien Suzanne in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - Sandrine Chaufournais in Room 308 at 14-16 rue Soleillet 75020 Paris (Secrétaire)
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - Florent Jouatte in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - Clovis Nzouendjou in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - Christophe Combelles in Room 308 at 14-16 rue Soleillet 75020 Paris (Comercial)
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - Simon André in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
+    2014-1021 09:46:08 INFO - anyblok:exampleblok.scripts - End ...
 
 
 The registry is loaded two time:
