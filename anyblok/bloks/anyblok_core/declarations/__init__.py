@@ -1,4 +1,4 @@
-#flake8: noqa
+# flake8: noqa
 
 from . import fields
 from . import columns

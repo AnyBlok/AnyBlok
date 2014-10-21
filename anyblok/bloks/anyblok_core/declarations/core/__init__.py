@@ -1,4 +1,4 @@
-#flake8: noqa
+# flake8: noqa
 from . import base
 from . import sqlbase
 from . import sqlviewbase
