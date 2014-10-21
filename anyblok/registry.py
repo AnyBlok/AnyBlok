@@ -374,6 +374,7 @@ class Registry:
         self.ordered_loaded_bloks = []
         self.loaded_namespaces = {}
         self.children_namespaces = {}
+        self.properties = {}
 
     def get(self, namespace):
         """ Return the namespace Class
@@ -464,6 +465,18 @@ class Registry:
         for base in bases:
             self.loaded_cores[core].insert(0, base)
 
+    def load_properties(self, blok):
+        properties = RegistryManager.loaded_bloks[blok]['properties']
+        for k, v in properties.items():
+            if k not in self.properties:
+                self.properties[k] = v
+            elif isinstance(self.properties[k], dict) and isinstance(v, dict):
+                self.properties.update(v)
+            elif isinstance(self.properties[k], list) and isinstance(v, list):
+                self.properties.extend(v)
+            else:
+                self.properties[k] = v
+
     def load_blok(self, blok):
         """ load on blok, load all the core and all the entry for one blok
 
@@ -491,6 +504,7 @@ class Registry:
         for entry in RegistryManager.declared_entries:
             self.load_entry(blok, entry)
 
+        self.load_properties(blok)
         self.loaded_bloks[blok] = b
         self.ordered_loaded_bloks.append(blok)
         logger.info("Blok %r loaded" % blok)
