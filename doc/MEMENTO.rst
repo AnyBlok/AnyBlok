@@ -28,6 +28,7 @@ To declare a blok you have to:
 
 
     class MyBlok(Blok):
+        """ Short description of the blok """
         ...
 
 
@@ -36,10 +37,15 @@ These are the options to apply at your blok
 +-----------------------+-----------------------------------------------------+
 | Name of the option    | Descriptions                                        |
 +=======================+=====================================================+
+|  ``__doc__``          | Short description of the blok                       |
++-----------------------+-----------------------------------------------------+
 | ``autoinstall``       | boolean, if ``True`` this blok is automaticaly      |
 |                       | installed                                           |
 +-----------------------+-----------------------------------------------------+
 | ``priority``          | order of the blok to installation                   |
++-----------------------+-----------------------------------------------------+
+| ``readme``            | Readme file path of the blok, by default            |
+|                       | ``README.rst``                                      |
 +-----------------------+-----------------------------------------------------+
 
 And the method defined blok behaviours
@@ -82,7 +88,7 @@ In AnyBlok, all is declarations:
 * Column
 * ...
 
-All is declaration and you have to import the ``Declarations`` class
+All is declaration and you have to import the ``Declarations`` class::
 
     from anyblok.declarations import Declarations
 
@@ -297,8 +303,15 @@ All the column type are in the ``Declarations``::
 
 
     Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
 
-List of the ``Déclaration`` of the column type
+    @Declarations.target_registry(Declaration.Model)
+    class MyModel:
+
+        id = Integer(primary_key=True)
+        name = String()
+
+List of the ``Déclarations`` of the column type:
 
  * ``DateTime``: use datetime.datetime
  * ``Decimal``: use decimal.Decimal
@@ -317,7 +330,7 @@ List of the ``Déclaration`` of the column type
  * ``uText``
  * ``Selection``
 
- All the column have got the same params
+ All the columns have got the this params:
 
 +-------------+---------------------------------------------------------------+
 | Param       | Description                                                   |
@@ -352,8 +365,134 @@ List of the ``Déclaration`` of the column type
 |             |                                                               |
 +-------------+---------------------------------------------------------------+
 
+Other attribute for ``String`` and ``uString``:
+
++-------------+---------------------------------------------------------------+
+| Param       | Description                                                   |
++=============+===============================================================+
+| ``size``    | Column size in the bdd                                        |
++-------------+---------------------------------------------------------------+
+
+Other attribute for ``Selection``:
+
++----------------+------------------------------------------------------------+
+| Param          | Description                                                |
++================+============================================================+
+| ``size``       | column size in the bdd                                     |
++----------------+------------------------------------------------------------+
+| ``selections`` | ``dict`` or ``dict.items`` to list the available key with  |
+|                | the associate label                                        |
++----------------+------------------------------------------------------------+
+
 RelationShip
 ------------
+
+To declare a ``RelationShip`` in a model, add a RelationShip on the table of 
+the model. All the RelationShip type are in the ``Declarations``::
+
+    from anyblok.declarations import Declarations
+
+
+    Integer = Declarations.Column.Integer
+    Many2One = Declarations.RelationShip.Many2One
+
+    @Declarations.target_registry(Declaration.Model)
+    class MyModel:
+
+        id = Integer(primary_key=True)
+
+    @Declarations.target_registry(Declaration.Model)
+    class MyModel2:
+
+        id = Integer(primary_key=True)
+        mymodel = Many2One(model=Declaration.Model.MyModel)
+
+List of the ``Déclarations`` of the RelationShip type:
+
+* ``One2One``
+* ``Many2One``
+* ``One2Many``
+* ``Many2Many``
+
+Params for RelationShip:
+
++-------------------+---------------------------------------------------------+
+| Param             | Description                                             |
++===================+=========================================================+
+| ``label``         | The label of the column                                 |
++-------------------+---------------------------------------------------------+
+| ``model``         | The remote model                                        |
++-------------------+---------------------------------------------------------+
+| ``remote_column`` | The column name on the remote model, if any remote      |
+|                   | column is filled the the remote column will be the      |
+|                   | primary column of the remote model                      |
++-------------------+---------------------------------------------------------+
+
+Params for ``One2One``:
+
++-------------------+---------------------------------------------------------+
+| Param             | Description                                             |
++===================+=========================================================+
+| ``column_name``   | Name of the local column.                               |
+|                   | If the column doesn't exist then this column will be    |
+|                   | created.                                                |
+|                   | If any column name then the name will be 'tablename' +  |
+|                   | '_' + name of the relation ship                         |
++-------------------+---------------------------------------------------------+
+| ``nullable``      | Indicate if the column name is nullable or not          |
++-------------------+---------------------------------------------------------+
+| ``backref``       | Remote One2One link with the column name                |
++-------------------+---------------------------------------------------------+
+
+Params for ``Many2One``:
+
++-------------------+---------------------------------------------------------+
+| Param             | Description                                             |
++===================+=========================================================+
+| ``column_name``   | Name of the local column.                               |
+|                   | If the column doesn't exist then this column will be    |
+|                   | created.                                                |
+|                   | If any column name then the name will be 'tablename' +  |
+|                   | '_' + name of the relation ship                         |
++-------------------+---------------------------------------------------------+
+| ``nullable``      | Indicate if the column name is nullable or not          |
++-------------------+---------------------------------------------------------+
+| ``one2many``      | Opposite One2Many link with this Many2one               |
++-------------------+---------------------------------------------------------+
+
+Params for ``One2Many``:
+
++-------------------+---------------------------------------------------------+
+| Param             | Description                                             |
++===================+=========================================================+
+| ``primaryjoin``   | Join condition between the relation ship and the remote | 
+|                   | column                                                  |
++-------------------+---------------------------------------------------------+
+| ``many2one``      | Opposite Many2One link with this One2Many               |
++-------------------+---------------------------------------------------------+
+
+Params for ``Many2Many``:
+
++-----------------------+-----------------------------------------------------+
+| Param                 | Description                                         |
++=======================+=====================================================+
+| ``join_table``        | many2many link table between both models            |
++-----------------------+-----------------------------------------------------+
+| ``m2m_remote_column`` | Column name in the join table which have got the    | 
+|                       | foreign key to the remote model                     |
++-----------------------+-----------------------------------------------------+
+| ``local_column``      | Name of the local column which have got the foreign |
+|                       | key to the join table.                              |
+|                       | If the column doesn't exist then this column will be|
+|                       | created.                                            |
+|                       | If any column name then the name will be 'tablename'|
+|                       | + '_' + name of the relation ship                   |
++-----------------------+-----------------------------------------------------+
+| ``m2m_local_column``  | Column name in the join table which have got the    |
+|                       | foreign key to the model                            |
++-----------------------+-----------------------------------------------------+
+| ``many2many``         | Opposite Many2Many link with this relation ship     |
++-----------------------+-----------------------------------------------------+
 
 Field
 -----
@@ -386,3 +525,6 @@ Session
 
 Share the table between more than one model
 -------------------------------------------
+
+Share the view between more than one model
+------------------------------------------

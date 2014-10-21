@@ -302,7 +302,7 @@ class RegistryManager:
         """ Save the value in the properties
 
         :param property\_: name of the property
-        ;param value: the value to save, the type is not important
+        :param value: the value to save, the type is not important
         """
         blok = EnvironmentManager.get('current_blok')
         cls.loaded_bloks[blok]['properties'][property_] = value
@@ -312,7 +312,7 @@ class RegistryManager:
         """ Return the value in the properties
 
         :param property\_: name of the property
-        ;param default: return default If not entry in the property
+        :param default: return default If not entry in the property
         """
         blok = EnvironmentManager.get('current_blok')
         return cls.loaded_bloks[blok]['properties'].get(property_, default)
