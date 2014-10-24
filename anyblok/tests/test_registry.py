@@ -101,6 +101,7 @@ class TestRegistry(TestCase):
                      'SqlViewBase': [],
                      'Query': [],
                      'InstrumentedList': []},
+            'properties': {},
         }
         for entry in RegistryManager.declared_entries:
             RegistryManager.loaded_bloks['blok'][entry] = {
