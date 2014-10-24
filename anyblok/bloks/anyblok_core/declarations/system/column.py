@@ -16,6 +16,10 @@ class Column(Mixin.Field):
     unique = Boolean()
 
     @classmethod
+    def get_cname(self, field, cname):
+        return field.property.columns[0].name
+
+    @classmethod
     def add_field(cls, cname, column, model, table):
         c = column.property.columns[0]
         vals = dict(autoincrement=c.autoincrement,

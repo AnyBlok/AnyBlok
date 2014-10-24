@@ -59,6 +59,7 @@ class Model:
                     for cname in get_fields(m):
                         field = getattr(m, cname)
                         Field = get_field_model(field)
+                        cname = Field.get_cname(field, cname)
                         query = Field.query()
                         query = query.filter(Field.model == model)
                         query = query.filter(Field.name == cname)
@@ -74,6 +75,7 @@ class Model:
                     for cname in get_fields(m):
                         field = getattr(m, cname)
                         Field = get_field_model(field)
+                        cname = Field.get_cname(field, cname)
                         Field.add_field(cname, field, model, table)
             except Exception as e:
                 logger.error(str(e))

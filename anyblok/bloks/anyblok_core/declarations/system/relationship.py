@@ -17,6 +17,10 @@ class RelationShip(Mixin.Field):
     remote = Boolean(default=False)
 
     @classmethod
+    def get_cname(self, field, cname):
+        return cname
+
+    @classmethod
     def add_field(cls, rname, relation, model, table):
         local_column = relation.info.get('local_column')
         remote_column = relation.info.get('remote_column')
