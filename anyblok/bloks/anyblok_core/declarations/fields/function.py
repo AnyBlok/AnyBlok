@@ -44,6 +44,7 @@ class Function(Declarations.Field):
         fdel = wrap('fdel')
         fexpr = wrap('fexpr', 'fget')
 
-        properties['loaded_columns'].remove(fieldname)
+        self.format_label(fieldname)
+        properties['loaded_fields'][fieldname] = self.label
         properties[fieldname] = hybrid_property(
             fget, fset, fdel=fdel, expr=fexpr)

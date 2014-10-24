@@ -15,10 +15,7 @@ class RelationShip(Mixin.Field):
     remote_name = String()
     remote_model = String(nullable=False)
     remote = Boolean(default=False)
-
-    @classmethod
-    def get_cname(self, field, cname):
-        return cname
+    nullable = Boolean()
 
     @classmethod
     def add_field(cls, rname, relation, model, table):

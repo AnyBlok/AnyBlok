@@ -224,6 +224,7 @@ class Model:
 
         if namespace in registry.loaded_registries['Model_names']:
             properties['loaded_columns'] = []
+            properties['loaded_fields'] = {}
             tablename = properties['__tablename__']
             if properties['is_sql_view']:
                 bases += registry.loaded_cores['SqlViewBase']

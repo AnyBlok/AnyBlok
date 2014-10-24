@@ -1,7 +1,5 @@
 from anyblok import Declarations
 from logging import getLogger
-from sqlalchemy.orm.attributes import InstrumentedAttribute
-from inspect import getmembers
 
 logger = getLogger(__name__)
 
@@ -10,6 +8,7 @@ System = Declarations.Model.System
 String = Declarations.Column.String
 Text = Declarations.Column.Text
 Boolean = Declarations.Column.Boolean
+Function = Declarations.Field.Function
 
 
 @target_registry(System)
@@ -23,9 +22,16 @@ class Model:
         return self.name
 
     name = String(size=256, primary_key=True)
-    description = Text()
     table = String(size=256)
     is_sql_model = Boolean(label="Is a SQL model")
+    description = Function(fget='get_model_doc_string')
+
+    def get_model_doc_string(self):
+        m = self.registry.loaded_namespaces[self.name]
+        if hasattr(m, '__doc__'):
+            return m.__doc__
+
+        return ''
 
     @classmethod
     def update_list(cls):
@@ -39,10 +45,15 @@ class Model:
             else:
                 raise Exception('Not implemented yet')
 
-        def get_fields(model):
-            m = getmembers(model)
-            res = [x for x, y in m if type(y) is InstrumentedAttribute]
-            return res
+        def get_field(cname):
+            if cname in m.loaded_fields.keys():
+                field = m.loaded_fields[cname]
+                Field = cls.registry.System.Field
+            else:
+                field = getattr(m, cname)
+                Field = get_field_model(field)
+
+            return field, Field
 
         for model in cls.registry.loaded_namespaces.keys():
             try:
@@ -55,10 +66,8 @@ class Model:
 
                 _m = cls.query('name').filter(cls.name == model)
                 if _m.count():
-                    _m.update({'description': m.__doc__})
-                    for cname in get_fields(m):
-                        field = getattr(m, cname)
-                        Field = get_field_model(field)
+                    for cname in m.loaded_columns:
+                        field, Field = get_field(cname)
                         cname = Field.get_cname(field, cname)
                         query = Field.query()
                         query = query.filter(Field.model == model)
@@ -70,11 +79,9 @@ class Model:
                 else:
                     is_sql_model = len(m.loaded_columns) > 0
                     cls.insert(name=model, table=table,
-                               is_sql_model=is_sql_model,
-                               description=m.__doc__)
-                    for cname in get_fields(m):
-                        field = getattr(m, cname)
-                        Field = get_field_model(field)
+                               is_sql_model=is_sql_model)
+                    for cname in m.loaded_columns:
+                        field, Field = get_field(cname)
                         cname = Field.get_cname(field, cname)
                         Field.add_field(cname, field, model, table)
             except Exception as e:

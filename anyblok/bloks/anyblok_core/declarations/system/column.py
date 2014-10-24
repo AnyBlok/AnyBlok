@@ -14,6 +14,7 @@ class Column(Mixin.Field):
     primary_key = Boolean()
     ctype = String(label="Type")
     unique = Boolean()
+    nullable = Boolean()
 
     @classmethod
     def get_cname(self, field, cname):
