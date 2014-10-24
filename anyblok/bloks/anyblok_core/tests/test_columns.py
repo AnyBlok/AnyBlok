@@ -213,3 +213,53 @@ class TestColumns(DBTestCase):
         registry.Test.insert(col=SELECTIONS[0][0])
         registry.Test.query().filter(
             registry.Test.col.in_(['admin', 'regular-user'])).first()
+
+    def test_selection_use_method(self):
+        SELECTIONS = [
+            (u'admin', u'Admin'),
+            (u'regular-user', u'Regular user')
+        ]
+
+        def add_selection():
+            Integer = Declarations.Column.Integer
+            Selection = Declarations.Column.Selection
+
+            @target_registry(Model)
+            class Test:
+
+                @classmethod
+                def get_selection(cls):
+                    return SELECTIONS
+
+                id = Integer(primary_key=True)
+                col = Selection(selections=get_selection)
+
+        registry = self.init_registry(add_selection)
+        registry.Test.insert(col=SELECTIONS[0][0])
+        registry.Test.query().filter(
+            registry.Test.col.in_(['admin', 'regular-user'])).first()
+
+    def test_selection_use_method_name(self):
+        SELECTIONS = [
+            (u'admin', u'Admin'),
+            (u'regular-user', u'Regular user')
+        ]
+
+        def add_selection():
+            Integer = Declarations.Column.Integer
+            Selection = Declarations.Column.Selection
+
+            @target_registry(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                col = Selection(selections='get_selection')
+
+                @classmethod
+                def get_selection(cls):
+                    return SELECTIONS
+
+        registry = self.init_registry(add_selection)
+        registry.Test.insert(col=SELECTIONS[0][0])
+        registry.Test.query().filter(
+            registry.Test.col.in_(['admin', 'regular-user'])).first()

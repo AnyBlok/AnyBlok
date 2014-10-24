@@ -14,7 +14,7 @@ class Date(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        Date = Declarations.Date
+        Date = Declarations.Column.Date
 
         @target_registry(Model)
         class Test:

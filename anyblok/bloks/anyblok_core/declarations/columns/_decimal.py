@@ -14,7 +14,7 @@ class Decimal(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        Decimal = Declarations.Decimal
+        Decimal = Declarations.Column.Decimal
 
         @target_registry(Model)
         class Test:

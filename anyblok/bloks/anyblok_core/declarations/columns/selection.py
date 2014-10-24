@@ -9,40 +9,54 @@ FieldException = Declarations.Exception.FieldException
 
 class StrSelection(str):
     selections = {}
+    registry = None
+    namespace = None
+
+    def get_selections(self):
+        if isinstance(self.selections, dict):
+            return self.selections
+        if isinstance(self.selections, str):
+            m = self.registry.loaded_namespaces[self.namespace]
+            return dict(getattr(m, self.selections)())
 
     def validate(self):
         a = super(StrSelection, self).__str__()
-        return a in self.selections.keys()
+        return a in self.get_selections().keys()
 
     @property
     def label(self):
         a = super(StrSelection, self).__str__()
-        return self.selections[a]
+        return self.get_selections()[a]
 
 
 class SelectionType(types.UserDefinedType):
 
-    def __init__(self, selections, size):
+    def __init__(self, selections, size, registry=None, namespace=None):
         super(SelectionType, self).__init__()
         self.size = size
-        if isinstance(selections, dict):
+        if isinstance(selections, (dict, str)):
             self.selections = selections
         elif isinstance(selections, (list, tuple)):
             self.selections = dict(selections)
+        elif isinstance(selections, classmethod):
+            self.selections = selections.__func__.__name__
         else:
             raise FieldException(
                 "selection wainting 'dict', get %r" % type(selections))
 
-        for k in self.selections.keys():
-            if not isinstance(k, str):
-                raise FieldException('The key must be a str')
-            if len(k) > 64:
-                raise Exception(
-                    '%r is too long %r, waiting max %s or use size arg' % (
-                        k, len(k), size))
+        if isinstance(self.selections, dict):
+            for k in self.selections.keys():
+                if not isinstance(k, str):
+                    raise FieldException('The key must be a str')
+                if len(k) > 64:
+                    raise Exception(
+                        '%r is too long %r, waiting max %s or use size arg' % (
+                            k, len(k), size))
 
         self._StrSelection = type('StrSelection', (StrSelection,),
-                                  {'selections': self.selections})
+                                  {'selections': self.selections,
+                                   'registry': registry,
+                                   'namespace': namespace})
 
     def compare_type(self, other):
         """ return True if the types are different,
@@ -73,7 +87,7 @@ class Selection(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        Selection = Declarations.Selection
+        Selection = Declarations.Column.Selection
 
         @target_registry(Model)
         class Test:
@@ -86,15 +100,15 @@ class Selection(Declarations.Column):
 
     """
     def __init__(self, *args, **kwargs):
-        selections = tuple()
-        size = 64
+        self.selections = tuple()
+        self.size = 64
         if 'selections' in kwargs:
-            selections = kwargs.pop('selections')
+            self.selections = kwargs.pop('selections')
 
         if 'size' in kwargs:
-            size = kwargs.pop('size')
+            self.size = kwargs.pop('size')
 
-        self.sqlalchemy_type = SelectionType(selections, size)
+        self.sqlalchemy_type = 'tmp value for assert'
 
         super(Selection, self).__init__(*args, **kwargs)
 
@@ -122,3 +136,10 @@ class Selection(Declarations.Column):
 
         properties[fieldname] = hybrid_property(
             selection_get, selection_set, expr=selection_expression)
+
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
+                               properties):
+        self.sqlalchemy_type = SelectionType(
+            self.selections, self.size, registry=registry, namespace=namespace)
+        return super(Selection, self).get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties)

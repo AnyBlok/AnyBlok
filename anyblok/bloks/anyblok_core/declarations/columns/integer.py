@@ -13,7 +13,7 @@ class Integer(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        Integer = Declarations.Integer
+        Integer = Declarations.Column.Integer
 
         @target_registry(Model)
         class Test:

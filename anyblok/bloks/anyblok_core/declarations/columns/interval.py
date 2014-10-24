@@ -14,7 +14,7 @@ class Interval(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        Interval = Declarations.Interval
+        Interval = Declarations.Column.Interval
 
         @target_registry(Model)
         class Test:

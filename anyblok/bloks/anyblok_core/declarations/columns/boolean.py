@@ -13,7 +13,7 @@ class Boolean(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        Boolean = Declarations.Boolean
+        Boolean = Declarations.Column.Boolean
 
         @target_registry(Model)
         class Test:

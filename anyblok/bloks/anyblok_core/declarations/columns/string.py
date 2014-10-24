@@ -13,7 +13,7 @@ class String(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        String = Declarations.String
+        String = Declarations.Column.String
 
         @target_registry(Model)
         class Test:

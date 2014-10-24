@@ -13,7 +13,7 @@ class SmallInteger(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        SmallInteger = Declarations.SmallInteger
+        SmallInteger = Declarations.Column.SmallInteger
 
         @target_registry(Model)
         class Test:

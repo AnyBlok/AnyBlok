@@ -13,7 +13,7 @@ class uText(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        uText = Declarations.uText
+        uText = Declarations.Column.uText
 
         @target_registry(Model)
         class Test:

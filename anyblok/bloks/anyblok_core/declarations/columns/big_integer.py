@@ -14,7 +14,7 @@ class BigInteger(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        BigInteger = Declarations.BigInteger
+        BigInteger = Declarations.Column.BigInteger
 
         @target_registry(Model)
         class Test:

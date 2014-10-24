@@ -14,7 +14,7 @@ class Time(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        Time = Declarations.Time
+        Time = Declarations.Column.Time
 
         @target_registry(Model)
         class Test:

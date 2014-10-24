@@ -387,7 +387,7 @@ Other attribute for ``Selection``:
 RelationShip
 ------------
 
-To declare a ``RelationShip`` in a model, add a RelationShip on the table of 
+To declare a ``RelationShip`` in a model, add a RelationShip on the table of
 the model. All the RelationShip type are in the ``Declarations``::
 
     from anyblok.declarations import Declarations
@@ -465,7 +465,7 @@ Params for ``One2Many``:
 +-------------------+---------------------------------------------------------+
 | Param             | Description                                             |
 +===================+=========================================================+
-| ``primaryjoin``   | Join condition between the relation ship and the remote | 
+| ``primaryjoin``   | Join condition between the relation ship and the remote |
 |                   | column                                                  |
 +-------------------+---------------------------------------------------------+
 | ``many2one``      | Opposite Many2One link with this One2Many               |
@@ -478,7 +478,7 @@ Params for ``Many2Many``:
 +=======================+=====================================================+
 | ``join_table``        | many2many link table between both models            |
 +-----------------------+-----------------------------------------------------+
-| ``m2m_remote_column`` | Column name in the join table which have got the    | 
+| ``m2m_remote_column`` | Column name in the join table which have got the    |
 |                       | foreign key to the remote model                     |
 +-----------------------+-----------------------------------------------------+
 | ``local_column``      | Name of the local column which have got the foreign |
@@ -496,6 +496,46 @@ Params for ``Many2Many``:
 
 Field
 -----
+
+To declare a ``Field`` in a model, add a Field on the Model, this is not a
+SQL column. All the Field type are in the ``Declarations``::
+
+    from anyblok.declarations import Declarations
+
+
+    Integer = Declarations.Column.Integer
+    Fuction = Declarations.Field.Function
+
+    @Declarations.target_registry(Declaration.Model)
+    class MyModel:
+
+        id = Integer(primary_key=True)
+        myid = Function(fget='get_my_id')
+
+        def get_my_id(self):
+            return self.id
+
+List of the ``Déclarations`` of the Field type:
+
+* ``Function``
+
+Params for ``Field.Function``
+
++-------------------+---------------------------------------------------------+
+| Param             | Description                                             |
++===================+=========================================================+
+| ``fget``          | method name to call to get the falue of field function::|
+|                   |                                                         |
+|                   |   def fget(self):                                       |
+|                   |       return self.id                                    |
+|                   |                                                         |
++-------------------+---------------------------------------------------------+
+| ``model``         | The remote model                                        |
++-------------------+---------------------------------------------------------+
+| ``remote_column`` | The column name on the remote model, if any remote      |
+|                   | column is filled the the remote column will be the      |
+|                   | primary column of the remote model                      |
++-------------------+---------------------------------------------------------+
 
 Mixin
 -----

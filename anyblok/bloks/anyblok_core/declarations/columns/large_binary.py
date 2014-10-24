@@ -14,7 +14,7 @@ class LargeBinary(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        LargeBinary = Declarations.LargeBinary
+        LargeBinary = Declarations.Column.LargeBinary
 
         blob = urandom(100000)
 

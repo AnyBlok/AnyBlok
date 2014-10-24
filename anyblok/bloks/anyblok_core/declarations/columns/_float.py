@@ -13,7 +13,7 @@ class Float(Declarations.Column):
 
         target_registry = Declarations.target_registry
         Model = Declarations.Model
-        Float = Declarations.Float
+        Float = Declarations.Column.Float
 
         @target_registry(Model)
         class Test:
