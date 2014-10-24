@@ -124,6 +124,9 @@ def sqlschema(description, version, argsparse_groups, parts_to_load):
 
     # add all the class
     for model, cls in registry.loaded_namespaces.items():
+        if not hasattr(cls, '__tablename__'):
+            continue
+
         if not models_:
             dot.add_table(cls.__tablename__)
         elif model in models_:
@@ -135,8 +138,10 @@ def sqlschema(description, version, argsparse_groups, parts_to_load):
         if models_ and model not in models_:
             continue
 
-        t = dot.get_table(cls.__tablename__)
+        if not hasattr(cls, '__tablename__'):
+            continue
 
+        t = dot.get_table(cls.__tablename__)
         columns = Column.query('name', 'ctype', 'foreign_key', 'primary_key',
                                'nullable')
         columns = columns.filter(Column.model == model)
@@ -184,6 +189,9 @@ def modelschema(description, version, argsparse_groups, parts_to_load):
 
     # add all the class
     for model, cls in registry.loaded_namespaces.items():
+        if not hasattr(cls, '__tablename__'):
+            continue
+
         if not models_:
             dot.add_class(model)
         elif model in models_:
@@ -193,6 +201,9 @@ def modelschema(description, version, argsparse_groups, parts_to_load):
         models_by_table[cls.__tablename__] = model
 
     for model, cls in registry.loaded_namespaces.items():
+        if not hasattr(cls, '__tablename__'):
+            continue
+
         if models_ and model not in models_:
             continue
 
