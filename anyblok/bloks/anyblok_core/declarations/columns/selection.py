@@ -38,8 +38,6 @@ class SelectionType(types.UserDefinedType):
             self.selections = selections
         elif isinstance(selections, (list, tuple)):
             self.selections = dict(selections)
-        elif isinstance(selections, classmethod):
-            self.selections = selections.__func__.__name__
         else:
             raise FieldException(
                 "selection wainting 'dict', get %r" % type(selections))

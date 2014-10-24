@@ -47,9 +47,8 @@ class Blok:
         file_path = join(path, readme)
         description = ''
         if isfile(file_path):
-            fp = open(file_path, 'r')
-            description = fp.read()
-            fp.close()
+            with open(file_path, 'r') as fp:
+                description = fp.read()
 
         return description
 
