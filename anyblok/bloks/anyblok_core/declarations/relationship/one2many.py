@@ -47,6 +47,8 @@ class One2Many(Declarations.RelationShip):
         """
         fks = []
         for f, p in properties.items():
+            if f == '__tablename__':
+                continue
             if p.foreign_key and p.foreign_key.split('.')[0] == tablename:
                 fks.append(f)
 
@@ -67,7 +69,7 @@ class One2Many(Declarations.RelationShip):
         :rtype: Many2One relation ship
         """
         remote_properties = registry.loaded_namespaces_first_step.get(
-            self.model.__registry_name__)
+            self.get_registry_name())
         self_properties = registry.loaded_namespaces_first_step.get(namespace)
 
         tablename = properties['__tablename__']
@@ -81,7 +83,8 @@ class One2Many(Declarations.RelationShip):
             local_column = self.find_primary_key(self_properties)
 
             primaryjoin = tablename + '.' + local_column + " == "
-            primaryjoin += self.model.__tablename__ + '.' + self.remote_column
+            primaryjoin += self.get_tablename(registry)
+            primaryjoin += '.' + self.remote_column
             self.kwargs['primaryjoin'] = primaryjoin
 
         return super(One2Many, self).get_sqlalchemy_mapping(

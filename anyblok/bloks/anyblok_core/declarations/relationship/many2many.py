@@ -95,11 +95,11 @@ class Many2Many(Declarations.RelationShip):
         :rtype: Many2One relation ship
         """
         remote_properties = registry.loaded_namespaces_first_step.get(
-            self.model.__registry_name__)
+            self.get_registry_name())
         local_properties = registry.loaded_namespaces_first_step.get(namespace)
 
         local_tablename = properties['__tablename__']
-        remote_tablename = self.model.__tablename__
+        remote_tablename = self.get_tablename(registry)
         if self.join_table is None:
             self.join_table = 'join_%s_and_%s' % (local_tablename,
                                                   remote_tablename)

@@ -33,7 +33,20 @@ class RelationShip(Declarations.Field):
         if 'info' not in self.kwargs:
             self.kwargs['info'] = {}
 
-        self.kwargs['info']['remote_model'] = self.model.__registry_name__
+        self.kwargs['info']['remote_model'] = self.get_registry_name()
+
+    def get_registry_name(self):
+        if isinstance(self.model, str):
+            return self.model
+        else:
+            return self.model.__registry_name__
+
+    def get_tablename(self, registry):
+        if isinstance(self.model, str):
+            model = registry.loaded_namespaces_first_step[self.model]
+            return model['__tablename__']
+        else:
+            return self.model.__tablename__
 
     def apply_instrumentedlist(self, registry):
         self.kwargs['collection_class'] = registry.InstrumentedList
@@ -55,6 +68,8 @@ class RelationShip(Declarations.Field):
         """
         pks = []
         for f, p in properties.items():
+            if f == '__tablename__':
+                continue
             if 'primary_key' in p.kwargs:
                 pks.append(f)
 
@@ -78,4 +93,4 @@ class RelationShip(Declarations.Field):
         self.kwargs['info']['label'] = self.label
         self.kwargs['info']['rtype'] = self.__class__.__name__
         self.apply_instrumentedlist(registry)
-        return relationship(self.model.__tablename__, **self.kwargs)
+        return relationship(self.get_tablename(registry), **self.kwargs)

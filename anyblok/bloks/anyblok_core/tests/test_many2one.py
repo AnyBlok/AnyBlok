@@ -45,6 +45,23 @@ def _minimum_many2one(**kwargs):
         address = Many2One(model=Model.Address)
 
 
+def _many2one_with_str_model(**kwargs):
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+    Many2One = Declarations.RelationShip.Many2One
+
+    @target_registry(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+
+    @target_registry(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model='Model.Address')
+
+
 def _minimum_many2one_without_model(**kwargs):
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
@@ -117,6 +134,22 @@ class TestMany2One(DBTestCase):
 
     def test_minimum_many2one(self):
         registry = self.init_registry(_minimum_many2one)
+
+        address_exist = hasattr(registry.Person, 'address')
+        self.assertEqual(address_exist, True)
+
+        address_id_exist = hasattr(registry.Person, 'address_id')
+        self.assertEqual(address_id_exist, True)
+
+        address = registry.Address.insert()
+
+        person = registry.Person.insert(
+            name=u"Jean-sébastien SUZANNE", address=address)
+
+        self.assertEqual(person.address, address)
+
+    def test_many2one_with_str_model(self):
+        registry = self.init_registry(_many2one_with_str_model)
 
         address_exist = hasattr(registry.Person, 'address')
         self.assertEqual(address_exist, True)

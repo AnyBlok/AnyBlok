@@ -51,6 +51,26 @@ def _minimum_many2many(**kwargs):
         address = Many2Many(model=Model.Address)
 
 
+def _many2many_with_str_model(**kwargs):
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+    Many2Many = Declarations.RelationShip.Many2Many
+
+    @target_registry(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @target_registry(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2Many(model='Model.Address')
+
+
 def auto_detect_two_primary_keys(**kwargs):
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
@@ -136,6 +156,28 @@ class TestMany2Many(DBTestCase):
 
     def test_minimum_many2many(self):
         registry = self.init_registry(_minimum_many2many)
+
+        address_exist = hasattr(registry.Person, 'address')
+        self.assertEqual(address_exist, True)
+
+        m2m_tables_exist = hasattr(registry, 'many2many_tables')
+        self.assertEqual(m2m_tables_exist, True)
+
+        jt = registry.declarativebase.metadata.tables
+        join_table_exist = 'join_person_and_address' in jt
+        self.assertEqual(join_table_exist, True)
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(name=u"Jean-sébastien SUZANNE")
+
+        person.address.append(address)
+
+        self.assertEqual(person.address, [address])
+
+    def test_many2many_with_str_model(self):
+        registry = self.init_registry(_many2many_with_str_model)
 
         address_exist = hasattr(registry.Person, 'address')
         self.assertEqual(address_exist, True)

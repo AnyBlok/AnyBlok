@@ -175,6 +175,8 @@ class Model:
         bases = []
         properties = {}
         ns = registry.loaded_registries[namespace]
+        if '__tablename__' in ns['properties']:
+            properties['__tablename__'] = ns['properties']['__tablename__']
 
         for b in ns['bases']:
             bases.append(b)

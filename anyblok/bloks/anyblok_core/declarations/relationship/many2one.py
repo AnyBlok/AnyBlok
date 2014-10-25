@@ -64,7 +64,7 @@ class Many2One(Declarations.RelationShip):
         :param propertie: the properties known
         """
         remote_properties = registry.loaded_namespaces_first_step.get(
-            self.model.__registry_name__)
+            self.get_registry_name())
 
         if self.remote_column is None:
             self.remote_column = self.find_primary_key(remote_properties)
@@ -72,7 +72,7 @@ class Many2One(Declarations.RelationShip):
         self.kwargs['info']['remote_column'] = self.remote_column
 
         if self.column_name is None:
-            self.column_name = "%s_%s" % (self.model.__tablename__,
+            self.column_name = "%s_%s" % (self.get_tablename(registry),
                                           self.remote_column)
 
         self.kwargs['info']['local_column'] = self.column_name
@@ -81,7 +81,7 @@ class Many2One(Declarations.RelationShip):
         if self.column_name not in self_properties:
             from sqlalchemy.ext.declarative import declared_attr
             remote_type = remote_properties[self.remote_column].native_type()
-            foreign_key = '%s.%s' % (self.model.__tablename__,
+            foreign_key = '%s.%s' % (self.get_tablename(registry),
                                      self.remote_column)
 
             def wraper(cls):

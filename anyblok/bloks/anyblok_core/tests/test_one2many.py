@@ -61,6 +61,31 @@ def _minimum_one2many(**kwargs):
         persons = One2Many(model=Model.Person)
 
 
+def _one2many_with_str_model(**kwargs):
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+    One2Many = Declarations.RelationShip.One2Many
+
+    @target_registry(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @target_registry(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address_id = Integer(foreign_key=(Model.Address, 'id'))
+
+    @target_registry(Model)  # noqa
+    class Address:
+
+        persons = One2Many(model='Model.Person')
+
+
 def _autodetect_two_foreign_key(**kwargs):
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
@@ -102,6 +127,15 @@ class TestOne2One(DBTestCase):
 
     def test_minimum_one2one(self):
         registry = self.init_registry(_minimum_one2many)
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(name=u"Jean-sébastien SUZANNE")
+        address.persons.append(person)
+
+    def test_one2many_with_str_model(self):
+        registry = self.init_registry(_one2many_with_str_model)
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')

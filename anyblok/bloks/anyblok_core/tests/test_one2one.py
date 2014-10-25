@@ -45,6 +45,23 @@ def _minimum_one2one(**kwargs):
         address = One2One(model=Model.Address, backref="person")
 
 
+def _one2one_with_str_method(**kwargs):
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+    One2One = Declarations.RelationShip.One2One
+
+    @target_registry(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+
+    @target_registry(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = One2One(model="Model.Address", backref="person")
+
+
 def _minimum_one2one_without_backref(**kwargs):
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
@@ -101,6 +118,22 @@ class TestOne2One(DBTestCase):
 
     def test_minimum_one2one(self):
         registry = self.init_registry(_minimum_one2one)
+
+        address_exist = hasattr(registry.Person, 'address')
+        self.assertEqual(address_exist, True)
+
+        address_id_exist = hasattr(registry.Person, 'address_id')
+        self.assertEqual(address_id_exist, True)
+
+        address = registry.Address.insert()
+
+        person = registry.Person.insert(
+            name=u"Jean-sébastien SUZANNE", address=address)
+
+        self.assertEqual(address.person, person)
+
+    def test_one2one_with_str_model(self):
+        registry = self.init_registry(_one2one_with_str_method)
 
         address_exist = hasattr(registry.Person, 'address')
         self.assertEqual(address_exist, True)
