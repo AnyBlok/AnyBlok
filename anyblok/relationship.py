@@ -79,6 +79,12 @@ class RelationShip(Declarations.Field):
 
         return pks[0]
 
+    def check_existing_remote_model(self, registry):
+        remote_model = self.get_registry_name()
+        if remote_model not in registry.loaded_namespaces_first_step:
+            raise FieldException(
+                "Remote model %r doesn't exist" % remote_model)
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Return the instance of the real field
@@ -89,6 +95,7 @@ class RelationShip(Declarations.Field):
         :param properties: properties known of the model
         :rtype: sqlalchemy relation ship instance
         """
+        self.check_existing_remote_model(registry)
         self.format_label(fieldname)
         self.kwargs['info']['label'] = self.label
         self.kwargs['info']['rtype'] = self.__class__.__name__

@@ -94,6 +94,7 @@ class Many2Many(Declarations.RelationShip):
         :param properties: the properties known
         :rtype: Many2One relation ship
         """
+        self.check_existing_remote_model(registry)
         remote_properties = registry.loaded_namespaces_first_step.get(
             self.get_registry_name())
         local_properties = registry.loaded_namespaces_first_step.get(namespace)

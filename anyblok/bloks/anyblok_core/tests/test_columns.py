@@ -50,6 +50,14 @@ class TestColumns(DBTestCase):
         test = registry.Test.insert(col=1)
         self.assertEqual(test.col, 1)
 
+    def test_integer_str_foreign_key(self):
+        Integer = Declarations.Column.Integer
+        registry = self.init_registry(
+            simple_column, ColumnType=Integer, foreign_key=('test', 'id'))
+        test = registry.Test.insert()
+        test2 = registry.Test.insert(col=test.id)
+        self.assertEqual(test2.col, test.id)
+
     def test_big_integer(self):
         BigInteger = Declarations.Column.BigInteger
         registry = self.init_registry(simple_column, ColumnType=BigInteger)

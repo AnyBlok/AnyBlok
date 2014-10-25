@@ -68,6 +68,7 @@ class One2Many(Declarations.RelationShip):
         :param propertie: the properties known
         :rtype: Many2One relation ship
         """
+        self.check_existing_remote_model(registry)
         remote_properties = registry.loaded_namespaces_first_step.get(
             self.get_registry_name())
         self_properties = registry.loaded_namespaces_first_step.get(namespace)

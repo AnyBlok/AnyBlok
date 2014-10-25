@@ -27,7 +27,10 @@ class Column(Declarations.Field):
 
         if 'foreign_key' in kwargs:
             model, col = kwargs.pop('foreign_key')
-            self.foreign_key = model.__tablename__ + '.' + col
+            if isinstance(model, str):
+                self.foreign_key = model + '.' + col
+            else:
+                self.foreign_key = model.__tablename__ + '.' + col
 
         super(Column, self).__init__(*args, **kwargs)
 
