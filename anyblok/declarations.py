@@ -63,6 +63,26 @@ class Declarations:
         return cls_
 
     @classmethod
+    def cache(cls, size=128):
+        def wrapper(method):
+            method.is_cache_method = True
+            method.is_cache_classmethod = False
+            method.size = size
+            return method
+
+        return wrapper
+
+    @classmethod
+    def classmethod_cache(cls, size=128):
+        def wrapper(method):
+            method.is_cache_method = True
+            method.is_cache_classmethod = True
+            method.size = size
+            return method
+
+        return wrapper
+
+    @classmethod
     def add_declaration_type(cls, cls_=None, isAnEntry=False,
                              assemble=None, initialize=None):
         """ Method to add a type of declaration

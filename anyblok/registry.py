@@ -10,6 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from anyblok.migration import Migration
 from sqlalchemy.exc import ProgrammingError, OperationalError
+from functools import lru_cache
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -59,6 +60,7 @@ class RegistryManager:
         :param blok: name of the blok
         :rtype: boolean
         """
+
         return blok in cls.loaded_bloks
 
     @classmethod
@@ -137,6 +139,7 @@ class RegistryManager:
         :param initialize_callback: function callback to call to init after
             assembling
         """
+
         if entry not in cls.declared_entries:
             cls.declared_entries.append(entry)
 
@@ -201,8 +204,10 @@ class RegistryManager:
         :param ``cls_``: Class of the Core to save in loaded blok target
             registry
         """
+
+        new_cls = cls.apply_cache('Core.' + core, cls_)
         current_blok = EnvironmentManager.get('current_blok')
-        cls.loaded_bloks[current_blok]['Core'][core].append(cls_)
+        cls.loaded_bloks[current_blok]['Core'][core].append(new_cls)
 
     @classmethod
     def remove_core_in_target_registry(cls, blok, core, cls_):
@@ -232,6 +237,41 @@ class RegistryManager:
         return len(cls.loaded_bloks[blok][entry][key]['bases']) > 0
 
     @classmethod
+    def apply_cache(cls, key, cls_):
+        caches = cls.get_blok_property('caches', {})
+        methods_cached = {}
+
+        def apply_wrapper(attr, method):
+            @lru_cache(maxsize=method.size)
+            def wrapper(*args, **kwargs):
+                return method(*args, **kwargs)
+
+            wrapper.indentify = (key, attr)
+            caches[key][attr].append(wrapper)
+            if method.is_cache_classmethod:
+                methods_cached[attr] = classmethod(wrapper)
+            else:
+                methods_cached[attr] = wrapper
+
+        for attr in dir(cls_):
+            method = getattr(cls_, attr)
+            if not hasattr(method, 'is_cache_method'):
+                continue
+            elif method.is_cache_method is True:
+                if key not in caches:
+                    caches[key] = {attr: []}
+                elif attr not in caches[key]:
+                    caches[key][attr] = []
+
+                apply_wrapper(attr, method)
+
+        cls.add_or_replace_blok_property('caches', caches)
+        if methods_cached:
+            return type(key, (cls_,), methods_cached)
+
+        return cls_
+
+    @classmethod
     def add_entry_in_target_registry(cls, entry, key, cls_, **kwargs):
         """ Load entry in blok
 
@@ -240,13 +280,15 @@ class RegistryManager:
         :param key: is the existing key in the entry
         :param ``cls_``: Class of the entry / key to remove in loaded blok
         """
+
+        new_cls = cls.apply_cache(key, cls_)
         bases = []
 
-        for base in cls_.__bases__:
+        for base in new_cls.__bases__:
             if hasattr(base, '__registry_name__'):
                 bases.append(base)
 
-        setattr(cls_, '__anyblok_bases__', bases)
+        setattr(new_cls, '__anyblok_bases__', bases)
 
         cb = EnvironmentManager.get('current_blok')
 
@@ -259,7 +301,7 @@ class RegistryManager:
         cls.loaded_bloks[cb][entry][key]['properties'].update(kwargs)
         # Add before in registry because it is the same order than the
         # inheritance __bases__ and __mro__
-        cls.loaded_bloks[cb][entry][key]['bases'].insert(0, cls_)
+        cls.loaded_bloks[cb][entry][key]['bases'].insert(0, new_cls)
 
         if key not in cls.loaded_bloks[cb][entry]['registry_names']:
             cls.loaded_bloks[cb][entry]['registry_names'].append(key)

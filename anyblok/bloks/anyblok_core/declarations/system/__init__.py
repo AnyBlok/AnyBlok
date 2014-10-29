@@ -10,3 +10,4 @@ from . import field  # noqa
 from . import column  # noqa
 from . import relationship  # noqa
 from . import blok  # noqa
+from . import cache  # noqa

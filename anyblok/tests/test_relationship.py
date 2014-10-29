@@ -35,14 +35,6 @@ class TestRelationShip(TestCase):
         except FieldException:
             pass
 
-    def test_without_label(self):
-        target_registry(RelationShip, cls_=OneRelationShip,
-                        name_='NoLabelRelationShip')
-        relation = RelationShip.NoLabelRelationShip(model=OneModel)
-        relation.get_sqlalchemy_mapping(MockRegistry(), None,
-                                        'a_relation_ship', None)
-        self.assertEqual(relation.label, 'A relation ship')
-
     def test_must_have_a_model(self):
         target_registry(RelationShip, cls_=OneRelationShip,
                         name_="RealRelationShip")

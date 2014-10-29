@@ -5,3 +5,7 @@ from anyblok import Declarations
 class Base:
 
     is_sql = False
+
+    @classmethod
+    def initialize_model(cls):
+        pass

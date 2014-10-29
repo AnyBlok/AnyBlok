@@ -1,0 +1,64 @@
+from anyblok.declarations import Declarations
+
+
+target_registry = Declarations.target_registry
+System = Declarations.Model.System
+
+Integer = Declarations.Column.Integer
+String = Declarations.Column.String
+Text = Declarations.Column.Text
+
+
+@target_registry(System)
+class Cache:
+
+    last_cache_id = None
+    lrus = {}
+
+    id = Integer(primary_key=True)
+    registry_name = String(nullable=False)
+    method = String(nullable=False)
+
+    @classmethod
+    def get_last_id(cls):
+        res = cls.query('id').order_by(cls.id.desc()).limit(1).first()
+        if res:
+            return res[0]
+
+        return 0
+
+    @classmethod
+    def initialize_model(cls):
+        super(Cache, cls).initialize_model()
+        cls.last_cache_id = cls.get_last_id()
+
+    @classmethod
+    def invalidate(cls, registry_name, method):
+        if isinstance(registry_name, str):
+            cls.insert(registry_name=registry_name, method=method)
+        elif hasattr(registry_name, '__registry_name__'):
+            cls.insert(registry_name=registry_name.__registry_name__,
+                       method=method)
+
+        cls.clear_invalidate_cache()
+
+    @classmethod
+    def detect_invalidation(cls):
+        return cls.last_cache_id < cls.get_last_id()
+
+    @classmethod
+    def get_invalidation(cls):
+        res = []
+        if cls.detect_invalidation():
+            caches = cls.registry.properties['caches']
+            for i in cls.query().filter(cls.id > cls.last_cache_id).all():
+                res.extend(caches[i.registry_name][i.method])
+
+            cls.last_cache_id = cls.get_last_id()
+
+        return res
+
+    @classmethod
+    def clear_invalidate_cache(cls):
+        for cache in cls.get_invalidation():
+            cache.cache_clear()

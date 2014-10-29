@@ -341,6 +341,9 @@ class Model:
 
         :param registry: registry to update
         """
+        for Model in registry.loaded_namespaces.values():
+            Model.initialize_model()
+
         Model = registry.System.Model
         Model.update_list()
 
