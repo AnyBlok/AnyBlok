@@ -20,6 +20,45 @@ def simple_subclass_model():
         other = String()
 
 
+def simple_subclass_Core_Base():
+
+    @target_registry(Core)
+    class Base:
+
+        def mymethod(self):
+            return 1
+
+    @target_registry(Core)  # noqa
+    class Base:
+
+        def mymethod(self):
+            return 10 * super(Base, self).mymethod()
+
+    @target_registry(Model)
+    class Test:
+        pass
+
+
+def simple_subclass_Core_SqlBase():
+    Integer = Declarations.Column.Integer
+
+    @target_registry(Core)
+    class SqlBase:
+
+        def mymethod(self):
+            return 1
+
+    @target_registry(Core)  # noqa
+    class SqlBase:
+
+        def mymethod(self):
+            return 10 * super(SqlBase, self).mymethod()
+
+    @target_registry(Model)
+    class Test:
+        id = Integer(primary_key=True)
+
+
 def simple_subclass_model_change_type():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
@@ -398,6 +437,16 @@ class TestInherit(DBTestCase):
     def test_simple_subclass_model(self):
         registry = self.init_registry(simple_subclass_model)
         self.check_registry(registry.Test)
+
+    def test_simple_subclass_Core_Base(self):
+        registry = self.init_registry(simple_subclass_Core_Base)
+        m = registry.Test()
+        self.assertEqual(m.mymethod(), 10)
+
+    def test_simple_subclass_Core_SqlBase(self):
+        registry = self.init_registry(simple_subclass_Core_SqlBase)
+        m = registry.Test()
+        self.assertEqual(m.mymethod(), 10)
 
     def test_simple_subclass_model_change_type(self):
         registry = self.init_registry(simple_subclass_model_change_type)

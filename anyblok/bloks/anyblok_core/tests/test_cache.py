@@ -424,3 +424,274 @@ class TestClassMethodCache(DBTestCase):
         self.assertEqual(m.method_cached(), 17)
         registry.System.Cache.invalidate('Mixin.MTest', 'method_cached')
         self.assertEqual(m.method_cached(), 23)
+
+
+class TestInheritedCache(DBTestCase):
+
+    def check_method_cached(self, Model, registry_name):
+        m = Model()
+        self.assertEqual(m.method_cached(), 3)
+        self.assertEqual(m.method_cached(), 5)
+        Model.registry.System.Cache.invalidate(registry_name, 'method_cached')
+        self.assertEqual(m.method_cached(), 8)
+
+    def check_inherited_method_cached(self, Model, registry_name):
+        m = Model()
+        self.assertEqual(m.method_cached(), 3)
+        self.assertEqual(m.method_cached(), 3)
+        Model.registry.System.Cache.invalidate(registry_name, 'method_cached')
+        self.assertEqual(m.method_cached(), 6)
+
+    def add_model_with_method_cached(self, inheritcache=False):
+
+        @target_registry(Model)
+        class Test:
+
+            x = 0
+
+            @Declarations.cache()
+            def method_cached(self):
+                self.x += 1
+                return self.x
+
+        @target_registry(Model)  # noqa
+        class Test:
+
+            y = 0
+
+            if inheritcache:
+                @Declarations.cache()
+                def method_cached(self):
+                    self.y += 2
+                    return self.y + super(Test, self).method_cached()
+            else:
+                def method_cached(self):
+                    self.y += 2
+                    return self.y + super(Test, self).method_cached()
+
+    def add_model_with_method_cached_by_core(self, inheritcache=False):
+
+        @target_registry(Core)
+        class Base:
+
+            x = 0
+
+            @Declarations.cache()
+            def method_cached(self):
+                self.x += 1
+                return self.x
+
+        @target_registry(Core)  # noqa
+        class Base:
+
+            y = 0
+
+            if inheritcache:
+                @Declarations.cache()
+                def method_cached(self):
+                    self.y += 2
+                    return self.y + super(Base, self).method_cached()
+            else:
+                def method_cached(self):
+                    self.y += 2
+                    return self.y + super(Base, self).method_cached()
+
+        @target_registry(Model)
+        class Test:
+            pass
+
+    def add_model_with_method_cached_by_mixin(self, inheritcache=False):
+
+        @target_registry(Mixin)
+        class MTest:
+
+            x = 0
+
+            @Declarations.cache()
+            def method_cached(self):
+                self.x += 1
+                return self.x
+
+        @target_registry(Mixin)  # noqa
+        class MTest:
+
+            y = 0
+
+            if inheritcache:
+                @Declarations.cache()
+                def method_cached(self):
+                    self.y += 2
+                    return self.y + super(MTest, self).method_cached()
+            else:
+                def method_cached(self):
+                    self.y += 2
+                    return self.y + super(MTest, self).method_cached()
+
+        @target_registry(Model)
+        class Test(Mixin.MTest):
+            pass
+
+    def test_model(self):
+        registry = self.init_registry(self.add_model_with_method_cached)
+        self.check_method_cached(registry.Test, 'Model.Test')
+
+    def test_model2(self):
+        registry = self.init_registry(self.add_model_with_method_cached,
+                                      inheritcache=True)
+        self.check_inherited_method_cached(registry.Test, 'Model.Test')
+
+    def test_core(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_core)
+        self.check_method_cached(registry.Test, 'Core.Base')
+
+    def test_core2(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_core, inheritcache=True)
+        self.check_inherited_method_cached(registry.Test, 'Core.Base')
+
+    def test_mixin(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
+        self.check_method_cached(registry.Test, 'Mixin.MTest')
+
+    def test_mixin2(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin, inheritcache=True)
+        self.check_inherited_method_cached(registry.Test, 'Mixin.MTest')
+
+
+class TestInheritedClassMethodCache(DBTestCase):
+
+    def check_method_cached(self, Model, registry_name):
+        self.assertEqual(Model.method_cached(), 3)
+        self.assertEqual(Model.method_cached(), 5)
+        Model.registry.System.Cache.invalidate(registry_name, 'method_cached')
+        self.assertEqual(Model.method_cached(), 8)
+
+    def check_inherited_method_cached(self, Model, registry_name):
+        self.assertEqual(Model.method_cached(), 3)
+        self.assertEqual(Model.method_cached(), 3)
+        Model.registry.System.Cache.invalidate(registry_name, 'method_cached')
+        self.assertEqual(Model.method_cached(), 6)
+
+    def add_model_with_method_cached(self, inheritcache=False):
+
+        @target_registry(Model)
+        class Test:
+
+            x = 0
+
+            @Declarations.classmethod_cache()
+            def method_cached(cls):
+                cls.x += 1
+                return cls.x
+
+        @target_registry(Model)  # noqa
+        class Test:
+
+            y = 0
+
+            if inheritcache:
+                @Declarations.classmethod_cache()
+                def method_cached(cls):
+                    cls.y += 2
+                    return cls.y + super(Test, cls).method_cached()
+            else:
+                @classmethod
+                def method_cached(cls):
+                    cls.y += 2
+                    return cls.y + super(Test, cls).method_cached()
+
+    def add_model_with_method_cached_by_core(self, inheritcache=False):
+
+        @target_registry(Core)
+        class Base:
+
+            x = 0
+
+            @Declarations.classmethod_cache()
+            def method_cached(cls):
+                cls.x += 1
+                return cls.x
+
+        @target_registry(Core)  # noqa
+        class Base:
+
+            y = 0
+
+            if inheritcache:
+                @Declarations.classmethod_cache()
+                def method_cached(cls):
+                    cls.y += 2
+                    return cls.y + super(Base, cls).method_cached()
+            else:
+                @classmethod
+                def method_cached(cls):
+                    cls.y += 2
+                    return cls.y + super(Base, cls).method_cached()
+
+        @target_registry(Model)
+        class Test:
+            pass
+
+    def add_model_with_method_cached_by_mixin(self, inheritcache=False):
+
+        @target_registry(Mixin)
+        class MTest:
+
+            x = 0
+
+            @Declarations.classmethod_cache()
+            def method_cached(cls):
+                cls.x += 1
+                return cls.x
+
+        @target_registry(Mixin)  # noqa
+        class MTest:
+
+            y = 0
+
+            if inheritcache:
+                @Declarations.classmethod_cache()
+                def method_cached(cls):
+                    cls.y += 2
+                    return cls.y + super(MTest, cls).method_cached()
+            else:
+                @classmethod
+                def method_cached(cls):
+                    cls.y += 2
+                    return cls.y + super(MTest, cls).method_cached()
+
+        @target_registry(Model)
+        class Test(Mixin.MTest):
+            pass
+
+    def test_model(self):
+        registry = self.init_registry(self.add_model_with_method_cached)
+        self.check_method_cached(registry.Test, 'Model.Test')
+
+    def test_model2(self):
+        registry = self.init_registry(self.add_model_with_method_cached,
+                                      inheritcache=True)
+        self.check_inherited_method_cached(registry.Test, 'Model.Test')
+
+    def test_core(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_core)
+        self.check_method_cached(registry.Test, 'Core.Base')
+
+    def test_core2(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_core, inheritcache=True)
+        self.check_inherited_method_cached(registry.Test, 'Core.Base')
+
+    def test_mixin(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
+        self.check_method_cached(registry.Test, 'Mixin.MTest')
+
+    def test_mixin2(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin, inheritcache=True)
+        self.check_inherited_method_cached(registry.Test, 'Mixin.MTest')

@@ -503,7 +503,6 @@ class Registry:
         :param core: the core name to load
         """
         bases = RegistryManager.loaded_bloks[blok]['Core'][core]
-        bases.reverse()
         for base in bases:
             self.loaded_cores[core].insert(0, base)
 
