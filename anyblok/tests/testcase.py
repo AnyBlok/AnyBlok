@@ -161,7 +161,15 @@ class DBTestCase(TestCase):
             function(**kwargs)
         finally:
             EnvironmentManager.set('current_blok', None)
-        return self.getRegistry()
+        registry = self.getRegistry()
+
+        def session_commit(*args, **kwargs):
+            pass
+
+        registry.old_session_commit = registry.session_commit
+        registry.session_commit = session_commit
+
+        return registry
 
 
 class BlokTestCase(TestCase):
@@ -205,6 +213,11 @@ class BlokTestCase(TestCase):
 
         if bloks:
             registry.upgrade(install=bloks)
+
+        def session_commit(*args, **kwargs):
+            pass
+
+        registry.session_commit = session_commit
 
     def tearDown(self):
         """ Roll back the session """

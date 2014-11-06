@@ -160,7 +160,7 @@ class TestModel(DBTestCase):
         registry = self.init_registry(simple_model)
 
         t = registry.Test.insert(name=1)
-        registry.commit()
+        registry.old_session_commit()
         self.assertNotEqual(t.name, 1)
 
     def test_model_with_foreign_key(self):

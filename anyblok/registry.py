@@ -736,6 +736,14 @@ class Registry:
         else:
             super(Registry, self).__getattr__(attribute)
 
+    def commit(self, *args, **kwargs):
+        self.session_commit(*args, **kwargs)
+
+    def session_commit(self, *args, **kwargs):
+        if self.Session:
+            session = self.Session()
+            session.commit(*args, **kwargs)
+
     def clean_model(self):
         """ Clean the registry of all the namespace """
         for model in self.loaded_namespaces.keys():
