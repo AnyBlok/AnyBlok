@@ -70,3 +70,8 @@ class SqlBase(SqlMixin):
             cls.registry.flush()
 
         return instances
+
+    @classmethod
+    def precommit_hook(cls, method, put_at_the_end_if_exist=False):
+        cls.registry.precommit_hook(cls.__registry_name__, method,
+                                    put_at_the_end_if_exist)

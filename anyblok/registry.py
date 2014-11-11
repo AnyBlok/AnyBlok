@@ -417,6 +417,7 @@ class Registry:
         self.loaded_namespaces = {}
         self.children_namespaces = {}
         self.properties = {}
+        self._precommit_hook = []
 
     def get(self, namespace):
         """ Return the namespace Class
@@ -736,7 +737,27 @@ class Registry:
         else:
             super(Registry, self).__getattr__(attribute)
 
+    def precommit_hook(self, registryname, method, put_at_the_if_exist):
+        entry = (registryname, method)
+        if entry in self._precommit_hook:
+            if put_at_the_if_exist:
+                self._precommit_hook.remove(entry)
+                self._precommit_hook.append(entry)
+
+        else:
+            self._precommit_hook.append(entry)
+
     def commit(self, *args, **kwargs):
+        hooks = []
+        if self._precommit_hook:
+            hooks.extend(self._precommit_hook)
+
+        for hook in hooks:
+            Model = self.loaded_namespaces[hook[0]]
+            method = hook[1]
+            getattr(Model, method)()
+            self._precommit_hook.remove(hook)
+
         self.session_commit(*args, **kwargs)
 
     def session_commit(self, *args, **kwargs):
