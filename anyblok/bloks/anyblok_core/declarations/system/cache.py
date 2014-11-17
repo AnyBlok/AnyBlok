@@ -9,6 +9,11 @@ String = Declarations.Column.String
 Text = Declarations.Column.Text
 
 
+@target_registry(Declarations.Exception)
+class CacheException(Exception):
+    pass
+
+
 @target_registry(System)
 class Cache:
 
@@ -34,11 +39,24 @@ class Cache:
 
     @classmethod
     def invalidate(cls, registry_name, method):
+        caches = cls.registry.caches
+
+        def insert(registry_name=None, method=None):
+            if registry_name in caches:
+                if method in caches[registry_name]:
+                    cls.insert(registry_name=registry_name, method=method)
+                else:
+                    raise Declarations.Exception.CacheException(
+                        "Unknown cached method %r" % method)
+            else:
+                raise Declarations.Exception.CacheException(
+                    "Unknown cached model %r" % registry_name)
+
         if isinstance(registry_name, str):
-            cls.insert(registry_name=registry_name, method=method)
+            insert(registry_name=registry_name, method=method)
         elif hasattr(registry_name, '__registry_name__'):
-            cls.insert(registry_name=registry_name.__registry_name__,
-                       method=method)
+            insert(registry_name=registry_name.__registry_name__,
+                   method=method)
 
         cls.clear_invalidate_cache()
 
@@ -50,7 +68,7 @@ class Cache:
     def get_invalidation(cls):
         res = []
         if cls.detect_invalidation():
-            caches = cls.registry.properties['caches']
+            caches = cls.registry.caches
             for i in cls.query().filter(cls.id > cls.last_cache_id).all():
                 res.extend(caches[i.registry_name][i.method])
 

@@ -4,6 +4,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper
+from functools import lru_cache
 
 
 class CreateView(DDLElement):
@@ -168,6 +169,39 @@ class Model:
         field.update_properties(registry, namespace, name, properties)
 
     @classmethod
+    def apply_cache(cls, registry, namespace, base):
+        methods_cached = {}
+
+        def apply_wrapper(attr, method):
+            @lru_cache(maxsize=method.size)
+            def wrapper(*args, **kwargs):
+                return method(*args, **kwargs)
+
+            wrapper.indentify = (namespace, attr)
+            registry.caches[namespace][attr].append(wrapper)
+            if method.is_cache_classmethod:
+                methods_cached[attr] = classmethod(wrapper)
+            else:
+                methods_cached[attr] = wrapper
+
+        for attr in dir(base):
+            method = getattr(base, attr)
+            if not hasattr(method, 'is_cache_method'):
+                continue
+            elif method.is_cache_method is True:
+                if namespace not in registry.caches:
+                    registry.caches[namespace] = {attr: []}
+                elif attr not in registry.caches[namespace]:
+                    registry.caches[namespace][attr] = []
+
+                apply_wrapper(attr, method)
+
+        if methods_cached:
+            return type(namespace, (base,), methods_cached)
+
+        return base
+
+    @classmethod
     def load_namespace_first_step(cls, registry, namespace):
         if namespace in registry.loaded_namespaces_first_step:
             return registry.loaded_namespaces_first_step[namespace]
@@ -199,7 +233,8 @@ class Model:
         return properties
 
     @classmethod
-    def load_namespace_second_step(cls, registry, namespace):
+    def load_namespace_second_step(cls, registry, namespace,
+                                   realregistryname=None):
         if namespace in registry.loaded_namespaces:
             return [registry.loaded_namespaces[namespace]], {}
 
@@ -214,14 +249,21 @@ class Model:
             if b in bases:
                 continue
 
-            bases.append(b)
+            if realregistryname:
+                bases.append(cls.apply_cache(registry, realregistryname, b))
+            else:
+                bases.append(cls.apply_cache(registry, namespace, b))
+
             if b.__doc__ and '__doc__' not in properties:
                 properties['__doc__'] = b.__doc__
 
             for b_ns in b.__anyblok_bases__:
-                bs, ps = cls.load_namespace_second_step(
-                    registry,
-                    b_ns.__registry_name__)
+                brn = b_ns.__registry_name__
+                if brn in registry.loaded_registries['Mixin_names']:
+                    bs, ps = cls.load_namespace_second_step(
+                        registry, brn, realregistryname=namespace)
+                else:
+                    bs, ps = cls.load_namespace_second_step(registry, brn)
                 bases += bs
 
         if namespace in registry.loaded_registries['Model_names']:
@@ -229,15 +271,19 @@ class Model:
             properties['loaded_fields'] = {}
             tablename = properties['__tablename__']
             if properties['is_sql_view']:
-                bases += registry.loaded_cores['SqlViewBase']
+                bases += [cls.apply_cache(registry, namespace, x)
+                          for x in registry.loaded_cores['SqlViewBase']]
             elif has_sql_fields(bases):
-                bases += registry.loaded_cores['SqlBase']
-                bases += [registry.declarativebase]
+                bases += [cls.apply_cache(registry, namespace, x)
+                          for x in registry.loaded_cores['SqlBase']]
+                bases += [cls.apply_cache(registry, namespace, x)
+                          for x in [registry.declarativebase]]
             else:
                 # remove tablename to inherit from a sqlmodel
                 del properties['__tablename__']
 
-            bases += registry.loaded_cores['Base']
+            bases += [cls.apply_cache(registry, namespace, x)
+                      for x in registry.loaded_cores['Base']]
 
             if tablename in registry.declarativebase.metadata.tables:
                 if '__tablename__' in properties:
@@ -319,6 +365,7 @@ class Model:
         """
         registry.loaded_namespaces_first_step = {}
         registry.loaded_views = {}
+        registry.caches = {}
 
         # get all the information to create a namespace
         for namespace in registry.loaded_registries['Model_names']:
