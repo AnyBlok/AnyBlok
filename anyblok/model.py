@@ -202,8 +202,30 @@ class Model:
         return base
 
     @classmethod
+    def apply_event_listner(cls, registry, namespace, base):
+
+        for attr in dir(base):
+            method = getattr(base, attr)
+            if not hasattr(method, 'is_an_event_listener'):
+                continue
+            elif method.is_an_event_listener is True:
+                model = method.model
+                event = method.event
+                if model not in registry.events:
+                    registry.events[model] = {event: []}
+                elif event not in registry.events[model]:
+                    registry.events[model][event] = []
+
+                val = (namespace, attr)
+                if val not in registry.events[model][event]:
+                    registry.events[model][event].append(val)
+
+        return base
+
+    @classmethod
     def transform_base(cls, registry, namespace, base):
         new_base = cls.apply_cache(registry, namespace, base)
+        new_base = cls.apply_event_listner(registry, namespace, new_base)
         return new_base
 
     @classmethod
@@ -371,6 +393,7 @@ class Model:
         registry.loaded_namespaces_first_step = {}
         registry.loaded_views = {}
         registry.caches = {}
+        registry.events = {}
 
         # get all the information to create a namespace
         for namespace in registry.loaded_registries['Model_names']:

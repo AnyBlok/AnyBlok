@@ -568,3 +568,9 @@ Share the table between more than one model
 
 Share the view between more than one model
 ------------------------------------------
+
+Cache
+-----
+
+Event
+-----
