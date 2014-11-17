@@ -202,6 +202,11 @@ class Model:
         return base
 
     @classmethod
+    def transform_base(cls, registry, namespace, base):
+        new_base = cls.apply_cache(registry, namespace, base)
+        return new_base
+
+    @classmethod
     def load_namespace_first_step(cls, registry, namespace):
         if namespace in registry.loaded_namespaces_first_step:
             return registry.loaded_namespaces_first_step[namespace]
@@ -250,9 +255,9 @@ class Model:
                 continue
 
             if realregistryname:
-                bases.append(cls.apply_cache(registry, realregistryname, b))
+                bases.append(cls.transform_base(registry, realregistryname, b))
             else:
-                bases.append(cls.apply_cache(registry, namespace, b))
+                bases.append(cls.transform_base(registry, namespace, b))
 
             if b.__doc__ and '__doc__' not in properties:
                 properties['__doc__'] = b.__doc__
@@ -271,18 +276,18 @@ class Model:
             properties['loaded_fields'] = {}
             tablename = properties['__tablename__']
             if properties['is_sql_view']:
-                bases += [cls.apply_cache(registry, namespace, x)
+                bases += [cls.transform_base(registry, namespace, x)
                           for x in registry.loaded_cores['SqlViewBase']]
             elif has_sql_fields(bases):
-                bases += [cls.apply_cache(registry, namespace, x)
+                bases += [cls.transform_base(registry, namespace, x)
                           for x in registry.loaded_cores['SqlBase']]
-                bases += [cls.apply_cache(registry, namespace, x)
+                bases += [cls.transform_base(registry, namespace, x)
                           for x in [registry.declarativebase]]
             else:
                 # remove tablename to inherit from a sqlmodel
                 del properties['__tablename__']
 
-            bases += [cls.apply_cache(registry, namespace, x)
+            bases += [cls.transform_base(registry, namespace, x)
                       for x in registry.loaded_cores['Base']]
 
             if tablename in registry.declarativebase.metadata.tables:
