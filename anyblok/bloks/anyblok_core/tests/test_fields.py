@@ -92,3 +92,26 @@ class TestField(DBTestCase):
         t = registry.Test.query().filter(
             registry.Test.name == 'Jean-Sebastien SUZANNE').first()
         self.assertEqual(t.name, 'Jean-Sebastien SUZANNE')
+
+    def test_field_function_without_fexpr(self):
+
+        def add_in_registry():
+
+            @target_registry(Model)
+            class Test:
+
+                id = Column.Integer(primary_key=True)
+                val1 = Column.Integer()
+                val2 = Field.Function(fget='fget', fset='fset')
+
+                def fget(self):
+                    return 2 * self.val1
+
+                def fset(self, val):
+                    self.val1 = val / 2
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.insert(val1=1)
+        t = registry.Test.query().filter(registry.Test.val2 == 2).first()
+        self.assertEqual(t.val1, 1)
+        self.assertEqual(t.val2, 2)

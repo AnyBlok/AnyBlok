@@ -248,7 +248,7 @@ class Model:
 
             def wrapper(self, *args, **kwargs):
                 self_ = self.registry.loaded_namespaces[self.__registry_name__]
-                if self == self_:
+                if self is self_:
                     return getattr(super(new_base, self), attr)(
                         self, *args, **kwargs)
                 else:
