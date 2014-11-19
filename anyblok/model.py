@@ -4,6 +4,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper
+from sqlalchemy.ext.hybrid import hybrid_method
 from functools import lru_cache
 
 
@@ -169,7 +170,7 @@ class Model:
         field.update_properties(registry, namespace, name, properties)
 
     @classmethod
-    def apply_cache(cls, registry, namespace, base):
+    def apply_cache(cls, registry, namespace, base, properties):
         methods_cached = {}
 
         def apply_wrapper(attr, method):
@@ -202,8 +203,7 @@ class Model:
         return base
 
     @classmethod
-    def apply_event_listner(cls, registry, namespace, base):
-
+    def apply_event_listner(cls, registry, namespace, base, properties):
         for attr in dir(base):
             method = getattr(base, attr)
             if not hasattr(method, 'is_an_event_listener'):
@@ -220,13 +220,51 @@ class Model:
                 if val not in registry.events[model][event]:
                     registry.events[model][event].append(val)
 
-        return base
+    @classmethod
+    def detect_hybrid_method(cls, registry, namespace, base, properties):
+        for attr in dir(base):
+            method = getattr(base, attr)
+            if not hasattr(method, 'is_an_hybrid_method'):
+                continue
+            elif method.is_an_hybrid_method is True:
+                if attr not in properties['hybrid_method']:
+                    properties['hybrid_method'].append(attr)
 
     @classmethod
-    def transform_base(cls, registry, namespace, base):
-        new_base = cls.apply_cache(registry, namespace, base)
-        new_base = cls.apply_event_listner(registry, namespace, new_base)
+    def transform_base(cls, registry, namespace, base, properties):
+        new_base = cls.apply_cache(registry, namespace, base, properties)
+        cls.apply_event_listner(registry, namespace, new_base, properties)
+        cls.detect_hybrid_method(registry, namespace, new_base, properties)
         return new_base
+
+    @classmethod
+    def apply_hybrid_method(cls, registry, namespace, bases, properties):
+        if not properties['hybrid_method']:
+            return
+
+        new_base = type(namespace, tuple(), {})
+
+        def apply_wrapper(attr):
+
+            def wrapper(self, *args, **kwargs):
+                self_ = self.registry.loaded_namespaces[self.__registry_name__]
+                if self == self_:
+                    return getattr(super(new_base, self), attr)(
+                        self, *args, **kwargs)
+                else:
+                    return getattr(super(new_base, self), attr)(
+                        *args, **kwargs)
+
+            setattr(new_base, attr, hybrid_method(wrapper))
+
+        for attr in properties['hybrid_method']:
+            apply_wrapper(attr)
+
+        bases.insert(0, new_base)
+
+    @classmethod
+    def insert_in_bases(cls, registry, namespace, bases, properties):
+        cls.apply_hybrid_method(registry, namespace, bases, properties)
 
     @classmethod
     def load_namespace_first_step(cls, registry, namespace):
@@ -261,9 +299,15 @@ class Model:
 
     @classmethod
     def load_namespace_second_step(cls, registry, namespace,
-                                   realregistryname=None):
+                                   realregistryname=None,
+                                   transformation_properties=None):
         if namespace in registry.loaded_namespaces:
             return [registry.loaded_namespaces[namespace]], {}
+
+        if transformation_properties is None:
+            transformation_properties = {
+                'hybrid_method': [],
+            }
 
         bases = []
         ns = registry.loaded_registries[namespace]
@@ -277,9 +321,11 @@ class Model:
                 continue
 
             if realregistryname:
-                bases.append(cls.transform_base(registry, realregistryname, b))
+                bases.append(cls.transform_base(registry, realregistryname, b,
+                                                transformation_properties))
             else:
-                bases.append(cls.transform_base(registry, namespace, b))
+                bases.append(cls.transform_base(registry, namespace, b,
+                                                transformation_properties))
 
             if b.__doc__ and '__doc__' not in properties:
                 properties['__doc__'] = b.__doc__
@@ -288,7 +334,8 @@ class Model:
                 brn = b_ns.__registry_name__
                 if brn in registry.loaded_registries['Mixin_names']:
                     bs, ps = cls.load_namespace_second_step(
-                        registry, brn, realregistryname=namespace)
+                        registry, brn, realregistryname=namespace,
+                        transformation_properties=transformation_properties)
                 else:
                     bs, ps = cls.load_namespace_second_step(registry, brn)
                 bases += bs
@@ -298,18 +345,22 @@ class Model:
             properties['loaded_fields'] = {}
             tablename = properties['__tablename__']
             if properties['is_sql_view']:
-                bases += [cls.transform_base(registry, namespace, x)
+                bases += [cls.transform_base(registry, namespace, x,
+                                             transformation_properties)
                           for x in registry.loaded_cores['SqlViewBase']]
             elif has_sql_fields(bases):
-                bases += [cls.transform_base(registry, namespace, x)
+                bases += [cls.transform_base(registry, namespace, x,
+                                             transformation_properties)
                           for x in registry.loaded_cores['SqlBase']]
-                bases += [cls.transform_base(registry, namespace, x)
+                bases += [cls.transform_base(registry, namespace, x,
+                                             transformation_properties)
                           for x in [registry.declarativebase]]
             else:
                 # remove tablename to inherit from a sqlmodel
                 del properties['__tablename__']
 
-            bases += [cls.transform_base(registry, namespace, x)
+            bases += [cls.transform_base(registry, namespace, x,
+                                         transformation_properties)
                       for x in registry.loaded_cores['Base']]
 
             if tablename in registry.declarativebase.metadata.tables:
@@ -329,6 +380,8 @@ class Model:
                         cls.declare_field(
                             registry, p, f, namespace, properties)
 
+            cls.insert_in_bases(registry, namespace, bases,
+                                transformation_properties)
             bases = [type(tablename, tuple(bases), properties)]
 
             if properties['is_sql_view']:

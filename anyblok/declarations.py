@@ -96,6 +96,19 @@ class Declarations:
         return wrapper
 
     @classmethod
+    def hybrid_method(cls, method=None):
+        if method:
+            method.is_an_hybrid_method = True
+            return method
+        else:
+
+            def wrapper(method):
+                method.is_an_hybrid_method = True
+                return method
+
+            return wrapper
+
+    @classmethod
     def add_declaration_type(cls, cls_=None, isAnEntry=False,
                              assemble=None, initialize=None):
         """ Method to add a type of declaration
