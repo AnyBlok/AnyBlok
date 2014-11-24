@@ -8,7 +8,6 @@ Next step
 * Do documentation
 * ADD unittest:
     - anyblok_core system
-* classic redirection must depend of the database, so put in the registry
 
 To implement
 ------------
@@ -26,8 +25,6 @@ Library to include
 * sqltap http://sqltap.inconshreveable.com, profiling and introspection for SQLAlchemy applications
 * Crypt https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/DatabaseCrypt
 * profiling https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Profiling
-* json column https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/JSONColumn
-* https://pypi.python.org/pypi/aiopyramid/0.2.0
 
 
 Web client
@@ -43,6 +40,5 @@ Functionnality which need a sprint
 * Back Task
 * Cron
 * Tasks Management
-* Event
 * Event by messaging bus
 * Import / Export

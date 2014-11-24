@@ -246,3 +246,75 @@ class TestColumns(DBTestCase):
         registry.Test.insert(col=SELECTIONS[0][0])
         registry.Test.query().filter(
             registry.Test.col.in_(['admin', 'regular-user'])).first()
+
+    def test_json(self):
+        Json = Declarations.Column.Json
+        registry = self.init_registry(simple_column, ColumnType=Json)
+        val = {'a': 'Test'}
+        test = registry.Test.insert(col=val)
+        self.assertEqual(test.col, val)
+
+    def test_json_update(self):
+        Json = Declarations.Column.Json
+        registry = self.init_registry(simple_column, ColumnType=Json)
+        test = registry.Test.insert(col={'a': 'test'})
+        test.col['b'] = 'test'
+        self.assertEqual(test.col, {'a': 'test', 'b': 'test'})
+
+    def test_json_simple_filter(self):
+        Json = Declarations.Column.Json
+        registry = self.init_registry(simple_column, ColumnType=Json)
+        Test = registry.Test
+        Test.insert(col={'a': 'test'})
+        Test.insert(col={'a': 'test'})
+        Test.insert(col={'b': 'test'})
+        self.assertEqual(
+            Test.query().filter(Test.col == {'a': 'test'}).count(), 2)
+
+    # WORKS with json postgres column but not with the generic AnyBlok column
+    # def test_json_filter(self):
+    #     Json = Declarations.Column.Json
+    #     registry = self.init_registry(simple_column, ColumnType=Json)
+    #     Test = registry.Test
+    #     t1 = Test.insert(col={'a': 'Test1'})
+    #     Test.insert(col={'a': 'Test2'})
+    #     self.assertEqual(Test.query().filter(
+    #         Test.col['a'] == 'Test1').first(), t1)
+
+    # def test_json_filter_numeric(self):
+    #     Json = Declarations.Column.Json
+    #     registry = self.init_registry(simple_column, ColumnType=Json)
+    #     Test = registry.Test
+    #     t1 = Test.insert(col={'a': 1})
+    #     Test.insert(col={'a': 2})
+    #     self.assertEqual(Test.query().filter(
+    #         Test.col['a'] == 1).first(), t1)
+
+    # def test_json_filter_astext(self):
+    #     Json = Declarations.Column.Json
+    #     registry = self.init_registry(simple_column, ColumnType=Json)
+    #     Test = registry.Test
+    #     t1 = Test.insert(col={'a': 'Test1'})
+    #     Test.insert(col={'a': 'Test2'})
+    #     self.assertEqual(Test.query().filter(
+    #         Test.col['a'].astext == 'Test1').first(), t1)
+
+    # def test_json_filter_cast(self):
+    #     Json = Declarations.Column.Json
+    #     Integer = Declarations.Column.Integer
+    #     registry = self.init_registry(simple_column, ColumnType=Json)
+    #     Test = registry.Test
+    #     t1 = Test.insert(col={'a': '1'})
+    #     Test.insert(col={'a': '2'})
+    #     self.assertEqual(Test.query().filter(
+    #         Test.col['a'].cast(Integer) == 1).first(), t1)
+
+    def test_json_null(self):
+        Json = Declarations.Column.Json
+        registry = self.init_registry(simple_column, ColumnType=Json)
+        Test = registry.Test
+        Test.insert(col=None)
+        Test.insert(col=None)
+        Test.insert(col={'a': 'test'})
+        self.assertEqual(Test.query().filter(Test.col == Json.Null).count(), 2)
+        self.assertEqual(Test.query().filter(Test.col != Json.Null).count(), 1)
