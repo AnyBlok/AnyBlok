@@ -30,6 +30,7 @@ To declare a blok you have to:
     class MyBlok(Blok):
         """ Short description of the blok """
         ...
+        version = '1.0.0'
 
 
 These are the options to apply at your blok
@@ -38,6 +39,9 @@ These are the options to apply at your blok
 | Name of the option    | Descriptions                                        |
 +=======================+=====================================================+
 |  ``__doc__``          | Short description of the blok                       |
++-----------------------+-----------------------------------------------------+
+| ``version``           | the version of the blok(required because no value   |
+|                       | by default)                                         |
 +-----------------------+-----------------------------------------------------+
 | ``autoinstall``       | boolean, if ``True`` this blok is automaticaly      |
 |                       | installed                                           |
@@ -57,11 +61,13 @@ And the method defined blok behaviours
 |                         | blok, use only if an action must be execute       |
 |                         | before reload the blok                            |
 +-------------------------+---------------------------------------------------+
-| ``install``             | Action to do when this blok is installed          |
-+-------------------------+---------------------------------------------------+
-| ``update``              | Action to do when the blok is updating            |
+| ``update``              | Action to do when the blok is installing or       |
+|                         | updating, this method has got one argument        |
+|                         | ``latest_version`` (None for install)             |
 +-------------------------+---------------------------------------------------+
 | ``uninstall``           | Action to do when the blok is uninstalled         |
++-------------------------+---------------------------------------------------+
+| ``load``                | Action to do when the server start                |
 +-------------------------+---------------------------------------------------+
 
 3) Declare the entry point in the setup::
@@ -329,6 +335,7 @@ List of the ``Déclarations`` of the column type:
  * ``uString``
  * ``uText``
  * ``Selection``
+ * ``Json``
 
  All the columns have got the this params:
 
@@ -569,8 +576,14 @@ Share the table between more than one model
 Share the view between more than one model
 ------------------------------------------
 
+Specific decorator
+------------------
+
 Cache
------
+~~~~~
 
 Event
------
+~~~~~
+
+Hybrid method
+~~~~~~~~~~~~~
