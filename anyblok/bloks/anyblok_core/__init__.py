@@ -6,5 +6,6 @@ class AnyBlokCore(Blok):
 
     This blok is the main blok"""
 
+    version = '0.0.1'
     autoinstall = True
     priority = 0

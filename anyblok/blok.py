@@ -220,11 +220,11 @@ class Blok:
     def clean_before_reload(cls):
         pass
 
-    def install(self):
-        pass
-
-    def update(self):
+    def update(self, latest_version):
         pass
 
     def uninstall(self):
+        pass
+
+    def load(self):
         pass

@@ -19,9 +19,9 @@ class Blok:
         'uninstalled': 'Uninstalled',
         'installed': 'Installed',
         'toinstall': 'To install',
-        'touninstall': 'To update',
+        'toupdate': 'To update',
         'touninstall': 'To uninstall',
-        'undefined': 'Uninstalled',
+        'undefined': 'Undefined',
     }
 
     name = String(primary_key=True, nullable=False)
@@ -29,6 +29,8 @@ class Blok:
     order = Integer(default=-1, nullable=False)
     short_description = Function(fget='get_short_description')
     long_description = Function(fget='get_long_description')
+    version = String(nullable=False)
+    installed_version = String()
 
     def get_short_description(self):
         blok = BlokManager.get(self.name)
@@ -80,7 +82,8 @@ class Blok:
             for link in links:
                 if createifnotexist:
                     if not cls.query().filter(cls.name == link).count():
-                        cls.insert(name=link, state='undefined')
+                        cls.insert(name=link, state='undefined',
+                                   version='None')
                 query = Association.query()
                 query = query.filter(Association.blok == blok)
                 query = query.filter(Association.linked_blok == link)
@@ -91,10 +94,12 @@ class Blok:
         # Create blok if not exist
         for order, blok in enumerate(BlokManager.ordered_bloks):
             b = cls.query().filter(cls.name == blok)
+            version = BlokManager.bloks[blok].version
             if b.count():
                 b.order = order
+                b.version = version
             else:
-                cls.insert(name=blok, order=order)
+                cls.insert(name=blok, order=order, version=version)
 
         # Update required, optional, conditional
         for blok in BlokManager.ordered_bloks:
@@ -115,18 +120,21 @@ class Blok:
             entry = cls.registry.loaded_bloks[blok]
             if b.state in ('undefined', 'uninstalled', 'toinstall'):
                 logger.info("Install the blok %r" % blok)
-                entry.install()
+                entry.update(None)
                 b.state = 'installed'
+                b.installed_version = b.version
             elif b.state == 'toupdate':
                 # FIXME look wrong
-                entry.update()
+                entry.update(b.version)
                 bloks = cls.query('name').filter(cls.state == 'installed')
                 bloks = bloks.all()
                 associate = Association.query()
                 associate = associate.filter(Association.blok == blok)
-                associate = associate.filter(associate.linked_blok.in_(bloks))
+                associate = associate.filter(
+                    Association.linked_blok.in_(bloks))
                 associate.update({'state': 'toupdate'})
                 b.state = 'installed'
+                b.installed_version = b.version
             elif b.state == 'touninstall':
                 # FIXME look wrong
                 entry.uninstall()
@@ -139,6 +147,7 @@ class Blok:
                 associate = associate.filter(associate.mode == 'required')
                 associate.update({'state': 'touninstall'})
                 b.state = 'uninstalled'
+                b.installed_version = None
 
         uninstalled_bloks = cls.query('name').filter(
             cls.state == 'uninstalled').all()
@@ -164,6 +173,11 @@ class Blok:
                 query.update({'state': 'toinstall'})
 
             return True
+        else:
+            for blok in bloks:
+                # Make the query in the loop to be sure to keep order
+                entry = cls.registry.loaded_bloks[blok]
+                entry.load()
 
         return False
 
