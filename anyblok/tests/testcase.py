@@ -149,6 +149,12 @@ class DBTestCase(TestCase):
         self.dropdb()
         super(DBTestCase, self).tearDown()
 
+    def upgrade(self, registry, **kwargs):
+        session_commit = registry.session_commit
+        registry.session_commit = registry.old_session_commit
+        registry.upgrade(**kwargs)
+        registry.session_commit = session_commit
+
     def init_registry(self, function, **kwargs):
         """ call a function to filled the blok manager with new model
 
@@ -156,11 +162,13 @@ class DBTestCase(TestCase):
         :param kwargs: kwargs for the function
         :rtype: registry instance
         """
-        EnvironmentManager.set('current_blok', self.current_blok)
-        try:
-            function(**kwargs)
-        finally:
-            EnvironmentManager.set('current_blok', None)
+        if function is not None:
+            EnvironmentManager.set('current_blok', self.current_blok)
+            try:
+                function(**kwargs)
+            finally:
+                EnvironmentManager.set('current_blok', None)
+
         registry = self.getRegistry()
 
         def session_commit(*args, **kwargs):
@@ -217,7 +225,14 @@ class BlokTestCase(TestCase):
         def session_commit(*args, **kwargs):
             pass
 
+        registry.old_session_commit = registry.session_commit
         registry.session_commit = session_commit
+
+    def upgrade(self, **kwargs):
+        session_commit = self.registry.session_commit
+        self.registry.session_commit = self.registry.old_session_commit
+        self.registry.upgrade(**kwargs)
+        self.registry.session_commit = session_commit
 
     def tearDown(self):
         """ Roll back the session """

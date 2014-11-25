@@ -117,37 +117,12 @@ class Blok:
         for blok in bloks:
             # Make the query in the loop to be sure to keep order
             b = cls.query().filter(cls.name == blok).first()
-            entry = cls.registry.loaded_bloks[blok]
             if b.state in ('undefined', 'uninstalled', 'toinstall'):
-                logger.info("Install the blok %r" % blok)
-                entry.update(None)
-                b.state = 'installed'
-                b.installed_version = b.version
+                b.install()
             elif b.state == 'toupdate':
-                # FIXME look wrong
-                entry.update(b.version)
-                bloks = cls.query('name').filter(cls.state == 'installed')
-                bloks = bloks.all()
-                associate = Association.query()
-                associate = associate.filter(Association.blok == blok)
-                associate = associate.filter(
-                    Association.linked_blok.in_(bloks))
-                associate.update({'state': 'toupdate'})
-                b.state = 'installed'
-                b.installed_version = b.version
+                b.upgrade()
             elif b.state == 'touninstall':
-                # FIXME look wrong
-                entry.uninstall()
-                bloks = cls.query('name')
-                bloks = bloks.filter(cls.state.in_(('installed', 'toupdate')))
-                bloks = bloks.all()
-                associate = Association.query()
-                associate = associate.filter(Association.blok == blok)
-                associate = associate.filter(associate.linked_blok.in_(bloks))
-                associate = associate.filter(associate.mode == 'required')
-                associate.update({'state': 'touninstall'})
-                b.state = 'uninstalled'
-                b.installed_version = None
+                b.uninstall()
 
         uninstalled_bloks = cls.query('name').filter(
             cls.state == 'uninstalled').all()
@@ -169,17 +144,33 @@ class Blok:
 
         if conditional_bloks_to_install:
             for b in conditional_bloks_to_install:
-                query = cls.query().filter(cls.name == b)
-                query.update({'state': 'toinstall'})
+                cls.query().filter(cls.name == b).update(
+                    {'state': 'toinstall'})
 
             return True
-        else:
-            for blok in bloks:
-                # Make the query in the loop to be sure to keep order
-                entry = cls.registry.loaded_bloks[blok]
-                entry.load()
 
         return False
+
+    def install(self):
+        logger.info("Install the blok %r" % self.name)
+        entry = self.registry.loaded_bloks[self.name]
+        entry.update(None)
+        self.state = 'installed'
+        self.installed_version = self.version
+
+    def upgrade(self):
+        logger.info("Update the blok %r" % self.name)
+        entry = self.registry.loaded_bloks[self.name]
+        entry.update(self.installed_version)
+        self.state = 'installed'
+        self.installed_version = self.version
+
+    def uninstall(self):
+        logger.info("Uninstall the blok %r" % self.name)
+        entry = BlokManager.bloks[self.name](self.registry)
+        entry.uninstall()
+        self.state = 'uninstalled'
+        self.installed_version = None
 
 
 @target_registry(System.Blok)

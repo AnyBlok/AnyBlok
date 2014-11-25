@@ -477,4 +477,6 @@ class Model:
 
         Blok = registry.System.Blok
         Blok.update_list()
-        return Blok.apply_state(*registry.ordered_loaded_bloks)
+        bloks = Blok.list_by_state('touninstall')
+        bloks.extend(registry.ordered_loaded_bloks)
+        return Blok.apply_state(*bloks)

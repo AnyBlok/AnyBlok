@@ -39,6 +39,9 @@ setup(
         'AnyBlok': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
         ],
+        'TestAnyBlok': [
+            'test-blok1=anyblok.test_bloks.test_blok1:TestBlok',
+        ],
     },
     extras_require={},
 )
