@@ -3,6 +3,7 @@ from anyblok import Declarations
 from logging import getLogger
 from os.path import join, isfile
 
+
 logger = getLogger(__name__)
 target_registry = Declarations.target_registry
 System = Declarations.Model.System
@@ -35,7 +36,7 @@ class Blok:
     def get_short_description(self):
         blok = BlokManager.get(self.name)
         if hasattr(blok, '__doc__'):
-            return blok.__doc__
+            return blok.__doc__ or ''
 
         return ''
 
@@ -145,7 +146,7 @@ class Blok:
         if conditional_bloks_to_install:
             for b in conditional_bloks_to_install:
                 cls.query().filter(cls.name == b).update(
-                    {'state': 'toinstall'})
+                    {cls.state: 'toinstall'})
 
             return True
 
@@ -176,8 +177,14 @@ class Blok:
 @target_registry(System.Blok)
 class Association:
 
+    MODES = {
+        'required': 'Required',
+        'optional': 'Optional',
+        'conditional': 'Conditional',
+    }
+
     blok = String(foreign_key=(System.Blok, 'name'),
                   nullable=False, primary_key=True)
     linked_blok = String(foreign_key=(System.Blok, 'name'),
                          nullable=False, primary_key=True)
-    mode = String(nullable=False, primary_key=True)
+    mode = Selection(selections=MODES, nullable=False, primary_key=True)

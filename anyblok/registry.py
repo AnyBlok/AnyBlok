@@ -10,6 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from anyblok.migration import Migration
 from sqlalchemy.exc import ProgrammingError, OperationalError
+from sqlalchemy.orm import aliased
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -17,6 +18,11 @@ logger = getLogger(__name__)
 
 @Declarations.target_registry(Declarations.Exception)
 class RegistryManagerException(Exception):
+    """ Simple Exception for Registry """
+
+
+@Declarations.target_registry(Declarations.Exception)
+class RegistryException(Exception):
     """ Simple Exception for Registry """
 
 
@@ -751,18 +757,52 @@ class Registry:
         :param uninstall: list of the blok to uninstall
         """
         Blok = self.System.Blok
+        Association = Blok.Association
+        Blok2 = aliased(Blok)
 
-        def upgrade_state_bloks(bloks, state):
-            if not bloks:
-                return
+        def get_bloks(blok, filter_states, filter_modes=None):
+            if filter_modes is None:
+                filter_modes = Association.MODES.keys()
 
-            for blok in bloks:
-                Blok.query().filter(Blok.name == blok).update(
-                    {Blok.state: state})
+            query = Blok.query()
+            query = query.join(Association, Association.blok == Blok.name)
+            query = query.join(Blok2, Association.linked_blok == Blok2.name)
+            query = query.filter(Blok2.name == blok)
+            query = query.filter(Blok.state.in_(filter_states))
+            query = query.filter(Association.mode.in_(filter_modes))
+            return query.all().name
 
-        upgrade_state_bloks(install, 'toinstall')
-        upgrade_state_bloks(update, 'toupdate')
-        upgrade_state_bloks(uninstall, 'touninstall')
+        def apply_state(blok, state):
+            Blok.query().filter(Blok.name == blok).update({Blok.state: state})
+
+        def upgrade_state_bloks(state):
+            if state == 'toinstall':
+                def wrap(bloks):
+                    for blok in bloks:
+                        apply_state(blok, state)
+
+            elif state == 'toupdate':
+                def wrap(bloks):
+                    for blok in bloks:
+                        apply_state(blok, state)
+                        upgrade_state_bloks(state)(get_bloks(blok,
+                                                             ['installed']))
+
+            elif state == 'touninstall':
+                def wrap(bloks):
+                    for blok in bloks:
+                        apply_state(blok, state)
+                        upgrade_state_bloks(state)(get_bloks(blok, [
+                            'installed', 'toinstall', 'touninstall']))
+
+            else:
+                raise Declarations.RegistryManager("Unknow state %r" % state)
+
+            return wrap
+
+        upgrade_state_bloks('toinstall')(install or [])
+        upgrade_state_bloks('toupdate')(update or [])
+        upgrade_state_bloks('touninstall')(uninstall or [])
 
         self.commit()
         self.reload()
