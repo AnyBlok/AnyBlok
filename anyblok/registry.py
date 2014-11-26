@@ -499,7 +499,7 @@ class Registry:
             return False
 
         b = BlokManager.bloks[blok](self)
-        for required in b.required:
+        for required in b.required + b.conditional:
             if not self.load_blok(required):
                 raise RegistryManagerException(
                     "Required blok not found")
