@@ -772,26 +772,33 @@ class Registry:
             query = query.filter(Association.mode.in_(filter_modes))
             return query.all().name
 
-        def apply_state(blok, state):
-            Blok.query().filter(Blok.name == blok).update({Blok.state: state})
+        def apply_state(blok, state, in_states):
+            query = Blok.query().filter(Blok.name == blok)
+            query = query.filter(Blok.state.in_(in_states))
+            if not query.count():
+                raise Declarations.Exception.RegistryException(
+                    "Apply state %r is forbidden because the blok %r is in"
+                    " the state %r" % (
+                        state, blok, ', '.join(in_states)))
+            query.update({Blok.state: state}, synchronize_session='fetch')
 
         def upgrade_state_bloks(state):
             if state == 'toinstall':
                 def wrap(bloks):
                     for blok in bloks:
-                        apply_state(blok, state)
+                        apply_state(blok, state, ['uninstalled', state])
 
             elif state == 'toupdate':
                 def wrap(bloks):
                     for blok in bloks:
-                        apply_state(blok, state)
+                        apply_state(blok, state, ['installed', state])
                         upgrade_state_bloks(state)(get_bloks(blok,
                                                              ['installed']))
 
             elif state == 'touninstall':
                 def wrap(bloks):
                     for blok in bloks:
-                        apply_state(blok, state)
+                        apply_state(blok, state, ['installed', state])
                         upgrade_state_bloks(state)(get_bloks(blok, [
                             'installed', 'toinstall', 'touninstall']))
 
