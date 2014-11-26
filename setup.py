@@ -42,6 +42,10 @@ setup(
         'TestAnyBlok': [
             'test-blok1=anyblok.test_bloks.test_blok1:TestBlok',
             'test-blok2=anyblok.test_bloks.test_blok2:TestBlok',
+            'test-blok3=anyblok.test_bloks.test_blok3:TestBlok',
+            'test-blok4=anyblok.test_bloks.test_blok4:TestBlok',
+            'test-blok5=anyblok.test_bloks.test_blok5:TestBlok',
+            'test-blok6=anyblok.test_bloks.test_blok6:TestBlok',
         ],
     },
     extras_require={},
