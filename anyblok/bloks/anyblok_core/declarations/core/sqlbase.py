@@ -1,4 +1,5 @@
 from anyblok import Declarations
+from sqlalchemy.orm import aliased
 
 
 @Declarations.target_registry(Declarations.Exception)
@@ -34,6 +35,10 @@ class SqlMixin:
     @classmethod
     def get_on_model_methods(cls):
         return ['update', 'delete']
+
+    @classmethod
+    def aliased(cls, *args, **kwargs):
+        return aliased(cls, *args, **kwargs)
 
 
 @Declarations.target_registry(Declarations.Core)

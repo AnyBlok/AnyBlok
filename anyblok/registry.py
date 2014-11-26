@@ -10,7 +10,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from anyblok.migration import Migration
 from sqlalchemy.exc import ProgrammingError, OperationalError
-from sqlalchemy.orm import aliased
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -759,7 +758,7 @@ class Registry:
         """
         Blok = self.System.Blok
         Association = Blok.Association
-        Blok2 = aliased(Blok)
+        Blok2 = Blok.aliased()
 
         def get_bloks(blok, filter_states, filter_modes=None):
             if filter_modes is None:
