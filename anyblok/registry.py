@@ -487,7 +487,7 @@ class Registry:
             else:
                 self.properties[k] = v
 
-    def load_blok(self, blok):
+    def load_blok(self, blok, toinstall, toload):
         """ load on blok, load all the core and all the entry for one blok
 
         :param blok: name of the blok
@@ -500,12 +500,13 @@ class Registry:
 
         b = BlokManager.bloks[blok](self)
         for required in b.required + b.conditional:
-            if not self.load_blok(required):
+            if not self.load_blok(required, toinstall, toload):
                 raise RegistryManagerException(
                     "Required blok not found")
 
         for optional in b.optional:
-            self.load_blok(optional)
+            if toinstall or optional in toload:
+                self.load_blok(optional, toinstall, toload)
 
         for core in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
                      'InstrumentedList'):
@@ -628,10 +629,10 @@ class Registry:
                 toinstall = self.get_bloks_to_install(toload)
 
             for blok in toload:
-                self.load_blok(blok)
+                self.load_blok(blok, False, toload)
 
             if toinstall:
-                self.load_blok(toinstall[0])
+                self.load_blok(toinstall[0], True, toload)
 
             instrumentedlist_base = [] + self.loaded_cores['InstrumentedList']
             instrumentedlist_base += [list]
@@ -806,7 +807,11 @@ class Registry:
                                 "You must uninstall one of them" % blok)
                         apply_state(blok, state, ['installed', state])
                         upgrade_state_bloks(state)(get_bloks(blok, [
-                            'installed', 'toinstall', 'touninstall']))
+                            'installed', 'toinstall', 'touninstall'],
+                            filter_modes=['required', 'conditional']))
+                        upgrade_state_bloks('toupdate')(get_bloks(blok, [
+                            'installed', 'toinstall', 'touninstall'],
+                            filter_modes=['optional']))
 
             else:
                 raise Declarations.RegistryManager("Unknow state %r" % state)

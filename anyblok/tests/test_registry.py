@@ -107,7 +107,7 @@ class TestRegistry(TestCase):
             RegistryManager.loaded_bloks['blok'][entry] = {
                 'registry_names': []}
 
-        self.registry.load_blok('blok')
+        self.registry.load_blok('blok', False, [])
         have_session = TestCase in self.registry.loaded_cores['Session']
         self.assertEqual(have_session, True)
 
