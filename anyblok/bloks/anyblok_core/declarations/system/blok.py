@@ -114,7 +114,6 @@ class Blok:
 
     @classmethod
     def apply_state(cls, *bloks):
-        Association = cls.registry.System.Blok.Association
         for blok in bloks:
             # Make the query in the loop to be sure to keep order
             b = cls.query().filter(cls.name == blok).first()
@@ -125,23 +124,13 @@ class Blok:
             elif b.state == 'touninstall':
                 b.uninstall()
 
-        uninstalled_bloks = cls.query('name').filter(
-            cls.state == 'uninstalled').all()
-        installed_bloks = cls.query('name').filter(
-            cls.state == 'installed').all()
+        uninstalled_bloks = cls.query().filter(
+            cls.state == 'uninstalled').all().name
 
         conditional_bloks_to_install = []
         for blok in uninstalled_bloks:
-            total_association_count = Association.query().filter(
-                Association.blok == blok,
-                Association.mode == 'conditional').count()
-            association_count = Association.query().filter(
-                Association.blok == blok,
-                Association.mode == 'conditional',
-                Association.linked_blok.in_(installed_bloks)).count()
-            if total_association_count:
-                if total_association_count == association_count:
-                    conditional_bloks_to_install.append(blok[0])
+            if cls.check_if_the_conditional_are_installed(blok):
+                conditional_bloks_to_install.append(blok)
 
         if conditional_bloks_to_install:
             for b in conditional_bloks_to_install:
@@ -149,6 +138,25 @@ class Blok:
                     {cls.state: 'toinstall'})
 
             return True
+
+        return False
+
+    @classmethod
+    def check_if_the_conditional_are_installed(cls, blok):
+        Association = cls.registry.System.Blok.Association
+        total_association_count = Association.query().filter(
+            Association.blok == blok,
+            Association.mode == 'conditional').count()
+        query = Association.query().filter(
+            Association.blok == blok,
+            Association.mode == 'conditional')
+        query = query.join(cls, cls.name == Association.linked_blok)
+        query = query.filter(
+            cls.state.in_(['installed', 'toinstall', 'toupdate']))
+        association_count = query.count()
+        if total_association_count:
+            if total_association_count == association_count:
+                return True
 
         return False
 

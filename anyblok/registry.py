@@ -798,6 +798,12 @@ class Registry:
             elif state == 'touninstall':
                 def wrap(bloks):
                     for blok in bloks:
+                        if Blok.check_if_the_conditional_are_installed(blok):
+                            raise Declarations.Exception.RegistryException(
+                                "the blok %r can not be unistalled because "
+                                "this blok is a conditional blok and all the "
+                                "bloks in his conditional list are installed "
+                                "You must uninstall one of them" % blok)
                         apply_state(blok, state, ['installed', state])
                         upgrade_state_bloks(state)(get_bloks(blok, [
                             'installed', 'toinstall', 'touninstall']))
