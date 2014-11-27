@@ -187,6 +187,16 @@ class Blok:
         self.state = 'uninstalled'
         self.installed_version = None
 
+    def load(self):
+        if self.name in BlokManager.bloks:
+            logger.info("Load the blok %r" % self.name)
+            BlokManager.bloks[self.name](self.registry).load()
+
+    @classmethod
+    def load_all(cls):
+        query = cls.query().filter(cls.state == 'installed')
+        query.order_by(cls.order).all().load()
+
 
 @target_registry(System.Blok)
 class Association:

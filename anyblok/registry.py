@@ -671,6 +671,8 @@ class Registry:
 
         if len(toinstall) > 1 or mustreload:
             self.reload()
+        else:
+            self.System.Blok.load_all()
 
     def init_migration(self):
         self.migration = Migration(self.session,

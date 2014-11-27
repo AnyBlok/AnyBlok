@@ -675,4 +675,4 @@ class TestBlokOrder(DBTestCase):
         registry = self.init_registry(None)
         self.upgrade(registry, install=('test-blok3',))
         self.check_order(registry, 'load', [
-            'test-blok1', 'test-blok2', 'test-blok3'])
+            'anyblok-core', 'test-blok1', 'test-blok2', 'test-blok3'])
