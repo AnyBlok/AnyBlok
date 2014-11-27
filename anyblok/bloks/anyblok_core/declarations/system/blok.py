@@ -121,8 +121,6 @@ class Blok:
                 b.install()
             elif b.state == 'toupdate':
                 b.upgrade()
-            elif b.state == 'touninstall':
-                b.uninstall()
 
         uninstalled_bloks = cls.query().filter(
             cls.state == 'uninstalled').all().name
@@ -140,6 +138,14 @@ class Blok:
             return True
 
         return False
+
+    @classmethod
+    def uninstall_all(cls, *bloks):
+        query = cls.query().filter(cls.name.in_(bloks))
+        query = query.order_by(cls.order.desc())
+        bloks = query.all()
+        if bloks:
+            bloks.uninstall()
 
     @classmethod
     def check_if_the_conditional_are_installed(cls, blok):

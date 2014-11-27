@@ -626,3 +626,53 @@ class TestBlokOptional(DBTestCase):
         self.assertEqual(testblok1.installed_version, '2.0.0')
         self.assertEqual(testblok6.state, 'installed')
         self.assertEqual(testblok6.installed_version, '2.0.0')
+
+
+class TestBlokOrder(DBTestCase):
+
+    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+
+    def check_order(self, registry, mode, wanted):
+        Test = registry.Test
+        self.assertEqual(Test.query().filter(Test.mode == mode).all().blok,
+                         wanted)
+
+    def test_install(self):
+        registry = self.init_registry(None)
+        self.upgrade(registry, install=('test-blok3',))
+        self.check_order(registry, 'install', [
+            'test-blok1', 'test-blok2', 'test-blok3'])
+
+    def test_uninstall(self):
+        from anyblok.blok import Blok, BlokManager
+        old_uninstall = Blok.uninstall
+
+        uninstalled = []
+
+        def uninstall(self):
+            cls = self.__class__
+            uninstalled.extend(
+                [x for x, y in BlokManager.bloks.items() if y is cls])
+
+        try:
+            Blok.uninstall = uninstall
+            registry = self.init_registry(None)
+            self.upgrade(registry, install=('test-blok3',))
+            self.upgrade(registry, uninstall=('test-blok1',))
+            self.assertEqual(uninstalled, [
+                'test-blok3', 'test-blok2', 'test-blok1'])
+        finally:
+            Blok.uninstall = old_uninstall
+
+    def test_update(self):
+        registry = self.init_registry(None)
+        self.upgrade(registry, install=('test-blok3',))
+        self.upgrade(registry, update=('test-blok1',))
+        self.check_order(registry, 'update', [
+            'test-blok1', 'test-blok2', 'test-blok3'])
+
+    def test_load(self):
+        registry = self.init_registry(None)
+        self.upgrade(registry, install=('test-blok3',))
+        self.check_order(registry, 'load', [
+            'test-blok1', 'test-blok2', 'test-blok3'])
