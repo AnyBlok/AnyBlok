@@ -5,9 +5,7 @@ Next step
 ---------
 
 * Improve Migration Class: see alembic: http://alembic.readthedocs.org/en/latest/
-* Do documentation
-* ADD unittest:
-    - anyblok_core system
+* Improve documentation, docstring and unittest
 
 To implement
 ------------

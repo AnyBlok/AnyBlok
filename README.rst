@@ -104,6 +104,8 @@ package in this package will be import by anyblok.
 
     class DeskBlok(Blok):
 
+        version = '1.0.0'
+
         def install(self):
             """ this method is call at the installation of this blok """
             address = self.registry.Address.insert(street='14-16 rue Soleillet',
@@ -126,6 +128,8 @@ package in this package will be import by anyblok.
 
 
     class PositionBlok(Blok):
+
+        version = '1.0.0'
 
         def install(self):
             self.registry.Position.multi_insert({'name': 'DG'},
@@ -160,6 +164,7 @@ of the registry, then this blok will be loaded and installed
 
     class WorkerBlok(Blok):
 
+        version = '1.0.0'
         autoinstall = True
 
         required = [
@@ -201,6 +206,7 @@ conditional blok.
 
     class WorkerPositionBlok(Blok):
 
+        version = '1.0.0'
         priority = 200
 
         conditional = [
