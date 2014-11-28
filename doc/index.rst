@@ -9,7 +9,7 @@ Welcome to AnyBlok's documentation!
 .. toctree::
     :hidden:
 
-    ../README.rst
+    README.rst
     MEMENTO.rst
     CODE.rst
     UNITTEST.rst
@@ -17,7 +17,7 @@ Welcome to AnyBlok's documentation!
     CHANGES.rst
     ROADMAP.rst
 
-.. include:: ../README.rst
+.. include:: README.rst
 .. include:: MEMENTO.rst
 .. include:: CODE.rst
 .. include:: UNITTEST.rst
