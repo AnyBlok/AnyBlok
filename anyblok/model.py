@@ -156,6 +156,15 @@ class Model:
 
     @classmethod
     def declare_field(self, registry, name, field, namespace, properties):
+        """ Declare the field/column/relationship to put in the properties
+        of the model
+
+        :param registry: the current  registry
+        :param name: name of the field / column or relationship
+        :param field: the declaration field / column or relationship
+        :param namespace: the namespace of the model
+        :param properties: the properties of the model
+        """
         if name in properties:
             return
 
@@ -171,6 +180,14 @@ class Model:
 
     @classmethod
     def apply_cache(cls, registry, namespace, base, properties):
+        """ Find the cached methods in the base to apply the real cache
+        decorator
+
+        :param registry: the current  registry
+        :param namespace: the namespace of the model
+        :param base: One of the base of the model
+        :param properties: the properties of the model
+        """
         methods_cached = {}
 
         def apply_wrapper(attr, method):
@@ -396,6 +413,16 @@ class Model:
 
     @classmethod
     def apply_view(cls, namespace, tablename, base, registry, properties):
+        """ Transform the sqlmodel to view model
+
+        :param namespace: Namespace of the model
+        :param tablename: Name od the table of the model
+        :param base: Model cls
+        :param registry: current registry
+        :param properties: properties of the model
+        :exception: MigrationException
+        :exception: ViewException
+        """
         if hasattr(base, '__view__'):
             view = base.__view__
         elif tablename in registry.loaded_views:

@@ -25,6 +25,7 @@ class Exception:
         :param parent: Existing declaration
         :param name: Name of the new declaration to add it
         :param cls_: Class to add in the declaration
+        :exception: DeclarationsException
         """
         _registryname = parent.__registry_name__ + '.' + name
         if hasattr(parent, name) and not EnvironmentManager.get('reload',
@@ -38,7 +39,10 @@ class Exception:
 
     @classmethod
     def remove_registry(self, registry, child, cls_, **kwargs):
-        """ Forbidden method """
+        """ Forbidden method
+
+        :exception: DeclarationsException
+        """
         raise DeclarationsException("Remove an exception is forbiden")
 
 

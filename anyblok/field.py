@@ -23,6 +23,7 @@ class Field:
         :param parent: Existing in the declaration
         :param name: Name of the new field to add it
         :param cls_: Class to add in declaration
+        :exception: FieldException
         """
         _registryname = parent.__registry_name__ + '.' + name
         if hasattr(parent, name) and not EnvironmentManager.get('reload',
@@ -34,7 +35,10 @@ class Field:
 
     @classmethod
     def remove_registry(self, registry, child, cls_, **kwargs):
-        """ Forbidden method """
+        """ Forbidden method
+
+        :exception: FieldException
+        """
         raise FieldException("Remove a field is forbiden")
 
     def __init__(self, *args, **kwargs):
@@ -56,6 +60,7 @@ class Field:
         """ Raise an exception if the cls is an instance of this __class__
 
         :param cls: instance of the class
+        :exception: FieldException
         """
         if self.__class__ is cls:
             raise FieldException(
@@ -89,5 +94,8 @@ class Field:
             self.label = label.capitalize()
 
     def native_type(self):
-        """ Return the native SqlAlchemy type """
+        """ Return the native SqlAlchemy type
+
+        :exception: FieldException
+        """
         raise FieldException("No native type for this field")

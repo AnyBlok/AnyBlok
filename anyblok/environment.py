@@ -16,6 +16,7 @@ class EnvironmentManager:
         """ Define the class use for the environment
 
         :param Environment: class of environment
+        :exception: EnvironmentException
         """
 
         def check_classmethod(method, acceptNone=False):
@@ -45,6 +46,7 @@ class EnvironmentManager:
 
         :param key: the key of the value to save
         :param value: the value to save
+        :exception: EnvironmentException
         """
         if cls.environment is None:
             raise EnvironmentException("No environment defined")
@@ -58,6 +60,7 @@ class EnvironmentManager:
         :param key: the key of the value to load
         :param default: return this value if not value loaded for the key
         :rtype: the value of the key
+        :exception: EnvironmentException
         """
         if cls.environment is None:
             raise EnvironmentException("No environment defined")

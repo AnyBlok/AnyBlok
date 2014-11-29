@@ -60,6 +60,7 @@ class BlokManager:
 
         :param blok: blok name
         :rtype: blok instance
+        :exception: BlokManagerException
         """
         if not cls.has(blok):
             raise BlokManagerException('%r not found' % blok)
@@ -72,6 +73,7 @@ class BlokManager:
 
         :param blokname: blok name
         :param blok: blok instance
+        :exception: BlokManagerException
         """
         if cls.has(blokname):
             raise BlokManagerException('%r already add' % blokname)
@@ -85,6 +87,7 @@ class BlokManager:
         """ Reload the entry points
 
         Empty the dict bloks and use the bloks_groups property to load bloks
+        :exception: BlokManagerException
         """
         if cls.bloks_groups is None:
             raise BlokManagerException(
@@ -113,6 +116,7 @@ class BlokManager:
         """ Load all the blok and import it
 
         :param bloks_groups: Use by iter_entry_points to get the blok
+        :exception: BlokManagerException
         """
         if not bloks_groups:
             raise BlokManagerException("The bloks_groups mustn't be empty")

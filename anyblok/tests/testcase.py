@@ -150,6 +150,19 @@ class DBTestCase(TestCase):
         super(DBTestCase, self).tearDown()
 
     def upgrade(self, registry, **kwargs):
+        """ Upgrade the registry::
+
+            class MyTest(DBTestCase):
+
+                def test_mytest(self):
+                    registry = self.init_registry(...)
+                    self.upgrade(registry, install=('MyBlok',))
+
+        :param registry: registry to upgrade
+        :param install: list the blok to install
+        :param update: list the blok to update
+        :param uninstall: list the blok to uninstall
+        """
         session_commit = registry.session_commit
         registry.session_commit = registry.old_session_commit
         registry.upgrade(**kwargs)
@@ -206,7 +219,10 @@ class BlokTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """ Intialialise the argsparse manager """
+        """ Intialialise the argsparse manager
+
+        Deactivate the commit method of the registry
+        """
         super(BlokTestCase, cls).setUpClass()
         cls.init_argsparse_manager()
         cls.createdb(keep_existing=True)
@@ -229,6 +245,17 @@ class BlokTestCase(TestCase):
         registry.session_commit = session_commit
 
     def upgrade(self, **kwargs):
+        """ Upgrade the registry::
+
+            class MyTest(DBTestCase):
+
+                def test_mytest(self):
+                    self.registry.upgrade(install=('MyBlok',))
+
+        :param install: list the blok to install
+        :param update: list the blok to update
+        :param uninstall: list the blok to uninstall
+        """
         session_commit = self.registry.session_commit
         self.registry.session_commit = self.registry.old_session_commit
         self.registry.upgrade(**kwargs)

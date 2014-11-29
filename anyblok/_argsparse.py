@@ -9,7 +9,7 @@ def getParser(description):
     """ Return a parser
 
     :param description: label of the configuration help
-    :rtype: instance of ArgsParseManagerException
+    :rtype: instance of ArgumentParser
     """
     return ArgumentParser(description=description)
 
@@ -17,7 +17,6 @@ def getParser(description):
 @Declarations.target_registry(Declarations.Exception)
 class ArgsParseManagerException(Exception):
     """ Simple Exception for ArgsParseManager"""
-    pass
 
 
 class ArgsParseManager:
@@ -171,7 +170,11 @@ class ArgsParseManager:
 
     @classmethod
     def merge_groups(cls, *parts):
-        """ Internal method to merge groups in function of parts """
+        """ Internal method to merge groups in function of parts
+
+        :param parts: parts to merge
+        :exception: ArgsParseManagerException
+        """
         if not parts:
             raise ArgsParseManagerException("No parts to merge")
 
@@ -191,7 +194,11 @@ class ArgsParseManager:
 
     @classmethod
     def merge_labels(cls, *parts):
-        """ Internal method to merge labels in function of parts """
+        """ Internal method to merge labels in function of parts
+
+        :param parts: parts to merge
+        :exception: ArgsParseManagerException
+        """
         if not parts:
             raise ArgsParseManagerException("No parts to merge")
 
@@ -213,10 +220,11 @@ class ArgsParseManager:
         Get the options of the database, the only option which can be overload
         is the name of the database::
 
-            url = ArgsParseManagerException.get_url(dbname='Mydb')
+            url = ArgsParseManager.get_url(dbname='Mydb')
 
         :param dbname: Name of the database
         :rtype: SqlAlchemy URL
+        :exception: ArgsParseManagerException
         """
         config = cls.configuration
         drivername = username = password = host = port = database = None

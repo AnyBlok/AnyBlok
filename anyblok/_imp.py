@@ -38,6 +38,7 @@ class ImportManager:
 
         :param blok: name of the blok to add
         :rtype: loader instance
+        :exception: ImportManagerException
         """
         from anyblok.blok import BlokManager
         if cls.has(blok):
@@ -56,6 +57,7 @@ class ImportManager:
 
         :param blok: name of the blok to add
         :rtype: loader instance
+        :exception: ImportManagerException
         """
         if not cls.has(blok):
             raise ImportManagerException('Unexisting blok %r' % blok)

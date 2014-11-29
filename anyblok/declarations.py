@@ -24,6 +24,7 @@ class Declarations:
         :param parent: An existing anyblok class in the Declaration
         :param ``cls_``: The ``class`` object to add in the Declaration
         :rtype: ``cls_``
+        :exception: DeclarationsException
         """
 
         def wrapper(self):
@@ -117,6 +118,7 @@ class Declarations:
         :param isAnEntry: if true the type will be assembling by the registry
         :param assemble: name of the method callback to call (classmethod)
         :param initialize: name of the method callback to call (classmethod)
+        :exception: DeclarationsException
         """
 
         def wrapper(self):

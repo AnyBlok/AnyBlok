@@ -392,6 +392,7 @@ class MigrationConstraintUnique:
 
         :param \*column: list of column name
         :rtype: MigrationConstraintUnique instance
+        :exception: MigrationException
         """
         if not columns:
             raise MigrationException("""To add an unique constraint you """
@@ -434,6 +435,7 @@ class MigrationConstraintPrimaryKey:
 
         :param \*column: list of column name
         :rtype: MigrationConstraintPrimaryKey instance
+        :exception: MigrationException
         """
         if not columns:
             raise MigrationException("""To add an primary key  constraint """
@@ -500,6 +502,7 @@ class MigrationIndex:
 
         :param \*column: list of column name
         :rtype: MigrationIndex instance
+        :exception: MigrationException
         """
         if not columns:
             raise MigrationException(
@@ -606,6 +609,7 @@ class MigrationTable:
 
         :param name: New table name
         :rtype: MigrationTable instance
+        :exception: MigrationException
         """
         if 'name' not in kwargs:
             raise MigrationException("Table can only alter name")
