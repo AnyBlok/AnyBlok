@@ -187,6 +187,7 @@ class Model:
         :param namespace: the namespace of the model
         :param base: One of the base of the model
         :param properties: the properties of the model
+        :rtype: new base
         """
         methods_cached = {}
 
@@ -221,6 +222,14 @@ class Model:
 
     @classmethod
     def apply_event_listner(cls, registry, namespace, base, properties):
+        """ Find the event listener methods in the base to save the
+        namespace and the method in the registry
+
+        :param registry: the current  registry
+        :param namespace: the namespace of the model
+        :param base: One of the base of the model
+        :param properties: the properties of the model
+        """
         for attr in dir(base):
             method = getattr(base, attr)
             if not hasattr(method, 'is_an_event_listener'):
@@ -239,6 +248,14 @@ class Model:
 
     @classmethod
     def detect_hybrid_method(cls, registry, namespace, base, properties):
+        """ Find the sqlalchemy hybrid  methods in the base to save the
+        namespace and the method in the registry
+
+        :param registry: the current  registry
+        :param namespace: the namespace of the model
+        :param base: One of the base of the model
+        :param properties: the properties of the model
+        """
         for attr in dir(base):
             method = getattr(base, attr)
             if not hasattr(method, 'is_an_hybrid_method'):
@@ -249,6 +266,14 @@ class Model:
 
     @classmethod
     def transform_base(cls, registry, namespace, base, properties):
+        """ Detect specific declaration which must define by registry
+
+        :param registry: the current  registry
+        :param namespace: the namespace of the model
+        :param base: One of the base of the model
+        :param properties: the properties of the model
+        :rtype: new base
+        """
         new_base = cls.apply_cache(registry, namespace, base, properties)
         cls.apply_event_listner(registry, namespace, new_base, properties)
         cls.detect_hybrid_method(registry, namespace, new_base, properties)
@@ -256,6 +281,15 @@ class Model:
 
     @classmethod
     def apply_hybrid_method(cls, registry, namespace, bases, properties):
+        """ Create overload to define the write declaration of sqlalchemy
+        hybrid method, add the overload in the declarated bases of the
+        namespace
+
+        :param registry: the current  registry
+        :param namespace: the namespace of the model
+        :param base: One of the base of the model
+        :param properties: the properties of the model
+        """
         if not properties['hybrid_method']:
             return
 
@@ -281,10 +315,25 @@ class Model:
 
     @classmethod
     def insert_in_bases(cls, registry, namespace, bases, properties):
+        """ Add in the declarated namespaces new base.
+
+        :param registry: the current  registry
+        :param namespace: the namespace of the model
+        :param base: One of the base of the model
+        :param properties: the properties of the model
+        """
         cls.apply_hybrid_method(registry, namespace, bases, properties)
 
     @classmethod
     def load_namespace_first_step(cls, registry, namespace):
+        """ Return the properties of the declarated bases for one namespace.
+        This is the first step because some action need  to known all the
+        properties
+
+        :param registry: the current  registry
+        :param namespace: the namespace of the model
+        :rtype: dict of the known properties
+        """
         if namespace in registry.loaded_namespaces_first_step:
             return registry.loaded_namespaces_first_step[namespace]
 
@@ -318,6 +367,14 @@ class Model:
     def load_namespace_second_step(cls, registry, namespace,
                                    realregistryname=None,
                                    transformation_properties=None):
+        """ Return the bases and the properties of the namespace
+
+        :param registry: the current  registry
+        :param namespace: the namespace of the model
+        :param realregistryname: the name of the model if the namespace is a
+        mixin
+        :rtype: the list od the bases and the properties
+        """
         if namespace in registry.loaded_namespaces:
             return [registry.loaded_namespaces[namespace]], {}
 

@@ -590,7 +590,7 @@ Share the view between more than one model
 
 TODO
 
-Specific decorator
+Specific behariour
 ------------------
 
 TODO
@@ -607,5 +607,20 @@ TODO
 
 Hybrid method
 ~~~~~~~~~~~~~
+
+TODO
+
+Pre commit hook
+~~~~~~~~~~~~~~~
+
+TODO
+
+Instrumented list
+~~~~~~~~~~~~~~~~~
+
+TODO
+
+Aliased
+~~~~~~~
 
 TODO

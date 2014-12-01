@@ -18,6 +18,8 @@ def query_method(name):
 
 @Declarations.target_registry(Declarations.Core)
 class SqlViewBase(SqlMixin):
+    """ this class is inherited by all the SQL view
+    """
 
     sqlalchemy_query_delete = query_method('delete')
     sqlalchemy_query_update = query_method('update')

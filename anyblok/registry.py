@@ -391,6 +391,7 @@ class Registry:
 
         :param namespace: namespace to get from the registry str
         :rtype: namespace cls
+        :exception: RegistryManagerException
         """
         if namespace not in self.loaded_namespaces:
             raise RegistryManagerException(
@@ -490,6 +491,7 @@ class Registry:
         """ load on blok, load all the core and all the entry for one blok
 
         :param blok: name of the blok
+        :exception: RegistryManagerException
         """
         if blok in self.ordered_loaded_bloks:
             return True
@@ -673,6 +675,7 @@ class Registry:
             self.reload()
         else:
             self.System.Blok.load_all()
+            self.commit()
 
     def init_migration(self):
         self.migration = Migration(self.session,
@@ -708,6 +711,16 @@ class Registry:
             super(Registry, self).__getattr__(attribute)
 
     def precommit_hook(self, registryname, method, put_at_the_if_exist):
+        """ Add a method in the precommit_hook list
+
+        a precommit hook is a method call just after the commit, it is use to
+        call this method one time, because one hook is save only one time
+
+        :param registryname: namespace of the model
+        :param method: method to call on the registryname
+        :param put_at_the_if_exist: if true and hook allready exist then the
+        hook are moved at the end
+        """
         entry = (registryname, method)
         if entry in self._precommit_hook:
             if put_at_the_if_exist:
@@ -718,6 +731,7 @@ class Registry:
             self._precommit_hook.append(entry)
 
     def commit(self, *args, **kwargs):
+        """ Overload the commit method of the SqlAlchemy session """
         hooks = []
         if self._precommit_hook:
             hooks.extend(self._precommit_hook)
@@ -757,6 +771,7 @@ class Registry:
         :param install: list of the blok to install
         :param update: list of the blok to update
         :param uninstall: list of the blok to uninstall
+        :exception: RegistryException
         """
         Blok = self.System.Blok
         Association = Blok.Association

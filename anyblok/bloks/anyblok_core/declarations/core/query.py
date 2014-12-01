@@ -10,15 +10,27 @@ class QueryException(Exception):
 
 @Declarations.target_registry(Declarations.Core)
 class Query(query.Query):
+    """ Overload the SqlAlchemy Query
+    """
 
     def all(self):
+        """ Return an instrumented list of the result of the query
+        """
         return self.registry.InstrumentedList(self)
 
     def sqlalchemy_query_method(self, method, *args, **kwargs):
+        """ Wrapper to call a specific method by getattr
+        """
         return getattr(query.Query, method)(self, *args, **kwargs)
 
     @classmethod
     def get_on_model_methods(cls):
+        """ Return  the list of the method which can be wrap by
+        sqlalchemy_query_method method
+
+        :rtype: list of the method name
+        :exception: QueryException
+        """
         return ['update', 'delete']
 
     def __getattribute__(self, name):

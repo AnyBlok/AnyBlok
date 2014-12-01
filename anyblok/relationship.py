@@ -36,12 +36,20 @@ class RelationShip(Declarations.Field):
         self.kwargs['info']['remote_model'] = self.get_registry_name()
 
     def get_registry_name(self):
+        """ Return the registry name of the remote model
+
+        :rtype: str of the registry name
+        """
         if isinstance(self.model, str):
             return self.model
         else:
             return self.model.__registry_name__
 
     def get_tablename(self, registry):
+        """ Return the table name of the remote model
+
+        :rtype: str of the table name
+        """
         if isinstance(self.model, str):
             model = registry.loaded_namespaces_first_step[self.model]
             return model['__tablename__']
@@ -65,6 +73,7 @@ class RelationShip(Declarations.Field):
 
         :param properties: first step properties for the model
         :rtype: column name of the primary key
+        :exception: FieldException
         """
         pks = []
         for f, p in properties.items():
@@ -80,6 +89,13 @@ class RelationShip(Declarations.Field):
         return pks[0]
 
     def check_existing_remote_model(self, registry):
+        """ Check if the remote model exist
+
+        The information of the existance come from the first step of
+        assembling
+
+        :exception: FieldException if the model doesn't exist
+        """
         remote_model = self.get_registry_name()
         if remote_model not in registry.loaded_namespaces_first_step:
             raise FieldException(

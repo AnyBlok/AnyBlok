@@ -89,6 +89,12 @@ class Field:
         return self
 
     def format_label(self, fieldname):
+        """ Return the label for this field
+
+        :param fieldname: if no label filled, the fieldname will be capitalized
+        and returned
+        :rtype: the label for this field
+        """
         if not self.label:
             label = fieldname.replace('_', ' ')
             self.label = label.capitalize()

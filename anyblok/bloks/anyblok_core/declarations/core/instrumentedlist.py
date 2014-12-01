@@ -3,6 +3,8 @@ from anyblok import Declarations
 
 @Declarations.target_registry(Declarations.Core)
 class InstrumentedList:
+    """ class of the return of the query.all() or the relationship list
+    """
 
     def __getattr__(self, name):
 

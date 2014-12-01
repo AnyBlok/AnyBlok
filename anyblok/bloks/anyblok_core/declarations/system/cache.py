@@ -11,7 +11,7 @@ Text = Declarations.Column.Text
 
 @target_registry(Declarations.Exception)
 class CacheException(Exception):
-    pass
+    """ Simple Exception for the cache Model """
 
 
 @target_registry(System)
@@ -26,6 +26,8 @@ class Cache:
 
     @classmethod
     def get_last_id(cls):
+        """ Return the last primary key ``id`` value
+        """
         res = cls.query('id').order_by(cls.id.desc()).limit(1).first()
         if res:
             return res[0]
@@ -34,6 +36,8 @@ class Cache:
 
     @classmethod
     def initialize_model(cls):
+        """ Initialize the last_cache_id known
+        """
         super(Cache, cls).initialize_model()
         cls.last_cache_id = cls.get_last_id()
 

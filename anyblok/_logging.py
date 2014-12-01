@@ -68,6 +68,7 @@ def init_logger(level='info', mode='console',
         init_logger(level='debug')
 
     A logger can be by:
+
     * console (default)::
 
         init_logger(mode='console')
@@ -90,6 +91,7 @@ def init_logger(level='info', mode='console',
             init_logger(mode='syslog', socket='/dev/log')
 
         the syslog mode define logger facility:
+
             * LOG_AUTH
             * LOG_AUTHPRIV
             * LOG_CRON

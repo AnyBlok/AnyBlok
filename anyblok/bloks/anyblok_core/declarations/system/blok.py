@@ -34,6 +34,10 @@ class Blok:
     installed_version = String()
 
     def get_short_description(self):
+        """ fget of the ``short_description`` Column.Selection
+
+        :rtype: the docstring of the blok
+        """
         blok = BlokManager.get(self.name)
         if hasattr(blok, '__doc__'):
             return blok.__doc__ or ''
@@ -41,6 +45,10 @@ class Blok:
         return ''
 
     def get_long_description(self):
+        """ fget of the ``long_description`` Column.Selection
+
+        :rtype: the readme file of the blok
+        """
         blok = BlokManager.get(self.name)
         path = BlokManager.getPath(self.name)
         readme = 'README.rst'
@@ -60,6 +68,11 @@ class Blok:
 
     @classmethod
     def list_by_state(cls, *states):
+        """ Return the blok name in function of the wanted states
+
+        :param states: list of the state
+        :rtype: list if state is a state, dict if the states is a list
+        """
         if not states:
             return None
 
@@ -74,6 +87,8 @@ class Blok:
 
     @classmethod
     def update_list(cls):
+        """ Populate the bloks list and update the state of existing bloks
+        """
         # Do not remove blok because 2 or More AnyBlok api may use the same
         # Database
 
@@ -114,6 +129,14 @@ class Blok:
 
     @classmethod
     def apply_state(cls, *bloks):
+        """ Call the rigth method is the blok state change
+
+        .. warning::
+
+            for the uninstallation the method called is ``uninstall_all``
+
+        :param bloks: list of the blok name load by the registry
+        """
         for blok in bloks:
             # Make the query in the loop to be sure to keep order
             b = cls.query().filter(cls.name == blok).first()
@@ -141,6 +164,15 @@ class Blok:
 
     @classmethod
     def uninstall_all(cls, *bloks):
+        """ Search and call the uninstall method for all the uninstalled bloks
+
+        .. warning::
+
+            Use the ``desc order`` to uninstall because `we can't uninstall
+            a dependancies before
+
+        :param bloks: list of the blok name to uninstall
+        """
         query = cls.query().filter(cls.name.in_(bloks))
         query = query.order_by(cls.order.desc())
         bloks = query.all()
@@ -149,6 +181,11 @@ class Blok:
 
     @classmethod
     def check_if_the_conditional_are_installed(cls, blok):
+        """ Return True if all the condition to install this blok is right
+
+        :param blok: blok name
+        :rtype: boolean
+        """
         Association = cls.registry.System.Blok.Association
         total_association_count = Association.query().filter(
             Association.blok == blok,
@@ -167,6 +204,8 @@ class Blok:
         return False
 
     def install(self):
+        """ Method to install the blok
+        """
         logger.info("Install the blok %r" % self.name)
         entry = self.registry.loaded_bloks[self.name]
         entry.update(None)
@@ -174,6 +213,8 @@ class Blok:
         self.installed_version = self.version
 
     def upgrade(self):
+        """ Method to update the blok
+        """
         logger.info("Update the blok %r" % self.name)
         entry = self.registry.loaded_bloks[self.name]
         entry.update(self.installed_version)
@@ -181,6 +222,8 @@ class Blok:
         self.installed_version = self.version
 
     def uninstall(self):
+        """ Method to uninstall the blok
+        """
         logger.info("Uninstall the blok %r" % self.name)
         entry = BlokManager.bloks[self.name](self.registry)
         entry.uninstall()
@@ -188,12 +231,16 @@ class Blok:
         self.installed_version = None
 
     def load(self):
+        """ Method to load the blok when the registry is completly loaded
+        """
         if self.name in BlokManager.bloks:
             logger.info("Load the blok %r" % self.name)
             BlokManager.bloks[self.name](self.registry).load()
 
     @classmethod
     def load_all(cls):
+        """ Load all the installed bloks
+        """
         query = cls.query().filter(cls.state == 'installed')
         query.order_by(cls.order).all().load()
 
