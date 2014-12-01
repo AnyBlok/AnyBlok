@@ -547,8 +547,12 @@ Params for ``Field.Function``
 Mixin
 -----
 
+TODO
+
 SQL View
 --------
+
+TODO
 
 Core
 ----
@@ -593,12 +597,34 @@ TODO
 Specific behariour
 ------------------
 
-TODO
+AnyBlok implement some of facility to help the writter of the source file.
 
 Cache
 ~~~~~
 
-TODO
+The cache allow to call more than one time a method without have got any
+difference in the result. But the cache must also depend of the registry (
+database) and the model. The cache of anyblok can be put on a Model, a Core or
+a Mixin method. If the cache is on a Core or a Mixin then the usecase depend
+of the registry name of the assembled model.
+
+Use ``Declarations.cache`` or ``Declarations.classmethod_cache`` to apply a
+cache on method
+
+Cache the method of a Model::
+
+    @target_registry(Model)
+    class Foo:
+
+        @classmethod_cache()
+        def bar(cls):
+            import random
+            return random.random()
+
+
+    -----------------------------------------
+
+    assert Foo.bar() == Foo.bar()
 
 Event
 ~~~~~
