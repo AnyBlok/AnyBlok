@@ -123,7 +123,7 @@ def init_logger(level='info', mode='console',
     :param filename: Out put file
     :param socket: Socket or UnixSocket
     :param facility:
-    ;exception: Exception
+    :exception: Exception
     """
     if logger.hasHandlers():
         for h in logger.handlers:

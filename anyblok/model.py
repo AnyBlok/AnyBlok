@@ -372,7 +372,7 @@ class Model:
         :param registry: the current  registry
         :param namespace: the namespace of the model
         :param realregistryname: the name of the model if the namespace is a
-        mixin
+            mixin
         :rtype: the list od the bases and the properties
         """
         if namespace in registry.loaded_namespaces:

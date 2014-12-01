@@ -43,6 +43,12 @@ class Cache:
 
     @classmethod
     def invalidate(cls, registry_name, method):
+        """ Call the invalidation for a specific method cached on a model
+
+        :param registry_name: namespace of the model
+        :param method: name of the method on the model
+        :exception: CacheException
+        """
         caches = cls.registry.caches
 
         def insert(registry_name=None, method=None):
@@ -66,10 +72,16 @@ class Cache:
 
     @classmethod
     def detect_invalidation(cls):
+        """ Return True if a new invalidation is found in the table
+
+        :rtype: Boolean
+        """
         return cls.last_cache_id < cls.get_last_id()
 
     @classmethod
     def get_invalidation(cls):
+        """ Return the pointer of the method to invalidate
+        """
         res = []
         if cls.detect_invalidation():
             caches = cls.registry.caches
@@ -82,5 +94,7 @@ class Cache:
 
     @classmethod
     def clear_invalidate_cache(cls):
+        """ Invalidate the cache which need to be invalidated
+        """
         for cache in cls.get_invalidation():
             cache.cache_clear()

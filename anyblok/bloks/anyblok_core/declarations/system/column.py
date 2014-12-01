@@ -18,10 +18,23 @@ class Column(Mixin.Field):
 
     @classmethod
     def get_cname(self, field, cname):
+        """ Return the real name of the column
+
+        :param field: the instance of the column
+        :param cname: Not use here
+        :rtype: string of the real column name
+        """
         return field.property.columns[0].name
 
     @classmethod
     def add_field(cls, cname, column, model, table):
+        """ Insert a column definition
+
+        :param cname: name of the column
+        :param column: instance of the column
+        :param model: namespace of the model
+        :param table: name of the table of the model
+        """
         c = column.property.columns[0]
         vals = dict(autoincrement=c.autoincrement,
                     code=table + '.' + cname,
@@ -36,6 +49,11 @@ class Column(Mixin.Field):
 
     @classmethod
     def alter_field(cls, column, meta_column):
+        """ Update an existing column
+
+        :param column: instance of the Column model to update
+        :param meta_column: instance of the SqlAlchemy column
+        """
         c = meta_column.property.columns[0]
         for col in ('autoincrement', 'nullable', 'primary_key', 'unique'):
             if getattr(column, col) != getattr(c, col):

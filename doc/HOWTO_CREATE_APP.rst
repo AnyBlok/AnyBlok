@@ -1,8 +1,5 @@
-README
-======
-
-AnyBlok is a framework to dynamically include Python sources. It is the reference
-documentation.
+How to create your own application
+==================================
 
 This first part presents how to create an application with his own code. 
 Why do we have to create an application ? Because AnyBlok is just a framework 

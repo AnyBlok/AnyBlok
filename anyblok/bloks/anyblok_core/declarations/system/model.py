@@ -27,14 +27,20 @@ class Model:
     description = Function(fget='get_model_doc_string')
 
     def get_model_doc_string(self):
+        """ Return the docstring of the model
+        """
         m = self.registry.loaded_namespaces[self.name]
         if hasattr(m, '__doc__'):
-            return m.__doc__
+            return m.__doc__ or ''
 
         return ''
 
     @classmethod
     def update_list(cls):
+        """ Insert and update the table of models
+
+        :exception: Exception
+        """
 
         def get_field_model(field):
             ftype = field.property.__class__.__name__

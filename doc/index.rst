@@ -6,24 +6,19 @@
 Welcome to AnyBlok's documentation!
 ===================================
 
-.. toctree::
-    :hidden:
+AnyBlok is a framework to dynamically include Python sources. It is the reference
+documentation.
 
-    README.rst
+.. toctree::
+    :maxdepth: 2
+
+    HOWTO_CREATE_APP.rst
     MEMENTO.rst
     CODE.rst
     UNITTEST.rst
     BLOKS.rst
     CHANGES.rst
     ROADMAP.rst
-
-.. include:: README.rst
-.. include:: MEMENTO.rst
-.. include:: CODE.rst
-.. include:: UNITTEST.rst
-.. include:: BLOKS.rst
-.. include:: CHANGES.rst
-.. include:: ROADMAP.rst
 
 Indices and tables
 ==================

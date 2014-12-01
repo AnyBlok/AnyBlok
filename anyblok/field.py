@@ -92,7 +92,7 @@ class Field:
         """ Return the label for this field
 
         :param fieldname: if no label filled, the fieldname will be capitalized
-        and returned
+            and returned
         :rtype: the label for this field
         """
         if not self.label:

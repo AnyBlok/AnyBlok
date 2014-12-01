@@ -19,6 +19,13 @@ class RelationShip(Mixin.Field):
 
     @classmethod
     def add_field(cls, rname, relation, model, table):
+        """ Insert a relationship definition
+
+        :param rname: name of the relationship
+        :param relation: instance of the relationship
+        :param model: namespace of the model
+        :param table: name of the table of the model
+        """
         local_column = relation.info.get('local_column')
         remote_column = relation.info.get('remote_column')
         remote_model = relation.info.get('remote_model')

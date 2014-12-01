@@ -719,7 +719,7 @@ class Registry:
         :param registryname: namespace of the model
         :param method: method to call on the registryname
         :param put_at_the_if_exist: if true and hook allready exist then the
-        hook are moved at the end
+            hook are moved at the end
         """
         entry = (registryname, method)
         if entry in self._precommit_hook:
