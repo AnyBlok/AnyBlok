@@ -68,6 +68,22 @@ class MigrationReport:
                     _, index = diff
                     log_names.append('Drop index %s on %s' % (
                         index.name, index.table))
+                elif name == 'add_fk':
+                    _, fk = diff
+                    for column in fk.columns:
+                        for fk_ in column.foreign_keys:
+                            log_names.append(
+                                'Add Foreign keys on %s.%s => %s' % (
+                                    fk.table.name, column.name,
+                                    fk_.target_fullname))
+                elif name == 'remove_fk':
+                    _, fk = diff
+                    for column in fk.columns:
+                        for fk_ in column.foreign_keys:
+                            log_names.append(
+                                'Drop Foreign keys on %s.%s => %s' % (
+                                    fk.table.name, column.name,
+                                    fk_.target_fullname))
                 elif name in ('remove_table', 'remove_column'):
                     # No save remove table or column
                     # Remove table or column is
@@ -123,6 +139,18 @@ class MigrationReport:
                 if not index.unique:
                     table = self.migration.table(index.table.name)
                     table.index(name=index.name).drop()
+            elif action[0] == 'add_fk':
+                _, fk = action
+                t = self.migration.table(fk.table.name)
+                for column in fk.columns:
+                    for fk_ in column.foreign_keys:
+                        t.column(name=column.name).foreign_key().add(
+                            fk_.column)
+            elif action[0] == 'remove_fk':
+                _, fk = action
+                t = self.migration.table(fk.table.name)
+                for column in fk.columns:
+                    t.column(name=column.name).foreign_key().drop()
 
 
 class MigrationConstraintForeignKey:
@@ -150,8 +178,11 @@ class MigrationConstraintForeignKey:
         :param remote_field: The column of the remote model
         :rtype: MigrationConstraintForeignKey instance
         """
-        remote_table = remote_field.property.columns[0].table.name
-        remote_column = remote_field.property.columns[0].name
+        if hasattr(remote_field, 'propery'):
+            remote_field = remote_field.property.columns[0]
+
+        remote_table = remote_field.table.name
+        remote_column = remote_field.name
         self.column.table.migration.operation.create_foreign_key(
             self.name, self.column.table.name, remote_table,
             [self.column.name], [remote_column], **kwargs)

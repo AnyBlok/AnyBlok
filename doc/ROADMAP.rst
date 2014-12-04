@@ -4,8 +4,7 @@ ROADMAP
 Next step
 ---------
 
-* Improve Migration Class: see alembic: http://alembic.readthedocs.org/en/latest/
-* Improve documentation, docstring and unittest
+* Improve documentation
 
 To implement
 ------------

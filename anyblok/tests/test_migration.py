@@ -264,7 +264,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertEqual(report.log_has("Alter test.other"), False)
 
-    @skipIf(alembic.__version__ <= "0.7.0", "Alembic doesn't implement yet")
+    @skipIf(alembic.__version__ <= "0.7.1", "Alembic doesn't implement yet")
     def test_detect_primary_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -281,7 +281,6 @@ class TestMigration(TestCase):
         self.assertEqual(report.log_has("Alter test.integer"), False)
         self.assertEqual(report.log_has("Alter test.other"), False)
 
-    @skipIf(alembic.__version__ <= "0.7.0", "Alembic doesn't implement yet")
     def test_detect_add_foreign_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE testfk")
@@ -291,12 +290,13 @@ class TestMigration(TestCase):
                     other INT
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), True)
+        self.assertEqual(report.log_has(
+            "Add Foreign keys on testfk.other => testfktarget.integer"), True)
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), False)
+        self.assertEqual(report.log_has(
+            "Add Foreign keys on testfk.other => testfktarget.integer"), False)
 
-    @skipIf(alembic.__version__ <= "0.7.0", "Alembic doesn't implement yet")
     def test_detect_drop_foreign_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -306,10 +306,29 @@ class TestMigration(TestCase):
                     other CHAR(64) references system_blok(name)
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), True)
+        self.assertEqual(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"), True)
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), False)
+        self.assertEqual(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"), False)
+
+    def test_detect_drop_column_with_foreign_key(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64),
+                    other2 CHAR(64) references system_blok(name)
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertEqual(report.log_has(
+            "Drop Foreign keys on test.other2 => system_blok.name"), True)
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertEqual(report.log_has(
+            "Drop Foreign keys on test.other2 => system_blok.name"), False)
 
     def test_detect_drop_constraint(self):
         with self.cnx() as conn:
