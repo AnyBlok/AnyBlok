@@ -1,3 +1,4 @@
+from random import random
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 target_registry = Declarations.target_registry
@@ -696,3 +697,80 @@ class TestInheritedClassMethodCache(DBTestCase):
         registry = self.init_registry(
             self.add_model_with_method_cached_by_mixin, inheritcache=True)
         self.check_inherited_method_cached(registry.Test)
+
+
+class TestComparatorInterModel(DBTestCase):
+
+    def check_comparator(self, registry):
+        Test = registry.Test
+        Test2 = registry.Test2
+        self.assertEqual(Test.method_cached(), Test.method_cached())
+        self.assertEqual(Test2.method_cached(), Test2.method_cached())
+        self.assertNotEqual(Test.method_cached(), Test2.method_cached())
+
+    def test_model(self):
+
+        def add_in_registry():
+
+            @target_registry(Model)
+            class Test:
+
+                @Declarations.classmethod_cache()
+                def method_cached(cls):
+                    return random()
+
+            @target_registry(Model)
+            class Test2:
+
+                @Declarations.classmethod_cache()
+                def method_cached(cls):
+                    return random()
+
+        registry = self.init_registry(add_in_registry)
+        self.check_comparator(registry)
+
+    def test_mixin(self):
+
+        def add_in_registry():
+
+            @target_registry(Mixin)
+            class MTest:
+
+                @Declarations.classmethod_cache()
+                def method_cached(cls):
+                    return random()
+
+            @target_registry(Model)
+            class Test(Mixin.MTest):
+                pass
+
+            @target_registry(Model)
+            class Test2(Mixin.MTest):
+
+                pass
+
+        registry = self.init_registry(add_in_registry)
+        self.check_comparator(registry)
+
+    def test_core(self):
+
+        def add_in_registry():
+
+            @target_registry(Core)
+            class Base:
+
+                @Declarations.classmethod_cache()
+                def method_cached(cls):
+                    return random()
+
+            @target_registry(Model)
+            class Test:
+                pass
+
+            @target_registry(Model)
+            class Test2:
+
+                pass
+
+        registry = self.init_registry(add_in_registry)
+        self.check_comparator(registry)

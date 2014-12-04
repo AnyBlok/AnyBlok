@@ -547,42 +547,130 @@ Params for ``Field.Function``
 Mixin
 -----
 
-TODO
+Mixin look like Model, but they have any table. Mixin add behaviour at
+Model by python inherit::
+
+    @target_registry(Mixin)
+    class MyMixin:
+
+        def foo():
+            pass
+
+    @target_registry(Model)
+    class MyModel(Mixin.MyMixin):
+        pass
+
+    ----------------------------------
+
+    assert hasattr(registry.MyModel, 'foo')
+
+
+In the assembling of the bases, if one base inherit of a mixin declaration
+then all the bases of this mixin declaration replace the mixine declaration.
+This behaviour allow to inherit one mixin and all the model which inherit this
+mixin before the overload, get the overload too::
+
+    @target_registry(Mixin)
+    class MyMixin:
+        pass
+
+    @target_registry(Model)
+    class MyModel(Mixin.MyMixin):
+        pass
+
+    @target_registry(Mixin)
+    class MyMixin:
+
+        def foo():
+            pass
+
+    ----------------------------------
+
+    assert hasattr(registry.MyModel, 'foo')
+
 
 SQL View
 --------
 
-TODO
+SQL view is a model, with the argument ``is_sql_view=True`` in the
+target_registry. and the classmethod ``sqlalchemy_view_declaration``::
+
+    @target_registry(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @target_registry(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @target_registry(Model, is_sql_view=True)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            """ This method must return the query of the view """
+            T1 = cls.registry.T1
+            T2 = cls.registry.T2
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T2.val.label('val2')])
+            return query.where(T1.code == T2.code)
+
 
 Core
 ----
 
-Core is a low level for all Model of AnyBlok
+Core is a low level for all Model of AnyBlok. Core add general behaviour of
+the application.
 
 Base
 ~~~~
 
-TODO
+Add a behaviour in all the Model, Each Model inherit of Base. for example, the
+``fire`` method of the event come from Base core.
 
 SqlBase
 ~~~~~~~
 
-TODO
+Only the Model with ``Field``, ``Column``, ``RelationShip`` inherit SqlBase.
+Because the method ``insert`` have interest only for the ``Model`` with a table
 
 SqlViewBase
 ~~~~~~~~~~~
 
-TODO
+As SqlBase, only the SqlView inherit this ``Core``.
 
 Query
 ~~~~~
 
-TODO
+Overload the SqlAlchemy Query class. Allow to add feature to minify the
+source file.
 
 Session
 ~~~~~~~
 
-TODO
+Over load the SqlAlchemy Session class.
+
+Insrumented List
+~~~~~~~~~~~~~~~~
+
+Instrumented List if the class returned by the Query for all the list result
+as:
+
+* query.all()
+* relationship list (Many2Many, One2Many)
+
+Add some feature as get a specific property of call a method on all the
+elements::
+
+    MyModel.query().all().foo(bar)
 
 Share the table between more than one model
 -------------------------------------------
@@ -626,6 +714,58 @@ Cache the method of a Model::
 
     assert Foo.bar() == Foo.bar()
 
+
+Cache the method coming from a Mixin::
+
+    @target_registry(Mixin)
+    class MFoo:
+
+        @classmethod_cache()
+        def bar(cls):
+            import random
+            return random.random()
+
+    @target_registry(Model)
+    class Foo(Mixin.MFoo):
+        pass
+
+    @target_registry(Model)
+    class Foo2(Mixin.MFoo):
+        pass
+
+
+    -----------------------------------------
+
+    assert Foo.bar() == Foo.bar()
+    assert Foo2.bar() == Foo2.bar()
+    assert Foo.bar() != Foo2.bar()
+
+
+Cache the method coming from a Mixin::
+
+    @target_registry(Core)
+    class Base
+
+        @classmethod_cache()
+        def bar(cls):
+            import random
+            return random.random()
+
+    @target_registry(Model)
+    class Foo:
+        pass
+
+    @target_registry(Model)
+    class Foo2:
+        pass
+
+
+    -----------------------------------------
+
+    assert Foo.bar() == Foo.bar()
+    assert Foo2.bar() == Foo2.bar()
+    assert Foo.bar() != Foo2.bar()
+
 Event
 ~~~~~
 
@@ -638,11 +778,6 @@ TODO
 
 Pre commit hook
 ~~~~~~~~~~~~~~~
-
-TODO
-
-Instrumented list
-~~~~~~~~~~~~~~~~~
 
 TODO
 
