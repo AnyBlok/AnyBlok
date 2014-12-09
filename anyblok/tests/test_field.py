@@ -58,7 +58,7 @@ class TestField(TestCase):
 
         target_registry(Field, cls_=OneField, name_="Field2Remove")
         try:
-            remove_registry(Field, cls_=OneField, name_="Field2Remove")
+            remove_registry(Field.Field2Remove, OneField)
             self.fail('No watch dog to remove field')
         except FieldException:
             pass

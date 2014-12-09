@@ -81,8 +81,7 @@ class TestRelationShip(TestCase):
         target_registry(RelationShip, cls_=OneRelationShip,
                         name_="RelationShip2Remove")
         try:
-            remove_registry(RelationShip, cls_=OneRelationShip,
-                            name_="RelationShip2Remove")
+            remove_registry(RelationShip.RelationShip2Remove, OneRelationShip)
             self.fail('No watch dog to remove relation ship')
         except FieldException:
             pass

@@ -40,6 +40,13 @@ class TestCoreInterfaceMixin(TestCase):
             has = cls_ in blok['Mixin']['Mixin.MyMixin']['bases']
             self.assertEqual(has, True)
 
+    def assertInRemoved(self, cls):
+        core = RegistryManager.loaded_bloks['testMixin']['removed']
+        if cls in core:
+            return True
+
+        self.fail('Not in removed')
+
     def test_add_interface(self):
         target_registry(Mixin, cls_=OneInterface, name_='MyMixin')
         self.assertEqual('Mixin', Mixin.MyMixin.__declaration_type__)
@@ -69,13 +76,12 @@ class TestCoreInterfaceMixin(TestCase):
 
         target_registry(Mixin, cls_=OneInterface, name_="MyMixin")
         self.assertInMixin(OneInterface)
-        blokname = 'testMixin'
-        remove_registry(Mixin, cls_=OneInterface, name_="MyMixin",
-                        blok=blokname)
+        remove_registry(Mixin.MyMixin, OneInterface)
 
         blokname = 'testMixin'
         self.assertEqual(hasattr(Mixin, blokname), False)
-        self.assertInMixin()
+        self.assertInMixin(OneInterface)
+        self.assertInRemoved(OneInterface)
 
     def test_remove_interface_with_2_cls_in_registry(self):
 
@@ -86,7 +92,6 @@ class TestCoreInterfaceMixin(TestCase):
             pass
 
         self.assertInMixin(OneInterface, MyMixin)
-        blokname = 'testMixin'
-        remove_registry(Mixin, cls_=OneInterface, name_="MyMixin",
-                        blok=blokname)
-        self.assertInMixin(MyMixin)
+        remove_registry(Mixin.MyMixin, OneInterface)
+        self.assertInMixin(MyMixin, OneInterface)
+        self.assertInRemoved(OneInterface)

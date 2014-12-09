@@ -52,8 +52,8 @@ class TestCoreInterfaceException(TestCase):
         target_registry(Declarations.Exception, cls_=OneInterface,
                         name_="Exception2Remove")
         try:
-            remove_registry(Declarations.Exception, cls_=OneInterface,
-                            name_="Exception2Remove")
+            remove_registry(Declarations.Exception.Exception2Remove,
+                            OneInterface)
             self.fail('No watch dog to remove field')
         except Declarations.Exception.DeclarationsException:
             pass

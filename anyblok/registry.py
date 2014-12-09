@@ -183,6 +183,7 @@ class RegistryManager:
                 'InstrumentedList': [],
             },
             'properties': {},
+            'removed': [],
         }
         for de in cls.declared_entries:
             blok[de] = {'registry_names': []}
@@ -213,15 +214,15 @@ class RegistryManager:
         cls.loaded_bloks[current_blok]['Core'][core].append(cls_)
 
     @classmethod
-    def remove_core_in_target_registry(cls, blok, core, cls_):
-        """ Remove Class in blok and in core
+    def remove_in_target_registry(cls, cls_):
+        """ Remove Class in blok and in entry
 
-        :param blok: name of the blok
-        :param core: is the existing core name
-        :param ``cls_``: Class of the Core to remove in loaded blok target
-                        registry
+        :param ``cls_``: Class of the entry / key to remove in loaded blok
         """
-        cls.loaded_bloks[blok]['Core'][core].remove(cls_)
+        current_blok = EnvironmentManager.get('current_blok')
+        removed = cls.loaded_bloks[current_blok]['removed']
+        if cls_ not in removed:
+            removed.append(cls_)
 
     @classmethod
     def has_entry_in_target_registry(cls, blok, entry, key):
@@ -280,18 +281,6 @@ class RegistryManager:
             return {}
 
         return cls.loaded_bloks[cb][entry][key]['properties'].copy()
-
-    @classmethod
-    def remove_entry_in_target_registry(cls, blok, entry, key, cls_, **kwargs):
-        """ Remove Class in blok and in entry
-
-        :param blok: name of the blok
-        :param entry: is the existing entry name
-        :param key: is the existing key in the entry
-        :param ``cls_``: Class of the entry / key to remove in loaded blok
-        """
-        cls.loaded_bloks[blok][entry][key]['bases'].remove(cls_)
-        cls.loaded_bloks[blok][entry][key]['properties'].update(kwargs)
 
     @classmethod
     def has_blok_property(cls, property_):
@@ -384,6 +373,7 @@ class Registry:
         self.loaded_namespaces = {}
         self.children_namespaces = {}
         self.properties = {}
+        self.removed = []
         self._precommit_hook = []
 
     def get(self, namespace):
@@ -487,6 +477,11 @@ class Registry:
             else:
                 self.properties[k] = v
 
+    def load_removed(self, blok):
+        for removed in RegistryManager.loaded_bloks[blok]['removed']:
+            if removed not in self.removed:
+                self.removed.append(removed)
+
     def load_blok(self, blok, toinstall, toload):
         """ load on blok, load all the core and all the entry for one blok
 
@@ -517,6 +512,7 @@ class Registry:
             self.load_entry(blok, entry)
 
         self.load_properties(blok)
+        self.load_removed(blok)
         self.loaded_bloks[blok] = b
         self.ordered_loaded_bloks.append(blok)
         logger.info("Blok %r loaded" % blok)

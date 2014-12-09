@@ -47,18 +47,18 @@ class TestRegistryEntry(TestCase):
         class test:
             pass
 
+        def has_test_in_removed():
+            core = RegistryManager.loaded_bloks['testEntry']['removed']
+            if test in core:
+                return True
+
+            return False
+
         RegistryManager.add_entry_in_target_registry('Other', 'test', test)
         self.assertInEntry('test', test)
-        self.assertEqual(
-            RegistryManager.has_entry_in_target_registry('testEntry', 'Other',
-                                                         'test'),
-            True)
-        RegistryManager.remove_entry_in_target_registry(
-            'testEntry', 'Other', 'test', test)
-        self.assertEqual(
-            RegistryManager.has_entry_in_target_registry('testEntry', 'Other',
-                                                         'test'),
-            False)
+        self.assertEqual(has_test_in_removed(), False)
+        RegistryManager.remove_in_target_registry(test)
+        self.assertEqual(has_test_in_removed(), True)
 
     def test_get_entry_properties_in_target_registry(self):
         class test:

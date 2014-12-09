@@ -101,6 +101,7 @@ class TestRegistry(TestCase):
                      'SqlViewBase': [],
                      'Query': [],
                      'InstrumentedList': []},
+            'removed': [],
             'properties': {},
         }
         for entry in RegistryManager.declared_entries:

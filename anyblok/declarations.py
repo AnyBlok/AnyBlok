@@ -49,17 +49,17 @@ class Declarations:
             return wrapper
 
     @classmethod
-    def remove_registry(cls, parent, cls_, **kwargs):
+    def remove_registry(cls, entry, cls_):
         """ Method to remove from a type of declaration
 
-            :param parent: An existing anyblok class in the Declaration
-            :param ``cls_``: The ``class`` object to remove from the
-                Declaration
-            :rtype: ``cls_``
+        :param entry: entry declaration of the model where the ``cls_``
+            must be removed
+        :param ``cls_``: The ``class`` object to remove from the
+            Declaration
+        :rtype: ``cls_``
         """
-        declaration = cls.declaration_types[parent.__declaration_type__]
-        name = kwargs.get('name_', cls_.__name__)
-        declaration.remove_registry(parent, name, cls_, **kwargs)
+        declaration = cls.declaration_types[entry.__declaration_type__]
+        declaration.remove_registry(entry, cls_)
 
         return cls_
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, ProgrammingError
 from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
@@ -183,9 +183,17 @@ class MigrationConstraintForeignKey:
 
         remote_table = remote_field.table.name
         remote_column = remote_field.name
-        self.column.table.migration.operation.create_foreign_key(
-            self.name, self.column.table.name, remote_table,
-            [self.column.name], [remote_column], **kwargs)
+        savepoint = 'add_fk_%s_%s' % (remote_table, remote_column)
+        try:
+            self.column.table.migration.savepoint(savepoint)
+            self.column.table.migration.operation.create_foreign_key(
+                self.name, self.column.table.name, remote_table,
+                [self.column.name], [remote_column], **kwargs)
+        except ProgrammingError as e:
+            self.column.table.migration.rollback_savepoint(savepoint)
+            logger.warn(str(e))
+        finally:
+            self.column.table.migration.release_savepoint(savepoint)
         return self
 
     def drop(self):

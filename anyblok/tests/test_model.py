@@ -40,6 +40,13 @@ class TestModel(TestCase):
             has = cls_ in blok['Model']['Model.MyModel']['bases']
             self.assertEqual(has, True)
 
+    def assertInRemoved(self, cls):
+        core = RegistryManager.loaded_bloks['testModel']['removed']
+        if cls in core:
+            return True
+
+        self.fail('Not in removed')
+
     def test_add_interface(self):
         target_registry(Model, cls_=OneModel, name_='MyModel')
         self.assertEqual('Model', Model.MyModel.__declaration_type__)
@@ -69,13 +76,9 @@ class TestModel(TestCase):
 
         target_registry(Model, cls_=OneModel, name_="MyModel")
         self.assertInModel(OneModel)
-        blokname = 'testModel'
-        remove_registry(Model, cls_=OneModel, name_="MyModel",
-                        blok=blokname)
-
-        blokname = 'testModel'
-        self.assertEqual(hasattr(Model, blokname), False)
-        self.assertInModel()
+        remove_registry(Model.MyModel, OneModel)
+        self.assertInModel(OneModel)
+        self.assertInRemoved(OneModel)
 
     def test_remove_interface_with_2_cls_in_registry(self):
 
@@ -86,7 +89,6 @@ class TestModel(TestCase):
             pass
 
         self.assertInModel(OneModel, MyModel)
-        blokname = 'testModel'
-        remove_registry(Model, cls_=OneModel, name_="MyModel",
-                        blok=blokname)
-        self.assertInModel(MyModel)
+        remove_registry(Model.MyModel, OneModel)
+        self.assertInModel(MyModel, OneModel)
+        self.assertInRemoved(OneModel)

@@ -10,7 +10,7 @@ class OneType:
         setattr(parent, name, cls_)
 
     @classmethod
-    def remove_registry(cls, parent, name, cls_, **kwargs):
+    def remove_registry(cls, entry, cls_):
         pass
 
 
@@ -53,4 +53,4 @@ class TestDeclaration(TestCase):
         class SubType:
             pass
 
-        Declarations.remove_registry(Declarations.MyOneType, cls_=SubType)
+        Declarations.remove_registry(Declarations.MyOneType.SubType, SubType)

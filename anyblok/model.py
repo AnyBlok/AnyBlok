@@ -61,6 +61,40 @@ def get_fields(base):
     return fields
 
 
+class ModelList(list):
+
+    def __init__(self, Model, registry, namespace, transformation_properties):
+        super(ModelList, self).__init__()
+        self.Model = Model
+        self.registry = registry
+        self.namespace = namespace
+        self.transformation_properties = transformation_properties
+
+    def transform_base(self, base, namespace=None):
+        if base in self.registry.removed:
+            return None
+
+        if namespace is None:
+            namespace = self.namespace
+
+        newbase = self.Model.transform_base(
+            self.registry, namespace, base, self.transformation_properties)
+        return newbase
+
+    def append(self, base, **kwargs):
+        newbase = self.transform_base(base, **kwargs)
+        if newbase:
+            super(ModelList, self).append(newbase)
+
+    def extend(self, bases, **kwargs):
+        newbases = [x
+                    for y in bases
+                    for x in [self.transform_base(y)]
+                    if x is not None]
+        if newbases:
+            super(ModelList, self).extend(newbases)
+
+
 @Declarations.add_declaration_type(isAnEntry=True,
                                    assemble='assemble_callback',
                                    initialize='initialize_callback')
@@ -141,18 +175,14 @@ class Model:
             'Model', _registryname, cls_, **kwargs)
 
     @classmethod
-    def remove_registry(self, parent, name, cls_, **kwargs):
+    def remove_registry(self, entry, cls_):
         """ Remove the Interface in the registry
 
-        :param registry: Existing global registry
-        :param name: Name of the new registry to add it
+        :param entry: entry declaration of the model where the ``cls_``
+            must be removed
         :param cls_: Class Interface to remove in registry
         """
-        blok = kwargs.pop('blok')
-        _registryname = parent.__registry_name__ + '.' + name
-        RegistryManager.remove_entry_in_target_registry(blok, 'Model',
-                                                        _registryname, cls_,
-                                                        **kwargs)
+        RegistryManager.remove_in_target_registry(cls_)
 
     @classmethod
     def declare_field(self, registry, name, field, namespace, properties):
@@ -383,7 +413,7 @@ class Model:
                 'hybrid_method': [],
             }
 
-        bases = []
+        bases = ModelList(cls, registry, namespace, transformation_properties)
         ns = registry.loaded_registries[namespace]
         properties = ns['properties'].copy()
 
@@ -395,11 +425,9 @@ class Model:
                 continue
 
             if realregistryname:
-                bases.append(cls.transform_base(registry, realregistryname, b,
-                                                transformation_properties))
+                bases.append(b, namespace=realregistryname)
             else:
-                bases.append(cls.transform_base(registry, namespace, b,
-                                                transformation_properties))
+                bases.append(b)
 
             if b.__doc__ and '__doc__' not in properties:
                 properties['__doc__'] = b.__doc__
@@ -419,23 +447,15 @@ class Model:
             properties['loaded_fields'] = {}
             tablename = properties['__tablename__']
             if properties['is_sql_view']:
-                bases += [cls.transform_base(registry, namespace, x,
-                                             transformation_properties)
-                          for x in registry.loaded_cores['SqlViewBase']]
+                bases.extend([x for x in registry.loaded_cores['SqlViewBase']])
             elif has_sql_fields(bases):
-                bases += [cls.transform_base(registry, namespace, x,
-                                             transformation_properties)
-                          for x in registry.loaded_cores['SqlBase']]
-                bases += [cls.transform_base(registry, namespace, x,
-                                             transformation_properties)
-                          for x in [registry.declarativebase]]
+                bases.extend([x for x in registry.loaded_cores['SqlBase']])
+                bases.append(registry.declarativebase)
             else:
                 # remove tablename to inherit from a sqlmodel
                 del properties['__tablename__']
 
-            bases += [cls.transform_base(registry, namespace, x,
-                                         transformation_properties)
-                      for x in registry.loaded_cores['Base']]
+            bases.extend([x for x in registry.loaded_cores['Base']])
 
             if tablename in registry.declarativebase.metadata.tables:
                 if '__tablename__' in properties:

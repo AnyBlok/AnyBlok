@@ -40,15 +40,11 @@ class Mixin:
             'Mixin', _registryname, cls_, **kwargs)
 
     @classmethod
-    def remove_registry(self, parent, name, cls_, **kwargs):
+    def remove_registry(self, entry, cls_):
         """ Remove the Interface in the registry
 
-        :param parent: Existing global registry
-        :param name: Name of the new registry to add it
+        :param entry: entry declaration of the model where the ``cls_``
+            must be removed
         :param cls_: Class Interface to remove in registry
         """
-        blok = kwargs.pop('blok')
-        _registryname = parent.__registry_name__ + '.' + name
-        RegistryManager.remove_entry_in_target_registry(blok, 'Mixin',
-                                                        _registryname, cls_,
-                                                        **kwargs)
+        RegistryManager.remove_in_target_registry(cls_)

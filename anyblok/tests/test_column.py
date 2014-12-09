@@ -60,7 +60,7 @@ class TestColumn(TestCase):
 
         target_registry(Column, cls_=OneColumn, name_="Column2Remove")
         try:
-            remove_registry(Column, cls_=OneColumn, name_="Column2Remove")
+            remove_registry(Column.Column2Remove, OneColumn)
             self.fail('No watch dog to remove Column')
         except FieldException:
             pass

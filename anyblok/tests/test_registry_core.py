@@ -45,13 +45,15 @@ class TestRegistryCore(TestCase):
         class test:
             pass
 
+        def has_test_in_removed():
+            core = RegistryManager.loaded_bloks['testCore']['removed']
+            if test in core:
+                return True
+
+            return False
+
         RegistryManager.add_core_in_target_registry('test', test)
         self.assertInCore(test)
-        self.assertEqual(
-            RegistryManager.has_core_in_target_registry('testCore', 'test'),
-            True)
-        RegistryManager.remove_core_in_target_registry(
-            'testCore', 'test', test)
-        self.assertEqual(
-            RegistryManager.has_core_in_target_registry('testCore', 'test'),
-            False)
+        self.assertEqual(has_test_in_removed(), False)
+        RegistryManager.remove_in_target_registry(test)
+        self.assertEqual(has_test_in_removed(), True)

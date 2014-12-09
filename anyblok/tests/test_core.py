@@ -40,6 +40,13 @@ class TestCoreInterfaceCoreBase(TestCase):
             hasCls = cls_ in blok['Core'][self._corename]
             self.assertEqual(hasCls, True)
 
+    def assertInRemoved(self, cls):
+        core = RegistryManager.loaded_bloks['testCoreBase']['removed']
+        if cls in core:
+            return True
+
+        self.fail('Not in removed')
+
     def test_add_interface(self):
         target_registry(Core, cls_=OneInterface, name_='Base')
         self.assertEqual('Core', Core.Base.__declaration_type__)
@@ -69,12 +76,9 @@ class TestCoreInterfaceCoreBase(TestCase):
 
         target_registry(Core, cls_=OneInterface, name_="Base")
         self.assertInCore(OneInterface)
-        blokname = 'testCore' + self._corename
-        remove_registry(Core, cls_=OneInterface, name_="Base", blok=blokname)
-
-        blokname = 'testCore' + self._corename
-        self.assertEqual(hasattr(Core, blokname), False)
-        self.assertInCore()
+        remove_registry(Core.Base, OneInterface)
+        self.assertInCore(OneInterface)
+        self.assertInRemoved(OneInterface)
 
     def test_remove_interface_with_2_cls_in_registry(self):
 
@@ -85,6 +89,6 @@ class TestCoreInterfaceCoreBase(TestCase):
             pass
 
         self.assertInCore(OneInterface, Base)
-        blokname = 'testCore' + self._corename
-        remove_registry(Core, cls_=OneInterface, name_="Base", blok=blokname)
-        self.assertInCore(Base)
+        remove_registry(Core.Base, OneInterface)
+        self.assertInCore(Base, OneInterface)
+        self.assertInRemoved(OneInterface)

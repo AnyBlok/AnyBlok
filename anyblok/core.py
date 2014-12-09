@@ -37,12 +37,11 @@ class Core:
         RegistryManager.add_core_in_target_registry(name, cls_)
 
     @classmethod
-    def remove_registry(self, parent, name, cls_, **kwargs):
+    def remove_registry(self, entry, cls_):
         """ Remove the Interface in the registry
 
-        :param parent: Existing declaration (not use here)
-        :param name: Name of the new declaration to remove it
+        :param entry: entry declaration of the model where the ``cls_``
+            must be removed
         :param cls_: Class Interface to remove in the declaration
         """
-        blok = kwargs.pop('blok')
-        RegistryManager.remove_core_in_target_registry(blok, name, cls_)
+        RegistryManager.remove_in_target_registry(cls_)

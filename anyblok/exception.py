@@ -38,7 +38,7 @@ class Exception:
         setattr(parent, name, cls_)
 
     @classmethod
-    def remove_registry(self, registry, child, cls_, **kwargs):
+    def remove_registry(self, entry, cls_):
         """ Forbidden method
 
         :exception: DeclarationsException

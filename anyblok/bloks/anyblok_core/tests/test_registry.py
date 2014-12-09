@@ -66,3 +66,131 @@ class TestRegistry(DBTestCase):
         registry.commit()
         self.assertEqual(t1.val, 3 * t1.id)
         self.assertEqual(t2.val, 3 * t2.id)
+
+    def define_cls(self, typename='Model', name='Test', val=1, usesuper=False,
+                   inherit=None):
+
+        from anyblok import Declarations
+
+        target_registry = Declarations.target_registry
+        Type = getattr(Declarations, typename)
+        if inherit is None:
+            inherit = object
+        else:
+            inherit = getattr(Declarations.Mixin, inherit)
+
+        @target_registry(Type, name_=name)
+        class Test(inherit):
+
+            @classmethod
+            def foo(cls):
+                if usesuper:
+                    return val * super(Test, cls).foo()
+
+                return val
+
+        return Test
+
+    def test_check_define_cls(self):
+
+        def add_in_registry():
+            self.define_cls()
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 1)
+
+    def test_check_define_cls_with_inherit(self):
+
+        def add_in_registry():
+            self.define_cls()
+            self.define_cls(val=2, usesuper=True)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 2)
+
+    def test_check_define_cls_with_inherit_core(self):
+
+        def add_in_registry():
+            self.define_cls(typename='Core', name='Base', val=2)
+            self.define_cls(val=2, usesuper=True)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 4)
+
+    def test_check_define_cls_with_inherit_mixin(self):
+
+        def add_in_registry():
+            self.define_cls(typename='Mixin', name='MTest', val=3)
+            self.define_cls(val=3, usesuper=True, inherit='MTest')
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 9)
+
+    def test_check_define_cls_with_inherit2(self):
+
+        def add_in_registry():
+            self.define_cls()
+            self.define_cls(val=2, usesuper=True)
+            self.define_cls(val=2, usesuper=True)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 4)
+
+    def test_check_define_cls_with_inherit_core2(self):
+
+        def add_in_registry():
+            self.define_cls(typename='Core', name='Base', val=2)
+            self.define_cls(typename='Core', name='Base', val=2, usesuper=True)
+            self.define_cls(val=2, usesuper=True)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 8)
+
+    def test_check_define_cls_with_inherit_mixin2(self):
+
+        def add_in_registry():
+            self.define_cls(typename='Mixin', name='MTest', val=3)
+            self.define_cls(typename='Mixin', name='MTest', val=3,
+                            usesuper=True)
+            self.define_cls(val=3, usesuper=True, inherit='MTest')
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 27)
+
+    def test_remove(self):
+
+        def add_in_registry():
+            self.define_cls()
+            cls_ = self.define_cls(val=2, usesuper=True)
+            self.define_cls(val=2, usesuper=True)
+            from anyblok import Declarations
+            Declarations.remove_registry(Declarations.Model.Test, cls_)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 2)
+
+    def test_remove_core(self):
+
+        def add_in_registry():
+            self.define_cls(typename='Core', name='Base', val=2)
+            cls_ = self.define_cls(typename='Core', name='Base', val=2,
+                                   usesuper=True)
+            self.define_cls(val=2, usesuper=True)
+            from anyblok import Declarations
+            Declarations.remove_registry(Declarations.Core.Base, cls_)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 4)
+
+    def test_remove_mixin(self):
+
+        def add_in_registry():
+            self.define_cls(typename='Mixin', name='MTest', val=3)
+            cls_ = self.define_cls(typename='Mixin', name='MTest', val=3,
+                                   usesuper=True)
+            self.define_cls(val=3, usesuper=True, inherit='MTest')
+            from anyblok import Declarations
+            Declarations.remove_registry(Declarations.Mixin.MTest, cls_)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(registry.Test.foo(), 9)

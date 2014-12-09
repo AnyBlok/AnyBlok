@@ -34,7 +34,7 @@ class Field:
         logger.info("Add new type field : %r" % _registryname)
 
     @classmethod
-    def remove_registry(self, registry, child, cls_, **kwargs):
+    def remove_registry(self, child, cls_):
         """ Forbidden method
 
         :exception: FieldException
