@@ -676,3 +676,24 @@ class TestBlokOrder(DBTestCase):
         self.upgrade(registry, install=('test-blok3',))
         self.check_order(registry, 'load', [
             'anyblok-core', 'test-blok1', 'test-blok2', 'test-blok3'])
+
+
+class TestBlokModel(DBTestCase):
+
+    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+
+    def test_remove_foreign_key_after_uninstallation(self):
+        registry = self.init_registry(None)
+        self.upgrade(registry, install=('test-blok7', 'test-blok8'))
+        t2 = registry.Test2.insert(label="test2")
+        registry.Test.insert(label="Test1", test2=t2.id)
+        registry.old_session_commit()
+        from sqlalchemy.exc import IntegrityError
+        try:
+            registry.Test2.query().delete()
+            self.fail('No watch dog')
+        except IntegrityError:
+            pass
+        registry.rollback()
+        self.upgrade(registry, uninstall=('test-blok8',))
+        registry.Test2.query().delete()
