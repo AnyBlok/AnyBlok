@@ -196,7 +196,7 @@ namespace in lower and with ``-`` which replace ``.``.
 
     The registry is accessible only in the method of the models::
 
-        target_registry(Model)
+        @target_registry(Model)
         class Foo:
 
             def myMethod(self):
@@ -208,12 +208,12 @@ to overload easylly these models. The declaration, record the python class in
 the registry, if one model already exist then the second declaration of this
 model overload the first model::
 
-    target_registry(Model)
+    @target_registry(Model)
     class Foo:
         x = 1
 
 
-    target_registry(Model)
+    @target_registry(Model)
     class Foo:
         x = 2
 
@@ -249,6 +249,24 @@ These are the params of the ``target_registry`` method for ``Model``
 +-------------+---------------------------------------------------------------+
 | is_sql_view | Boolean flag, which indicate if the model is based on a sql   |
 |             | view                                                          |
++-------------+---------------------------------------------------------------+
+| tablename   | Define the realname of the table. By default the table name   |
+|             | registry name without the declaration type, and with the '.'  |
+|             | replaced by '_'. This attibut is also used to map an existing |
+|             | table declared by a previous Model. The allow values are :    |
+|             |                                                               |
+|             | * str ::                                                      |
+|             |                                                               |
+|             |    @target_registry(Model, tablename='foo')                   |
+|             |    class Bar:                                                 |
+|             |        pass                                                   |
+|             |                                                               |
+|             | * declaration ::                                              |
+|             |                                                               |
+|             |    @target_registry(Model, tablename=Model.Foo)               |
+|             |    class Bar:                                                 |
+|             |        pass                                                   |
+|             |                                                               |
 +-------------+---------------------------------------------------------------+
 
 No SQL Model
@@ -675,12 +693,65 @@ elements::
 Share the table between more than one model
 -------------------------------------------
 
-TODO
+SqlAlchemy allow two method to share a table between two or more mappin class:
+
+* Inherit a SQL Model in a non SQL Model::
+
+    @target_registry(Model)
+    class Test:
+        id = Integer(primary_key=True)
+        name = String()
+
+    @target_registry(Model)
+    class Test2(Model.Test):
+        pass
+
+    ----------------------------------------
+
+    t1 = Test1.insert(name='foo')
+    assert Test2.query().filter(Test2.id == t1.id,
+                                Test2.name == t1.name).count() == 1
+
+* Share the ``__table__``.
+    AnyBlok can't give the table at the declaration, because the table doesn't
+    exist yet. But during the assembling, if the table exist and le model
+    have the name of this table then AnyBlok link directly the table. To
+    define the table you must use the named argument tablename in the
+    target_registry
+
+    ::
+
+        @target_registry(Model)
+        class Test:
+            id = Integer(primary_key=True)
+            name = String()
+
+        @target_registry(Model, tablename=Model.Test)
+        class Test2:
+            id = Integer(primary_key=True)
+            name = String()
+
+        ----------------------------------------
+
+        t1 = Test1.insert(name='foo')
+        assert Test2.query().filter(Test2.id == t1.id,
+                                    Test2.name == t1.name).count() == 1
+
+    .. warning::
+        They are any check on the existing columns.
 
 Share the view between more than one model
 ------------------------------------------
 
-TODO
+Share the view between to Model is the merge between:
+
+* Create a View Model
+* Share the same table between more than one model.
+
+.. warning::
+
+    For the view you must redined the column in the Model which take the view
+    with Inherit or simple Share by tablename
 
 Specific behariour
 ------------------
