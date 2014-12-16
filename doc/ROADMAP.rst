@@ -9,7 +9,6 @@ Next step
 To implement
 ------------
 
-* Make a registry reload to update registry without destroy the curent registry and create a new(Protect the session)
 * Add RelationShip model in anyblok-core and refatore the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
 * Put postgres databas in this own distribution with the good import
 
@@ -39,3 +38,5 @@ Functionnality which need a sprint
 * Tasks Management
 * Event by messaging bus
 * Import / Export
+* Internalization
+* Ancestor left / right
