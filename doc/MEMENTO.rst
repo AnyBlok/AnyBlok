@@ -654,16 +654,43 @@ Base
 Add a behaviour in all the Model, Each Model inherit of Base. for example, the
 ``fire`` method of the event come from Base core.
 
+::
+
+    from anyblok import Declarations
+
+
+    @Declarations.target_registry(Declarations.Core)
+    class Base:
+        pass
+
 SqlBase
 ~~~~~~~
 
 Only the Model with ``Field``, ``Column``, ``RelationShip`` inherit SqlBase.
 Because the method ``insert`` have interest only for the ``Model`` with a table
 
+::
+
+    from anyblok import Declarations
+
+
+    @Declarations.target_registry(Declarations.Core)
+    class SqlBase:
+        pass
+
 SqlViewBase
 ~~~~~~~~~~~
 
 As SqlBase, only the SqlView inherit this ``Core``.
+
+::
+
+    from anyblok import Declarations
+
+
+    @Declarations.target_registry(Declarations.Core)
+    class SqlViewBase:
+        pass
 
 Query
 ~~~~~
@@ -671,13 +698,40 @@ Query
 Overload the SqlAlchemy Query class. Allow to add feature to minify the
 source file.
 
+::
+
+    from anyblok import Declarations
+
+
+    @Declarations.target_registry(Declarations.Core)
+    class Query
+        pass
+
 Session
 ~~~~~~~
 
 Over load the SqlAlchemy Session class.
 
+::
+
+    from anyblok import Declarations
+
+
+    @Declarations.target_registry(Declarations.Core)
+    class Session
+        pass
+
 Insrumented List
 ~~~~~~~~~~~~~~~~
+
+::
+
+    from anyblok import Declarations
+
+
+    @Declarations.target_registry(Declarations.Core)
+    class InstrumentedList
+        pass
 
 Instrumented List if the class returned by the Query for all the list result
 as:
@@ -840,19 +894,113 @@ Cache the method coming from a Mixin::
 Event
 ~~~~~
 
-TODO
+Simple implementation of synchronious ``event``::
+
+
+    @target_registry(Model)
+    class Event:
+        pass
+
+    @target_registry(Model)
+    class Test:
+
+            x = 0
+
+            @Declarations.addListener(Model.Event, 'fireevent')
+            def my_event(cls, a=1, b=1):
+                cls.x = a * b
+
+    ---------------------------------------------
+
+    registry.Event.fire('fireevent', a=2)
+    assert registry.Test.x == 2
+
+.. note::
+
+    The decorated method is seen as a classmethod
+
+This api give:
+
+* decorator ``addListener`` which link the decorated method with the event.
+* ``fire`` method with the params
+    - event: string name of the event
+    - \*args: positionnal arguments to pass att the decorated method
+    - \*\*kwargs: named argument to pass at the decorated method
+
+It is possible to overload an existing event listner, just by overload the
+decorated method::
+
+    @target_registry(Model)
+    class Test:
+
+        @classmethod
+        def my_event(cls, **kwarg):
+            res = super(Test, cls).my_event(**kwargs)
+            return res * 2
+
+    ---------------------------------------------
+
+    registry.Event.fire('fireevent', a=2)
+    assert registry.Test.x == 4
+
+.. warning::
+
+    the overload doesn't take the ``addListener`` decorator but the
+    classmethod decorator, because the method name has already seen as a
+    event listener
 
 Hybrid method
 ~~~~~~~~~~~~~
 
-TODO
+Facility to create a SqlAlchemy hybrid method. see the page
+http://docs.sqlalchemy.org/en/latest/orm/extensions/hybrid.html#module-sqlalchemy.ext.hybrid
+
+AnyBlok allow to define a hybrid_method which can be overload, because the
+real sqlalchemy decorator is applied after assembling in the last overload
+of the decorated method::
+
+    @target_registry(Model)
+    class Test:
+
+        @Declarations.hybrid_method
+        def my_hybrid_method(self):
+            return ...
 
 Pre commit hook
 ~~~~~~~~~~~~~~~
 
-TODO
+It is possible to call specific classmethods just before the commit of the
+session::
+
+    @target_registry(Model)
+    class Test:
+
+        id = Integer(primary_key=True)
+        val = Integer(default=0)
+
+        @classmethod
+        def method2call_just_before_the_commit(cls):
+            pass
+
+    -----------------------------------------------------
+
+    registry.Test.precommit_hook('method2call_just_before_the_commit')
+
 
 Aliased
 ~~~~~~~
 
-TODO
+Facility to create a sql alias for the sql query by the orm::
+
+    select * from my_table the_table_alias.
+
+This facility is given by SqlAlchemy, and anyblok add this functionnality
+directly in the Model::
+
+    BlokAliased = registry.System.Blok.aliased()
+
+.. note:: See the
+    http://docs.sqlalchemy.org/en/latest/orm/query.html#sqlalchemy.orm.aliased
+    to known the params of the ``aliased`` method
+
+    .. warning:: The first arg is alredy passed by AnyBlok
