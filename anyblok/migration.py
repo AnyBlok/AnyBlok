@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy.exc import IntegrityError, ProgrammingError
+from sqlalchemy.exc import IntegrityError
 from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
@@ -112,10 +112,12 @@ class MigrationReport:
         this methode parse the changment detected and call the Migration
         system to apply changment with the api of Declarations
         """
+        columns_added = []
         for action in self.actions:
             if action[0] == 'add_column':
                 _, _, table, column = action
                 self.migration.table(table).column().add(column)
+                columns_added.append(column)
             elif action[0] == 'modify_nullable':
                 _, _, table, column, kwargs, oldvalue, newvalue = action
                 self.migration.table(table).column(column).alter(
@@ -143,6 +145,9 @@ class MigrationReport:
                 _, fk = action
                 t = self.migration.table(fk.table.name)
                 for column in fk.columns:
+                    if column in columns_added:
+                        continue
+
                     for fk_ in column.foreign_keys:
                         t.column(name=column.name).foreign_key().add(
                             fk_.column)
@@ -183,17 +188,9 @@ class MigrationConstraintForeignKey:
 
         remote_table = remote_field.table.name
         remote_column = remote_field.name
-        savepoint = 'add_fk_%s_%s' % (remote_table, remote_column)
-        try:
-            self.column.table.migration.savepoint(savepoint)
-            self.column.table.migration.operation.create_foreign_key(
-                self.name, self.column.table.name, remote_table,
-                [self.column.name], [remote_column], **kwargs)
-        except ProgrammingError as e:
-            self.column.table.migration.rollback_savepoint(savepoint)
-            logger.warn(str(e))
-        finally:
-            self.column.table.migration.release_savepoint(savepoint)
+        self.column.table.migration.operation.create_foreign_key(
+            self.name, self.column.table.name, remote_table,
+            [self.column.name], [remote_column], **kwargs)
         return self
 
     def drop(self):
@@ -318,7 +315,7 @@ class MigrationColumn:
             except IntegrityError as e:
                 self.table.migration.rollback_savepoint(savepoint)
                 logger.warn(str(e))
-            finally:
+            else:
                 self.table.migration.release_savepoint(savepoint)
 
         return MigrationColumn(self.table, name)
