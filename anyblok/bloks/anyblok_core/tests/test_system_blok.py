@@ -1,3 +1,10 @@
+# This file is a part of the AnyBlok project
+#
+#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file,You can
+# obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import BlokTestCase, DBTestCase
 from anyblok import Declarations
 
@@ -218,7 +225,15 @@ class TestBlokRequired2(DBTestCase):
         self.assertEqual(testblok2.state, 'uninstalled')
         self.assertEqual(testblok2.version, '1.0.0')
         self.assertEqual(testblok2.installed_version, None)
-        self.assertEqual(testblok2.long_description, 'Test blok3\n')
+        long_description = ".. This file is a part of the AnyBlok project\n.."
+        long_description += "\n..    Copyright (C) 2014 Jean-Sebastien SUZANNE"
+        long_description += " <jssuzanne@anybox.fr>\n..\n.. This Source Code "
+        long_description += "Form is subject to the terms of the Mozilla "
+        long_description += "Public License,\n.. v. 2.0. If a copy of the MPL "
+        long_description += "was not distributed with this file,You can\n.. "
+        long_description += "obtain one at http://mozilla.org/MPL/2.0/.\n\n"
+        long_description += "Test blok3\n"
+        self.assertEqual(testblok2.long_description, long_description)
 
     def test_install_1by1(self):
         registry = self.init_registry(None)

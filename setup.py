@@ -1,3 +1,10 @@
+# This file is a part of the AnyBlok project
+#
+#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file,You can
+# obtain one at http://mozilla.org/MPL/2.0/.
 import os
 import sys
 from setuptools import setup, find_packages
@@ -23,7 +30,7 @@ setup(
     author="Anybox",
     author_email="jssuzanne@anybox.fr",
     description="Anyblok is a dynamic injection blok framework",
-    license="GPL",
+    license="MPL",
     long_description=open('README.rst').read(),
     url="https://bitbucket.org/anybox/erpblok",
     packages=find_packages(),

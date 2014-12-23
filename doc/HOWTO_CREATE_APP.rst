@@ -1,8 +1,16 @@
+.. This file is a part of the AnyBlok project
+..
+..    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..
+.. This Source Code Form is subject to the terms of the Mozilla Public License,
+.. v. 2.0. If a copy of the MPL was not distributed with this file,You can
+.. obtain one at http://mozilla.org/MPL/2.0/.
+
 How to create your own application
 ==================================
 
-This first part presents how to create an application with his own code. 
-Why do we have to create an application ? Because AnyBlok is just a framework 
+This first part presents how to create an application with his own code.
+Why do we have to create an application ? Because AnyBlok is just a framework
 not an application.
 
 And the goal more than one application use the same database for different goal.
@@ -186,7 +194,7 @@ of the registry, then this blok will be loaded and installed
             workers = [dict(name=worker, room=room)
                        for worker in ('Georges Racinet', 'Christophe Combelles',
                                       'Sandrine Chaufournais', 'Pierre Verkest',
-                                      'Franck Bret', u"Simon André", 
+                                      'Franck Bret', u"Simon André",
                                       'Florent Jouatte', 'Clovis Nzouendjou',
                                       u"Jean-Sébastien Suzanne")]
             self.registry.Worker.multi_insert(*workers)
