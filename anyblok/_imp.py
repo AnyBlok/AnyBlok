@@ -112,7 +112,13 @@ class Loader:
 
         :exception: ImportManagerException
         """
-        from importlib import reload as reload_module
+        isimp = False
+        try:
+            from importlib import reload as reload_module
+        except ImportError:
+            isimp = True
+            from imp import reload as reload_module
+
         from anyblok.blok import BlokManager
         from anyblok.registry import RegistryManager
         from anyblok.environment import EnvironmentManager
@@ -140,7 +146,9 @@ class Loader:
             self.import_known.sort()
             for module in self.import_known:
                 try:
-                    if (version_info.major, version_info.minor) == (3, 3):
+                    if isimp:
+                        module2load = module
+                    elif (version_info.major, version_info.minor) == (3, 3):
                         module2load = module
                     elif (version_info.major, version_info.minor) >= (3, 4):
                         module2load = modules[module]
