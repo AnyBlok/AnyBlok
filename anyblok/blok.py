@@ -83,7 +83,7 @@ class BlokManager:
         :exception: BlokManagerException
         """
         if cls.has(blokname):
-            raise BlokManagerException('%r already add' % blokname)
+            raise BlokManagerException('%r already present' % blokname)
 
         cls.bloks[blokname] = blok
         cls.ordered_bloks.append(blokname)
