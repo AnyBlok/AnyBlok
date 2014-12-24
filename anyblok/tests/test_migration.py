@@ -41,6 +41,11 @@ class TestMigration(TestCase):
             other = Str()
 
         @target_registry(Model)
+        class TestUnique:
+            integer = Int(primary_key=True)
+            other = Str(unique=True)
+
+        @target_registry(Model)
         class TestFKTarget:
             integer = Int(primary_key=True)
 
@@ -64,7 +69,8 @@ class TestMigration(TestCase):
 
     def tearDown(self):
         super(TestMigration, self).tearDown()
-        for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget'):
+        for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget',
+                      'testunique'):
             try:
                 self.registry.migration.table(table).drop()
             except:
@@ -336,6 +342,22 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertEqual(report.log_has(
             "Drop Foreign keys on test.other2 => system_blok.name"), False)
+
+    def test_detect_add_unique_constrainte(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE testunique")
+            conn.execute(
+                """CREATE TABLE testunique(
+                    integer INT  PRIMARY KEY NOT NULL,
+                    other CHAR(64)
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertEqual(report.log_has(
+            "Add unique constraint on testunique (other)"), True)
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertEqual(report.log_has(
+            "Add unique constraint on testunique (other)"), False)
 
     def test_detect_drop_constraint(self):
         with self.cnx() as conn:

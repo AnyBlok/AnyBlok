@@ -84,6 +84,11 @@ class MigrationReport:
                                 'Drop Foreign keys on %s.%s => %s' % (
                                     fk.table.name, column.name,
                                     fk_.target_fullname))
+                elif name == 'add_constraint':
+                    _, constraint = diff
+                    columns = [x.name for x in constraint.columns]
+                    log_names.append('Add unique constraint on %s (%s)' % (
+                        constraint.table.name, ', '.join(columns)))
                 elif name in ('remove_table', 'remove_column'):
                     # No save remove table or column
                     # Remove table or column is
@@ -156,6 +161,10 @@ class MigrationReport:
                 t = self.migration.table(fk.table.name)
                 for column in fk.columns:
                     t.column(name=column.name).foreign_key().drop()
+            elif action[0] == 'add_constraint':
+                _, constraint = action
+                table = self.migration.table(constraint.table.name)
+                table.unique(name=constraint.name).add(*constraint.columns)
 
 
 class MigrationConstraintForeignKey:
