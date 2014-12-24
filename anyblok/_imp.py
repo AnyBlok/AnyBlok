@@ -147,7 +147,7 @@ class Loader:
             for module in self.import_known:
                 try:
                     if isimp:
-                        module2load = module
+                        module2load = modules[module]
                     elif (version_info.major, version_info.minor) == (3, 3):
                         module2load = module
                     elif (version_info.major, version_info.minor) >= (3, 4):
