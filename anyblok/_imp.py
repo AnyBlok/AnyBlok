@@ -7,7 +7,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import anyblok
-from sys import modules
+from sys import modules, version_info
 from os.path import splitext, split
 from os import listdir
 from importlib import import_module
@@ -108,14 +108,11 @@ class Loader:
                              if b.__module__ + '.' in x]
 
     def reload(self):
-        """ Reload all the import for this module """
-        isimp = False
-        try:
-            from importlib import reload as reload_module
-        except ImportError:
-            isimp = True
-            from imp import reload as reload_module
+        """ Reload all the import for this module
 
+        :exception: ImportManagerException
+        """
+        from importlib import reload as reload_module
         from anyblok.blok import BlokManager
         from anyblok.registry import RegistryManager
         from anyblok.environment import EnvironmentManager
@@ -143,10 +140,14 @@ class Loader:
             self.import_known.sort()
             for module in self.import_known:
                 try:
-                    if isimp:
-                        module = modules[module]
-
-                    reload_module(module)
+                    if (version_info.major, version_info.minor) == (3, 3):
+                        module2load = module
+                    elif (version_info.major, version_info.minor) >= (3, 4):
+                        module2load = modules[module]
+                    else:
+                        raise ImportManagerException(
+                            "Unknow action to do to reload module %r" % module)
+                    reload_module(module2load)
                 except ImportError:
                     pass
         finally:
