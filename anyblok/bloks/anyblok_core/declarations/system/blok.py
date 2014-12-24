@@ -170,7 +170,7 @@ class Blok:
         return False
 
     @classmethod
-    def uninstall_all(cls, *bloks):
+    def uninstall_all(cls, *bloksname):
         """ Search and call the uninstall method for all the uninstalled bloks
 
         .. warning::
@@ -180,7 +180,10 @@ class Blok:
 
         :param bloks: list of the blok name to uninstall
         """
-        query = cls.query().filter(cls.name.in_(bloks))
+        if not bloksname:
+            return
+
+        query = cls.query().filter(cls.name.in_(bloksname))
         query = query.order_by(cls.order.desc())
         bloks = query.all()
         if bloks:
