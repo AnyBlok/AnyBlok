@@ -9,6 +9,7 @@ import logging
 from syslog import LOG_USER
 from functools import wraps
 from anyblok.environment import EnvironmentManager
+from .common import function_name
 
 
 LEVELS = {
@@ -193,9 +194,9 @@ def log(level='info', withargs=False):
         def f(*args, **kwargs):
             if level == 'debug' or withargs:
                 getattr(log, level)("%s with args %r and kwargs %r" % (
-                    function.__qualname__, args, kwargs))
+                    function_name(function), args, kwargs))
             else:
-                getattr(log, level)(function.__qualname__)
+                getattr(log, level)(function_name(function))
 
             return function(*args, **kwargs)
 

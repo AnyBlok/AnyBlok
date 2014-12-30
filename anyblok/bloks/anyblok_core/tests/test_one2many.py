@@ -127,7 +127,7 @@ class TestOne2One(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name=u"Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
         address.persons.append(person)
 
         self.assertEqual(person.address, address)
@@ -138,7 +138,7 @@ class TestOne2One(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name=u"Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
         address.persons.append(person)
 
     def test_one2many_with_str_model(self):
@@ -147,7 +147,7 @@ class TestOne2One(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name=u"Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
         address.persons.append(person)
 
     def test_autodetect_two_foreign_key(self):

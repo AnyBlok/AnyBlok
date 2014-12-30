@@ -119,21 +119,21 @@ class TestColumns(DBTestCase):
     def test_ustring(self):
         uString = Declarations.Column.uString
         registry = self.init_registry(simple_column, ColumnType=uString)
-        test = registry.Test.insert(col=u'col')
-        self.assertEqual(test.col, u'col')
+        test = registry.Test.insert(col='col')
+        self.assertEqual(test.col, 'col')
 
     def test_ustring_with_size(self):
         uString = Declarations.Column.uString
         registry = self.init_registry(simple_column, ColumnType=uString,
                                       size=100)
-        test = registry.Test.insert(col=u'col')
-        self.assertEqual(test.col, u'col')
+        test = registry.Test.insert(col='col')
+        self.assertEqual(test.col, 'col')
 
     def test_utext(self):
         uText = Declarations.Column.uText
         registry = self.init_registry(simple_column, ColumnType=uText)
-        test = registry.Test.insert(col=u'col')
-        self.assertEqual(test.col, u'col')
+        test = registry.Test.insert(col='col')
+        self.assertEqual(test.col, 'col')
 
     def test_date(self):
         from datetime import date
@@ -183,8 +183,8 @@ class TestColumns(DBTestCase):
 
     def test_selection(self):
         SELECTIONS = [
-            (u'admin', u'Admin'),
-            (u'regular-user', u'Regular user')
+            ('admin', 'Admin'),
+            ('regular-user', 'Regular user')
         ]
 
         Selection = Declarations.Column.Selection
@@ -204,8 +204,8 @@ class TestColumns(DBTestCase):
 
     def test_selection_key_other_than_str(self):
         SELECTIONS = [
-            (0, u'Admin'),
-            (1, u'Regular user')
+            (0, 'Admin'),
+            (1, 'Regular user')
         ]
 
         Selection = Declarations.Column.Selection
@@ -218,8 +218,8 @@ class TestColumns(DBTestCase):
 
     def test_selection_comparator(self):
         SELECTIONS = [
-            (u'admin', u'Admin'),
-            (u'regular-user', u'Regular user')
+            ('admin', 'Admin'),
+            ('regular-user', 'Regular user')
         ]
 
         Selection = Declarations.Column.Selection
@@ -231,8 +231,8 @@ class TestColumns(DBTestCase):
 
     def test_selection_use_method(self):
         SELECTIONS = [
-            (u'admin', u'Admin'),
-            (u'regular-user', u'Regular user')
+            ('admin', 'Admin'),
+            ('regular-user', 'Regular user')
         ]
 
         def add_selection():
