@@ -12,7 +12,7 @@ ROADMAP
 Next step
 ---------
 
-* Improve documentation
+* Contributor section with how to run tests and report bugs
 
 To implement
 ------------
