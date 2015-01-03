@@ -9,7 +9,7 @@ from sqlalchemy.types import DateTime as SA_DateTime
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Column)
+@Declarations.register(Declarations.Column)
 class DateTime(Declarations.Column):
     """ DateTime column
 
@@ -19,11 +19,11 @@ class DateTime(Declarations.Column):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         DateTime = Declarations.Column.DateTime
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = DateTime(default=datetime.now())

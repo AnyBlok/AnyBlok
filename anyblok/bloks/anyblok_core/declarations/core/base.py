@@ -8,7 +8,7 @@
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Core)
+@Declarations.register(Declarations.Core)
 class Base:
     """ Inherited by all the models
     """

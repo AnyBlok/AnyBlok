@@ -15,18 +15,18 @@ class Mixin:
 
     * Add new mixin class::
 
-        @Declarations.target_registry(Declarations.Mixin)
+        @Declarations.register(Declarations.Mixin)
         class MyMixinclass:
             pass
 
     * Remove a mixin class::
 
-        Declarations.remove_registry(Declarations.Mixin, 'MyMixinclass',
+        Declarations.unregister(Declarations.Mixin, 'MyMixinclass',
                                      MyMixinclass, blok='MyBlok')
     """
 
     @classmethod
-    def target_registry(self, parent, name, cls_, **kwargs):
+    def register(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry
 
         :param parent: Existing global registry
@@ -43,15 +43,15 @@ class Mixin:
         if parent is Declarations:
             return
 
-        RegistryManager.add_entry_in_target_registry(
+        RegistryManager.add_entry_in_register(
             'Mixin', _registryname, cls_, **kwargs)
 
     @classmethod
-    def remove_registry(self, entry, cls_):
+    def unregister(self, entry, cls_):
         """ Remove the Interface in the registry
 
         :param entry: entry declaration of the model where the ``cls_``
             must be removed
         :param cls_: Class Interface to remove in registry
         """
-        RegistryManager.remove_in_target_registry(cls_)
+        RegistryManager.remove_in_register(cls_)

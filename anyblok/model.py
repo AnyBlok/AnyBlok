@@ -110,13 +110,13 @@ class Model:
 
     Add new model class::
 
-        @Declarations.target_registry(Declarations.Model)
+        @Declarations.register(Declarations.Model)
         class MyModelclass:
             pass
 
     Remove a model class::
 
-        Declarations.remove_registry(Declarations.Model, 'MyModelclass',
+        Declarations.unregister(Declarations.Model, 'MyModelclass',
                                      MyModelclass, blok='MyBlok')
 
     There are three Model families:
@@ -141,7 +141,7 @@ class Model:
     """
 
     @classmethod
-    def target_registry(self, parent, name, cls_, **kwargs):
+    def register(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry
 
         :param parent: Existing global registry
@@ -178,18 +178,18 @@ class Model:
         kwargs['__registry_name__'] = _registryname
         kwargs['__tablename__'] = tablename
 
-        RegistryManager.add_entry_in_target_registry(
+        RegistryManager.add_entry_in_register(
             'Model', _registryname, cls_, **kwargs)
 
     @classmethod
-    def remove_registry(self, entry, cls_):
+    def unregister(self, entry, cls_):
         """ Remove the Interface from the registry
 
         :param entry: entry declaration of the model where the ``cls_``
             must be removed
         :param cls_: Class Interface to remove in registry
         """
-        RegistryManager.remove_in_target_registry(cls_)
+        RegistryManager.remove_in_register(cls_)
 
     @classmethod
     def declare_field(self, registry, name, field, namespace, properties):

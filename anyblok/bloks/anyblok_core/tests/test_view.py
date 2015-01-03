@@ -8,7 +8,7 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from sqlalchemy.sql import select
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 
 
@@ -16,19 +16,19 @@ def simple_view():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class T1:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model)
+    @register(Model)
     class T2:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model, is_sql_view=True)
+    @register(Model, is_sql_view=True)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -48,19 +48,19 @@ def simple_view_with_same_table_by_declaration_model():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class T1:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model)
+    @register(Model)
     class T2:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model, is_sql_view=True)
+    @register(Model, is_sql_view=True)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -75,7 +75,7 @@ def simple_view_with_same_table_by_declaration_model():
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
-    @target_registry(Model, is_sql_view=True, tablename=Model.TestView)
+    @register(Model, is_sql_view=True, tablename=Model.TestView)
     class TestView2:
         code = String(primary_key=True)
         val1 = Integer()
@@ -86,19 +86,19 @@ def simple_view_with_same_table_by_name():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class T1:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model)
+    @register(Model)
     class T2:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model, is_sql_view=True)
+    @register(Model, is_sql_view=True)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -113,7 +113,7 @@ def simple_view_with_same_table_by_name():
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
-    @target_registry(Model, is_sql_view=True, tablename='testview')
+    @register(Model, is_sql_view=True, tablename='testview')
     class TestView2:
         code = String(primary_key=True)
         val1 = Integer()
@@ -124,19 +124,19 @@ def simple_view_with_same_table_by_inherit():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class T1:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model)
+    @register(Model)
     class T2:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model, is_sql_view=True)
+    @register(Model, is_sql_view=True)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -151,7 +151,7 @@ def simple_view_with_same_table_by_inherit():
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
-    @target_registry(Model, is_sql_view=True)
+    @register(Model, is_sql_view=True)
     class TestView2(Model.TestView):
         code = String(primary_key=True)
         val1 = Integer()
@@ -162,19 +162,19 @@ def simple_view_without_primary_key():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class T1:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model)
+    @register(Model)
     class T2:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model, is_sql_view=True)
+    @register(Model, is_sql_view=True)
     class TestView:
         code = String()
         val1 = Integer()
@@ -194,19 +194,19 @@ def simple_view_without_view_declaration():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class T1:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model)
+    @register(Model)
     class T2:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model, is_sql_view=True)
+    @register(Model, is_sql_view=True)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()

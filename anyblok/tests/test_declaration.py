@@ -13,11 +13,11 @@ from anyblok.declarations import DeclarationsException  # FIXME USE Declaration
 class OneType:
 
     @classmethod
-    def target_registry(cls, parent, name, cls_, **kwargs):
+    def register(cls, parent, name, cls_, **kwargs):
         setattr(parent, name, cls_)
 
     @classmethod
-    def remove_registry(cls, entry, cls_):
+    def unregister(cls, entry, cls_):
         pass
 
 
@@ -36,8 +36,8 @@ class TestDeclaration(TestCase):
         class SubType:
             pass
 
-        Declarations.target_registry(Declarations.OneType, cls_=SubType)
-        Declarations.remove_registry(Declarations.OneType, cls_=SubType)
+        Declarations.register(Declarations.OneType, cls_=SubType)
+        Declarations.unregister(Declarations.OneType, cls_=SubType)
 
     def test_add_doublon(self):
         Declarations.add_declaration_type(cls_=OneType)
@@ -56,8 +56,8 @@ class TestDeclaration(TestCase):
         self.assertEqual(Declarations.declaration_types['MyOneType'],
                          MyOneType)
 
-        @Declarations.target_registry(Declarations.MyOneType)
+        @Declarations.register(Declarations.MyOneType)
         class SubType:
             pass
 
-        Declarations.remove_registry(Declarations.MyOneType.SubType, SubType)
+        Declarations.unregister(Declarations.MyOneType.SubType, SubType)

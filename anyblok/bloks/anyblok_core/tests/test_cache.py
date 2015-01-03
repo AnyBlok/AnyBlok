@@ -8,7 +8,7 @@
 from random import random
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
 Core = Declarations.Core
@@ -20,7 +20,7 @@ class TestCache(DBTestCase):
 
         from anyblok import Declarations
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = 0
@@ -74,7 +74,7 @@ class TestSimpleCache(DBTestCase):
 
     def add_model_with_method_cached(self):
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = 0
@@ -86,7 +86,7 @@ class TestSimpleCache(DBTestCase):
 
     def add_model_with_method_cached_by_core(self):
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
 
             x = 0
@@ -96,13 +96,13 @@ class TestSimpleCache(DBTestCase):
                 self.x += 1
                 return self.x
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
             pass
 
     def add_model_with_method_cached_by_mixin(self):
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MTest:
 
             x = 0
@@ -112,7 +112,7 @@ class TestSimpleCache(DBTestCase):
                 self.x += 1
                 return self.x
 
-        @target_registry(Model)
+        @register(Model)
         class Test(Mixin.MTest):
             pass
 
@@ -121,7 +121,7 @@ class TestSimpleCache(DBTestCase):
                                                             withmixin=False,
                                                             withcore=False):
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
 
             x = 0
@@ -137,7 +137,7 @@ class TestSimpleCache(DBTestCase):
                     self.x += 1
                     return self.x
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MTest:
 
             y = 0
@@ -153,7 +153,7 @@ class TestSimpleCache(DBTestCase):
                     self.y += 2
                     return self.y + super(MTest, self).method_cached()
 
-        @target_registry(Model)
+        @register(Model)
         class Test(Mixin.MTest):
 
             z = 0
@@ -259,7 +259,7 @@ class TestClassMethodCache(DBTestCase):
 
     def add_model_with_method_cached(self):
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = 0
@@ -271,7 +271,7 @@ class TestClassMethodCache(DBTestCase):
 
     def add_model_with_method_cached_by_core(self):
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
 
             x = 0
@@ -281,13 +281,13 @@ class TestClassMethodCache(DBTestCase):
                 cls.x += 1
                 return cls.x
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
             pass
 
     def add_model_with_method_cached_by_mixin(self):
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MTest:
 
             x = 0
@@ -297,7 +297,7 @@ class TestClassMethodCache(DBTestCase):
                 cls.x += 1
                 return cls.x
 
-        @target_registry(Model)
+        @register(Model)
         class Test(Mixin.MTest):
             pass
 
@@ -306,7 +306,7 @@ class TestClassMethodCache(DBTestCase):
                                                             withmixin=False,
                                                             withcore=False):
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
 
             x = 0
@@ -323,7 +323,7 @@ class TestClassMethodCache(DBTestCase):
                     cls.x += 1
                     return cls.x
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MTest:
 
             y = 0
@@ -340,7 +340,7 @@ class TestClassMethodCache(DBTestCase):
                     cls.y += 2
                     return cls.y + super(MTest, cls).method_cached()
 
-        @target_registry(Model)
+        @register(Model)
         class Test(Mixin.MTest):
 
             z = 0
@@ -453,7 +453,7 @@ class TestInheritedCache(DBTestCase):
 
     def add_model_with_method_cached(self, inheritcache=False):
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = 0
@@ -463,7 +463,7 @@ class TestInheritedCache(DBTestCase):
                 self.x += 1
                 return self.x
 
-        @target_registry(Model)  # noqa
+        @register(Model)  # noqa
         class Test:
 
             y = 0
@@ -480,7 +480,7 @@ class TestInheritedCache(DBTestCase):
 
     def add_model_with_method_cached_by_core(self, inheritcache=False):
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
 
             x = 0
@@ -490,7 +490,7 @@ class TestInheritedCache(DBTestCase):
                 self.x += 1
                 return self.x
 
-        @target_registry(Core)  # noqa
+        @register(Core)  # noqa
         class Base:
 
             y = 0
@@ -505,13 +505,13 @@ class TestInheritedCache(DBTestCase):
                     self.y += 2
                     return self.y + super(Base, self).method_cached()
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
             pass
 
     def add_model_with_method_cached_by_mixin(self, inheritcache=False):
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MTest:
 
             x = 0
@@ -521,7 +521,7 @@ class TestInheritedCache(DBTestCase):
                 self.x += 1
                 return self.x
 
-        @target_registry(Mixin)  # noqa
+        @register(Mixin)  # noqa
         class MTest:
 
             y = 0
@@ -536,7 +536,7 @@ class TestInheritedCache(DBTestCase):
                     self.y += 2
                     return self.y + super(MTest, self).method_cached()
 
-        @target_registry(Model)
+        @register(Model)
         class Test(Mixin.MTest):
             pass
 
@@ -586,7 +586,7 @@ class TestInheritedClassMethodCache(DBTestCase):
 
     def add_model_with_method_cached(self, inheritcache=False):
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = 0
@@ -596,7 +596,7 @@ class TestInheritedClassMethodCache(DBTestCase):
                 cls.x += 1
                 return cls.x
 
-        @target_registry(Model)  # noqa
+        @register(Model)  # noqa
         class Test:
 
             y = 0
@@ -614,7 +614,7 @@ class TestInheritedClassMethodCache(DBTestCase):
 
     def add_model_with_method_cached_by_core(self, inheritcache=False):
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
 
             x = 0
@@ -624,7 +624,7 @@ class TestInheritedClassMethodCache(DBTestCase):
                 cls.x += 1
                 return cls.x
 
-        @target_registry(Core)  # noqa
+        @register(Core)  # noqa
         class Base:
 
             y = 0
@@ -640,13 +640,13 @@ class TestInheritedClassMethodCache(DBTestCase):
                     cls.y += 2
                     return cls.y + super(Base, cls).method_cached()
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
             pass
 
     def add_model_with_method_cached_by_mixin(self, inheritcache=False):
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MTest:
 
             x = 0
@@ -656,7 +656,7 @@ class TestInheritedClassMethodCache(DBTestCase):
                 cls.x += 1
                 return cls.x
 
-        @target_registry(Mixin)  # noqa
+        @register(Mixin)  # noqa
         class MTest:
 
             y = 0
@@ -672,7 +672,7 @@ class TestInheritedClassMethodCache(DBTestCase):
                     cls.y += 2
                     return cls.y + super(MTest, cls).method_cached()
 
-        @target_registry(Model)
+        @register(Model)
         class Test(Mixin.MTest):
             pass
 
@@ -719,14 +719,14 @@ class TestComparatorInterModel(DBTestCase):
 
         def add_in_registry():
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
 
                 @Declarations.classmethod_cache()
                 def method_cached(cls):
                     return random()
 
-            @target_registry(Model)
+            @register(Model)
             class Test2:
 
                 @Declarations.classmethod_cache()
@@ -740,18 +740,18 @@ class TestComparatorInterModel(DBTestCase):
 
         def add_in_registry():
 
-            @target_registry(Mixin)
+            @register(Mixin)
             class MTest:
 
                 @Declarations.classmethod_cache()
                 def method_cached(cls):
                     return random()
 
-            @target_registry(Model)
+            @register(Model)
             class Test(Mixin.MTest):
                 pass
 
-            @target_registry(Model)
+            @register(Model)
             class Test2(Mixin.MTest):
 
                 pass
@@ -763,18 +763,18 @@ class TestComparatorInterModel(DBTestCase):
 
         def add_in_registry():
 
-            @target_registry(Core)
+            @register(Core)
             class Base:
 
                 @Declarations.classmethod_cache()
                 def method_cached(cls):
                     return random()
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
                 pass
 
-            @target_registry(Model)
+            @register(Model)
             class Test2:
 
                 pass

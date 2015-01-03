@@ -12,13 +12,13 @@ from anyblok import Declarations
 FieldException = Declarations.Exception.FieldException
 
 
-@Declarations.target_registry(Declarations.RelationShip)
+@Declarations.register(Declarations.RelationShip)
 class One2One(Declarations.RelationShip.Many2One):
     """ Define a relationship attribute on the model
 
     ::
 
-        @target_registry(Model)
+        @register(Model)
         class TheModel:
 
             relationship = One2One(label="The relationship",

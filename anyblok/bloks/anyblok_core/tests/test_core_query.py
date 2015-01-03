@@ -21,7 +21,7 @@ class TestCoreQuery(DBTestCase):
             Model = Declarations.Model
             Integer = Declarations.Column.Integer
 
-            @Declarations.target_registry(Model)
+            @Declarations.register(Model)
             class Test:
 
                 id = Integer(primary_key=True)
@@ -51,7 +51,7 @@ class TestCoreQuery(DBTestCase):
             from anyblok import Declarations
             Core = Declarations.Core
 
-            @Declarations.target_registry(Core)
+            @Declarations.register(Core)
             class Query:
 
                 def foo(self):

@@ -9,7 +9,7 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 FieldException = Declarations.Exception.FieldException
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 
 
@@ -18,7 +18,7 @@ def _complete_many2many(**kwargs):
     String = Declarations.Column.String
     Many2Many = Declarations.RelationShip.Many2Many
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
@@ -26,7 +26,7 @@ def _complete_many2many(**kwargs):
         zip = String()
         city = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -43,7 +43,7 @@ def _minimum_many2many(**kwargs):
     String = Declarations.Column.String
     Many2Many = Declarations.RelationShip.Many2Many
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
@@ -51,7 +51,7 @@ def _minimum_many2many(**kwargs):
         zip = String()
         city = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -63,7 +63,7 @@ def _many2many_with_str_model(**kwargs):
     String = Declarations.Column.String
     Many2Many = Declarations.RelationShip.Many2Many
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
@@ -71,7 +71,7 @@ def _many2many_with_str_model(**kwargs):
         zip = String()
         city = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -83,13 +83,13 @@ def auto_detect_two_primary_keys(**kwargs):
     String = Declarations.Column.String
     Many2Many = Declarations.RelationShip.Many2Many
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
         id2 = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -101,12 +101,12 @@ def unexisting_remote_column(**kwargs):
     String = Declarations.Column.String
     Many2Many = Declarations.RelationShip.Many2Many
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -118,18 +118,18 @@ def reuse_many2many_table(**kwargs):
     String = Declarations.Column.String
     Many2Many = Declarations.RelationShip.Many2Many
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
         address = Many2Many(model=Model.Address)
 
-    @target_registry(Model)  # noqa
+    @register(Model)  # noqa
     class Address:
 
         id = Integer(primary_key=True)

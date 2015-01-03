@@ -29,11 +29,11 @@ class TestInstrumentedList(DBTestCase):
             Many2Many = Declarations.RelationShip.Many2Many
             Model = Declarations.Model
 
-            @Declarations.target_registry(Model)
+            @Declarations.register(Model)
             class Test:
                 id = Integer(primary_key=True)
 
-            @Declarations.target_registry(Model)
+            @Declarations.register(Model)
             class Test2:
                 id = Integer(primary_key=True)
                 tests = Many2Many(model=Model.Test, many2many="tests2")
@@ -58,16 +58,16 @@ class TestInstrumentedList(DBTestCase):
             One2Many = Declarations.RelationShip.One2Many
             Model = Declarations.Model
 
-            @Declarations.target_registry(Model)
+            @Declarations.register(Model)
             class Test2:
                 id = Integer(primary_key=True)
 
-            @Declarations.target_registry(Model)
+            @Declarations.register(Model)
             class Test:
                 id = Integer(primary_key=True)
                 test2 = Integer(foreign_key=(Model.Test2, 'id'))
 
-            @Declarations.target_registry(Model)  # noqa
+            @Declarations.register(Model)  # noqa
             class Test2:
                 tests = One2Many(model=Model.Test)
 
@@ -88,11 +88,11 @@ class TestInstrumentedList(DBTestCase):
             Many2One = Declarations.RelationShip.Many2One
             Model = Declarations.Model
 
-            @Declarations.target_registry(Model)
+            @Declarations.register(Model)
             class Test:
                 id = Integer(primary_key=True)
 
-            @Declarations.target_registry(Model)
+            @Declarations.register(Model)
             class Test2:
                 id = Integer(primary_key=True)
                 test = Many2One(model=Model.Test, one2many="tests2")
@@ -113,7 +113,7 @@ class TestInstrumentedList(DBTestCase):
             Integer = Declarations.Column.Integer
             Model = Declarations.Model
 
-            @Declarations.target_registry(Model)
+            @Declarations.register(Model)
             class Test:
                 id = Integer(primary_key=True)
 
@@ -130,7 +130,7 @@ class TestInstrumentedList(DBTestCase):
             Integer = Declarations.Column.Integer
             Model = Declarations.Model
 
-            @Declarations.target_registry(Model)
+            @Declarations.register(Model)
             class Test:
                 id = Integer(primary_key=True)
 
@@ -149,7 +149,7 @@ class TestInstrumentedList(DBTestCase):
             from anyblok import Declarations
             Core = Declarations.Core
 
-            @Declarations.target_registry(Core)
+            @Declarations.register(Core)
             class InstrumentedList:
 
                 def foo(self):

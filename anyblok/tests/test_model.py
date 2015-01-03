@@ -9,8 +9,8 @@ from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
 from anyblok import Declarations
-target_registry = Declarations.target_registry
-remove_registry = Declarations.remove_registry
+register = Declarations.register
+unregister = Declarations.unregister
 Model = Declarations.Model
 
 
@@ -55,14 +55,14 @@ class TestModel(TestCase):
         self.fail('Not in removed')
 
     def test_add_interface(self):
-        target_registry(Model, cls_=OneModel, name_='MyModel')
+        register(Model, cls_=OneModel, name_='MyModel')
         self.assertEqual('Model', Model.MyModel.__declaration_type__)
         self.assertInModel(OneModel)
         dir(Declarations.Model.MyModel)
 
     def test_add_interface_with_decorator(self):
 
-        @target_registry(Model)
+        @register(Model)
         class MyModel:
             pass
 
@@ -71,9 +71,9 @@ class TestModel(TestCase):
 
     def test_add_two_interface(self):
 
-        target_registry(Model, cls_=OneModel, name_="MyModel")
+        register(Model, cls_=OneModel, name_="MyModel")
 
-        @target_registry(Model)
+        @register(Model)
         class MyModel:
             pass
 
@@ -81,21 +81,21 @@ class TestModel(TestCase):
 
     def test_remove_interface_with_1_cls_in_registry(self):
 
-        target_registry(Model, cls_=OneModel, name_="MyModel")
+        register(Model, cls_=OneModel, name_="MyModel")
         self.assertInModel(OneModel)
-        remove_registry(Model.MyModel, OneModel)
+        unregister(Model.MyModel, OneModel)
         self.assertInModel(OneModel)
         self.assertInRemoved(OneModel)
 
     def test_remove_interface_with_2_cls_in_registry(self):
 
-        target_registry(Model, cls_=OneModel, name_="MyModel")
+        register(Model, cls_=OneModel, name_="MyModel")
 
-        @target_registry(Model)
+        @register(Model)
         class MyModel:
             pass
 
         self.assertInModel(OneModel, MyModel)
-        remove_registry(Model.MyModel, OneModel)
+        unregister(Model.MyModel, OneModel)
         self.assertInModel(MyModel, OneModel)
         self.assertInRemoved(OneModel)

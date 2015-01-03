@@ -9,7 +9,7 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 FieldException = Declarations.Exception.FieldException
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 
 
@@ -18,7 +18,7 @@ def _complete_one2one(**kwargs):
     String = Declarations.Column.String
     One2One = Declarations.RelationShip.One2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
@@ -26,7 +26,7 @@ def _complete_one2one(**kwargs):
         zip = String()
         city = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -40,12 +40,12 @@ def _minimum_one2one(**kwargs):
     String = Declarations.Column.String
     One2One = Declarations.RelationShip.One2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -57,12 +57,12 @@ def _one2one_with_str_method(**kwargs):
     String = Declarations.Column.String
     One2One = Declarations.RelationShip.One2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -74,12 +74,12 @@ def _minimum_one2one_without_backref(**kwargs):
     String = Declarations.Column.String
     One2One = Declarations.RelationShip.One2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -91,12 +91,12 @@ def _minimum_one2one_with_one2many(**kwargs):
     String = Declarations.Column.String
     One2One = Declarations.RelationShip.One2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)

@@ -10,12 +10,12 @@ from sqlalchemy.orm import query
 from inspect import ismethod
 
 
-@Declarations.target_registry(Declarations.Exception)
+@Declarations.register(Declarations.Exception)
 class QueryException(Exception):
     """ Simple Exception for query """
 
 
-@Declarations.target_registry(Declarations.Core)
+@Declarations.register(Declarations.Core)
 class Query(query.Query):
     """ Overload the SqlAlchemy Query
     """

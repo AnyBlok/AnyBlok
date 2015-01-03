@@ -9,8 +9,8 @@ from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
 from anyblok import Declarations
 from anyblok.environment import EnvironmentManager
-target_registry = Declarations.target_registry
-remove_registry = Declarations.remove_registry
+register = Declarations.register
+unregister = Declarations.unregister
 Mixin = Declarations.Mixin
 
 
@@ -55,14 +55,14 @@ class TestCoreInterfaceMixin(TestCase):
         self.fail('Not in removed')
 
     def test_add_interface(self):
-        target_registry(Mixin, cls_=OneInterface, name_='MyMixin')
+        register(Mixin, cls_=OneInterface, name_='MyMixin')
         self.assertEqual('Mixin', Mixin.MyMixin.__declaration_type__)
         self.assertInMixin(OneInterface)
         dir(Declarations.Mixin.MyMixin)
 
     def test_add_interface_with_decorator(self):
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MyMixin:
             pass
 
@@ -71,9 +71,9 @@ class TestCoreInterfaceMixin(TestCase):
 
     def test_add_two_interface(self):
 
-        target_registry(Mixin, cls_=OneInterface, name_="MyMixin")
+        register(Mixin, cls_=OneInterface, name_="MyMixin")
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MyMixin:
             pass
 
@@ -81,9 +81,9 @@ class TestCoreInterfaceMixin(TestCase):
 
     def test_remove_interface_with_1_cls_in_registry(self):
 
-        target_registry(Mixin, cls_=OneInterface, name_="MyMixin")
+        register(Mixin, cls_=OneInterface, name_="MyMixin")
         self.assertInMixin(OneInterface)
-        remove_registry(Mixin.MyMixin, OneInterface)
+        unregister(Mixin.MyMixin, OneInterface)
 
         blokname = 'testMixin'
         self.assertEqual(hasattr(Mixin, blokname), False)
@@ -92,13 +92,13 @@ class TestCoreInterfaceMixin(TestCase):
 
     def test_remove_interface_with_2_cls_in_registry(self):
 
-        target_registry(Mixin, cls_=OneInterface, name_="MyMixin")
+        register(Mixin, cls_=OneInterface, name_="MyMixin")
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MyMixin:
             pass
 
         self.assertInMixin(OneInterface, MyMixin)
-        remove_registry(Mixin.MyMixin, OneInterface)
+        unregister(Mixin.MyMixin, OneInterface)
         self.assertInMixin(MyMixin, OneInterface)
         self.assertInRemoved(OneInterface)

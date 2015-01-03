@@ -9,7 +9,7 @@ from sqlalchemy.types import DECIMAL as SA_Decimal
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Column)
+@Declarations.register(Declarations.Column)
 class Decimal(Declarations.Column):
     """ Decimal column
 
@@ -19,11 +19,11 @@ class Decimal(Declarations.Column):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         Decimal = Declarations.Column.Decimal
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = Decimal(default=D('1.1'))

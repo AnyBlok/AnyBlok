@@ -10,13 +10,13 @@ from sqlalchemy.schema import ForeignKey
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.RelationShip)
+@Declarations.register(Declarations.RelationShip)
 class Many2One(Declarations.RelationShip):
     """ Define a relationship attribute on the model
 
     ::
 
-        @target_registry(Model)
+        @register(Model)
         class TheModel:
 
             relationship = Many2One(label="The relationship",

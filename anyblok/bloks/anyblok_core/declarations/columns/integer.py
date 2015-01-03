@@ -9,7 +9,7 @@ from sqlalchemy.types import Integer as SA_Integer
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Column)
+@Declarations.register(Declarations.Column)
 class Integer(Declarations.Column):
     """ Integer column
 
@@ -18,11 +18,11 @@ class Integer(Declarations.Column):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         Integer = Declarations.Column.Integer
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = Integer(default=1)

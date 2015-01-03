@@ -9,7 +9,7 @@ from sqlalchemy.types import Boolean as SA_Boolean
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Column)
+@Declarations.register(Declarations.Column)
 class Boolean(Declarations.Column):
     """ Boolean column
 
@@ -18,11 +18,11 @@ class Boolean(Declarations.Column):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         Boolean = Declarations.Column.Boolean
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = Boolean(default=True)

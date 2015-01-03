@@ -16,7 +16,7 @@ from sys import modules
 from os.path import dirname
 
 
-@anyblok.Declarations.target_registry(anyblok.Declarations.Exception)
+@anyblok.Declarations.register(anyblok.Declarations.Exception)
 class BlokManagerException(Exception):
     """ Simple exception to BlokManager """
 

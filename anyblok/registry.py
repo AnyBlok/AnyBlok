@@ -22,12 +22,12 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
-@Declarations.target_registry(Declarations.Exception)
+@Declarations.register(Declarations.Exception)
 class RegistryManagerException(Exception):
     """ Simple Exception for Registry """
 
 
-@Declarations.target_registry(Declarations.Exception)
+@Declarations.register(Declarations.Exception)
 class RegistryException(Exception):
     """ Simple Exception for Registry """
 
@@ -40,15 +40,15 @@ class RegistryManager:
         RegistryManager.declare_entry('newEntry')
         RegistryManager.init_blok('newBlok')
         EnvironmentManager.set('current_blok', 'newBlok')
-        RegistryManager.add_entry_in_target_registry(
+        RegistryManager.add_entry_in_register(
             'newEntry', 'oneKey', cls_)
         EnvironmentManager.set('current_blok', None)
 
     Remove an existing entry::
 
-        if RegistryManager.has_entry_in_target_registry('newBlok', 'newEntry',
+        if RegistryManager.has_entry_in_register('newBlok', 'newEntry',
                                                         'oneKey'):
-            RegistryManager.remove_entry_in_target_registry(
+            RegistryManager.remove_entry_in_register(
                 'newBlok', 'newEntry', 'oneKey', cls_)
 
     get a new registry for a database::
@@ -198,7 +198,7 @@ class RegistryManager:
         cls.loaded_bloks[blokname] = blok
 
     @classmethod
-    def has_core_in_target_registry(cls, blok, core):
+    def has_core_in_register(cls, blok, core):
         """ Return True if One Class exist in this blok for this core
 
         :param blok: name of the blok
@@ -207,7 +207,7 @@ class RegistryManager:
         return len(cls.loaded_bloks[blok]['Core'][core]) > 0
 
     @classmethod
-    def add_core_in_target_registry(cls, core, cls_):
+    def add_core_in_register(cls, core, cls_):
         """ Load core in blok
 
         warning the global var current_blok must be filled on the good blok
@@ -221,7 +221,7 @@ class RegistryManager:
         cls.loaded_bloks[current_blok]['Core'][core].append(cls_)
 
     @classmethod
-    def remove_in_target_registry(cls, cls_):
+    def remove_in_register(cls, cls_):
         """ Remove Class in blok and in entry
 
         :param ``cls_``: Class of the entry / key to remove in loaded blok
@@ -232,7 +232,7 @@ class RegistryManager:
             removed.append(cls_)
 
     @classmethod
-    def has_entry_in_target_registry(cls, blok, entry, key):
+    def has_entry_in_register(cls, blok, entry, key):
         """ Return True if One Class exist in this blok for this entry
 
         :param blok: name of the blok
@@ -248,7 +248,7 @@ class RegistryManager:
         return len(cls.loaded_bloks[blok][entry][key]['bases']) > 0
 
     @classmethod
-    def add_entry_in_target_registry(cls, entry, key, cls_, **kwargs):
+    def add_entry_in_register(cls, entry, key, cls_, **kwargs):
         """ Load entry in blok
 
         warning the global var current_blok must be filled on the good blok
@@ -282,7 +282,7 @@ class RegistryManager:
             cls.loaded_bloks[cb][entry]['registry_names'].append(key)
 
     @classmethod
-    def get_entry_properties_in_target_registry(cls, entry, key):
+    def get_entry_properties_in_register(cls, entry, key):
         cb = EnvironmentManager.get('current_blok')
         if key not in cls.loaded_bloks[cb][entry]:
             return {}

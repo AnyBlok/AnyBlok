@@ -9,7 +9,7 @@ from anyblok import Declarations
 from sqlalchemy.ext.hybrid import hybrid_property
 
 
-@Declarations.target_registry(Declarations.Field)
+@Declarations.register(Declarations.Field)
 class Function(Declarations.Field):
     """ Function Field
 
@@ -18,11 +18,11 @@ class Function(Declarations.Field):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         Function = Declarations.Field.Function
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
             x = Function(fget='fget', fset='fset', fdel='fdel', fexp='fexpr')
 

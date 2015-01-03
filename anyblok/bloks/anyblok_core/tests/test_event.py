@@ -9,7 +9,7 @@ from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 
 
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
 Core = Declarations.Core
@@ -30,11 +30,11 @@ class TestEvent(DBTestCase):
 
         def add_in_registry():
 
-            @target_registry(Model)
+            @register(Model)
             class Event:
                 pass
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
 
                 x = 0
@@ -50,11 +50,11 @@ class TestEvent(DBTestCase):
 
         def add_in_registry():
 
-            @target_registry(Model)
+            @register(Model)
             class Event:
                 pass
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
 
                 x = 0
@@ -71,11 +71,11 @@ class TestEvent(DBTestCase):
 
         def add_in_registry():
 
-            @target_registry(Model)
+            @register(Model)
             class Event:
                 pass
 
-            @target_registry(Mixin)
+            @register(Mixin)
             class MTest:
 
                 x = 0
@@ -84,7 +84,7 @@ class TestEvent(DBTestCase):
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
-            @target_registry(Model)
+            @register(Model)
             class Test(Mixin.MTest):
                 pass
 
@@ -96,11 +96,11 @@ class TestEvent(DBTestCase):
 
         def add_in_registry():
 
-            @target_registry(Model)
+            @register(Model)
             class Event:
                 pass
 
-            @target_registry(Core)
+            @register(Core)
             class Base:
 
                 x = 0
@@ -109,7 +109,7 @@ class TestEvent(DBTestCase):
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
                 pass
 
@@ -119,11 +119,11 @@ class TestEvent(DBTestCase):
     def add_in_registry_inherited(self, withcore=False, withmixin=False,
                                   withmodel=False):
 
-        @target_registry(Model)
+        @register(Model)
         class Event:
             pass
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
 
             x = 0
@@ -133,7 +133,7 @@ class TestEvent(DBTestCase):
                 def my_event(cls, a=1, b=1):
                     pass
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MTest:
 
             if withmixin:
@@ -141,7 +141,7 @@ class TestEvent(DBTestCase):
                 def my_event(cls, a=1, b=1):
                     pass
 
-        @target_registry(Model)
+        @register(Model)
         class Test(Mixin.MTest):
 
             if withmodel:

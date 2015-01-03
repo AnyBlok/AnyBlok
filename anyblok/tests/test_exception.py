@@ -10,8 +10,8 @@ from anyblok import Declarations
 Field = Declarations.Field
 Column = Declarations.Column
 RelationShip = Declarations.RelationShip
-target_registry = Declarations.target_registry
-remove_registry = Declarations.remove_registry
+register = Declarations.register
+unregister = Declarations.unregister
 FieldException = Declarations.Exception.FieldException
 
 
@@ -22,7 +22,7 @@ class OneInterface:
 class TestCoreInterfaceException(TestCase):
 
     def test_add_interface(self):
-        target_registry(Declarations.Exception, cls_=OneInterface,
+        register(Declarations.Exception, cls_=OneInterface,
                         name_='OneException')
         self.assertEqual(
             'Exception',
@@ -31,7 +31,7 @@ class TestCoreInterfaceException(TestCase):
 
     def test_add_interface_with_decorator(self):
 
-        @target_registry(Declarations.Exception)
+        @register(Declarations.Exception)
         class OneDecoratorException:
             pass
 
@@ -42,11 +42,11 @@ class TestCoreInterfaceException(TestCase):
 
     def test_add_same_interface(self):
 
-        target_registry(Declarations.Exception, cls_=OneInterface,
+        register(Declarations.Exception, cls_=OneInterface,
                         name_="SameException")
 
         try:
-            @target_registry(Declarations.Exception)
+            @register(Declarations.Exception)
             class SameException:
                 pass
 
@@ -56,10 +56,10 @@ class TestCoreInterfaceException(TestCase):
 
     def test_remove_interface(self):
 
-        target_registry(Declarations.Exception, cls_=OneInterface,
+        register(Declarations.Exception, cls_=OneInterface,
                         name_="Exception2Remove")
         try:
-            remove_registry(Declarations.Exception.Exception2Remove,
+            unregister(Declarations.Exception.Exception2Remove,
                             OneInterface)
             self.fail('No watch dog to remove field')
         except Declarations.Exception.DeclarationsException:

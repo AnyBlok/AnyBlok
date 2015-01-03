@@ -18,7 +18,7 @@ class Exception:
 
     Add new Exception type::
 
-        @Declarations.target_registry(Declarations.Exception)
+        @Declarations.register(Declarations.Exception)
         class MyException:
             pass
 
@@ -26,7 +26,7 @@ class Exception:
     """
 
     @classmethod
-    def target_registry(self, parent, name, cls_, **kwargs):
+    def register(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry
 
         :param parent: Existing declaration
@@ -45,7 +45,7 @@ class Exception:
         setattr(parent, name, cls_)
 
     @classmethod
-    def remove_registry(self, entry, cls_):
+    def unregister(self, entry, cls_):
         """ Forbidden method
 
         :exception: DeclarationsException
@@ -53,7 +53,7 @@ class Exception:
         raise DeclarationsException("Removing an exception is forbidden")
 
 
-Declarations.target_registry(Declarations.Exception,
+Declarations.register(Declarations.Exception,
                              cls_=DeclarationsException)
-Declarations.target_registry(Declarations.Exception,
+Declarations.register(Declarations.Exception,
                              cls_=EnvironmentException)

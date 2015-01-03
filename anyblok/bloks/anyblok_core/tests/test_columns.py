@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 FieldException = Declarations.Exception.FieldException
 
@@ -16,7 +16,7 @@ def simple_column(ColumnType=None, **kwargs):
 
     Integer = Declarations.Column.Integer
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
 
         id = Integer(primary_key=True)
@@ -28,12 +28,12 @@ def column_with_foreign_key():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
 
         name = String(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Test2:
 
         id = Integer(primary_key=True)
@@ -239,7 +239,7 @@ class TestColumns(DBTestCase):
             Integer = Declarations.Column.Integer
             Selection = Declarations.Column.Selection
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
 
                 id = Integer(primary_key=True)

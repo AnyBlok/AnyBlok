@@ -21,7 +21,7 @@ def getParser(description):
     return ArgumentParser(description=description)
 
 
-@Declarations.target_registry(Declarations.Exception)
+@Declarations.register(Declarations.Exception)
 class ArgsParseManagerException(Exception):
     """ Simple Exception for ArgsParseManager"""
 

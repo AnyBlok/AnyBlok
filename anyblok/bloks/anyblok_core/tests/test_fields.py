@@ -10,14 +10,14 @@ from anyblok import Declarations
 from sqlalchemy import func
 from unittest import skipIf
 import sqlalchemy
-target_registry = Declarations.target_registry
+register = Declarations.register
 Field = Declarations.Field
 Model = Declarations.Model
 Column = Declarations.Column
 FieldException = Declarations.Exception.FieldException
 
 
-@target_registry(Field)
+@register(Field)
 class OneFieldForTest(Field):
     pass
 
@@ -26,7 +26,7 @@ def field_without_name():
 
     OneFieldForTest = Field.OneFieldForTest
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
 
         id = Column.Integer(primary_key=True)
@@ -40,7 +40,7 @@ class TestField(DBTestCase):
 
     def define_field_function(self):
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             id = Column.Integer(primary_key=True)
@@ -104,7 +104,7 @@ class TestField(DBTestCase):
 
         def add_in_registry():
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
 
                 id = Column.Integer(primary_key=True)

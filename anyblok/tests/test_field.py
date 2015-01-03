@@ -10,8 +10,8 @@ from anyblok import Declarations
 Field = Declarations.Field
 Column = Declarations.Column
 RelationShip = Declarations.RelationShip
-target_registry = Declarations.target_registry
-remove_registry = Declarations.remove_registry
+register = Declarations.register
+unregister = Declarations.unregister
 FieldException = Declarations.Exception.FieldException
 
 
@@ -29,19 +29,19 @@ class TestField(TestCase):
             pass
 
     def test_without_label(self):
-        target_registry(Field, cls_=OneField, name_='RealField')
+        register(Field, cls_=OneField, name_='RealField')
         field = Field.RealField()
         field.get_sqlalchemy_mapping(None, None, 'a_field', None)
         self.assertEqual(field.label, 'A field')
 
     def test_add_interface(self):
-        target_registry(Field, cls_=OneField, name_='OneField')
+        register(Field, cls_=OneField, name_='OneField')
         self.assertEqual('Field', Field.OneField.__declaration_type__)
         dir(Declarations.Field.OneField)
 
     def test_add_interface_with_decorator(self):
 
-        @target_registry(Field)
+        @register(Field)
         class OneDecoratorField(OneField):
             pass
 
@@ -50,10 +50,10 @@ class TestField(TestCase):
 
     def test_add_same_interface(self):
 
-        target_registry(Field, cls_=OneField, name_="SameField")
+        register(Field, cls_=OneField, name_="SameField")
 
         try:
-            @target_registry(Field)
+            @register(Field)
             class SameField(OneField):
                 pass
 
@@ -63,9 +63,9 @@ class TestField(TestCase):
 
     def test_remove_interface(self):
 
-        target_registry(Field, cls_=OneField, name_="Field2Remove")
+        register(Field, cls_=OneField, name_="Field2Remove")
         try:
-            remove_registry(Field.Field2Remove, OneField)
+            unregister(Field.Field2Remove, OneField)
             self.fail('No watch dog to remove field')
         except FieldException:
             pass

@@ -9,7 +9,7 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 FieldException = Declarations.Exception.FieldException
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 
 
@@ -20,7 +20,7 @@ def _complete_one2many(**kwargs):
 
     primaryjoin = "address.id == person.address_id"
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
@@ -28,13 +28,13 @@ def _complete_one2many(**kwargs):
         zip = String()
         city = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
         address_id = Integer(foreign_key=(Model.Address, 'id'))
 
-    @target_registry(Model)  # noqa
+    @register(Model)  # noqa
     class Address:
 
         persons = One2Many(model=Model.Person,
@@ -48,7 +48,7 @@ def _minimum_one2many(**kwargs):
     String = Declarations.Column.String
     One2Many = Declarations.RelationShip.One2Many
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
@@ -56,13 +56,13 @@ def _minimum_one2many(**kwargs):
         zip = String()
         city = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
         address_id = Integer(foreign_key=(Model.Address, 'id'))
 
-    @target_registry(Model)  # noqa
+    @register(Model)  # noqa
     class Address:
 
         persons = One2Many(model=Model.Person)
@@ -73,7 +73,7 @@ def _one2many_with_str_model(**kwargs):
     String = Declarations.Column.String
     One2Many = Declarations.RelationShip.One2Many
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
@@ -81,13 +81,13 @@ def _one2many_with_str_model(**kwargs):
         zip = String()
         city = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
         address_id = Integer(foreign_key=(Model.Address, 'id'))
 
-    @target_registry(Model)  # noqa
+    @register(Model)  # noqa
     class Address:
 
         persons = One2Many(model='Model.Person')
@@ -98,7 +98,7 @@ def _autodetect_two_foreign_key(**kwargs):
     String = Declarations.Column.String
     One2Many = Declarations.RelationShip.One2Many
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
@@ -106,14 +106,14 @@ def _autodetect_two_foreign_key(**kwargs):
         zip = String()
         city = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
         address_id = Integer(foreign_key=(Model.Address, 'id'))
         address2_id = Integer(foreign_key=(Model.Address, 'id'))
 
-    @target_registry(Model)  # noqa
+    @register(Model)  # noqa
     class Address:
 
         persons = One2Many(model=Model.Person)

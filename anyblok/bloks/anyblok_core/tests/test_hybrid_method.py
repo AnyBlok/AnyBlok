@@ -8,7 +8,7 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
 Core = Declarations.Core
@@ -35,7 +35,7 @@ class TestHybridMethod(DBTestCase):
         def add_in_registry():
             Integer = Declarations.Column.Integer
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
                 id = Integer(primary_key=True)
                 val = Integer(nullable=False)
@@ -52,7 +52,7 @@ class TestHybridMethod(DBTestCase):
         def add_in_registry():
             Integer = Declarations.Column.Integer
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
                 id = Integer(primary_key=True)
                 val = Integer(nullable=False)
@@ -70,14 +70,14 @@ class TestHybridMethod(DBTestCase):
         def add_in_registry():
             Integer = Declarations.Column.Integer
 
-            @target_registry(Core)
+            @register(Core)
             class SqlBase:
 
                 @Declarations.hybrid_method
                 def val_is(self, val):
                     return self.val == val
 
-            @target_registry(Model)
+            @register(Model)
             class Test:
                 id = Integer(primary_key=True)
                 val = Integer(nullable=False)
@@ -90,7 +90,7 @@ class TestHybridMethod(DBTestCase):
         def add_in_registry():
             Integer = Declarations.Column.Integer
 
-            @target_registry(Mixin)
+            @register(Mixin)
             class MTest:
                 id = Integer(primary_key=True)
                 val = Integer(nullable=False)
@@ -99,7 +99,7 @@ class TestHybridMethod(DBTestCase):
                 def val_is(self, val):
                     return self.val == val
 
-            @target_registry(Model)
+            @register(Model)
             class Test(Mixin.MTest):
                 pass
 
@@ -110,7 +110,7 @@ class TestHybridMethod(DBTestCase):
                                     withmodel=False):
         Integer = Declarations.Column.Integer
 
-        @target_registry(Core)
+        @register(Core)
         class SqlBase:
 
             if withcore:
@@ -118,7 +118,7 @@ class TestHybridMethod(DBTestCase):
                 def val_is(self, val):
                     pass
 
-        @target_registry(Mixin)
+        @register(Mixin)
         class MTest:
             id = Integer(primary_key=True)
             val = Integer(nullable=False)
@@ -128,7 +128,7 @@ class TestHybridMethod(DBTestCase):
                 def val_is(self, val):
                     pass
 
-        @target_registry(Model)
+        @register(Model)
         class Test(Mixin.MTest):
 
             if withmodel:
@@ -136,7 +136,7 @@ class TestHybridMethod(DBTestCase):
                 def val_is(self, val):
                     pass
 
-        @target_registry(Model)  # noqa
+        @register(Model)  # noqa
         class Test:
 
             def val_is(self, val):

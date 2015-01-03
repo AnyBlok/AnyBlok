@@ -9,7 +9,7 @@ from sqlalchemy.types import LargeBinary as SA_LargeBinary
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Column)
+@Declarations.register(Declarations.Column)
 class LargeBinary(Declarations.Column):
     """ Large binary column
 
@@ -19,13 +19,13 @@ class LargeBinary(Declarations.Column):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         LargeBinary = Declarations.Column.LargeBinary
 
         blob = urandom(100000)
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = LargeBinary(default=blob)

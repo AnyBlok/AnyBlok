@@ -106,7 +106,7 @@ The ``Declarations`` has two main methods
 +---------------------+-------------------------------------------------------+
 | Method name         | Description                                           |
 +=====================+=======================================================+
-| ``target_registry`` | Add the blok in the registry                          |
+| ``register`` | Add the blok in the registry                          |
 |                     | This method can be used as:                           |
 |                     |                                                       |
 |                     | * A function::                                        |
@@ -114,21 +114,21 @@ The ``Declarations`` has two main methods
 |                     |    class Foo:                                         |
 |                     |        pass                                           |
 |                     |                                                       |
-|                     |    target_registry(``Declarations.type``, cls_=Foo)   |
+|                     |    register(``Declarations.type``, cls_=Foo)   |
 |                     |                                                       |
 |                     | * A decorator::                                       |
 |                     |                                                       |
-|                     |    @target_registry(``Declarations.type``)            |
+|                     |    @register(``Declarations.type``)            |
 |                     |    class Foo:                                         |
 |                     |        pass                                           |
 |                     |                                                       |
 +---------------------+-------------------------------------------------------+
-| ``remove_registry`` | Remove an existing blok from the registry. This       |
+| ``unregister`` | Remove an existing blok from the registry. This       |
 |                     | method is only used as a function::                   |
 |                     |                                                       |
 |                     |    from ... import Foo                                |
 |                     |                                                       |
-|                     |    remove_registry(``Declarations.type``, cls_=Foo)   |
+|                     |    unregister(``Declarations.type``, cls_=Foo)   |
 |                     |                                                       |
 +---------------------+-------------------------------------------------------+
 
@@ -140,8 +140,8 @@ The ``Declarations`` has two main methods
     * Column
     * ...
 
-    ``Declarations.type`` defines the behaviour of the ``target_registry`` and
-    ``remove_registry`` methods
+    ``Declarations.type`` defines the behaviour of the ``register`` and
+    ``unregister`` methods
 
 Model
 -----
@@ -150,16 +150,16 @@ A Model is an AnyBlok class referenced in the registry. The registry is
 hierarchical. The model ``Foo`` is accessed by ``registry.Foo`` and the model
 ``Foo.Bar`` is accessed by ``registry.Foo.Bar``.
 
-To declare a Model you must use ``target_registry``::
+To declare a Model you must use ``register``::
 
     from anyblok.declarations import Declarations
 
 
-    target_registry = Declarations.target_registry
+    register = Declarations.register
     Model = Declarations.Model
 
 
-    @target_registry(Model):
+    @register(Model):
     class Foo:
         pass
 
@@ -174,7 +174,7 @@ example, ``Foo`` is in ``Model``, you can access at ``Foo`` by ``Model.Foo``.
 
 If you define the ``Bar`` model, under the ``Foo`` model, you should write::
 
-    @target_registry(Model.Foo)
+    @register(Model.Foo)
     class Bar:
         """ Description of the model """
         pass
@@ -197,7 +197,7 @@ namespace in lowercase with ``.`` replaced with ``.``.
 
     The registry is accessible only in the method of the models::
 
-        @target_registry(Model)
+        @register(Model)
         class Foo:
 
             def myMethod(self):
@@ -209,12 +209,12 @@ to easily overload these models. The declaration stores the Python class in
 the registry. If one model already exist then the second declaration of this
 model overloads the first model::
 
-    @target_registry(Model)
+    @register(Model)
     class Foo:
         x = 1
 
 
-    @target_registry(Model)
+    @register(Model)
     class Foo:
         x = 2
 
@@ -224,17 +224,17 @@ model overloads the first model::
     Foo = registry.Foo
     assert Foo.x == 2
 
-Here are the parameters of the ``target_registry`` method for ``Model``:
+Here are the parameters of the ``register`` method for ``Model``:
 
 +-------------+---------------------------------------------------------------+
 | Param       | Description                                                   |
 +=============+===============================================================+
-| cls\_       | Define the real class if ``target_registry`` is used as a     |
+| cls\_       | Define the real class if ``register`` is used as a     |
 |             | function not as a decorator                                   |
 +-------------+---------------------------------------------------------------+
 | name\_      | Overload the name of the class::                              |
 |             |                                                               |
-|             |    @target_registry(Model, name_='Bar')                       |
+|             |    @register(Model, name_='Bar')                       |
 |             |    class Foo:                                                 |
 |             |        pass                                                   |
 |             |                                                               |
@@ -243,7 +243,7 @@ Here are the parameters of the ``target_registry`` method for ``Model``:
 +-------------+---------------------------------------------------------------+
 | tablename   | Overload the name of the table::                              |
 |             |                                                               |
-|             |    @target_registry(Model, tablename='my_table')              |
+|             |    @register(Model, tablename='my_table')              |
 |             |    class Foo:                                                 |
 |             |        pass                                                   |
 |             |                                                               |
@@ -258,13 +258,13 @@ Here are the parameters of the ``target_registry`` method for ``Model``:
 |             |                                                               |
 |             | * str ::                                                      |
 |             |                                                               |
-|             |    @target_registry(Model, tablename='foo')                   |
+|             |    @register(Model, tablename='foo')                   |
 |             |    class Bar:                                                 |
 |             |        pass                                                   |
 |             |                                                               |
 |             | * declaration ::                                              |
 |             |                                                               |
-|             |    @target_registry(Model, tablename=Model.Foo)               |
+|             |    @register(Model, tablename=Model.Foo)               |
 |             |    class Bar:                                                 |
 |             |        pass                                                   |
 |             |                                                               |
@@ -276,7 +276,7 @@ Non SQL Model
 This is the default model. This model has no tables. It is used to
 organize the registry or for specific process.::
 
-    #target_registry(Model)
+    #register(Model)
     class Foo:
         pass
 
@@ -286,7 +286,7 @@ SQL Model
 A ``SQL Model`` is a simple ``Model`` with ``Column`` or ``RelationShip``. For
 each model, one table will be created.::
 
-    @target_registry(Model)
+    @register(Model)
     class Foo:
         # SQL Model with mapped with the table ``foo``
 
@@ -299,11 +299,11 @@ View Model
 ~~~~~~~~~~
 
 A ``View Model`` as ``SQL Model``. Need the declaration of ``Column`` and / or
-``RelationShip``. In the ``target_registry`` the param ``is_sql_view`` must be
+``RelationShip``. In the ``register`` the param ``is_sql_view`` must be
 True and the ``View Model`` must define the ``sqlalchemy_view_declaration``
 classmethod.::
 
-    @target_registry(Model, is_sql_view=True)
+    @register(Model, is_sql_view=True)
     class Foo:
 
         id = Integer(primary_key=True)
@@ -330,7 +330,7 @@ All the column type are in the ``Declarations``::
     String = Declarations.Column.String
 
 
-    @Declarations.target_registry(Declaration.Model)
+    @Declarations.register(Declaration.Model)
     class MyModel:
 
         id = Integer(primary_key=True)
@@ -380,11 +380,11 @@ All the columns have the following parameters:
 | foreign_key | Define a foreign key on this column to another column of      |
 |             | another model::                                               |
 |             |                                                               |
-|             |    @target_registry(Model)                                    |
+|             |    @register(Model)                                    |
 |             |    class Foo:                                                 |
 |             |        id : Integer(primary_key=True)                         |
 |             |                                                               |
-|             |    @target_registry(Model)                                    |
+|             |    @register(Model)                                    |
 |             |    class Bar:                                                 |
 |             |        id : Integer(primary_key=True)                         |
 |             |        foo: Integer(foreign_key=(Model.Foo, 'id'))            |
@@ -422,13 +422,13 @@ the model. All the RelationShip types are in the ``Declarations``::
     Many2One = Declarations.RelationShip.Many2One
 
 
-    @Declarations.target_registry(Declaration.Model)
+    @Declarations.register(Declaration.Model)
     class MyModel:
 
         id = Integer(primary_key=True)
 
 
-    @Declarations.target_registry(Declaration.Model)
+    @Declarations.register(Declaration.Model)
     class MyModel2:
 
         id = Integer(primary_key=True)
@@ -533,7 +533,7 @@ SQL column. All the Field type are in the ``Declarations``::
     Fuction = Declarations.Field.Function
 
 
-    @Declarations.target_registry(Declaration.Model)
+    @Declarations.register(Declaration.Model)
     class MyModel:
 
         id = Integer(primary_key=True)
@@ -570,13 +570,13 @@ Mixin
 A Mixin looks like a Model, but has no tables. A Mixin adds behaviour to
 a Model with Python inheritance::
 
-    @target_registry(Mixin)
+    @register(Mixin)
     class MyMixin:
 
         def foo():
             pass
 
-    @target_registry(Model)
+    @register(Model)
     class MyModel(Mixin.MyMixin):
         pass
 
@@ -588,15 +588,15 @@ a Model with Python inheritance::
 If you inherit a mixin, all the models previously using the base mixin also benefit
 from the overload::
 
-    @target_registry(Mixin)
+    @register(Mixin)
     class MyMixin:
         pass
 
-    @target_registry(Model)
+    @register(Model)
     class MyModel(Mixin.MyMixin):
         pass
 
-    @target_registry(Mixin)
+    @register(Mixin)
     class MyMixin:
 
         def foo():
@@ -611,21 +611,21 @@ SQL View
 --------
 
 An SQL view is a model, with the argument ``is_sql_view=True`` in the
-target_registry. and the classmethod ``sqlalchemy_view_declaration``::
+register. and the classmethod ``sqlalchemy_view_declaration``::
 
-    @target_registry(Model)
+    @register(Model)
     class T1:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model)
+    @register(Model)
     class T2:
         id = Integer(primary_key=True)
         code = String()
         val = Integer()
 
-    @target_registry(Model, is_sql_view=True)
+    @register(Model, is_sql_view=True)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -659,7 +659,7 @@ Add a behaviour in all the Models, Each Model inherits Base. For instance, the
     from anyblok import Declarations
 
 
-    @Declarations.target_registry(Declarations.Core)
+    @Declarations.register(Declarations.Core)
     class Base:
         pass
 
@@ -674,7 +674,7 @@ For instance, the ``insert`` method only makes sense for the ``Model`` with a ta
     from anyblok import Declarations
 
 
-    @Declarations.target_registry(Declarations.Core)
+    @Declarations.register(Declarations.Core)
     class SqlBase:
         pass
 
@@ -688,7 +688,7 @@ Like ``SqlBase``, only the ``SqlView`` inherits this ``Core`` class.
     from anyblok import Declarations
 
 
-    @Declarations.target_registry(Declarations.Core)
+    @Declarations.register(Declarations.Core)
     class SqlViewBase:
         pass
 
@@ -702,7 +702,7 @@ Overloads the SQLAlchemy ``Query`` class.
     from anyblok import Declarations
 
 
-    @Declarations.target_registry(Declarations.Core)
+    @Declarations.register(Declarations.Core)
     class Query
         pass
 
@@ -716,7 +716,7 @@ Overloads the SQLAlchemy ``Session`` class.
     from anyblok import Declarations
 
 
-    @Declarations.target_registry(Declarations.Core)
+    @Declarations.register(Declarations.Core)
     class Session
         pass
 
@@ -728,7 +728,7 @@ InstrumentedList
     from anyblok import Declarations
 
 
-    @Declarations.target_registry(Declarations.Core)
+    @Declarations.register(Declarations.Core)
     class InstrumentedList
         pass
 
@@ -751,12 +751,12 @@ class:
 
 * Inherit an SQL Model in a non-SQL Model::
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
         id = Integer(primary_key=True)
         name = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Test2(Model.Test):
         pass
 
@@ -771,16 +771,16 @@ class:
     exist yet. But during the assembly, if the table exists and the model
     has the name of this table, AnyBlok directly links the table. To
     define the table you must use the named argument ``tablename`` in the
-    ``target_registry``
+    ``register``
 
     ::
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
             id = Integer(primary_key=True)
             name = String()
 
-        @target_registry(Model, tablename=Model.Test)
+        @register(Model, tablename=Model.Test)
         class Test2:
             id = Integer(primary_key=True)
             name = String()
@@ -826,7 +826,7 @@ cache on a method
 
 Cache the method of a Model::
 
-    @target_registry(Model)
+    @register(Model)
     class Foo:
 
         @classmethod_cache()
@@ -842,7 +842,7 @@ Cache the method of a Model::
 
 Cache the method coming from a Mixin::
 
-    @target_registry(Mixin)
+    @register(Mixin)
     class MFoo:
 
         @classmethod_cache()
@@ -850,11 +850,11 @@ Cache the method coming from a Mixin::
             import random
             return random.random()
 
-    @target_registry(Model)
+    @register(Model)
     class Foo(Mixin.MFoo):
         pass
 
-    @target_registry(Model)
+    @register(Model)
     class Foo2(Mixin.MFoo):
         pass
 
@@ -868,7 +868,7 @@ Cache the method coming from a Mixin::
 
 Cache the method coming from a Mixin::
 
-    @target_registry(Core)
+    @register(Core)
     class Base
 
         @classmethod_cache()
@@ -876,11 +876,11 @@ Cache the method coming from a Mixin::
             import random
             return random.random()
 
-    @target_registry(Model)
+    @register(Model)
     class Foo:
         pass
 
-    @target_registry(Model)
+    @register(Model)
     class Foo2:
         pass
 
@@ -897,11 +897,11 @@ Event
 Simple implementation of a synchronous ``event``::
 
 
-    @target_registry(Model)
+    @register(Model)
     class Event:
         pass
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
 
             x = 0
@@ -930,7 +930,7 @@ This API gives:
 It is possible to overload an existing event listener, just by overloading the
 decorated method::
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
 
         @classmethod
@@ -959,7 +959,7 @@ AnyBlok allows to define a hybrid_method which can be overloaded, because the
 real sqlalchemy decorator is applied after assembling in the last overload
 of the decorated method::
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
 
         @Declarations.hybrid_method
@@ -972,7 +972,7 @@ Pre-commit hook
 It is possible to call specific classmethods just before the commit of the
 session::
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
 
         id = Integer(primary_key=True)

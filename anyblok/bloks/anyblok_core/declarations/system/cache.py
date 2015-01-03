@@ -8,7 +8,7 @@
 from anyblok.declarations import Declarations
 
 
-target_registry = Declarations.target_registry
+register = Declarations.register
 System = Declarations.Model.System
 
 Integer = Declarations.Column.Integer
@@ -16,12 +16,12 @@ String = Declarations.Column.String
 Text = Declarations.Column.Text
 
 
-@target_registry(Declarations.Exception)
+@register(Declarations.Exception)
 class CacheException(Exception):
     """ Simple Exception for the cache Model """
 
 
-@target_registry(System)
+@register(System)
 class Cache:
 
     last_cache_id = None

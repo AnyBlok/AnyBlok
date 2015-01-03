@@ -12,7 +12,7 @@ from os.path import join, isfile
 
 
 logger = getLogger(__name__)
-target_registry = Declarations.target_registry
+register = Declarations.register
 System = Declarations.Model.System
 String = Declarations.Column.String
 Integer = Declarations.Column.Integer
@@ -20,7 +20,7 @@ Selection = Declarations.Column.Selection
 Function = Declarations.Field.Function
 
 
-@target_registry(System)
+@register(System)
 class Blok:
 
     STATES = {
@@ -255,7 +255,7 @@ class Blok:
         query.order_by(cls.order).all().load()
 
 
-@target_registry(System.Blok)
+@register(System.Blok)
 class Association:
 
     MODES = {

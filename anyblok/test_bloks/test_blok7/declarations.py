@@ -8,20 +8,20 @@
 from anyblok import Declarations
 
 
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 Integer = Declarations.Column.Integer
 String = Declarations.Column.String
 
 
-@target_registry(Model)
+@register(Model)
 class Test:
 
     id = Integer(primary_key=True)
     label = String()
 
 
-@target_registry(Model)
+@register(Model)
 class Test2:
 
     id = Integer(primary_key=True)

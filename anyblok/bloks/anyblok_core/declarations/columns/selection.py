@@ -81,7 +81,7 @@ class SelectionType(types.UserDefinedType):
         return self._StrSelection
 
 
-@Declarations.target_registry(Declarations.Column)
+@Declarations.register(Declarations.Column)
 class Selection(Declarations.Column):
     """ Selection column
 
@@ -90,11 +90,11 @@ class Selection(Declarations.Column):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         Selection = Declarations.Column.Selection
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
             STATUS = (
                 (u'draft', u'Draft'),

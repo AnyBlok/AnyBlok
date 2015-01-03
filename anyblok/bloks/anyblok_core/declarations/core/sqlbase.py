@@ -9,7 +9,7 @@ from anyblok import Declarations
 from sqlalchemy.orm import aliased
 
 
-@Declarations.target_registry(Declarations.Exception)
+@Declarations.register(Declarations.Exception)
 class SqlBaseException(Exception):
     """ Simple Exception for sql base """
 
@@ -75,7 +75,7 @@ class SqlMixin:
         return aliased(cls, *args, **kwargs)
 
 
-@Declarations.target_registry(Declarations.Core)
+@Declarations.register(Declarations.Core)
 class SqlBase(SqlMixin):
     """ this class is inherited by all the SQL model
     """

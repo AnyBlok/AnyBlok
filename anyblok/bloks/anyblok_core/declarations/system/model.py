@@ -10,7 +10,7 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
-target_registry = Declarations.target_registry
+register = Declarations.register
 System = Declarations.Model.System
 String = Declarations.Column.String
 Text = Declarations.Column.Text
@@ -18,7 +18,7 @@ Boolean = Declarations.Column.Boolean
 Function = Declarations.Field.Function
 
 
-@target_registry(System)
+@register(System)
 class Model:
     """Models assembled"""
 

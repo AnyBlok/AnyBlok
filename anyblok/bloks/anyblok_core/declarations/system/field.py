@@ -6,14 +6,14 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-target_registry = Declarations.target_registry
+register = Declarations.register
 System = Declarations.Model.System
 Mixin = Declarations.Mixin
 String = Declarations.Column.String
 Boolean = Declarations.Column.Boolean
 
 
-@target_registry(Mixin)
+@register(Mixin)
 class Field:
 
     name = String(primary_key=True)
@@ -34,7 +34,7 @@ class Field:
         pass
 
 
-@target_registry(System)  # noqa
+@register(System)  # noqa
 class Field(Mixin.Field):
 
     @classmethod

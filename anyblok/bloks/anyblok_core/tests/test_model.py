@@ -8,7 +8,7 @@
 from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.model import has_sql_fields, get_fields
 from anyblok import Declarations
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 
 
@@ -16,7 +16,7 @@ def simple_model():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
         id = Integer(primary_key=True)
         name = String()
@@ -26,7 +26,7 @@ def simple_model_with_tablename():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model, tablename='othername')
+    @register(Model, tablename='othername')
     class Test:
         id = Integer(primary_key=True)
         name = String()
@@ -36,12 +36,12 @@ def simple_models_with_same_table():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
         id = Integer(primary_key=True)
         name = String()
 
-    @target_registry(Model, tablename='test')
+    @register(Model, tablename='test')
     class Test2:
         id = Integer(primary_key=True)
         name = String()
@@ -51,12 +51,12 @@ def simple_models_with_same_table_by_declaration_model():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
         id = Integer(primary_key=True)
         name = String()
 
-    @target_registry(Model, tablename=Model.Test)
+    @register(Model, tablename=Model.Test)
     class Test2:
         id = Integer(primary_key=True)
         name = String()
@@ -66,17 +66,17 @@ def simple_models_with_same_table_by_inherit():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
         id = Integer(primary_key=True)
         name = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Test2:
         id = Integer(primary_key=True)
         name = String()
 
-    @target_registry(Model, tablename='test')  # noqa
+    @register(Model, tablename='test')  # noqa
     class Test2:
         pass
 
@@ -85,16 +85,16 @@ def simple_models_with_inherit_sqlmodel():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
         id = Integer(primary_key=True)
         name = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Test2(Model.Test):
         pass
 
-    @target_registry(Model)
+    @register(Model)
     class Test3(Model.Test):
         pass
 
@@ -103,12 +103,12 @@ def model_with_foreign_key():
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
 
-    @target_registry(Model)
+    @register(Model)
     class TestFk:
 
         name = String(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Test:
 
         id = Integer(primary_key=True)

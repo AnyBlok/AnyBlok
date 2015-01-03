@@ -9,7 +9,7 @@ from sqlalchemy.types import Unicode
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Column)
+@Declarations.register(Declarations.Column)
 class uString(Declarations.Column):
     """ Unicode column
 
@@ -18,11 +18,11 @@ class uString(Declarations.Column):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         uString = Declarations.Column.uString
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = uString(de", default=u'test')

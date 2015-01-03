@@ -42,10 +42,10 @@ class TestRegistryCore(TestCase):
         class test:
             pass
 
-        RegistryManager.add_core_in_target_registry('test', test)
+        RegistryManager.add_core_in_register('test', test)
         self.assertInCore(test)
         self.assertEqual(
-            RegistryManager.has_core_in_target_registry('testCore', 'test'),
+            RegistryManager.has_core_in_register('testCore', 'test'),
             True)
 
     def test_remove_core(self):
@@ -59,8 +59,8 @@ class TestRegistryCore(TestCase):
 
             return False
 
-        RegistryManager.add_core_in_target_registry('test', test)
+        RegistryManager.add_core_in_register('test', test)
         self.assertInCore(test)
         self.assertEqual(has_test_in_removed(), False)
-        RegistryManager.remove_in_target_registry(test)
+        RegistryManager.remove_in_register(test)
         self.assertEqual(has_test_in_removed(), True)

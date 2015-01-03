@@ -108,7 +108,7 @@ class DBTestCase(TestCase):
 
         def simple_column(ColumnType=None, **kwargs):
 
-            @Declarations.target_registry(Declarations.Model)
+            @Declarations.register(Declarations.Model)
             class Test:
 
                 id = Declarations.Column.Integer(primary_key=True)

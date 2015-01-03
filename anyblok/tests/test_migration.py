@@ -28,28 +28,28 @@ class TestMigration(TestCase):
         cls.createdb()
         BlokManager.load('AnyBlok')
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         Int = Declarations.Column.Integer
         Str = Declarations.Column.String
 
         EnvironmentManager.set('current_blok', 'anyblok-core')
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
             integer = Int(primary_key=True)
             other = Str()
 
-        @target_registry(Model)
+        @register(Model)
         class TestUnique:
             integer = Int(primary_key=True)
             other = Str(unique=True)
 
-        @target_registry(Model)
+        @register(Model)
         class TestFKTarget:
             integer = Int(primary_key=True)
 
-        @target_registry(Model)
+        @register(Model)
         class TestFK:
             integer = Int(primary_key=True)
             other = Int(foreign_key=(Model.TestFKTarget, 'integer'))

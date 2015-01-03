@@ -20,7 +20,7 @@ class RelationShip(Declarations.Field):
 
     Add a new relation ship type::
 
-        @Declarations.target_registry(Declarations.RelationShip)
+        @Declarations.register(Declarations.RelationShip)
         class Many2one:
             pass
 

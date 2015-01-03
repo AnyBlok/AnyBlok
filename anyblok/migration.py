@@ -23,7 +23,7 @@ def cnx(migration):
         raise
 
 
-@Declarations.target_registry(Declarations.Exception)
+@Declarations.register(Declarations.Exception)
 class MigrationException(Exception):
     """ Simple Exception class for Migration """
 

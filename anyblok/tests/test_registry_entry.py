@@ -43,10 +43,10 @@ class TestRegistryEntry(TestCase):
         class test:
             pass
 
-        RegistryManager.add_entry_in_target_registry('Other', 'test', test)
+        RegistryManager.add_entry_in_register('Other', 'test', test)
         self.assertInEntry('test', test)
         self.assertEqual(
-            RegistryManager.has_entry_in_target_registry('testEntry', 'Other',
+            RegistryManager.has_entry_in_register('testEntry', 'Other',
                                                          'test'),
             True)
 
@@ -61,19 +61,19 @@ class TestRegistryEntry(TestCase):
 
             return False
 
-        RegistryManager.add_entry_in_target_registry('Other', 'test', test)
+        RegistryManager.add_entry_in_register('Other', 'test', test)
         self.assertInEntry('test', test)
         self.assertEqual(has_test_in_removed(), False)
-        RegistryManager.remove_in_target_registry(test)
+        RegistryManager.remove_in_register(test)
         self.assertEqual(has_test_in_removed(), True)
 
-    def test_get_entry_properties_in_target_registry(self):
+    def test_get_entry_properties_in_register(self):
         class test:
             pass
 
-        RegistryManager.add_entry_in_target_registry('Other', 'test', test,
+        RegistryManager.add_entry_in_register('Other', 'test', test,
                                                      property1='test')
-        properties = RegistryManager.get_entry_properties_in_target_registry(
+        properties = RegistryManager.get_entry_properties_in_register(
             'Other', 'test')
 
         hasproperty1 = 'property1' in properties

@@ -8,7 +8,7 @@
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Model)
+@Declarations.register(Declarations.Model)
 class System:
     pass
 

@@ -10,8 +10,8 @@ from anyblok import Declarations
 Field = Declarations.Field
 Column = Declarations.Column
 RelationShip = Declarations.RelationShip
-target_registry = Declarations.target_registry
-remove_registry = Declarations.remove_registry
+register = Declarations.register
+unregister = Declarations.unregister
 FieldException = Declarations.Exception.FieldException
 
 
@@ -43,7 +43,7 @@ class TestRelationShip(TestCase):
             pass
 
     def test_must_have_a_model(self):
-        target_registry(RelationShip, cls_=OneRelationShip,
+        register(RelationShip, cls_=OneRelationShip,
                         name_="RealRelationShip")
         RelationShip.RealRelationShip(model=OneModel)
         try:
@@ -53,14 +53,14 @@ class TestRelationShip(TestCase):
             pass
 
     def test_add_interface(self):
-        target_registry(RelationShip, cls_=OneRelationShip)
+        register(RelationShip, cls_=OneRelationShip)
         self.assertEqual('RelationShip',
                          RelationShip.OneRelationShip.__declaration_type__)
         dir(Declarations.RelationShip.OneRelationShip)
 
     def test_add_interface_with_decorator(self):
 
-        @target_registry(RelationShip)
+        @register(RelationShip)
         class OneDecoratorRelationShip(RelationShip):
             pass
 
@@ -71,11 +71,11 @@ class TestRelationShip(TestCase):
 
     def test_add_same_interface(self):
 
-        target_registry(RelationShip, cls_=OneRelationShip,
+        register(RelationShip, cls_=OneRelationShip,
                         name_="SameRelationShip")
 
         try:
-            @target_registry(RelationShip)
+            @register(RelationShip)
             class SameRelationShip(RelationShip):
                 pass
 
@@ -85,10 +85,10 @@ class TestRelationShip(TestCase):
 
     def test_remove_interface(self):
 
-        target_registry(RelationShip, cls_=OneRelationShip,
+        register(RelationShip, cls_=OneRelationShip,
                         name_="RelationShip2Remove")
         try:
-            remove_registry(RelationShip.RelationShip2Remove, OneRelationShip)
+            unregister(RelationShip.RelationShip2Remove, OneRelationShip)
             self.fail('No watch dog to remove relation ship')
         except FieldException:
             pass

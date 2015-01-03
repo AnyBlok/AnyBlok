@@ -9,7 +9,7 @@ from anyblok import Declarations
 from .sqlbase import SqlMixin
 
 
-@Declarations.target_registry(Declarations.Exception)
+@Declarations.register(Declarations.Exception)
 class ViewException(Exception):
     """ Simple Exception for sql view base """
 
@@ -23,7 +23,7 @@ def query_method(name):
     return classmethod(wrapper)
 
 
-@Declarations.target_registry(Declarations.Core)
+@Declarations.register(Declarations.Core)
 class SqlViewBase(SqlMixin):
     """ this class is inherited by all the SQL view
     """

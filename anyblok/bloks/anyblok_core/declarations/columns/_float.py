@@ -9,7 +9,7 @@ from sqlalchemy.types import Float as SA_Float
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Column)
+@Declarations.register(Declarations.Column)
 class Float(Declarations.Column):
     """ Float column
 
@@ -18,11 +18,11 @@ class Float(Declarations.Column):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         Float = Declarations.Column.Float
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = Float(default=1.0)

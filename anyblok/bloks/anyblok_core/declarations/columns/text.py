@@ -9,7 +9,7 @@ from sqlalchemy.types import Text as SA_Text
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Column)
+@Declarations.register(Declarations.Column)
 class Text(Declarations.Column):
     """ Text column
 
@@ -18,11 +18,11 @@ class Text(Declarations.Column):
         from AnyBlok.declarations import Declarations
 
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         Text = Declarations.Column.Text
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             x = Text(default='test')

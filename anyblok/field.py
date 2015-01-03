@@ -11,7 +11,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
-@Declarations.target_registry(Declarations.Exception)
+@Declarations.register(Declarations.Exception)
 class FieldException(Exception):
     """ Simple Exception for Field """
 
@@ -24,7 +24,7 @@ class Field:
     """
 
     @classmethod
-    def target_registry(self, parent, name, cls_, **kwargs):
+    def register(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry
 
         :param parent: Parent to attach the declaration to
@@ -41,7 +41,7 @@ class Field:
         logger.info("Add new type field : %r" % _registryname)
 
     @classmethod
-    def remove_registry(self, child, cls_):
+    def unregister(self, child, cls_):
         """ Forbidden method
 
         :exception: FieldException

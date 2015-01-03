@@ -9,8 +9,8 @@ from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
 from anyblok import Declarations
 from anyblok.environment import EnvironmentManager
-target_registry = Declarations.target_registry
-remove_registry = Declarations.remove_registry
+register = Declarations.register
+unregister = Declarations.unregister
 Core = Declarations.Core
 
 
@@ -55,14 +55,14 @@ class TestCoreInterfaceCoreBase(TestCase):
         self.fail('Not in removed')
 
     def test_add_interface(self):
-        target_registry(Core, cls_=OneInterface, name_='Base')
+        register(Core, cls_=OneInterface, name_='Base')
         self.assertEqual('Core', Core.Base.__declaration_type__)
         self.assertInCore(OneInterface)
         dir(Declarations.Core.Base)
 
     def test_add_interface_with_decorator(self):
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
             pass
 
@@ -71,9 +71,9 @@ class TestCoreInterfaceCoreBase(TestCase):
 
     def test_add_two_interface(self):
 
-        target_registry(Core, cls_=OneInterface, name_="Base")
+        register(Core, cls_=OneInterface, name_="Base")
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
             pass
 
@@ -81,21 +81,21 @@ class TestCoreInterfaceCoreBase(TestCase):
 
     def test_remove_interface_with_1_cls_in_registry(self):
 
-        target_registry(Core, cls_=OneInterface, name_="Base")
+        register(Core, cls_=OneInterface, name_="Base")
         self.assertInCore(OneInterface)
-        remove_registry(Core.Base, OneInterface)
+        unregister(Core.Base, OneInterface)
         self.assertInCore(OneInterface)
         self.assertInRemoved(OneInterface)
 
     def test_remove_interface_with_2_cls_in_registry(self):
 
-        target_registry(Core, cls_=OneInterface, name_="Base")
+        register(Core, cls_=OneInterface, name_="Base")
 
-        @target_registry(Core)
+        @register(Core)
         class Base:
             pass
 
         self.assertInCore(OneInterface, Base)
-        remove_registry(Core.Base, OneInterface)
+        unregister(Core.Base, OneInterface)
         self.assertInCore(Base, OneInterface)
         self.assertInRemoved(OneInterface)

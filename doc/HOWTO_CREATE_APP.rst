@@ -264,11 +264,11 @@ Create Your Model
 -----------------
 
 The Model must be added under the Model node of the declaration with the
-class decorator ``Declarations.target_registry``::
+class decorator ``Declarations.register``::
 
     from anyblok import Declarations
 
-    @Declarations.target_registry(Declarations.Model)
+    @Declarations.register(Declarations.Model)
     class AAnyBlokModel:
         """ The first Model of our application """
 
@@ -286,12 +286,12 @@ models. This example uses ``insert`` and ``multi_insert`` added by the
 An SQL model can define columns::
 
     from anyblok import Declarations
-    target_registry = Declarations.target_registry
+    register = Declarations.register
     Model = Declarations.Model
     String = Declarations.Column.String
 
 
-    @target_registry(Model)
+    @register(Model)
     class ASQLModel:
 
         acolumn = String(label="The first column", primary_key=True)
@@ -308,14 +308,14 @@ An SQL model can define columns::
 **office_blok.office**::
 
     from anyblok import Declarations
-    target_registry = Declarations.target_registry
+    register = Declarations.register
     Model = Declarations.Model
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
     Many2One = Declarations.RelationShip.Many2One
 
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(label="Identifier", primary_key=True)
@@ -327,7 +327,7 @@ An SQL model can define columns::
             return "%s %s %s" % (self.street, self.zip, self.city)
 
 
-    @target_registry(Model)
+    @register(Model)
     class Room:
 
         id = Integer(label="Identifier", primary_key=True)
@@ -350,12 +350,12 @@ column with the same type as the remote_column.
 **position_blok.position**::
 
     from anyblok import Declarations
-    target_registry = Declarations.target_registry
+    register = Declarations.register
     Model = Declarations.Model
     String = Declarations.Column.String
 
 
-    @target_registry(Model)
+    @register(Model)
     class Position:
 
         name = String(label="Position", primary_key=True)
@@ -366,13 +366,13 @@ column with the same type as the remote_column.
 **employee_blok.employee**::
 
     from anyblok import Declarations
-    target_registry = Declarations.target_registry
+    register = Declarations.register
     Model = Declarations.Model
     String = Declarations.Column.String
     Many2One = Declarations.RelationShip.Many2One
 
 
-    @target_registry(Model)
+    @register(Model)
     class Employee:
 
         name = String(label="Number of the room", primary_key=True)
@@ -392,12 +392,12 @@ get the real model
 **employee_position_blok.employee**::
 
     from anyblok import Declarations
-    target_registry = Declarations.target_registry
+    register = Declarations.register
     Model = Declarations.Model
     Many2One = Declarations.RelationShip.Many2One
 
 
-    @target_registry(Model)
+    @register(Model)
     class Employee:
 
         position = Many2One(label="Position", model=Model.Position, nullable=False)

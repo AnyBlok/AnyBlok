@@ -9,7 +9,7 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 FieldException = Declarations.Exception.FieldException
-target_registry = Declarations.target_registry
+register = Declarations.register
 Model = Declarations.Model
 
 
@@ -18,7 +18,7 @@ def _complete_many2one(**kwargs):
     String = Declarations.Column.String
     Many2One = Declarations.RelationShip.Many2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
@@ -26,7 +26,7 @@ def _complete_many2one(**kwargs):
         zip = String()
         city = String()
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -40,12 +40,12 @@ def _minimum_many2one(**kwargs):
     String = Declarations.Column.String
     Many2One = Declarations.RelationShip.Many2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -57,12 +57,12 @@ def _many2one_with_str_model(**kwargs):
     String = Declarations.Column.String
     Many2One = Declarations.RelationShip.Many2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -74,12 +74,12 @@ def _minimum_many2one_without_model(**kwargs):
     String = Declarations.Column.String
     Many2One = Declarations.RelationShip.Many2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -90,12 +90,12 @@ def _auto_detect_type(ColumnType=None, **kwargs):
     String = Declarations.Column.String
     Many2One = Declarations.RelationShip.Many2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = ColumnType(primary_key=True, **kwargs)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)
@@ -107,13 +107,13 @@ def _two_remote_primary_keys(**kwargs):
     String = Declarations.Column.String
     Many2One = Declarations.RelationShip.Many2One
 
-    @target_registry(Model)
+    @register(Model)
     class Address:
 
         id = Integer(primary_key=True)
         id2 = Integer(primary_key=True)
 
-    @target_registry(Model)
+    @register(Model)
     class Person:
 
         name = String(primary_key=True)

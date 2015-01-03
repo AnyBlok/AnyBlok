@@ -27,7 +27,7 @@ class Declarations:
     declaration_types = {}
 
     @classmethod
-    def target_registry(cls, parent, cls_=None, **kwargs):
+    def register(cls, parent, cls_=None, **kwargs):
         """ Method to add the blok in the registry under a type of declaration
 
         :param parent: An existing blok class in the Declaration
@@ -43,7 +43,7 @@ class Declarations:
                     "No parents %r for %s" % (parent, name))
 
             declaration = cls.declaration_types[parent.__declaration_type__]
-            declaration.target_registry(parent, name, self, **kwargs)
+            declaration.register(parent, name, self, **kwargs)
 
             node = getattr(parent, name)
             setattr(node, '__declaration_type__', parent.__declaration_type__)
@@ -58,7 +58,7 @@ class Declarations:
             return wrapper
 
     @classmethod
-    def remove_registry(cls, entry, cls_):
+    def unregister(cls, entry, cls_):
         """ Method to remove the blok from a type of declaration
 
         :param entry: declaration entry of the model where the ``cls_``
@@ -68,7 +68,7 @@ class Declarations:
         :rtype: ``cls_``
         """
         declaration = cls.declaration_types[entry.__declaration_type__]
-        declaration.remove_registry(entry, cls_)
+        declaration.unregister(entry, cls_)
 
         return cls_
 

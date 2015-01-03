@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session as SA_Session
 from anyblok import Declarations
 
 
-@Declarations.target_registry(Declarations.Core)
+@Declarations.register(Declarations.Core)
 class Session(SA_Session):
     """ Overload of the SqlAlchemy session
     """

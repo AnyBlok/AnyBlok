@@ -14,11 +14,11 @@ class TestRegistry(DBTestCase):
 
         from anyblok import Declarations
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Model = Declarations.Model
         Integer = Declarations.Column.Integer
 
-        @target_registry(Model)
+        @register(Model)
         class Test:
 
             id = Integer(primary_key=True)
@@ -79,14 +79,14 @@ class TestRegistry(DBTestCase):
 
         from anyblok import Declarations
 
-        target_registry = Declarations.target_registry
+        register = Declarations.register
         Type = getattr(Declarations, typename)
         if inherit is None:
             inherit = object
         else:
             inherit = getattr(Declarations.Mixin, inherit)
 
-        @target_registry(Type, name_=name)
+        @register(Type, name_=name)
         class Test(inherit):
 
             @classmethod
@@ -171,7 +171,7 @@ class TestRegistry(DBTestCase):
             cls_ = self.define_cls(val=2, usesuper=True)
             self.define_cls(val=2, usesuper=True)
             from anyblok import Declarations
-            Declarations.remove_registry(Declarations.Model.Test, cls_)
+            Declarations.unregister(Declarations.Model.Test, cls_)
 
         registry = self.init_registry(add_in_registry)
         self.assertEqual(registry.Test.foo(), 2)
@@ -184,7 +184,7 @@ class TestRegistry(DBTestCase):
                                    usesuper=True)
             self.define_cls(val=2, usesuper=True)
             from anyblok import Declarations
-            Declarations.remove_registry(Declarations.Core.Base, cls_)
+            Declarations.unregister(Declarations.Core.Base, cls_)
 
         registry = self.init_registry(add_in_registry)
         self.assertEqual(registry.Test.foo(), 4)
@@ -197,7 +197,7 @@ class TestRegistry(DBTestCase):
                                    usesuper=True)
             self.define_cls(val=3, usesuper=True, inherit='MTest')
             from anyblok import Declarations
-            Declarations.remove_registry(Declarations.Mixin.MTest, cls_)
+            Declarations.unregister(Declarations.Mixin.MTest, cls_)
 
         registry = self.init_registry(add_in_registry)
         self.assertEqual(registry.Test.foo(), 9)

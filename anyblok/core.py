@@ -15,19 +15,19 @@ class Core:
 
     Add new core model::
 
-        @Declarations.target_registry(Declarations.Core)
+        @Declarations.register(Declarations.Core)
         class Base:
             pass
 
     Remove the core model::
 
-        Declarations.remove_registry(Declarations.Core, 'Base', Base,
+        Declarations.unregister(Declarations.Core, 'Base', Base,
                                      blok='MyBlok')
 
     """
 
     @classmethod
-    def target_registry(self, parent, name, cls_, **kwargs):
+    def register(self, parent, name, cls_, **kwargs):
         """ Add new sub registry in the registry
 
         :param parent: Existing declaration
@@ -41,14 +41,14 @@ class Core:
         if parent == Declarations:
             return
 
-        RegistryManager.add_core_in_target_registry(name, cls_)
+        RegistryManager.add_core_in_register(name, cls_)
 
     @classmethod
-    def remove_registry(self, entry, cls_):
+    def unregister(self, entry, cls_):
         """ Remove the Interface from the registry
 
         :param entry: entry declaration of the model where the ``cls_``
             must be removed
         :param cls_: Class Interface to remove in the declaration
         """
-        RegistryManager.remove_in_target_registry(cls_)
+        RegistryManager.remove_in_register(cls_)

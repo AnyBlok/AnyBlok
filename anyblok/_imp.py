@@ -14,7 +14,7 @@ from importlib import import_module
 from .common import python_version
 
 
-@anyblok.Declarations.target_registry(anyblok.Declarations.Exception)
+@anyblok.Declarations.register(anyblok.Declarations.Exception)
 class ImportManagerException(Exception):
     """ Exception for Import Manager """
 
