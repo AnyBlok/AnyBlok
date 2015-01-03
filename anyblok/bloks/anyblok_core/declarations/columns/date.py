@@ -11,7 +11,7 @@ from anyblok import Declarations
 
 @Declarations.target_registry(Declarations.Column)
 class Date(Declarations.Column):
-    """ DataTime column
+    """ Date column
 
     ::
 

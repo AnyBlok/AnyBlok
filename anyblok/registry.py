@@ -76,7 +76,7 @@ class RegistryManager:
 
     @classmethod
     def clear(cls):
-        """ Clear the registry dict to forced the creation of new registry """
+        """ Clear the registry dict to force the creation of new registry """
         registries = [r for r in cls.registries.values()]
         for registry in registries:
             registry.close()
@@ -85,10 +85,10 @@ class RegistryManager:
     def get(cls, dbname):
         """ Return an existing Registry
 
-        If the Registry does'nt exist then the Registry are created and add to
-        registries dict
+        If the Registry doesn't exist then the Registry are created and added
+        to registries dict
 
-        :param dbname: the name of the database link with this registry
+        :param dbname: the name of the database linked to this registry
         :rtype: ``Registry``
         """
         EnvironmentManager.set('dbname', dbname)
@@ -110,7 +110,7 @@ class RegistryManager:
     def reload(cls, blok):
         """ Reload the blok
 
-        The purpose is to reload python module to get change in python file
+        The purpose is to reload the python module to get changes in python file
 
         :param blok: the name of the blok to reload
         """
@@ -173,10 +173,10 @@ class RegistryManager:
 
     @classmethod
     def init_blok(cls, blokname):
-        """ init one blok to be know by RegistryManager
+        """ init one blok to be known by the RegistryManager
 
-        All bloks loaded must be initialize because the registry will be create
-        with this information
+        All bloks loaded must be initialized because the registry will be
+        created with this information
 
         :param blokname: name of the blok
         """
@@ -291,7 +291,7 @@ class RegistryManager:
 
     @classmethod
     def has_blok_property(cls, property_):
-        """ Return True if the property exit in blok
+        """ Return True if the property exists in blok
 
         :param property\_: name of the property
         """
@@ -346,8 +346,8 @@ class RegistryManager:
 class Registry:
     """ Define one registry
 
-    A registry is link with a database, a have the definition of the installed
-    Blok, Model, Mixin for this database::
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
 
         registry = Registry('My database')
     """
@@ -362,7 +362,7 @@ class Registry:
         self.load()
 
     def ini_var(self):
-        """ Initialize the var to load the  registry """
+        """ Initialize the var to load the registry """
         self.loaded_namespaces = {}
         self.declarativebase = None
         self.loaded_bloks = {}
@@ -397,7 +397,7 @@ class Registry:
         return self.loaded_namespaces[namespace]
 
     def get_bloks_by_states(self, *states):
-        """ Return the bloks in fonction of this state
+        """ Return the bloks in these states
 
         :param states: list of the states
         :rtype: list of blok's name
@@ -618,7 +618,7 @@ class Registry:
 
     @log()
     def load(self):
-        """ Load all the namespace of the registry
+        """ Load all the namespaces of the registry
 
         Create all the table, make the shema migration
         Update Blok, Model, Column rows
@@ -695,7 +695,7 @@ class Registry:
             session.close_all()
 
     def close(self):
-        """Release the session, connection and engin"""
+        """Release the session, connection and engine"""
         self.close_session()
         self.engine.dispose()
         if self.dbname in RegistryManager.registries:
@@ -716,8 +716,8 @@ class Registry:
     def precommit_hook(self, registryname, method, put_at_the_if_exist):
         """ Add a method in the precommit_hook list
 
-        a precommit hook is a method call just after the commit, it is use to
-        call this method one time, because one hook is save only one time
+        a precommit hook is a method called just after the commit, it is used
+        to call this method once, because a hook is saved only once
 
         :param registryname: namespace of the model
         :param method: method to call on the registryname
@@ -753,7 +753,7 @@ class Registry:
             session.commit(*args, **kwargs)
 
     def clean_model(self):
-        """ Clean the registry of all the namespace """
+        """ Clean the registry of all the namespaces """
         for model in self.loaded_namespaces.keys():
             name = model.split('.')[1]
             if hasattr(self, name) and getattr(self, name):

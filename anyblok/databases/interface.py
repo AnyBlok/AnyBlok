@@ -2,7 +2,7 @@ from zope.interface import Interface
 
 
 class ISqlAlchemyDataBaseType(Interface):
-    """ Interface use to define database adapter
+    """ Interface used to define a database adapter
 
     The methods are:
         * createdb

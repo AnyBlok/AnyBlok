@@ -6,28 +6,30 @@
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
 .. obtain one at http://mozilla.org/MPL/2.0/.
 
+.. contents::
+
 How to create your own application
 ==================================
 
-This first part presents how to create an application with his own code.
+This first part introduces how to create an application with his code.
 Why do we have to create an application ? Because AnyBlok is just a framework
 not an application.
 
-And the goal more than one application use the same database for different goal.
-The web server need to give access to the user, but a profiler need another
-access with another access rule, or another application needs to follow one part
-of the functionnality.
+The goal is that more than one application can use the same database for different usage.
+The web server needs to give access to the user, but a profiler needs another
+access with another access rule, or another application needs to provide one part
+of the functionnalities.
 
-We will write a simple application which connect to an existing database:
+We will write a simple application that connects to an existing database:
 
-* Worker
-    - name: worker name
-    - desk (Room): the room where the worker works
-    - position: worker position (manager, employee...)
+* Employee
+    - name: employee's name
+    - office (Room): the room where the employee works
+    - position: employee position (manager, developer...)
 * Room
-    - number: describe the room in the office
+    - number: describe the room in the building
     - address: postal address
-    - workers: men and women working in that room
+    - employees: men and women working in that room
 * Address
     - street
     - zipcode
@@ -39,47 +41,45 @@ We will write a simple application which connect to an existing database:
 Create your Blok group
 ----------------------
 
-A blok group is a ``setuptools`` entry point. Separate the project by group
-allows to select the bloks needed by the application. This separation also allows
-a blok to come from more than one blok group, it is not the same blok but they have
-the same name. You can have two implementations for the same thing and use the
-good implementation depending on the context.
+A blok group is just a ``setuptools`` entry point. Splitting the project into
+several groups allows to select the bloks needed by the application. This
+separation also allows a blok to come from more than one blok group: it is not
+the same blok but they have the same name. You can provide two implementations
+for the same thing and use the right implementation depending on the context.
 
 For this example, the blok group ``WorkBlok`` will be used
 
 Create Your Blok
 ----------------
 
-A blok is a set of Declaration
+A blok contains Declarations such as:
 
-* Model: Python class usable by the application and linked in the registry
-* Mixin: Python class to extend Model
-* Column: Python class, describe a sql column type
-* RelationShip: Python class, allow to surh on the join on the model data
+* Model: a Python class usable by the application and linked in the registry
+* Mixin: a Python class to extend Model
+* Column: a Python class, describing an sql column type
+* RelationShip: a Python class, allowing to surh on the join on the model data
 * ...
 
-The blok name must be declared in the blok group of the distribution::
+The blok name must be declared in the blok group of the ``setup.py`` file of
+the distribution::
 
-    # declare 4 bloks
-    # desk: is the location
-    * worker: is the person
-    * position: is the position type
-    * worker-position: link a person with a position
+We declare 4 bloks in the ``setup.py`` file::
+
     WorkBlok = [
-        'desk=exampleblok.desk_blok:DeskBlok',
-        'worker=exampleblok.worker_blok:WorkerBlok',
+        'office=exampleblok.office_blok:OfficeBlok',
+        'employee=exampleblok.employee_blok:EmployeeBlok',
         'position=exampleblok.position_blok:PositionBlok',
-        'worker-position=exampleblok.worker_position_blok:WorkerPositionBlok',
+        'employee-position=exampleblok.employee_position_blok:EmployeePositionBlok',
     ],
 
     setup(
-        # ...
+        # (...)
         entry_points={
             'WorkBlok': WorkBlok,
         },
     )
 
-And the blok must inherits of the Blok class of anyblok in the ``__init__.py``
+And the blok must inherit the Blok class of anyblok in the ``__init__.py``
 file of a package::
 
     from anyblok.blok import Blok
@@ -87,32 +87,32 @@ file of a package::
     class MyFirstBlok(Blok):
         """ This is valid blok """
 
-The blok class must be in the init of the package because all the module and
-package in this package will be import by anyblok.
+The blok class must be in the init file of the package so that all the modules and
+packages in this package be imported by anyblok.
 
 .. warning::
-    The modules and package start with ``_`` aren't imported, the package tests
-    are not imported to because the test haven't to import with blok
+    The modules and packages starting with ``_`` are not imported, the package tests
+    are also not imported.
 
-**Desk blok**::
+**Office blok**
 
-    # tree
+File tree::
 
-    desk_blok
+    office_blok
     ├── __init__.py
-    └── desk.py
+    └── office.py
 
-    # __init__.py
+``__init__.py`` file::
 
     from anyblok.blok import Blok
 
 
-    class DeskBlok(Blok):
+    class OfficeBlok(Blok):
 
         version = '1.0.0'
 
         def install(self):
-            """ this method is call at the installation of this blok """
+            """ method called at blok installation time """
             address = self.registry.Address.insert(street='14-16 rue Soleillet',
                                                    zip='75020', city='Paris')
             self.registry.Room.insert(number=308, address=address)
@@ -121,17 +121,17 @@ package in this package will be import by anyblok.
             if latest_version is None:
                 self.install()
 
-    # desk.py describe the models Address and Room
+    # office.py describe the models Address and Room
 
-**Position blok**::
+**Position blok**
 
-    # tree
+File tree::
 
     position_blok
     ├── __init__.py
     └── position.py
 
-    # __init__.py
+``__init__.py`` file::
 
     from anyblok.blok import Blok
 
@@ -141,11 +141,11 @@ package in this package will be import by anyblok.
         version = '1.0.0'
 
         def install(self):
-            self.registry.Position.multi_insert({'name': 'DG'},
-                                                {'name': 'Comercial'},
-                                                {'name': 'Secrétaire'},
-                                                {'name': 'Chef de projet'},
-                                                {'name': 'Developper'})
+            self.registry.Position.multi_insert({'name': 'CTO'},
+                                                {'name': 'CEO'},
+                                                {'name': 'Administrative Manager'},
+                                                {'name': 'Project Manager'},
+                                                {'name': 'Developer'})
 
         def update(self, latest_version):
             if latest_version is None:
@@ -153,35 +153,35 @@ package in this package will be import by anyblok.
 
     # position.py describe the model Position
 
-Some blok can have requirement. Each blok define this dependencies:
+Some bloks can have requirements. Each blok define this dependencies:
 
-* required: the blok must be loaded before
-* optional: If the blok exist, it will be loaded
+* required: the required bloks must be loaded before
+* optional: If the blok exists, optional bloks will be loaded
 
-A blok can be declared ``autoinstall`` if the blok is not installed upon the loading
-of the registry, then this blok will be loaded and installed
+A blok can be declared as ``autoinstall`` if the blok is not installed upon the loading
+of the registry, then this blok will be loaded and installed.
 
-**Worker blok**::
+**Employee blok**
 
-    # tree
+File tree::
 
-    worker_blok
+    employee_blok
     ├── __init__.py
     ├── argsparse.py
-    └── worker.py
+    └── employee.py
 
-    # __init__.py
+``__init__.py`` file::
 
     from anyblok.blok import Blok
 
 
-    class WorkerBlok(Blok):
+    class EmployeeBlok(Blok):
 
         version = '1.0.0'
         autoinstall = True
 
         required = [
-            'desk',
+            'office',
         ]
 
         optional = [
@@ -191,63 +191,63 @@ of the registry, then this blok will be loaded and installed
         def install(self):
             room = self.registry.Room.query().filter(
                 self.registry.Room.number == 308).first()
-            workers = [dict(name=worker, room=room)
-                       for worker in ('Georges Racinet', 'Christophe Combelles',
+            employees = [dict(name=employee, room=room)
+                       for employee in ('Georges Racinet', 'Christophe Combelles',
                                       'Sandrine Chaufournais', 'Pierre Verkest',
                                       'Franck Bret', u"Simon André",
                                       'Florent Jouatte', 'Clovis Nzouendjou',
                                       u"Jean-Sébastien Suzanne")]
-            self.registry.Worker.multi_insert(*workers)
+            self.registry.Employee.multi_insert(*employees)
 
         def update(self, latest_version):
             if latest_version is None:
                 self.install()
 
-    # worker.py describe the model Worker
+    # employee.py describe the model Employee
 
-Some blok can be auto installed because other blok are installed, it is the
-conditional blok.
+Some bloks can be auto installed when other bloks are installed, they are
+called conditional bloks.
 
-**WorkerPosition blok**::
+**EmployeePosition blok**:
 
-    # tree
+File tree::
 
-    worker_position_blok
+    employee_position_blok
     ├── __init__.py
-    └── worker.py
+    └── employee.py
 
-    # __init__.py
+``__init__.py`` file::
 
     from anyblok.blok import Blok
 
 
-    class WorkerPositionBlok(Blok):
+    class EmployeePositionBlok(Blok):
 
         version = '1.0.0'
         priority = 200
 
         conditional = [
-            'worker',
+            'employee',
             'position',
         ]
 
         def install(self):
-            Worker = self.registry.Worker
+            Employee = self.registry.Employee
 
-            position_by_worker = {
-                'Georges Racinet': 'DG',
-                'Christophe Combelles': 'Comercial',
-                'Sandrine Chaufournais': u"Secrétaire",
-                'Pierre Verkest': 'Chef de projet',
-                'Franck Bret': 'Chef de projet',
-                u"Simon André": 'Developper',
-                'Florent Jouatte': 'Developper',
-                'Clovis Nzouendjou': 'Developper',
-                u"Jean-Sébastien Suzanne": 'Developper',
+            position_by_employee = {
+                'Georges Racinet': 'CTO',
+                'Christophe Combelles': 'CEO',
+                'Sandrine Chaufournais': u"Administrative Manager",
+                'Pierre Verkest': 'Project manager',
+                'Franck Bret': 'Project manager',
+                u"Simon André": 'Developer',
+                'Florent Jouatte': 'Developer',
+                'Clovis Nzouendjou': 'Developer',
+                u"Jean-Sébastien Suzanne": 'Developer',
             }
 
-            for worker, position in position_by_worker.items():
-                Worker.query().filter(Worker.name == worker).update({
+            for employee, position in position_by_employee.items():
+                Employee.query().filter(Employee.name == employee).update({
                     'position_name': position})
 
         def update(self, latest_version):
@@ -255,15 +255,15 @@ conditional blok.
                 self.install()
 
 .. warning::
-    They are not strongly dependancies linked between conditional bloks and
-    the blok, so the priority must be increase, The blok are load by dependencie
-    and priority a blok with small dependancie will be loaded before a blok with
-    higth dependancie
+    There are no strong dependencies between conditional bloks and the blok,
+    so the priority must be increased. The bloks are loaded by dependencies
+    and priorities. A blok a with small dependency will be loaded before a blok with
+    a high dependency.
 
 Create Your Model
 -----------------
 
-The Model must be added under the node Model of the declaration with the
+The Model must be added under the Model node of the declaration with the
 class decorator ``Declarations.target_registry``::
 
     from anyblok import Declarations
@@ -273,21 +273,23 @@ class decorator ``Declarations.target_registry``::
         """ The first Model of our application """
 
 
-They are two type of Model:
+There are two types of Model:
 
-* SQL: Generate a table in the database (inherit SqlBase and Base)
-* No SQL: No table but the model exist in the registry and can be used (inherit Base).
+* SQL: Create a table in the database (inherit SqlBase and Base)
+* Non SQL: No table but the model exists in the registry and can be used (inherits Base).
 
-SqlBase and Base are core models, directly call them is now allowed, too low level,
-but they are subclassable and each subclasses are propagated to all the anyblok
-models. this example use ``insert`` and ``multi_insert`` adding by ``anyblok-core`` blok.
+SqlBase and Base are core models. Directly calling them is not allowed.
+But they are inheritable and each subclass is propagated to all the anyblok
+models. This example uses ``insert`` and ``multi_insert`` added by the
+``anyblok-core`` blok.
 
-A SQL model can define the columns by adding a column::
+An SQL model can define columns::
 
     from anyblok import Declarations
     target_registry = Declarations.target_registry
     Model = Declarations.Model
     String = Declarations.Column.String
+
 
     @target_registry(Model)
     class ASQLModel:
@@ -295,14 +297,15 @@ A SQL model can define the columns by adding a column::
         acolumn = String(label="The first column", primary_key=True)
 
 .. warning::
-    All SQL Model must have one or more primary_key
+    Each SQL Model must have one or more primary_key
 
 .. warning::
-    The table name depend of the registry tree, here the table is ``asqlcolumn``.
-    If a new model are define under ASQLModel (example UnderModel:
-    ``asqlcolumn_undermodel``) and the registry model is Model.ASQLModel.UnderModel
+    The table name depends on the registry tree. Here the table is ``asqlcolumn``.
+    If a new model is defined under ASQLModel (example UnderModel:
+    ``asqlcolumn_undermodel``), the registry model will be stored
+    as Model.ASQLModel.UnderModel
 
-**desk_blok.desk**::
+**office_blok.office**::
 
     from anyblok import Declarations
     target_registry = Declarations.target_registry
@@ -315,7 +318,7 @@ A SQL model can define the columns by adding a column::
     @target_registry(Model)
     class Address:
 
-        id = Integer(label="Identifying", primary_key=True)
+        id = Integer(label="Identifier", primary_key=True)
         street = String(label="Street", nullable=False)
         zip = String(label="Zip", nullable=False)
         city = String(label="City", nullable=False)
@@ -327,7 +330,7 @@ A SQL model can define the columns by adding a column::
     @target_registry(Model)
     class Room:
 
-        id = Integer(label="Identifying", primary_key=True)
+        id = Integer(label="Identifier", primary_key=True)
         number = Integer(label="Number of the room", nullable=False)
         address = Many2One(label="Address", model=Model.Address, nullable=False,
                            one2many="rooms")
@@ -335,14 +338,14 @@ A SQL model can define the columns by adding a column::
         def __str__(self):
             return "Room %d at %s" % (self.number, self.address)
 
-The relationships can also define the opposite relation, here the Many2One
-declare the One2Many rooms on the Address Model
+The relationships can also define the opposite relation. Here the ``address`` Many2One relation
+also declares the ``room`` One2Many relation on the Address Model
 
-A relationship Many2One or One2One must have an existing column.
-The attribute ``column_name`` allow to choose the column linked, if this
+A Many2One or One2One relationship must have an existing column.
+The ``column_name`` attribute allows to choose the linked column, if this
 attribute is missing then the value is "'model.table'.'remote_column'"
-If the column linked doesn't exist then the relationship create the
-column with the same type of the remote_column
+If the linked column does not exist, the relationship creates the
+column with the same type as the remote_column.
 
 **position_blok.position**::
 
@@ -360,7 +363,7 @@ column with the same type of the remote_column
         def __str__(self):
             return self.name
 
-**worker_blok.worker**::
+**employee_blok.employee**::
 
     from anyblok import Declarations
     target_registry = Declarations.target_registry
@@ -370,23 +373,23 @@ column with the same type of the remote_column
 
 
     @target_registry(Model)
-    class Worker:
+    class Employee:
 
         name = String(label="Number of the room", primary_key=True)
-        room = Many2One(label="Desk", model=Model.Room, one2many="workers")
+        room = Many2One(label="Office", model=Model.Room, one2many="employees")
 
         def __str__(self):
             return "%s in %s" % (self.name, self.room)
 
 
-Update an existing Model
-------------------------
+Updating an existing Model
+--------------------------
 
-If you create 2 models with the same declaration position, the same name, then the
-second model subclass the first model. And the two models will be merged to
+If you create 2 models with the same declaration position and the same name, the
+second model will subclass the first model. The two models will be merged to
 get the real model
 
-**worker_position_blok.worker**::
+**employee_position_blok.employee**::
 
     from anyblok import Declarations
     target_registry = Declarations.target_registry
@@ -395,22 +398,22 @@ get the real model
 
 
     @target_registry(Model)
-    class Worker:
+    class Employee:
 
         position = Many2One(label="Position", model=Model.Position, nullable=False)
 
         def __str__(self):
-            res = super(Worker, self).__str__()
+            res = super(Employee, self).__str__()
             return "%s (%s)" % (res, self.position)
 
 
 Add entries in the argsparse configuration
 ------------------------------------------
 
-For some application some option can be needed. Options are grouped by
-category. And the application choose the category option to display.
+Some applications may require options. Options are grouped by
+category. And the application chooses the option category to display.
 
-**worker_blok.arsparse**::
+**employee_blok.arsparse**::
 
     from anyblok._argsparse import ArgsParseManager
 
@@ -425,7 +428,7 @@ Create your application
 -----------------------
 
 The application can be a simple script or a setuptools script. For a setuptools
-script add in setup::
+script, add this in the ``setup.py``::
 
     setup(
         ...
@@ -437,9 +440,9 @@ script add in setup::
 
 The script must display:
 
-* the ``message_before`` is filled
-* the lists of the worker by address and by room
-* the ``message_after`` is filled
+* the provided ``message_before``
+* the lists of the employee by address and by room
+* the provided ``message_after``
 
 **script**::
 
@@ -471,14 +474,14 @@ The script must display:
 
         for address in registry.Address.query().all():
             for room in address.rooms:
-                for worker in room.workers:
-                    logger.info(worker)
+                for employee in room.employees:
+                    logger.info(employee)
 
         if message_after:
             logger.info(message_after)
 
 
-**Get the help of your application**::
+**Display the help of your application**::
 
     jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -h
     usage: exampleblok [-h] [-c CONFIGFILE] [--message-before MESSAGE_BEFORE]
@@ -493,12 +496,12 @@ The script must display:
         -h, --help            show this help message and exit
         -c CONFIGFILE         Relative path of the config file
 
-    This is the group message:
+    This is the 'message' group:
         --message-before MESSAGE_BEFORE
         --message-after MESSAGE_AFTER
 
     Database:
-        --db_name DBNAME      Name of the data base
+        --db_name DBNAME      Name of the database
         --db_drivername DBDRIVERNAME
                               the name of the database backend. This name will
                               correspond to a module in sqlalchemy/databases or a
@@ -513,7 +516,7 @@ The script must display:
 **Create an empty database and call the script**::
 
     jssuzanne:anyblok jssuzanne$ createdb anyblok
-    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -c anyblok.cfg --message-before "Get the worker ..." --message-after "End ..."
+    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -c anyblok.cfg --message-before "Get the employee ..." --message-after "End ..."
     2014-1129 10:54:27 INFO - anyblok:root - Registry.load
     2014-1129 10:54:27 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
     2014-1129 10:54:27 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
@@ -525,7 +528,7 @@ The script must display:
     2014-1129 10:54:27 INFO - anyblok:root - Registry.reload
     2014-1129 10:54:27 INFO - anyblok:root - Registry.load
     2014-1129 10:54:27 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
-    2014-1129 10:54:27 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-1129 10:54:27 INFO - anyblok:anyblok.registry - Blok 'office' loaded
     2014-1129 10:54:27 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
     2014-1129 10:54:27 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
     2014-1129 10:54:27 INFO - anyblok:alembic.migration - Will assume transactional DDL.
@@ -533,11 +536,11 @@ The script must display:
     2014-1129 10:54:27 INFO - anyblok:alembic.ddl.postgresql - Detected sequence named 'system_cache_id_seq' as owned by integer column 'system_cache(id)', assuming SERIAL and omitting
     2014-1129 10:54:27 INFO - anyblok:alembic.ddl.postgresql - Detected sequence named 'room_id_seq' as owned by integer column 'room(id)', assuming SERIAL and omitting
     2014-1129 10:54:27 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
-    2014-1129 10:54:28 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'desk'
+    2014-1129 10:54:28 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'office'
     2014-1129 10:54:28 INFO - anyblok:root - Registry.reload
     2014-1129 10:54:28 INFO - anyblok:root - Registry.load
     2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
-    2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'office' loaded
     2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'position' loaded
     2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
     2014-1129 10:54:28 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
@@ -550,99 +553,99 @@ The script must display:
     2014-1129 10:54:28 INFO - anyblok:root - Registry.reload
     2014-1129 10:54:28 INFO - anyblok:root - Registry.load
     2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
-    2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'office' loaded
     2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'position' loaded
-    2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
+    2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Blok 'employee' loaded
     2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
     2014-1129 10:54:28 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
     2014-1129 10:54:28 INFO - anyblok:alembic.migration - Will assume transactional DDL.
     2014-1129 10:54:28 INFO - anyblok:alembic.ddl.postgresql - Detected sequence named 'system_cache_id_seq' as owned by integer column 'system_cache(id)', assuming SERIAL and omitting
     2014-1129 10:54:28 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
-    2014-1129 10:54:29 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'worker'
+    2014-1129 10:54:29 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'employee'
     2014-1129 10:54:29 INFO - anyblok:root - Registry.reload
     2014-1129 10:54:29 INFO - anyblok:root - Registry.load
     2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
-    2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Blok 'office' loaded
     2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Blok 'position' loaded
-    2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
-    2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Blok 'worker-position' loaded
+    2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Blok 'employee' loaded
+    2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Blok 'employee-position' loaded
     2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
     2014-1129 10:54:29 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
     2014-1129 10:54:29 INFO - anyblok:alembic.migration - Will assume transactional DDL.
     2014-1129 10:54:29 INFO - anyblok:alembic.ddl.postgresql - Detected sequence named 'system_cache_id_seq' as owned by integer column 'system_cache(id)', assuming SERIAL and omitting
-    2014-1129 10:54:29 INFO - anyblok:alembic.autogenerate.compare - Detected added column 'worker.position_name'
+    2014-1129 10:54:29 INFO - anyblok:alembic.autogenerate.compare - Detected added column 'employee.position_name'
     2014-1129 10:54:29 WARNING - anyblok:anyblok.migration - (IntegrityError) column "position_name" contains null values
-    'ALTER TABLE worker ALTER COLUMN position_name SET NOT NULL' {}
+    'ALTER TABLE employee ALTER COLUMN position_name SET NOT NULL' {}
     2014-1129 10:54:29 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
-    2014-1129 10:54:29 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'worker-position'
+    2014-1129 10:54:29 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Install the blok 'employee-position'
     2014-1129 10:54:30 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'anyblok-core'
-    2014-1129 10:54:30 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'desk'
+    2014-1129 10:54:30 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'office'
     2014-1129 10:54:30 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'position'
-    2014-1129 10:54:30 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'worker'
-    2014-1129 10:54:30 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'worker-position'
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Get the worker ...
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Sandrine Chaufournais in Room 308 at 14-16 rue Soleillet 75020 Paris (Secrétaire)
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Christophe Combelles in Room 308 at 14-16 rue Soleillet 75020 Paris (Comercial)
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Clovis Nzouendjou in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Florent Jouatte in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Simon André in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Jean-Sébastien Suzanne in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Georges Racinet in Room 308 at 14-16 rue Soleillet 75020 Paris (DG)
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Pierre Verkest in Room 308 at 14-16 rue Soleillet 75020 Paris (Chef de projet)
-    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Franck Bret in Room 308 at 14-16 rue Soleillet 75020 Paris (Chef de projet)
+    2014-1129 10:54:30 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'employee'
+    2014-1129 10:54:30 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'employee-position'
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Get the employee ...
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Sandrine Chaufournais in Room 308 at 14-16 rue Soleillet 75020 Paris (Administrative Manager)
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Christophe Combelles in Room 308 at 14-16 rue Soleillet 75020 Paris (CEO)
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Clovis Nzouendjou in Room 308 at 14-16 rue Soleillet 75020 Paris (Developer)
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Florent Jouatte in Room 308 at 14-16 rue Soleillet 75020 Paris (Developer)
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Simon André in Room 308 at 14-16 rue Soleillet 75020 Paris (Developer)
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Jean-Sébastien Suzanne in Room 308 at 14-16 rue Soleillet 75020 Paris (Developer)
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Georges Racinet in Room 308 at 14-16 rue Soleillet 75020 Paris (CTO)
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Pierre Verkest in Room 308 at 14-16 rue Soleillet 75020 Paris (Project Manager)
+    2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - Franck Bret in Room 308 at 14-16 rue Soleillet 75020 Paris (Project Manager)
     2014-1129 10:54:30 INFO - anyblok:exampleblok.scripts - End ...
 
 
-The registry is loaded two time:
+The registry is loaded twice:
 
-* First load install the bloks ``anyblok-core``, ``desk``, ``position`` and ``worker``
-* Second load install the conditional blok ``worker-position`` and make a migration to add the field ``worker_name``
+* The first load installs the bloks ``anyblok-core``, ``office``, ``position`` and ``employee``
+* The second load installs the conditional blok ``employee-position`` and runs a migration to add the field ``employee_name``
 
-**Recall the script**::
+**Call the script again**::
 
-    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -c anyblok.cfg --message-before "Get the worker ..." --message-after "End ..."
+    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -c anyblok.cfg --message-before "Get the employee ..." --message-after "End ..."
     2014-1129 10:57:52 INFO - anyblok:root - Registry.load
     2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
-    2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Blok 'office' loaded
     2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Blok 'position' loaded
-    2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
-    2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Blok 'worker-position' loaded
+    2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Blok 'employee' loaded
+    2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Blok 'employee-position' loaded
     2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
     2014-1129 10:57:52 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
     2014-1129 10:57:52 INFO - anyblok:alembic.migration - Will assume transactional DDL.
     2014-1129 10:57:52 INFO - anyblok:alembic.ddl.postgresql - Detected sequence named 'system_cache_id_seq' as owned by integer column 'system_cache(id)', assuming SERIAL and omitting
-    2014-1129 10:57:52 INFO - anyblok:alembic.autogenerate.compare - Detected NOT NULL on column 'worker.position_name'
+    2014-1129 10:57:52 INFO - anyblok:alembic.autogenerate.compare - Detected NOT NULL on column 'employee.position_name'
     2014-1129 10:57:52 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
     2014-1129 10:57:52 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'anyblok-core'
-    2014-1129 10:57:52 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'desk'
+    2014-1129 10:57:52 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'office'
     2014-1129 10:57:52 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'position'
-    2014-1129 10:57:52 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'worker'
-    2014-1129 10:57:52 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'worker-position'
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Get the worker ...
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Sandrine Chaufournais in Room 308 at 14-16 rue Soleillet 75020 Paris (Secrétaire)
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Christophe Combelles in Room 308 at 14-16 rue Soleillet 75020 Paris (Comercial)
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Clovis Nzouendjou in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Florent Jouatte in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Simon André in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Jean-Sébastien Suzanne in Room 308 at 14-16 rue Soleillet 75020 Paris (Developper)
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Georges Racinet in Room 308 at 14-16 rue Soleillet 75020 Paris (DG)
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Pierre Verkest in Room 308 at 14-16 rue Soleillet 75020 Paris (Chef de projet)
-    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Franck Bret in Room 308 at 14-16 rue Soleillet 75020 Paris (Chef de projet)
+    2014-1129 10:57:52 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'employee'
+    2014-1129 10:57:52 INFO - anyblok:anyblok.bloks.anyblok_core.declarations.system.blok - Load the blok 'employee-position'
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Get the employee ...
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Sandrine Chaufournais in Room 308 at 14-16 rue Soleillet 75020 Paris (Administrative Manager)
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Christophe Combelles in Room 308 at 14-16 rue Soleillet 75020 Paris (CEO)
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Clovis Nzouendjou in Room 308 at 14-16 rue Soleillet 75020 Paris (Developer)
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Florent Jouatte in Room 308 at 14-16 rue Soleillet 75020 Paris (Developer)
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Simon André in Room 308 at 14-16 rue Soleillet 75020 Paris (Developer)
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Jean-Sébastien Suzanne in Room 308 at 14-16 rue Soleillet 75020 Paris (Developer)
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Georges Racinet in Room 308 at 14-16 rue Soleillet 75020 Paris (CTO)
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Pierre Verkest in Room 308 at 14-16 rue Soleillet 75020 Paris (Project Manager)
+    2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - Franck Bret in Room 308 at 14-16 rue Soleillet 75020 Paris (Project Manager)
     2014-1129 10:57:52 INFO - anyblok:exampleblok.scripts - End ...
 
-The registry is loaded only one time, because the bloks are already installed
+The registry is loaded only once, because the bloks are already installed
 
 
 Create an interpreter
 ---------------------
 
-Anyblok give some function to help to create application:
+Anyblok provides some functions to help creating an application:
 
 * createdb
 * updatedb
 * interpreter
 
-::
+Here is how to create an interpreter::
 
     from anyblok.scripts import interpreter
 
@@ -655,13 +658,13 @@ Anyblok give some function to help to create application:
 
 ::
 
-    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok_interpretor -c anyblok.cfg
+    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok_interpreter -c anyblok.cfg
     2014-0428 20:57:38 INFO - anyblok:root - Registry.load
     2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
-    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'desk' loaded
+    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'office' loaded
     2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'position' loaded
-    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'worker' loaded
-    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'worker-position' loaded
+    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'employee' loaded
+    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'employee-position' loaded
     2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
     2014-0428 20:57:39 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
     2014-0428 20:57:39 INFO - anyblok:alembic.migration - Will assume transactional DDL.

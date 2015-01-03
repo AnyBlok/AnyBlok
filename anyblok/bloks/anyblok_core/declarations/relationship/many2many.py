@@ -14,14 +14,14 @@ FieldException = Declarations.Exception.FieldException
 
 @Declarations.target_registry(Declarations.RelationShip)
 class Many2Many(Declarations.RelationShip):
-    """ Define a relation ship attribute on the model
+    """ Define a relationship attribute on the model
 
     ::
 
         @target_registry(Model)
         class TheModel:
 
-            relationship = Many2Many(label="The relation ship",
+            relationship = Many2Many(label="The relationship",
                                      model=Model.RemoteModel,
                                      join_table="many2many table",
                                      remote_column="The remote column",
@@ -93,13 +93,13 @@ class Many2Many(Declarations.RelationShip):
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
-        """ Create the relation ship
+        """ Create the relationship
 
-        :param registry: the registry which load the relation ship
+        :param registry: the registry which load the relationship
         :param namespace: the name space of the model
-        :param fieldname: fieldname of the relation ship
+        :param fieldname: fieldname of the relationship
         :param properties: the properties known
-        :rtype: Many2One relation ship
+        :rtype: Many2One relationship
         """
         self.check_existing_remote_model(registry)
         remote_properties = registry.loaded_namespaces_first_step.get(

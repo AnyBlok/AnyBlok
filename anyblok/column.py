@@ -14,19 +14,19 @@ from sqlalchemy.schema import ForeignKey
 class Column(Declarations.Field):
     """ Column class
 
-    This class can't be instancied
+    This class can't be instanciated
     """
 
     foreign_key = None
     sqlalchemy_type = None
 
     def __init__(self, *args, **kwargs):
-        """ Initialise the column
+        """ Initialize the column
 
         :param label: label of this field
         :type label: str
         """
-        self.MustNotBeInstanced(Column)
+        self.forbid_instance(Column)
         assert self.sqlalchemy_type
 
         if 'type_' in kwargs:
@@ -52,7 +52,7 @@ class Column(Declarations.Field):
         :param registry: current registry
         :param namespace: name of the model
         :param fieldname: name of the field
-        :param properties: properties known of the model
+        :param properties: known properties of the model
         :rtype: sqlalchemy column instance
         """
         self.format_label(fieldname)

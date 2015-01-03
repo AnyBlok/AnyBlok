@@ -22,10 +22,10 @@ class OneColumn(Column):
 
 class TestColumn(TestCase):
 
-    def test_MustNotBeInstanced(self):
+    def test_forbid_instance(self):
         try:
             Column()
-            self.fail("Column mustn't be instanced")
+            self.fail("Column mustn't be instanciated")
         except FieldException:
             pass
 

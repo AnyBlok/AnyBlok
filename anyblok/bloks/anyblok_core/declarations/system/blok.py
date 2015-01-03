@@ -191,7 +191,7 @@ class Blok:
 
     @classmethod
     def check_if_the_conditional_are_installed(cls, blok):
-        """ Return True if all the condition to install this blok is right
+        """ Return True if all the conditions to install the blok are satisfied
 
         :param blok: blok name
         :rtype: boolean

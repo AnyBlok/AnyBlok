@@ -6,8 +6,8 @@
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
 .. obtain one at http://mozilla.org/MPL/2.0/.
 
-CHANGES LOG
-===========
+CHANGELOG
+=========
 
 0.1.0 (Next Version)
 --------------------
@@ -15,8 +15,8 @@ CHANGES LOG
 Main version of AnyBlok. You can with this version
 
 * Create your own application
-* Connect on a database
-* Define blok
+* Connect to a database
+* Define bloks
 * Install, Update, Uninstall the blok
 * Define field types
 * Define Column types
@@ -25,5 +25,5 @@ Main version of AnyBlok. You can with this version
 * Define Mixin
 * Define Model (SQL or not)
 * Define SQL view
-* Define more than one Model on a spécific table
+* Define more than one Model on a specific table
 * Write unittest for your blok

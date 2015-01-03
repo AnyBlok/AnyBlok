@@ -52,13 +52,13 @@ class BaseSchema:
                           _attributes=edge['attr'])
 
     def save(self):
-        """ call the render and create the file in the output """
+        """ render and create the output file """
         self.render()
         self.dot.render(self.name)
 
 
 class TableSchema:
-    """ Decribe one table """
+    """ Describe one table """
 
     def __init__(self, name, parent, islabel=False):
         self.name = name
@@ -67,7 +67,7 @@ class TableSchema:
         self.column = []
 
     def render(self, dot):
-        """Call graphviz to do the schema """
+        """Call graphviz to create the schema """
         if self.islabel:
             label = "{%s}" % self.name
         else:

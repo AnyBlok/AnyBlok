@@ -11,7 +11,7 @@ from anyblok import Declarations
 
 @Declarations.target_registry(Declarations.Column)
 class Interval(Declarations.Column):
-    """ Data time interval column
+    """ Datetime interval column
 
     ::
 

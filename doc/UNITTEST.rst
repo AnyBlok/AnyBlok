@@ -9,7 +9,7 @@
 Helper for unittest
 ===================
 
-For unittest classes are available to have some fonctionnality
+For unittest, classes are available to offer some fonctionnalities
 
 .. automodule:: anyblok.tests.testcase
 
@@ -31,7 +31,7 @@ TestCase
 DBTestCase
 ----------
 
-.. warning:: this testcase destroy the test database for each unittest
+.. warning:: this testcase destroys the test database for each unittest
 
 .. autoclass:: DBTestCase
     :members:

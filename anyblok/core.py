@@ -11,7 +11,7 @@ from anyblok import Declarations
 
 @Declarations.add_declaration_type()
 class Core:
-    """ The Core class are the base of all the AnyBlok model
+    """ The Core class is the base of all the AnyBlok models
 
     Add new core model::
 
@@ -28,7 +28,7 @@ class Core:
 
     @classmethod
     def target_registry(self, parent, name, cls_, **kwargs):
-        """ add new sub registry in the registry
+        """ Add new sub registry in the registry
 
         :param parent: Existing declaration
         :param name: Name of the new declaration to add it
@@ -45,7 +45,7 @@ class Core:
 
     @classmethod
     def remove_registry(self, entry, cls_):
-        """ Remove the Interface in the registry
+        """ Remove the Interface from the registry
 
         :param entry: entry declaration of the model where the ``cls_``
             must be removed

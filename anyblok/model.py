@@ -38,7 +38,7 @@ def compile_drop_view(element, compiler, **kw):
 
 
 def has_sql_fields(bases):
-    """ Indicate if the model as field or not
+    """ Tells whether the model as field or not
 
     :param bases: list of Model's Class
     :rtype: boolean
@@ -54,7 +54,7 @@ def has_sql_fields(bases):
 
 
 def get_fields(base):
-    """ Return the fields for one model
+    """ Return the fields for a model
 
     :param base: Model Class
     :rtype: dict with name of the field in key and instance of Field in value
@@ -106,7 +106,7 @@ class ModelList(list):
                                    assemble='assemble_callback',
                                    initialize='initialize_callback')
 class Model:
-    """ The Model class are used to define or inherit a SQL table.
+    """ The Model class is used to define or inherit an SQL table.
 
     Add new model class::
 
@@ -119,24 +119,24 @@ class Model:
         Declarations.remove_registry(Declarations.Model, 'MyModelclass',
                                      MyModelclass, blok='MyBlok')
 
-    They are thee familly of Model:
+    There are three Model families:
 
     * No SQL Model: These models have got any field, so any table
     * SQL Model:
     * SQL View Model: it is a model mapped with a SQL View, the insert, update
         delete method are forbidden by the database
 
-    each model have a:
+    Each model has a:
 
     * registry name: compose by the parent + . + class model name
     * table name: compose by the parent + '_' + class model name
 
-    the table name can be overload by the attribute tablename. the wanted value
+    The table name can be overloaded by the attribute tablename. the wanted value
     are a string (name of the table) of a model in the declaration.
 
     ..warning::
 
-        Two models can have got the same table name, both models are mapped on
+        Two models can have the same table name, both models are mapped on
         the table. But they must have the same column.
     """
 
@@ -183,7 +183,7 @@ class Model:
 
     @classmethod
     def remove_registry(self, entry, cls_):
-        """ Remove the Interface in the registry
+        """ Remove the Interface from the registry
 
         :param entry: entry declaration of the model where the ``cls_``
             must be removed
@@ -285,10 +285,10 @@ class Model:
 
     @classmethod
     def detect_hybrid_method(cls, registry, namespace, base, properties):
-        """ Find the sqlalchemy hybrid  methods in the base to save the
+        """ Find the sqlalchemy hybrid methods in the base to save the
         namespace and the method in the registry
 
-        :param registry: the current  registry
+        :param registry: the current registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
         :param properties: the properties of the model
@@ -305,7 +305,7 @@ class Model:
     def transform_base(cls, registry, namespace, base, properties):
         """ Detect specific declaration which must define by registry
 
-        :param registry: the current  registry
+        :param registry: the current registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
         :param properties: the properties of the model
@@ -319,10 +319,10 @@ class Model:
     @classmethod
     def apply_hybrid_method(cls, registry, namespace, bases, properties):
         """ Create overload to define the write declaration of sqlalchemy
-        hybrid method, add the overload in the declarated bases of the
+        hybrid method, add the overload in the declared bases of the
         namespace
 
-        :param registry: the current  registry
+        :param registry: the current registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
         :param properties: the properties of the model
@@ -352,9 +352,9 @@ class Model:
 
     @classmethod
     def insert_in_bases(cls, registry, namespace, bases, properties):
-        """ Add in the declarated namespaces new base.
+        """ Add in the declared namespaces new base.
 
-        :param registry: the current  registry
+        :param registry: the current registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
         :param properties: the properties of the model
@@ -363,11 +363,11 @@ class Model:
 
     @classmethod
     def load_namespace_first_step(cls, registry, namespace):
-        """ Return the properties of the declarated bases for one namespace.
-        This is the first step because some action need  to known all the
+        """ Return the properties of the declared bases for a namespace.
+        This is the first step because some actions need to known all the
         properties
 
-        :param registry: the current  registry
+        :param registry: the current registry
         :param namespace: the namespace of the model
         :rtype: dict of the known properties
         """
@@ -406,7 +406,7 @@ class Model:
                                    transformation_properties=None):
         """ Return the bases and the properties of the namespace
 
-        :param registry: the current  registry
+        :param registry: the current registry
         :param namespace: the namespace of the model
         :param realregistryname: the name of the model if the namespace is a
             mixin
@@ -572,7 +572,7 @@ class Model:
     def initialize_callback(cls, registry):
         """ initialize callback is called after assembling all entries
 
-        This callback update the database information about
+        This callback updates the database information about
 
         * Model
         * Column

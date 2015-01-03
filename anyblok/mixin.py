@@ -11,7 +11,7 @@ from anyblok import Declarations
 
 @Declarations.add_declaration_type(isAnEntry=True)
 class Mixin:
-    """ The Mixin class are used to define a behaviour on an one or more model:
+    """ The Mixin class are used to define a behaviours on models:
 
     * Add new mixin class::
 

@@ -182,7 +182,7 @@ class TestArgsParseManager(TestCase):
         ArgsParseManager.add('old-group', function_=fnct_argsparse)
         ArgsParseManager.add('old-group', part='other',
                              function_=fnct_argsparse)
-        groups = ArgsParseManager.merge_groups('AnyBlok')
+        groups = ArgsParseManager._merge_groups('AnyBlok')
         self.assertEqual(groups, {
             'new-group': [fnct_argsparse, fnct_other_argsparse],
             'old-group': [fnct_argsparse]})
@@ -193,27 +193,27 @@ class TestArgsParseManager(TestCase):
         ArgsParseManager.add('old-group', function_=fnct_argsparse)
         ArgsParseManager.add('old-group', part='other',
                              function_=fnct_other_argsparse)
-        groups = ArgsParseManager.merge_groups('AnyBlok', 'other')
+        groups = ArgsParseManager._merge_groups('AnyBlok', 'other')
         self.assertEqual(groups, {
             'new-group': [fnct_argsparse, fnct_other_argsparse],
             'old-group': [fnct_argsparse, fnct_other_argsparse]})
 
     def test_merge_no_parts(self):
         try:
-            ArgsParseManager.merge_groups()
+            ArgsParseManager._merge_groups()
             self.fail('No watchdog to merge no part')
         except ArgsParseManagerException:
             pass
 
     def test_merge_inexisting_part(self):
-        ArgsParseManager.merge_groups('other')
+        ArgsParseManager._merge_groups('other')
 
     def test_merge_label(self):
         ArgsParseManager.add('new-group', label="Label 1",
                              function_=fnct_other_argsparse)
         ArgsParseManager.add('old-group', label="Label 2", part='other',
                              function_=fnct_argsparse)
-        labels = ArgsParseManager.merge_labels('AnyBlok')
+        labels = ArgsParseManager._merge_labels('AnyBlok')
         self.assertEqual(labels, {'new-group': "Label 1"})
 
     def test_merge_label_with_more_parts(self):
@@ -221,19 +221,19 @@ class TestArgsParseManager(TestCase):
                              function_=fnct_other_argsparse)
         ArgsParseManager.add('old-group', label="Label 2", part='other',
                              function_=fnct_argsparse)
-        labels = ArgsParseManager.merge_labels('AnyBlok', 'other')
+        labels = ArgsParseManager._merge_labels('AnyBlok', 'other')
         self.assertEqual(labels, {'new-group': "Label 1",
                                   'old-group': "Label 2"})
 
     def test_merge_labels_with_no_parts(self):
         try:
-            ArgsParseManager.merge_labels()
+            ArgsParseManager._merge_labels()
             self.fail('No watchdog to merge no part')
         except ArgsParseManagerException:
             pass
 
     def test_merge_labels_inexisting_part(self):
-        ArgsParseManager.merge_labels('other')
+        ArgsParseManager._merge_labels('other')
 
     def test_remove(self):
         ArgsParseManager.add('new-group', function_=fnct_argsparse)

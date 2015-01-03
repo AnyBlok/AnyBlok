@@ -11,11 +11,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to AnyBlok's documentation!
-===================================
+AnyBlok documentation
+=====================
 
-AnyBlok is a framework to dynamically include Python sources, under ``MPL``
-license . It is the reference documentation.
+AnyBlok is a Python framework allowing to create highly dynamic and modular
+applications on top of SQLAlchemy. Applications are made of "bloks" that can be
+installed, extended, replaced, upgraded or uninstalled. Bloks can provide SQL
+Models, Column types, Fields, Mixins, SQL views, or plain Python code unrelated
+to the database.  Models can be dynamically customized, modified, or extended
+without strong dependencies between them, just by adding new bloks. Bloks are
+declared using `setuptools` entry-points.
+
+AnyBlok is released under the terms of the `Mozilla Public License`.
 
 .. toctree::
     :maxdepth: 2

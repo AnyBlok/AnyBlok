@@ -12,14 +12,14 @@ from anyblok import Declarations
 
 @Declarations.target_registry(Declarations.RelationShip)
 class Many2One(Declarations.RelationShip):
-    """ Define a relation ship attribute on the model
+    """ Define a relationship attribute on the model
 
     ::
 
         @target_registry(Model)
         class TheModel:
 
-            relationship = Many2One(label="The relation ship",
+            relationship = Many2One(label="The relationship",
                                     model=Model.RemoteModel,
                                     remote_column="The remote column",
                                     column_name="The column which have the "
@@ -27,12 +27,12 @@ class Many2One(Declarations.RelationShip):
                                     nullable=False,
                                     one2many="themodels")
 
-    If the remote_column are not define then, the system take the primary key
-    of the remote model
+    If the ``remote_column`` are not define then, the system takes the primary
+    key of the remote model
 
-    If the column doesn't exist, then the column will be create. Use the
+    If the column doesn't exist, the column will be created. Use the
     nullable option.
-    If the name has not filled then the name is "'remote table'_'remote colum'"
+    If the name is not filled, the name is "'remote table'_'remote colum'"
 
     :param model: the remote model
     :param remote_column: the column name on the remote model
@@ -62,12 +62,12 @@ class Many2One(Declarations.RelationShip):
             self.column_name = self.kwargs.pop('column_name')
 
     def update_properties(self, registry, namespace, fieldname, properties):
-        """ Create the column which have the foreign key if the column doesn't
+        """ Create the column which has the foreign key if the column doesn't
         exist
 
-        :param registry: the registry which load the relation ship
+        :param registry: the registry which load the relationship
         :param namespace: the name space of the model
-        :param fieldname: fieldname of the relation ship
+        :param fieldname: fieldname of the relationship
         :param propertie: the properties known
         """
         self.check_existing_remote_model(registry)
@@ -92,23 +92,23 @@ class Many2One(Declarations.RelationShip):
             foreign_key = '%s.%s' % (self.get_tablename(registry),
                                      self.remote_column)
 
-            def wraper(cls):
+            def wrapper(cls):
                 return SA_Column(
                     remote_type, ForeignKey(foreign_key),
                     nullable=self.nullable,
                     info=dict(label=self.label, foreign_key=foreign_key))
 
-            properties[self.column_name] = declared_attr(wraper)
+            properties[self.column_name] = declared_attr(wrapper)
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
-        """ Create the relation ship
+        """ Create the relationship
 
-        :param registry: the registry which load the relation ship
+        :param registry: the registry which load the relationship
         :param namespace: the name space of the model
-        :param fieldname: fieldname of the relation ship
+        :param fieldname: fieldname of the relationship
         :param propertie: the properties known
-        :rtype: Many2One relation ship
+        :rtype: Many2One relationship
         """
         self.kwargs['foreign_keys'] = "%s.%s" % (properties['__tablename__'],
                                                  self.column_name)

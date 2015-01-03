@@ -86,7 +86,7 @@ def updatedb(description, version, argsparse_groups, parts_to_load):
 
 
 def interpreter(description, version, argsparse_groups, parts_to_load):
-    """ Execute a script of give an interpreter
+    """ Execute a script or open an interpreter
 
     :param description: description of argsparse
     :param version: version of script for argparse

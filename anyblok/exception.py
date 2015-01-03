@@ -14,7 +14,7 @@ from anyblok.environment import EnvironmentManager, EnvironmentException
 class Exception:
     """ Adapter to Exception Class
 
-    The Exception class are used to define type of Declarations Exception
+    The Exception class is used to define the type of Declarations Exception
 
     Add new Exception type::
 
@@ -22,7 +22,7 @@ class Exception:
         class MyException:
             pass
 
-    the remove exception are forbidden because this exception can be used
+    Removing the exception is forbidden because it can be used
     """
 
     @classmethod
@@ -50,7 +50,7 @@ class Exception:
 
         :exception: DeclarationsException
         """
-        raise DeclarationsException("Remove an exception is forbiden")
+        raise DeclarationsException("Removing an exception is forbidden")
 
 
 Declarations.target_registry(Declarations.Exception,

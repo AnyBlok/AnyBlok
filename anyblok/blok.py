@@ -28,12 +28,12 @@ class BlokManagerException(Exception):
 class BlokManager:
     """ Manage the bloks for one process
 
-    One blok is a setuptools entrypoint, this entry point is define
-    by property bloks_groups in the first load
+    A blok has a `setuptools` entrypoint, this entry point is defined
+    by the ``bloks_groups`` attribute in the first load
 
-    the property bloks, is a dict with all the entry point load
+    The ``bloks`` attribute is a dict with all the loaded entry points
 
-    Use this class to import all the blok in the entrypoint::
+    Use this class to import all the bloks in the entrypoint::
 
         BlokManager.load('AnyBlok')
 
@@ -54,7 +54,7 @@ class BlokManager:
 
     @classmethod
     def has(cls, blok):
-        """ Return True if the blok has loaded
+        """ Return True if the blok is loaded
 
         :param blok: blok name
         :rtype: bool
@@ -76,7 +76,7 @@ class BlokManager:
 
     @classmethod
     def set(cls, blokname, blok):
-        """ Add new blok
+        """ Add a new blok
 
         :param blokname: blok name
         :param blok: blok instance
@@ -93,12 +93,12 @@ class BlokManager:
     def reload(cls):
         """ Reload the entry points
 
-        Empty the dict bloks and use the bloks_groups property to load bloks
+        Empty the ``bloks`` dict and use the ``bloks_groups`` attribute to load bloks
         :exception: BlokManagerException
         """
         if cls.bloks_groups is None:
             raise BlokManagerException(
-                "You must use the load classmethod before use reload")
+                "You must use the ``load`` classmethod before using ``reload``")
 
         bloks_groups = []
         bloks_groups += cls.bloks_groups
@@ -108,7 +108,7 @@ class BlokManager:
     @classmethod
     @log()
     def unload(cls):
-        """ Unload all the blok but not the registry """
+        """ Unload all the bloks but not the registry """
         from anyblok.registry import RegistryManager
 
         RegistryManager.unload()
@@ -120,9 +120,9 @@ class BlokManager:
     @classmethod
     @log()
     def load(cls, *bloks_groups):
-        """ Load all the blok and import it
+        """ Load all the bloks and import them
 
-        :param bloks_groups: Use by iter_entry_points to get the blok
+        :param bloks_groups: Use by ``iter_entry_points`` to get the blok
         :exception: BlokManagerException
         """
         if not bloks_groups:
@@ -152,7 +152,7 @@ class BlokManager:
                 raise BlokManagerException(
                     "Invalid bloks group %r" % bloks_group)
 
-        # Empty the orderred blok to reload it in function of priority
+        # Empty the ordered blok to reload it depending on the priority
         cls.ordered_bloks = []
         bloks.sort()
 
@@ -199,7 +199,7 @@ class BlokManager:
     def getPath(cls, blok):
         """ Return the path of the blok
 
-        :param blok: blok name in ordered_bloks
+        :param blok: blok name in ``ordered_bloks``
         :rtype: absolute path
         """
         blok = cls.get(blok)
@@ -207,14 +207,14 @@ class BlokManager:
 
 
 class Blok:
-    """ Super class for all the blok
+    """ Super class for all the bloks
 
     define the default value for:
 
-    * priority: order to load blok
-    * required: list of the blok need to install this blok
-    * optional: list of bloks to install if present in the blok list
-    * conditionnal: if all the list is installated the install this blok
+    * priority: order to load the blok
+    * required: list of the bloks needed to install this blok
+    * optional: list of the bloks to be installed if present in the blok list
+    * conditionnal: if all the bloks of this list are installed then install this blok
     * imports: list of the python file to import
     """
 

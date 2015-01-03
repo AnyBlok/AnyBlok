@@ -32,8 +32,8 @@ class Query(query.Query):
 
     @classmethod
     def get_on_model_methods(cls):
-        """ Return  the list of the method which can be wrap by
-        sqlalchemy_query_method method
+        """ Return  the list of the method which can be wrapped by
+        ``sqlalchemy_query_method`` method
 
         :rtype: list of the method name
         :exception: QueryException

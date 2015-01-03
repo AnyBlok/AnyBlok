@@ -20,16 +20,16 @@ class FieldException(Exception):
 class Field:
     """ Field class
 
-    This class can't be instancied
+    This class can't be instanciated
     """
 
     @classmethod
     def target_registry(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry
 
-        :param parent: Existing in the declaration
-        :param name: Name of the new field to add it
-        :param cls_: Class to add in declaration
+        :param parent: Parent to attach the declaration to
+        :param name: Name of the new field
+        :param cls_: Class to add in the declaration
         :exception: FieldException
         """
         _registryname = parent.__registry_name__ + '.' + name
@@ -46,15 +46,15 @@ class Field:
 
         :exception: FieldException
         """
-        raise FieldException("Remove a field is forbiden")
+        raise FieldException("Removing a field is forbidden")
 
     def __init__(self, *args, **kwargs):
-        """ Initialise the field
+        """ Initialize the field
 
         :param label: label of this field
         :type label: str
         """
-        self.MustNotBeInstanced(Field)
+        self.forbid_instance(Field)
         self.label = None
 
         if 'label' in kwargs:
@@ -63,7 +63,7 @@ class Field:
         self.args = args
         self.kwargs = kwargs
 
-    def MustNotBeInstanced(self, cls):
+    def forbid_instance(self, cls):
         """ Raise an exception if the cls is an instance of this __class__
 
         :param cls: instance of the class
@@ -71,7 +71,7 @@ class Field:
         """
         if self.__class__ is cls:
             raise FieldException(
-                "%r class must not be instanced use a sub class" % cls)
+                "%r class must not be instanciated use a sub class" % cls)
 
     def update_properties(self, registry, namespace, fieldname, properties):
         """ Update the propertie use to add new column
@@ -79,7 +79,7 @@ class Field:
         :param registry: current registry
         :param namespace: name of the model
         :param fieldname: name of the field
-        :param properties: properties known of the model
+        :param properties: properties known to the model
         """
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,

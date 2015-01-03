@@ -40,10 +40,10 @@ LEVEL_COLOR_MAPPING = {
 
 
 class Formatter(logging.Formatter):
-    """ Define the format for  console logging """
+    """ Define the format for console logging """
 
     def format(self, record):
-        """ Add color  at the message
+        """ Add color to the message
 
         :param record: logging record instance
         :rtype: logging record formatted
@@ -63,19 +63,19 @@ def init_logger(level='info', mode='console',
                 filename=None, socket=None, facility=LOG_USER):
     """ Init the logger output
 
-    They are 5 level of log
+    There are 5 levels of logging
     * debug
     * info (default)
     * warning
     * error
     * critical
 
-    Exemple::
+    Example::
 
         from anyblok.log import init_logger
         init_logger(level='debug')
 
-    A logger can be by:
+    A logger can log to:
 
     * console (default)::
 
@@ -91,7 +91,7 @@ def init_logger(level='info', mode='console',
 
     * syslog:
 
-        Exemple::
+        Example::
 
             # By socket
             init_logger(mode='syslog', socket('localhost', 514))
@@ -126,9 +126,9 @@ def init_logger(level='info', mode='console',
             init_logger(mode='syslog', socket='/dev/log',
                         facility=syslog.LOG_SYSLOG)
 
-    :param level: level define by anyblok
+    :param level: level defined by anyblok
     :param mode: Output mode
-    :param filename: Out put file
+    :param filename: Output file
     :param socket: Socket or UnixSocket
     :param facility:
     :exception: Exception
@@ -169,9 +169,9 @@ def init_logger(level='info', mode='console',
 
 
 def log(level='info', withargs=False):
-    """ decorator to log the entry of one method
+    """ decorator to log the entry of a method
 
-    They are 5 level of log
+    There are 5 levels of logging
     * debug
     * info (default)
     * warning

@@ -16,7 +16,7 @@ def getParser(description):
     """ Return a parser
 
     :param description: label of the configuration help
-    :rtype: instance of ArgumentParser
+    :rtype: ``ArgumentParser`` instance
     """
     return ArgumentParser(description=description)
 
@@ -27,17 +27,19 @@ class ArgsParseManagerException(Exception):
 
 
 class ArgsParseManager:
-    """ ArgsParse is use to define the options of the real argparse
-    and theses defaults values, each application or blok can declare there
-    options needed.
+    """ ``ArgsParse`` is used to define the options of the real argparse
+    and its default values. Each application or blok can declare needed
+    options here.
 
-    * groups: list of options by part, a part is a ConfigParser group, or
+    This class stores three attributes:
+
+    * groups: lists of options indexed by part, a part is a ``ConfigParser`` group, or
               a process name
 
-    * labels: if a group has got a label then all the option in group are put
-              in parser group
+    * labels: if a group has got a label then all the options in group are
+              gathered in a parser group
 
-    * configuration: result of the ArgsParser after load
+    * configuration: result of the ``ArgsParser`` after loading
 
     """
 
@@ -47,31 +49,31 @@ class ArgsParseManager:
 
     @classmethod
     def add(cls, group, part='AnyBlok', label=None, function_=None):
-        """ Add a function, each function are added in part and group.
+        """ Add a function in a part and a group.
 
-        The function have to have got two argument:
+        The function must have two arguments:
 
         * ``parser``: the parser instance of argparse
         * ``default``: A dict with the default value
 
-        This function is called to know what the options of this  must do.
-        You can declare this group by:
+        This function is called to know what the options of this must do.
+        You can declare this group:
 
-        * call the add method as a function::
+        * either by calling the ``add`` method as a function::
 
             def foo(parser, default):
                 pass
 
             ArgsParseManager.add('create-db', function_=foo)
 
-        * call th add method as a decorator::
+        * or by calling the ``add`` method as a decorator::
 
             @ArgsParseManager.add('create-db')
             def bar(parser, default):
                 pass
 
         By default the group is unnamed, if you want a named group, you must
-        fill the attribute label::
+        set the ``label`` attribute::
 
             @ArgsParseManager.add('create-db', label="Name of the group")
             def bar(parser, default):
@@ -79,8 +81,8 @@ class ArgsParseManager:
 
         :param part: ConfigParser group or process name
         :param group: group is a set of parser option
-        :param label: If the group have a label then all function in group are
-            put in group parser
+        :param label: If the group has a label then all the functions in the
+            group are put in group parser
         :param function_: function to add
         """
         if part not in cls.groups:
@@ -99,20 +101,20 @@ class ArgsParseManager:
                 cls.groups[part][group].append(function_)
         else:
 
-            def wraper(function):
+            def wrapper(function):
                 if function not in cls.groups[part][group]:
                     cls.groups[part][group].append(function)
                 return function
 
-            return wraper
+            return wrapper
 
     @classmethod
     def get(self, opt, default=None):
-        """ Get a value in configuration dict after load
+        """ Get a value from the configuration dict after loading
 
         After the loading of the application, all the options are saved in the
-        ArgsParseManager. And all the application have got a freelly access to
-        this options::
+        ArgsParseManager. And all the applications have free access to
+        these options::
 
             from anyblok._argsparse import ArgsParseManager
 
@@ -120,7 +122,7 @@ class ArgsParseManager:
 
         ..warning::
 
-            Some options is used as default value not real value, as the dbname
+            Some options are used as a default value not real value, such as the dbname
 
         :param opt: name of the option
         :param default: default value if the option doesn't exist
@@ -137,7 +139,7 @@ class ArgsParseManager:
     def remove_label(cls, group, part='AnyBlok'):
         """ Remove an existing label
 
-        The goal of this function is to remove anexisting label of a specific
+        The goal of this function is to remove an existing label of a specific
         group::
 
             @ArgsParseManager.add('create-db', label="Name of the group")
@@ -157,7 +159,7 @@ class ArgsParseManager:
     def remove(cls, group, function_, part='AnyBlok'):
         """ Remove an existing function
 
-        If your application inherit some unwanted options from a specific
+        If your application inherits some unwanted options from a specific
         function, you can unlink this function::
 
             def foo(opt, default):
@@ -176,7 +178,7 @@ class ArgsParseManager:
                     cls.groups[part][group].remove(function_)
 
     @classmethod
-    def merge_groups(cls, *parts):
+    def _merge_groups(cls, *parts):
         """ Internal method to merge groups in function of parts
 
         :param parts: parts to merge
@@ -200,7 +202,7 @@ class ArgsParseManager:
         return groups
 
     @classmethod
-    def merge_labels(cls, *parts):
+    def _merge_labels(cls, *parts):
         """ Internal method to merge labels in function of parts
 
         :param parts: parts to merge
@@ -222,9 +224,9 @@ class ArgsParseManager:
 
     @classmethod
     def get_url(cls, dbname=None):
-        """ Return an URL sqlalchemy for database
+        """ Return an sqlalchemy URL for database
 
-        Get the options of the database, the only option which can be overload
+        Get the options of the database, the only option which can be overloaded
         is the name of the database::
 
             url = ArgsParseManager.get_url(dbname='Mydb')
@@ -262,6 +264,7 @@ class ArgsParseManager:
     @log()
     def load(cls, description='AnyBlok :', argsparse_groups=None,
              parts_to_load=None):
+
         parser = getParser(description)
 
         if argsparse_groups is None:
@@ -270,8 +273,8 @@ class ArgsParseManager:
         if parts_to_load is None:
             parts_to_load = ['AnyBlok']
 
-        groups = cls.merge_groups(*parts_to_load)
-        labels = cls.merge_labels(*parts_to_load)
+        groups = cls._merge_groups(*parts_to_load)
+        labels = cls._merge_labels(*parts_to_load)
 
         for group in groups:
             if group not in argsparse_groups:
@@ -294,7 +297,7 @@ class ArgsParseManager:
 
         if arguments._get_args():
             raise ArgsParseManagerException(
-                'Positionnal arguments is forbiden')
+                'Positional arguments are forbidden')
 
         if arguments.configfile:
             cparser = ConfigParser()
@@ -330,7 +333,7 @@ def add_configuration_file(parser, configuration):
 @ArgsParseManager.add('database', label="Database")
 def add_database(group, configuration):
     group.add_argument('--db_name', dest='dbname', default='',
-                       help="Name of the data base")
+                       help="Name of the database")
     group.add_argument('--db_drivername', dest='dbdrivername', default='',
                        help="the name of the database backend. This name "
                             "will correspond to a module in "
@@ -354,19 +357,19 @@ def add_install_bloks(parser, configuration):
 @ArgsParseManager.add('uninstall-bloks')
 def add_uninstall_bloks(parser, configuration):
     parser.add_argument('--uninstall-bloks', dest='uninstall_bloks',
-                        default='', help="blok to uninstall")
+                        default='', help="bloks to uninstall")
 
 
 @ArgsParseManager.add('update-bloks')
 def add_update_bloks(parser, configuration):
     parser.add_argument('--update-bloks', dest='update_bloks', default='',
-                        help="blok to update")
+                        help="bloks to update")
 
 
 @ArgsParseManager.add('interpreter')
 def add_interpreter(parser, configuration):
     parser.add_argument('--script', dest='python_script',
-                        help="Python script to exec")
+                        help="Python script to execute")
 
 
 @ArgsParseManager.add('logging', label="Logging options")
@@ -396,4 +399,4 @@ def add_schema(group, configuration):
     group.add_argument('--schema-output', dest='schema_output',
                        default='anyblok-schema')
     group.add_argument('--schema-models', dest='schema_model',
-                       help='Detail only these models separate by ","')
+                       help='Detail only these models separated by ","')

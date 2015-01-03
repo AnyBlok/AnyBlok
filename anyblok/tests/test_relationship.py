@@ -35,10 +35,10 @@ class MockRegistry:
 
 class TestRelationShip(TestCase):
 
-    def test_MustNotBeInstanced(self):
+    def test_forbid_instance(self):
         try:
             RelationShip(model=OneModel)
-            self.fail("RelationShip mustn't be instanced")
+            self.fail("RelationShip mustn't be instanciated")
         except FieldException:
             pass
 

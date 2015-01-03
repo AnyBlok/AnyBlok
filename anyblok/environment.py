@@ -10,7 +10,7 @@ from inspect import ismethod
 
 
 class EnvironmentException(Exception):
-    """ Simple Exception for environment """
+    """ Exception for the Environment """
 
 
 class EnvironmentManager:
@@ -20,7 +20,7 @@ class EnvironmentManager:
 
     @classmethod
     def define_environment_cls(cls, Environment):
-        """ Define the class use for the environment
+        """ Define the class used for the environment
 
         :param Environment: class of environment
         :exception: EnvironmentException
@@ -56,7 +56,7 @@ class EnvironmentManager:
         :exception: EnvironmentException
         """
         if cls.environment is None:
-            raise EnvironmentException("No environment defined")
+            raise EnvironmentException("No environments defined")
 
         cls.environment.setter(key, value)
 
@@ -70,7 +70,7 @@ class EnvironmentManager:
         :exception: EnvironmentException
         """
         if cls.environment is None:
-            raise EnvironmentException("No environment defined")
+            raise EnvironmentException("No environments defined")
 
         return cls.environment.getter(key, default)
 
@@ -84,8 +84,8 @@ class ThreadEnvironment:
     """ Use the thread, to get the environment """
 
     scoped_function_for_session = None
-    """ No scoped function here because for none value sqlalchemy use already
-    thread to save the session """
+    """ No scoped function here because for none value sqlalchemy already uses
+    a thread to save the session """
 
     values = {}
 
@@ -103,10 +103,10 @@ class ThreadEnvironment:
 
     @classmethod
     def getter(cls, key, default):
-        """ Load the value of the key in the environment
+        """ Get the value of the key in the environment
 
-        :param key: the key of the value to load
-        :param default: return this value if not value loaded for the key
+        :param key: the key of the value to retrieve
+        :param default: return this value if no value loaded for the key
         :rtype: the value of the key
         """
         if str(threading.current_thread()) not in cls.values:

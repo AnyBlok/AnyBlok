@@ -29,7 +29,7 @@ class MigrationException(Exception):
 
 
 class MigrationReport:
-    """ Report of changment
+    """ Change report
 
     Get a new report::
 
@@ -38,7 +38,7 @@ class MigrationReport:
     """
 
     def __init__(self, migration, diffs):
-        """ Initilisator
+        """ Initializer
 
         :param migration: migration instance
         :param diffs: diff between the metadata and the database, come from
@@ -105,17 +105,17 @@ class MigrationReport:
     def log_has(self, log):
         """ return True id the log is present
 
-        .. warning:: this method is only use for the unittest
+        .. warning:: this method is only used for the unittest
 
-        :param log: log sentance attendeed
+        :param log: log sentence expected
         """
         return log in self.logs
 
     def apply_change(self):
         """ Apply the migration
 
-        this methode parse the changment detected and call the Migration
-        system to apply changment with the api of Declarations
+        this method parses the detected change and calls the Migration
+        system to apply the change with the api of Declarations
         """
         columns_added = []
         for action in self.actions:
@@ -250,8 +250,8 @@ class MigrationColumn:
     def add(self, column):
         """ Add a new column
 
-        The column is added in two phase, the last phase is only for the
-        the nullable, if nullable can not be apply then a warning was logged
+        The column is added in two phases, the last phase is only for the
+        the nullable, if nullable can not be applied, a warning is logged
 
         :param column: sqlalchemy column
         :rtype: MigrationColumn instance
@@ -278,8 +278,8 @@ class MigrationColumn:
     def alter(self, **kwargs):
         """ Alter an existing column
 
-        Alter the column in two time, because the nullable column have not
-        lock the migration
+        Alter the column in two phases, because the nullable column has not
+        locked the migration
 
         .. warning::
             See Alembic alter_column, the existing_* param are used for some
@@ -338,11 +338,11 @@ class MigrationColumn:
         return self.info['nullable']
 
     def type(self):
-        """ Use for unittest return the column type """
+        """ Use for unittest: return the column type """
         return self.info['type']
 
     def server_default(self):
-        """ Use for the unittest return the default database value """
+        """ Use for unittest: return the default database value """
         return self.info['default']
 
     def foreign_key(self):
@@ -360,7 +360,7 @@ class MigrationConstraintCheck:
 
         table('My table name').check().add('check_my_column', 'mycolumn > 5')
 
-    Get and drop the constrainst::
+    Get and drop the constraint::
 
         table('My table name').check('check_my_column').drop()
 
@@ -395,7 +395,7 @@ class MigrationConstraintUnique:
 
         table('My table name').unique().add('col1', 'col2')
 
-    Get and drop the constrainst::
+    Get and drop the constraint::
 
         table('My table name').unique('col1', 'col2').drop()
 
@@ -420,7 +420,7 @@ class MigrationConstraintUnique:
 
             if not self.exist:
                 raise MigrationException(
-                    "No unique constraint %r found on %r" % (
+                    "No unique constraints %r found on %r" % (
                         self.name, self.table.name))
 
     def format_name(self, *columns):
@@ -463,7 +463,7 @@ class MigrationConstraintPrimaryKey:
 
         table('My table name').primarykey().add('col1', 'col2')
 
-    Get and drop the constrainst::
+    Get and drop the constraint::
 
         table('My table name').primarykey('col1', 'col2').drop()
     """
@@ -483,7 +483,7 @@ class MigrationConstraintPrimaryKey:
         :exception: MigrationException
         """
         if not columns:
-            raise MigrationException("""To add an primary key  constraint """
+            raise MigrationException("""To add a primary key constraint """
                                      """you must define one or more columns""")
 
         columns_name = [x.name for x in columns]
@@ -505,7 +505,7 @@ class MigrationIndex:
 
         table('My table name').index().add('col1', 'col2')
 
-    Get and drop the constrainst::
+    Get and drop the constraint::
 
         table('My table name').index('col1', 'col2').drop()
 
@@ -567,7 +567,7 @@ class MigrationIndex:
 
 
 class MigrationTable:
-    """ Used for manipulate table
+    """ Use to manipulate tables
 
     Add a table::
 
@@ -667,7 +667,7 @@ class MigrationTable:
 class Migration:
     """ Migration Main entry
 
-    This class allow to manipulate all the migration class::
+    This class allows to manipulate all the migration class::
 
         migration = Migration(Session(), Base.Metadata)
         t = migration.table('My table name')
@@ -708,7 +708,7 @@ class Migration:
         return MigrationReport(self, diff)
 
     def savepoint(self, name=None):
-        """ Add a save point
+        """ Add a savepoint
 
         :param name: name of the save point
         :rtype: return the name of the save point
@@ -716,16 +716,16 @@ class Migration:
         return self.conn._savepoint_impl(name=name)
 
     def rollback_savepoint(self, name):
-        """ Rollback to the save point
+        """ Rollback to the savepoint
 
-        :param name: name of the save point
+        :param name: name of the savepoint
         """
         self.conn._rollback_to_savepoint_impl(name, None)
 
     def release_savepoint(self, name):
         """ Release the save point
 
-        :param name: name of the save point
+        :param name: name of the savepoint
         """
         self.conn._release_savepoint_impl(name, None)
 

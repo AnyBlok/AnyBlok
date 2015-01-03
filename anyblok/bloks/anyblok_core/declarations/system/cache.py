@@ -101,7 +101,7 @@ class Cache:
 
     @classmethod
     def clear_invalidate_cache(cls):
-        """ Invalidate the cache which need to be invalidated
+        """ Invalidate the cache that needs to be invalidated
         """
         for cache in cls.get_invalidation():
             cache.cache_clear()

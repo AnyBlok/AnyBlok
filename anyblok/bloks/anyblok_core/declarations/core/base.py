@@ -10,21 +10,21 @@ from anyblok import Declarations
 
 @Declarations.target_registry(Declarations.Core)
 class Base:
-    """ this class is inherited by all the model
+    """ Inherited by all the models
     """
 
     is_sql = False
 
     @classmethod
     def initialize_model(cls):
-        """ This method is called to initialize a model at the creation of the
-        registry
+        """ This method is called to initialize a model during the creation of
+        the registry
         """
         pass
 
     @classmethod
     def fire(cls, event, *args, **kwargs):
-        """ Call a specific event  on the model
+        """ Call a specific event on the model
 
         :param event: Name of the event
         """

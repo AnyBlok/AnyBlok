@@ -14,22 +14,22 @@ FieldException = Declarations.Exception.FieldException
 
 @Declarations.add_declaration_type()
 class RelationShip(Declarations.Field):
-    """ Relation Ship class
+    """ RelationShip class
 
-    The RelationShip class are used to define type of Declarations SQL field
+    The RelationShip class is used to define the type of SQL field Declarations
 
-    Add new relation ship type::
+    Add a new relation ship type::
 
         @Declarations.target_registry(Declarations.RelationShip)
         class Many2one:
             pass
 
-    the relation ship column are forbidden because the model can be used on
+    the relationship column are forbidden because the model can be used on
     the model
     """
 
     def __init__(self, *args, **kwargs):
-        self.MustNotBeInstanced(RelationShip)
+        self.forbid_instance(RelationShip)
         if 'model' in kwargs:
             self.model = kwargs.pop('model')
         else:
@@ -96,7 +96,7 @@ class RelationShip(Declarations.Field):
         return pks[0]
 
     def check_existing_remote_model(self, registry):
-        """ Check if the remote model exist
+        """ Check if the remote model exists
 
         The information of the existance come from the first step of
         assembling

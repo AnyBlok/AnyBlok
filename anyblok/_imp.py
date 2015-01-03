@@ -16,33 +16,29 @@ from .common import python_version
 
 @anyblok.Declarations.target_registry(anyblok.Declarations.Exception)
 class ImportManagerException(Exception):
-    """ Simple inheritance of Exception class """
+    """ Exception for Import Manager """
 
 
 class ImportManager:
-    """ Use to import blok or reload the blok import
+    """ Use to import the blok or reload the blok imports
 
-
-        Add a blok and imports these modules::
+        Add a blok and imports its modules::
 
             blok = ImportManager.add('my blok')
             blok.imports()
 
-        Reload the modules of one blok::
+        Reload the modules of a blok::
 
             if ImportManager.has('my blok'):
                 blok = ImportManager.get('my blok')
                 blok.reload()
                 # import the unimported module
-
     """
-
     modules = {}
 
     @classmethod
     def add(cls, blok):
-        """ Save blok to know which bloak are load when we want reload the
-        blok
+        """ Store the blok so that we know which bloks to reload if needed
 
         :param blok: name of the blok to add
         :rtype: loader instance
@@ -109,7 +105,7 @@ class Loader:
                              if b.__module__ + '.' in x]
 
     def reload(self):
-        """ Reload all the import for this module
+        """ Reload all the imports for this module
 
         :exception: ImportManagerException
         """

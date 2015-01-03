@@ -29,7 +29,7 @@ class JsonType(types.TypeDecorator):
 
 @Declarations.target_registry(Declarations.Column)
 class Json(Declarations.Column):
-    """ String column
+    """ JSON column
 
     ::
 

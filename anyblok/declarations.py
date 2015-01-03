@@ -12,12 +12,12 @@ class DeclarationsException(Exception):
 
 
 class Declarations:
-    """ Represente all the declarations done by the bloks
+    """ Represents all the declarations done by the bloks
 
     .. warning::
-        It is a global information, during the execution you must use the
+        This is a global information, during the execution you must use the
         registry. The registry is the real assembler of the python classes
-        in function of the installed bloks
+        based on the installed bloks
 
     ::
 
@@ -28,9 +28,9 @@ class Declarations:
 
     @classmethod
     def target_registry(cls, parent, cls_=None, **kwargs):
-        """ Method to add in a type of declaration
+        """ Method to add the blok in the registry under a type of declaration
 
-        :param parent: An existing anyblok class in the Declaration
+        :param parent: An existing blok class in the Declaration
         :param ``cls_``: The ``class`` object to add in the Declaration
         :rtype: ``cls_``
         :exception: DeclarationsException
@@ -40,7 +40,7 @@ class Declarations:
             name = kwargs.get('name_', self.__name__)
             if parent.__declaration_type__ not in cls.declaration_types:
                 raise DeclarationsException(
-                    "No parent %r for %s" % (parent, name))
+                    "No parents %r for %s" % (parent, name))
 
             declaration = cls.declaration_types[parent.__declaration_type__]
             declaration.target_registry(parent, name, self, **kwargs)
@@ -59,9 +59,9 @@ class Declarations:
 
     @classmethod
     def remove_registry(cls, entry, cls_):
-        """ Method to remove from a type of declaration
+        """ Method to remove the blok from a type of declaration
 
-        :param entry: entry declaration of the model where the ``cls_``
+        :param entry: declaration entry of the model where the ``cls_``
             must be removed
         :param ``cls_``: The ``class`` object to remove from the
             Declaration
@@ -121,10 +121,10 @@ class Declarations:
     @classmethod
     def add_declaration_type(cls, cls_=None, isAnEntry=False,
                              assemble=None, initialize=None):
-        """ Method to add a type of declaration
+        """ Add a declaration type
 
         :param cls_: The ``class`` object to add as a world of the MetaData
-        :param isAnEntry: if true the type will be assembling by the registry
+        :param isAnEntry: if true the type will be assembled by the registry
         :param assemble: name of the method callback to call (classmethod)
         :param initialize: name of the method callback to call (classmethod)
         :exception: DeclarationsException
@@ -134,7 +134,7 @@ class Declarations:
             name = self.__name__
             if name in cls.declaration_types:
                 raise DeclarationsException(
-                    "The declaration type %r are already defined" % name)
+                    "The declaration type %r is already defined" % name)
 
             cls.declaration_types[name] = self
 

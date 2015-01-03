@@ -9,6 +9,9 @@
 AnyBlok
 =======
 
-AnyBlok is a framework to create application with dynamical include of python source from set of module called ``blok``. These bloks are declared in package with ``setup tools`` entry point.
+AnyBlok is a Python framework allowing to create highly dynamic and modular
+applications on top of SQLAlchemy.
 
-See the [last documentation](http://docs.anybox.fr/anyblok/default/)
+AnyBlok is released under the terms of the `Mozilla Public License`.
+
+See the `latest documentation <http://docs.anybox.fr/anyblok/default/>`_

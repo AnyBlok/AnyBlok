@@ -6,31 +6,31 @@
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
 .. obtain one at http://mozilla.org/MPL/2.0/.
 
+.. contents::
+
 MEMENTO
 =======
 
-Anyblok is a framework write with:
+Anyblok mainly depends on:
 
-* ``python 3.3``
-* ``sqlalchemy``
-* ``alembic``
-
-All the implementation need with AnyBlok is presented here
+* Python 3.3+
+* SQLAlchemy
+* Alembic
 
 Blok
 ----
 
-A blok is a set of source code files. These files are loaded in the registry
-only if the blok have this state equal at ``installed``.
+A blok is a collection of source code files. These files are loaded in the registry
+only if the blok state is ``installed``.
 
 To declare a blok you have to:
 
-1) Declare a python module::
+1) Declare a Python package::
 
-    ``the name of the module is not really important``
-    --> __init__.py
+    The name of the module is not really significant
+    --> Just create an ``__init__.py`` file
 
-2) Declare a blok class in the __init__ of the python module::
+2) Declare a blok class in the ``__init__.py`` of the Python package::
 
     from anyblok.blok import Blok
 
@@ -41,44 +41,44 @@ To declare a blok you have to:
         version = '1.0.0'
 
 
-These are the options to apply at your blok
+Here are the available attributes for the blok:
 
 +-----------------------+-----------------------------------------------------+
-| Name of the option    | Descriptions                                        |
+| Attribute             | Description                                         |
 +=======================+=====================================================+
-|  ``__doc__``          | Short description of the blok                       |
+| ``__doc__``           | Short description of the blok (in the docstring)    |
 +-----------------------+-----------------------------------------------------+
-| ``version``           | the version of the blok(required because no value   |
+| ``version``           | the version of the blok (required because no value  |
 |                       | by default)                                         |
 +-----------------------+-----------------------------------------------------+
-| ``autoinstall``       | boolean, if ``True`` this blok is automaticaly      |
+| ``autoinstall``       | boolean, if ``True`` this blok is automatically     |
 |                       | installed                                           |
 +-----------------------+-----------------------------------------------------+
-| ``priority``          | order of the blok to installation                   |
+| ``priority``          | installation order of the blok to installation      |
 +-----------------------+-----------------------------------------------------+
-| ``readme``            | Readme file path of the blok, by default            |
+| ``readme``            | Path of the 'readme' file of the blok, by default   |
 |                       | ``README.rst``                                      |
 +-----------------------+-----------------------------------------------------+
 
-And the method defined blok behaviours
+And the methods that define blok behaviours:
 
 +-------------------------+---------------------------------------------------+
-| Method name             | Description                                       |
+| Method                  | Description                                       |
 +=========================+===================================================+
-| ``clean_before_reload`` | ``classmethod``, call before python reload of the |
-|                         | blok, use only if an action must be execute       |
-|                         | before reload the blok                            |
+| ``clean_before_reload`` | ``classmethod``, call before Python reload of the |
+|                         | blok. Use only if an action must be executed      |
+|                         | before reloading the blok                         |
 +-------------------------+---------------------------------------------------+
-| ``update``              | Action to do when the blok is installing or       |
-|                         | updating, this method has got one argument        |
+| ``update``              | Action to do when the blok is being installed or  |
+|                         | updated. This method has one argument             |
 |                         | ``latest_version`` (None for install)             |
 +-------------------------+---------------------------------------------------+
-| ``uninstall``           | Action to do when the blok is uninstalled         |
+| ``uninstall``           | Action to do when the blok is being uninstalled   |
 +-------------------------+---------------------------------------------------+
-| ``load``                | Action to do when the server start                |
+| ``load``                | Action to do when the server starts               |
 +-------------------------+---------------------------------------------------+
 
-3) Declare the entry point in the setup::
+3) Declare the entry point in the ``setup.py``::
 
     from setuptools import setup
 
@@ -96,22 +96,17 @@ And the method defined blok behaviours
 Declaration
 -----------
 
-In AnyBlok, all is declarations:
-
-* Model
-* Column
-* ...
-
-All is declaration and you have to import the ``Declarations`` class::
+In AnyBlok, everything is a declaration (Model, Column, ...) and you have to
+import the ``Declarations`` class::
 
     from anyblok.declarations import Declarations
 
-The ``Declarations`` have got two main method
+The ``Declarations`` has two main methods
 
 +---------------------+-------------------------------------------------------+
 | Method name         | Description                                           |
 +=====================+=======================================================+
-| ``target_registry`` | Add one declarations in the description of the blok.  |
+| ``target_registry`` | Add the blok in the registry                          |
 |                     | This method can be used as:                           |
 |                     |                                                       |
 |                     | * A function::                                        |
@@ -119,7 +114,7 @@ The ``Declarations`` have got two main method
 |                     |    class Foo:                                         |
 |                     |        pass                                           |
 |                     |                                                       |
-|                     |    target_registry(``Declarations.type``, cls_=Foo    |
+|                     |    target_registry(``Declarations.type``, cls_=Foo)   |
 |                     |                                                       |
 |                     | * A decorator::                                       |
 |                     |                                                       |
@@ -128,7 +123,7 @@ The ``Declarations`` have got two main method
 |                     |        pass                                           |
 |                     |                                                       |
 +---------------------+-------------------------------------------------------+
-| ``remove_registry`` | Remove an existing declarations of whatever blok. This|
+| ``remove_registry`` | Remove an existing blok from the registry. This       |
 |                     | method is only used as a function::                   |
 |                     |                                                       |
 |                     |    from ... import Foo                                |
@@ -145,19 +140,17 @@ The ``Declarations`` have got two main method
     * Column
     * ...
 
-    ``Declarations.type`` define the behaviour of the ``target_registry`` and
+    ``Declarations.type`` defines the behaviour of the ``target_registry`` and
     ``remove_registry`` methods
-
-Each object which need this declarations define the need to used these methods
 
 Model
 -----
 
-A ``Model`` is an AnyBlok ``class`` referenced in the registry. The registry is
+A Model is an AnyBlok class referenced in the registry. The registry is
 hierarchical. The model ``Foo`` is accessed by ``registry.Foo`` and the model
 ``Foo.Bar`` is accessed by ``registry.Foo.Bar``.
 
-To declare a Model you have tu use ``target_registry``::
+To declare a Model you must use ``target_registry``::
 
     from anyblok.declarations import Declarations
 
@@ -170,14 +163,14 @@ To declare a Model you have tu use ``target_registry``::
     class Foo:
         pass
 
-The name of the model is defined by the name of the class, here it is ``Foo``.
-The namespace of ``Foo`` id defined by the hierarchie in ``Model``. In this
+The name of the model is defined by the name of the class (here ``Foo``).
+The namespace of ``Foo`` is defined by the hierarchy under ``Model``. In this
 example, ``Foo`` is in ``Model``, you can access at ``Foo`` by ``Model.Foo``.
 
 .. warning::
 
-    ``Model.Foo`` is not the ``Foo`` Model. it is an avatar of ``Foo`` only use
-    for the declaration.
+    ``Model.Foo`` is not the ``Foo`` Model. It is an avatar of ``Foo`` only
+    used for the declaration.
 
 If you define the ``Bar`` model, under the ``Foo`` model, you should write::
 
@@ -190,15 +183,15 @@ If you define the ``Bar`` model, under the ``Foo`` model, you should write::
 
     The description is used by the model System.Model to describe the model
 
-The declaration's name of ``Bar`` is ``Model.Foo.Bar``. The namespace of
+The declaration name of ``Bar`` is ``Model.Foo.Bar``. The namespace of
 ``Bar`` in the registry is ``Foo.Bar``. The namespace of ``Foo`` in the
 registry is ``Foo``::
 
     Foo = registry.Foo
     Bar = registry.Foo.Bar
 
-Some model have got a table in the database. The table's name is by default the
-namespace in lower and with ``-`` which replace ``.``.
+Some models have a table in the database. The name of the table is by default the
+namespace in lowercase with ``.`` replaced with ``.``.
 
 .. note::
 
@@ -211,10 +204,10 @@ namespace in lower and with ``-`` which replace ``.``.
                 registry = self.registry
                 Foo = registry.Foo
 
-The main goal of AnyBlok is not only to add models in the registry, It is also
-to overload easylly these models. The declaration, record the python class in
-the registry, if one model already exist then the second declaration of this
-model overload the first model::
+The main goal of AnyBlok is not only to add models in the registry, but also
+to easily overload these models. The declaration stores the Python class in
+the registry. If one model already exist then the second declaration of this
+model overloads the first model::
 
     @target_registry(Model)
     class Foo:
@@ -231,7 +224,7 @@ model overload the first model::
     Foo = registry.Foo
     assert Foo.x == 2
 
-These are the params of the ``target_registry`` method for ``Model``
+Here are the parameters of the ``target_registry`` method for ``Model``:
 
 +-------------+---------------------------------------------------------------+
 | Param       | Description                                                   |
@@ -255,13 +248,13 @@ These are the params of the ``target_registry`` method for ``Model``
 |             |        pass                                                   |
 |             |                                                               |
 +-------------+---------------------------------------------------------------+
-| is_sql_view | Boolean flag, which indicate if the model is based on a sql   |
+| is_sql_view | Boolean flag, which indicateis if the model is based on a SQL |
 |             | view                                                          |
 +-------------+---------------------------------------------------------------+
-| tablename   | Define the realname of the table. By default the table name   |
-|             | registry name without the declaration type, and with the '.'  |
-|             | replaced by '_'. This attibut is also used to map an existing |
-|             | table declared by a previous Model. The allow values are :    |
+| tablename   | Define the real name of the table. By default the table name  |
+|             | is the registry name without the declaration type, and with   |
+|             | '.' replaced with '_'. This attribute is also used to map an  |
+|             | existing table declared by a previous Model. Allowed values:  |
 |             |                                                               |
 |             | * str ::                                                      |
 |             |                                                               |
@@ -277,10 +270,10 @@ These are the params of the ``target_registry`` method for ``Model``
 |             |                                                               |
 +-------------+---------------------------------------------------------------+
 
-No SQL Model
-~~~~~~~~~~~~
+Non SQL Model
+~~~~~~~~~~~~~
 
-It is the default model. This model have got any table. It is used to
+This is the default model. This model has no tables. It is used to
 organize the registry or for specific process.::
 
     #target_registry(Model)
@@ -291,7 +284,7 @@ SQL Model
 ~~~~~~~~~
 
 A ``SQL Model`` is a simple ``Model`` with ``Column`` or ``RelationShip``. For
-each models, one table will be created.::
+each model, one table will be created.::
 
     @target_registry(Model)
     class Foo:
@@ -305,10 +298,10 @@ each models, one table will be created.::
 View Model
 ~~~~~~~~~~
 
-A ``View Model`` as ``SQL Model``, need the declaration of ``Column`` and / or
-``RelationShip``. In the ``target_registry`` the param ``is_sql_view`` have to
-flag at True value and the ``View Model`` must define the classmethod
-``sqlalchemy_view_declaration``.::
+A ``View Model`` as ``SQL Model``. Need the declaration of ``Column`` and / or
+``RelationShip``. In the ``target_registry`` the param ``is_sql_view`` must be
+True and the ``View Model`` must define the ``sqlalchemy_view_declaration``
+classmethod.::
 
     @target_registry(Model, is_sql_view=True)
     class Foo:
@@ -322,8 +315,8 @@ flag at True value and the ``View Model`` must define the classmethod
             Model = cls.registry.System.Model
             return select([Model.id.label('id'), Model.name.label('name')])
 
-``sqlalchemy_view_declaration`` must return a select query to apply to create
-a SQL view?
+``sqlalchemy_view_declaration`` must return a select query corresponding to the
+request of the SQL view.
 
 Column
 ------
@@ -333,9 +326,9 @@ All the column type are in the ``Declarations``::
 
     from anyblok.declarations import Declarations
 
-
     Integer = Declarations.Column.Integer
     String = Declarations.Column.String
+
 
     @Declarations.target_registry(Declaration.Model)
     class MyModel:
@@ -343,7 +336,7 @@ All the column type are in the ``Declarations``::
         id = Integer(primary_key=True)
         name = String()
 
-List of the ``Déclarations`` of the column type:
+List of the ``Declarations`` of the column type:
 
  * ``DateTime``: use datetime.datetime
  * ``Decimal``: use decimal.Decimal
@@ -363,28 +356,28 @@ List of the ``Déclarations`` of the column type:
  * ``Selection``
  * ``Json``
 
- All the columns have got the this params:
+All the columns have the following parameters:
 
 +-------------+---------------------------------------------------------------+
-| Param       | Description                                                   |
+| Parameter   | Description                                                   |
 +=============+===============================================================+
 | label       | Label of the column, If None the label is the name of column  |
 |             | capitalized                                                   |
 +-------------+---------------------------------------------------------------+
 | default     | define a default value for this column.                       |
 |             |                                                               |
-|             | ..warning:: the default value depend of the column type       |
+|             | ..warning:: the default value depends of the column type      |
 +-------------+---------------------------------------------------------------+
-| index       | boolean flag to define if the column is indexed               |
+| index       | boolean flag to define whether the column is indexed          |
 +-------------+---------------------------------------------------------------+
-| nullable    | Define if the column must be filled or not                    |
+| nullable    | Defines if the column must be filled or not                   |
 +-------------+---------------------------------------------------------------+
-| primary_key | Boolean flag to define if the column is primary key or not    |
+| primary_key | Boolean flag to define if the column is a primary key or not  |
 +-------------+---------------------------------------------------------------+
 | unique      | Boolean flag to define if the column value must be unique or  |
 |             | not                                                           |
 +-------------+---------------------------------------------------------------+
-| foreign_key | Define a foreign key on this column to another column form    |
+| foreign_key | Define a foreign key on this column to another column of      |
 |             | another model::                                               |
 |             |                                                               |
 |             |    @target_registry(Model)                                    |
@@ -413,7 +406,7 @@ Other attribute for ``Selection``:
 +================+============================================================+
 | ``size``       | column size in the bdd                                     |
 +----------------+------------------------------------------------------------+
-| ``selections`` | ``dict`` or ``dict.items`` to list the available key with  |
+| ``selections`` | ``dict`` or ``dict.items`` to give the available key with  |
 |                | the associate label                                        |
 +----------------+------------------------------------------------------------+
 
@@ -421,18 +414,19 @@ RelationShip
 ------------
 
 To declare a ``RelationShip`` in a model, add a RelationShip on the table of
-the model. All the RelationShip type are in the ``Declarations``::
+the model. All the RelationShip types are in the ``Declarations``::
 
     from anyblok.declarations import Declarations
 
-
     Integer = Declarations.Column.Integer
     Many2One = Declarations.RelationShip.Many2One
+
 
     @Declarations.target_registry(Declaration.Model)
     class MyModel:
 
         id = Integer(primary_key=True)
+
 
     @Declarations.target_registry(Declaration.Model)
     class MyModel2:
@@ -440,14 +434,14 @@ the model. All the RelationShip type are in the ``Declarations``::
         id = Integer(primary_key=True)
         mymodel = Many2One(model=Declaration.Model.MyModel)
 
-List of the ``Déclarations`` of the RelationShip type:
+List of the ``Declarations`` of the RelationShip type:
 
 * ``One2One``
 * ``Many2One``
 * ``One2Many``
 * ``Many2Many``
 
-Params for RelationShip:
+Parameters of a ``RelationShip``:
 
 +-------------------+---------------------------------------------------------+
 | Param             | Description                                             |
@@ -456,12 +450,12 @@ Params for RelationShip:
 +-------------------+---------------------------------------------------------+
 | ``model``         | The remote model                                        |
 +-------------------+---------------------------------------------------------+
-| ``remote_column`` | The column name on the remote model, if any remote      |
-|                   | column is filled the the remote column will be the      |
+| ``remote_column`` | The column name on the remote model, if no remote       |
+|                   | columns are defined the remote column will be the       |
 |                   | primary column of the remote model                      |
 +-------------------+---------------------------------------------------------+
 
-Params for ``One2One``:
+Parameters of the ``One2One`` field:
 
 +-------------------+---------------------------------------------------------+
 | Param             | Description                                             |
@@ -469,23 +463,23 @@ Params for ``One2One``:
 | ``column_name``   | Name of the local column.                               |
 |                   | If the column doesn't exist then this column will be    |
 |                   | created.                                                |
-|                   | If any column name then the name will be 'tablename' +  |
-|                   | '_' + name of the relation ship                         |
+|                   | If no column name then the name will be 'tablename' +   |
+|                   | '_' + name of the relationship                          |
 +-------------------+---------------------------------------------------------+
-| ``nullable``      | Indicate if the column name is nullable or not          |
+| ``nullable``      | Indicates if the column name is nullable or not         |
 +-------------------+---------------------------------------------------------+
 | ``backref``       | Remote One2One link with the column name                |
 +-------------------+---------------------------------------------------------+
 
-Params for ``Many2One``:
+Parameters of the ``Many2One`` field:
 
 +-------------------+---------------------------------------------------------+
-| Param             | Description                                             |
+| Parameter         | Description                                             |
 +===================+=========================================================+
 | ``column_name``   | Name of the local column.                               |
 |                   | If the column doesn't exist then this column will be    |
 |                   | created.                                                |
-|                   | If any column name then the name will be 'tablename' +  |
+|                   | If no column name then the name will be 'tablename' +   |
 |                   | '_' + name of the relation ship                         |
 +-------------------+---------------------------------------------------------+
 | ``nullable``      | Indicate if the column name is nullable or not          |
@@ -493,38 +487,38 @@ Params for ``Many2One``:
 | ``one2many``      | Opposite One2Many link with this Many2one               |
 +-------------------+---------------------------------------------------------+
 
-Params for ``One2Many``:
+Parameters of the ``One2Many`` field:
 
 +-------------------+---------------------------------------------------------+
-| Param             | Description                                             |
+| Parameter         | Description                                             |
 +===================+=========================================================+
-| ``primaryjoin``   | Join condition between the relation ship and the remote |
+| ``primaryjoin``   | Join condition between the relationship and the remote  |
 |                   | column                                                  |
 +-------------------+---------------------------------------------------------+
 | ``many2one``      | Opposite Many2One link with this One2Many               |
 +-------------------+---------------------------------------------------------+
 
-Params for ``Many2Many``:
+Parameters of the ``Many2Many`` field:
 
 +-----------------------+-----------------------------------------------------+
-| Param                 | Description                                         |
+| Parameter             | Description                                         |
 +=======================+=====================================================+
-| ``join_table``        | many2many link table between both models            |
+| ``join_table``        | many2many intermediate table between both models    |
 +-----------------------+-----------------------------------------------------+
 | ``m2m_remote_column`` | Column name in the join table which have got the    |
 |                       | foreign key to the remote model                     |
 +-----------------------+-----------------------------------------------------+
-| ``local_column``      | Name of the local column which have got the foreign |
+| ``local_column``      | Name of the local column which holds the foreign    |
 |                       | key to the join table.                              |
-|                       | If the column doesn't exist then this column will be|
-|                       | created.                                            |
-|                       | If any column name then the name will be 'tablename'|
-|                       | + '_' + name of the relation ship                   |
+|                       | If the column does not exist then this column will  |
+|                       | be created.                                         |
+|                       | If no column name then the name will be 'tablename' |
+|                       | + '_' + name of the relationship                    |
 +-----------------------+-----------------------------------------------------+
-| ``m2m_local_column``  | Column name in the join table which have got the    |
+| ``m2m_local_column``  | Column name in the join table which holds the       |
 |                       | foreign key to the model                            |
 +-----------------------+-----------------------------------------------------+
-| ``many2many``         | Opposite Many2Many link with this relation ship     |
+| ``many2many``         | Opposite Many2Many link with this relationship      |
 +-----------------------+-----------------------------------------------------+
 
 Field
@@ -535,9 +529,9 @@ SQL column. All the Field type are in the ``Declarations``::
 
     from anyblok.declarations import Declarations
 
-
     Integer = Declarations.Column.Integer
     Fuction = Declarations.Field.Function
+
 
     @Declarations.target_registry(Declaration.Model)
     class MyModel:
@@ -548,16 +542,16 @@ SQL column. All the Field type are in the ``Declarations``::
         def get_my_id(self):
             return self.id
 
-List of the ``Déclarations`` of the Field type:
+List of the ``Declarations`` of the ``Field`` type:
 
 * ``Function``
 
-Params for ``Field.Function``
+Parameters for ``Field.Function``
 
 +-------------------+---------------------------------------------------------+
-| Param             | Description                                             |
+| Parameter         | Description                                             |
 +===================+=========================================================+
-| ``fget``          | method name to call to get the falue of field function::|
+| ``fget``          | name of the method to call to get the value of field::  |
 |                   |                                                         |
 |                   |   def fget(self):                                       |
 |                   |       return self.id                                    |
@@ -565,16 +559,16 @@ Params for ``Field.Function``
 +-------------------+---------------------------------------------------------+
 | ``model``         | The remote model                                        |
 +-------------------+---------------------------------------------------------+
-| ``remote_column`` | The column name on the remote model, if any remote      |
-|                   | column is filled the the remote column will be the      |
+| ``remote_column`` | The column name on the remote model, if no remote       |
+|                   | columns are given, the remote column will be the        |
 |                   | primary column of the remote model                      |
 +-------------------+---------------------------------------------------------+
 
 Mixin
 -----
 
-Mixin look like Model, but they have any table. Mixin add behaviour at
-Model by python inherit::
+A Mixin looks like a Model, but has no tables. A Mixin adds behaviour to
+a Model with Python inheritance::
 
     @target_registry(Mixin)
     class MyMixin:
@@ -591,10 +585,8 @@ Model by python inherit::
     assert hasattr(registry.MyModel, 'foo')
 
 
-In the assembling of the bases, if one base inherit of a mixin declaration
-then all the bases of this mixin declaration replace the mixine declaration.
-This behaviour allow to inherit one mixin and all the model which inherit this
-mixin before the overload, get the overload too::
+If you inherit a mixin, all the models previously using the base mixin also benefit
+from the overload::
 
     @target_registry(Mixin)
     class MyMixin:
@@ -618,7 +610,7 @@ mixin before the overload, get the overload too::
 SQL View
 --------
 
-SQL view is a model, with the argument ``is_sql_view=True`` in the
+An SQL view is a model, with the argument ``is_sql_view=True`` in the
 target_registry. and the classmethod ``sqlalchemy_view_declaration``::
 
     @target_registry(Model)
@@ -653,14 +645,14 @@ target_registry. and the classmethod ``sqlalchemy_view_declaration``::
 Core
 ----
 
-Core is a low level for all Model of AnyBlok. Core add general behaviour of
-the application.
+``Core`` is a low level set of declarations for all the Models of AnyBlok. ``Core`` adds
+general behaviour to the application.
 
 Base
 ~~~~
 
-Add a behaviour in all the Model, Each Model inherit of Base. for example, the
-``fire`` method of the event come from Base core.
+Add a behaviour in all the Models, Each Model inherits Base. For instance, the
+``fire`` method of the event come from ``Core.Base``.
 
 ::
 
@@ -674,8 +666,8 @@ Add a behaviour in all the Model, Each Model inherit of Base. for example, the
 SqlBase
 ~~~~~~~
 
-Only the Model with ``Field``, ``Column``, ``RelationShip`` inherit SqlBase.
-Because the method ``insert`` have interest only for the ``Model`` with a table
+Only the Models with ``Field``, ``Column``, ``RelationShip`` inherits ``Core.SqlBase``.
+For instance, the ``insert`` method only makes sense for the ``Model`` with a table.
 
 ::
 
@@ -689,7 +681,7 @@ Because the method ``insert`` have interest only for the ``Model`` with a table
 SqlViewBase
 ~~~~~~~~~~~
 
-As SqlBase, only the SqlView inherit this ``Core``.
+Like ``SqlBase``, only the ``SqlView`` inherits this ``Core`` class.
 
 ::
 
@@ -703,8 +695,7 @@ As SqlBase, only the SqlView inherit this ``Core``.
 Query
 ~~~~~
 
-Overload the SqlAlchemy Query class. Allow to add feature to minify the
-source file.
+Overloads the SQLAlchemy ``Query`` class.
 
 ::
 
@@ -718,7 +709,7 @@ source file.
 Session
 ~~~~~~~
 
-Over load the SqlAlchemy Session class.
+Overloads the SQLAlchemy ``Session`` class.
 
 ::
 
@@ -729,7 +720,7 @@ Over load the SqlAlchemy Session class.
     class Session
         pass
 
-Insrumented List
+InstrumentedList
 ~~~~~~~~~~~~~~~~
 
 ::
@@ -741,23 +732,24 @@ Insrumented List
     class InstrumentedList
         pass
 
-Instrumented List if the class returned by the Query for all the list result
-as:
+``InstrumentedList`` is the class returned by the Query for all the list result
+like:
 
 * query.all()
 * relationship list (Many2Many, One2Many)
 
-Add some feature as get a specific property of call a method on all the
-elements::
+Adds some features like getting a specific property or calling a method on all
+the elements of the list::
 
     MyModel.query().all().foo(bar)
 
-Share the table between more than one model
+Sharing a table between more than one model
 -------------------------------------------
 
-SqlAlchemy allow two method to share a table between two or more mappin class:
+SQLAlchemy allows two methods to share a table between two or more mapping
+class:
 
-* Inherit a SQL Model in a non SQL Model::
+* Inherit an SQL Model in a non-SQL Model::
 
     @target_registry(Model)
     class Test:
@@ -775,11 +767,11 @@ SqlAlchemy allow two method to share a table between two or more mappin class:
                                 Test2.name == t1.name).count() == 1
 
 * Share the ``__table__``.
-    AnyBlok can't give the table at the declaration, because the table doesn't
-    exist yet. But during the assembling, if the table exist and le model
-    have the name of this table then AnyBlok link directly the table. To
-    define the table you must use the named argument tablename in the
-    target_registry
+    AnyBlok cannot give the table at the declaration, because the table does not
+    exist yet. But during the assembly, if the table exists and the model
+    has the name of this table, AnyBlok directly links the table. To
+    define the table you must use the named argument ``tablename`` in the
+    ``target_registry``
 
     ::
 
@@ -800,37 +792,37 @@ SqlAlchemy allow two method to share a table between two or more mappin class:
                                     Test2.name == t1.name).count() == 1
 
     .. warning::
-        They are any check on the existing columns.
+        There are no checks on the existing columns.
 
-Share the view between more than one model
+Sharing a view between more than one model
 ------------------------------------------
 
-Share the view between to Model is the merge between:
+Sharing a view between two Models is the merge between:
 
-* Create a View Model
-* Share the same table between more than one model.
+* Creating a View Model
+* Sharing the same table between more than one model.
 
 .. warning::
 
-    For the view you must redined the column in the Model which take the view
-    with Inherit or simple Share by tablename
+    For the view you must redined the column in the Model corresponding to the view
+    with inheritance or simple Share by tablename
 
-Specific behariour
+Specific behaviour
 ------------------
 
-AnyBlok implement some of facility to help the writter of the source file.
+AnyBlok implements some facilities to help developers
 
 Cache
 ~~~~~
 
-The cache allow to call more than one time a method without have got any
-difference in the result. But the cache must also depend of the registry (
-database) and the model. The cache of anyblok can be put on a Model, a Core or
-a Mixin method. If the cache is on a Core or a Mixin then the usecase depend
-of the registry name of the assembled model.
+The cache allows to call a method more than once without having any difference
+in the result. But the cache must also depend on the registry database and the
+model. The cache of anyblok can be put on a Model, a Core or a Mixin method. If
+the cache is on a Core or a Mixin then the usecase depends on the registry name
+of the assembled model.
 
 Use ``Declarations.cache`` or ``Declarations.classmethod_cache`` to apply a
-cache on method
+cache on a method
 
 Cache the method of a Model::
 
@@ -902,7 +894,7 @@ Cache the method coming from a Mixin::
 Event
 ~~~~~
 
-Simple implementation of synchronious ``event``::
+Simple implementation of a synchronous ``event``::
 
 
     @target_registry(Model)
@@ -927,15 +919,15 @@ Simple implementation of synchronious ``event``::
 
     The decorated method is seen as a classmethod
 
-This api give:
+This API gives:
 
-* decorator ``addListener`` which link the decorated method with the event.
-* ``fire`` method with the params
-    - event: string name of the event
-    - \*args: positionnal arguments to pass att the decorated method
-    - \*\*kwargs: named argument to pass at the decorated method
+* a decorator ``addListener`` which binds the decorated method to the event.
+* ``fire`` method with the following parameters:
+    - ``event``: string name of the event
+    - ``*args``: positionnal arguments to pass att the decorated method
+    - ``**kwargs``: named argument to pass at the decorated method
 
-It is possible to overload an existing event listner, just by overload the
+It is possible to overload an existing event listener, just by overloading the
 decorated method::
 
     @target_registry(Model)
@@ -953,17 +945,17 @@ decorated method::
 
 .. warning::
 
-    the overload doesn't take the ``addListener`` decorator but the
-    classmethod decorator, because the method name has already seen as a
+    The overload does not take the ``addListener`` decorator but the
+    classmethod decorator, because the method name is already seen as an
     event listener
 
 Hybrid method
 ~~~~~~~~~~~~~
 
-Facility to create a SqlAlchemy hybrid method. see the page
+Facility to create an SQLAlchemy hybrid method. See this page:
 http://docs.sqlalchemy.org/en/latest/orm/extensions/hybrid.html#module-sqlalchemy.ext.hybrid
 
-AnyBlok allow to define a hybrid_method which can be overload, because the
+AnyBlok allows to define a hybrid_method which can be overloaded, because the
 real sqlalchemy decorator is applied after assembling in the last overload
 of the decorated method::
 
@@ -974,7 +966,7 @@ of the decorated method::
         def my_hybrid_method(self):
             return ...
 
-Pre commit hook
+Pre-commit hook
 ~~~~~~~~~~~~~~~
 
 It is possible to call specific classmethods just before the commit of the
@@ -998,17 +990,17 @@ session::
 Aliased
 ~~~~~~~
 
-Facility to create a sql alias for the sql query by the orm::
+Facility to create an SQL alias for the SQL query by the ORM::
 
     select * from my_table the_table_alias.
 
-This facility is given by SqlAlchemy, and anyblok add this functionnality
+This facility is given by SQLAlchemy, and anyblok adds this functionnality
 directly in the Model::
 
     BlokAliased = registry.System.Blok.aliased()
 
-.. note:: See the
+.. note:: See this page:
     http://docs.sqlalchemy.org/en/latest/orm/query.html#sqlalchemy.orm.aliased
-    to known the params of the ``aliased`` method
+    to know the parameters of the ``aliased`` method
 
-    .. warning:: The first arg is alredy passed by AnyBlok
+    .. warning:: The first arg is already passed by AnyBlok

@@ -13,20 +13,20 @@ FieldException = Declarations.Exception.FieldException
 
 @Declarations.target_registry(Declarations.RelationShip)
 class One2Many(Declarations.RelationShip):
-    """ Define a relation ship attribute on the model
+    """ Define a relationship attribute on the model
 
     ::
 
         @target_registry(Model)
         class TheModel:
 
-            relationship = One2Many(label="The relation ship",
+            relationship = One2Many(label="The relationship",
                                     model=Model.RemoteModel,
                                     remote_column="The remote column",
                                     primaryjoin="Join condition"
                                     many2one="themodel")
 
-    If the primaryjoin has not filled then the join condition is
+    If the primaryjoin is not filled then the join condition is
         "'local table'.'local promary key' == 'remote table'.'remote colum'"
 
     :param model: the remote model
@@ -67,13 +67,13 @@ class One2Many(Declarations.RelationShip):
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
-        """ Create the relation ship
+        """ Create the relationship
 
-        :param registry: the registry which load the relation ship
+        :param registry: the registry which load the relationship
         :param namespace: the name space of the model
-        :param fieldname: fieldname of the relation ship
+        :param fieldname: fieldname of the relationship
         :param propertie: the properties known
-        :rtype: Many2One relation ship
+        :rtype: Many2One relationship
         """
         self.check_existing_remote_model(registry)
         remote_properties = registry.loaded_namespaces_first_step.get(
