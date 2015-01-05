@@ -106,7 +106,7 @@ The ``Declarations`` has two main methods
 +---------------------+-------------------------------------------------------+
 | Method name         | Description                                           |
 +=====================+=======================================================+
-| ``register`` | Add the blok in the registry                          |
+| ``register``        | Add the blok in the registry                          |
 |                     | This method can be used as:                           |
 |                     |                                                       |
 |                     | * A function::                                        |
@@ -114,21 +114,21 @@ The ``Declarations`` has two main methods
 |                     |    class Foo:                                         |
 |                     |        pass                                           |
 |                     |                                                       |
-|                     |    register(``Declarations.type``, cls_=Foo)   |
+|                     |    register(``Declarations.type``, cls_=Foo)          |
 |                     |                                                       |
 |                     | * A decorator::                                       |
 |                     |                                                       |
-|                     |    @register(``Declarations.type``)            |
+|                     |    @register(``Declarations.type``)                   |
 |                     |    class Foo:                                         |
 |                     |        pass                                           |
 |                     |                                                       |
 +---------------------+-------------------------------------------------------+
-| ``unregister`` | Remove an existing blok from the registry. This       |
+| ``unregister``      | Remove an existing blok from the registry. This       |
 |                     | method is only used as a function::                   |
 |                     |                                                       |
 |                     |    from ... import Foo                                |
 |                     |                                                       |
-|                     |    unregister(``Declarations.type``, cls_=Foo)   |
+|                     |    unregister(``Declarations.type``, cls_=Foo)        |
 |                     |                                                       |
 +---------------------+-------------------------------------------------------+
 
@@ -229,12 +229,12 @@ Here are the parameters of the ``register`` method for ``Model``:
 +-------------+---------------------------------------------------------------+
 | Param       | Description                                                   |
 +=============+===============================================================+
-| cls\_       | Define the real class if ``register`` is used as a     |
+| cls\_       | Define the real class if ``register`` is used as a            |
 |             | function not as a decorator                                   |
 +-------------+---------------------------------------------------------------+
 | name\_      | Overload the name of the class::                              |
 |             |                                                               |
-|             |    @register(Model, name_='Bar')                       |
+|             |    @register(Model, name_='Bar')                              |
 |             |    class Foo:                                                 |
 |             |        pass                                                   |
 |             |                                                               |
@@ -243,7 +243,7 @@ Here are the parameters of the ``register`` method for ``Model``:
 +-------------+---------------------------------------------------------------+
 | tablename   | Overload the name of the table::                              |
 |             |                                                               |
-|             |    @register(Model, tablename='my_table')              |
+|             |    @register(Model, tablename='my_table')                     |
 |             |    class Foo:                                                 |
 |             |        pass                                                   |
 |             |                                                               |
@@ -258,13 +258,13 @@ Here are the parameters of the ``register`` method for ``Model``:
 |             |                                                               |
 |             | * str ::                                                      |
 |             |                                                               |
-|             |    @register(Model, tablename='foo')                   |
+|             |    @register(Model, tablename='foo')                          |
 |             |    class Bar:                                                 |
 |             |        pass                                                   |
 |             |                                                               |
 |             | * declaration ::                                              |
 |             |                                                               |
-|             |    @register(Model, tablename=Model.Foo)               |
+|             |    @register(Model, tablename=Model.Foo)                      |
 |             |    class Bar:                                                 |
 |             |        pass                                                   |
 |             |                                                               |
@@ -380,11 +380,11 @@ All the columns have the following parameters:
 | foreign_key | Define a foreign key on this column to another column of      |
 |             | another model::                                               |
 |             |                                                               |
-|             |    @register(Model)                                    |
+|             |    @register(Model)                                           |
 |             |    class Foo:                                                 |
 |             |        id : Integer(primary_key=True)                         |
 |             |                                                               |
-|             |    @register(Model)                                    |
+|             |    @register(Model)                                           |
 |             |    class Bar:                                                 |
 |             |        id : Integer(primary_key=True)                         |
 |             |        foo: Integer(foreign_key=(Model.Foo, 'id'))            |
