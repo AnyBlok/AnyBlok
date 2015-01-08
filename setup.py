@@ -11,10 +11,10 @@ from setuptools import setup, find_packages
 version = '0.0.1'
 
 
-#if sys.version_info < (3, 3):
-#    sys.stderr.write("This package requires Python 3.3 or newer. "
-#                     "Yours is " + sys.version + os.linesep)
-#    sys.exit(1)
+if sys.version_info < (3, 2):
+    sys.stderr.write("This package requires Python 3.2 or newer. "
+                     "Yours is " + sys.version + os.linesep)
+    sys.exit(1)
 
 requires = [
     'zope.component',
