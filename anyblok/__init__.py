@@ -56,6 +56,10 @@ def start(processName, version=release.version, prompt=PROMPT,
     return registry
 
 
+BDD = {
+}
+
+
 from .declarations import Declarations  # noqa
 from . import exception  # noqa
 from . import databases  # noqa

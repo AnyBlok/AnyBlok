@@ -10,7 +10,6 @@ from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
 from anyblok.registry import RegistryManager
 from anyblok._graphviz import ModelSchema, SQLSchema
-from zope.component import getUtility
 import code
 import inspect
 
@@ -50,10 +49,8 @@ def createdb(description, argsparse_groups, parts_to_load):
     dbname = ArgsParseManager.get('dbname')
     bloks = format_bloks(ArgsParseManager.get('install_bloks'))
 
-    adapter = getUtility(anyblok.AnyBlok.Interface.ISqlAlchemyDataBase,
-                         drivername)
-    if adapter:
-        adapter.createdb(dbname)
+    bdd = anyblok.BDD[drivername]
+    bdd.createdb(dbname)
 
     registry = RegistryManager.get(dbname)
     registry.upgrade(install=bloks)

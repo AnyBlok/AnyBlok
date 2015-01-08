@@ -1,15 +1,11 @@
+import anyblok
 from anyblok._logging import log
 from anyblok._argsparse import ArgsParseManager
-from zope.interface import implementer
 from sqlalchemy import create_engine
 from contextlib import contextmanager
-from anyblok.databases.interface import ISqlAlchemyDataBaseType
-from zope.component import getGlobalSiteManager
-gsm = getGlobalSiteManager()
 
 
-@implementer(ISqlAlchemyDataBaseType)
-class ASqlAlchemyPostgres:
+class SqlAlchemyPostgres:
     """ Postgres adapter for database management"""
 
     __interface__ = 'postgres'
@@ -75,5 +71,4 @@ class ASqlAlchemyPostgres:
         return [x[0] for x in res.fetchall()]
 
 
-postgres = ASqlAlchemyPostgres()
-gsm.registerUtility(postgres, ISqlAlchemyDataBaseType, 'postgres')
+anyblok.BDD['postgres'] = SqlAlchemyPostgres()

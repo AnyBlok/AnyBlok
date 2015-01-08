@@ -12,8 +12,7 @@ from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
 from anyblok import start
-from anyblok.databases.interface import ISqlAlchemyDataBaseType
-from zope.component import getUtility
+import anyblok
 
 logger = getLogger(__name__)
 
@@ -61,16 +60,15 @@ class TestCase(unittest.TestCase):
 
         :param keep_existing: If false drop the previous db before create it
         """
-        adapter = getUtility(ISqlAlchemyDataBaseType,
-                             ArgsParseManager.get('dbdrivername'))
+        bdd = anyblok.BDD[ArgsParseManager.get('dbdrivername')]
         dbname = ArgsParseManager.get('dbname')
-        if dbname in adapter.listdb():
+        if dbname in bdd.listdb():
             if keep_existing:
                 return True
 
-            adapter.dropdb(dbname)
+            bdd.dropdb(dbname)
 
-        adapter.createdb(dbname)
+        bdd.createdb(dbname)
 
     @classmethod
     def dropdb(cls):
@@ -82,9 +80,8 @@ class TestCase(unittest.TestCase):
             cls.dropdb()
 
         """
-        adapter = getUtility(ISqlAlchemyDataBaseType,
-                             ArgsParseManager.get('dbdrivername'))
-        adapter.dropdb(ArgsParseManager.get('dbname'))
+        bdd = anyblok.BDD[ArgsParseManager.get('dbdrivername')]
+        bdd.dropdb(ArgsParseManager.get('dbname'))
 
     def getRegistry(self):
         """ Return the registry for the database in argsparse i

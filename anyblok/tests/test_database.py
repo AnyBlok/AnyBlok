@@ -7,11 +7,10 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase
-from anyblok.databases.interface import ISqlAlchemyDataBaseType
 import os
 from anyblok._argsparse import ArgsParseManager
-from zope.component import getUtility
 from datetime import datetime
+import anyblok
 
 
 class TestDataBase(TestCase):
@@ -52,12 +51,11 @@ class TestPostgres(TestDataBase):
 
         dbname = ArgsParseManager.get('dbname') + datetime.strftime(
             datetime.today(), '%Y-%m-%d_%H:%M:%S')
-        adapter = getUtility(ISqlAlchemyDataBaseType, self.drivername)
-
-        adapter.createdb(dbname)
-        has_dblist = dbname in adapter.listdb()
+        bdd = anyblok.BDD[self.drivername]
+        bdd.createdb(dbname)
+        has_dblist = dbname in bdd.listdb()
         self.assertEqual(has_dblist, True)
 
-        adapter.dropdb(dbname)
-        has_dblist = dbname in adapter.listdb()
+        bdd.dropdb(dbname)
+        has_dblist = dbname in bdd.listdb()
         self.assertEqual(has_dblist, False)

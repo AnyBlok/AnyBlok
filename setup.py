@@ -17,7 +17,6 @@ if sys.version_info < (3, 2):
     sys.exit(1)
 
 requires = [
-    'zope.component',
     'sqlalchemy',
     'argparse',
     'alembic',
