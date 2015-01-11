@@ -70,8 +70,7 @@ The latest version of them is strongly recommended.
 Contributing (hackers needed!)
 ------------------------------
 
-Anyblok is at a very early stage, so as this recipe.
-Feel free to fork, talk with core dev, and spread the word!
+Anyblok is at a very early stage, feel free to fork, talk with core dev, and spread the word!
 
 Author
 ------
