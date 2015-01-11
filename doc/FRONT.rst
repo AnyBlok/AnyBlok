@@ -81,6 +81,7 @@ Contributors
 ------------
 
 `Anybox <http://anybox.fr>`_ team:
+
 * Georges Racinet
 * Christophe Combelles
 .. * Sandrine Chaufournais
