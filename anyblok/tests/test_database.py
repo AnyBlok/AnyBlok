@@ -34,7 +34,7 @@ class TestDataBase(TestCase):
             'dbdrivername': self.drivername,
             'dbusername': env.get(self.drivername + '_dbusername'),
             'dbpassword': env.get(self.drivername + '_dbpassword'),
-            'dbhost': env.get(self.drivername + '_dbhost', 'localhost'),
+            'dbhost': env.get(self.drivername + '_dbhost'),
             'dbport': env.get(self.drivername + '_dbport'),
         }
         ArgsParseManager.configuration = env
