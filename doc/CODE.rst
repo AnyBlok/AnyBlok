@@ -179,7 +179,7 @@ anyblok.databases.postgres module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: anyblok.databases.postgres
-.. autoclass:: ASqlAlchemyPostgres
+.. autoclass:: SqlAlchemyPostgres
     :members:
     :noindex:
 

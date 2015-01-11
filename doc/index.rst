@@ -27,6 +27,7 @@ AnyBlok is released under the terms of the `Mozilla Public License`.
 .. toctree::
     :maxdepth: 2
 
+    FRONT.rst
     HOWTO_CREATE_APP.rst
     MEMENTO.rst
     CODE.rst
