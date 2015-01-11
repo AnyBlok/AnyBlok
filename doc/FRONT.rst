@@ -19,7 +19,7 @@ Information about the AnyBlok project.
 Project Homepage
 ----------------
 
-AnyBlok is hosted on `Bitbucket <http://bitbucket.org>`_ - the lead project
+AnyBlok is hosted on `Bitbucket <http://bitbucket.org>`_ - the main project
 page is at https://bitbucket.org/jssuzanne/anyblok. Source code is tracked here
 using `Mercurial <http://mercurial.selenic.com>`_.
 
@@ -54,12 +54,12 @@ Installation via source distribution is via the ``setup.py`` script::
 
     python setup.py install
 
-The install will add the ``anyblok`` commands to the environment.
+Installation will add the ``anyblok`` commands to the environment.
 
 Dependencies
 ------------
 
-AnyBlok works with **Python 3.2** and later. AnyBlok's install process will 
+AnyBlok works with **Python 3.2** and later. The install process will 
 ensure that `SQLAlchemy <http://www.sqlalchemy.org>`_, 
 `Alembic <http://alembic.readthedocs.org/>`_ are installed, in addition to 
 other dependencies.  AnyBlok will work with SQLAlchemy as of version **0.9.8**. 
@@ -71,7 +71,7 @@ Contributing (hackers needed!)
 ------------------------------
 
 Anyblok is at a very early stage, so as this recipe.
-Feel free to fork, talk with core dev, and spread the world!
+Feel free to fork, talk with core dev, and spread the word!
 
 Author
 ------
@@ -81,7 +81,7 @@ Jean-Sébastien Suzanne
 Contributors
 ------------
 
-Anybox's team www.anybox.fr:
+`Anybox <http://anybox.fr>`_ team:
 * Georges Racinet
 * Christophe Combelles
 .. * Sandrine Chaufournais
@@ -90,7 +90,7 @@ Anybox's team www.anybox.fr:
 * Simon André
 * Clovis Nzouendjou
 * Pierre Verkest
-* Franck Brette
+* Franck Bret
 
 Bugs
 ----
