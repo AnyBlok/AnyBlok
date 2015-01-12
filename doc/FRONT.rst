@@ -11,6 +11,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. contents::
+
 Front Matter
 ============
 
@@ -20,14 +22,15 @@ Project Homepage
 ----------------
 
 AnyBlok is hosted on `Bitbucket <http://bitbucket.org>`_ - the main project
-page is at https://bitbucket.org/jssuzanne/anyblok. Source code is tracked here
+page is at https://bitbucket.org/jssuzanne/anyblok or 
+http://code.anyblok.org. Source code is tracked here
 using `Mercurial <http://mercurial.selenic.com>`_.
 
 .. Releases and project status are available on Pypi at
 .. http://pypi.python.org/pypi/anyblok.
 
 The most recent published version of this documentation should be at
-http://docs.anybox.fr/anyblok/default.
+http://docs.anyblok.org.
 
 .. This version of the documentation is for the release 0.1.0
 .. at http://docs.anybox.fr/anyblok/0.1.0.
@@ -39,8 +42,8 @@ AnyBlok is currently in beta status and is expected to be fairly
 stable.   Users should take care to report bugs and missing features on an as-needed
 basis.  It should be expected that the development version may be required
 for proper implementation of recently repaired issues in between releases;
-the latest master is always available at https://bitbucket.org/jssuzanne/anyblok/get/default.tar.gz.
-or https://bitbucket.org/jssuzanne/anyblok/get/default.zip
+the latest master is always available at http://code.anyblok.org/get/default.tar.gz.
+or http://code.anyblok.org/get/default.zip
 
 Installation
 ------------
@@ -95,5 +98,5 @@ Contributors
 Bugs
 ----
 
-Bugs and feature enhancements to AnyBlok should be reported on the `Bitbucket
-issue tracker <https://bitbucket.org/jssuzanne/anyblok/issues?status=new&status=open>`_.
+Bugs and feature enhancements to AnyBlok should be reported on the `Issue 
+tracker <http://issue.anyblok.org>`_.
