@@ -84,7 +84,7 @@ Contributors
 
 * Georges Racinet
 * Christophe Combelles
-.. * Sandrine Chaufournais
+* Sandrine Chaufournais
 * Jean-Sébastien Suzanne
 * Florent Jouatte
 * Simon André

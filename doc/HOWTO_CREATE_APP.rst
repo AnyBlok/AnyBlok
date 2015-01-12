@@ -1,6 +1,6 @@
 .. This file is a part of the AnyBlok project
 ..
-..    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -192,11 +192,15 @@ File tree::
             room = self.registry.Room.query().filter(
                 self.registry.Room.number == 308).first()
             employees = [dict(name=employee, room=room)
-                       for employee in ('Georges Racinet', 'Christophe Combelles',
-                                      'Sandrine Chaufournais', 'Pierre Verkest',
-                                      'Franck Bret', u"Simon André",
-                                      'Florent Jouatte', 'Clovis Nzouendjou',
-                                      u"Jean-Sébastien Suzanne")]
+                         for employee in ('Georges Racinet', 
+                                          'Christophe Combelles',
+                                          'Sandrine Chaufournais', 
+                                          'Pierre Verkest',
+                                          'Franck Bret', 
+                                          "Simon André",
+                                          'Florent Jouatte', 
+                                          'Clovis Nzouendjou',
+                                          u"Jean-Sébastien Suzanne")]
             self.registry.Employee.multi_insert(*employees)
 
         def update(self, latest_version):
