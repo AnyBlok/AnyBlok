@@ -9,10 +9,16 @@
 ROADMAP
 =======
 
-Next step
----------
+Next step before 0.1
+--------------------
 
 * Contributor section with how to run tests and report bugs
+* Add logo and slogan
+
+Next step for the 0.2
+---------------------
+
+* Access Rules / Roles
 
 To implement
 ------------
@@ -29,7 +35,6 @@ Library to include
 * sqltap http://sqltap.inconshreveable.com, profiling and introspection for SQLAlchemy applications
 * Crypt https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/DatabaseCrypt
 * profiling https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Profiling
-
 
 Web client
 ----------
@@ -48,3 +53,4 @@ Functionnality which need a sprint
 * Import / Export
 * Internalization
 * Ancestor left / right
+* Access Rules / Roles
