@@ -12,7 +12,6 @@ ROADMAP
 Next step before 0.1
 --------------------
 
-* Contributor section with how to run tests and report bugs
 * Add logo and slogan
 
 Next step for the 0.2

@@ -7,6 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy import types
 import json
+from copy import deepcopy
 from anyblok import Declarations
 
 
@@ -25,6 +26,12 @@ class JsonType(types.TypeDecorator):
         if value is None:
             return None
         return json.loads(value)
+
+    def copy_value(self, value):
+        return deepcopy(value)
+
+    def compare_values(self, x, y):
+        return x == y
 
 
 @Declarations.register(Declarations.Column)

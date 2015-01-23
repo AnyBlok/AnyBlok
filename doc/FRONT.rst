@@ -30,10 +30,10 @@ using `Mercurial <http://mercurial.selenic.com>`_.
 .. http://pypi.python.org/pypi/anyblok.
 
 The most recent published version of this documentation should be at
-http://docs.anyblok.org.
+http://doc.anyblok.org.
 
-.. This version of the documentation is for the release 0.1.0
-.. at http://docs.anybox.fr/anyblok/0.1.0.
+.. The latest stable documentation is for the release 0.1.0
+.. at http://docs.anyblok.org/0.1.0
 
 Project Status
 --------------
@@ -58,6 +58,14 @@ Installation via source distribution is via the ``setup.py`` script::
     python setup.py install
 
 Installation will add the ``anyblok`` commands to the environment.
+
+Unit Test
+---------
+
+Run the test with ``nose``::
+
+    pip install nose
+    nosetests anyblok/tests anyblok/bloks/anyblok_core/tests 
 
 Dependencies
 ------------
