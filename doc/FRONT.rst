@@ -26,14 +26,14 @@ page is at https://bitbucket.org/jssuzanne/anyblok or
 http://code.anyblok.org. Source code is tracked here
 using `Mercurial <http://mercurial.selenic.com>`_.
 
-.. Releases and project status are available on Pypi at
-.. http://pypi.python.org/pypi/anyblok.
+Releases and project status are available on Pypi at 
+http://pypi.python.org/pypi/anyblok.
 
 The most recent published version of this documentation should be at
 http://doc.anyblok.org.
 
-.. The latest stable documentation is for the release 0.1.0
-.. at http://docs.anyblok.org/0.1.0
+The latest stable documentation is for the release 0.1.0
+at http://docs.anyblok.org/0.1.0
 
 Project Status
 --------------
@@ -48,10 +48,10 @@ or http://code.anyblok.org/get/default.zip
 Installation
 ------------
 
-.. Install released versions of AnyBlok from the Python package index with 
-.. `pip <http://pypi.python.org/pypi/pip>`_ or a similar tool::
+Install released versions of AnyBlok from the Python package index with 
+`pip <http://pypi.python.org/pypi/pip>`_ or a similar tool::
 
-..    pip install anyblok
+    pip install anyblok
 
 Installation via source distribution is via the ``setup.py`` script::
 
