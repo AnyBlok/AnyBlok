@@ -8,7 +8,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.1.0'
+version = '0.1.1'
 
 
 if sys.version_info < (3, 2):
@@ -26,12 +26,12 @@ requires = [
 setup(
     name="AnyBlok",
     version=version,
-    author="Anybox",
+    author="Jean-Sébastien Suzanne",
     author_email="jssuzanne@anybox.fr",
     description="Anyblok is a dynamic injection blok framework",
     license="MPL",
     long_description=open('README.rst').read(),
-    url="https://bitbucket.org/anybox/erpblok",
+    url="http://docs.anyblok.org/0.1.1",
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
