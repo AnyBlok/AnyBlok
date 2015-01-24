@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import Blok
+from anyblok.release import version
 
 
 class AnyBlokCore(Blok):
@@ -48,6 +49,6 @@ class AnyBlokCore(Blok):
         - Relationship
     """
 
-    version = '0.0.1'
+    version = version
     autoinstall = True
     priority = 0

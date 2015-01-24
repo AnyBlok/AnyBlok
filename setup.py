@@ -31,7 +31,7 @@ setup(
     description="Anyblok is a dynamic injection blok framework",
     license="MPL",
     long_description=open('README.rst').read(),
-    url="http://docs.anyblok.org/0.1.1",
+    url="http://docs.anyblok.org/%s" % version,
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
