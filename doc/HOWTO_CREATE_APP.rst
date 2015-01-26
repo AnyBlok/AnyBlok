@@ -20,7 +20,7 @@ The web server needs to give access to the user, but a profiler needs another
 access with another access rule, or another application needs to provide one part
 of the functionnalities.
 
-We will write a simple application that connects to an existing database:
+We will write a simple application that connects to a new empty database:
 
 * Employee
     - name: employee's name
@@ -38,10 +38,10 @@ We will write a simple application that connects to an existing database:
 * Position
     - name: position name
 
-Create your Blok group
-----------------------
+Create a Blok group
+-------------------
 
-A blok group is just a ``setuptools`` entry point. Splitting the project into
+A blok group is a ``setuptools`` entry point. Splitting the project into
 several groups allows to select the bloks needed by the application. This
 separation also allows a blok to come from more than one blok group: it is not
 the same blok but they have the same name. You can provide two implementations
@@ -49,21 +49,13 @@ for the same thing and use the right implementation depending on the context.
 
 For this example, the blok group ``WorkBlok`` will be used
 
-Create Your Blok
-----------------
+File tree::
 
-A blok contains Declarations such as:
+    WorkBlok
+    └── setup.py
 
-* Model: a Python class usable by the application and linked in the registry
-* Mixin: a Python class to extend Model
-* Column: a Python class, describing an sql column type
-* RelationShip: a Python class, allowing to surh on the join on the model data
-* ...
 
-The blok name must be declared in the blok group of the ``setup.py`` file of
-the distribution::
-
-We declare 4 bloks in the ``setup.py`` file::
+We declare 4 bloks in the ``setup.py`` file that we will define explain after::
 
     WorkBlok = [
         'office=exampleblok.office_blok:OfficeBlok',
@@ -79,6 +71,20 @@ We declare 4 bloks in the ``setup.py`` file::
         },
     )
 
+Create Bloks
+------------
+
+A blok contains Declarations such as:
+
+* Model: a Python class usable by the application and linked in the registry
+* Mixin: a Python class to extend Model
+* Column: a Python class, describing an sql column type
+* RelationShip: a Python class, allowing to surh on the join on the model data
+* ...
+
+The blok name must be declared in the blok group of the ``setup.py`` file of
+the distribution as explain before.
+
 And the blok must inherit the Blok class of anyblok in the ``__init__.py``
 file of a package::
 
@@ -87,12 +93,14 @@ file of a package::
     class MyFirstBlok(Blok):
         """ This is valid blok """
 
-The blok class must be in the init file of the package so that all the modules and
-packages in this package be imported by anyblok.
+The blok class must be in the init file of the package so that all modules and
+sub-packages will be imported by anyblok.
 
 .. warning::
-    The modules and packages starting with ``_`` are not imported, the package tests
+
+    Modules and packages starting with ``_`` are not imported, the package tests
     are also not imported.
+
 
 **Office blok**
 
@@ -153,15 +161,15 @@ File tree::
 
     # position.py describe the model Position
 
-Some bloks can have requirements. Each blok define this dependencies:
+**Employee blok**
 
-* required: the required bloks must be loaded before
+Some bloks can have requirements. Each blok define its dependencies:
+
+* required: required bloks must be loaded before
 * optional: If the blok exists, optional bloks will be loaded
 
 A blok can be declared as ``autoinstall`` if the blok is not installed upon the loading
 of the registry, then this blok will be loaded and installed.
-
-**Employee blok**
 
 File tree::
 
@@ -209,10 +217,10 @@ File tree::
 
     # employee.py describe the model Employee
 
-Some bloks can be auto installed when other bloks are installed, they are
-called conditional bloks.
-
 **EmployeePosition blok**:
+
+Some bloks can be installed when other bloks are installed, they are
+called conditional bloks.
 
 File tree::
 
@@ -242,8 +250,8 @@ File tree::
                 'Georges Racinet': 'CTO',
                 'Christophe Combelles': 'CEO',
                 'Sandrine Chaufournais': u"Administrative Manager",
-                'Pierre Verkest': 'Project manager',
-                'Franck Bret': 'Project manager',
+                'Pierre Verkest': 'Project Manager',
+                'Franck Bret': 'Project Manager',
                 u"Simon André": 'Developer',
                 'Florent Jouatte': 'Developer',
                 'Clovis Nzouendjou': 'Developer',
@@ -259,13 +267,14 @@ File tree::
                 self.install()
 
 .. warning::
-    There are no strong dependencies between conditional bloks and the blok,
-    so the priority must be increased. The bloks are loaded by dependencies
-    and priorities. A blok a with small dependency will be loaded before a blok with
-    a high dependency.
+    There are no strong dependencies between conditional blok and bloks,
+    so the priority number of the conditional blok must be bigger than bloks
+    defined in the `conditional` list. Bloks are loaded by dependencies
+    and priorities so a blok with small dependency/priority will be loaded before a blok with
+    an higher dependency/priority.
 
-Create Your Model
------------------
+Create Models
+-------------
 
 The Model must be added under the Model node of the declaration with the
 class decorator ``Declarations.register``::
@@ -301,10 +310,10 @@ An SQL model can define columns::
         acolumn = String(label="The first column", primary_key=True)
 
 .. warning::
-    Each SQL Model must have one or more primary_key
+    Any SQL Model must have a primary key composed with one or more columns.
 
 .. warning::
-    The table name depends on the registry tree. Here the table is ``asqlcolumn``.
+    The table name depends on the registry tree. Here the table is ``asqlmodel``.
     If a new model is defined under ASQLModel (example UnderModel:
     ``asqlcolumn_undermodel``), the registry model will be stored
     as Model.ASQLModel.UnderModel
@@ -428,8 +437,8 @@ category. And the application chooses the option category to display.
         parser.add_argument('--message-after', dest='message_after')
 
 
-Create your application
------------------------
+Create an application
+---------------------
 
 The application can be a simple script or a setuptools script. For a setuptools
 script, add this in the ``setup.py``::
@@ -448,7 +457,7 @@ The script must display:
 * the lists of the employee by address and by room
 * the provided ``message_after``
 
-**script**::
+**scripts.py**::
 
     import anyblok
     from logging import getLogger
@@ -655,7 +664,7 @@ Here is how to create an interpreter::
 
 
     def exampleblok_interpreter():
-        anyblok_interpreter(
+        interpreter(
             'Interpreter', '1.0',
             argsparse_groups=['config', 'database', 'interpreter'],
             parts_to_load=['AnyBlok', 'WorkBlok'])
@@ -677,4 +686,14 @@ Here is how to create an interpreter::
     [GCC 4.2.1 Compatible Apple LLVM 5.1 (clang-503.0.38)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
     (InteractiveConsole)
-    >>>
+    >>> [emp.name for emp in registry.Employee.query()]
+    ['Clovis Nzouendjou', 'Franck Bret', 'Florent Jouatte', 'Georges Racinet',
+     'Sandrine Chaufournais', 'Simon André', 'Pierre Verkest',
+     'Jean-Sébastien Suzanne', 'Christophe Combelles']
+
+
+TODO: I know it's not a setuptools documentation but it could be kind to show
+a complete minimalist exampe of `setup.py` with requires (to anyblok).
+We could also display the full tree from root
+
+A direct link to download the full working example.
