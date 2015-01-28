@@ -52,3 +52,11 @@ class Core:
         :param cls_: Class Interface to remove in the declaration
         """
         RegistryManager.remove_in_register(cls_)
+
+
+RegistryManager.declare_core('Base')
+RegistryManager.declare_core('SqlBase')
+RegistryManager.declare_core('SqlViewBase')
+RegistryManager.declare_core('Session')
+RegistryManager.declare_core('Query')
+RegistryManager.declare_core('InstrumentedList')

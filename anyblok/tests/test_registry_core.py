@@ -16,6 +16,7 @@ class TestRegistryCore(TestCase):
     @classmethod
     def setUpClass(cls):
         super(TestRegistryCore, cls).setUpClass()
+        RegistryManager.declare_core('test')
         RegistryManager.init_blok('testCore')
         EnvironmentManager.set('current_blok', 'testCore')
 
@@ -24,11 +25,11 @@ class TestRegistryCore(TestCase):
         super(TestRegistryCore, cls).tearDownClass()
         EnvironmentManager.set('current_blok', None)
         del RegistryManager.loaded_bloks['testCore']
+        RegistryManager.undeclare_core('test')
 
-    def setUp(self):
-        super(TestRegistryCore, self).setUp()
-        blokname = 'testCore'
-        RegistryManager.loaded_bloks[blokname]['Core']['test'] = []
+    def tearDown(self):
+        super(TestRegistryCore, self).tearDown()
+        RegistryManager.loaded_bloks['testCore']['Core']['test'] = []
 
     def assertInCore(self, *args):
         blokname = 'testCore'

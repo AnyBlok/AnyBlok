@@ -39,7 +39,7 @@ class TestRegistryEntry(TestCase):
             hasCls = cls_ in blok['Other'][entry]['bases']
             self.assertEqual(hasCls, True)
 
-    def test_add_core(self):
+    def test_add_entry(self):
         class test:
             pass
 
@@ -47,7 +47,7 @@ class TestRegistryEntry(TestCase):
         self.assertInEntry('test', test)
         self.assertEqual(
             RegistryManager.has_entry_in_register('testEntry', 'Other',
-                                                         'test'),
+                                                  'test'),
             True)
 
     def test_remove_core(self):
@@ -72,7 +72,7 @@ class TestRegistryEntry(TestCase):
             pass
 
         RegistryManager.add_entry_in_register('Other', 'test', test,
-                                                     property1='test')
+                                              property1='test')
         properties = RegistryManager.get_entry_properties_in_register(
             'Other', 'test')
 

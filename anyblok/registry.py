@@ -59,6 +59,7 @@ class RegistryManager:
 
     loaded_bloks = {}
     declared_entries = []
+    declared_cores = []
     callback_assemble_entries = {}
     callback_initialize_entries = {}
     registries = {}
@@ -129,9 +130,28 @@ class RegistryManager:
             registry.reload()
 
     @classmethod
+    def declare_core(cls, core):
+        """ Add new core in the declared cores
+
+        ::
+
+            RegistryManager.declare_entry('core name')
+
+        :param core: core name
+        """
+
+        if core not in cls.declared_cores:
+            cls.declared_cores.append(core)
+
+    @classmethod
+    def undeclare_core(cls, core):
+        if core in cls.declared_cores:
+            cls.declared_cores.remove(core)
+
+    @classmethod
     def declare_entry(cls, entry, assemble_callback=None,
                       initialize_callback=None):
-        """ Add new entry in the declared entry
+        """ Add new entry in the declared entries
 
         ::
 
@@ -181,14 +201,7 @@ class RegistryManager:
         :param blokname: name of the blok
         """
         blok = {
-            'Core': {
-                'Base': [],
-                'SqlBase': [],
-                'SqlViewBase': [],
-                'Session': [],
-                'Query': [],
-                'InstrumentedList': [],
-            },
+            'Core': {core: [] for core in cls.declared_cores},
             'properties': {},
             'removed': [],
         }
@@ -368,14 +381,9 @@ class Registry:
         self.loaded_bloks = {}
         self.loaded_registries = {x + '_names': []
                                   for x in RegistryManager.declared_entries}
-        self.loaded_cores = {
-            'Base': [self.registry_base],
-            'SqlBase': [],
-            'SqlViewBase': [],
-            'Session': [],
-            'Query': [],
-            'InstrumentedList': [],
-        }
+        self.loaded_cores = {core: []
+                             for core in RegistryManager.declared_cores}
+        self.loaded_cores['Base'].append(self.registry_base)
         self.ordered_loaded_bloks = []
         self.loaded_namespaces = {}
         self.children_namespaces = {}
@@ -511,8 +519,7 @@ class Registry:
             if toinstall or optional in toload:
                 self.load_blok(optional, toinstall, toload)
 
-        for core in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
-                     'InstrumentedList'):
+        for core in RegistryManager.declared_cores:
             self.load_core(blok, core)
 
         for entry in RegistryManager.declared_entries:
