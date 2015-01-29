@@ -29,6 +29,7 @@ AnyBlok is released under the terms of the `Mozilla Public License`.
 
     FRONT.rst
     HOWTO_CREATE_APP.rst
+    HOWTO_ADD_ENTRY_OR_CORE_TYPE.rst
     MEMENTO.rst
     CODE.rst
     UNITTEST.rst

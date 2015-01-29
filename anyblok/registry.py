@@ -137,6 +137,11 @@ class RegistryManager:
 
             RegistryManager.declare_entry('core name')
 
+        .. warning::
+
+            The core must be declared in the application, not in the bloks
+            The declaration must be done before the loading of the bloks
+
         :param core: core name
         """
 
@@ -164,6 +169,12 @@ class RegistryManager:
             RegistryManager.declare_entry(
                 'Entry name', assemble_callback=assemble_callback,
                 initialize_callback=initialize_callback)
+
+
+        .. warning::
+
+            The entry must be declared in the application, not in the bloks
+            The declaration must be done before the loading of the bloks
 
         :param entry: entry name
         :param assemble_callback: function callback to call to assemble
@@ -383,7 +394,6 @@ class Registry:
                                   for x in RegistryManager.declared_entries}
         self.loaded_cores = {core: []
                              for core in RegistryManager.declared_cores}
-        self.loaded_cores['Base'].append(self.registry_base)
         self.ordered_loaded_bloks = []
         self.loaded_namespaces = {}
         self.children_namespaces = {}

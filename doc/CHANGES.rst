@@ -9,8 +9,19 @@
 CHANGELOG
 =========
 
-0.1.0 (Next Version)
---------------------
+0.1.2
+-----
+
+[REFACTOR] Allow to declare Core components
+[ADD] Howto declare core/entry
+
+0.1.1
+-----
+
+[FIX] version, documentation, setup
+
+0.1.0
+-----
 
 Main version of AnyBlok. You can with this version
 

@@ -9,15 +9,12 @@
 ROADMAP
 =======
 
-Next step before 0.1
---------------------
-
-* Add logo and slogan
-
 Next step for the 0.2
 ---------------------
 
 * Access Rules / Roles
+* Add logo and slogan
+* Update doc
 
 To implement
 ------------
@@ -34,13 +31,6 @@ Library to include
 * sqltap http://sqltap.inconshreveable.com, profiling and introspection for SQLAlchemy applications
 * Crypt https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/DatabaseCrypt
 * profiling https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Profiling
-
-Web client
-----------
-
-* http://www.javascriptkit.com/javatutors/closuresleak/index.shtml
-* http://www.javascriptkit.com/javatutors/crossmenu.shtml
-* cms https://github.com/Kotti/Kotti
 
 Functionnality which need a sprint
 ----------------------------------

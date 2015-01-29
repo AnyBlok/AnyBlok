@@ -8,7 +8,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.1.1'
+version = '0.1.2'
 
 
 if sys.version_info < (3, 2):
@@ -23,14 +23,20 @@ requires = [
     'graphviz',
 ]
 
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, 'README.rst')) as readme:
+    README = readme.read()
+with open(os.path.join(here, 'doc', 'CHANGES.rst')) as changes:
+    CHANGES = changes.read()
+
 setup(
     name="AnyBlok",
     version=version,
     author="Jean-Sébastien Suzanne",
     author_email="jssuzanne@anybox.fr",
     description="Anyblok is a dynamic injection blok framework",
-    license="MPL",
-    long_description=open('README.rst').read(),
+    license="MPL2",
+    long_description=README + '\n\n\n\n' + CHANGES,
     url="http://docs.anyblok.org/%s" % version,
     packages=find_packages(),
     zip_safe=False,
@@ -38,6 +44,11 @@ setup(
     install_requires=requires,
     tests_require=requires + ['nose'],
     classifiers=[
+        'Intended Audience :: Developers',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'License :: OSI Approved :: Mozilla Public License v2',
     ],
     entry_points={
         'AnyBlok': [

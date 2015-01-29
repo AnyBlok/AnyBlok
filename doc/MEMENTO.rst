@@ -648,6 +648,10 @@ Core
 ``Core`` is a low level set of declarations for all the Models of AnyBlok. ``Core`` adds
 general behaviour to the application.
 
+.. warning::
+
+    Core can not inherit Model, Mixin, Core, or other declaration type.
+
 Base
 ~~~~
 

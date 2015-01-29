@@ -481,6 +481,7 @@ class Model:
                         cls.declare_field(
                             registry, p, f, namespace, properties)
 
+            bases.append(registry.registry_base)
             cls.insert_in_bases(registry, namespace, bases,
                                 transformation_properties)
             bases = [type(tablename, tuple(bases), properties)]
