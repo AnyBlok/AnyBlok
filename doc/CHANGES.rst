@@ -12,13 +12,13 @@ CHANGELOG
 0.1.2
 -----
 
-[REFACTOR] Allow to declare Core components
-[ADD] Howto declare core/entry
+* [REFACTOR] Allow to declare Core components
+* [ADD] Howto declare core/entry
 
 0.1.1
 -----
 
-[FIX] version, documentation, setup
+* [FIX] version, documentation, setup
 
 0.1.0
 -----

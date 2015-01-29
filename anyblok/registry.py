@@ -135,7 +135,13 @@ class RegistryManager:
 
         ::
 
-            RegistryManager.declare_entry('core name')
+            RegistryManager.declare_core('Core name')
+
+            -----------------------------------------
+
+            @Declarations.register(Declarations.Core)
+            class ``Core name``:
+                ...
 
         .. warning::
 
@@ -170,6 +176,9 @@ class RegistryManager:
                 'Entry name', assemble_callback=assemble_callback,
                 initialize_callback=initialize_callback)
 
+            @Declarations.register(Declarations.``Entry name``)
+            class MyClass:
+                ...
 
         .. warning::
 
