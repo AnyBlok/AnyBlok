@@ -9,24 +9,10 @@ from anyblok.registry import RegistryManager
 from anyblok import Declarations
 
 
-@Declarations.add_declaration_type(isAnEntry=True)
-class Mixin:
-    """ The Mixin class are used to define a behaviours on models:
-
-    * Add new mixin class::
-
-        @Declarations.register(Declarations.Mixin)
-        class MyMixinclass:
-            pass
-
-    * Remove a mixin class::
-
-        Declarations.unregister(Declarations.Mixin, 'MyMixinclass',
-                                     MyMixinclass, blok='MyBlok')
-    """
+class MixinType:
 
     @classmethod
-    def register(self, parent, name, cls_, **kwargs):
+    def register(cls, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry
 
         :param parent: Existing global registry
@@ -44,10 +30,10 @@ class Mixin:
             return
 
         RegistryManager.add_entry_in_register(
-            'Mixin', _registryname, cls_, **kwargs)
+            cls.__name__, _registryname, cls_, **kwargs)
 
     @classmethod
-    def unregister(self, entry, cls_):
+    def unregister(cls, entry, cls_):
         """ Remove the Interface in the registry
 
         :param entry: entry declaration of the model where the ``cls_``
@@ -55,3 +41,20 @@ class Mixin:
         :param cls_: Class Interface to remove in registry
         """
         RegistryManager.remove_in_register(cls_)
+
+
+@Declarations.add_declaration_type(isAnEntry=True)
+class Mixin(MixinType):
+    """ The Mixin class are used to define a behaviours on models:
+
+    * Add new mixin class::
+
+        @Declarations.register(Declarations.Mixin)
+        class MyMixinclass:
+            pass
+
+    * Remove a mixin class::
+
+        Declarations.unregister(Declarations.Mixin, 'MyMixinclass',
+                                     MyMixinclass, blok='MyBlok')
+    """

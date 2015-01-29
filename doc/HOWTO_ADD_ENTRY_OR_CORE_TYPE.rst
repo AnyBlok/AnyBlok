@@ -23,6 +23,11 @@ Declare a new entry
 
 TODO
 
+Declare a Mixin entry
+---------------------
+
+TODO
+
 Declare a new core
 ------------------
 
