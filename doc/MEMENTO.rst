@@ -828,6 +828,11 @@ of the assembled model.
 Use ``Declarations.cache`` or ``Declarations.classmethod_cache`` to apply a
 cache on a method
 
+.. warning::
+
+    ``Declarations.cache`` depend of the instance, if you want add a cache for
+    any instance you must use ``Declarations.classmethod_cache``
+
 Cache the method of a Model::
 
     @register(Model)
