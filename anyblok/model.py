@@ -15,6 +15,16 @@ from sqlalchemy.ext.hybrid import hybrid_method
 from functools import lru_cache
 
 
+@Declarations.register(Declarations.Exception)
+class ModelException(Exception):
+    """Exception for Model declaration"""
+
+
+@Declarations.register(Declarations.Exception)
+class ViewException(Declarations.Exception.ModelException):
+    """Exception for View declaration"""
+
+
 class CreateView(DDLElement):
     def __init__(self, name, selectable):
         self.name = name
@@ -445,8 +455,14 @@ class Model:
                     bs, ps = cls.load_namespace_second_step(
                         registry, brn, realregistryname=namespace,
                         transformation_properties=transformation_properties)
-                else:
+                elif brn in registry.loaded_registries['Model_names']:
                     bs, ps = cls.load_namespace_second_step(registry, brn)
+                else:
+                    raise Declarations.Exception.ModelException(
+                        "You have not to inherit the %r "
+                        "Only the 'Mixin' and %r types are allowed" % (
+                            brn, cls.__name__))
+
                 bases += bs
 
         if namespace in registry.loaded_registries['Model_names']:

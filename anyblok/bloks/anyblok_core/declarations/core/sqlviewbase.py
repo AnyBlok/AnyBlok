@@ -9,16 +9,12 @@ from anyblok import Declarations
 from .sqlbase import SqlMixin
 
 
-@Declarations.register(Declarations.Exception)
-class ViewException(Exception):
-    """ Simple Exception for sql view base """
-
-
 def query_method(name):
 
     def wrapper(cls, query, *args, **kwargs):
-        raise ViewException("%r.%r method are not availlable on view model" % (
-            cls, name))
+        raise Declarations.Exception.ViewException(
+            "%r.%r method are not availlable on view model" % (
+                cls, name))
 
     return classmethod(wrapper)
 

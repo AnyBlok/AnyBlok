@@ -14,6 +14,7 @@ CHANGELOG
 
 * [REFACTOR] Allow to declare Core components
 * [ADD] Howto declare core/entry
+# [FIX] Model can only inherit simple python class, Mixin or Model
 
 0.1.1
 -----

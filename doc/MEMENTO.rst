@@ -607,6 +607,11 @@ from the overload::
     assert hasattr(registry.MyModel, 'foo')
 
 
+.. warning::
+
+    Model can only inherit simple python class, Mixin or Model.
+
+
 SQL View
 --------
 
