@@ -445,6 +445,56 @@ class TestInherit(DBTestCase):
         registry = self.init_registry(simple_subclass_model)
         self.check_registry(registry.Test)
 
+    def test_inherit_multi_mixins(self):
+        def add_in_registry():
+            Integer = Declarations.Column.Integer
+            String = Declarations.Column.String
+
+            @register(Mixin)
+            class MixinName:
+
+                name = String()
+
+            @register(Mixin)
+            class MixinOther:
+
+                other = String()
+
+            @register(Model)
+            class Test(Mixin.MixinName, Mixin.MixinOther):
+
+                id = Integer(primary_key=True)
+
+        registry = self.init_registry(simple_subclass_model)
+        self.check_registry(registry.Test)
+
+    def test_inherit_cascade_mixins(self):
+        def add_in_registry():
+            Integer = Declarations.Column.Integer
+            String = Declarations.Column.String
+
+            @register(Mixin)
+            class MixinName:
+
+                name = String()
+
+            @register(Mixin)
+            class MixinOther:
+
+                other = String()
+
+            @register(Mixin)
+            class MTest(Mixin.MixinName, Mixin.MixinOther):
+                pass
+
+            @register(Model)
+            class Test(Mixin.MTest):
+
+                id = Integer(primary_key=True)
+
+        registry = self.init_registry(simple_subclass_model)
+        self.check_registry(registry.Test)
+
     def test_simple_subclass_Core_Base(self):
         registry = self.init_registry(simple_subclass_Core_Base)
         m = registry.Test()

@@ -116,6 +116,26 @@ class TestSimpleCache(DBTestCase):
         class Test(Mixin.MTest):
             pass
 
+    def add_model_with_method_cached_by_mixin_chain(self):
+
+        @register(Mixin)
+        class MTest:
+
+            x = 0
+
+            @Declarations.cache()
+            def method_cached(self):
+                self.x += 1
+                return self.x
+
+        @register(Mixin)
+        class MTest2(Mixin.MTest):
+            pass
+
+        @register(Model)
+        class Test(Mixin.MTest2):
+            pass
+
     def add_model_with_method_cached_with_mixin_and_or_core(self,
                                                             withmodel=False,
                                                             withmixin=False,
@@ -196,6 +216,17 @@ class TestSimpleCache(DBTestCase):
     def test_mixin2(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_by_mixin)
+        from anyblok import Declarations
+        self.check_method_cached(registry.Test, Declarations.Model.Test)
+
+    def test_mixin_chain(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin_chain)
+        self.check_method_cached(registry.Test, 'Model.Test')
+
+    def test_mixin_chain2(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin_chain)
         from anyblok import Declarations
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
@@ -301,6 +332,26 @@ class TestClassMethodCache(DBTestCase):
         class Test(Mixin.MTest):
             pass
 
+    def add_model_with_method_cached_by_mixin_chain(self):
+
+        @register(Mixin)
+        class MTest:
+
+            x = 0
+
+            @Declarations.classmethod_cache()
+            def method_cached(cls):
+                cls.x += 1
+                return cls.x
+
+        @register(Mixin)
+        class MTest2(Mixin.MTest):
+            pass
+
+        @register(Model)
+        class Test(Mixin.MTest2):
+            pass
+
     def add_model_with_method_cached_with_mixin_and_or_core(self,
                                                             withmodel=False,
                                                             withmixin=False,
@@ -384,6 +435,17 @@ class TestClassMethodCache(DBTestCase):
     def test_mixin2(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_by_mixin)
+        from anyblok import Declarations
+        self.check_method_cached(registry.Test, Declarations.Model.Test)
+
+    def test_mixin_chain(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin_chain)
+        self.check_method_cached(registry.Test, 'Model.Test')
+
+    def test_mixin_chain2(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin_chain)
         from anyblok import Declarations
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 

@@ -270,6 +270,11 @@ Here are the parameters of the ``register`` method for ``Model``:
 |             |                                                               |
 +-------------+---------------------------------------------------------------+
 
+.. warning::
+
+    Model can only inherit simple python class, Mixin or Model.
+
+
 Non SQL Model
 ~~~~~~~~~~~~~
 
@@ -605,11 +610,6 @@ from the overload::
     ----------------------------------
 
     assert hasattr(registry.MyModel, 'foo')
-
-
-.. warning::
-
-    Model can only inherit simple python class, Mixin or Model.
 
 
 SQL View

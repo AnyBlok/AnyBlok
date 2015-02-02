@@ -452,9 +452,15 @@ class Model:
             for b_ns in b.__anyblok_bases__:
                 brn = b_ns.__registry_name__
                 if brn in registry.loaded_registries['Mixin_names']:
-                    bs, ps = cls.load_namespace_second_step(
-                        registry, brn, realregistryname=namespace,
-                        transformation_properties=transformation_properties)
+                    tp = transformation_properties
+                    if realregistryname:
+                        bs, ps = cls.load_namespace_second_step(
+                            registry, brn, realregistryname=realregistryname,
+                            transformation_properties=tp)
+                    else:
+                        bs, ps = cls.load_namespace_second_step(
+                            registry, brn, realregistryname=namespace,
+                            transformation_properties=tp)
                 elif brn in registry.loaded_registries['Model_names']:
                     bs, ps = cls.load_namespace_second_step(registry, brn)
                 else:
