@@ -153,7 +153,31 @@ The new ``Mixin`` ``Type`` is easy to add::
     class MyMixin(MixinType):
         pass
 
-Declare a new core
-------------------
+Declare a new ``Core``
+----------------------
 
-TODO
+
+The definition of a Core and the Declaration is in different parts
+
+Declarations of a new ``Core``::
+
+    from anyblok.registry import RegistryManager
+
+
+    RegistryManager.declare_core('MyCore')
+
+Definition or register of an overload of the ``Core`` declaration::
+
+    from anyblok import Declarations
+
+
+    @Declarations.register(Declarations.Core)
+    class MyCore:
+        ...
+
+The declaration must be done in the application, not in the blok. The
+is only done in the blok.
+
+.. warning::
+
+    ``Core`` can't inherit ``Model``, ``Mixin`` or other Type

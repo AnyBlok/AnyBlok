@@ -13,7 +13,7 @@ CHANGELOG
 -----
 
 * [REFACTOR] Allow to declare Core components
-* [ADD] Howto declare core/entry
+* [ADD] Howto declare Core / Type
 * [FIX] Model can only inherit simple python class, Mixin or Model
 * [FIX] Mixin inherit chained
 

@@ -49,9 +49,10 @@ setup(
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
-        'Topic :: Software Development :: Build Tools',
+        'Programming Language :: Python :: 3 :: Only',
+        'Topic :: Software Development',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'License :: OSI Approved :: Mozilla Public License v2',
+        'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
     ],
     entry_points={
         'AnyBlok': [
