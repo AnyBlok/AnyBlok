@@ -111,7 +111,8 @@ class RegistryManager:
     def reload(cls, blok):
         """ Reload the blok
 
-        The purpose is to reload the python module to get changes in python file
+        The purpose is to reload the python module to get changes in python
+        file
 
         :param blok: the name of the blok to reload
         """

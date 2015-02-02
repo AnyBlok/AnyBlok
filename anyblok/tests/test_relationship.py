@@ -44,7 +44,7 @@ class TestRelationShip(TestCase):
 
     def test_must_have_a_model(self):
         register(RelationShip, cls_=OneRelationShip,
-                        name_="RealRelationShip")
+                 name_="RealRelationShip")
         RelationShip.RealRelationShip(model=OneModel)
         try:
             RelationShip.RealRelationShip()
@@ -72,7 +72,7 @@ class TestRelationShip(TestCase):
     def test_add_same_interface(self):
 
         register(RelationShip, cls_=OneRelationShip,
-                        name_="SameRelationShip")
+                 name_="SameRelationShip")
 
         try:
             @register(RelationShip)
@@ -86,7 +86,7 @@ class TestRelationShip(TestCase):
     def test_remove_interface(self):
 
         register(RelationShip, cls_=OneRelationShip,
-                        name_="RelationShip2Remove")
+                 name_="RelationShip2Remove")
         try:
             unregister(RelationShip.RelationShip2Remove, OneRelationShip)
             self.fail('No watch dog to remove relation ship')

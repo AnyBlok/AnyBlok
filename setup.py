@@ -26,6 +26,10 @@ requires = [
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst')) as readme:
     README = readme.read()
+
+with open(os.path.join(here, 'doc', 'FRONT.rst')) as front:
+    FRONT = front.read()
+
 with open(os.path.join(here, 'doc', 'CHANGES.rst')) as changes:
     CHANGES = changes.read()
 
@@ -36,7 +40,7 @@ setup(
     author_email="jssuzanne@anybox.fr",
     description="Anyblok is a dynamic injection blok framework",
     license="MPL2",
-    long_description=README + '\n\n\n\n' + CHANGES,
+    long_description=README + '\n\n' + FRONT + '\n\n' + CHANGES,
     url="http://docs.anyblok.org/%s" % version,
     packages=find_packages(),
     zip_safe=False,
@@ -44,7 +48,7 @@ setup(
     install_requires=requires,
     tests_require=requires + ['nose'],
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',

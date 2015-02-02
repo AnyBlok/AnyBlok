@@ -55,6 +55,5 @@ class Mixin(MixinType):
 
     * Remove a mixin class::
 
-        Declarations.unregister(Declarations.Mixin, 'MyMixinclass',
-                                     MyMixinclass, blok='MyBlok')
+        Declarations.unregister(Declarations.Mixin.MyMixinclass, MyMixinclass)
     """

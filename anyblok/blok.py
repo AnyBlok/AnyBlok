@@ -93,12 +93,14 @@ class BlokManager:
     def reload(cls):
         """ Reload the entry points
 
-        Empty the ``bloks`` dict and use the ``bloks_groups`` attribute to load bloks
+        Empty the ``bloks`` dict and use the ``bloks_groups`` attribute to
+        load bloks
         :exception: BlokManagerException
         """
         if cls.bloks_groups is None:
             raise BlokManagerException(
-                "You must use the ``load`` classmethod before using ``reload``")
+                """You must use the ``load`` classmethod before using """
+                """``reload``""")
 
         bloks_groups = []
         bloks_groups += cls.bloks_groups
@@ -214,7 +216,8 @@ class Blok:
     * priority: order to load the blok
     * required: list of the bloks needed to install this blok
     * optional: list of the bloks to be installed if present in the blok list
-    * conditionnal: if all the bloks of this list are installed then install this blok
+    * conditionnal: if all the bloks of this list are installed then install
+      this blok
     * imports: list of the python file to import
     """
 

@@ -92,23 +92,23 @@ class Model:
 
     Remove a model class::
 
-        Declarations.unregister(Declarations.Model, 'MyModelclass',
-                                     MyModelclass, blok='MyBlok')
+        Declarations.unregister(Declarations.Model.MyModelclass,
+                                MyModelclass)
 
     There are three Model families:
 
     * No SQL Model: These models have got any field, so any table
     * SQL Model:
     * SQL View Model: it is a model mapped with a SQL View, the insert, update
-        delete method are forbidden by the database
+      delete method are forbidden by the database
 
     Each model has a:
 
     * registry name: compose by the parent + . + class model name
     * table name: compose by the parent + '_' + class model name
 
-    The table name can be overloaded by the attribute tablename. the wanted value
-    are a string (name of the table) of a model in the declaration.
+    The table name can be overloaded by the attribute tablename. the wanted
+    value are a string (name of the table) of a model in the declaration.
 
     ..warning::
 

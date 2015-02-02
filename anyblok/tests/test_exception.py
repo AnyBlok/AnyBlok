@@ -23,7 +23,7 @@ class TestCoreInterfaceException(TestCase):
 
     def test_add_interface(self):
         register(Declarations.Exception, cls_=OneInterface,
-                        name_='OneException')
+                 name_='OneException')
         self.assertEqual(
             'Exception',
             Declarations.Exception.OneException.__declaration_type__)
@@ -43,7 +43,7 @@ class TestCoreInterfaceException(TestCase):
     def test_add_same_interface(self):
 
         register(Declarations.Exception, cls_=OneInterface,
-                        name_="SameException")
+                 name_="SameException")
 
         try:
             @register(Declarations.Exception)
@@ -57,10 +57,10 @@ class TestCoreInterfaceException(TestCase):
     def test_remove_interface(self):
 
         register(Declarations.Exception, cls_=OneInterface,
-                        name_="Exception2Remove")
+                 name_="Exception2Remove")
         try:
             unregister(Declarations.Exception.Exception2Remove,
-                            OneInterface)
+                       OneInterface)
             self.fail('No watch dog to remove field')
         except Declarations.Exception.DeclarationsException:
             pass

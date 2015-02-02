@@ -16,6 +16,7 @@ CHANGELOG
 * [ADD] Howto declare Core / Type
 * [FIX] Model can only inherit simple python class, Mixin or Model
 * [FIX] Mixin inherit chained
+* [FIX] Flake8
 
 0.1.1
 -----

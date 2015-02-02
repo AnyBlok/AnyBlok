@@ -53,7 +53,5 @@ class Exception:
         raise DeclarationsException("Removing an exception is forbidden")
 
 
-Declarations.register(Declarations.Exception,
-                             cls_=DeclarationsException)
-Declarations.register(Declarations.Exception,
-                             cls_=EnvironmentException)
+Declarations.register(Declarations.Exception, cls_=DeclarationsException)
+Declarations.register(Declarations.Exception, cls_=EnvironmentException)

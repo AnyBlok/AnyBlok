@@ -33,12 +33,10 @@ class ArgsParseManager:
 
     This class stores three attributes:
 
-    * groups: lists of options indexed by part, a part is a ``ConfigParser`` group, or
-              a process name
-
+    * groups: lists of options indexed by part, a part is a ``ConfigParser``
+      group, or a process name
     * labels: if a group has got a label then all the options in group are
-              gathered in a parser group
-
+      gathered in a parser group
     * configuration: result of the ``ArgsParser`` after loading
 
     """
@@ -122,7 +120,8 @@ class ArgsParseManager:
 
         ..warning::
 
-            Some options are used as a default value not real value, such as the dbname
+            Some options are used as a default value not real value, such
+            as the dbname
 
         :param opt: name of the option
         :param default: default value if the option doesn't exist
@@ -226,8 +225,8 @@ class ArgsParseManager:
     def get_url(cls, dbname=None):
         """ Return an sqlalchemy URL for database
 
-        Get the options of the database, the only option which can be overloaded
-        is the name of the database::
+        Get the options of the database, the only option which can be
+        overloaded is the name of the database::
 
             url = ArgsParseManager.get_url(dbname='Mydb')
 
