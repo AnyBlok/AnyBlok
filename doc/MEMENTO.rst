@@ -106,7 +106,7 @@ The ``Declarations`` has two main methods
 +---------------------+-------------------------------------------------------+
 | Method name         | Description                                           |
 +=====================+=======================================================+
-| ``register``        | Add the blok in the registry                          |
+| ``register``        | Add the declaration in the registry                   |
 |                     | This method can be used as:                           |
 |                     |                                                       |
 |                     | * A function::                                        |
@@ -123,8 +123,8 @@ The ``Declarations`` has two main methods
 |                     |        pass                                           |
 |                     |                                                       |
 +---------------------+-------------------------------------------------------+
-| ``unregister``      | Remove an existing blok from the registry. This       |
-|                     | method is only used as a function::                   |
+| ``unregister``      | Remove an existing declaration from the registry.     |
+|                     | This method is only used as a function::              |
 |                     |                                                       |
 |                     |    from ... import Foo                                |
 |                     |                                                       |

@@ -12,7 +12,7 @@ from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper
 from sqlalchemy.ext.hybrid import hybrid_method
-from functools import lru_cache
+from anyblok.common import TypeList, apply_cache
 
 
 @Declarations.register(Declarations.Exception)
@@ -76,40 +76,6 @@ def get_fields(base):
             if Field in getattr(base, p).__class__.__mro__:
                 fields[p] = getattr(base, p)
     return fields
-
-
-class ModelList(list):
-
-    def __init__(self, Model, registry, namespace, transformation_properties):
-        super(ModelList, self).__init__()
-        self.Model = Model
-        self.registry = registry
-        self.namespace = namespace
-        self.transformation_properties = transformation_properties
-
-    def transform_base(self, base, namespace=None):
-        if base in self.registry.removed:
-            return None
-
-        if namespace is None:
-            namespace = self.namespace
-
-        newbase = self.Model.transform_base(
-            self.registry, namespace, base, self.transformation_properties)
-        return newbase
-
-    def append(self, base, **kwargs):
-        newbase = self.transform_base(base, **kwargs)
-        if newbase:
-            super(ModelList, self).append(newbase)
-
-    def extend(self, bases, **kwargs):
-        newbases = [x
-                    for y in bases
-                    for x in [self.transform_base(y)]
-                    if x is not None]
-        if newbases:
-            super(ModelList, self).extend(newbases)
 
 
 @Declarations.add_declaration_type(isAnEntry=True,
@@ -226,48 +192,6 @@ class Model:
         field.update_properties(registry, namespace, name, properties)
 
     @classmethod
-    def apply_cache(cls, registry, namespace, base, properties):
-        """ Find the cached methods in the base to apply the real cache
-        decorator
-
-        :param registry: the current  registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param properties: the properties of the model
-        :rtype: new base
-        """
-        methods_cached = {}
-
-        def apply_wrapper(attr, method):
-            @lru_cache(maxsize=method.size)
-            def wrapper(*args, **kwargs):
-                return method(*args, **kwargs)
-
-            wrapper.indentify = (namespace, attr)
-            registry.caches[namespace][attr].append(wrapper)
-            if method.is_cache_classmethod:
-                methods_cached[attr] = classmethod(wrapper)
-            else:
-                methods_cached[attr] = wrapper
-
-        for attr in dir(base):
-            method = getattr(base, attr)
-            if not hasattr(method, 'is_cache_method'):
-                continue
-            elif method.is_cache_method is True:
-                if namespace not in registry.caches:
-                    registry.caches[namespace] = {attr: []}
-                elif attr not in registry.caches[namespace]:
-                    registry.caches[namespace][attr] = []
-
-                apply_wrapper(attr, method)
-
-        if methods_cached:
-            return type(namespace, (base,), methods_cached)
-
-        return base
-
-    @classmethod
     def apply_event_listner(cls, registry, namespace, base, properties):
         """ Find the event listener methods in the base to save the
         namespace and the method in the registry
@@ -321,7 +245,7 @@ class Model:
         :param properties: the properties of the model
         :rtype: new base
         """
-        new_base = cls.apply_cache(registry, namespace, base, properties)
+        new_base = apply_cache(registry, namespace, base, properties)
         cls.apply_event_listner(registry, namespace, new_base, properties)
         cls.detect_hybrid_method(registry, namespace, new_base, properties)
         return new_base
@@ -430,7 +354,7 @@ class Model:
                 'hybrid_method': [],
             }
 
-        bases = ModelList(cls, registry, namespace, transformation_properties)
+        bases = TypeList(cls, registry, namespace, transformation_properties)
         ns = registry.loaded_registries[namespace]
         properties = ns['properties'].copy()
 
