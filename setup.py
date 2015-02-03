@@ -8,7 +8,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.1.2'
+version = '0.1.3'
 
 
 if sys.version_info < (3, 2):
@@ -27,12 +27,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst')) as readme:
     README = readme.read()
 
-with open(os.path.join(here, 'doc', 'FRONT.rst')) as front:
-    FRONT = front.read()
-
-with open(os.path.join(here, 'doc', 'CHANGES.rst')) as changes:
-    CHANGES = changes.read()
-
 setup(
     name="AnyBlok",
     version=version,
@@ -40,7 +34,7 @@ setup(
     author_email="jssuzanne@anybox.fr",
     description="Anyblok is a dynamic injection blok framework",
     license="MPL2",
-    long_description=README + '\n\n' + FRONT + '\n\n' + CHANGES,
+    long_description=README,
     url="http://docs.anyblok.org/%s" % version,
     packages=find_packages(),
     zip_safe=False,
