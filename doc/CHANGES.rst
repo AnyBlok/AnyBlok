@@ -9,6 +9,12 @@
 CHANGELOG
 =========
 
+
+0.1.3
+-----
+
+* [FIX] setup long description, good for pypi but not for easy_install
+
 0.1.2
 -----
 
