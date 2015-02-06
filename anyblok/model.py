@@ -345,6 +345,7 @@ class Model:
         :param realregistryname: the name of the model if the namespace is a
             mixin
         :rtype: the list od the bases and the properties
+        :exception: ModelException
         """
         if namespace in registry.loaded_namespaces:
             return [registry.loaded_namespaces[namespace]], {}

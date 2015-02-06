@@ -33,7 +33,7 @@ The most recent published version of this documentation should be at
 http://doc.anyblok.org.
 
 The latest stable documentation is for the release 0.1.0
-at http://docs.anyblok.org/0.1.1
+at http://docs.anyblok.org/0.1.4
 
 Project Status
 --------------
