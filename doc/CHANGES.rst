@@ -11,6 +11,13 @@
 CHANGELOG
 =========
 
+Future
+------
+
+* [ADD] Env in registry_base to access at EnvironmentManager without to import
+  it at each time
+* [IMP] doc add how to on the environment
+
 0.1.3
 -----
 

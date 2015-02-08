@@ -390,7 +390,9 @@ class Registry:
         self.dbname = dbname
         url = ArgsParseManager.get_url(dbname=dbname)
         self.engine = create_engine(url)
-        self.registry_base = type("RegistryBase", tuple(), {'registry': self})
+        self.registry_base = type("RegistryBase", tuple(), {
+            'registry': self,
+            'Env': EnvironmentManager})
         self.ini_var()
         self.Session = None
         self.load()

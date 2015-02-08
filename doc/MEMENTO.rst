@@ -13,9 +13,9 @@ MEMENTO
 
 Anyblok mainly depends on:
 
-* Python 3.3+
-* SQLAlchemy
-* Alembic
+* Python 3.2+
+* `SQLAlchemy <http://www.sqlalchemy.org>`_
+* `Alembic <http://alembic.readthedocs.org/en/latest/>`_
 
 Blok
 ----
@@ -1018,3 +1018,28 @@ directly in the Model::
     to know the parameters of the ``aliased`` method
 
     .. warning:: The first arg is already passed by AnyBlok
+
+Get the registry
+~~~~~~~~~~~~~~~~
+
+You can get a Model by the registry in any method of Models::
+
+    Model = self.registry.System.Model
+    assert Model.__registry_name__ == 'Model.System.Model'
+
+Get the current environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The current environment is saved in the main thread. You can add a value to
+the current Environment::
+
+    self.Env.set('My var', 'one value')
+
+You can get a value from the current Environment::
+
+    myvalue = self.Env.get('My var', defaul="My default value")
+
+.. note::
+
+    The environment is as a dict the value can be an instance of any type
+
