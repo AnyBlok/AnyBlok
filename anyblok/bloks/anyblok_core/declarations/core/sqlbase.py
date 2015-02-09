@@ -7,6 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql.expression import true
 
 
 @Declarations.register(Declarations.Exception)
@@ -74,6 +75,45 @@ class SqlMixin:
         """
         return aliased(cls, *args, **kwargs)
 
+    @classmethod
+    def from_primary_keys(cls, **pks):
+        """ return the instance of the model from the primary keys
+
+        :param \*\*pks: dict {primary_key: value, ...}
+        :rtype: instance of the model
+        :exception: SqlBaseException
+        """
+        _pks = cls.get_primary_keys()
+        for pk in _pks:
+            if pk not in pks:
+                raise SqlBaseException("No primary key %s filled for %r" % (
+                    pk, cls.__registry_name__))
+
+        where_clause = [getattr(cls, k) == v for k, v in pks.items()]
+        query = cls.query().filter(*where_clause)
+        return query.first()
+
+    def to_primary_keys(self):
+        """ return the primary keys and values for this instance
+
+        :rtype: dict {primary key: value, ...}
+        """
+        pks = self.get_primary_keys()
+        return {x: getattr(self, x) for x in pks}
+
+    @classmethod
+    def get_primary_keys(cls):
+        """ return the name of the primary keys of the model
+
+        :type: list of the primary keys name
+        """
+        Column = cls.registry.System.Column
+        model = cls.__registry_name__
+        query = Column.query()
+        query = query.filter(Column.model == model)
+        query = query.filter(Column.primary_key == true())
+        return query.all().name
+
 
 @Declarations.register(Declarations.Core)
 class SqlBase(SqlMixin):
@@ -95,7 +135,7 @@ class SqlBase(SqlMixin):
             query.update({...})
 
         """
-        pks = [c.name for c in self.__table__.primary_key.columns.values()]
+        pks = self.get_primary_keys()
         where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
                         for pk in pks]
         self.__class__.query().filter(*where_clause).update(*args, **kwargs)

@@ -27,3 +27,33 @@ class TestCoreSqlBase(BlokTestCase):
                                                            'ThreeBlok'])).all()
         states = [x[0] for x in states]
         self.assertEqual(states, ['undefined', 'undefined', 'undefined'])
+
+    def test_from_primary_key(self):
+        Model = self.registry.System.Model
+        model = Model.query().first()
+        model2 = Model.from_primary_keys(name=model.name)
+        self.assertEqual(model, model2)
+
+    def test_from_primary_keys(self):
+        Column = self.registry.System.Column
+        column = Column.query().first()
+        column2 = Column.from_primary_keys(model=column.model,
+                                           name=column.name)
+        self.assertEqual(column, column2)
+
+    def test_get_primary_key(self):
+        self.assertEqual(self.registry.System.Model.get_primary_keys(),
+                         ['name'])
+
+    def test_get_primary_keys(self):
+        self.assertEqual(self.registry.System.Column.get_primary_keys(),
+                         ['name', 'model'])
+
+    def test_to_primary_key(self):
+        model = self.registry.System.Model.query().first()
+        self.assertEqual(model.to_primary_keys(), dict(name=model.name))
+
+    def test_to_primary_keys(self):
+        column = self.registry.System.Column.query().first()
+        self.assertEqual(column.to_primary_keys(),
+                         {'model': column.model, 'name': column.name})

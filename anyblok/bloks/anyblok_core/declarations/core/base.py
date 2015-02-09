@@ -6,9 +6,15 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+register = Declarations.register
 
 
-@Declarations.register(Declarations.Core)
+@register(Declarations.Exception)
+class CoreBaseException(Exception):
+    """ Exception for ``Core.Base`` """
+
+
+@register(Declarations.Core)
 class Base:
     """ Inherited by all the models
     """
@@ -34,3 +40,17 @@ class Base:
                 for model, method in events[cls.__registry_name__][event]:
                     m = cls.registry.loaded_namespaces[model]
                     getattr(m, method)(*args, **kwargs)
+
+    @classmethod
+    def get_primary_keys(cls, **pks):
+        """ No SQL Model has not primary key """
+        raise CoreBaseException("No primary key for No SQL Model")
+
+    @classmethod
+    def from_primary_keys(cls, **pks):
+        """ No SQL Model has not primary key """
+        raise CoreBaseException("No primary key for No SQL Model")
+
+    def to_primary_keys(self):
+        """ No SQL Model has not primary key """
+        raise CoreBaseException("No primary key for No SQL Model")
