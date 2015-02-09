@@ -14,6 +14,9 @@ CHANGELOG
 Future
 ------
 
+* [ADD] IO:
+    * Mapping: Link between Model instance and (Model, str key)
+
 * [ADD] Env in registry_base to access at EnvironmentManager without to import
   it at each time
 * [IMP] doc add how to on the environment

@@ -1042,4 +1042,3 @@ You can get a value from the current Environment::
 .. note::
 
     The environment is as a dict the value can be an instance of any type
-

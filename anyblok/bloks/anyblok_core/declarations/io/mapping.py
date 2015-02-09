@@ -94,9 +94,9 @@ class Mapping:
         return cls.insert(model=model, key=key, primary_key=pks)
 
     @classmethod
-    def set(cls, model, key, instance):
+    def set(cls, key, instance):
         pks = instance.to_primary_keys()
-        return cls.set_primary_keys(model, key, pks)
+        return cls.set_primary_keys(instance.__registry_name__, key, pks)
 
     @classmethod
     def get(cls, model, key):

@@ -44,7 +44,7 @@ class TestIOMapping(BlokTestCase):
 
     def test_set(self):
         column = self.Column.query().first()
-        res = self.Mapping.set(column.__registry_name__, 'test_set', column)
+        res = self.Mapping.set('test_set', column)
         query = self.Mapping.query()
         query = query.filter(self.Mapping.key == 'test_set')
         self.assertEqual(query.count(), 1)
@@ -73,13 +73,13 @@ class TestIOMapping(BlokTestCase):
 
     def test_get(self):
         column = self.Column.query().first()
-        self.Mapping.set(column.__registry_name__, 'test_get', column)
+        self.Mapping.set('test_get', column)
         mapping = self.Mapping.get(column.__registry_name__, 'test_get')
         self.assertEqual(mapping, column)
 
     def test_delete(self):
         column = self.Column.query().first()
-        self.Mapping.set(column.__registry_name__, 'test_delete', column)
+        self.Mapping.set('test_delete', column)
         mapping = self.Mapping.get(column.__registry_name__, 'test_delete')
         self.assertEqual(mapping, column)
         self.Mapping.delete(column.__registry_name__, 'test_delete')
@@ -93,7 +93,7 @@ class TestIOMapping(BlokTestCase):
 
         # create all
         for key, instance in columns.items():
-            self.Mapping.set(model, key, instance)
+            self.Mapping.set(key, instance)
 
         # check all
         for key, instance in columns.items():
