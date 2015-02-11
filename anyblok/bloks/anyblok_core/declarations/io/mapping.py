@@ -33,14 +33,30 @@ class Mapping:
 
     @Declarations.hybrid_method
     def filter_by_model_and_key(self, model, key):
+        """ SQLAlechemy hybrid method to filter by model and key
+
+        :param model: model of the mapping
+        :param key: external key of the mapping
+        """
         return (self.model == model) & (self.key == key)
 
     @Declarations.hybrid_method
     def filter_by_model_and_keys(self, model, *keys):
+        """ SQLAlechemy hybrid method to filter by model and key
+
+        :param model: model of the mapping
+        :param key: external key of the mapping
+        """
         return (self.model == model) & self.key.in_(keys)
 
     @classmethod
     def multi_delete(cls, model, *keys):
+        """ Delete all the keys for this model
+
+        :param model: model of the mapping
+        :param \*keys: list of the key
+        :rtype: Boolean True if the mappings are removed
+        """
         query = cls.query()
         query = query.filter(cls.filter_by_model_and_keys(model, *keys))
         if query.count():
@@ -51,6 +67,12 @@ class Mapping:
 
     @classmethod
     def delete(cls, model, key):
+        """ Delete the key for this model
+
+        :param model: model of the mapping
+        :param key: string of the key
+        :rtype: Boolean True if the mapping is removed
+        """
         query = cls.query()
         query = query.filter(cls.filter_by_model_and_key(model, key))
         if query.count():
@@ -80,10 +102,12 @@ class Mapping:
                         pk, pks, model))
 
     @classmethod
-    def set_primary_keys(cls, model, key, pks):
+    def set_primary_keys(cls, model, key, pks, raiseifexist=True):
         if cls.get_primary_keys(model, key):
-            raise IOMappingSetException(
-                "One value found for model %r and key %r" % (model, key))
+            if raiseifexist:
+                raise IOMappingSetException(
+                    "One value found for model %r and key %r" % (model, key))
+            cls.delete(model, key)
 
         if not pks:
             raise IOMappingSetException(
@@ -94,9 +118,10 @@ class Mapping:
         return cls.insert(model=model, key=key, primary_key=pks)
 
     @classmethod
-    def set(cls, key, instance):
+    def set(cls, key, instance, raiseifexist=True):
         pks = instance.to_primary_keys()
-        return cls.set_primary_keys(instance.__registry_name__, key, pks)
+        return cls.set_primary_keys(instance.__registry_name__, key, pks,
+                                    raiseifexist=raiseifexist)
 
     @classmethod
     def get(cls, model, key):

@@ -108,3 +108,17 @@ class TestIOMapping(BlokTestCase):
             mapping = self.Mapping.get(model, key)
             self.assertNotEqual(mapping, instance)
             self.assertEqual(mapping, None)
+
+    def test_multi_set_the_same_key_with_raise(self):
+        from anyblok import Declarations
+        IOException = Declarations.Exception.IOException
+        IOMappingSetException = IOException.IOMappingSetException
+        column = self.Column.query().first()
+        self.Mapping.set('test_set', column)
+        with self.assertRaises(IOMappingSetException):
+            self.Mapping.set('test_set', column)
+
+    def test_multi_set_the_same_key_without_raise(self):
+        column = self.Column.query().first()
+        self.Mapping.set('test_set', column)
+        self.Mapping.set('test_set', column, raiseifexist=False)

@@ -25,6 +25,16 @@ Save an instance with a key::
     blok = Blok.query().filter(Blok.name == 'anyblok-core').first()
     self.registry.IO.Mapping.set('External ID', blok)
 
+.. warning::
+
+    By default if you save another instance with the same key and the same
+    model, an ``IOMapingSetException`` will be raised. Il really you want
+    this mapping you must call the set method with the named argument 
+    **raiseifexist=False**::
+
+        self.registry.IO.Mapping.set('External ID', blok, raiseifexist=False)
+        
+
 Get an entry in the mapping::
 
     blok2 = self.registry.IO.Mapping.get('Model.System.Blok', 'External ID')
