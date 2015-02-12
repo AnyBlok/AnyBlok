@@ -323,15 +323,13 @@ class Model:
                 ps.update(properties)
                 properties.update(ps)
 
-        if namespace in registry.loaded_registries['Model_names']:
-            for b in bases:
-                fields = get_fields(b)
-                for p, f in fields.items():
+        for b in bases:
+            fields = get_fields(b)
+            for p, f in fields.items():
+                if p not in properties:
                     properties[p] = f
 
-            registry.loaded_namespaces_first_step[namespace] = properties
-            properties = {}
-
+        registry.loaded_namespaces_first_step[namespace] = properties
         return properties
 
     @classmethod

@@ -11,6 +11,7 @@ from anyblok import Declarations
 FieldException = Declarations.Exception.FieldException
 register = Declarations.register
 Model = Declarations.Model
+Mixin = Declarations.Mixin
 
 
 def _complete_one2many(**kwargs):
@@ -61,6 +62,34 @@ def _minimum_one2many(**kwargs):
 
         name = String(primary_key=True)
         address_id = Integer(foreign_key=(Model.Address, 'id'))
+
+    @register(Model)  # noqa
+    class Address:
+
+        persons = One2Many(model=Model.Person)
+
+
+def _minimum_one2many_remote_field_in_mixin(**kwargs):
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+    One2Many = Declarations.RelationShip.One2Many
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Mixin)
+    class MPerson:
+        address_id = Integer(foreign_key=(Model.Address, 'id'))
+
+    @register(Model)
+    class Person(Mixin.MPerson):
+
+        name = String(primary_key=True)
 
     @register(Model)  # noqa
     class Address:
@@ -119,9 +148,9 @@ def _autodetect_two_foreign_key(**kwargs):
         persons = One2Many(model=Model.Person)
 
 
-class TestOne2One(DBTestCase):
+class TestOne2Many(DBTestCase):
 
-    def test_complete_one2one(self):
+    def test_complete_one2many(self):
         registry = self.init_registry(_complete_one2many)
 
         address = registry.Address.insert(
@@ -132,7 +161,16 @@ class TestOne2One(DBTestCase):
 
         self.assertEqual(person.address, address)
 
-    def test_minimum_one2one(self):
+    def test_minimum_one2many(self):
+        registry = self.init_registry(_minimum_one2many)
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        address.persons.append(person)
+
+    def test_minimum_one2many_remote_field_in_mixin(self):
         registry = self.init_registry(_minimum_one2many)
 
         address = registry.Address.insert(
