@@ -11,6 +11,10 @@
 IO
 ==
 
+.. note::
+
+    Require tha the anyblok-io is installed
+
 TODO
 
 Mapping
