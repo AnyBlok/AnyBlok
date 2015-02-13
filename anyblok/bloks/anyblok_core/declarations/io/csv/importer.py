@@ -6,22 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-register = Declarations.register
-Model = Declarations.Model
 
 
-@register(Declarations.Exception)
-class IOException(Exception):
-    """ IO exception """
-
-
-@register(Model)
-class IO:
+@Declarations.register(Declarations.Model.IO)
+class Importer(Declarations.Mixin.IOCSVMixin):
     pass
-
-
-from . import mapping  # noqa
-from . import mixin  # noqa
-from . import importer  # noqa
-from . import exporter  # noqa
-from . import csv  # noqa

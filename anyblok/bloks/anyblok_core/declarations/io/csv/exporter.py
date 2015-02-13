@@ -7,21 +7,19 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 register = Declarations.register
-Model = Declarations.Model
+IO = Declarations.Model.IO
+Mixin = Declarations.Mixin
+Integer = Declarations.Column.Integer
+One2Many = Declarations.RelationShip.One2Many
 
 
-@register(Declarations.Exception)
-class IOException(Exception):
-    """ IO exception """
+@register(IO.Exporter)
+class Field(Mixin.IOCSVFieldMixin):
+
+    exporter = Integer(foreign_key=(IO.Exporter, 'id'), nullable=False)
 
 
-@register(Model)
-class IO:
-    pass
+@register(IO)
+class Exporter(Mixin.IOCSVMixin):
 
-
-from . import mapping  # noqa
-from . import mixin  # noqa
-from . import importer  # noqa
-from . import exporter  # noqa
-from . import csv  # noqa
+    fields_to_export = One2Many(model=IO.Exporter.Field)

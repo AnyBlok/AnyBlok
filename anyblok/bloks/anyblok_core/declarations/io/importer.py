@@ -6,22 +6,12 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-register = Declarations.register
-Model = Declarations.Model
+LargeBinary = Declarations.Column.LargeBinary
+Boolean = Declarations.Column.Boolean
 
 
-@register(Declarations.Exception)
-class IOException(Exception):
-    """ IO exception """
+@Declarations.register(Declarations.Model.IO)
+class Importer(Declarations.Mixin.IOMixin):
 
-
-@register(Model)
-class IO:
-    pass
-
-
-from . import mapping  # noqa
-from . import mixin  # noqa
-from . import importer  # noqa
-from . import exporter  # noqa
-from . import csv  # noqa
+    file = LargeBinary(nullable=False)
+    commit_in_each_grouped = Boolean(default=True)
