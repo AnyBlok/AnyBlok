@@ -5,20 +5,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations, reload_module_if_blok_is_reloaded
-register = Declarations.register
-Model = Declarations.Model
+from anyblok import Declarations
 
 
-@register(Declarations.Exception)
-class IOException(Exception):
-    """ IO exception """
-
-
-@register(Model)
-class IO:
+@Declarations.register(Declarations.Model.IO)
+class Exporter(Declarations.Mixin.IOMixin):
     pass
-
-
-from . import mapping
-reload_module_if_blok_is_reloaded(mapping)

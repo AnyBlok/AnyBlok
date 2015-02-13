@@ -60,7 +60,6 @@ class AnyBlokCore(Blok):
         from . import relationship  # noqa
         from . import core  # noqa
         from . import system  # noqa
-        from . import io  # noqa
 
     @classmethod
     def reload_declaration_module(cls, reload):
@@ -74,5 +73,3 @@ class AnyBlokCore(Blok):
         reload(core)
         from . import system
         reload(system)
-        from . import io
-        reload(io)
