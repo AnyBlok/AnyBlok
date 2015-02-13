@@ -55,6 +55,8 @@ setup(
     entry_points={
         'AnyBlok': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
+            'anyblok-io=anyblok.bloks.io:AnyBlokIO',
+            'anyblok-io-csv=anyblok.bloks.io_csv:AnyBlokIOCSV',
         ],
         'TestAnyBlok': [
             'test-blok1=anyblok.test_bloks.test_blok1:TestBlok',

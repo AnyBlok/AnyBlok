@@ -117,12 +117,10 @@ class MigrationReport:
         this method parses the detected change and calls the Migration
         system to apply the change with the api of Declarations
         """
-        columns_added = []
         for action in self.actions:
             if action[0] == 'add_column':
                 _, _, table, column = action
                 self.migration.table(table).column().add(column)
-                columns_added.append(column)
             elif action[0] == 'modify_nullable':
                 _, _, table, column, kwargs, oldvalue, newvalue = action
                 self.migration.table(table).column(column).alter(
@@ -150,9 +148,6 @@ class MigrationReport:
                 _, fk = action
                 t = self.migration.table(fk.table.name)
                 for column in fk.columns:
-                    if column in columns_added:
-                        continue
-
                     for fk_ in column.foreign_keys:
                         t.column(name=column.name).foreign_key().add(
                             fk_.column)
@@ -271,7 +266,9 @@ class MigrationColumn:
         t = self.table.migration.metadata.tables[self.table.name]
         for constraint in t.constraints:
             if not isinstance(constraint, schema.PrimaryKeyConstraint):
-                self.table.migration.operation.impl.add_constraint(constraint)
+                if not isinstance(constraint, schema.ForeignKeyConstraint):
+                    self.table.migration.operation.impl.add_constraint(
+                        constraint)
 
         return MigrationColumn(self.table, column.name)
 
@@ -324,8 +321,6 @@ class MigrationColumn:
             except IntegrityError as e:
                 self.table.migration.rollback_savepoint(savepoint)
                 logger.warn(str(e))
-            else:
-                self.table.migration.release_savepoint(savepoint)
 
         return MigrationColumn(self.table, name)
 
