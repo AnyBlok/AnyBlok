@@ -9,6 +9,35 @@
 import anyblok
 from .common import python_version
 
+isimp = False
+try:
+    from importlib import reload as reload_module
+except ImportError:
+    isimp = True
+    from imp import reload as reload_module
+
+
+def reload_wraper(module):
+    if isimp:
+        module2reload = module
+    elif python_version() == (3, 3):
+        module2reload = module.__name__
+    elif python_version() >= (3, 4):
+        module2reload = module
+    else:
+        raise ImportManagerException(
+            "Unknow action to do to reload module %r" %
+            module.__name__)
+
+    reload_module(module2reload)
+
+
+def reload_module_if_blok_is_reloaded(module):
+    from anyblok.environment import EnvironmentManager
+
+    if EnvironmentManager.get('reload', default=False):
+        reload_wraper(module)
+
 
 @anyblok.Declarations.register(anyblok.Declarations.Exception)
 class ImportManagerException(Exception):
@@ -92,27 +121,6 @@ class Loader:
 
         :exception: ImportManagerException
         """
-        isimp = False
-        try:
-            from importlib import reload as reload_module
-        except ImportError:
-            isimp = True
-            from imp import reload as reload_module
-
-        def reload_wraper(module):
-            if isimp:
-                module2reload = module
-            elif python_version() == (3, 3):
-                module2reload = module.__name__
-            elif python_version() >= (3, 4):
-                module2reload = module
-            else:
-                raise ImportManagerException(
-                    "Unknow action to do to reload module %r" %
-                    module.__name__)
-
-            reload_module(module2reload)
-
         from anyblok.blok import BlokManager
         from anyblok.registry import RegistryManager
         from anyblok.environment import EnvironmentManager

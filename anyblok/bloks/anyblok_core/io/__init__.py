@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
+from anyblok import Declarations, reload_module_if_blok_is_reloaded
 register = Declarations.register
 Model = Declarations.Model
 
@@ -20,8 +20,13 @@ class IO:
     pass
 
 
-from . import mapping  # noqa
-from . import mixin  # noqa
-from . import importer  # noqa
-from . import exporter  # noqa
-from . import csv  # noqa
+from . import mapping
+reload_module_if_blok_is_reloaded(mapping)
+from . import mixin
+reload_module_if_blok_is_reloaded(mixin)
+from . import importer
+reload_module_if_blok_is_reloaded(importer)
+from . import exporter
+reload_module_if_blok_is_reloaded(exporter)
+from . import csv
+reload_module_if_blok_is_reloaded(csv)
