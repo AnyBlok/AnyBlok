@@ -11,3 +11,7 @@ from anyblok.blok import Blok
 class TestBlok(Blok):
 
     version = '1.0.0'
+
+    @classmethod
+    def import_declaration_module(cls):
+        from . import test  # noqa

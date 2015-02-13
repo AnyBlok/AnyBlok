@@ -101,13 +101,6 @@ class RegistryManager:
         return registry
 
     @classmethod
-    def unload(cls):
-        """ Unload the registry bloks """
-
-        for blok in cls.loaded_bloks.keys():
-            cls.init_blok(blok)
-
-    @classmethod
     def reload(cls, blok):
         """ Reload the blok
 
@@ -116,15 +109,11 @@ class RegistryManager:
 
         :param blok: the name of the blok to reload
         """
-        cls.unload()
-        mod = ImportManager.get(blok)
-        EnvironmentManager.set('current_blok', blok)
         try:
-            EnvironmentManager.set('reload', True)
-            mod.imports()
+            mod = ImportManager.get(blok)
+            EnvironmentManager.set('current_blok', blok)
             mod.reload()
         finally:
-            EnvironmentManager.set('reload', False)
             EnvironmentManager.set('current_blok', None)
 
         for registry in cls.registries.values():

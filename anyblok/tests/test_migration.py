@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase
-from anyblok.registry import Registry
+from anyblok.registry import Registry, RegistryManager
 from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
 from anyblok.environment import EnvironmentManager
@@ -16,6 +16,7 @@ from anyblok import Declarations
 from sqlalchemy.exc import InternalError
 from unittest import skipIf
 import alembic
+from copy import deepcopy
 MigrationException = Declarations.Exception.MigrationException
 
 
@@ -33,6 +34,7 @@ class TestMigration(TestCase):
         Int = Declarations.Column.Integer
         Str = Declarations.Column.String
 
+        cls.loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
         EnvironmentManager.set('current_blok', 'anyblok-core')
 
         @register(Model)
@@ -65,6 +67,7 @@ class TestMigration(TestCase):
     def tearDownClass(cls):
         super(TestMigration, cls).tearDownClass()
         BlokManager.unload()
+        RegistryManager.loaded_bloks = cls.loaded_bloks
         cls.dropdb()
 
     def tearDown(self):

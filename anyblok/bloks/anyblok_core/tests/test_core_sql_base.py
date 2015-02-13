@@ -46,8 +46,11 @@ class TestCoreSqlBase(BlokTestCase):
                          ['name'])
 
     def test_get_primary_keys(self):
-        self.assertEqual(self.registry.System.Column.get_primary_keys(),
-                         ['name', 'model'])
+        pks = self.registry.System.Column.get_primary_keys()
+        model_in_pks = 'model' in pks
+        name_in_pks = 'name' in pks
+        self.assertEqual(model_in_pks, True)
+        self.assertEqual(name_in_pks, True)
 
     def test_to_primary_key(self):
         model = self.registry.System.Model.query().first()

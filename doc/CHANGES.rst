@@ -14,6 +14,11 @@ CHANGELOG
 Future
 ------
 
+.. warning:: 
+
+    This version is not compatible with the version **0.1.3**
+
+* [REF] Import and reload are more explicite
 * [ADD] IO:
     * Mapping: Link between Model instance and (Model, str key)
 

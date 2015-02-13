@@ -111,9 +111,6 @@ class BlokManager:
     @log()
     def unload(cls):
         """ Unload all the bloks but not the registry """
-        from anyblok.registry import RegistryManager
-
-        RegistryManager.unload()
         cls.bloks = {}
         cls.ordered_bloks = []
         cls.bloks_groups = None
@@ -218,7 +215,6 @@ class Blok:
     * optional: list of the bloks to be installed if present in the blok list
     * conditionnal: if all the bloks of this list are installed then install
       this blok
-    * imports: list of the python file to import
     """
 
     autoinstall = False
@@ -231,7 +227,7 @@ class Blok:
         self.registry = registry
 
     @classmethod
-    def clean_before_reload(cls):
+    def import_declaration_module(cls):
         pass
 
     def update(self, latest_version):

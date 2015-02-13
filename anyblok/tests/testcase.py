@@ -179,6 +179,8 @@ class DBTestCase(TestCase):
         :param kwargs: kwargs for the function
         :rtype: registry instance
         """
+        from copy import deepcopy
+        loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
         if function is not None:
             EnvironmentManager.set('current_blok', self.current_blok)
             try:
@@ -186,7 +188,10 @@ class DBTestCase(TestCase):
             finally:
                 EnvironmentManager.set('current_blok', None)
 
-        registry = self.getRegistry()
+        try:
+            registry = self.getRegistry()
+        finally:
+            RegistryManager.loaded_bloks = loaded_bloks
 
         def session_commit(*args, **kwargs):
             pass

@@ -129,6 +129,10 @@ File tree::
             if latest_version is None:
                 self.install()
 
+        @classmethod
+        def import_declaration_module(cls):
+            from . import office  # noqa
+
     # office.py describe the models Address and Room
 
 **Position blok**
@@ -158,6 +162,10 @@ File tree::
         def update(self, latest_version):
             if latest_version is None:
                 self.install()
+
+        @classmethod
+        def import_declaration_module(cls):
+            from . import position  # noqa
 
     # position.py describe the model Position
 
@@ -215,6 +223,11 @@ File tree::
             if latest_version is None:
                 self.install()
 
+        @classmethod
+        def import_declaration_module(cls):
+            from . import argsparse  # noqa
+            from . import employee  # noqa
+
     # employee.py describe the model Employee
 
 **EmployeePosition blok**:
@@ -265,6 +278,10 @@ File tree::
         def update(self, latest_version):
             if latest_version is None:
                 self.install()
+
+        @classmethod
+        def import_declaration_module(cls):
+            from . import employee  # noqa
 
 .. warning::
     There are no strong dependencies between conditional blok and bloks,

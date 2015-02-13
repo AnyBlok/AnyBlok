@@ -62,21 +62,29 @@ Here are the available attributes for the blok:
 
 And the methods that define blok behaviours:
 
-+-------------------------+---------------------------------------------------+
-| Method                  | Description                                       |
-+=========================+===================================================+
-| ``clean_before_reload`` | ``classmethod``, call before Python reload of the |
-|                         | blok. Use only if an action must be executed      |
-|                         | before reloading the blok                         |
-+-------------------------+---------------------------------------------------+
-| ``update``              | Action to do when the blok is being installed or  |
-|                         | updated. This method has one argument             |
-|                         | ``latest_version`` (None for install)             |
-+-------------------------+---------------------------------------------------+
-| ``uninstall``           | Action to do when the blok is being uninstalled   |
-+-------------------------+---------------------------------------------------+
-| ``load``                | Action to do when the server starts               |
-+-------------------------+---------------------------------------------------+
++-------------------------------+---------------------------------------------+
+| Method                        | Description                                 |
++===============================+=============================================+
+| ``import_declaration_module`` | ``classmethod``, call to import all python  |
+|                               | module which declare object from blok.      |
++-------------------------------+---------------------------------------------+
+| ``reload_declaration_module`` | ``classmethod``, call to reload the import  |
+|                               | all the python module which declare object  |
++-------------------------------+---------------------------------------------+
+| ``update``                    | Action to do when the blok is being         |
+|                               | install or updated. This method has one     |
+|                               | argument ``latest_version`` (None for       | 
+|                               | install)                                    |
++-------------------------------+---------------------------------------------+
+| ``uninstall``                 | Action to do when the blok is being         |
+|                               | uninstalled                                 |
++-------------------------------+---------------------------------------------+
+| ``load``                      | Action to do when the server starts         |
++-------------------------------+---------------------------------------------+
+
+.. note::
+
+    The version 0.2.0 change the import and reload of the module python
 
 3) Declare the entry point in the ``setup.py``::
 

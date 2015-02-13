@@ -7,10 +7,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import anyblok
-from sys import modules
-from os.path import splitext, split
-from os import listdir
-from importlib import import_module
 from .common import python_version
 
 
@@ -81,7 +77,6 @@ class Loader:
 
     def __init__(self, blok):
         self.blok = blok
-        self.import_known = []
 
     def imports(self):
         """ Imports modules and / or packages listed in the blok path"""
@@ -90,19 +85,7 @@ class Loader:
 
         RegistryManager.init_blok(self.blok)
         b = BlokManager.get(self.blok)
-        main_path = modules[b.__module__].__file__
-        path, init = split(main_path)
-
-        mods = [x for x in listdir(path) if x != init and x[0] != '.']
-        for module in mods:
-            module_name = b.__module__ + '.' + splitext(module)[0]
-            try:
-                import_module(module_name)
-            except ImportError:
-                pass
-
-        self.import_known = [x for x in modules.keys()
-                             if b.__module__ + '.' in x]
+        b.import_declaration_module()
 
     def reload(self):
         """ Reload all the imports for this module
@@ -116,48 +99,31 @@ class Loader:
             isimp = True
             from imp import reload as reload_module
 
+        def reload_wraper(module):
+            if isimp:
+                module2reload = module
+            elif python_version() == (3, 3):
+                module2reload = module.__name__
+            elif python_version() >= (3, 4):
+                module2reload = module
+            else:
+                raise ImportManagerException(
+                    "Unknow action to do to reload module %r" %
+                    module.__name__)
+
+            reload_module(module2reload)
+
         from anyblok.blok import BlokManager
         from anyblok.registry import RegistryManager
         from anyblok.environment import EnvironmentManager
 
         b = BlokManager.get(self.blok)
-        b.clean_before_reload()
-        RegistryManager.init_blok(self.blok)
-        main_path = modules[b.__module__].__file__
-        path, init = split(main_path)
-        mods = [x for x in listdir(path) if x != init and x[0] != '.']
+        if not hasattr(b, 'reload_declaration_module'):
+            return
 
         try:
             EnvironmentManager.set('reload', True)
-
-            for module in mods:
-                module_name = b.__module__ + '.' + splitext(module)[0]
-                if module_name in self.import_known:
-                    continue
-
-                try:
-                    import_module(module_name)
-                except ImportError:
-                    pass
-
-            self.import_known.sort()
-            for module in self.import_known:
-                try:
-                    if isimp:
-                        module2load = modules[module]
-                    elif python_version() == (3, 3):
-                        module2load = module
-                    elif python_version() >= (3, 4):
-                        module2load = modules[module]
-                    else:
-                        raise ImportManagerException(
-                            "Unknow action to do to reload module %r" % module)
-
-                    reload_module(module2load)
-                except ImportError:
-                    pass
+            RegistryManager.init_blok(self.blok)
+            b.reload_declaration_module(reload_wraper)
         finally:
             EnvironmentManager.set('reload', False)
-
-        self.import_known = [x for x in modules.keys()
-                             if b.__module__ + '.' in x]

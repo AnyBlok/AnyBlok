@@ -14,3 +14,7 @@ class TestBlok(Blok):
     required = [
         'test-blok7',
     ]
+
+    @classmethod
+    def import_declaration_module(cls):
+        from . import declarations  # noqa

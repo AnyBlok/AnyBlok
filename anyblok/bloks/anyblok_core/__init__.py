@@ -52,3 +52,7 @@ class AnyBlokCore(Blok):
     version = version
     autoinstall = True
     priority = 0
+
+    @classmethod
+    def import_declaration_module(cls):
+        from . import declarations  # noqa
