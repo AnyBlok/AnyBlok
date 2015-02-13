@@ -42,6 +42,10 @@ class Base:
                     getattr(m, method)(*args, **kwargs)
 
     @classmethod
+    def get_model(cls, model):
+        return cls.registry.loaded_namespaces[model]
+
+    @classmethod
     def get_primary_keys(cls, **pks):
         """ No SQL Model has not primary key """
         raise CoreBaseException("No primary key for No SQL Model")

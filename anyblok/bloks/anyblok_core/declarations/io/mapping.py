@@ -83,6 +83,12 @@ class Mapping:
 
     @classmethod
     def get_primary_keys(cls, model, key):
+        """ return primary key for a model and an external key
+
+        :param model: model of the mapping
+        :param key: string of the key
+        :rtype: dict primary key: value or None
+        """
         query = cls.query()
         query = query.filter(cls.filter_by_model_and_key(model, key))
         if query.count():
@@ -94,8 +100,14 @@ class Mapping:
 
     @classmethod
     def check_primary_keys(cls, model, *pks):
-        M = cls.registry.loaded_namespaces[model]
-        for pk in M.get_primary_keys():
+        """ check if the all the primary keys match with primary keys of the
+        model
+
+        :param model: model to check
+        :param pks: list of the primary keys to check
+        :exception: IOMappingCheckException
+        """
+        for pk in cls.get_model(model).get_primary_keys():
             if pk not in pks:
                 raise IOMappingCheckException(
                     "No primary key %r found in %r for model %r" % (
@@ -103,6 +115,15 @@ class Mapping:
 
     @classmethod
     def set_primary_keys(cls, model, key, pks, raiseifexist=True):
+        """ Add or update a mmping with a model and a external key
+
+        :param model: model to check
+        :param key: string of the key
+        :param pks: dict of the primary key to save
+        :param raiseifexist: boolean (True by default), if True and the entry
+            exist then an exception is raised
+        :exception: IOMappingSetException
+        """
         if cls.get_primary_keys(model, key):
             if raiseifexist:
                 raise IOMappingSetException(
@@ -119,15 +140,29 @@ class Mapping:
 
     @classmethod
     def set(cls, key, instance, raiseifexist=True):
+        """ Add or update a mmping with a model and a external key
+
+        :param model: model to check
+        :param key: string of the key
+        :param instance: instance of the model to save
+        :param raiseifexist: boolean (True by default), if True and the entry
+            exist then an exception is raised
+        :exception: IOMappingSetException
+        """
         pks = instance.to_primary_keys()
         return cls.set_primary_keys(instance.__registry_name__, key, pks,
                                     raiseifexist=raiseifexist)
 
     @classmethod
     def get(cls, model, key):
+        """ return instance of the model with this external key
+
+        :param model: model of the mapping
+        :param key: string of the key
+        :rtype: instance of the model
+        """
         pks = cls.get_primary_keys(model, key)
         if pks is None:
             return None
 
-        M = cls.registry.loaded_namespaces[model]
-        return M.from_primary_keys(**pks)
+        return cls.get_model(model).from_primary_keys(**pks)
