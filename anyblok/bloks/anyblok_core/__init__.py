@@ -55,4 +55,24 @@ class AnyBlokCore(Blok):
 
     @classmethod
     def import_declaration_module(cls):
-        from . import declarations  # noqa
+        from . import fields  # noqa
+        from . import columns  # noqa
+        from . import relationship  # noqa
+        from . import core  # noqa
+        from . import system  # noqa
+        from . import io  # noqa
+
+    @classmethod
+    def reload_declaration_module(cls, reload):
+        from . import fields
+        reload(fields)
+        from . import columns
+        reload(columns)
+        from . import relationship
+        reload(relationship)
+        from . import core
+        reload(core)
+        from . import system
+        reload(system)
+        from . import io
+        reload(io)
