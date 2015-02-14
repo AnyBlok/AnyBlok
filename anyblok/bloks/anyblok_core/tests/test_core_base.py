@@ -23,3 +23,8 @@ class TestCoreBase(BlokTestCase):
     def test_get_primary_keys(self):
         with self.assertRaises(Declarations.Exception.CoreBaseException):
             self.registry.System.get_primary_keys()
+
+    def test_get_model(self):
+        M = self.registry.System.Model
+        M2 = self.registry.System.get_model('Model.System.Model')
+        self.assertEqual(M, M2)
