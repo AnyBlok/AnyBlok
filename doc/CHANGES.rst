@@ -14,6 +14,9 @@ CHANGELOG
 Future
 ------
 
+0.2.0
+-----
+
 .. warning:: 
 
     This version is not compatible with the version **0.1.3**
