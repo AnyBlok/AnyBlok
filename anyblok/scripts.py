@@ -40,6 +40,7 @@ def createdb(description, argsparse_groups, parts_to_load):
     :param argsparse_groups: list argsparse groupe to load
     :param parts_to_load: group of blok to load
     """
+    format_argsparse(argsparse_groups, 'install-bloks')
     BlokManager.load(*parts_to_load)
     ArgsParseManager.load(description=description,
                           argsparse_groups=argsparse_groups,
@@ -291,3 +292,15 @@ def modelschema(description, version, argsparse_groups, parts_to_load):
     dot.save()
     registry.rollback()
     registry.close()
+
+
+def anyblok_createdb():
+    from anyblok.release import version
+    description = "Anyblok-%s create db" % version
+    createdb(description, ['config', 'database'], ['AnyBlok'])
+
+
+def anyblok_updatedb():
+    from anyblok.release import version
+    updatedb("AnyBlok - update db", version, ['config', 'database'],
+             ['AnyBlok'])

@@ -53,6 +53,10 @@ setup(
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
     ],
     entry_points={
+        'console_scripts': [
+            'anyblok_createdb=anyblok.scripts:anyblok_createdb',
+            'anyblok_updatedb=anyblok.scripts:anyblok_updatedb',
+        ],
         'AnyBlok': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
             'anyblok-io=anyblok.bloks.io:AnyBlokIO',
