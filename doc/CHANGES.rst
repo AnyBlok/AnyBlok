@@ -14,6 +14,9 @@ CHANGELOG
 Future
 ------
 
+0.2.2
+-----
+
 * [REF] Unittest
     * TestCase and DBTestCase are only used for framework
     * BlokTestCase is used:
