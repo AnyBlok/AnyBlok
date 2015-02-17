@@ -11,7 +11,6 @@ from anyblok._argsparse import ArgsParseManager
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
-from anyblok import start
 import anyblok
 
 logger = getLogger(__name__)
@@ -202,7 +201,7 @@ class DBTestCase(TestCase):
         return registry
 
 
-class BlokTestCase(TestCase):
+class BlokTestCase(unittest.TestCase):
     """ Use to test bloks without have to create new database for each test
 
     ::
@@ -212,19 +211,11 @@ class BlokTestCase(TestCase):
 
         class MyBlokTest(BlokTestCase):
 
-            parts_to_load = ['AnyBlok']
-            need_blok = ['blok 1', 'blok 2', ..., 'blok n']
-
             def test_1(self):
+                # access of the registry by ``self.registry``
                 ...
 
     """
-
-    parts_to_load = None
-    """ Group of blok to load """
-
-    need_blok = ['anyblok-core']
-    """ List of the blok need for this test """
 
     @classmethod
     def setUpClass(cls):
@@ -233,51 +224,20 @@ class BlokTestCase(TestCase):
         Deactivate the commit method of the registry
         """
         super(BlokTestCase, cls).setUpClass()
-        cls.init_argsparse_manager()
-        cls.createdb(keep_existing=True)
-        registry = start('BlokTestCase', parts_to_load=cls.parts_to_load)
-        cls.registry = registry
-
-        query = registry.System.Blok.query('name')
-        query = query.filter(registry.System.Blok.name.in_(cls.need_blok),
-                             registry.System.Blok.state == 'uninstalled')
-
-        bloks = [x[0] for x in query.all()]
-
-        if bloks:
-            registry.upgrade(install=bloks)
+        if not hasattr(cls, 'registry'):
+            cls.registry = RegistryManager.get(ArgsParseManager.get('dbname'))
 
         def session_commit(*args, **kwargs):
             pass
 
-        registry.old_session_commit = registry.session_commit
-        registry.session_commit = session_commit
+        cls.old_session_commit = cls.registry.session_commit
+        cls.registry.session_commit = session_commit
 
-    def upgrade(self, **kwargs):
-        """ Upgrade the registry::
-
-            class MyTest(DBTestCase):
-
-                def test_mytest(self):
-                    self.registry.upgrade(install=('MyBlok',))
-
-        :param install: list the blok to install
-        :param update: list the blok to update
-        :param uninstall: list the blok to uninstall
-        """
-        session_commit = self.registry.session_commit
-        self.registry.session_commit = self.registry.old_session_commit
-        self.registry.upgrade(**kwargs)
-        self.registry.session_commit = session_commit
+    @classmethod
+    def tearDownClass(cls):
+        super(BlokTestCase, cls).tearDownClass()
+        cls.registry.session_commit = cls.old_session_commit
 
     def tearDown(self):
         """ Roll back the session """
         self.registry.rollback()
-
-    @classmethod
-    def tearDownClass(self):
-        """ Clear the registry, unload the blok manager
-        """
-        RegistryManager.clear()
-        BlokManager.unload()
-        super(BlokTestCase, self).tearDownClass()

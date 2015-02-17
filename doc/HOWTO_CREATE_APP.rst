@@ -208,13 +208,13 @@ File tree::
             room = self.registry.Room.query().filter(
                 self.registry.Room.number == 308).first()
             employees = [dict(name=employee, room=room)
-                         for employee in ('Georges Racinet', 
+                         for employee in ('Georges Racinet',
                                           'Christophe Combelles',
-                                          'Sandrine Chaufournais', 
+                                          'Sandrine Chaufournais',
                                           'Pierre Verkest',
-                                          'Franck Bret', 
+                                          'Franck Bret',
                                           "Simon André",
-                                          'Florent Jouatte', 
+                                          'Florent Jouatte',
                                           'Clovis Nzouendjou',
                                           u"Jean-Sébastien Suzanne")]
             self.registry.Employee.multi_insert(*employees)
@@ -674,6 +674,7 @@ Anyblok provides some functions to help creating an application:
 * createdb
 * updatedb
 * interpreter
+* run_exit (nose test)
 
 Here is how to create an interpreter::
 

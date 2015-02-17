@@ -17,6 +17,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from anyblok.migration import Migration
 from sqlalchemy.exc import ProgrammingError, OperationalError
+from anyblok.common import format_bloks
+from os.path import join, exists
+import nose
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -642,6 +645,7 @@ class Registry:
         Update Blok, Model, Column rows
         """
         mustreload = False
+        blok2install = None
         try:
             self.declarativebase = declarative_base(class_registry=dict(
                 registry=self))
@@ -654,7 +658,8 @@ class Registry:
                 self.load_blok(blok, False, toload)
 
             if toinstall:
-                self.load_blok(toinstall[0], True, toload)
+                blok2install = toinstall[0]
+                self.load_blok(blok2install, True, toload)
 
             instrumentedlist_base = [] + self.loaded_cores['InstrumentedList']
             instrumentedlist_base += [list]
@@ -692,11 +697,51 @@ class Registry:
             self.close()
             raise
 
-        if len(toinstall) > 1 or mustreload:
-            self.reload()
-        else:
+        test_blok = blok2install and ArgsParseManager.get('test_blok')
+        selected_bloks = format_bloks(ArgsParseManager.get('selected_bloks'))
+        in_selected_bloks = blok2install in (selected_bloks or [blok2install])
+        unwanted_bloks = format_bloks(ArgsParseManager.get('unwanted_bloks'))
+        not_in_unwanted_bloks = blok2install not in (unwanted_bloks or [])
+
+        if test_blok and in_selected_bloks and not_in_unwanted_bloks:
             self.System.Blok.load_all()
             self.commit()
+            self.run_test(blok2install)
+            if len(toinstall) > 1 or mustreload:
+                self.reload()
+
+        else:
+            if len(toinstall) > 1 or mustreload:
+                self.reload()
+            else:
+                self.System.Blok.load_all()
+                self.commit()
+
+    def run_test(registry, blok2install):
+        defaultTest = join(BlokManager.getPath(blok2install), 'tests')
+        if exists(defaultTest):
+
+            class ContextSuite(nose.suite.ContextSuite):
+
+                def __init__(self, *args, **kwargs):
+                    super(ContextSuite, self).__init__(*args, **kwargs)
+                    if self.context is not None:
+                        self.context.registry = registry
+
+            class ContextSuiteFactory(nose.suite.ContextSuiteFactory):
+                suiteClass = ContextSuite
+
+            class TestLoader(nose.loader.TestLoader):
+
+                def __init__(self, *args, **kwargs):
+                    super(TestLoader, self).__init__(*args, **kwargs)
+                    self.suiteClass = ContextSuiteFactory(config=self.config)
+
+            nose.run(defaultTest=[defaultTest], testLoader=TestLoader(),
+                     argv=['-v', '-s'])
+        else:
+            logger.warning("Blok %r has no %r directory" % (
+                blok2install, defaultTest))
 
     def init_migration(self):
         self.migration = Migration(self.session,

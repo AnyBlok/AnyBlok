@@ -9,6 +9,16 @@ import sys
 from functools import lru_cache
 
 
+def format_bloks(bloks):
+    if bloks == '':
+        bloks = None
+
+    if bloks is not None:
+        bloks = bloks.split(',')
+
+    return bloks
+
+
 def function_name(function):
     if sys.version_info < (3, 3):
         return function.__name__

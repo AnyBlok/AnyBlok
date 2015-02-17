@@ -59,10 +59,18 @@ Installation will add the ``anyblok`` commands to the environment.
 Unit Test
 ---------
 
-Run the test with ``nose``::
+Run the framework test with ``nose``::
 
     pip install nose
-    nosetests anyblok/tests anyblok/bloks/anyblok_core/tests 
+    nosetests anyblok/tests
+
+Run all the installed bloks::
+
+    anyblok_nose -c config.file.cfg
+
+Run the blok tests at the installation::
+
+    anyblok_updatedb -c config.file.cfg --install_bloks myblok --test-blok-at-install
 
 Dependencies
 ------------

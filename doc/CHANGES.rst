@@ -14,6 +14,12 @@ CHANGELOG
 Future
 ------
 
+* [REF] Unittest
+    * TestCase and DBTestCase are only used for framework
+    * BlokTestCase is used:
+        - by ``run_exit`` function to test all the installed bloks
+        - at the installation of a blok if wanted
+
 0.2.0
 -----
 

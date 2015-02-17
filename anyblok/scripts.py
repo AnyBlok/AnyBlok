@@ -10,18 +10,12 @@ from anyblok.blok import BlokManager
 from anyblok._argsparse import ArgsParseManager
 from anyblok.registry import RegistryManager
 from anyblok._graphviz import ModelSchema, SQLSchema
+from anyblok.common import format_bloks
 import code
+from nose import main
 import inspect
-
-
-def format_bloks(bloks):
-    if bloks == '':
-        bloks = None
-
-    if bloks is not None:
-        bloks = bloks.split(',')
-
-    return bloks
+import sys
+from os.path import join, exists
 
 
 def format_argsparse(argsparse_groups, *confs):
@@ -77,10 +71,44 @@ def updatedb(description, version, argsparse_groups, parts_to_load):
     install_bloks = format_bloks(ArgsParseManager.get('install_bloks'))
     uninstall_bloks = format_bloks(ArgsParseManager.get('uninstall_bloks'))
     update_bloks = format_bloks(ArgsParseManager.get('update_bloks'))
-    registry.upgrade(install=install_bloks, update=update_bloks,
-                     uninstall=uninstall_bloks)
-    registry.commit()
-    registry.close()
+    if registry:
+        registry.upgrade(install=install_bloks, update=update_bloks,
+                         uninstall=uninstall_bloks)
+        registry.commit()
+        registry.close()
+
+
+def run_exit(description, version, argsparse_groups, parts_to_load):
+    """ Update an existing database
+
+    :param description: description of argsparse
+    :param version: version of script for argparse
+    :param argsparse_groups: list argsparse groupe to load
+    :param parts_to_load: group of blok to load
+    """
+    format_argsparse(argsparse_groups, 'unittest')
+    registry = anyblok.start(description, version,
+                             argsparse_groups=argsparse_groups,
+                             parts_to_load=parts_to_load, useseparator=True)
+
+    defaultTest = []
+    if registry:
+        installed_bloks = registry.System.Blok.list_by_state("installed")
+        selected_bloks = format_bloks(ArgsParseManager.get('selected_bloks'))
+        if not selected_bloks:
+            selected_bloks = installed_bloks
+
+        unwanted_bloks = format_bloks(ArgsParseManager.get('unwanted_bloks'))
+        if unwanted_bloks is None:
+            unwanted_bloks = []
+
+        defaultTest = [path
+                       for blok in installed_bloks
+                       if blok in selected_bloks and blok not in unwanted_bloks
+                       for path in [join(BlokManager.getPath(blok), 'tests')]
+                       if exists(path)]
+
+    sys.exit(main(defaultTest=defaultTest))
 
 
 def interpreter(description, version, argsparse_groups, parts_to_load):
@@ -297,10 +325,17 @@ def modelschema(description, version, argsparse_groups, parts_to_load):
 def anyblok_createdb():
     from anyblok.release import version
     description = "Anyblok-%s create db" % version
-    createdb(description, ['config', 'database'], ['AnyBlok'])
+    createdb(description, ['config', 'database', 'unittest'], ['AnyBlok'])
 
 
 def anyblok_updatedb():
     from anyblok.release import version
-    updatedb("AnyBlok - update db", version, ['config', 'database'],
+    updatedb("AnyBlok - update db", version,
+             ['config', 'database', 'unittest'],
+             ['AnyBlok'])
+
+
+def anyblok_nose():
+    from anyblok.release import version
+    run_exit("Nose test for AnyBlok", version, ['config', 'database'],
              ['AnyBlok'])

@@ -10,6 +10,7 @@ from anyblok._logging import init_logger, log
 from argparse import ArgumentParser
 from configparser import ConfigParser
 from anyblok import Declarations
+import sys
 
 
 def getParser(description):
@@ -262,9 +263,28 @@ class ArgsParseManager:
     @classmethod
     @log()
     def load(cls, description='AnyBlok :', argsparse_groups=None,
-             parts_to_load=None):
+             parts_to_load=None, useseparator=False):
+        """ Load the argparse definition and parse them
 
-        parser = getParser(description)
+        :param description: description of argsparse
+        :param argsparse_groups: list argsparse groupe to load
+        :param parts_to_load: group of blok to load
+        :param useseparator: boolean(default False)
+        """
+
+        sep = len(sys.argv)
+        our_argv = sys.argv[1:]
+        if useseparator:
+            description += "[options] -- other arguments"
+            parser = getParser(description)
+
+            try:
+                sep = sys.argv.index('--')
+                our_argv = sys.argv[1:sep]
+            except ValueError:
+                pass
+        else:
+            parser = getParser(description)
 
         if argsparse_groups is None:
             return
@@ -288,7 +308,10 @@ class ArgsParseManager:
             for function in groups[group]:
                 function(g, cls.configuration)
 
-        args = parser.parse_args()
+        args = parser.parse_args(our_argv)
+        if sep is not None:
+            del sys.argv[1:sep+1]
+
         cls.parse_options(args, parts_to_load)
 
     @classmethod
@@ -351,6 +374,9 @@ def add_database(group, configuration):
 def add_install_bloks(parser, configuration):
     parser.add_argument('--install-bloks', dest='install_bloks', default='',
                         help="blok to install")
+    parser.add_argument('--test-blok-at-install',
+                        dest='test_blok', action='store_true')
+    parser.set_defaults(test_blok=False)
 
 
 @ArgsParseManager.add('uninstall-bloks')
@@ -399,3 +425,11 @@ def add_schema(group, configuration):
                        default='anyblok-schema')
     group.add_argument('--schema-models', dest='schema_model',
                        help='Detail only these models separated by ","')
+
+
+@ArgsParseManager.add('unittest', label="Unittest")
+def add_unittest(group, configuration):
+    group.add_argument('--selected_bloks', dest='selected_bloks', default='',
+                       help="Name of the bloks to test")
+    group.add_argument('--unwanted_bloks', dest='unwanted_bloks', default='',
+                       help="Name of the bloks to no test")

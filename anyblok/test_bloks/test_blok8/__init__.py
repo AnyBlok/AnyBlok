@@ -18,3 +18,8 @@ class TestBlok(Blok):
     @classmethod
     def import_declaration_module(cls):
         from . import declarations  # noqa
+
+    @classmethod
+    def reload_declaration_module(cls, reload):
+        from . import declarations
+        reload(declarations)

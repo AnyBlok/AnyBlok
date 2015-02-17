@@ -16,7 +16,8 @@ from anyblok._argsparse import (ArgsParseManager,
                                 add_update_bloks,
                                 add_interpreter,
                                 add_logging,
-                                add_schema)
+                                add_schema,
+                                add_unittest)
 from anyblok.tests.testcase import TestCase
 from anyblok import Declarations
 
@@ -372,6 +373,7 @@ class TestArgsParseOption(TestCase):
             'add_interpreter': add_interpreter,
             'add_logging': add_logging,
             'add_schema': add_schema,
+            'add_unittest': add_unittest,
         }
 
     def test_add_configuration_file(self):
@@ -398,3 +400,6 @@ class TestArgsParseOption(TestCase):
 
     def test_add_schema(self):
         self.function['add_schema'](self.group, self.configuration)
+
+    def test_add_unittest(self):
+        self.function['add_unittest'](self.group, self.configuration)
