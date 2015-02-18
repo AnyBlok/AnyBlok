@@ -12,15 +12,15 @@ from anyblok import Declarations, reload_module_if_blok_is_reloaded
 class System:
     pass
 
-from . import model
+from . import model  # noqa
 reload_module_if_blok_is_reloaded(model)
-from . import field
+from . import field  # noqa
 reload_module_if_blok_is_reloaded(field)
-from . import column
+from . import column  # noqa
 reload_module_if_blok_is_reloaded(column)
-from . import relationship
+from . import relationship  # noqa
 reload_module_if_blok_is_reloaded(relationship)
-from . import blok
+from . import blok  # noqa
 reload_module_if_blok_is_reloaded(blok)
-from . import cache
+from . import cache  # noqa
 reload_module_if_blok_is_reloaded(cache)
