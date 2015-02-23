@@ -429,7 +429,7 @@ def add_schema(group, configuration):
 
 @ArgsParseManager.add('unittest', label="Unittest")
 def add_unittest(group, configuration):
-    group.add_argument('--selected_bloks', dest='selected_bloks', default='',
+    group.add_argument('--selected-bloks', dest='selected_bloks', default='',
                        help="Name of the bloks to test")
-    group.add_argument('--unwanted_bloks', dest='unwanted_bloks', default='',
+    group.add_argument('--unwanted-bloks', dest='unwanted_bloks', default='',
                        help="Name of the bloks to no test")
