@@ -56,6 +56,10 @@ class One2Many(Declarations.RelationShip):
         for f, p in properties.items():
             if f == '__tablename__':
                 continue
+
+            if not hasattr(p, 'foreign_key'):
+                continue
+
             if p.foreign_key and p.foreign_key.split('.')[0] == tablename:
                 fks.append(f)
 
@@ -97,3 +101,17 @@ class One2Many(Declarations.RelationShip):
 
         return super(One2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
+
+    def define_backref_properties(self, registry, namespace, properties):
+        """ Add option in the backref if both model and remote model are the
+        same, it is for the One2Many on the same model
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param propertie: the properties known
+        """
+        if namespace == self.get_registry_name():
+            self_properties = registry.loaded_namespaces_first_step.get(
+                namespace)
+            pk = self.find_primary_key(self_properties)
+            self.backref_properties.update({'remote_side': [properties[pk]]})

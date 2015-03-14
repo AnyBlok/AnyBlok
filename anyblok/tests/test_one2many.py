@@ -194,3 +194,22 @@ class TestOne2Many(DBTestCase):
             self.fail('No watch dog to more than one foreign key')
         except FieldException:
             pass
+
+    def test_same_model_backref(self):
+
+        def add_in_registry():
+            Integer = Declarations.Column.Integer
+            One2Many = Declarations.RelationShip.One2Many
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                parent_id = Integer(foreign_key=('test', 'id'))
+                children = One2Many(model='Model.Test', many2one='parent')
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert(parent=t1)
+        self.assertEqual(t1.children[0], t2)
+        self.assertEqual(t2.parent, t1)

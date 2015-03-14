@@ -63,18 +63,30 @@ def has_sql_fields(bases):
     return False
 
 
-def get_fields(base):
+def get_fields(base, without_relationship=False, only_relationship=False):
     """ Return the fields for a model
 
     :param base: Model Class
+    :param without_relationship: Do not return the relationship field
+    :param only_relationship: return only the relationship field
     :rtype: dict with name of the field in key and instance of Field in value
     """
     Field = Declarations.Field
+    RelationShip = Declarations.RelationShip
     fields = {}
     for p in dir(base):
         if hasattr(getattr(base, p), '__class__'):
+            if without_relationship:
+                if RelationShip in getattr(base, p).__class__.__mro__:
+                    continue
+
+            if only_relationship:
+                if RelationShip not in getattr(base, p).__class__.__mro__:
+                    continue
+
             if Field in getattr(base, p).__class__.__mro__:
                 fields[p] = getattr(base, p)
+
     return fields
 
 
@@ -183,11 +195,19 @@ class Model:
 
         from sqlalchemy.ext.declarative import declared_attr
 
-        def wrapper(cls):
-            return field.get_sqlalchemy_mapping(
+        if field.must_be_declared_as_attr():
+            # All the declaration are seen as mixin for sqlalchemy
+            # some of them need de be defered for the initialisation
+            # cause of the mixin as relation ship and column with foreign key
+            def wrapper(cls):
+                return field.get_sqlalchemy_mapping(
+                    registry, namespace, name, properties)
+
+            properties[name] = declared_attr(wrapper)
+        else:
+            properties[name] = field.get_sqlalchemy_mapping(
                 registry, namespace, name, properties)
 
-        properties[name] = declared_attr(wrapper)
         properties['loaded_columns'].append(name)
         field.update_properties(registry, namespace, name, properties)
 
@@ -422,7 +442,15 @@ class Model:
                                 tablename = namespace.replace('.', '_').lower()
             else:
                 for b in bases:
-                    for p, f in get_fields(b).items():
+                    # do in the first time the fields and columns
+                    # because for the relationship on the same model
+                    # the primary keys must exist before the relationship
+                    for p, f in get_fields(b,
+                                           without_relationship=True).items():
+                        cls.declare_field(
+                            registry, p, f, namespace, properties)
+
+                    for p, f in get_fields(b, only_relationship=True).items():
                         cls.declare_field(
                             registry, p, f, namespace, properties)
 

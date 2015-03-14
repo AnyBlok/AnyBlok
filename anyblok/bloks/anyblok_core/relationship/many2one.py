@@ -100,6 +100,9 @@ class Many2One(Declarations.RelationShip):
 
             properties[self.column_name] = declared_attr(wrapper)
 
+        if namespace == self.get_registry_name():
+            self.kwargs['remote_side'] = [properties[self.remote_column]]
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Create the relationship

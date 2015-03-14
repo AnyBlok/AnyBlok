@@ -5,7 +5,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from sqlalchemy.orm import backref
 from anyblok import Declarations
 
 
@@ -54,5 +53,11 @@ class One2One(Declarations.RelationShip.Many2One):
 
         self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
-        self.kwargs['backref'] = backref(
-            self.kwargs['backref'], uselist=False)
+    def define_backref_properties(self, registry, namespace, properties):
+        """ Add option uselist = False
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param propertie: the properties known
+        """
+        self.backref_properties.update({'uselist': False})

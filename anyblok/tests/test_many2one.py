@@ -234,3 +234,20 @@ class TestMany2One(DBTestCase):
     def test_autodetect_type_time(self):
         Time = Declarations.Column.Time
         self.check_autodetect_type(Time)
+
+    def test_same_model(self):
+        def add_in_registry():
+            Integer = Declarations.Column.Integer
+            Many2One = Declarations.RelationShip.Many2One
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                parent = Many2One(model='Model.Test', one2many='children')
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert(parent=t1)
+        self.assertEqual(t2.parent, t1)
+        self.assertEqual(t1.children[0], t2)

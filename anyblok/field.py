@@ -112,3 +112,7 @@ class Field:
         :exception: FieldException
         """
         raise FieldException("No native type for this field")
+
+    def must_be_declared_as_attr(self):
+        """ Return False, it is the default value """
+        return False

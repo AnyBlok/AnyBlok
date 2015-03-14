@@ -69,3 +69,10 @@ class Column(Declarations.Field):
             kwargs['info']['foreign_key'] = self.foreign_key
 
         return SA_Column(fieldname, self.sqlalchemy_type, *args, **kwargs)
+
+    def must_be_declared_as_attr(self):
+        """ Return True if the column have a foreign key to a remote column """
+        if self.foreign_key is not None:
+            return True
+
+        return False

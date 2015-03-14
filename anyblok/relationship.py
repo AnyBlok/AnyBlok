@@ -7,6 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref
 
 
 FieldException = Declarations.Exception.FieldException
@@ -41,6 +42,7 @@ class RelationShip(Declarations.Field):
             self.kwargs['info'] = {}
 
         self.kwargs['info']['remote_model'] = self.get_registry_name()
+        self.backref_properties = {}
 
     def get_registry_name(self):
         """ Return the registry name of the remote model
@@ -64,16 +66,44 @@ class RelationShip(Declarations.Field):
             return self.model.__tablename__
 
     def apply_instrumentedlist(self, registry):
+        """ Add the InstrumentedList class to replace List class as result
+        of the query
+
+        :param registry: current registry
+        """
         self.kwargs['collection_class'] = registry.InstrumentedList
-        backref = self.kwargs.get('backref')
-        if not backref:
+        self.backref_properties['collection_class'] = registry.InstrumentedList
+
+    def define_backref_properties(self, registry, namespace, properties):
+        """ Add in the backref_properties, new property for the backref
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param properties: properties known of the model
+        """
+        pass
+
+    def format_backref(self, registry, namespace, properties):
+        """ Create the real backref, with the backref string and the
+        backref properties
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param properties: properties known of the model
+        """
+        _backref = self.kwargs.get('backref')
+        if not _backref:
             return
 
-        if not isinstance(backref, (list, tuple)):
-            backref = (backref, {})
+        if isinstance(_backref, (list, tuple)):
+            _backref, backref_properties = _backref
+            self.backref_properties.update(backref_properties)
 
-        backref[1]['collection_class'] = registry.InstrumentedList
-        self.kwargs['backref'] = backref
+        self.define_backref_properties(registry, namespace, properties)
+
+        if self.backref_properties:
+            self.kwargs['backref'] = backref(_backref,
+                                             **self.backref_properties)
 
     def find_primary_key(self, properties):
         """ Return the primary key come from the first step property
@@ -123,4 +153,9 @@ class RelationShip(Declarations.Field):
         self.kwargs['info']['label'] = self.label
         self.kwargs['info']['rtype'] = self.__class__.__name__
         self.apply_instrumentedlist(registry)
+        self.format_backref(registry, namespace, properties)
         return relationship(self.get_tablename(registry), **self.kwargs)
+
+    def must_be_declared_as_attr(self):
+        """ Return True, because it is a relationship """
+        return True
