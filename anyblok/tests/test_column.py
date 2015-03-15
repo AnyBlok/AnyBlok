@@ -122,7 +122,8 @@ class TestColumns(DBTestCase):
     def test_integer_str_foreign_key(self):
         Integer = Declarations.Column.Integer
         registry = self.init_registry(
-            simple_column, ColumnType=Integer, foreign_key=('test', 'id'))
+            simple_column, ColumnType=Integer,
+            foreign_key=('Model.Test', 'id'))
         test = registry.Test.insert()
         test2 = registry.Test.insert(col=test.id)
         self.assertEqual(test2.col, test.id)

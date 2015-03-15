@@ -45,9 +45,10 @@ class One2Many(Declarations.RelationShip):
             self.kwargs['backref'] = self.kwargs.pop('many2one')
             self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
-    def find_foreign_key(self, properties, tablename):
+    def find_foreign_key(self, registry, properties, tablename):
         """ Return the primary key come from the first step property
 
+        :param registry: the registry which load the relationship
         :param properties: first step properties for the model
         :param tablename: the name of the table for the foreign key
         :rtype: column name of the primary key
@@ -60,8 +61,10 @@ class One2Many(Declarations.RelationShip):
             if not hasattr(p, 'foreign_key'):
                 continue
 
-            if p.foreign_key and p.foreign_key.split('.')[0] == tablename:
-                fks.append(f)
+            if p.foreign_key:
+                model, _ = p.foreign_key
+                if self.get_tablename(registry, model=model) == tablename:
+                    fks.append(f)
 
         if len(fks) != 1:
             raise FieldException(
@@ -86,7 +89,8 @@ class One2Many(Declarations.RelationShip):
 
         tablename = properties['__tablename__']
         if self.remote_column is None:
-            self.remote_column = self.find_foreign_key(remote_properties,
+            self.remote_column = self.find_foreign_key(registry,
+                                                       remote_properties,
                                                        tablename)
 
         self.kwargs['info']['remote_column'] = self.remote_column

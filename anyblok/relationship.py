@@ -54,16 +54,19 @@ class RelationShip(Declarations.Field):
         else:
             return self.model.__registry_name__
 
-    def get_tablename(self, registry):
+    def get_tablename(self, registry, model=None):
         """ Return the table name of the remote model
 
         :rtype: str of the table name
         """
-        if isinstance(self.model, str):
-            model = registry.loaded_namespaces_first_step[self.model]
+        if model is None:
+            model = self.model
+
+        if isinstance(model, str):
+            model = registry.loaded_namespaces_first_step[model]
             return model['__tablename__']
         else:
-            return self.model.__tablename__
+            return model.__tablename__
 
     def apply_instrumentedlist(self, registry):
         """ Add the InstrumentedList class to replace List class as result

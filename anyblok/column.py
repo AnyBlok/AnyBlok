@@ -33,17 +33,34 @@ class Column(Declarations.Field):
             del kwargs['type_']
 
         if 'foreign_key' in kwargs:
-            model, col = kwargs.pop('foreign_key')
-            if isinstance(model, str):
-                self.foreign_key = model + '.' + col
-            else:
-                self.foreign_key = model.__tablename__ + '.' + col
+            self.foreign_key = kwargs.pop('foreign_key')
 
         super(Column, self).__init__(*args, **kwargs)
 
     def native_type(cls):
         """ Return the native SqlAlchemy type """
         return cls.sqlalchemy_type
+
+    def get_tablename(self, registry, model):
+        """ Return the table name of the remote model
+
+        :rtype: str of the table name
+        """
+        if isinstance(model, str):
+            model = registry.loaded_namespaces_first_step[model]
+            return model['__tablename__']
+        else:
+            return model.__tablename__
+
+    def format_foreign_key(self, registry, args, kwargs):
+        if self.foreign_key:
+            model, col = self.foreign_key
+            tablename = self.get_tablename(registry, model)
+            foreign_key = tablename + '.' + col
+            args = args + (ForeignKey(foreign_key),)
+            kwargs['info']['foreign_key'] = foreign_key
+
+        return args
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -57,17 +74,11 @@ class Column(Declarations.Field):
         """
         self.format_label(fieldname)
         args = self.args
-
         kwargs = self.kwargs.copy()
         if 'info' not in kwargs:
             kwargs['info'] = {}
-
+        args = self.format_foreign_key(registry, args, kwargs)
         kwargs['info']['label'] = self.label
-
-        if self.foreign_key:
-            args = args + (ForeignKey(self.foreign_key),)
-            kwargs['info']['foreign_key'] = self.foreign_key
-
         return SA_Column(fieldname, self.sqlalchemy_type, *args, **kwargs)
 
     def must_be_declared_as_attr(self):

@@ -205,7 +205,7 @@ class TestOne2Many(DBTestCase):
             class Test:
 
                 id = Integer(primary_key=True)
-                parent_id = Integer(foreign_key=('test', 'id'))
+                parent_id = Integer(foreign_key=('Model.Test', 'id'))
                 children = One2Many(model='Model.Test', many2one='parent')
 
         registry = self.init_registry(add_in_registry)
