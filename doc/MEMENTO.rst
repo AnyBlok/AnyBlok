@@ -402,6 +402,11 @@ All the columns have the following parameters:
 |             |        id : Integer(primary_key=True)                         |
 |             |        foo: Integer(foreign_key=(Model.Foo, 'id'))            |
 |             |                                                               |
+|             | If the ``Model`` Declarations doesn't exist yet, you can use  |
+|             | the regisrty name::                                           |
+|             |                                                               |
+|             |     foo: Integer(foreign_key=('Model.Foo', 'id'))             |
+|             |                                                               |
 +-------------+---------------------------------------------------------------+
 
 Other attribute for ``String`` and ``uString``:

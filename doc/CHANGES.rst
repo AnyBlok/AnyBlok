@@ -17,6 +17,8 @@ Future
 * [FIX] Allow to add a relationship on the same model, the main use is to add 
   parent / children relation ship on a model, They are any difference with
   the declaration of ta relation ship on another model
+* [REF] standardize foreign_key and relation ship, if the str which replace 
+  the Model Declarations is now the registry name
 
 0.2.2
 -----
