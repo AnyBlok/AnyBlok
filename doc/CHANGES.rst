@@ -14,13 +14,22 @@ CHANGELOG
 Future
 ------
 
+* [FIX] In the parent / children relationship, where the pk is on a mixin or
+  from inherit
+
 0.2.3
 -----
 
-* [FIX] Allow to add a relationship on the same model, the main use is to add 
+.. warning::
+
+    This version can be not compatible with the version **0.2.2**. Because
+    in the foregn key model is a string you must replace the tablename by
+    the registry name
+
+* [FIX] Allow to add a relationship on the same model, the main use is to add
   parent / children relation ship on a model, They are any difference with
   the declaration of ta relation ship on another model
-* [REF] standardize foreign_key and relation ship, if the str which replace 
+* [REF] standardize foreign_key and relation ship, if the str which replace
   the Model Declarations is now the registry name
 
 0.2.2
@@ -35,7 +44,7 @@ Future
 0.2.0
 -----
 
-.. warning:: 
+.. warning::
 
     This version is not compatible with the version **0.1.3**
 

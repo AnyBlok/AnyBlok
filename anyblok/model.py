@@ -441,15 +441,18 @@ class Model:
                                 properties['__table__'] = m.__table__
                                 tablename = namespace.replace('.', '_').lower()
             else:
+                # do in the first time the fields and columns
+                # because for the relationship on the same model
+                # the primary keys must exist before the relationship
+                # load all the base before do relationship because primary key
+                # can be come from inherit
                 for b in bases:
-                    # do in the first time the fields and columns
-                    # because for the relationship on the same model
-                    # the primary keys must exist before the relationship
                     for p, f in get_fields(b,
                                            without_relationship=True).items():
                         cls.declare_field(
                             registry, p, f, namespace, properties)
 
+                for b in bases:
                     for p, f in get_fields(b, only_relationship=True).items():
                         cls.declare_field(
                             registry, p, f, namespace, properties)

@@ -11,6 +11,7 @@ from anyblok import Declarations
 FieldException = Declarations.Exception.FieldException
 register = Declarations.register
 Model = Declarations.Model
+Mixin = Declarations.Mixin
 
 
 def _complete_many2one(**kwargs):
@@ -244,6 +245,48 @@ class TestMany2One(DBTestCase):
             class Test:
 
                 id = Integer(primary_key=True)
+                parent = Many2One(model='Model.Test', one2many='children')
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert(parent=t1)
+        self.assertEqual(t2.parent, t1)
+        self.assertEqual(t1.children[0], t2)
+
+    def test_same_model_pk_by_inherit(self):
+        def add_in_registry():
+            Integer = Declarations.Column.Integer
+            Many2One = Declarations.RelationShip.Many2One
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)  # noqa
+            class Test:
+
+                parent = Many2One(model='Model.Test', one2many='children')
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert(parent=t1)
+        self.assertEqual(t2.parent, t1)
+        self.assertEqual(t1.children[0], t2)
+
+    def test_same_model_pk_by_mixin(self):
+        def add_in_registry():
+            Integer = Declarations.Column.Integer
+            Many2One = Declarations.RelationShip.Many2One
+
+            @register(Mixin)
+            class MTest:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)  # noqa
+            class Test(Mixin.MTest):
+
                 parent = Many2One(model='Model.Test', one2many='children')
 
         registry = self.init_registry(add_in_registry)
