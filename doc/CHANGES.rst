@@ -16,6 +16,7 @@ Future
 
 * [FIX] In the parent / children relationship, where the pk is on a mixin or
   from inherit
+* [FIX] How to Environment
 
 0.2.3
 -----

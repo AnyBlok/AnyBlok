@@ -294,3 +294,6 @@ class TestMany2One(DBTestCase):
         t2 = registry.Test.insert(parent=t1)
         self.assertEqual(t2.parent, t1)
         self.assertEqual(t1.children[0], t2)
+
+    def test_add_unique_constraint(self):
+        raise

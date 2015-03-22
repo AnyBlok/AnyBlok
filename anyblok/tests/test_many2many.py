@@ -229,3 +229,9 @@ class TestMany2Many(DBTestCase):
         person.address.append(address)
 
         self.assertEqual(address.persons, [person])
+
+    def test_declared_in_mixin(self):
+        raise
+
+    def test_declared_in_mixin_inherit_by_two_models(self):
+        raise
