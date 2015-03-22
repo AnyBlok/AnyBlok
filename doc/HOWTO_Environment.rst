@@ -25,7 +25,7 @@ Generic use
 To get or set variable in environment, you must import the
 ``EnvironmentManager``::
 
-    from anyblok import EnvironmentManager
+    from anyblok.environment import EnvironmentManager
 
 Set a variable::
 
