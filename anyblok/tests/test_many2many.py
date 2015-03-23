@@ -11,6 +11,7 @@ from anyblok import Declarations
 FieldException = Declarations.Exception.FieldException
 register = Declarations.register
 Model = Declarations.Model
+Mixin = Declarations.Mixin
 
 
 def _complete_many2many(**kwargs):
@@ -56,6 +57,29 @@ def _minimum_many2many(**kwargs):
 
         name = String(primary_key=True)
         address = Many2Many(model=Model.Address)
+
+
+def _minimum_many2many_by_mixin(**kwargs):
+    Integer = Declarations.Column.Integer
+    String = Declarations.Column.String
+    Many2Many = Declarations.RelationShip.Many2Many
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Mixin)
+    class MixinM2M:
+        address = Many2Many(model=Model.Address)
+
+    @register(Model)
+    class Person(Mixin.MixinM2M):
+
+        name = String(primary_key=True)
 
 
 def _many2many_with_str_model(**kwargs):
@@ -231,7 +255,49 @@ class TestMany2Many(DBTestCase):
         self.assertEqual(address.persons, [person])
 
     def test_declared_in_mixin(self):
-        raise
+        registry = self.init_registry(_minimum_many2many_by_mixin)
+
+        address_exist = hasattr(registry.Person, 'address')
+        self.assertEqual(address_exist, True)
+
+        m2m_tables_exist = hasattr(registry, 'many2many_tables')
+        self.assertEqual(m2m_tables_exist, True)
+
+        jt = registry.declarativebase.metadata.tables
+        join_table_exist = 'join_person_and_address' in jt
+        self.assertEqual(join_table_exist, True)
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+
+        person.address.append(address)
+
+        self.assertEqual(person.address, [address])
 
     def test_declared_in_mixin_inherit_by_two_models(self):
-        raise
+        def add_in_registry():
+            String = Declarations.Column.String
+            _minimum_many2many_by_mixin()
+
+            @register(Model)
+            class Person2(Mixin.MixinM2M):
+
+                name = String(primary_key=True)
+
+        registry = self.init_registry(add_in_registry)
+
+        address_exist = hasattr(registry.Person, 'address')
+        self.assertEqual(address_exist, True)
+        address_exist = hasattr(registry.Person2, 'address')
+        self.assertEqual(address_exist, True)
+
+        m2m_tables_exist = hasattr(registry, 'many2many_tables')
+        self.assertEqual(m2m_tables_exist, True)
+
+        jt = registry.declarativebase.metadata.tables
+        join_table_exist = 'join_person_and_address' in jt
+        self.assertEqual(join_table_exist, True)
+        join_table_exist = 'join_person2_and_address' in jt
+        self.assertEqual(join_table_exist, True)

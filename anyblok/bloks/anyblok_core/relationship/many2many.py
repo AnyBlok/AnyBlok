@@ -33,6 +33,11 @@ class Many2Many(Declarations.RelationShip):
     if the join_table is not defined, then the table join is
         "join_'local table'_and_'remote table'"
 
+    .. warning::
+
+        The join_table must be filled when the declaration of the
+        Many2Many is done in a Mixin
+
     If the remote_column are not define then, the system take the primary key
     of the remote model
 
@@ -108,11 +113,11 @@ class Many2Many(Declarations.RelationShip):
 
         local_tablename = properties['__tablename__']
         remote_tablename = self.get_tablename(registry)
+        join_table = self.join_table
         if self.join_table is None:
-            self.join_table = 'join_%s_and_%s' % (local_tablename,
-                                                  remote_tablename)
+            join_table = 'join_%s_and_%s' % (local_tablename, remote_tablename)
 
-        if self.join_table not in registry.declarativebase.metadata.tables:
+        if join_table not in registry.declarativebase.metadata.tables:
             rname, rtype, rfk = self.get_m2m_column_info(
                 remote_tablename, remote_properties, self.remote_column,
                 self.m2m_remote_column)
@@ -121,11 +126,11 @@ class Many2Many(Declarations.RelationShip):
                 local_tablename, local_properties, self.local_column,
                 self.m2m_local_column)
 
-            Table(self.join_table, registry.declarativebase.metadata,
+            Table(join_table, registry.declarativebase.metadata,
                   Column(lname, ltype, ForeignKey(lfk)),
                   Column(rname, rtype, ForeignKey(rfk)))
 
-        self.kwargs['secondary'] = self.join_table
+        self.kwargs['secondary'] = join_table
 
         return super(Many2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
