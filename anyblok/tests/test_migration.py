@@ -280,7 +280,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertEqual(report.log_has("Alter test.other"), False)
 
-    @skipIf(alembic.__version__ <= "0.7.4", "Alembic doesn't implement yet")
+    @skipIf(alembic.__version__ <= "0.7.5", "Alembic doesn't implement yet")
     def test_detect_primary_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
