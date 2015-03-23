@@ -8,6 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
+from sqlalchemy.exc import IntegrityError
 FieldException = Declarations.Exception.FieldException
 register = Declarations.register
 Model = Declarations.Model
@@ -296,4 +297,25 @@ class TestMany2One(DBTestCase):
         self.assertEqual(t1.children[0], t2)
 
     def test_add_unique_constraint(self):
-        raise
+        def add_in_registry():
+            Integer = Declarations.Column.Integer
+            String = Declarations.Column.String
+            Many2One = Declarations.RelationShip.Many2One
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                address = Many2One(model=Model.Address, unique=True)
+
+        registry = self.init_registry(add_in_registry)
+        address = registry.Address.insert()
+        registry.Person.insert(name="Jean-sébastien SUZANNE", address=address)
+
+        with self.assertRaises(IntegrityError):
+            registry.Person.insert(name="Other", address=address)

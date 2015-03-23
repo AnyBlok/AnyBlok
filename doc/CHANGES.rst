@@ -17,6 +17,9 @@ Future
 * [FIX] In the parent / children relationship, where the pk is on a mixin or
   from inherit
 * [FIX] How to Environment
+* [FIX] Many2Many declared in Mixin
+* [IMP] Many2One can now declared than the local column must be unique (
+  only if the local column is not declared in the model)
 
 0.2.3
 -----

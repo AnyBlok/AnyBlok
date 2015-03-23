@@ -24,7 +24,8 @@ class Many2One(Declarations.RelationShip):
                                     remote_column="The remote column",
                                     column_name="The column which have the "
                                                 "foreigh key",
-                                    nullable=False,
+                                    nullable=True,
+                                    unique=False,
                                     one2many="themodels")
 
     If the ``remote_column`` are not define then, the system takes the primary
@@ -38,6 +39,7 @@ class Many2One(Declarations.RelationShip):
     :param remote_column: the column name on the remote model
     :param column_name: the column on the model which have the foreign key
     :param nullable: If the column_name is nullable
+    :param unique: If True, add the unique constraint on the column
     :param one2many: create the one2many link with this many2one
     """
 
@@ -52,6 +54,11 @@ class Many2One(Declarations.RelationShip):
         if 'nullable' in kwargs:
             self.nullable = self.kwargs.pop('nullable')
             self.kwargs['info']['nullable'] = self.nullable
+
+        self.unique = False
+        if 'unique' in kwargs:
+            self.unique = self.kwargs.pop('unique')
+            self.kwargs['info']['unique'] = self.unique
 
         if 'one2many' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('one2many')
@@ -96,6 +103,7 @@ class Many2One(Declarations.RelationShip):
                 return SA_Column(
                     remote_type, ForeignKey(foreign_key),
                     nullable=self.nullable,
+                    unique=self.unique,
                     info=dict(label=self.label, foreign_key=foreign_key))
 
             properties[self.column_name] = declared_attr(wrapper)
