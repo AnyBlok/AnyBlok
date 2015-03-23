@@ -14,6 +14,9 @@ CHANGELOG
 Future
 ------
 
+0.2.4
+-----
+
 * [FIX] In the parent / children relationship, where the pk is on a mixin or
   from inherit
 * [FIX] How to Environment
