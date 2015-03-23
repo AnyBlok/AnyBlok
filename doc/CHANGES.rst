@@ -14,7 +14,7 @@ CHANGELOG
 Future
 ------
 
-0.2.4
+0.2.5
 -----
 
 * [FIX] In the parent / children relationship, where the pk is on a mixin or
