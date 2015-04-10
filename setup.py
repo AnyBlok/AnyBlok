@@ -21,6 +21,7 @@ requires = [
     'argparse',
     'alembic',
     'graphviz',
+    'nose',  # for unittest during the blok install
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))
