@@ -64,6 +64,7 @@ class RelationShip(Mixin.Field):
                         model=remote_model, name=remote_name,
                         local_column=remote_column, remote_model=model,
                         remote_name=rname,
-                        remote_column=local_column, label=label,
+                        remote_column=local_column,
+                        label=remote_name.capitalize().replace('_', ' '),
                         nullable=True, rtype=remote_type, remote=True)
             cls.insert(**vals)

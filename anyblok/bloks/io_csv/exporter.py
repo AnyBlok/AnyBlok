@@ -9,17 +9,16 @@ from anyblok import Declarations
 register = Declarations.register
 IO = Declarations.Model.IO
 Mixin = Declarations.Mixin
-Integer = Declarations.Column.Integer
-One2Many = Declarations.RelationShip.One2Many
+Many2One = Declarations.RelationShip.Many2One
+
+
+@register(IO)
+class Exporter(Mixin.IOCSVMixin):
+    pass
 
 
 @register(IO.Exporter)
 class Field(Mixin.IOCSVFieldMixin):
 
-    exporter = Integer(foreign_key=(IO.Exporter, 'id'), nullable=False)
-
-
-@register(IO)
-class Exporter(Mixin.IOCSVMixin):
-
-    fields_to_export = One2Many(model=IO.Exporter.Field)
+    exporter = Many2One(model=IO.Exporter, nullable=False,
+                        one2many='fields_to_export')
