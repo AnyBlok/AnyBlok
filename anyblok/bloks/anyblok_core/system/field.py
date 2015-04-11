@@ -11,6 +11,7 @@ System = Declarations.Model.System
 Mixin = Declarations.Mixin
 String = Declarations.Column.String
 Boolean = Declarations.Column.Boolean
+Json = Declarations.Column.Json
 
 
 @register(Mixin)
@@ -37,24 +38,26 @@ class Field:
 @register(System)  # noqa
 class Field(Mixin.Field):
 
+    info = Json()
+
     @classmethod
-    def add_field(cls, rname, label, model, table):
+    def add_field(cls, rname, properties, model, table):
         """ Insert a field definition
 
         :param rname: name of the field
-        :param label: label of the field
+        :param properties: properties of the field
         :param model: namespace of the model
         :param table: name of the table of the model
         """
-        vals = dict(code=table + '.' + rname, model=model, name=rname,
-                    label=label)
+        vals = dict(code=table + '.' + rname, model=model, name=rname)
+        vals.update(properties)
         cls.insert(**vals)
 
     @classmethod
-    def alter_field(cls, field, label):
+    def alter_field(cls, field, properties):
         """ Update an existing field
 
         :param field: instance of the Field model to update
-        :param label: new label
+        :param properties: properties of the field
         """
-        field.update({cls.label: label})
+        field.update(properties)
