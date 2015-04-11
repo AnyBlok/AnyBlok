@@ -14,6 +14,9 @@ CHANGELOG
 Future
 ------
 
+0.2.6
+-----
+
 * [FIX] use the backref name to get the label of the remote relation ship
 * [FIX] add type information of the simple field
 
