@@ -674,6 +674,10 @@ Anyblok provides some functions to help creating an application:
 * createdb
 * updatedb
 * interpreter
+  .. note::
+
+      if IPython is in the sys.modules then the interpreter is an IPython interpreter
+
 * run_exit (nose test)
 
 Here is how to create an interpreter::

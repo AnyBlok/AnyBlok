@@ -11,7 +11,6 @@ from anyblok._argsparse import ArgsParseManager
 from anyblok.registry import RegistryManager
 from anyblok._graphviz import ModelSchema, SQLSchema
 from anyblok.common import format_bloks
-import code
 from nose import main
 import inspect
 import sys
@@ -128,7 +127,12 @@ def interpreter(description, version, argsparse_groups, parts_to_load):
         with open(python_script, "r") as fh:
             exec(fh.read(), None, locals())
     else:
-        code.interact(local=locals())
+        try:
+            from IPython import embed
+            embed()
+        except ImportError:
+            import code
+            code.interact(local=locals())
 
 
 def sqlschema(description, version, argsparse_groups, parts_to_load):

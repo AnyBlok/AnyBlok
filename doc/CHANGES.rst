@@ -14,6 +14,8 @@ CHANGELOG
 Future
 ------
 
+* [IMP] Add IPython support for interpreter
+
 0.2.6
 -----
 
