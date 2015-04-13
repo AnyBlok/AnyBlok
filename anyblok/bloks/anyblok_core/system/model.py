@@ -36,7 +36,7 @@ class Model:
     def get_model_doc_string(self):
         """ Return the docstring of the model
         """
-        m = self.registry.loaded_namespaces[self.name]
+        m = self.registry.get(self.name)
         if hasattr(m, '__doc__'):
             return m.__doc__ or ''
 
@@ -72,7 +72,7 @@ class Model:
             try:
                 # TODO need refactor, then try except pass whenever refactor
                 # not apply
-                m = cls.registry.loaded_namespaces[model]
+                m = cls.registry.get(model)
                 table = ''
                 if hasattr(m, '__tablename__'):
                     table = m.__tablename__

@@ -38,12 +38,12 @@ class Base:
         if cls.__registry_name__ in events:
             if event in events[cls.__registry_name__]:
                 for model, method in events[cls.__registry_name__][event]:
-                    m = cls.registry.loaded_namespaces[model]
+                    m = cls.registry.get(model)
                     getattr(m, method)(*args, **kwargs)
 
     @classmethod
     def get_model(cls, model):
-        return cls.registry.loaded_namespaces[model]
+        return cls.registry.get(model)
 
     @classmethod
     def get_primary_keys(cls, **pks):

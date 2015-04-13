@@ -23,7 +23,7 @@ class StrSelection(str):
         if isinstance(self.selections, dict):
             return self.selections
         if isinstance(self.selections, str):
-            m = self.registry.loaded_namespaces[self.namespace]
+            m = self.registry.get(self.namespace)
             return dict(getattr(m, self.selections)())
 
     def validate(self):
