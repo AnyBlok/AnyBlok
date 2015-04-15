@@ -19,7 +19,6 @@ class Column(Mixin.Field):
     autoincrement = Boolean(label="Auto increment")
     foreign_key = String()
     primary_key = Boolean()
-    ctype = String(label="Type")
     unique = Boolean()
     nullable = Boolean()
 
@@ -34,32 +33,34 @@ class Column(Mixin.Field):
         return field.property.columns[0].name
 
     @classmethod
-    def add_field(cls, cname, column, model, table):
+    def add_field(cls, cname, column, model, table, ftype):
         """ Insert a column definition
 
         :param cname: name of the column
         :param column: instance of the column
         :param model: namespace of the model
         :param table: name of the table of the model
+        :param ftype: type of the AnyBlok Field
         """
         c = column.property.columns[0]
         vals = dict(autoincrement=c.autoincrement,
                     code=table + '.' + cname,
                     model=model, name=cname,
                     foreign_key=c.info.get('foreign_key'),
-                    label=c.info['label'],
+                    label=c.info.get('label'),
                     nullable=c.nullable,
                     primary_key=c.primary_key,
-                    ctype=str(c.type),
+                    ftype=ftype,
                     unique=c.unique)
         cls.insert(**vals)
 
     @classmethod
-    def alter_field(cls, column, meta_column):
+    def alter_field(cls, column, meta_column, ftype):
         """ Update an existing column
 
         :param column: instance of the Column model to update
         :param meta_column: instance of the SqlAlchemy column
+        :param ftype: type of the AnyBlok Field
         """
         c = meta_column.property.columns[0]
         for col in ('autoincrement', 'nullable', 'primary_key', 'unique'):
@@ -70,6 +71,5 @@ class Column(Mixin.Field):
             if getattr(column, col) != c.info.get(col):
                 setattr(column, col, c.info.get(col))
 
-        ctype = str(c.type)
-        if column.ctype != ctype:
-            column.ctype = ctype
+        if column.ftype != ftype:
+            column.ftype = ftype

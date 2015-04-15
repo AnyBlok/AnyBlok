@@ -16,7 +16,6 @@ Boolean = Declarations.Column.Boolean
 @register(System)
 class RelationShip(Mixin.Field):
 
-    rtype = String(label="Type", nullable=False)
     local_column = String()
     remote_column = String()
     remote_name = String()
@@ -25,13 +24,14 @@ class RelationShip(Mixin.Field):
     nullable = Boolean()
 
     @classmethod
-    def add_field(cls, rname, relation, model, table):
+    def add_field(cls, rname, relation, model, table, ftype):
         """ Insert a relationship definition
 
         :param rname: name of the relationship
         :param relation: instance of the relationship
         :param model: namespace of the model
         :param table: name of the table of the model
+        :param ftype: type of the AnyBlok Field
         """
         local_column = relation.info.get('local_column')
         remote_column = relation.info.get('remote_column')
@@ -39,24 +39,21 @@ class RelationShip(Mixin.Field):
         remote_name = relation.info.get('remote_name')
         label = relation.info.get('label')
         nullable = relation.info.get('nullable', True)
-        rtype = relation.info.get('rtype')
-        if rtype is None:
-            return
 
         vals = dict(code=table + '.' + rname,
                     model=model, name=rname, local_column=local_column,
                     remote_model=remote_model, remote_name=remote_name,
                     remote_column=remote_column, label=label,
-                    nullable=nullable, rtype=rtype)
+                    nullable=nullable, ftype=ftype)
         cls.insert(**vals)
 
         if remote_name:
             remote_type = "Many2One"
-            if rtype == "Many2One":
+            if ftype == "Many2One":
                 remote_type = "One2Many"
-            elif rtype == 'Many2Many':
+            elif ftype == 'Many2Many':
                 remote_type = "Many2Many"
-            elif rtype == "One2One":
+            elif ftype == "One2One":
                 remote_type = "One2One"
 
             m = cls.registry.get(remote_model)
@@ -66,5 +63,5 @@ class RelationShip(Mixin.Field):
                         remote_name=rname,
                         remote_column=local_column,
                         label=remote_name.capitalize().replace('_', ' '),
-                        nullable=True, rtype=remote_type, remote=True)
+                        nullable=True, ftype=remote_type, remote=True)
             cls.insert(**vals)

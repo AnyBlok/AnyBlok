@@ -11,53 +11,52 @@ System = Declarations.Model.System
 Mixin = Declarations.Mixin
 String = Declarations.Column.String
 Boolean = Declarations.Column.Boolean
-Json = Declarations.Column.Json
 
 
 @register(Mixin)
 class Field:
 
     name = String(primary_key=True)
-    code = String()
+    code = String(nullable=True)
     model = String(primary_key=True)
     label = String()
+    ftype = String(label="Type", nullable=True)
 
     @classmethod
     def get_cname(self, field, cname):
         return cname
 
     @classmethod
-    def add_field(cls, name, field, model, table):
+    def add_field(cls, name, field, model, table, ftype):
         pass
 
     @classmethod
-    def alter_field(cls, field, meta_field):
+    def alter_field(cls, field, meta_field, ftype):
         pass
 
 
 @register(System)  # noqa
 class Field(Mixin.Field):
 
-    info = Json()
-
     @classmethod
-    def add_field(cls, rname, properties, model, table):
+    def add_field(cls, rname, label, model, table, ftype):
         """ Insert a field definition
 
         :param rname: name of the field
-        :param properties: properties of the field
+        :param label: label of the field
         :param model: namespace of the model
         :param table: name of the table of the model
+        :param ftype: type of the AnyBlok Field
         """
-        vals = dict(code=table + '.' + rname, model=model, name=rname)
-        vals.update(properties)
-        cls.insert(**vals)
+        cls.insert(code=table + '.' + rname, model=model, name=rname,
+                   label=label, ftype=ftype)
 
     @classmethod
-    def alter_field(cls, field, properties):
+    def alter_field(cls, field, label, ftype):
         """ Update an existing field
 
         :param field: instance of the Field model to update
-        :param properties: properties of the field
+        :param label: label of the field
+        :param ftype: type of the AnyBlok Field
         """
-        field.update(properties)
+        field.update({'label': label, 'ftype': ftype})

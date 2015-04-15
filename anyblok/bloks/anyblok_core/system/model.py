@@ -58,15 +58,17 @@ class Model:
             else:
                 raise Exception('Not implemented yet')
 
-        def get_field(cname):
-            if cname in m.loaded_fields.keys():
-                field = m.loaded_fields[cname]
+        def get_field(model, cname):
+            if cname in model.loaded_fields.keys():
+                field = model.loaded_fields[cname]
                 Field = cls.registry.System.Field
             else:
-                field = getattr(m, cname)
+                field = getattr(model, cname)
                 Field = get_field_model(field)
 
             return field, Field
+
+        fsp = cls.registry.loaded_namespaces_first_step
 
         for model in cls.registry.loaded_namespaces.keys():
             try:
@@ -80,22 +82,24 @@ class Model:
                 _m = cls.query('name').filter(cls.name == model)
                 if _m.count():
                     for cname in m.loaded_columns:
-                        field, Field = get_field(cname)
+                        ftype = fsp[model][cname].__class__.__name__
+                        field, Field = get_field(m, cname)
                         cname = Field.get_cname(field, cname)
                         query = Field.query()
                         query = query.filter(Field.model == model)
                         query = query.filter(Field.name == cname)
                         if query.count():
-                            Field.alter_field(query.first(), field)
+                            Field.alter_field(query.first(), field, ftype)
                         else:
-                            Field.add_field(cname, field, model, table)
+                            Field.add_field(cname, field, model, table, ftype)
                 else:
                     is_sql_model = len(m.loaded_columns) > 0
                     cls.insert(name=model, table=table,
                                is_sql_model=is_sql_model)
                     for cname in m.loaded_columns:
-                        field, Field = get_field(cname)
+                        field, Field = get_field(m, cname)
                         cname = Field.get_cname(field, cname)
-                        Field.add_field(cname, field, model, table)
+                        ftype = fsp[model][cname].__class__.__name__
+                        Field.add_field(cname, field, model, table, ftype)
             except Exception as e:
                 logger.error(str(e))

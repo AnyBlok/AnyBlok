@@ -60,8 +60,6 @@ class Function(Declarations.Field):
         fexpr = wrap('fexpr', 'fget')
 
         self.format_label(fieldname)
-        properties['loaded_fields'][fieldname] = {
-            'label': self.label,
-            'info': {'ftype': self.kwargs.get('type', 'Function')}}
+        properties['loaded_fields'][fieldname] = self.label
         properties[fieldname] = hybrid_property(
             fget, fset, fdel=fdel, expr=fexpr)

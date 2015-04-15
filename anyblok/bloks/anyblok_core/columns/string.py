@@ -32,6 +32,13 @@ class String(Declarations.Column):
         size = 64
         if 'size' in kwargs:
             size = kwargs.pop('size')
+            self.size = size
+
+        if 'type_' in kwargs:
+            del kwargs['type_']
+
+        if 'foreign_key' in kwargs:
+            self.foreign_key = kwargs.pop('foreign_key')
 
         self.sqlalchemy_type = SA_String(size)
 

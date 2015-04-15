@@ -15,6 +15,8 @@ Future
 ------
 
 * [IMP] Add IPython support for interpreter
+* [REF] Update and Standardize the method to field the models (Field, Column, RelationShip)
+  now all the type of the column go on the ftype and comme from the name of the class
 
 0.2.6
 -----
