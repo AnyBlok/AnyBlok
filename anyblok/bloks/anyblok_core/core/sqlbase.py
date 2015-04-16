@@ -124,7 +124,8 @@ class SqlBase(SqlMixin):
     sqlalchemy_query_update = query_method('update')
 
     def update(self, *args, **kwargs):
-        """ Call the SqlAlchemy Query.update method on the model::
+        """ Call the SqlAlchemy Query.update method on the instance of the
+        model::
 
             self.update({...})
 
@@ -139,6 +140,24 @@ class SqlBase(SqlMixin):
         where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
                         for pk in pks]
         self.__class__.query().filter(*where_clause).update(*args, **kwargs)
+
+    def delete(self):
+        """ Call the SqlAlchemy Query.delete method on the instance of the
+        model::
+
+            self.delete()
+
+        is equal at::
+
+            query = self.registry.session.query(MyModel)
+            query = query.filter(MyModel.``pk`` == self.``pk``)
+            query.delete()
+
+        """
+        pks = self.get_primary_keys()
+        where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
+                        for pk in pks]
+        self.__class__.query().filter(*where_clause).delete()
 
     @classmethod
     def insert(cls, **kwargs):
