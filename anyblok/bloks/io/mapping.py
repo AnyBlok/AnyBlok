@@ -82,7 +82,7 @@ class Mapping:
         return False
 
     @classmethod
-    def get_primary_keys(cls, model, key):
+    def get_mapping_primary_keys(cls, model, key):
         """ return primary key for a model and an external key
 
         :param model: model of the mapping
@@ -124,7 +124,7 @@ class Mapping:
             exist then an exception is raised
         :exception: IOMappingSetException
         """
-        if cls.get_primary_keys(model, key):
+        if cls.get_mapping_primary_keys(model, key):
             if raiseifexist:
                 raise IOMappingSetException(
                     "One value found for model %r and key %r" % (model, key))
@@ -161,7 +161,7 @@ class Mapping:
         :param key: string of the key
         :rtype: instance of the model
         """
-        pks = cls.get_primary_keys(model, key)
+        pks = cls.get_mapping_primary_keys(model, key)
         if pks is None:
             return None
 

@@ -58,8 +58,8 @@ class TestIOMapping(BlokTestCase):
         model = self.Model.query().first()
         self.Mapping.set_primary_keys(
             model.__registry_name__, 'test_get_pk', dict(name=model.name))
-        mapping = self.Mapping.get_primary_keys(model.__registry_name__,
-                                                'test_get_pk')
+        mapping = self.Mapping.get_mapping_primary_keys(
+            model.__registry_name__, 'test_get_pk')
         self.assertEqual(mapping, dict(name=model.name))
 
     def test_get_primary_keys(self):
@@ -67,8 +67,8 @@ class TestIOMapping(BlokTestCase):
         self.Mapping.set_primary_keys(
             column.__registry_name__, 'test_get_pks',
             dict(model=column.model, name=column.name))
-        mapping = self.Mapping.get_primary_keys(column.__registry_name__,
-                                                'test_get_pks')
+        mapping = self.Mapping.get_mapping_primary_keys(
+            column.__registry_name__, 'test_get_pks')
         self.assertEqual(mapping, dict(model=column.model, name=column.name))
 
     def test_get(self):
