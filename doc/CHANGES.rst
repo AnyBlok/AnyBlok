@@ -14,6 +14,11 @@ CHANGELOG
 Future
 ------
 
+* [IMP] unittest on SQLBase
+* [IMP] add delete method on SQLBase to delete une entry from an instance of the model
+* [REF] rename get_primary_keys to get_mapping_primary_keys, cause of get_primary_keys
+  already exist in SQLBase
+
 0.2.7
 -----
 
