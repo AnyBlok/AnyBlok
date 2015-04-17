@@ -14,6 +14,11 @@ CHANGELOG
 Future
 ------
 
+0.2.9
+-----
+
+* [FIX] Add all rst at the main path of all the bloks
+
 0.2.8
 -----
 

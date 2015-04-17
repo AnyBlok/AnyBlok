@@ -40,6 +40,9 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
+    package_data={
+        'anyblok.bloks': ['*/*.rst'],  # need to found a recursive glob
+    },
     install_requires=requires,
     tests_require=requires + ['nose'],
     classifiers=[
