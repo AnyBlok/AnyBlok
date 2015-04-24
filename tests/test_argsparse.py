@@ -5,7 +5,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import anyblok
 from os.path import join
 from anyblok import _argsparse
 from anyblok._argsparse import (ArgsParseManager,
@@ -38,7 +37,7 @@ class MockArgParseArguments:
 
     def __init__(self, configfile=None, args=None, kwargs=None):
         if configfile:
-            cfile = join(anyblok.__path__[0], 'tests', configfile)
+            cfile = join('/'.join(__file__.split('/')[:-1]), configfile)
             self.configfile = cfile
         else:
             self.configfile = None
@@ -318,7 +317,6 @@ class TestArgsParseManager(TestCase):
             'dbpassword': '',
             'dbhost': 'localhost',
             'dbport': '',
-            'wsgi_port': '8080',
         })
         self.assertEqual(ArgsParseManager.configuration, kwargs)
 
@@ -332,7 +330,6 @@ class TestArgsParseManager(TestCase):
             'dbpassword': '',
             'dbhost': 'localhost',
             'dbport': '',
-            'wsgi_port': '8080',
         })
 
     def test_parse_option_kwargs(self):

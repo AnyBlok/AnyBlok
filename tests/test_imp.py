@@ -11,11 +11,11 @@ from anyblok.blok import BlokManager
 from sys import modules
 from anyblok._imp import ImportManager
 from os.path import join
-from anyblok.tests.mockblok import mockblok
+from .mockblok import mockblok
 ImportManagerException = anyblok.Declarations.Exception.ImportManagerException
 
 
-tests_path = join(anyblok.__path__[0], 'tests', 'mockblok')
+tests_path = join('/'.join(__file__.split('/')[:-1]), 'mockblok')
 fp = open(join(tests_path, 'mockfile.py'), 'r')
 initial_file = fp.read()
 fp.close()
@@ -30,10 +30,10 @@ class TestImportManager(TestCase):
 
     def tearDown(self):
         super(TestImportManager, self).tearDown()
-        if 'anyblok.tests.mockblok.' in modules:
+        if '.mockblok.' in modules:
             mod_2_del = []
             for mod in modules.keys():
-                if 'anyblok.tests.mockblok.' in mod:
+                if '.mockblok.' in mod:
                     mod_2_del.append(mod)
 
             for mod in mod_2_del:
@@ -74,9 +74,9 @@ class TestImportManager(TestCase):
     def test_reload(self):
         blok = ImportManager.add('mockblok')
         blok.imports()
-        from anyblok.tests.mockblok.mockpackage import mockfile1, mockfile2
-        from anyblok.tests.mockblok.mockpackage import submockpackage
-        from anyblok.tests.mockblok import mockfile
+        from .mockblok.mockpackage import mockfile1, mockfile2
+        from .mockblok.mockpackage import submockpackage
+        from .mockblok import mockfile
 
         fp = open(join(tests_path, 'mockpackage', 'mockfile1.py'), 'w')
         fp.write("""foo = 'reload'""")
@@ -101,10 +101,10 @@ class TestImportManager(TestCase):
     def test_imports(self):
         blok = ImportManager.add('mockblok')
         blok.imports()
-        from anyblok.tests.mockblok.mockfile import foo
+        from .mockblok.mockfile import foo
         self.assertEqual(foo, 'bar')
-        from anyblok.tests.mockblok.mockpackage import mockfile1, mockfile2
-        from anyblok.tests.mockblok.mockpackage import submockpackage
+        from .mockblok.mockpackage import mockfile1, mockfile2
+        from .mockblok.mockpackage import submockpackage
         self.assertEqual(mockfile1.foo, 'bar')
         self.assertEqual(mockfile2.foo, 'bar')
         self.assertEqual(submockpackage.mockfile1.foo, 'bar')
