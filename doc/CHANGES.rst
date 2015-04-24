@@ -14,6 +14,8 @@ CHANGELOG
 Future
 ------
 
+* [FIX] Python 3.2 need that bloks directory are python modules, add empty __init__ file
+
 0.2.9
 -----
 
