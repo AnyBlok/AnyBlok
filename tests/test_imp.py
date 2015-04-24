@@ -11,6 +11,7 @@ from anyblok.blok import BlokManager
 from sys import modules
 from anyblok._imp import ImportManager
 from os.path import join
+from unittest import skipIf
 from .mockblok import mockblok
 ImportManagerException = anyblok.Declarations.Exception.ImportManagerException
 
@@ -19,6 +20,11 @@ tests_path = join('/'.join(__file__.split('/')[:-1]), 'mockblok')
 fp = open(join(tests_path, 'mockfile.py'), 'r')
 initial_file = fp.read()
 fp.close()
+
+
+def python_version():
+    import sys
+    return '%d.%d' % (sys.version_info.major, sys.version_info.minor)
 
 
 class TestImportManager(TestCase):
@@ -58,6 +64,7 @@ class TestImportManager(TestCase):
         except ImportManagerException:
             pass
 
+    @skipIf(python_version() < '3.3', "Reload doesn't work in python 3.2")
     def test_reload(self):
         blok = ImportManager.add('mockblok')
         blok.imports()
