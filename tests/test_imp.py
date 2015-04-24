@@ -39,19 +39,6 @@ class TestImportManager(TestCase):
             for mod in mod_2_del:
                 del modules[mod]
 
-        fp = open(join(tests_path, 'mockfile.py'), 'w')
-        fp.write(initial_file)
-        fp.close()
-
-        fp = open(join(tests_path, 'mockpackage', 'mockfile1.py'), 'w')
-        fp.write(initial_file)
-        fp.close()
-
-        fp = open(join(tests_path, 'mockpackage', 'submockpackage',
-                       'mockfile2.py'), 'w')
-        fp.write(initial_file)
-        fp.close()
-
         del BlokManager.bloks['mockblok']
         BlokManager.ordered_bloks.remove('mockblok')
 
@@ -92,11 +79,25 @@ class TestImportManager(TestCase):
         fp.close()
 
         blok.reload()
-        self.assertEqual(mockfile1.foo, 'reload')
-        self.assertEqual(mockfile2.foo, 'bar')
-        self.assertEqual(submockpackage.mockfile1.foo, 'bar')
-        self.assertEqual(submockpackage.mockfile2.foo, 'reload')
-        self.assertEqual(mockfile.foo, 'reload')
+        try:
+            self.assertEqual(mockfile1.foo, 'reload')
+            self.assertEqual(mockfile2.foo, 'bar')
+            self.assertEqual(submockpackage.mockfile1.foo, 'bar')
+            self.assertEqual(submockpackage.mockfile2.foo, 'reload')
+            self.assertEqual(mockfile.foo, 'reload')
+        finally:
+            fp = open(join(tests_path, 'mockfile.py'), 'w')
+            fp.write(initial_file)
+            fp.close()
+
+            fp = open(join(tests_path, 'mockpackage', 'mockfile1.py'), 'w')
+            fp.write(initial_file)
+            fp.close()
+
+            fp = open(join(tests_path, 'mockpackage', 'submockpackage',
+                           'mockfile2.py'), 'w')
+            fp.write(initial_file)
+            fp.close()
 
     def test_imports(self):
         blok = ImportManager.add('mockblok')
