@@ -374,8 +374,10 @@ def add_database(group, configuration):
 def add_install_bloks(parser, configuration):
     parser.add_argument('--install-bloks', dest='install_bloks', default='',
                         help="blok to install")
-    parser.add_argument('--test-blok-at-install',
-                        dest='test_blok', action='store_true')
+    parser.add_argument('--install-all-bloks', dest='install_all_bloks',
+                        action='store_true')
+    parser.add_argument('--test-blok-at-install', dest='test_blok',
+                        action='store_true')
     parser.set_defaults(test_blok=False)
 
 

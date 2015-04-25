@@ -41,12 +41,19 @@ def createdb(description, argsparse_groups, parts_to_load):
     ArgsParseManager.init_logger()
     drivername = ArgsParseManager.get('dbdrivername')
     dbname = ArgsParseManager.get('dbname')
-    bloks = format_bloks(ArgsParseManager.get('install_bloks'))
 
     bdd = anyblok.BDD[drivername]
     bdd.createdb(dbname)
 
     registry = RegistryManager.get(dbname)
+    if registry is None:
+        return
+
+    if ArgsParseManager.get('install_all_bloks'):
+        bloks = registry.System.Blok.list_by_state('uninstalled')
+    else:
+        bloks = format_bloks(ArgsParseManager.get('install_bloks'))
+
     registry.upgrade(install=bloks)
     registry.commit()
     registry.close()
@@ -67,7 +74,11 @@ def updatedb(description, version, argsparse_groups, parts_to_load):
                              argsparse_groups=argsparse_groups,
                              parts_to_load=parts_to_load)
 
-    install_bloks = format_bloks(ArgsParseManager.get('install_bloks'))
+    if ArgsParseManager.get('install_all_bloks'):
+        install_bloks = registry.System.Blok.list_by_state('uninstalled')
+    else:
+        install_bloks = format_bloks(ArgsParseManager.get('install_bloks'))
+
     uninstall_bloks = format_bloks(ArgsParseManager.get('uninstall_bloks'))
     update_bloks = format_bloks(ArgsParseManager.get('update_bloks'))
     if registry:
