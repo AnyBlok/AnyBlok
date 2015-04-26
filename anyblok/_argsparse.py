@@ -11,6 +11,7 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 from anyblok import Declarations
 import sys
+import os
 
 
 def getParser(description):
@@ -368,6 +369,15 @@ def add_database(group, configuration):
                        help="The name of the host")
     group.add_argument('--db_port', dest='dbport', default='',
                        help="The port number")
+
+    configuration.update({
+        'dbname': os.environ.get('ANYBLOK_DATABASE_NAME'),
+        'dbdrivername': os.environ.get('ANYBLOK_DATABASE_DRIVER'),
+        'dbusername': os.environ.get('ANYBLOK_DATABASE_USER'),
+        'dbpassword': os.environ.get('ANYBLOK_DATABASE_PASSWORD'),
+        'dbhost': os.environ.get('ANYBLOK_DATABASE_HOST'),
+        'dbport': os.environ.get('ANYBLOK_DATABASE_PORT'),
+    })
 
 
 @ArgsParseManager.add('install-bloks')

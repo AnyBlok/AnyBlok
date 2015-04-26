@@ -12,12 +12,12 @@ from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
 import anyblok
-import os
 
 logger = getLogger(__name__)
 
 
-class TestCaseMixin:
+class TestCase(unittest.TestCase):
+    """ Unittest class add helper for unit test in anyblok """
     @classmethod
     def init_argsparse_manager(cls, prefix=None, **env):
         """ Initialise the argsparse manager with environ variable
@@ -31,12 +31,8 @@ class TestCaseMixin:
         :param env: add another dict to merge with environ variable
         """
 
-        dbname = os.environ.get('ANYBLOK_DATABASE_NAME', 'test_anyblok')
-        dbdriver = os.environ.get('ANYBLOK_DATABASE_DIVER', 'postgres')
-        dbuser = os.environ.get('ANYBLOK_DATABASE_USER', '')
-        dbpassword = os.environ.get('ANYBLOK_DATABASE_PASSWORD', '')
-        dbhost = os.environ.get('ANYBLOK_DATABASE_HOST', '')
-        dbport = os.environ.get('ANYBLOK_DATABASE_PORT', '')
+        dbname = ArgsParseManager.get('dbname', 'test_anyblok')
+        dbdrivername = ArgsParseManager.get('dbdrivername', 'postgres')
 
         if prefix:
             dbname = prefix + '_' + dbname
@@ -46,20 +42,10 @@ class TestCaseMixin:
 
         env.update({
             'dbname': dbname,
-            'dbdrivername': dbdriver,
-            'dbusername': dbuser,
-            'dbpassword': dbpassword,
-            'dbhost': dbhost,
-            'dbport': dbport,
+            'dbdrivername': dbdrivername,
         })
-        if ArgsParseManager.configuration:
-            env.update(ArgsParseManager.configuration)
 
-        ArgsParseManager.configuration = env
-
-
-class TestCase(unittest.TestCase, TestCaseMixin):
-    """ Unittest class add helper for unit test in anyblok """
+        ArgsParseManager.configuration.update(env)
 
     @classmethod
     def createdb(cls, keep_existing=False):
@@ -214,7 +200,7 @@ class DBTestCase(TestCase):
         return registry
 
 
-class BlokTestCase(unittest.TestCase, TestCaseMixin):
+class BlokTestCase(unittest.TestCase):
     """ Use to test bloks without have to create new database for each test
 
     ::
@@ -238,7 +224,6 @@ class BlokTestCase(unittest.TestCase, TestCaseMixin):
         """
         super(BlokTestCase, cls).setUpClass()
         if not hasattr(cls, 'registry'):
-            cls.init_argsparse_manager()
             cls.registry = RegistryManager.get(ArgsParseManager.get('dbname'))
 
         def session_commit(*args, **kwargs):
