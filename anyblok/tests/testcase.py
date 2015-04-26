@@ -32,16 +32,22 @@ class TestCase(unittest.TestCase):
         """
 
         dbname = ArgsParseManager.get('dbname', 'test_anyblok')
+        olddbname = ArgsParseManager.get('olddbname')
         dbdrivername = ArgsParseManager.get('dbdrivername', 'postgres')
 
         if prefix:
-            dbname = prefix + '_' + dbname
+            if olddbname:
+                dbname = prefix + '_' + olddbname
+            else:
+                olddbname = dbname
+                dbname = prefix + '_' + dbname
 
         if env is None:
             env = {}
 
         env.update({
             'dbname': dbname,
+            'olddbname': olddbname,
             'dbdrivername': dbdrivername,
         })
 
