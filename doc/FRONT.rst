@@ -72,6 +72,8 @@ Run the blok tests at the installation::
 
     anyblok_updatedb -c config.file.cfg --install_bloks myblok --test-blok-at-install
 
+AnyBlok are tested by the `Anybox <http://anybox.fr>`_ `builbot <http://buildbot.anyblok.org>`_
+
 Dependencies
 ------------
 
