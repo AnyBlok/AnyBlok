@@ -14,6 +14,11 @@ CHANGELOG
 Future
 ------
 
+0.2.11
+------
+
+* [FIX] UNIT test createdb with prefix
+
 0.2.10
 ------
 
