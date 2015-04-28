@@ -245,4 +245,5 @@ class BlokTestCase(unittest.TestCase):
 
     def tearDown(self):
         """ Roll back the session """
+        self.registry.System.Cache.invalidate_all()
         self.registry.rollback()

@@ -49,6 +49,18 @@ class Cache:
         cls.last_cache_id = cls.get_last_id()
 
     @classmethod
+    def invalidate_all(cls):
+        res = []
+        for registry_name, methods in cls.registry.caches.items():
+            for method in methods.keys():
+                res.append(dict(registry_name=registry_name, method=method))
+
+        if res:
+            cls.multi_insert(*res)
+
+        cls.clear_invalidate_cache()
+
+    @classmethod
     def invalidate(cls, registry_name, method):
         """ Call the invalidation for a specific method cached on a model
 

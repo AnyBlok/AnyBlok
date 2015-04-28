@@ -72,6 +72,13 @@ class TestSimpleCache(DBTestCase):
         Model.registry.System.Cache.invalidate(registry_name, 'method_cached')
         self.assertEqual(m.method_cached(), 2 * value)
 
+    def check_method_cached_invalidate_all(self, Model, value=1):
+        m = Model()
+        self.assertEqual(m.method_cached(), value)
+        self.assertEqual(m.method_cached(), value)
+        Model.registry.System.Cache.invalidate_all()
+        self.assertEqual(m.method_cached(), 2 * value)
+
     def add_model_with_method_cached(self):
 
         @register(Model)
@@ -276,6 +283,20 @@ class TestSimpleCache(DBTestCase):
         self.assertEqual(m.method_cached(), 9)
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
         self.assertEqual(m.method_cached(), 15)
+
+    def test_invalidate_all_check_model(self):
+        registry = self.init_registry(self.add_model_with_method_cached)
+        self.check_method_cached_invalidate_all(registry.Test)
+
+    def test_invalidate_all_check_core(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_core)
+        self.check_method_cached_invalidate_all(registry.Test)
+
+    def test_invalidate_all_check_mixin(self):
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
+        self.check_method_cached_invalidate_all(registry.Test)
 
 
 class TestClassMethodCache(DBTestCase):
