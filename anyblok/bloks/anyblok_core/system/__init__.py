@@ -1,6 +1,6 @@
 # This file is a part of the AnyBlok project
 #
-#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -26,3 +26,5 @@ from . import cache  # noqa
 reload_module_if_blok_is_reloaded(cache)
 from . import parameter  # noqa
 reload_module_if_blok_is_reloaded(parameter)
+from . import sequence  # noqa
+reload_module_if_blok_is_reloaded(sequence)
