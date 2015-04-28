@@ -16,15 +16,9 @@ Selection = Declarations.Column.Selection
 class IOMixin:
 
     id = Integer(primary_key=True)
-    file = LargeBinary()
-    offset = Integer(nullable=False, default=0)
-    nb_grouped_line = Integer(nullable=False, default=50)
     check = Boolean(default=False)
     mode = Selection(selections="get_mode_choices", nullable=False)
 
     @classmethod
     def get_mode_choices(cls):
         return {}
-
-    def run(self):
-        return self.get_model(self.mode)(self).run()

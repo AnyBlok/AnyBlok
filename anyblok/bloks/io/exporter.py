@@ -10,4 +10,6 @@ from anyblok import Declarations
 
 @Declarations.register(Declarations.Model.IO)
 class Exporter(Declarations.Mixin.IOMixin):
-    pass
+
+    def run(self, entries):
+        return self.get_model(self.mode)(self).run(entries)

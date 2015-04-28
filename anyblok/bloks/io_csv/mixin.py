@@ -10,6 +10,7 @@ register = Declarations.register
 Mixin = Declarations.Mixin
 String = Declarations.Column.String
 Integer = Declarations.Column.Integer
+Boolean = Declarations.Column.Boolean
 
 
 @register(Mixin)
@@ -24,9 +25,10 @@ class IOCSVMixin:
 
     csv_model = String(foreign_key=(Declarations.Model.System.Model, 'name'))
     csv_delimiter = String(nullable=False, default=",")
+    importer_capable = Boolean(default=True)
 
     @classmethod
     def get_mode_choices(cls):
         res = super(IOCSVMixin, cls).get_mode_choices()
-        res[cls.__registry_name__] = 'CSV'
+        res.update({'Model.IO.Exporter.CSV': 'CSV'})
         return res

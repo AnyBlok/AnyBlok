@@ -8,10 +8,16 @@
 from anyblok import Declarations
 LargeBinary = Declarations.Column.LargeBinary
 Boolean = Declarations.Column.Boolean
+Integer = Declarations.Column.Integer
 
 
 @Declarations.register(Declarations.Model.IO)
 class Importer(Declarations.Mixin.IOMixin):
 
     file = LargeBinary(nullable=False)
+    offset = Integer(default=0)
+    nb_grouped_line = Integer(nullable=False, default=50)
     commit_in_each_grouped = Boolean(default=True)
+
+    def run(self):
+        return self.get_model(self.mode)(self).run()
