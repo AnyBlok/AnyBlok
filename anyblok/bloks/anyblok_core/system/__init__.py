@@ -24,3 +24,5 @@ from . import blok  # noqa
 reload_module_if_blok_is_reloaded(blok)
 from . import cache  # noqa
 reload_module_if_blok_is_reloaded(cache)
+from . import parameter  # noqa
+reload_module_if_blok_is_reloaded(parameter)
