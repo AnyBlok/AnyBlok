@@ -15,16 +15,26 @@ class Exporter(Declarations.Mixin.IOMixin):
         return self.get_model(self.mode)(self).run(entries)
 
     @classmethod
-    def get_counter_by_model(cls, model):
+    def get_counter(cls, model):
         Sequence = cls.registry.System.Sequence
         seq_code = 'export.%s' % model
         query = Sequence.query().filter(Sequence.code == seq_code)
         if query.count():
             sequence = query.first()
         else:
-            sequence = Sequence.insert(code=seq_code)
+            sequence = Sequence.insert(code=seq_code, prefix=seq_code)
 
         return sequence.nextval()
 
-    def get_counter(self):
-        return self.registry.IO.Exporter.get_counter_by_model(self.model)
+    @classmethod
+    def get_key_maping(cls, entry):
+        Mapping = cls.registry.IO.Mapping
+        model = entry.__registry_name__
+        mapping = Mapping.get_from_model_and_pyramid_keys(
+            model, entry.to_primary_keys())
+        if mapping:
+            return mapping.key
+
+        key = cls.get_counter(model)
+        Mapping.set(key, entry)
+        return key

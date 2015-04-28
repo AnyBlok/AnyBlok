@@ -122,3 +122,18 @@ class TestIOMapping(BlokTestCase):
         column = self.Column.query().first()
         self.Mapping.set('test_set', column)
         self.Mapping.set('test_set', column, raiseifexist=False)
+
+    def test_detect_key_from_model_and_primary_key(self):
+        Mapping = self.registry.IO.Mapping
+        Blok = self.registry.System.Blok
+
+        values = []
+        for i, blok in enumerate(Blok.query().all()):
+            values.append(dict(key='key_%d' % i, model=Blok.__registry_name__,
+                               primary_key=blok.to_primary_keys()))
+
+        Mapping.multi_insert(*values)
+        mapping = Mapping.get_from_model_and_pyramid_keys(
+            Blok.__registry_name__, blok.to_primary_keys())
+        entry = Mapping.get(blok.__registry_name__, mapping.key)
+        self.assertEqual(entry, blok)

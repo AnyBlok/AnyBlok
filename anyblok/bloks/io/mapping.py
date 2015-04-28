@@ -166,3 +166,12 @@ class Mapping:
             return None
 
         return cls.get_model(model).from_primary_keys(**pks)
+
+    @classmethod
+    def get_from_model_and_pyramid_keys(cls, model, pks):
+        query = cls.query().filter(cls.model == model)
+        for mapping in query.all():
+            if mapping.primary_key == pks:
+                return mapping
+
+        return None
