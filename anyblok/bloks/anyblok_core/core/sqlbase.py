@@ -8,6 +8,7 @@
 from anyblok import Declarations
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import true
+from sqlalchemy.sql import functions
 
 
 @Declarations.register(Declarations.Exception)
@@ -114,6 +115,59 @@ class SqlMixin:
         query = query.filter(Column.primary_key == true())
         return query.all().name
 
+    @Declarations.addListener('Model.System.Model', 'Update Model')
+    def listener_update_model(cls, model):
+        cls.registry.System.Cache.invalidate(model, '_fields_description')
+
+    @Declarations.classmethod_cache()
+    def _fields_description(cls):
+        """ Return the information of the Field, Column, RelationShip """
+        Field = cls.registry.System.Field
+        Column = cls.registry.System.Column
+        RelationShip = cls.registry.System.RelationShip
+
+        def get_query(Model):
+            columns = [
+                Model.name.label('id'),
+                Model.label,
+                Model.ftype.label('type'),
+            ]
+            if Model is Column:
+                columns.append(Model.nullable)
+                columns.append(Model.primary_key)
+                columns.append(functions.literal_column('null').label(
+                    'model'))
+            elif Model is RelationShip:
+                columns.append(Model.nullable)
+                columns.append(functions.literal_column('false').label(
+                    'primary_key'))
+                columns.append(Model.remote_model.label('model'))
+            elif Model is Field:
+                columns.append(
+                    functions.literal_column('true as nullable'))
+                columns.append(functions.literal_column('false').label(
+                    'primary_key'))
+                columns.append(functions.literal_column('null').label(
+                    'model'))
+
+            return Model.query(*columns).filter(
+                Model.model == cls.__registry_name__)
+
+        query = get_query(RelationShip).union_all(get_query(Column)).union_all(
+            get_query(Field))
+        fields2get = ['id', 'label', 'type', 'nullable', 'primary_key',
+                      'model']
+        return {x.id: {y: getattr(x, y) for y in fields2get}
+                for x in query.all()}
+
+    @classmethod
+    def fields_description(cls, fields=None):
+        res = cls._fields_description()
+        if fields:
+            return {x: y for x, y in res.items() if x in fields}
+
+        return res
+
 
 @Declarations.register(Declarations.Core)
 class SqlBase(SqlMixin):
@@ -190,7 +244,7 @@ class SqlBase(SqlMixin):
         instances = []
         for kwargs in args:
             if not isinstance(kwargs, dict):
-                raise SqlBaseException("inserts method wait list of dict")
+                raise SqlBaseException("multi_insert method wait list of dict")
 
             instance = cls(**kwargs)
             cls.registry.add(instance)

@@ -60,3 +60,60 @@ class TestCoreSqlBase(BlokTestCase):
         column = self.registry.System.Column.query().first()
         self.assertEqual(column.to_primary_keys(),
                          {'model': column.model, 'name': column.name})
+
+    def test_fields_description(self):
+        Model = self.registry.System.Model
+        self.maxDiff = None
+        res = {'description': {'id': 'description',
+                               'label': 'Description',
+                               'model': None,
+                               'nullable': True,
+                               'primary_key': False,
+                               'type': 'Function'},
+               'is_sql_model': {'id': 'is_sql_model',
+                                'label': 'Is a SQL model',
+                                'model': None,
+                                'nullable': True,
+                                'primary_key': False,
+                                'type': 'Boolean'},
+               'name': {'id': 'name',
+                        'label': 'Name',
+                        'model': None,
+                        'nullable': False,
+                        'primary_key': True,
+                        'type': 'String'},
+               'table': {'id': 'table',
+                         'label': 'Table',
+                         'model': None,
+                         'nullable': True,
+                         'primary_key': False,
+                         'type': 'String'}}
+        self.assertEqual(Model.fields_description(), res)
+
+    def test_fields_description_limited_field(self):
+        Model = self.registry.System.Model
+        self.maxDiff = None
+        res = {'table': {'id': 'table',
+                         'label': 'Table',
+                         'model': None,
+                         'nullable': True,
+                         'primary_key': False,
+                         'type': 'String'}}
+        self.assertEqual(Model.fields_description(fields=['table']), res)
+
+    def test_fields_description_cache(self):
+        Model = self.registry.System.Model
+        self.maxDiff = None
+        res = {'table': {'id': 'table',
+                         'label': 'Table',
+                         'model': None,
+                         'nullable': True,
+                         'primary_key': False,
+                         'type': 'String'}}
+        self.assertEqual(Model.fields_description(fields=['table']), res)
+        column = self.registry.System.Column.from_primary_keys(
+            model='Model.System.Model', name='table')
+        column.update(dict(label='Test'))
+        self.assertEqual(Model.fields_description(fields=['table']), res)
+        Model.fire('Update Model', 'Model.System.Model')
+        self.assertNotEqual(Model.fields_description(fields=['table']), res)

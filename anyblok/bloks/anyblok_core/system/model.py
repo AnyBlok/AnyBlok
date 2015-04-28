@@ -101,5 +101,9 @@ class Model:
                         cname = Field.get_cname(field, cname)
                         ftype = fsp[model][cname].__class__.__name__
                         Field.add_field(cname, field, model, table, ftype)
+
+                if m.loaded_columns:
+                    cls.fire('Update Model', model)
+
             except Exception as e:
                 logger.error(str(e))
