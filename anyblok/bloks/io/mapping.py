@@ -168,10 +168,15 @@ class Mapping:
         return cls.get_model(model).from_primary_keys(**pks)
 
     @classmethod
-    def get_from_model_and_pyramid_keys(cls, model, pks):
+    def get_from_model_and_primary_keys(cls, model, pks):
         query = cls.query().filter(cls.model == model)
         for mapping in query.all():
             if mapping.primary_key == pks:
                 return mapping
 
         return None
+
+    @classmethod
+    def get_from_entry(cls, entry):
+        return cls.get_from_model_and_primary_keys(
+            entry.__registry_name__, entry.to_primary_keys())

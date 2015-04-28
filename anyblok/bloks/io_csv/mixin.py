@@ -23,8 +23,8 @@ class IOCSVFieldMixin:
 @register(Mixin)
 class IOCSVMixin:
 
-    csv_model = String(foreign_key=(Declarations.Model.System.Model, 'name'))
     csv_delimiter = String(nullable=False, default=",")
+    csv_quotechar = String(nullable=False, default='"')
     importer_capable = Boolean(default=True)
 
     @classmethod

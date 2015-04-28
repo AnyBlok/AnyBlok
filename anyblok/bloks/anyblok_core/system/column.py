@@ -21,6 +21,7 @@ class Column(Mixin.Field):
     primary_key = Boolean()
     unique = Boolean()
     nullable = Boolean()
+    remote_model = String()
 
     @classmethod
     def get_cname(self, field, cname):
@@ -51,6 +52,7 @@ class Column(Mixin.Field):
                     nullable=c.nullable,
                     primary_key=c.primary_key,
                     ftype=ftype,
+                    remote_model=c.info.get('remote_model'),
                     unique=c.unique)
         cls.insert(**vals)
 
@@ -67,7 +69,7 @@ class Column(Mixin.Field):
             if getattr(column, col) != getattr(c, col):
                 setattr(column, col, getattr(c, col))
 
-        for col in ('foreign_key', 'label'):
+        for col in ('foreign_key', 'label', 'remote_model'):
             if getattr(column, col) != c.info.get(col):
                 setattr(column, col, c.info.get(col))
 

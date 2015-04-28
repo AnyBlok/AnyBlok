@@ -52,6 +52,16 @@ class Column(Declarations.Field):
         else:
             return model.__tablename__
 
+    def get_registry_name(self, model):
+        """ Return the registry name of the remote model
+
+        :rtype: str of the registry name
+        """
+        if isinstance(model, str):
+            return model
+        else:
+            return model.__registry_name__
+
     def format_foreign_key(self, registry, args, kwargs):
         if self.foreign_key:
             model, col = self.foreign_key
@@ -59,6 +69,7 @@ class Column(Declarations.Field):
             foreign_key = tablename + '.' + col
             args = args + (ForeignKey(foreign_key),)
             kwargs['info']['foreign_key'] = foreign_key
+            kwargs['info']['remote_model'] = self.get_registry_name(model)
 
         return args
 

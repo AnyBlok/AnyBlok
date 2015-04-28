@@ -135,8 +135,7 @@ class SqlMixin:
             if Model is Column:
                 columns.append(Model.nullable)
                 columns.append(Model.primary_key)
-                columns.append(functions.literal_column('null').label(
-                    'model'))
+                columns.append(Model.remote_model.label('model'))
             elif Model is RelationShip:
                 columns.append(Model.nullable)
                 columns.append(functions.literal_column('false').label(

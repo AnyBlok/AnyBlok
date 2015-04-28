@@ -133,7 +133,7 @@ class TestIOMapping(BlokTestCase):
                                primary_key=blok.to_primary_keys()))
 
         Mapping.multi_insert(*values)
-        mapping = Mapping.get_from_model_and_pyramid_keys(
+        mapping = Mapping.get_from_model_and_primary_keys(
             Blok.__registry_name__, blok.to_primary_keys())
         entry = Mapping.get(blok.__registry_name__, mapping.key)
         self.assertEqual(entry, blok)

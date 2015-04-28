@@ -8,6 +8,11 @@
 from anyblok import Declarations
 
 
+@Declarations.register(Declarations.Exception)
+class ExporterException(Exception):
+    """Simple Exception for exporter"""
+
+
 @Declarations.register(Declarations.Model.IO)
 class Exporter(Declarations.Mixin.IOMixin):
 
@@ -29,12 +34,10 @@ class Exporter(Declarations.Mixin.IOMixin):
     @classmethod
     def get_key_maping(cls, entry):
         Mapping = cls.registry.IO.Mapping
-        model = entry.__registry_name__
-        mapping = Mapping.get_from_model_and_pyramid_keys(
-            model, entry.to_primary_keys())
+        mapping = Mapping.get_from_entry(entry)
         if mapping:
             return mapping.key
 
-        key = cls.get_counter(model)
+        key = cls.get_counter(entry.__registry_name__)
         Mapping.set(key, entry)
         return key
