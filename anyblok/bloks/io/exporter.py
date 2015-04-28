@@ -13,3 +13,18 @@ class Exporter(Declarations.Mixin.IOMixin):
 
     def run(self, entries):
         return self.get_model(self.mode)(self).run(entries)
+
+    @classmethod
+    def get_counter_by_model(cls, model):
+        Sequence = cls.registry.System.Sequence
+        seq_code = 'export.%s' % model
+        query = Sequence.query().filter(Sequence.code == seq_code)
+        if query.count():
+            sequence = query.first()
+        else:
+            sequence = Sequence.insert(code=seq_code)
+
+        return sequence.nextval()
+
+    def get_counter(self):
+        return self.registry.IO.Exporter.get_counter_by_model(self.model)
