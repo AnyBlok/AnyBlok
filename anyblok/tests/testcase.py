@@ -30,6 +30,7 @@ class TestCase(unittest.TestCase):
         :param prefix: prefix the database name
         :param env: add another dict to merge with environ variable
         """
+        ArgsParseManager.load_config_for_test()
         dbname = ArgsParseManager.get('dbname', 'test_anyblok')
         dbdrivername = ArgsParseManager.get('dbdrivername', 'postgres')
         env.update({

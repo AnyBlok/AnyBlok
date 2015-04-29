@@ -198,7 +198,7 @@ class ArgsParseManager:
                 if k in groups:
                     groups[k].extend(v)
                 else:
-                    groups[k] = v
+                    groups[k] = [] + v
 
         return groups
 
@@ -260,6 +260,15 @@ class ArgsParseManager:
         from sqlalchemy.engine.url import URL
         return URL(drivername, username=username, password=password, host=host,
                    port=port, database=database)
+
+    @classmethod
+    @log()
+    def load_config_for_test(cls):
+        parser = getParser("Initialise unit test")
+        for part in cls.groups.values():
+            for fncts in part.values():
+                for fnct in fncts:
+                    fnct(parser, cls.configuration)
 
     @classmethod
     @log()
