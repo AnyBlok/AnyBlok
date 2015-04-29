@@ -132,7 +132,7 @@ class Selection(Declarations.Column):
             val = self.sqlalchemy_type.python_type(value)
             if not val.validate():
                 raise FieldException('%r is not in the selections (%s)' % (
-                    value, ', '.join(val.selections)))
+                    value, ', '.join(val.get_selections())))
 
             setattr(model_self, '_' + fieldname, value)
 
