@@ -19,7 +19,7 @@ logger = getLogger(__name__)
 class TestCase(unittest.TestCase):
     """ Unittest class add helper for unit test in anyblok """
     @classmethod
-    def init_argsparse_manager(cls, prefix=None, **env):
+    def init_argsparse_manager(cls, **env):
         """ Initialise the argsparse manager with environ variable
         to launch the test
 
@@ -30,27 +30,12 @@ class TestCase(unittest.TestCase):
         :param prefix: prefix the database name
         :param env: add another dict to merge with environ variable
         """
-
         dbname = ArgsParseManager.get('dbname', 'test_anyblok')
-        olddbname = ArgsParseManager.get('olddbname')
         dbdrivername = ArgsParseManager.get('dbdrivername', 'postgres')
-
-        if prefix:
-            if olddbname:
-                dbname = prefix + '_' + olddbname
-            else:
-                olddbname = dbname
-                dbname = prefix + '_' + dbname
-
-        if env is None:
-            env = {}
-
         env.update({
             'dbname': dbname,
-            'olddbname': olddbname,
             'dbdrivername': dbdrivername,
         })
-
         ArgsParseManager.configuration.update(env)
 
     @classmethod
@@ -141,7 +126,7 @@ class DBTestCase(TestCase):
     def setUpClass(cls):
         """ Intialialise the argsparse manager """
         super(DBTestCase, cls).setUpClass()
-        cls.init_argsparse_manager(prefix='db_testcase')
+        cls.init_argsparse_manager()
 
     def setUp(self):
         """ Create a database and load the blok manager """
