@@ -20,7 +20,7 @@ class Exporter(Declarations.Mixin.IOMixin):
         return self.get_model(self.mode)(self).run(entries)
 
     @classmethod
-    def get_counter(cls, model):
+    def get_external_id(cls, model):
         Sequence = cls.registry.System.Sequence
         seq_code = 'export.%s' % model
         query = Sequence.query().filter(Sequence.code == seq_code)
@@ -38,6 +38,6 @@ class Exporter(Declarations.Mixin.IOMixin):
         if mapping:
             return mapping.key
 
-        key = cls.get_counter(entry.__registry_name__)
+        key = cls.get_external_id(entry.__registry_name__)
         Mapping.set(key, entry)
         return key

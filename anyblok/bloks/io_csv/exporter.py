@@ -41,7 +41,7 @@ class Field(Mixin.IOCSVFieldMixin):
     def get_selection(cls):
         return {
             'any': '',
-            'counter': 'With counter',
+            'external_id': 'External ID',
         }
 
     def get_value_for(self, entry):

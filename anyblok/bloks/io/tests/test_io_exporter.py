@@ -10,10 +10,10 @@ from anyblok.tests.testcase import BlokTestCase
 
 class TestIOExportCSV(BlokTestCase):
 
-    def test_get_counter(self):
+    def test_get_external_id(self):
         Exporter = self.registry.IO.Exporter
-        val1 = Exporter.get_counter(Exporter.__registry_name__)
-        val2 = Exporter.get_counter(Exporter.__registry_name__)
+        val1 = Exporter.get_external_id(Exporter.__registry_name__)
+        val2 = Exporter.get_external_id(Exporter.__registry_name__)
         val1 = val1.split('_')
         val1 = '_'.join([val1[0], str(int(val1[1]) + 1)])
         self.assertEqual(val1, val2)
@@ -22,7 +22,7 @@ class TestIOExportCSV(BlokTestCase):
         Exporter = self.registry.IO.Exporter
         Blok = self.registry.System.Blok
         entry = Blok.from_primary_keys(name='anyblok-core')
-        val1 = Exporter.get_counter(Blok.__registry_name__)
+        val1 = Exporter.get_external_id(Blok.__registry_name__)
         val1 = val1.split('_')
         val1 = '_'.join([val1[0], str(int(val1[1]) + 1)])
         self.assertEqual(Exporter.get_key_maping(entry), val1)
@@ -31,7 +31,7 @@ class TestIOExportCSV(BlokTestCase):
         Exporter = self.registry.IO.Exporter
         Blok = self.registry.System.Blok
         entry = Blok.from_primary_keys(name='anyblok-core')
-        val1 = Exporter.get_counter(Blok.__registry_name__)
+        val1 = Exporter.get_external_id(Blok.__registry_name__)
         val1 = val1.split('_')
         val1 = '_'.join([val1[0], str(int(val1[1]) + 1)])
         self.assertEqual(Exporter.get_key_maping(entry), val1)

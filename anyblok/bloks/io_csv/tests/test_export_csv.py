@@ -46,8 +46,8 @@ class TestIOExportCSV(BlokTestCase):
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0], 'id')
 
-    def test_get_header_from_fields_counter(self):
-        fields = [{'name': 'id', 'mode': 'counter'}]
+    def test_get_header_from_fields_external_id(self):
+        fields = [{'name': 'id', 'mode': 'external_id'}]
         exporter = self.create_exporter(self.registry.IO.Exporter,
                                         fields=fields)
         res = exporter.get_model(exporter.mode)(exporter).get_header()
@@ -61,19 +61,19 @@ class TestIOExportCSV(BlokTestCase):
         res = exporter.fields_to_export[0].get_value_for(exporter)
         self.assertEqual(res, exporter.id)
 
-    def test_format_field_with_mapping_counter(self):
+    def test_format_field_with_mapping_external_id(self):
         Exporter = self.registry.IO.Exporter
-        fields = [{'name': 'id', 'mode': 'counter'}]
+        fields = [{'name': 'id', 'mode': 'external_id'}]
         exporter = self.create_exporter(Exporter, fields=fields)
-        key = Exporter.get_counter(exporter.model)
+        key = Exporter.get_external_id(exporter.model)
         key = key.split('_')
         key = '_'.join([key[0], str(int(key[1]) + 1)])
         res = exporter.fields_to_export[0].get_value_for(exporter)
         self.assertEqual(res, key)
 
-    def test_format_field_with_forbidden_mapping_counter(self):
+    def test_format_field_with_forbidden_mapping_external_id(self):
         Exporter = self.registry.IO.Exporter
-        fields = [{'name': 'id.other', 'mode': 'counter'}]
+        fields = [{'name': 'id.other', 'mode': 'external_id'}]
         exporter = self.create_exporter(Exporter, fields=fields)
         from anyblok import Declarations
         ExporterException = Declarations.Exception.ExporterException
@@ -96,7 +96,7 @@ class TestIOExportCSV(BlokTestCase):
 
     def test_format_browsed_field_with_mapping_key(self):
         Exporter = self.registry.IO.Exporter
-        fields = [{'name': 'model.name', 'mode': 'counter'}]
+        fields = [{'name': 'model.name', 'mode': 'external_id'}]
         exporter = self.create_exporter(Exporter, fields=fields)
         model = self.registry.System.Model.from_primary_keys(
             name=Exporter.__registry_name__)
@@ -106,7 +106,7 @@ class TestIOExportCSV(BlokTestCase):
 
     def test_export_anyblok_core(self):
         Blok = self.registry.System.Blok
-        fields = [{'name': 'name', 'mode': 'counter'},
+        fields = [{'name': 'name', 'mode': 'external_id'},
                   {'name': 'state'}]
         exporter = self.create_exporter(Blok, fields=fields)
         blok = Blok.from_primary_keys(name="anyblok-core")
