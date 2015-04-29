@@ -14,6 +14,9 @@ CHANGELOG
 Future
 ------
 
+0.2.12
+------
+
 * [IMP] CSV Exporter
 * [IMP] Exporter Model give external ID behaviour
 * [ADD] Sequence model (Model.System.Sequence)
