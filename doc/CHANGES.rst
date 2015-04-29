@@ -14,6 +14,12 @@ CHANGELOG
 Future
 ------
 
+* [IMP] CSV Exporter
+* [IMP] Exporter Model give external ID behaviour
+* [ADD] Sequence model (Model.System.Sequence)
+* [ADD] fields_description cached_classmethod with invalidation
+* [ADD] Parameter Model (Model.System.Parameter) 
+
 0.2.11
 ------
 
