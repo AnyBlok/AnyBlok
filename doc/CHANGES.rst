@@ -19,6 +19,7 @@ Future
 * [ADD] Sequence model (Model.System.Sequence)
 * [ADD] fields_description cached_classmethod with invalidation
 * [ADD] Parameter Model (Model.System.Parameter) 
+* [FIX] environnement variable for test unitaire
 
 0.2.11
 ------
