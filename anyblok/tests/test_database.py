@@ -7,7 +7,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase
-import os
 from anyblok._argsparse import ArgsParseManager
 from datetime import datetime
 import anyblok
@@ -27,18 +26,8 @@ class TestDataBase(TestCase):
         if self.drivername is None:
             return
 
-        env = os.environ
-
-        env = {
-            'dbname': env.get(self.drivername + '_dbname', 'test_db_anyblok'),
-            'dbdrivername': self.drivername,
-            'dbusername': env.get(self.drivername + '_dbusername'),
-            'dbpassword': env.get(self.drivername + '_dbpassword'),
-            'dbhost': env.get(self.drivername + '_dbhost'),
-            'dbport': env.get(self.drivername + '_dbport'),
-        }
-        ArgsParseManager.configuration = env
-        self.ready_to_test = True
+        if ArgsParseManager.get('db_drivername') == 'postgres':
+            self.ready_to_test = True
 
 
 class TestPostgres(TestDataBase):

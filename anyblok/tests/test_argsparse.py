@@ -95,11 +95,17 @@ class TestArgsParseManager(TestCase):
             return MockArgumentParser()
 
         _argsparse.getParser = getParser
+        cls.old_configuration = ArgsParseManager.configuration.copy()
+        cls.old_groups = ArgsParseManager.groups.copy()
+        cls.old_labels = ArgsParseManager.labels.copy()
 
     @classmethod
     def tearDownClass(cls):
         super(TestArgsParseManager, cls).tearDownClass()
         _argsparse.getParser = old_getParser
+        ArgsParseManager.configuration = cls.old_configuration
+        ArgsParseManager.groups = cls.old_groups
+        ArgsParseManager.labels = cls.old_labels
 
     def setUp(self):
         super(TestArgsParseManager, self).setUp()
