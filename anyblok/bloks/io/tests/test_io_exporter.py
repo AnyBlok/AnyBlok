@@ -36,3 +36,12 @@ class TestIOExportCSV(BlokTestCase):
         val1 = '_'.join([val1[0], str(int(val1[1]) + 1)])
         self.assertEqual(Exporter.get_key_maping(entry), val1)
         self.assertEqual(Exporter.get_key_maping(entry), val1)
+
+    def test_export_with_entries_doesnt_come_from_model(self):
+        Exporter = self.registry.IO.Exporter
+        Blok = self.registry.System.Blok
+        exporter = Exporter(model=Blok.__registry_name__)
+        from anyblok import Declarations
+        ExporterException = Declarations.Exception.ExporterException
+        with self.assertRaises(ExporterException):
+            exporter.run([exporter])

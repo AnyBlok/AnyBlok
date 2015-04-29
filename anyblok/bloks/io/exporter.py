@@ -17,6 +17,11 @@ class ExporterException(Exception):
 class Exporter(Declarations.Mixin.IOMixin):
 
     def run(self, entries):
+        for entry in entries:
+            if entry.__registry_name__ != self.model:
+                raise Declarations.Exception.ExporterException(
+                    "The entries must be instance of %r" % self.model)
+
         return self.get_model(self.mode)(self).run(entries)
 
     @classmethod
