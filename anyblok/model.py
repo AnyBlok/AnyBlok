@@ -13,6 +13,7 @@ from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper
 from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
+from copy import deepcopy
 
 
 @Declarations.register(Declarations.Exception)
@@ -194,6 +195,9 @@ class Model:
             return
 
         from sqlalchemy.ext.declarative import declared_attr
+
+        if field.must_be_duplicate_before_added():
+            field = deepcopy(field)
 
         if field.must_be_declared_as_attr():
             # All the declaration are seen as mixin for sqlalchemy

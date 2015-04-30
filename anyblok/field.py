@@ -116,3 +116,7 @@ class Field:
     def must_be_declared_as_attr(self):
         """ Return False, it is the default value """
         return False
+
+    def must_be_duplicate_before_added(self):
+        """ Return False, it is the default value """
+        return False

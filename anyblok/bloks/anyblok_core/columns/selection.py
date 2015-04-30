@@ -148,3 +148,12 @@ class Selection(Declarations.Column):
             self.selections, self.size, registry=registry, namespace=namespace)
         return super(Selection, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
+
+    def must_be_duplicate_before_added(self):
+        """ Return True because the field selection in a mixin must be copied
+        else the selection method can be wrond
+        """
+        if isinstance(self.selections, str):
+            return True
+        else:
+            return False
