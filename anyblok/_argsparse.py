@@ -264,11 +264,12 @@ class ArgsParseManager:
     @classmethod
     @log()
     def load_config_for_test(cls):
-        parser = getParser("Initialise unit test")
-        for part in cls.groups.values():
-            for fncts in part.values():
-                for fnct in fncts:
-                    fnct(parser, cls.configuration)
+        if not cls.configuration:
+            parser = getParser("Initialise unit test")
+            for part in cls.groups.values():
+                for fncts in part.values():
+                    for fnct in fncts:
+                        fnct(parser, cls.configuration)
 
     @classmethod
     @log()
