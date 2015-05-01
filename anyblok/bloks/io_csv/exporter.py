@@ -26,7 +26,12 @@ class CSVExporterException(Exception):
 
 @register(IO)
 class Exporter(Mixin.IOCSVMixin):
-    pass
+
+    @classmethod
+    def get_mode_choices(cls):
+        res = super(Exporter, cls).get_mode_choices()
+        res.update({'Model.IO.Exporter.CSV': 'CSV'})
+        return res
 
 
 @register(IO.Exporter)
@@ -100,7 +105,7 @@ class CSV:
         self.exporter = exporter
 
     @classmethod
-    def insert(cls, delimiter=None, fields=None, **kwargs):
+    def insert(cls, delimiter=None, quotechar=None, fields=None, **kwargs):
         kwargs['mode'] = cls.__registry_name__
         if 'model' in kwargs:
             if not isinstance(kwargs['model'], str):
@@ -108,6 +113,9 @@ class CSV:
 
         if delimiter is not None:
             kwargs['csv_delimiter'] = delimiter
+
+        if quotechar is not None:
+            kwargs['csv_quotechar'] = quotechar
 
         exporter = cls.registry.IO.Exporter.insert(**kwargs)
         if fields:

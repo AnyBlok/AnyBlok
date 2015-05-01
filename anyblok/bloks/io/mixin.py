@@ -17,7 +17,6 @@ String = Declarations.Column.String
 class IOMixin:
 
     id = Integer(primary_key=True)
-    check = Boolean(default=False)
     mode = Selection(selections="get_mode_choices", nullable=False)
     model = String(foreign_key=(Declarations.Model.System.Model, 'name'),
                    nullable=False)

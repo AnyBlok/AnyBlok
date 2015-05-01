@@ -25,10 +25,3 @@ class IOCSVMixin:
 
     csv_delimiter = String(nullable=False, default=",")
     csv_quotechar = String(nullable=False, default='"')
-    importer_capable = Boolean(default=True)
-
-    @classmethod
-    def get_mode_choices(cls):
-        res = super(IOCSVMixin, cls).get_mode_choices()
-        res.update({'Model.IO.Exporter.CSV': 'CSV'})
-        return res

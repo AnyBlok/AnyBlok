@@ -6,8 +6,213 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from csv import DictReader
+from io import StringIO
 
 
-@Declarations.register(Declarations.Model.IO)
-class Importer(Declarations.Mixin.IOCSVMixin):
-    pass
+register = Declarations.register
+Mixin = Declarations.Mixin
+IO = Declarations.Model.IO
+Selection = Declarations.Column.Selection
+ImporterException = Declarations.Exception.ImporterException
+
+
+@register(ImporterException)
+class CSVImporterException(Exception):
+    """ Simple exception for importer exception """
+
+
+@register(IO)
+class Importer(Mixin.IOCSVMixin):
+
+    csv_on_error = Selection(
+        selections=[('raise_now', 'Raise now'),
+                    ('raise_at_the_end', 'Raise at the end'),
+                    ('ignore', 'Ignore and continue')],
+        default='raise_at_the_end')
+    csv_if_exist = Selection(selections=[('pass', 'Pass to the next record'),
+                                         ('update', 'Update the record'),
+                                         ('create', 'Create another record'),
+                                         ('raise', 'Raise an exception')],
+                             default='update')
+    csv_if_does_not_exist = Selection(selections=[
+        ('pass', 'Pass to the next record'),
+        ('create', 'Create the record'),
+        ('raise', 'Raise an exception')], default='create')
+
+    @classmethod
+    def get_mode_choices(cls):
+        res = super(Importer, cls).get_mode_choices()
+        res.update({'Model.IO.Importer.CSV': 'CSV'})
+        return res
+
+
+@register(IO.Importer)
+class CSV:
+
+    def __init__(self, importer):
+        self.importer = importer
+        self.error_found = []
+        self.reader = None
+        self.create_entries = []
+        self.update_entries = []
+        self.header_pks = []
+        self.header_external_id = None
+        self.header_external_ids = {}
+        self.header_fields = []
+        self.fields_description = {}
+
+    def commit(self):
+        if self.error_found:
+            return False
+
+        self.importer.offset = self.reader.line_num - 1
+        self.importer.commit()
+        return True
+
+    def get_reader(self):
+        csvfile = StringIO()
+        csvfile.write(self.importer.file_to_import.decode('utf-8'))
+        csvfile.seek(0)
+        self.reader = DictReader(csvfile,
+                                 delimiter=self.importer.csv_delimiter,
+                                 quotechar=self.importer.csv_quotechar)
+
+    def consume_offset(self):
+        try:
+            for offset in range(self.importer.offset):
+                next(self.reader)
+        except StopIteration:
+            pass
+
+    def consume_nb_grouped_lines(self):
+        res = []
+        try:
+            for offset in range(self.importer.nb_grouped_lines):
+                res.append(next(self.reader))
+        except StopIteration:
+            pass
+
+        return res
+
+    def get_header(self):
+        headers = self.reader.fieldnames
+        Model = self.registry.get(self.importer.model)
+        self.fields_description = Model.fields_description(
+            fields=[h.split('/')[0] for h in headers])
+
+        for header in headers:
+            if '/' in header:
+                name = header.split('/')[0]
+                external_id = True
+            else:
+                name = header
+                external_id = False
+
+            if external_id:
+                if not name or self.fields_description[name]['primary_key']:
+                    self.header_external_id = header
+                else:
+                    self.header_external_ids[header] = name
+            else:
+                if self.fields_description[name]['primary_key']:
+                    self.header_pks.append(header)
+                else:
+                    self.header_fields.append(name)
+
+    def parse_row(self, row):
+        try:
+            entry = pks = None
+            Model = self.registry.get(self.importer.model)
+            Mapping = self.registry.IO.Mapping
+            values = {}
+            for field in self.header_fields:
+                ctype = self.fields_description[field]['type']
+                values[field] = self.importer.format_field_value(
+                    row[field], ctype)
+
+            for external_field, field in self.header_external_ids.items():
+                ctype = self.fields_description[field]['type']
+                model = self.fields_description[field]['model']
+                values[field] = self.importer.format_field_value(
+                    row[external_field], ctype, external_id=True, model=model)
+
+            if self.header_external_id:
+                entry = self.importer.get_key_mapping(
+                    row[self.header_external_id])
+            elif self.header_pks:
+                pks = {}
+                for field in self.header_pks:
+                    ctype = self.fields_description[field]['type']
+                    pks[field] = self.importer.format_field_value(
+                        row[field], ctype)
+
+                entry = Model.from_primary_keys(**pks)
+
+            if entry:
+                if self.importer.csv_if_exist == 'update':
+                    entry.update(values)
+                    self.update_entries.append(entry)
+                elif self.importer.csv_if_exist == 'create':
+                    entry = Model.insert(**values)
+                    self.create_entries.append(entry)
+                elif self.importer.csv_if_exist == 'raise':
+                    raise ImporterException.CSVImporterException(
+                        "Row %r already an entry %r " % (
+                            row, entry.to_primary_keys()))
+            else:
+                if self.importer.csv_if_does_not_exist == 'create':
+                    if pks:
+                        values.update(pks)
+
+                    entry = Model.insert(**values)
+                    self.create_entries.append(entry)
+                    if self.header_external_id:
+                        Mapping.set(row[self.header_external_id], entry)
+
+                elif self.importer.csv_if_does_not_exist == 'raise':
+                    raise ImporterException.CSVImporterException(
+                        "Create row are not allowed")
+
+        except Exception as e:
+            self.error_found.append(str(e))
+            if self.importer.csv_on_error == 'raise_now':
+                raise ImporterException.CSVImporterException('%r: %r' % (
+                    e.__class__.__name__, e))
+
+    def run(self):
+        self.get_reader()
+        self.get_header()
+        self.consume_offset()
+        while self.nb_lines_already_read < self.nb_lines_to_read:
+            for row in self.consume_nb_group_lines():
+                self.import_row(row)
+
+            self.commit()
+
+        if self.reader:
+            self.reader.close()
+
+        return {
+            'error': self.error_found,
+            'create_entries': self.create_entries,
+            'update_entries': self.update_entries,
+        }
+
+    @classmethod
+    def insert(cls, delimiter=None, quotechar=None, **kwargs):
+        kwargs['mode'] = cls.__registry_name__
+        if 'model' not in kwargs:
+            raise ImporterException.CSVImporterException(
+                "The column 'model' is required")
+
+        if not isinstance(kwargs['model'], str):
+            kwargs['model'] = kwargs['model'].__registry_name__
+
+        if delimiter is not None:
+            kwargs['csv_delimiter'] = delimiter
+
+        if quotechar is not None:
+            kwargs['csv_quotechar'] = quotechar
+
+        return cls.registry.IO.Importer.insert(**kwargs)
