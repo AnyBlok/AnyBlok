@@ -8,7 +8,7 @@
 from anyblok.tests.testcase import BlokTestCase
 
 
-class TestIOExportCSV(BlokTestCase):
+class TestExporter(BlokTestCase):
 
     def test_get_external_id(self):
         Exporter = self.registry.IO.Exporter

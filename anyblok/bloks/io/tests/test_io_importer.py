@@ -8,7 +8,7 @@
 from anyblok.tests.testcase import BlokTestCase
 
 
-class TestIOImportCSV(BlokTestCase):
+class TestImporter(BlokTestCase):
 
     def create_importer(self, **kwargs):
         Importer = self.registry.IO.Importer

@@ -15,7 +15,7 @@ class Decimal(Declarations.Column):
 
     ::
 
-        from dedimal import Decimal as D
+        from decimal import Decimal as D
         from AnyBlok.declarations import Declarations
 
 

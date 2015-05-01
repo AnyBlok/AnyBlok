@@ -228,6 +228,14 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertEqual(report.log_has("Add test.other"), False)
 
+    def test_detect_column_removed(self):
+        # TODO nothing
+        raise
+
+    def test_detect_not_nullable_column_removed(self):
+        # TODO remove nullable property
+        raise
+
     def test_detect_nullable(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")

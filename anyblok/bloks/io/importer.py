@@ -6,6 +6,10 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+import datetime
+from json import loads
+
+
 register = Declarations.register
 IO = Declarations.Model.IO
 LargeBinary = Declarations.Column.LargeBinary
@@ -79,12 +83,82 @@ class Field:
 
 
 @register(IO.Importer)
+class Float(IO.Importer.Field):
+
+    def field_value(self, value):
+        return float(value)
+
+
+@register(IO.Importer)
+class Decimal(IO.Importer.Field):
+
+    def field_value(self, value):
+        from decimal import Decimal as D
+        return D(value)
+
+
+@register(IO.Importer)
+class Json(IO.Importer.Field):
+
+    def field_value(self, value):
+        return loads(value)
+
+
+@register(IO.Importer)
+class Interval(IO.Importer.Field):
+
+    def field_value(self, value):
+        return datetime.timedelta(seconds=int(value))
+
+
+@register(IO.Importer)
 class Integer(IO.Importer.Field):
 
     def field_value(self, value):
         return int(value)
 
-    def field_external_id(self, value, model):
-        return int(super(Integer, self).field_external_id(value, model))
 
-# TODO Add other field
+@register(IO.Importer)
+class SmallInteger(IO.Importer.Integer):
+    pass
+
+
+@register(IO.Importer)
+class BigInteger(IO.Importer.Integer):
+    pass
+
+
+@register(IO.Importer)
+class Boolean(IO.Importer.Field):
+
+    def field_value(self, value):
+        if value in ("1", "true", "True"):
+            return True
+        elif value in ("0", "false", "False"):
+            return False
+
+        raise Declarations.Exception.ImporterException(
+            "Value %r is not a boolean" % value)
+
+
+@register(IO.Importer)
+class Time(IO.Importer.Field):
+
+    def field_value(self, value):
+        dt = datetime.datetime.strptime(value, "%H:%M:%S")
+        return datetime.time(dt.hour, dt.minute, dt.second)
+
+
+@register(IO.Importer)
+class Date(IO.Importer.Field):
+
+    def field_value(self, value):
+        dt = datetime.datetime.strptime(value, "%Y-%m-%d")
+        return datetime.date(dt.year, dt.month, dt.day)
+
+
+@register(IO.Importer)
+class DateTime(IO.Importer.Field):
+
+    def field_value(self, value):
+        return datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
