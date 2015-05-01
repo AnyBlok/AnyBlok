@@ -418,6 +418,9 @@ class Registry:
 
         return self.loaded_namespaces[namespace]
 
+    def has(self, namespace):
+        return True if namespace in self.loaded_namespaces else False
+
     def get_bloks_by_states(self, *states):
         """ Return the bloks in these states
 

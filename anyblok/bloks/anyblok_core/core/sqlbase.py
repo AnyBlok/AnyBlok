@@ -92,7 +92,10 @@ class SqlMixin:
 
         where_clause = [getattr(cls, k) == v for k, v in pks.items()]
         query = cls.query().filter(*where_clause)
-        return query.first()
+        if query.count():
+            return query.first()
+
+        return None
 
     def to_primary_keys(self):
         """ return the primary keys and values for this instance
