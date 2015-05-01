@@ -175,23 +175,33 @@ class CSV:
                         "Create row are not allowed")
 
         except Exception as e:
-            self.error_found.append(str(e))
+            msg = '%r: %r' % (e.__class__.__name__, e)
+            self.error_found.append(msg)
             if self.importer.csv_on_error == 'raise_now':
-                raise ImporterException.CSVImporterException('%r: %r' % (
-                    e.__class__.__name__, e))
+                raise ImporterException.CSVImporterException(msg)
 
     def run(self):
-        self.get_reader()
-        self.get_header()
-        self.consume_offset()
-        while self.nb_lines_already_read < self.nb_lines_to_read:
-            for row in self.consume_nb_group_lines():
-                self.import_row(row)
+        try:
+            self.get_reader()
+            self.get_header()
+            self.consume_offset()
+            while True:
+                rows = self.consume_nb_grouped_lines()
+                if not rows:
+                    break
 
-            self.commit()
+                for row in rows:
+                    self.parse_row(row)
 
-        if self.reader:
-            self.reader.close()
+                self.commit()
+        except Exception as e:
+            msg = '%r: %r' % (e.__class__.__name__, e)
+            self.error_found.append(msg)
+
+        if self.error_found:
+            if self.importer.csv_on_error == 'raise_at_the_end':
+                msg = "Exception found : \n %s" % '\n'.join(self.error_found)
+                raise ImporterException.CSVImporterException(msg)
 
         return {
             'error': self.error_found,

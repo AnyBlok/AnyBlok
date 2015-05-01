@@ -462,7 +462,28 @@ class TestIOImportCSV(BlokTestCase):
         self.assertEqual(len(importer.error_found), 1)
 
     def test_run(self):
-        raise
+        importer = self.create_csv_importer(
+            model='Model.IO.Exporter',
+            file_to_import=self.get_exporter_file_to_import())
+        importer.run()
+        self.assertEqual(len(importer.create_entries), 1)
+        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.error_found), 0)
 
-    def test_wrong_run(self):
-        raise
+    def test_run_raise_at_end(self):
+        importer = self.create_csv_importer()
+        from anyblok import Declarations
+        ImporterException = Declarations.Exception.ImporterException
+        with self.assertRaises(ImporterException.CSVImporterException):
+            importer.run()
+
+        self.assertEqual(len(importer.create_entries), 0)
+        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.error_found), 1)
+
+    def test_run_raise_ignored(self):
+        importer = self.create_csv_importer(csv_on_error='ignore')
+        importer.run()
+        self.assertEqual(len(importer.create_entries), 0)
+        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.error_found), 1)
