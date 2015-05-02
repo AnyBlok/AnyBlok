@@ -37,6 +37,7 @@ class AnyBlokIO(Blok):
         from . import mixin  # noqa
         from . import importer  # noqa
         from . import exporter  # noqa
+        from . import formater  # noqa
 
     @classmethod
     def reload_declaration_module(cls, reload):
@@ -49,3 +50,5 @@ class AnyBlokIO(Blok):
         reload(importer)
         from . import exporter
         reload(exporter)
+        from . import formater
+        reload(formater)

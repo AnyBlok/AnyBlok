@@ -10,8 +10,10 @@ from anyblok.tests.testcase import BlokTestCase
 
 class TestImporterFormater(BlokTestCase):
 
-    def get_value(self, *args, **kwargs):
-        return self.registry.IO.Importer().format_field_value(*args, **kwargs)
+    def get_value(self, value, ctype, external_id=False, model=None):
+        return self.registry.IO.Importer().str2value(value, ctype,
+                                                     external_id=external_id,
+                                                     model=model)
 
     def test_datetime(self):
         from datetime import datetime

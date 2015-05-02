@@ -128,13 +128,12 @@ class CSV:
             values = {}
             for field in self.header_fields:
                 ctype = self.fields_description[field]['type']
-                values[field] = self.importer.format_field_value(
-                    row[field], ctype)
+                values[field] = self.importer.str2value(row[field], ctype)
 
             for external_field, field in self.header_external_ids.items():
                 ctype = self.fields_description[field]['type']
                 model = self.fields_description[field]['model']
-                values[field] = self.importer.format_field_value(
+                values[field] = self.importer.str2value(
                     row[external_field], ctype, external_id=True, model=model)
 
             if self.header_external_id:
@@ -144,8 +143,7 @@ class CSV:
                 pks = {}
                 for field in self.header_pks:
                     ctype = self.fields_description[field]['type']
-                    pks[field] = self.importer.format_field_value(
-                        row[field], ctype)
+                    pks[field] = self.importer.str2value(row[field], ctype)
 
                 entry = Model.from_primary_keys(**pks)
 
