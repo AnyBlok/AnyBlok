@@ -131,45 +131,33 @@ class TestMigration(TestCase):
 
     def test_drop_table(self):
         self.registry.migration.table('test').drop()
-        try:
+        with self.assertRaises(MigrationException):
             self.registry.migration.table('Test')
-            self.fail("Table not drop")
-        except MigrationException:
-            pass
 
     def test_drop_column(self):
         t = self.registry.migration.table('test')
         t.column('other').drop()
-        try:
+        with self.assertRaises(MigrationException):
             t.column('other')
-            self.fail("Column not drop")
-        except MigrationException:
-            pass
 
     def test_alter_table_name(self):
         t = self.registry.migration.table('test')
         t.alter(name='othername')
         self.registry.migration.table('othername')
-        try:
+        with self.assertRaises(MigrationException):
             self.registry.migration.table('test')
-            self.fail("table not rename")
-        except MigrationException:
-            pass
 
     def test_alter_column_name(self):
         t = self.registry.migration.table('test')
         t.column('other').alter(name='othername')
         t.column('othername')
-        try:
+        with self.assertRaises(MigrationException):
             t.column('other')
-            self.fail("Column not rename")
-        except MigrationException:
-            pass
 
     def test_alter_column_nullable(self):
         t = self.registry.migration.table('test')
         c = t.column('other').alter(nullable=False)
-        self.assertEqual(c.nullable(), False)
+        self.assertFalse(c.nullable())
 
     def test_alter_column_nullable_in_filled_table(self):
         t = self.registry.migration.table('test')
@@ -177,7 +165,7 @@ class TestMigration(TestCase):
         self.fill_test_table()
         c = t.column('new_column').alter(nullable=False)
         # the column doesn't change of nullable to not lock the migration
-        self.assertEqual(c.nullable(), True)
+        self.assertTrue(c.nullable())
 
     def test_alter_column_default(self):
         t = self.registry.migration.table('test')
@@ -223,18 +211,42 @@ class TestMigration(TestCase):
             conn.execute(
                 """CREATE TABLE test(integer INT PRIMARY KEY NOT NULL);""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Add test.other"), True)
+        self.assertTrue(report.log_has("Add test.other"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Add test.other"), False)
+        self.assertFalse(report.log_has("Add test.other"))
 
     def test_detect_column_removed(self):
-        # TODO nothing
-        raise
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64),
+                    other2 CHAR(64)
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop test.other2"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop test.other2"))
 
     def test_detect_not_nullable_column_removed(self):
-        # TODO remove nullable property
-        raise
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64),
+                    other2 CHAR(64) NOT NULL
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Drop test.other2"))
+        self.assertTrue(report.log_has("Drop test.other2 (not null)"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop test.other2"))
+        self.assertFalse(report.log_has("Drop test.other2 (not null)"))
 
     def test_detect_nullable(self):
         with self.cnx() as conn:
@@ -245,10 +257,10 @@ class TestMigration(TestCase):
                     other CHAR(64) NOT NULL
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), True)
+        self.assertTrue(report.log_has("Alter test.other"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), False)
+        self.assertFalse(report.log_has("Alter test.other"))
 
     def test_detect_server_default(self):
         with self.cnx() as conn:
@@ -259,20 +271,19 @@ class TestMigration(TestCase):
                     other CHAR(64) DEFAULT 9.99
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), True)
+        self.assertTrue(report.log_has("Alter test.other"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), False)
+        self.assertFalse(report.log_has("Alter test.other"))
 
     def test_detect_drop_index(self):
         with self.cnx() as conn:
             conn.execute("""CREATE INDEX other_idx ON test (other);""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Drop index other_idx on test"), True)
+        self.assertTrue(report.log_has("Drop index other_idx on test"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has(
-            "Drop index other_idx on test"), False)
+        self.assertFalse(report.log_has("Drop index other_idx on test"))
 
     def test_detect_type(self):
         with self.cnx() as conn:
@@ -283,10 +294,10 @@ class TestMigration(TestCase):
                     other INT
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), True)
+        self.assertTrue(report.log_has("Alter test.other"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.other"), False)
+        self.assertFalse(report.log_has("Alter test.other"))
 
     @skipIf(alembic.__version__ < "0.7.6", "Alembic doesn't implement yet")
     def test_detect_primary_key(self):
@@ -298,12 +309,12 @@ class TestMigration(TestCase):
                     other CHAR(64) PRIMARY KEY NOT NULL
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.integer"), True)
-        self.assertEqual(report.log_has("Alter test.other"), True)
+        self.assertTrue(report.log_has("Alter test.integer"))
+        self.assertTrue(report.log_has("Alter test.other"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has("Alter test.integer"), False)
-        self.assertEqual(report.log_has("Alter test.other"), False)
+        self.assertFalse(report.log_has("Alter test.integer"))
+        self.assertFalse(report.log_has("Alter test.other"))
 
     def test_detect_add_foreign_key(self):
         with self.cnx() as conn:
@@ -314,12 +325,12 @@ class TestMigration(TestCase):
                     other INT
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has(
-            "Add Foreign keys on testfk.other => testfktarget.integer"), True)
+        self.assertTrue(report.log_has(
+            "Add Foreign keys on testfk.other => testfktarget.integer"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has(
-            "Add Foreign keys on testfk.other => testfktarget.integer"), False)
+        self.assertFalse(report.log_has(
+            "Add Foreign keys on testfk.other => testfktarget.integer"))
 
     def test_detect_drop_foreign_key(self):
         with self.cnx() as conn:
@@ -330,12 +341,12 @@ class TestMigration(TestCase):
                     other CHAR(64) references system_blok(name)
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has(
-            "Drop Foreign keys on test.other => system_blok.name"), True)
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has(
-            "Drop Foreign keys on test.other => system_blok.name"), False)
+        self.assertFalse(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
 
     def test_detect_drop_column_with_foreign_key(self):
         with self.cnx() as conn:
@@ -347,12 +358,12 @@ class TestMigration(TestCase):
                     other2 CHAR(64) references system_blok(name)
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has(
-            "Drop Foreign keys on test.other2 => system_blok.name"), True)
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other2 => system_blok.name"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has(
-            "Drop Foreign keys on test.other2 => system_blok.name"), False)
+        self.assertFalse(report.log_has(
+            "Drop Foreign keys on test.other2 => system_blok.name"))
 
     def test_detect_add_unique_constrainte(self):
         with self.cnx() as conn:
@@ -363,12 +374,12 @@ class TestMigration(TestCase):
                     other CHAR(64)
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has(
-            "Add unique constraint on testunique (other)"), True)
+        self.assertTrue(report.log_has(
+            "Add unique constraint on testunique (other)"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(report.log_has(
-            "Add unique constraint on testunique (other)"), False)
+        self.assertFalse(report.log_has(
+            "Add unique constraint on testunique (other)"))
 
     def test_detect_drop_constraint(self):
         with self.cnx() as conn:
@@ -379,12 +390,11 @@ class TestMigration(TestCase):
                     other CHAR(64) CONSTRAINT unique_other UNIQUE
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertEqual(
-            report.log_has("Drop constraint unique_other on test"), True)
+        self.assertTrue(report.log_has("Drop constraint unique_other on test"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertEqual(
-            report.log_has("Drop constraint unique_other on test"), False)
+        self.assertFalse(
+            report.log_has("Drop constraint unique_other on test"))
 
     def test_savepoint(self):
         Test = self.registry.Test
@@ -399,8 +409,5 @@ class TestMigration(TestCase):
     def test_savepoint_without_rollback(self):
         self.registry.migration.savepoint('test')
         self.registry.migration.release_savepoint('test')
-        try:
+        with self.assertRaises(InternalError):
             self.registry.migration.rollback_savepoint('test')
-            self.fail("save point must be release")
-        except InternalError:
-            pass

@@ -14,6 +14,10 @@ CHANGELOG
 Future
 ------
 
+* [ADD] Formater, convert value 2 str or str 2 value, with or without mapping
+* [ADD] CSV Importer
+* [REF] CSV Exporter to use Formater
+
 0.2.12
 ------
 
