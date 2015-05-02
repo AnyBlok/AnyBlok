@@ -43,6 +43,9 @@ class Formater:
         return [x for x in pks.values()][0]
 
     def value2str(self, value, model):
+        if value is None:
+            return ''
+
         return str(value)
 
 

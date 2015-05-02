@@ -49,9 +49,9 @@ class Field(Mixin.IOCSVFieldMixin):
             'external_id': 'External ID',
         }
 
-    def get_value_for(self, entry):
+    def value2str(self, exporter, entry):
 
-        def _rc_get_sub_entry(name, entry):
+        def _get_fields_description(name, entry):
             Model = self.get_model(entry.__registry_name__)
             fields_description = Model.fields_description(fields=[name])
             if name not in fields_description:
@@ -59,12 +59,23 @@ class Field(Mixin.IOCSVFieldMixin):
                     "unknow field %r in exporter field %r" % (
                         name, self.name))
 
-            fields_description = fields_description[name]
-            if fields_description['type'] == 'Many2One':
+            return fields_description[name]
+
+        def _value2str(name, entry, external_id):
+            fields_description = _get_fields_description(name, entry)
+            if fields_description['primary_key'] and external_id:
+                return self.registry.IO.Exporter.get_key_mapping(entry)
+
+            ctype = fields_description['type']
+            model = fields_description['model']
+            return exporter.value2str(getattr(entry, name), ctype,
+                                      external_id=external_id, model=model)
+
+        def _rc_get_sub_entry(name, entry):
+            fields_description = _get_fields_description(name, entry)
+            if fields_description['type'] in ('Many2One', 'One2One'):
                 return getattr(entry, name)
 
-            elif fields_description['primary_key']:
-                return entry
             elif fields_description['model']:
                 model = fields_description['model']
                 Model = self.registry.get(model)
@@ -72,19 +83,22 @@ class Field(Mixin.IOCSVFieldMixin):
                 if len(pks) == 1:
                     pks = {pks[0]: getattr(entry, name)}
                 else:
-                    raise Exception("Not implemented yet")
+                    raise ExporterException.CSVExporterException(
+                        "Not implemented yet")
 
                 return Model.from_primary_keys(**pks)
 
-        def _rc_get_value(names, entry):
-            if len(names) == 0:
-                return self.registry.IO.Exporter.get_key_maping(entry)
-            elif len(names) == 1:
-                if self.mode == 'any':
-                    return getattr(entry, names[0])
+            else:
+                raise ExporterException.CSVExporterException(
+                    "the field %r of %r is not in (Many2One, One2One) "
+                    "or has not a foreign key")
 
-                return _rc_get_value(
-                    names[1:], _rc_get_sub_entry(names[0], entry))
+        def _rc_get_value(names, entry):
+            if not names:
+                return ''
+            elif len(names) == 1:
+                external_id = False if self.mode == 'any' else True
+                return _value2str(names[0], entry, external_id)
             else:
                 return _rc_get_value(
                     names[1:], _rc_get_sub_entry(names[0], entry))
@@ -137,8 +151,9 @@ class CSV:
                             quotechar=self.exporter.csv_quotechar)
         writer.writeheader()
         for entry in entries:
-            writer.writerow({field.format_header(): field.get_value_for(entry)
-                             for field in self.exporter.fields_to_export})
+            writer.writerow(
+                {field.format_header(): field.value2str(self.exporter, entry)
+                 for field in self.exporter.fields_to_export})
 
         csvfile.seek(0)
         return csvfile

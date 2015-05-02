@@ -58,8 +58,8 @@ class TestExportCSV(BlokTestCase):
         Exporter = self.registry.IO.Exporter
         fields = [{'name': 'id'}]
         exporter = self.create_exporter(Exporter, fields=fields)
-        res = exporter.fields_to_export[0].get_value_for(exporter)
-        self.assertEqual(res, exporter.id)
+        res = exporter.fields_to_export[0].value2str(exporter, exporter)
+        self.assertEqual(res, str(exporter.id))
 
     def test_format_field_with_mapping_external_id(self):
         Exporter = self.registry.IO.Exporter
@@ -68,7 +68,7 @@ class TestExportCSV(BlokTestCase):
         key = Exporter.get_external_id(exporter.model)
         key = key.split('_')
         key = '_'.join([key[0], str(int(key[1]) + 1)])
-        res = exporter.fields_to_export[0].get_value_for(exporter)
+        res = exporter.fields_to_export[0].value2str(exporter, exporter)
         self.assertEqual(res, key)
 
     def test_format_field_with_forbidden_mapping_external_id(self):
@@ -78,20 +78,20 @@ class TestExportCSV(BlokTestCase):
         from anyblok import Declarations
         ExporterException = Declarations.Exception.ExporterException
         with self.assertRaises(ExporterException.CSVExporterException):
-            exporter.fields_to_export[0].get_value_for(exporter)
+            exporter.fields_to_export[0].value2str(exporter, exporter)
 
     def test_format_browsed_field_with_mapping_any(self):
         Exporter = self.registry.IO.Exporter
         fields = [{'name': 'model.is_sql_model'}]
         exporter = self.create_exporter(Exporter, fields=fields)
-        res = exporter.fields_to_export[0].get_value_for(exporter)
-        self.assertEqual(res, True)
+        res = exporter.fields_to_export[0].value2str(exporter, exporter)
+        self.assertEqual(res, '1')
 
     def test_format_browsed_field_pks_without_mapping_key(self):
         Exporter = self.registry.IO.Exporter
         fields = [{'name': 'model.name'}]
         exporter = self.create_exporter(Exporter, fields=fields)
-        res = exporter.fields_to_export[0].get_value_for(exporter)
+        res = exporter.fields_to_export[0].value2str(exporter, exporter)
         self.assertEqual(res, 'Model.IO.Exporter')
 
     def test_format_browsed_field_with_mapping_key(self):
@@ -100,8 +100,8 @@ class TestExportCSV(BlokTestCase):
         exporter = self.create_exporter(Exporter, fields=fields)
         model = self.registry.System.Model.from_primary_keys(
             name=Exporter.__registry_name__)
-        key = self.registry.IO.Exporter.get_key_maping(model)
-        res = exporter.fields_to_export[0].get_value_for(exporter)
+        key = self.registry.IO.Exporter.get_key_mapping(model)
+        res = exporter.fields_to_export[0].value2str(exporter, exporter)
         self.assertEqual(res, key)
 
     def test_export_anyblok_core(self):
@@ -110,7 +110,7 @@ class TestExportCSV(BlokTestCase):
                   {'name': 'state'}]
         exporter = self.create_exporter(Blok, fields=fields)
         blok = Blok.from_primary_keys(name="anyblok-core")
-        key = self.registry.IO.Exporter.get_key_maping(blok)
+        key = self.registry.IO.Exporter.get_key_mapping(blok)
         csvfile = exporter.run([blok])
         reader = DictReader(csvfile, delimiter=exporter.csv_delimiter,
                             quotechar=exporter.csv_quotechar)
