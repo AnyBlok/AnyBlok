@@ -11,7 +11,7 @@ from csv import DictReader
 from io import StringIO
 
 
-class TestIOImportCSV(BlokTestCase):
+class TestImportCSV(BlokTestCase):
 
     def create_importer(self, file_to_import=None, **kwargs):
         CSV = self.registry.IO.Importer.CSV

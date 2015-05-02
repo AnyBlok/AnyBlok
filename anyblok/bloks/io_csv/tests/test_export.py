@@ -9,7 +9,7 @@ from anyblok.tests.testcase import BlokTestCase
 from csv import DictReader
 
 
-class TestIOExportCSV(BlokTestCase):
+class TestExportCSV(BlokTestCase):
 
     def create_exporter(self, Model, **kwargs):
         Exporter = self.registry.IO.Exporter.CSV

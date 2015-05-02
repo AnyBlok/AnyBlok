@@ -25,7 +25,7 @@ class TestExporter(BlokTestCase):
         val1 = Exporter.get_external_id(Blok.__registry_name__)
         val1 = val1.split('_')
         val1 = '_'.join([val1[0], str(int(val1[1]) + 1)])
-        self.assertEqual(Exporter.get_key_maping(entry), val1)
+        self.assertEqual(Exporter.get_key_mapping(entry), val1)
 
     def test_get_key_for_mapping_2nd_time(self):
         Exporter = self.registry.IO.Exporter
@@ -34,8 +34,8 @@ class TestExporter(BlokTestCase):
         val1 = Exporter.get_external_id(Blok.__registry_name__)
         val1 = val1.split('_')
         val1 = '_'.join([val1[0], str(int(val1[1]) + 1)])
-        self.assertEqual(Exporter.get_key_maping(entry), val1)
-        self.assertEqual(Exporter.get_key_maping(entry), val1)
+        self.assertEqual(Exporter.get_key_mapping(entry), val1)
+        self.assertEqual(Exporter.get_key_mapping(entry), val1)
 
     def test_export_with_entries_doesnt_come_from_model(self):
         Exporter = self.registry.IO.Exporter
