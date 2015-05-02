@@ -142,8 +142,8 @@ class TestImporterFormater(BlokTestCase):
         model = self.registry.System.Model.from_primary_keys(
             name='Model.System.Model')
         self.registry.IO.Mapping.set(key, model)
-        value = self.get_value(
-            json.dumps([key]), "Many2Many", model="Model.System.Model")
+        value = self.get_value(json.dumps([key]), "Many2Many",
+                               external_id=True, model="Model.System.Model")
         self.assertEqual(value, [model])
 
     def test_many2many_multi_value_external_ids(self):
@@ -156,8 +156,8 @@ class TestImporterFormater(BlokTestCase):
             name='Model.System.Column')
         self.registry.IO.Mapping.set(key1, model1)
         self.registry.IO.Mapping.set(key2, model2)
-        value = self.get_value(
-            json.dumps([key1, key2]), "Many2Many", model="Model.System.Model")
+        value = self.get_value(json.dumps([key1, key2]), "Many2Many",
+                               external_id=True, model="Model.System.Model")
         self.assertEqual(value, [model1, model2])
 
     def test_one2many(self):
@@ -184,8 +184,8 @@ class TestImporterFormater(BlokTestCase):
         model = self.registry.System.Model.from_primary_keys(
             name='Model.System.Model')
         self.registry.IO.Mapping.set(key, model)
-        value = self.get_value(
-            json.dumps([key]), "One2Many", model="Model.System.Model")
+        value = self.get_value(json.dumps([key]), "One2Many", external_id=True,
+                               model="Model.System.Model")
         self.assertEqual(value, [model])
 
     def test_one2many_multi_value_external_ids(self):

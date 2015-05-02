@@ -126,3 +126,60 @@ class DateTime(IO.Formater):
 
     def str2value(self, value, model):
         return datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+
+
+@register(IO.Formater)
+class Many2One(IO.Formater):
+
+    def str2value(self, value, model):
+        Model = self.registry.get(model)
+        if not value:
+            return None
+
+        pks = loads(value)
+        if not pks:
+            return None
+
+        if not isinstance(pks, dict):
+            raise Declarations.Exception.FormaterException(
+                "Value %r for %r must be dict" % (
+                    value, self.__registry_name__))
+
+        return Model.from_primary_keys(**pks)
+
+    def externalIdStr2value(self, value, model):
+        return self._externalIdStr2value(value, model)
+
+
+@register(IO.Formater)
+class One2One(IO.Formater.Many2One):
+    pass
+
+
+@register(IO.Formater)
+class Many2Many(IO.Formater):
+
+    def str2value(self, value, model):
+        Model = self.registry.get(model)
+        if not value:
+            return None
+
+        pks = loads(value)
+
+        if not all(isinstance(x, dict) for x in pks):
+            raise Declarations.Exception.FormaterException(
+                "All values in %r for %r must be dict" % (
+                    value, self.__registry_name__))
+
+        return [Model.from_primary_keys(**x) for x in pks if x]
+
+    def externalIdStr2value(self, values, model):
+        if not values:
+            return None
+        values = loads(values)
+        return [self._externalIdStr2value(value, model) for value in values]
+
+
+@register(IO.Formater)
+class One2Many(IO.Formater.Many2Many):
+    pass
