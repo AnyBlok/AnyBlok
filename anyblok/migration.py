@@ -89,7 +89,20 @@ class MigrationReport:
                     columns = [x.name for x in constraint.columns]
                     log_names.append('Add unique constraint on %s (%s)' % (
                         constraint.table.name, ', '.join(columns)))
-                elif name in ('remove_table', 'remove_column'):
+                elif name == 'remove_column':
+                    column = diff[3]
+                    msg = "Drop Column %s.%s" % (column.table.name,
+                                                 column.name)
+                    if column.nullable is False:
+                        msg += " (not null)"
+                        log_names.append(msg)
+                        self.actions.append(
+                            ('modify_nullable', None, column.table.name,
+                             column.name, {}, False, True))
+                        continue
+
+                    log_names.append(msg)
+                elif name == 'remove_table':
                     # No save remove table or column
                     # Remove table or column is
                     continue

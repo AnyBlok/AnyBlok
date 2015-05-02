@@ -226,10 +226,10 @@ class TestMigration(TestCase):
                     other2 CHAR(64)
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Drop test.other2"))
+        self.assertTrue(report.log_has("Drop Column test.other2"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Drop test.other2"))
+        self.assertTrue(report.log_has("Drop Column test.other2"))
 
     def test_detect_not_nullable_column_removed(self):
         with self.cnx() as conn:
@@ -241,12 +241,12 @@ class TestMigration(TestCase):
                     other2 CHAR(64) NOT NULL
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertFalse(report.log_has("Drop test.other2"))
-        self.assertTrue(report.log_has("Drop test.other2 (not null)"))
+        self.assertFalse(report.log_has("Drop Column test.other2"))
+        self.assertTrue(report.log_has("Drop Column test.other2 (not null)"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Drop test.other2"))
-        self.assertFalse(report.log_has("Drop test.other2 (not null)"))
+        self.assertTrue(report.log_has("Drop Column test.other2"))
+        self.assertFalse(report.log_has("Drop Column test.other2 (not null)"))
 
     def test_detect_nullable(self):
         with self.cnx() as conn:
