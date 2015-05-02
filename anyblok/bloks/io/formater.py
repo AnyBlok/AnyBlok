@@ -7,14 +7,11 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 import datetime
-from json import loads
+from json import loads, dumps
 
 
 register = Declarations.register
 IO = Declarations.Model.IO
-LargeBinary = Declarations.Column.LargeBinary
-Boolean = Declarations.Column.Boolean
-Integer = Declarations.Column.Integer
 
 
 @register(Declarations.Exception)
@@ -45,6 +42,9 @@ class Formater:
 
         return [x for x in pks.values()][0]
 
+    def value2str(self, value, model):
+        return str(value)
+
 
 @register(IO.Formater)
 class Float(IO.Formater):
@@ -67,12 +67,18 @@ class Json(IO.Formater):
     def str2value(self, value, model):
         return loads(value)
 
+    def value2str(self, value, model):
+        return dumps(value)
+
 
 @register(IO.Formater)
 class Interval(IO.Formater):
 
     def str2value(self, value, model):
         return datetime.timedelta(seconds=int(value))
+
+    def value2str(self, value, model):
+        return str(value.seconds)
 
 
 @register(IO.Formater)
@@ -103,6 +109,9 @@ class Boolean(IO.Formater):
 
         raise Declarations.Exception.FormaterException(
             "Value %r is not a boolean" % value)
+
+    def value2str(self, value, model):
+        return '1' if value else '0'
 
 
 @register(IO.Formater)
@@ -150,6 +159,19 @@ class Many2One(IO.Formater):
     def externalIdStr2value(self, value, model):
         return self._externalIdStr2value(value, model)
 
+    def value2str(self, value, model):
+        if value is None:
+            return ''
+
+        return dumps(value.to_primary_keys())
+
+    def externalIdValue2str(self, value, model):
+        if value is None:
+            return ''
+
+        Exporter = self.registry.IO.Exporter
+        return Exporter.get_key_mapping(value)
+
 
 @register(IO.Formater)
 class One2One(IO.Formater.Many2One):
@@ -178,6 +200,19 @@ class Many2Many(IO.Formater):
             return None
         values = loads(values)
         return [self._externalIdStr2value(value, model) for value in values]
+
+    def value2str(self, values, model):
+        if not values:
+            return dumps([])
+
+        return dumps([value.to_primary_keys() for value in values])
+
+    def externalIdValue2str(self, values, model):
+        if not values:
+            return dumps([])
+
+        Exporter = self.registry.IO.Exporter
+        return dumps([Exporter.get_key_mapping(value) for value in values])
 
 
 @register(IO.Formater)

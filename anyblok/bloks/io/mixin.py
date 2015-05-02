@@ -24,3 +24,10 @@ class IOMixin:
     @classmethod
     def get_mode_choices(cls):
         return {}
+
+    def get_formater(self, ctype):
+        formater_name = 'Model.IO.Formater.' + ctype
+        if self.registry.has(formater_name):
+            return self.registry.get(formater_name)()
+        else:
+            return self.registry.IO.Formater()

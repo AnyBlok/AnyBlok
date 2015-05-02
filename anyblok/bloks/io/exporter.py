@@ -37,7 +37,7 @@ class Exporter(Declarations.Mixin.IOMixin):
         return sequence.nextval()
 
     @classmethod
-    def get_key_maping(cls, entry):
+    def get_key_mapping(cls, entry):
         Mapping = cls.registry.IO.Mapping
         mapping = Mapping.get_from_entry(entry)
         if mapping:
@@ -46,3 +46,10 @@ class Exporter(Declarations.Mixin.IOMixin):
         key = cls.get_external_id(entry.__registry_name__)
         Mapping.set(key, entry)
         return key
+
+    def value2str(self, value, ctype, external_id=False, model=None):
+        formater = self.get_formater(ctype)
+        if external_id:
+            return formater.externalIdValue2str(value, model)
+
+        return formater.value2str(value, model)

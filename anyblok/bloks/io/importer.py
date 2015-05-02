@@ -46,12 +46,8 @@ class Importer(Declarations.Mixin.IOMixin):
         return True
 
     def str2value(self, value, ctype, external_id=False, model=None):
-        formater_name = 'Model.IO.Formater.' + ctype
-        if self.registry.has(formater_name):
-            formater = self.registry.get(formater_name)()
-        else:
-            formater = self.registry.IO.Formater()
-
+        formater = self.get_formater(ctype)
         if external_id:
             return formater.externalIdStr2value(value, model)
+
         return formater.str2value(value, model)
