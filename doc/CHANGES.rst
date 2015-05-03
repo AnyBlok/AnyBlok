@@ -14,6 +14,9 @@ CHANGELOG
 Future
 ------
 
+0.3.0
+-----
+
 * [IMP] Update Doc
 * [FIX] Remove nullable column, the nullable constraint is removed not the column
 * [ADD] Formater, convert value 2 str or str 2 value, with or without mapping
