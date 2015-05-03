@@ -197,4 +197,10 @@ class TestExporterFormater(BlokTestCase):
         self.assertEqual(value, key)
 
     def test_external_id(self):
-        raise
+        key = 'formater_mapping'
+        model = self.registry.System.Model.from_primary_keys(
+            name='Model.System.Model')
+        self.registry.IO.Mapping.set(key, model)
+        value = self.get_value(model.name, "String", external_id=True,
+                               model="Model.System.Model")
+        self.assertEqual(value, key)

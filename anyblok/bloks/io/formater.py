@@ -48,6 +48,25 @@ class Formater:
 
         return str(value)
 
+    def externalIdValue2str(self, value, model):
+        Model = self.registry.get(model)
+        Mapping = self.registry.IO.Mapping
+        pks = Model.get_primary_keys()
+        if len(pks) > 1:
+            raise Declarations.Exception.FormaterException(
+                "Foreign key on multi primary keys does not implemented yet")
+
+        pks = {x: value for x in pks}
+        mapping = Mapping.get_from_model_and_primary_keys(model, pks)
+
+        if mapping is None:
+            entry = Model.from_primary_keys(**pks)
+            key = self.registry.IO.Exporter.get_external_id(model)
+            Mapping.set(key, entry)
+            return key
+
+        return mapping.key
+
 
 @register(IO.Formater)
 class Float(IO.Formater):
