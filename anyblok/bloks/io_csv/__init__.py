@@ -10,6 +10,8 @@ from anyblok.release import version
 
 
 class AnyBlokIOCSV(Blok):
+    """ CSV Importer / Exporter behaviour
+    """
     version = version
 
     required = [

@@ -54,8 +54,8 @@ class CSV:
         self.importer = importer
         self.error_found = []
         self.reader = None
-        self.create_entries = []
-        self.update_entries = []
+        self.created_entries = []
+        self.updated_entries = []
         self.header_pks = []
         self.header_external_id = None
         self.header_external_ids = {}
@@ -150,10 +150,10 @@ class CSV:
             if entry:
                 if self.importer.csv_if_exist == 'update':
                     entry.update(values)
-                    self.update_entries.append(entry)
+                    self.updated_entries.append(entry)
                 elif self.importer.csv_if_exist == 'create':
                     entry = Model.insert(**values)
-                    self.create_entries.append(entry)
+                    self.created_entries.append(entry)
                 elif self.importer.csv_if_exist == 'raise':
                     raise ImporterException.CSVImporterException(
                         "Row %r already an entry %r " % (
@@ -164,7 +164,7 @@ class CSV:
                         values.update(pks)
 
                     entry = Model.insert(**values)
-                    self.create_entries.append(entry)
+                    self.created_entries.append(entry)
                     if self.header_external_id:
                         Mapping.set(row[self.header_external_id], entry)
 
@@ -203,8 +203,8 @@ class CSV:
 
         return {
             'error': self.error_found,
-            'create_entries': self.create_entries,
-            'update_entries': self.update_entries,
+            'created_entries': self.created_entries,
+            'updated_entries': self.updated_entries,
         }
 
     @classmethod

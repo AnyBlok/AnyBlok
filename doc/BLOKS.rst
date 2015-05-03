@@ -11,7 +11,7 @@
 Bloks
 =====
 
-anyblok-core blok
+Blok anyblok-core
 -----------------
 
 .. automodule:: anyblok.bloks.anyblok_core
@@ -20,3 +20,29 @@ anyblok-core blok
     :undoc-members:
     :show-inheritance:
     :noindex:
+
+.. include:: ../anyblok/bloks/anyblok_core/README.rst
+
+Blok IO
+-------
+
+.. automodule:: anyblok.bloks.io
+.. autoclass:: AnyBlokIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :noindex:
+
+.. include:: ../anyblok/bloks/io/README.rst
+
+Blok IO CSV
+-----------
+
+.. automodule:: anyblok.bloks.io_csv
+.. autoclass:: AnyBlokIOCSV
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :noindex:
+
+.. include:: ../anyblok/bloks/io_csv/README.rst

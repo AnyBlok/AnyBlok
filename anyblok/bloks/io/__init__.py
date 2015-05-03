@@ -10,6 +10,13 @@ from anyblok.release import version
 
 
 class AnyBlokIO(Blok):
+    """
+    In / Out tool's:
+
+    * Formater: convert value 2 str or str 2 value in function of the field,
+    * Importer: main model to define an import,
+    * Exporter: main model to define an export,
+    """
     version = version
 
     required = [

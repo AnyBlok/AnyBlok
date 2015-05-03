@@ -195,3 +195,6 @@ class TestExporterFormater(BlokTestCase):
         value = self.get_value(model, "One2One", external_id=True,
                                model="Model.System.Model")
         self.assertEqual(value, key)
+
+    def test_external_id(self):
+        raise

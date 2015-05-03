@@ -284,8 +284,8 @@ class TestImportCSV(BlokTestCase):
             fields=importer.header_fields)
         importer.parse_row({'model': 'Model.IO.Importer',
                             'mode': 'Model.IO.Exporter.CSV'})
-        self.assertEqual(len(importer.create_entries), 1)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 1)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 0)
 
     def test_parse_row_with_raise(self):
@@ -297,8 +297,8 @@ class TestImportCSV(BlokTestCase):
             fields=importer.header_fields)
         importer.parse_row({'model': 'Model.IO.Importer',
                             'mode': 'Model.IO.Exporter.CSV'})
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 1)
 
     def test_parse_row_with_pass(self):
@@ -310,8 +310,8 @@ class TestImportCSV(BlokTestCase):
             fields=importer.header_fields)
         importer.parse_row({'model': 'Model.IO.Importer',
                             'mode': 'Model.IO.Exporter.CSV'})
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 0)
 
     def test_parse_row_with_existing_pks_update(self):
@@ -324,10 +324,10 @@ class TestImportCSV(BlokTestCase):
         Model.insert(name='Model.IO.Test', table='io_test')
         importer.parse_row({'name': 'Model.IO.Test',
                             'table': 'io_test_other_table'})
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 1)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 1)
         self.assertEqual(len(importer.error_found), 0)
-        self.assertEqual(importer.update_entries[0].table,
+        self.assertEqual(importer.updated_entries[0].table,
                          'io_test_other_table')
 
     def test_parse_row_with_existing_pks_create(self):
@@ -342,8 +342,8 @@ class TestImportCSV(BlokTestCase):
         importer.parse_row({'id': str(exporter.id),
                             'model': 'Model.System.Model',
                             'mode': "Model.IO.Exporter.CSV"})
-        self.assertEqual(len(importer.create_entries), 1)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 1)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 0)
 
     def test_parse_row_with_existing_pks_pass(self):
@@ -357,8 +357,8 @@ class TestImportCSV(BlokTestCase):
         Model.insert(name='Model.IO.Test', table='io_test')
         importer.parse_row({'name': 'Model.IO.Test',
                             'table': 'io_test_other_table'})
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 0)
 
     def test_parse_row_with_existing_pks_raise(self):
@@ -372,8 +372,8 @@ class TestImportCSV(BlokTestCase):
         Model.insert(name='Model.IO.Test', table='io_test')
         importer.parse_row({'name': 'Model.IO.Test',
                             'table': 'io_test_other_table'})
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 1)
 
     def test_parse_row_with_unexting_multi_pks(self):
@@ -386,8 +386,8 @@ class TestImportCSV(BlokTestCase):
         importer.parse_row({'name': 'test',
                             'model': 'Model.System.Model',
                             'nullable': True})
-        self.assertEqual(len(importer.create_entries), 1)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 1)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 0)
 
     def test_parse_row_with_mapping_pks(self):
@@ -401,10 +401,10 @@ class TestImportCSV(BlokTestCase):
         self.registry.IO.Mapping.set('import_mapping', model)
         importer.parse_row({'name/EXTERNAL_ID': 'import_mapping',
                             'table': 'io_test_other_table'})
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 1)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 1)
         self.assertEqual(len(importer.error_found), 0)
-        self.assertEqual(importer.update_entries[0].table,
+        self.assertEqual(importer.updated_entries[0].table,
                          'io_test_other_table')
 
     def test_parse_row_with_unexisting_mapping_pks(self):
@@ -417,8 +417,8 @@ class TestImportCSV(BlokTestCase):
         importer.parse_row({'id/EXTERNAL_ID': 'import_mapping',
                             'model': 'Model.IO.Exporter',
                             'mode': 'Model.IO.Exporter.CSV'})
-        self.assertEqual(len(importer.create_entries), 1)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 1)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 0)
         exporter = self.registry.IO.Mapping.get('Model.IO.Exporter',
                                                 'import_mapping')
@@ -441,10 +441,10 @@ class TestImportCSV(BlokTestCase):
         importer.parse_row({'id': str(exporter.id),
                             'model/EXTERNAL_ID': 'import_mapping',
                             'mode': "Model.IO.Exporter.CSV"})
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 1)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 1)
         self.assertEqual(len(importer.error_found), 0)
-        self.assertEqual(importer.update_entries[0].model, 'Model.IO.Test')
+        self.assertEqual(importer.updated_entries[0].model, 'Model.IO.Test')
 
     def test_parse_row_with_unexisting_mapping(self):
         Importer = self.registry.IO.Importer
@@ -457,8 +457,8 @@ class TestImportCSV(BlokTestCase):
         importer.parse_row({'id': str(importer.importer.id),
                             'model/EXTERNAL_ID': 'import_mapping',
                             'mode': "Model.IO.Importer.CSV"})
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 1)
 
     def test_run(self):
@@ -466,8 +466,8 @@ class TestImportCSV(BlokTestCase):
             model='Model.IO.Exporter',
             file_to_import=self.get_exporter_file_to_import())
         importer.run()
-        self.assertEqual(len(importer.create_entries), 1)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 1)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 0)
 
     def test_run_raise_at_end(self):
@@ -477,13 +477,13 @@ class TestImportCSV(BlokTestCase):
         with self.assertRaises(ImporterException.CSVImporterException):
             importer.run()
 
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 1)
 
     def test_run_raise_ignored(self):
         importer = self.create_csv_importer(csv_on_error='ignore')
         importer.run()
-        self.assertEqual(len(importer.create_entries), 0)
-        self.assertEqual(len(importer.update_entries), 0)
+        self.assertEqual(len(importer.created_entries), 0)
+        self.assertEqual(len(importer.updated_entries), 0)
         self.assertEqual(len(importer.error_found), 1)
