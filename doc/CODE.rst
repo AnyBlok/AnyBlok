@@ -46,15 +46,6 @@ anyblok._imp module
     :members:
     :noindex:
 
-anyblok._logging module
------------------------
-
-.. automodule:: anyblok._logging
-    :show-inheritance:
-    :members:
-    :noindex:
-
-
 anyblok.environment module
 --------------------------
 
