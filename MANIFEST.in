@@ -1,0 +1,3 @@
+include doc/*.rst
+recursive-include anyblok/test_bloks */*.rst
+recursive-include anyblok/bloks */*.rst

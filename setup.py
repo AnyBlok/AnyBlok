@@ -28,6 +28,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst')) as readme:
     README = readme.read()
 
+with open(os.path.join(here, 'doc', 'README.rst')) as change:
+    CHANGE = change.read()
+
+with open(os.path.join(here, 'doc', 'README.rst')) as front:
+    FRONT = front.read()
+
 setup(
     name="AnyBlok",
     version=version,
@@ -35,14 +41,11 @@ setup(
     author_email="jssuzanne@anybox.fr",
     description="Anyblok is a dynamic injection blok framework",
     license="MPL2",
-    long_description=README,
+    long_description=README + '\n' + FRONT + '\n' + CHANGE,
     url="http://docs.anyblok.org/%s" % version,
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
-    package_data={
-        'anyblok.bloks': ['*/*.rst'],  # need to found a recursive glob
-    },
     install_requires=requires,
     tests_require=requires + ['nose'],
     classifiers=[

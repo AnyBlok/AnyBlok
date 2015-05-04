@@ -14,6 +14,11 @@ CHANGELOG
 Future
 ------
 
+0.3.1
+-----
+
+* [IMP] Update setup to add documentation files and blok's README
+
 0.3.0
 -----
 
