@@ -14,6 +14,12 @@ CHANGELOG
 Future
 ------
 
+0.3.2
+-----
+
+* [IMP] doc
+* [REF] Use logging.config.configFile
+
 0.3.1
 -----
 

@@ -1,8 +1,10 @@
 import anyblok
-from anyblok._logging import log
+from ..logging import log
 from anyblok._argsparse import ArgsParseManager
 from sqlalchemy import create_engine
 from contextlib import contextmanager
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class SqlAlchemyPostgres:
@@ -29,7 +31,7 @@ class SqlAlchemyPostgres:
             if cnx:
                 cnx.close()
 
-    @log(withargs=True)
+    @log(logger, withargs=True)
     def createdb(self, dbname):
         """ Create a database
 
@@ -38,7 +40,7 @@ class SqlAlchemyPostgres:
         with self.cnx() as conn:
             conn.execute("""create database "%s";""" % dbname)
 
-    @log(withargs=True)
+    @log(logger, withargs=True)
     def dropdb(self, dbname):
         """ Drop a database
 

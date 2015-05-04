@@ -6,12 +6,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok._logging import init_logger, log
+from .logging import log
 from argparse import ArgumentParser
 from configparser import ConfigParser
 from anyblok import Declarations
 import sys
 import os
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 def getParser(description):
@@ -262,7 +264,7 @@ class ArgsParseManager:
                    port=port, database=database)
 
     @classmethod
-    @log()
+    @log(logger)
     def load_config_for_test(cls):
         if not cls.configuration:
             parser = getParser("Initialise unit test")
@@ -272,7 +274,7 @@ class ArgsParseManager:
                         fnct(parser, cls.configuration)
 
     @classmethod
-    @log()
+    @log(logger)
     def load(cls, description='AnyBlok :', argsparse_groups=None,
              parts_to_load=None, useseparator=False):
         """ Load the argparse definition and parse them
@@ -332,6 +334,7 @@ class ArgsParseManager:
             raise ArgsParseManagerException(
                 'Positional arguments are forbidden')
 
+        cparser = None
         if arguments.configfile:
             cparser = ConfigParser()
             cparser.read(arguments.configfile)
@@ -344,16 +347,9 @@ class ArgsParseManager:
             if opt not in cls.configuration or value:
                 cls.configuration[opt] = value
 
-    @classmethod
-    def init_logger(cls, **kwargs):
-        config_var = ['level', 'mode', 'filename', 'socket', 'facility']
-        for cv in config_var:
-            if cv not in kwargs:
-                val = cls.get('logging_' + cv)
-                if val is not None:
-                    kwargs[cv] = cls.get('logging_' + cv)
-
-        init_logger(**kwargs)
+        if cparser and cparser.has_section('loggers'):
+            from logging import config
+            config.fileConfig(arguments.configfile)
 
 
 @ArgsParseManager.add('config')
@@ -417,25 +413,6 @@ def add_update_bloks(parser, configuration):
 def add_interpreter(parser, configuration):
     parser.add_argument('--script', dest='python_script',
                         help="Python script to execute")
-
-
-@ArgsParseManager.add('logging', label="Logging options")
-def add_logging(group, configuration):
-    group.add_argument('--logging-level', dest='logging_level',
-                       default='info', choices=('debug', 'info', 'warning',
-                                                'error', 'critical'))
-    group.add_argument('--logging-mode', dest='logging_mode',
-                       default='console',
-                       choices=('console', 'file', 'socket', 'syslog'))
-    group.add_argument('--logging-filename', dest='logging_filename',
-                       help='filename of the log file')
-    configuration['logging_filename'] = None
-    group.add_argument('--logging-socket', dest='logging_socket',
-                       help='(host, port) or UNIX socket interface')
-    configuration['logging_socket'] = None
-    group.add_argument('--logging-facility', dest='logging_facility',
-                       help='Facility for unix socket')
-    configuration['logging_facility'] = None
 
 
 @ArgsParseManager.add('schema', label="Schema options")

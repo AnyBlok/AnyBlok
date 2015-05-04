@@ -719,3 +719,45 @@ a complete minimalist exampe of `setup.py` with requires (to anyblok).
 We could also display the full tree from root
 
 A direct link to download the full working example.
+
+Create the configuration file
+-----------------------------
+
+The configuration file allow to load all the initialisation variable. All the 
+section which have the name of a group of group are loaded::
+
+    [AnyBlok]
+    key = value
+
+The logging configuration are also loaded, see `logging configuration file format
+<https://docs.python.org/3/library/logging.config.html#configuration-file-format>`_::
+
+    loggers]
+    keys=root,anyblok
+    
+    [handlers]
+    keys=consoleHandler
+    
+    [formatters]
+    keys=consoleFormatter
+    
+    [logger_root]
+    level=INFO
+    handlers=consoleHandler
+    
+    [logger_anyblok]
+    level=INFO
+    handlers=consoleHandler
+    qualname=anyblok
+    propagate=1
+    
+    [handler_consoleHandler]
+    class=StreamHandler
+    level=INFO
+    formatter=consoleFormatter
+    args=(sys.stdout,)
+    
+    [formatter_consoleFormatter]
+    class=anyblok.logging.consoleFormatter
+    format=%(database)s:%(levelname)s - %(message)s
+    datefmt=

@@ -14,7 +14,6 @@ from anyblok._argsparse import (ArgsParseManager,
                                 add_uninstall_bloks,
                                 add_update_bloks,
                                 add_interpreter,
-                                add_logging,
                                 add_schema,
                                 add_unittest)
 from anyblok.tests.testcase import TestCase
@@ -283,26 +282,6 @@ class TestArgsParseManager(TestCase):
         except:
             pass
 
-    def test_logging(self):
-        ArgsParseManager.configuration.update(dict(
-            logging_level='info',
-            logging_mode='console',
-            logging_filename=None,
-            logging_socket=None,
-            logging_facility=None,
-        ))
-        ArgsParseManager.init_logger()
-
-    def test_logging_with_kwargs(self):
-        ArgsParseManager.configuration.update(dict(
-            logging_level='info',
-            logging_mode='file',
-            logging_filename=None,
-            logging_socket=None,
-            logging_facility=None,
-        ))
-        ArgsParseManager.init_logger(mode='console')
-
     def test_load_without_argsparse_groupes(self):
         self.assertEqual(ArgsParseManager.load(), None)
 
@@ -377,7 +356,6 @@ class TestArgsParseOption(TestCase):
             'add_uninstall_bloks': add_uninstall_bloks,
             'add_update_bloks': add_update_bloks,
             'add_interpreter': add_interpreter,
-            'add_logging': add_logging,
             'add_schema': add_schema,
             'add_unittest': add_unittest,
         }
@@ -400,9 +378,6 @@ class TestArgsParseOption(TestCase):
 
     def test_add_interpreter(self):
         self.function['add_interpreter'](self.parser, self.configuration)
-
-    def test_add_logging(self):
-        self.function['add_logging'](self.group, self.configuration)
 
     def test_add_schema(self):
         self.function['add_schema'](self.group, self.configuration)

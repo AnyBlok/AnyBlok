@@ -13,7 +13,7 @@ PROMPT = "%(processName)s - %(version)s"
 
 
 def start(processName, version=release.version, prompt=PROMPT,
-          argsparse_groups=None, parts_to_load=None, logger=None,
+          argsparse_groups=None, parts_to_load=None,
           useseparator=False):
     """ Function which initialize the application
 
@@ -28,7 +28,6 @@ def start(processName, version=release.version, prompt=PROMPT,
     :param prompt: Prompt message for the help
     :param argsparse_groups: list of the group of option for argparse
     :param parts_to_load: group of blok to load
-    :param logger: option to configure  logging
     :param useseparator: boolean, indicate if argsparse option are split
         betwwen two application
     :rtype: registry if the database name is in the configuration
@@ -48,9 +47,6 @@ def start(processName, version=release.version, prompt=PROMPT,
                               parts_to_load=parts_to_load,
                               useseparator=useseparator)
 
-    if logger is None:
-        logger = {}
-    ArgsParseManager.init_logger(**logger)
     dbname = ArgsParseManager.get('dbname')
     if not dbname:
         return None

@@ -10,7 +10,7 @@ from anyblok import Declarations
 from anyblok._argsparse import ArgsParseManager
 from anyblok._imp import ImportManager
 from anyblok.blok import BlokManager
-from anyblok._logging import log
+from .logging import log
 from anyblok.environment import EnvironmentManager
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -640,7 +640,7 @@ class Registry:
 
         update_namespaces(self, namespace)
 
-    @log()
+    @log(logger)
     def load(self):
         """ Load all the namespaces of the registry
 
@@ -825,7 +825,7 @@ class Registry:
             if hasattr(self, name) and getattr(self, name):
                 setattr(self, name, None)
 
-    @log()
+    @log(logger)
     def reload(self):
         """ Reload the registry, close session, clean registry, reinit var """
         self.close_session()
@@ -833,7 +833,7 @@ class Registry:
         self.ini_var()
         self.load()
 
-    @log(withargs=True)
+    @log(logger, withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):
         """ Upgrade the current registry
 
