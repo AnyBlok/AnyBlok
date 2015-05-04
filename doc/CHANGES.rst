@@ -14,6 +14,11 @@ CHANGELOG
 Future
 ------
 
+0.3.3
+-----
+
+* [FIX] createdb script
+
 0.3.2
 -----
 

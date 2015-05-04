@@ -38,7 +38,6 @@ def createdb(description, argsparse_groups, parts_to_load):
     ArgsParseManager.load(description=description,
                           argsparse_groups=argsparse_groups,
                           parts_to_load=parts_to_load)
-    ArgsParseManager.init_logger()
     drivername = ArgsParseManager.get('dbdrivername')
     dbname = ArgsParseManager.get('dbname')
 
