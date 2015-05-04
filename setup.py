@@ -28,10 +28,10 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst')) as readme:
     README = readme.read()
 
-with open(os.path.join(here, 'doc', 'README.rst')) as change:
+with open(os.path.join(here, 'doc', 'CHANGES.rst')) as change:
     CHANGE = change.read()
 
-with open(os.path.join(here, 'doc', 'README.rst')) as front:
+with open(os.path.join(here, 'doc', 'FRONT.rst')) as front:
     FRONT = front.read()
 
 setup(
