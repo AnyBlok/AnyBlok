@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.blok import Blok
+from anyblok.blok import Blok, BlokManager
 from anyblok.release import version
 
 
@@ -34,3 +34,12 @@ class AnyBlokIOXML(Blok):
         reload(importer)
         from . import exporter
         reload(exporter)
+
+    def update(self, latest_version):
+        super(AnyBlokIOXML, self).update(latest_version)
+        if not BlokManager.has_importer('xml'):
+            BlokManager.add_importer('xml', 'Model.IO.Importer.XML')
+
+    def uninstall(self):
+        super(AnyBlokIOXML, self).uninstall()
+        BlokManager.remove_importer('xml')

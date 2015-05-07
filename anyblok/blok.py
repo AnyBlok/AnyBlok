@@ -15,6 +15,7 @@ from time import sleep
 from sys import modules
 from os.path import dirname
 from logging import getLogger
+from os.path import join
 
 logger = getLogger(__name__)
 
@@ -46,6 +47,7 @@ class BlokManager:
     bloks_groups = None
     ordered_bloks = []
     auto_install = []
+    importers = {}
 
     @classmethod
     def list(cls):
@@ -208,6 +210,47 @@ class BlokManager:
         blok = cls.get(blok)
         return dirname(modules[blok.__module__].__file__)
 
+    @classmethod
+    def add_importer(cls, key, cls_name):
+        """ Add a new importer
+
+        :param key: key of the importer
+        :param cls_name: name of the model to import
+        """
+        cls.imports[key] = cls_name
+
+    @classmethod
+    def has_importer(cls, key):
+        """ Check if an importer  """
+        return True if key in cls.importers else False
+
+    @classmethod
+    def get_importer(cls, key):
+        """ Get the importer class name
+
+        :param key: key of the importer
+        :rtype: name of the model to import
+        :exception: BlokManagerException
+        """
+        if not cls.has_importer(key):
+            raise anyblok.Declarations.Exception.BlokManagerException(
+                "No importer found for the key %r" % key)
+
+        return cls.importers[key]
+
+    @classmethod
+    def remove_importer(cls, key):
+        """ Remove the importer class name
+
+        :param key: key of the importer
+        :exception: BlokManagerException
+        """
+        if not cls.has_importer(key):
+            raise anyblok.Declarations.Exception.BlokManagerException(
+                "No importer found for the key %r" % key)
+
+        del cls.importers[key]
+
 
 class Blok:
     """ Super class for all the bloks
@@ -226,6 +269,7 @@ class Blok:
     required = []
     optional = []
     conditional = []
+    name = None  # filled by the BlokManager
 
     def __init__(self, registry):
         self.registry = registry
@@ -242,3 +286,21 @@ class Blok:
 
     def load(self):
         pass
+
+    def import_cfg_file(self, importer_name, model, *file_path, **kwargs):
+        blok_path = BlokManager.getPath(self.name)
+        _file = join(blok_path, *file_path)
+        logger.info("import %r file: %r", importer_name, _file)
+        Importer = self.registry.get(BlokManager.get_importer(importer_name))
+        file_to_import = None
+        with open(_file, 'rb') as fp:
+            file_to_import = fp.read()
+
+        importer = Importer.insert(
+            model=model, file_to_import=file_to_import, **kwargs)
+        res = importer.run()
+        logger.info("Create %d entries, Update %d entries",
+                    len(res['created_entries']), len(res['updated_entries']))
+        if res['error_found']:
+            for error in res['error_found']:
+                logger.error(error)
