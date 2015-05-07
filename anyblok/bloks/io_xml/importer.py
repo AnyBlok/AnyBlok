@@ -79,14 +79,16 @@ class XML:
             elif if_exist == 'raise':
                 self._raise("The tag %r (%r) already exist" % (
                     record.tag, record.attrib), **kwargs)
-                return True, None  # case of raise at the end, must not bloc import
+                # case of raise at the end, must not bloc import
+                return True, None
         else:
             if if_does_not_exist == 'pass':
                 return True, None
             elif if_does_not_exist == 'raise':
                 self._raise("The tag %r (%r) does not exist" % (
                     record.tag, record.attrib), **kwargs)
-                return True, None  # case of raise at the end, must not bloc import
+                # case of raise at the end, must not bloc import
+                return True, None
 
         return False, entry
 
