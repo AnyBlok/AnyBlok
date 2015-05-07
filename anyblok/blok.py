@@ -217,7 +217,7 @@ class BlokManager:
         :param key: key of the importer
         :param cls_name: name of the model to import
         """
-        cls.imports[key] = cls_name
+        cls.importers[key] = cls_name
 
     @classmethod
     def has_importer(cls, key):
