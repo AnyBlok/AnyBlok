@@ -11,8 +11,6 @@ from anyblok.environment import EnvironmentManager
 from .common import function_name
 
 
-FORMATTER = '%(asctime)s %(levelname)s - %(database)s:%(name)s - %(message)s'
-
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, _N, DEFAULT = range(10)
 RESET_SEQ = "\033[0m"
 COLOR_SEQ = "\033[1;%dm"
