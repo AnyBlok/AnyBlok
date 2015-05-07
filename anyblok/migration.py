@@ -130,6 +130,9 @@ class MigrationReport:
         this method parses the detected change and calls the Migration
         system to apply the change with the api of Declarations
         """
+        for log in self.logs:
+            logger.info(log)
+
         for action in self.actions:
             if action[0] == 'add_column':
                 _, _, table, column = action
