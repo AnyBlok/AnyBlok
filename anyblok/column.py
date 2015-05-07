@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from sqlalchemy.schema import Column as SA_Column
-from sqlalchemy.schema import ForeignKey
+from sqlalchemy.schema import ForeignKey, Sequence
 
 
 @Declarations.add_declaration_type()
@@ -28,12 +28,16 @@ class Column(Declarations.Field):
         """
         self.forbid_instance(Column)
         assert self.sqlalchemy_type
+        self.sequence = None
 
         if 'type_' in kwargs:
             del kwargs['type_']
 
         if 'foreign_key' in kwargs:
             self.foreign_key = kwargs.pop('foreign_key')
+
+        if 'sequence' in kwargs:
+            self.sequence = Sequence(kwargs.pop('sequence'))
 
         super(Column, self).__init__(*args, **kwargs)
 
@@ -90,6 +94,9 @@ class Column(Declarations.Field):
             kwargs['info'] = {}
         args = self.format_foreign_key(registry, args, kwargs)
         kwargs['info']['label'] = self.label
+        if self.sequence:
+            args = (self.sequence,) + args
+
         return SA_Column(fieldname, self.sqlalchemy_type, *args, **kwargs)
 
     def must_be_declared_as_attr(self):
