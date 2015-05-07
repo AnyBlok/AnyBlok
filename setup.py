@@ -22,6 +22,7 @@ requires = [
     'alembic',
     'graphviz',
     'nose',  # for unittest during the blok install
+    'lxml',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -69,6 +70,7 @@ setup(
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
             'anyblok-io=anyblok.bloks.io:AnyBlokIO',
             'anyblok-io-csv=anyblok.bloks.io_csv:AnyBlokIOCSV',
+            'anyblok-io-xml=anyblok.bloks.io_xml:AnyBlokIOXML',
         ],
         'TestAnyBlok': [
             'test-blok1=anyblok.test_bloks.test_blok1:TestBlok',
