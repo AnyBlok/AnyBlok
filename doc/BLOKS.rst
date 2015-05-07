@@ -46,3 +46,15 @@ Blok IO CSV
     :noindex:
 
 .. include:: ../anyblok/bloks/io_csv/README.rst
+
+Blok IO XML
+-----------
+
+.. automodule:: anyblok.bloks.io_xml
+.. autoclass:: AnyBlokIOXML
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :noindex:
+
+.. include:: ../anyblok/bloks/io_xml/README.rst

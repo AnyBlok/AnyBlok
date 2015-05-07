@@ -14,6 +14,10 @@ CHANGELOG
 Future
 ------
 
+* [ADD] logger.info on migration script to indicate what is changed
+* [IMP] Add sequence facility in the declaration of Column
+* [ADD] ADD XML Importer
+
 0.3.3
 -----
 
