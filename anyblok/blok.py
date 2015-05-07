@@ -146,6 +146,7 @@ class BlokManager:
                 try:
                     blok = i.load()
                     cls.set(i.name, blok)
+                    blok.name = i.name
                     bloks.append((blok.priority, i.name))
                 except Exception as e:
                     raise BlokManagerException(str(e))
