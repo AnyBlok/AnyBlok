@@ -276,18 +276,34 @@ class Blok:
 
     @classmethod
     def import_declaration_module(cls):
-        pass
+        """ Do the python import for the Declaration of the model or other
+        """
 
     def update(self, latest_version):
-        pass
+        """ Call at the installation or update
+
+        :param latest_version: latest version installed, if the blok have not
+                               been installing the latest_version will be None
+        """
 
     def uninstall(self):
-        pass
+        """ Call at the uninstallation
+        """
 
     def load(self):
-        pass
+        """ Call at the launch of the application
+        """
 
     def import_cfg_file(self, importer_name, model, *file_path, **kwargs):
+        """ Import data file
+
+        :param importer_name: Name of the importer (need installation of the
+                              Blok which have the importer)
+        :param model: Model of the data to import
+        :param \*file_path: relative path of the path in this Blok
+        :param \*\*kwargs: Option for the importer
+        :rtype: return dict of result
+        """
         blok_path = BlokManager.getPath(self.name)
         _file = join(blok_path, *file_path)
         logger.info("import %r file: %r", importer_name, _file)
@@ -304,3 +320,5 @@ class Blok:
         if res['error_found']:
             for error in res['error_found']:
                 logger.error(error)
+
+        return res

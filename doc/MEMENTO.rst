@@ -73,13 +73,15 @@ And the methods that define blok behaviours:
 +-------------------------------+---------------------------------------------+
 | ``update``                    | Action to do when the blok is being         |
 |                               | install or updated. This method has one     |
-|                               | argument ``latest_version`` (None for       | 
+|                               | argument ``latest_version`` (None for       |
 |                               | install)                                    |
 +-------------------------------+---------------------------------------------+
 | ``uninstall``                 | Action to do when the blok is being         |
 |                               | uninstalled                                 |
 +-------------------------------+---------------------------------------------+
 | ``load``                      | Action to do when the server starts         |
++-------------------------------+---------------------------------------------+
+| ``import_cfg_file``           | facility to import data                     |
 +-------------------------------+---------------------------------------------+
 
 .. note::
