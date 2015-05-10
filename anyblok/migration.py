@@ -282,11 +282,17 @@ class MigrationColumn:
         if column.default:
             self.table.migration.conn.execute
             query = "UPDATE %(table)s"
+            val = column.default.arg
             vals = {'table': self.table.name,
                     'column': column.name,
-                    'value': column.default.arg}
+                    'value': val}
             if column.default.is_scalar:
-                query += " SET %(column)s = %(value)d"
+                if isinstance(val, int):
+                    query += " SET %(column)s = %(value)d"
+                elif isinstance(val, float):
+                    query += " SET %(column)s = %(value)f"
+                else:
+                    query += " SET %(column)s = %(value)s"
             # TODO chech callable, sequence and other
             else:
                 query += " SET %(column)s = %(value)s"

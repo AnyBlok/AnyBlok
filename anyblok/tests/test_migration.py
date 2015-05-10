@@ -127,6 +127,11 @@ class TestMigration(TestCase):
         t.column().add(Column('new_column', Integer, default=100))
         t.column('new_column')
 
+    def test_add_column_with_default_str_value(self):
+        t = self.registry.migration.table('test')
+        t.column().add(Column('new_column', Integer, default='100'))
+        t.column('new_column')
+
     def test_add_column_in_filled_table_with_default_value(self):
         self.fill_test_table()
         t = self.registry.migration.table('test')
