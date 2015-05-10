@@ -279,6 +279,22 @@ class MigrationColumn:
                     existing_autoincrement=column.autoincrement,
                     existing_nullable=True, nullable=False)
 
+        if column.default:
+            self.table.migration.conn.execute
+            query = "UPDATE %(table)s"
+            vals = {'table': self.table.name,
+                    'column': column.name,
+                    'value': column.default.arg}
+            if column.default.is_scalar:
+                query += " SET %(column)s = %(value)d"
+            # TODO chech callable, sequence and other
+            else:
+                query += " SET %(column)s = %(value)s"
+
+            query += " WHERE %(column)s is null"
+            query = query % vals
+            self.table.migration.conn.execute(query)
+
         t = self.table.migration.metadata.tables[self.table.name]
         for constraint in t.constraints:
             if not isinstance(constraint, schema.PrimaryKeyConstraint):

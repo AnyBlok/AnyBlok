@@ -1,6 +1,6 @@
 .. This file is a part of the AnyBlok project
 ..
-..    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -13,6 +13,10 @@ CHANGELOG
 
 Future
 ------
+
+* [IMP] When a new column is add, if the column have a default value, then 
+  this value will be added in all the entries where the value is null for this
+  column
 
 0.3.4
 -----
