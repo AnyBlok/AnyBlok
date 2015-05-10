@@ -272,12 +272,6 @@ class MigrationColumn:
             column.nullable = True
 
         self.table.migration.operation.impl.add_column(self.table.name, column)
-        if not nullable:
-            c = MigrationColumn(self.table, column.name)
-            c.alter(existing_type=column.type,
-                    existing_server_default=column.server_default,
-                    existing_autoincrement=column.autoincrement,
-                    existing_nullable=True, nullable=False)
 
         if column.default:
             self.table.migration.conn.execute
@@ -300,6 +294,13 @@ class MigrationColumn:
             query += " WHERE %(column)s is null"
             query = query % vals
             self.table.migration.conn.execute(query)
+
+        if not nullable:
+            c = MigrationColumn(self.table, column.name)
+            c.alter(existing_type=column.type,
+                    existing_server_default=column.server_default,
+                    existing_autoincrement=column.autoincrement,
+                    existing_nullable=True, nullable=False)
 
         t = self.table.migration.metadata.tables[self.table.name]
         for constraint in t.constraints:
