@@ -321,4 +321,5 @@ class Blok:
             for error in res['error_found']:
                 logger.error(error)
 
+        importer.delete()
         return res
