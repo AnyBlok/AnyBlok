@@ -17,6 +17,7 @@ Future
 * [IMP] When a new column is add, if the column have a default value, then 
   this value will be added in all the entries where the value is null for this
   column
+* [REF] import_cfg_file remove the importer when import has done
 
 0.3.4
 -----

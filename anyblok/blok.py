@@ -320,6 +320,7 @@ class Blok:
         if res['error_found']:
             for error in res['error_found']:
                 logger.error(error)
+        else:
+            importer.delete()
 
-        importer.delete()
         return res
