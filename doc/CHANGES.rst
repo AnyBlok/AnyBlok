@@ -14,6 +14,9 @@ CHANGELOG
 Future
 ------
 
+0.3.5
+-----
+
 * [IMP] When a new column is add, if the column have a default value, then 
   this value will be added in all the entries where the value is null for this
   column
