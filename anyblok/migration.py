@@ -292,10 +292,10 @@ class MigrationColumn:
                 elif isinstance(val, float):
                     query += " SET %(column)s = %(value)f"
                 else:
-                    query += " SET %(column)s = %(value)s"
+                    query += " SET %(column)s = '%(value)s'"
             # TODO chech callable, sequence and other
             else:
-                query += " SET %(column)s = %(value)s"
+                query += " SET %(column)s = '%(value)s'"
 
             query += " WHERE %(column)s is null"
             query = query % vals
