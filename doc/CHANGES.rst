@@ -12,6 +12,8 @@ CHANGELOG
 Future
 ------
 
+* [FIX] add importer for import configuration file
+
 0.3.5
 -----
 

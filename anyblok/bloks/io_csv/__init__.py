@@ -18,6 +18,11 @@ class AnyBlokIOCSV(Blok):
         'anyblok-io',
     ]
 
+    def __init__(self, registry):
+        super(AnyBlokIOCSV, self).__init__(registry)
+        if not BlokManager.has_importer('csv'):
+            BlokManager.add_importer('csv', 'Model.IO.Importer.CSV')
+
     @classmethod
     def import_declaration_module(cls):
         from . import mixin  # noqa
@@ -32,12 +37,3 @@ class AnyBlokIOCSV(Blok):
         reload(importer)
         from . import exporter
         reload(exporter)
-
-    def update(self, latest_version):
-        super(AnyBlokIOCSV, self).update(latest_version)
-        if not BlokManager.has_importer('csv'):
-            BlokManager.add_importer('csv', 'Model.IO.Importer.CSV')
-
-    def uninstall(self):
-        super(AnyBlokIOCSV, self).uninstall()
-        BlokManager.remove_importer('csv')

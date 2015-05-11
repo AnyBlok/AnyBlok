@@ -238,19 +238,6 @@ class BlokManager:
 
         return cls.importers[key]
 
-    @classmethod
-    def remove_importer(cls, key):
-        """ Remove the importer class name
-
-        :param key: key of the importer
-        :exception: BlokManagerException
-        """
-        if not cls.has_importer(key):
-            raise anyblok.Declarations.Exception.BlokManagerException(
-                "No importer found for the key %r" % key)
-
-        del cls.importers[key]
-
 
 class Blok:
     """ Super class for all the bloks

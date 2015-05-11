@@ -23,6 +23,11 @@ class AnyBlokIOXML(Blok):
         'anyblok-io',
     ]
 
+    def __init__(self, registry):
+        super(AnyBlokIOXML, self).__init__(registry)
+        if not BlokManager.has_importer('xml'):
+            BlokManager.add_importer('xml', 'Model.IO.Importer.XML')
+
     @classmethod
     def import_declaration_module(cls):
         from . import importer  # noqa
@@ -34,12 +39,3 @@ class AnyBlokIOXML(Blok):
         reload(importer)
         from . import exporter
         reload(exporter)
-
-    def update(self, latest_version):
-        super(AnyBlokIOXML, self).update(latest_version)
-        if not BlokManager.has_importer('xml'):
-            BlokManager.add_importer('xml', 'Model.IO.Importer.XML')
-
-    def uninstall(self):
-        super(AnyBlokIOXML, self).uninstall()
-        BlokManager.remove_importer('xml')
