@@ -98,6 +98,17 @@ class XML:
                      two_way=False, **kwargs):
         Model = self.registry.get(model)
 
+        def update_x2M(entry, inValues, notInValues):
+            for field in inValues.keys():
+                if field in notInValues:
+                    continue
+
+                # temporaly deactivate auto flush to let time
+                # orm to fill the remote column with foreign_key
+                # which should be not null
+                with self.registry.session.no_autoflush:
+                    getattr(entry, field).extend(inValues[field])
+
         def create_entry():
             try:
                 insert_values = {x: y for x, y in values.items()
@@ -107,16 +118,7 @@ class XML:
                 else:
                     return_entry = Model.insert(**insert_values)
 
-                for field in values.keys():
-                    if field in insert_values:
-                        continue
-
-                    # temporaly deactivate auto flush to let time
-                    # orm to fill the remote column with foreign_key
-                    # which should be not null
-                    with self.registry.session.no_autoflush:
-                        getattr(return_entry, field).extend(values[field])
-
+                update_x2M(return_entry, values, insert_values)
                 self.created_entries.append(return_entry)
                 return return_entry
             except Exception as e:
@@ -130,7 +132,12 @@ class XML:
                 return_entry = create_entry()
             elif if_exist == 'update':
                 try:
-                    entry.update(values)
+                    insert_values = {x: y for x, y in values.items()
+                                     if not isinstance(y, list)}
+                    if insert_values:
+                        entry.update(values)
+
+                    update_x2M(entry, values, insert_values)
                     self.updated_entries.append(entry)
                 except Exception as e:
                     self._raise(e, **kwargs)

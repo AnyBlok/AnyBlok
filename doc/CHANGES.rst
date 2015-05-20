@@ -13,6 +13,7 @@ Future
 ------
 
 * [FIX] add importer for import configuration file
+* [FIX] x2M importer without field just, external id
 
 0.3.5
 -----
