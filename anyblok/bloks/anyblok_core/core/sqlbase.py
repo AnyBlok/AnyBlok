@@ -9,6 +9,7 @@ from anyblok import Declarations
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql import functions
+from sqlalchemy import or_, and_
 
 
 @Declarations.register(Declarations.Exception)
@@ -77,11 +78,11 @@ class SqlMixin:
         return aliased(cls, *args, **kwargs)
 
     @classmethod
-    def from_primary_keys(cls, **pks):
-        """ return the instance of the model from the primary keys
+    def get_where_clause_from_primary_keys(cls, **pks):
+        """ return the where clause to find object from pks
 
         :param \*\*pks: dict {primary_key: value, ...}
-        :rtype: instance of the model
+        :rtype: where clause
         :exception: SqlBaseException
         """
         _pks = cls.get_primary_keys()
@@ -90,12 +91,43 @@ class SqlMixin:
                 raise SqlBaseException("No primary key %s filled for %r" % (
                     pk, cls.__registry_name__))
 
-        where_clause = [getattr(cls, k) == v for k, v in pks.items()]
+        return [getattr(cls, k) == v for k, v in pks.items()]
+
+    @classmethod
+    def from_primary_keys(cls, **pks):
+        """ return the instance of the model from the primary keys
+
+        :param \*\*pks: dict {primary_key: value, ...}
+        :rtype: instance of the model
+        """
+        where_clause = cls.get_where_clause_from_primary_keys(**pks)
         query = cls.query().filter(*where_clause)
         if query.count():
             return query.first()
 
         return None
+
+    @classmethod
+    def from_multi_primary_keys(cls, *pks):
+        """ return the instances of the model from the primary keys
+
+        :param \*pks: list of dict [{primary_key: value, ...}]
+        :rtype: instances of the model
+        """
+        where_clause = []
+        for _pks in pks:
+            where_clause.append(cls.get_where_clause_from_primary_keys(**_pks))
+
+        if not where_clause:
+            return []
+
+        where_clause = or_(*[and_(*x) for x in where_clause])
+
+        query = cls.query().filter(where_clause)
+        if query.count():
+            return query.all()
+
+        return []
 
     def to_primary_keys(self):
         """ return the primary keys and values for this instance
