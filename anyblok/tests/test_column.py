@@ -108,6 +108,15 @@ class TestColumns(DBTestCase):
         Integer = Declarations.Column.Integer
         self.init_registry(simple_column, ColumnType=Integer, type_=Integer)
 
+    def test_column_with_db_column_name_in_kwargs(self):
+        Integer = Declarations.Column.Integer
+        registry = self.init_registry(simple_column, ColumnType=Integer,
+                                      db_column_name='another_name')
+        test = registry.Test.insert(col=1)
+        self.assertEqual(test.col, 1)
+        res = registry.execute('select id from test where another_name=1')
+        self.assertEqual(res.fetchone()[0], test.id)
+
     def test_column_with_foreign_key(self):
         registry = self.init_registry(column_with_foreign_key)
         registry.Test.insert(name='test')

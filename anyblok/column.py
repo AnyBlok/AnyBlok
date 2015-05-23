@@ -39,6 +39,10 @@ class Column(Declarations.Field):
         if 'sequence' in kwargs:
             self.sequence = Sequence(kwargs.pop('sequence'))
 
+        self.db_column_name = None
+        if 'db_column_name' in kwargs:
+            self.db_column_name = kwargs.pop('db_column_name')
+
         super(Column, self).__init__(*args, **kwargs)
 
     def native_type(cls):
@@ -97,7 +101,8 @@ class Column(Declarations.Field):
         if self.sequence:
             args = (self.sequence,) + args
 
-        return SA_Column(fieldname, self.sqlalchemy_type, *args, **kwargs)
+        db_column_name = self.db_column_name or fieldname
+        return SA_Column(db_column_name, self.sqlalchemy_type, *args, **kwargs)
 
     def must_be_declared_as_attr(self):
         """ Return True if the column have a foreign key to a remote column """

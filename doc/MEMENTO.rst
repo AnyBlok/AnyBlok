@@ -371,45 +371,49 @@ List of the ``Declarations`` of the column type:
  * ``Selection``
  * ``Json``
 
-All the columns have the following parameters:
+All the columns have the following optional parameters:
 
-+-------------+---------------------------------------------------------------+
-| Parameter   | Description                                                   |
-+=============+===============================================================+
-| label       | Label of the column, If None the label is the name of column  |
-|             | capitalized                                                   |
-+-------------+---------------------------------------------------------------+
-| default     | define a default value for this column.                       |
-|             |                                                               |
-|             | ..warning:: the default value depends of the column type      |
-+-------------+---------------------------------------------------------------+
-| index       | boolean flag to define whether the column is indexed          |
-+-------------+---------------------------------------------------------------+
-| nullable    | Defines if the column must be filled or not                   |
-+-------------+---------------------------------------------------------------+
-| primary_key | Boolean flag to define if the column is a primary key or not  |
-+-------------+---------------------------------------------------------------+
-| unique      | Boolean flag to define if the column value must be unique or  |
-|             | not                                                           |
-+-------------+---------------------------------------------------------------+
-| foreign_key | Define a foreign key on this column to another column of      |
-|             | another model::                                               |
-|             |                                                               |
-|             |    @register(Model)                                           |
-|             |    class Foo:                                                 |
-|             |        id : Integer(primary_key=True)                         |
-|             |                                                               |
-|             |    @register(Model)                                           |
-|             |    class Bar:                                                 |
-|             |        id : Integer(primary_key=True)                         |
-|             |        foo: Integer(foreign_key=(Model.Foo, 'id'))            |
-|             |                                                               |
-|             | If the ``Model`` Declarations doesn't exist yet, you can use  |
-|             | the regisrty name::                                           |
-|             |                                                               |
-|             |     foo: Integer(foreign_key=('Model.Foo', 'id'))             |
-|             |                                                               |
-+-------------+---------------------------------------------------------------+
++----------------+------------------------------------------------------------+
+| Parameter      | Description                                                |
++================+============================================================+
+| label          | Label of the column, If None the label is the name of      |
+|                | column capitalized                                         |
++----------------+------------------------------------------------------------+
+| default        | define a default value for this column.                    |
+|                |                                                            |
+|                | ..warning:: the default value depends of the column type   |
++----------------+------------------------------------------------------------+
+| index          | boolean flag to define whether the column is indexed       |
++----------------+------------------------------------------------------------+
+| nullable       | Defines if the column must be filled or not                |
++----------------+------------------------------------------------------------+
+| primary_key    | Boolean flag to define if the column is a primary key or   |
+|                | not                                                        |
++----------------+------------------------------------------------------------+
+| unique         | Boolean flag to define if the column value must be unique  |
+|                | or not                                                     |
++----------------+------------------------------------------------------------+
+| foreign_key    | Define a foreign key on this column to another column of   |
+|                | another model::                                            |
+|                |                                                            |
+|                |    @register(Model)                                        |
+|                |    class Foo:                                              |
+|                |        id : Integer(primary_key=True)                      |
+|                |                                                            |
+|                |    @register(Model)                                        |
+|                |    class Bar:                                              |
+|                |        id : Integer(primary_key=True)                      |
+|                |        foo: Integer(foreign_key=(Model.Foo, 'id'))         |
+|                |                                                            |
+|                | If the ``Model`` Declarations doesn't exist yet, you can   |
+|                | use the regisrty name::                                    |
+|                |                                                            |
+|                |     foo: Integer(foreign_key=('Model.Foo', 'id'))          |
+|                |                                                            |
++----------------+------------------------------------------------------------+
+| db_column_name | String to define the real column name in the table,        | 
+|                | different from the model attribute name                    |
++----------------+------------------------------------------------------------+
 
 Other attribute for ``String`` and ``uString``:
 

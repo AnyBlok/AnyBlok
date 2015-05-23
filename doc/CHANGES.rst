@@ -12,6 +12,7 @@ CHANGELOG
 Future
 ------
 
+* [IMP] Allow to define another column name in the table versus model
 * [FIX] add importer for import configuration file
 * [FIX] x2M importer without field just, external id
 
