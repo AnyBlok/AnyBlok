@@ -31,6 +31,9 @@ class Column(Mixin.Field):
         :param cname: Not use here
         :rtype: string of the real column name
         """
+        if field.property.columns[0].info.get('use_db_column_name'):
+            return cname
+
         return field.property.columns[0].name
 
     @classmethod

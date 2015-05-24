@@ -101,7 +101,12 @@ class Column(Declarations.Field):
         if self.sequence:
             args = (self.sequence,) + args
 
-        db_column_name = self.db_column_name or fieldname
+        if self.db_column_name:
+            db_column_name = self.db_column_name
+            kwargs['info']['use_db_column_name'] = db_column_name
+        else:
+            db_column_name = fieldname
+
         return SA_Column(db_column_name, self.sqlalchemy_type, *args, **kwargs)
 
     def must_be_declared_as_attr(self):
