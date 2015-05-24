@@ -353,3 +353,10 @@ def anyblok_nose():
     from anyblok.release import version
     run_exit("Nose test for AnyBlok", version, ['config', 'database'],
              ['AnyBlok'])
+
+
+def anyblok_interpreter():
+    interpreter(
+        'AnyBlok interpreter', version,
+        argsparse_groups=['config', 'database', 'interpreter', 'logging'],
+        parts_to_load=['AnyBlok'])
