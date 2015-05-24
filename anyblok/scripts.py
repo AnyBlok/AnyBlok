@@ -356,6 +356,7 @@ def anyblok_nose():
 
 
 def anyblok_interpreter():
+    from anyblok.release import version
     interpreter(
         'AnyBlok interpreter', version,
         argsparse_groups=['config', 'database', 'interpreter', 'logging'],
