@@ -8,7 +8,8 @@
 """Authorization subframework.
 
 The founding principle of authorization handling within Anyblok is to check
-authorization explicitely at the edge of the system (for instance, for applications
+authorization explicitely at the edge of the system (for instance,
+for applications
 exposed over HTTP, that would be in the controllers), because that is where the
 idea of user, or slightly more generally, has functional semantics that can
 be interpreted in the context of a given action.
