@@ -8,7 +8,7 @@
 from anyblok.tests.testcase import TestCase
 from anyblok.registry import Registry, RegistryManager
 from anyblok.blok import BlokManager
-from anyblok._argsparse import ArgsParseManager
+from anyblok.config import Configuration
 from anyblok.environment import EnvironmentManager
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
@@ -25,7 +25,7 @@ class TestMigration(TestCase):
     @classmethod
     def setUpClass(cls):
         super(TestMigration, cls).setUpClass()
-        cls.init_argsparse_manager()
+        cls.init_configuration_manager()
         cls.createdb()
         BlokManager.load()
 
@@ -60,7 +60,7 @@ class TestMigration(TestCase):
 
     def setUp(self):
         super(TestMigration, self).setUp()
-        self.registry = Registry(ArgsParseManager.get('db_name'))
+        self.registry = Registry(Configuration.get('db_name'))
         self.registry.init_migration()
 
     @classmethod

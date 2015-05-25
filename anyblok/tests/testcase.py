@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import unittest
 from logging import getLogger
-from anyblok._argsparse import ArgsParseManager
+from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
@@ -19,8 +19,8 @@ logger = getLogger(__name__)
 class TestCase(unittest.TestCase):
     """ Unittest class add helper for unit test in anyblok """
     @classmethod
-    def init_argsparse_manager(cls, **env):
-        """ Initialise the argsparse manager with environ variable
+    def init_configuration_manager(cls, **env):
+        """ Initialise the configuration manager with environ variable
         to launch the test
 
         .. warning::
@@ -30,13 +30,13 @@ class TestCase(unittest.TestCase):
         :param prefix: prefix the database name
         :param env: add another dict to merge with environ variable
         """
-        db_name = ArgsParseManager.get('db_name', 'test_anyblok')
-        db_driver_name = ArgsParseManager.get('db_driver_name', 'postgres')
+        db_name = Configuration.get('db_name', 'test_anyblok')
+        db_driver_name = Configuration.get('db_driver_name', 'postgres')
         env.update({
             'db_name': db_name,
             'db_driver_name': db_driver_name,
         })
-        ArgsParseManager.configuration.update(env)
+        Configuration.configuration.update(env)
 
     @classmethod
     def createdb(cls, keep_existing=False):
@@ -44,13 +44,13 @@ class TestCase(unittest.TestCase):
 
         ::
 
-            cls.init_argsparse_manager()
+            cls.init_configuration_manager()
             cls.createdb()
 
         :param keep_existing: If false drop the previous db before create it
         """
-        bdd = anyblok.BDD[ArgsParseManager.get('db_driver_name')]
-        db_name = ArgsParseManager.get('db_name')
+        bdd = anyblok.BDD[Configuration.get('db_driver_name')]
+        db_name = Configuration.get('db_name')
         if db_name in bdd.listdb():
             if keep_existing:
                 return True
@@ -65,15 +65,15 @@ class TestCase(unittest.TestCase):
 
         ::
 
-            cls.init_argsparse_manager()
+            cls.init_configuration_manager()
             cls.dropdb()
 
         """
-        bdd = anyblok.BDD[ArgsParseManager.get('db_driver_name')]
-        bdd.dropdb(ArgsParseManager.get('db_name'))
+        bdd = anyblok.BDD[Configuration.get('db_driver_name')]
+        bdd.dropdb(Configuration.get('db_name'))
 
     def getRegistry(self):
-        """ Return the registry for the database in argsparse i
+        """ Return the registry for the database in configuration i
 
         ::
 
@@ -81,7 +81,7 @@ class TestCase(unittest.TestCase):
 
         :rtype: registry instance
         """
-        return RegistryManager.get(ArgsParseManager.get('db_name'))
+        return RegistryManager.get(Configuration.get('db_name'))
 
 
 class DBTestCase(TestCase):
@@ -124,9 +124,9 @@ class DBTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """ Intialialise the argsparse manager """
+        """ Intialialise the configuration manager """
         super(DBTestCase, cls).setUpClass()
-        cls.init_argsparse_manager()
+        cls.init_configuration_manager()
 
     def setUp(self):
         """ Create a database and load the blok manager """
@@ -209,13 +209,13 @@ class BlokTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """ Intialialise the argsparse manager
+        """ Intialialise the configuration manager
 
         Deactivate the commit method of the registry
         """
         super(BlokTestCase, cls).setUpClass()
         if not hasattr(cls, 'registry'):
-            cls.registry = RegistryManager.get(ArgsParseManager.get('db_name'))
+            cls.registry = RegistryManager.get(Configuration.get('db_name'))
 
         def session_commit(*args, **kwargs):
             pass

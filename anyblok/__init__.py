@@ -13,27 +13,27 @@ PROMPT = "%(processName)s - %(version)s"
 
 
 def start(processName, version=release.version, prompt=PROMPT,
-          argsparse_groups=None, entry_points=None,
+          configuration_groups=None, entry_points=None,
           useseparator=False):
     """ Function which initialize the application
 
     ::
 
         registry = start('My application',
-                         argsparse_groups=['config', 'database'],
+                         configuration_groups=['config', 'database'],
                          entry_points=['AnyBlok'])
 
     :param processName: Name of the application
     :param version: Version of the application
     :param prompt: Prompt message for the help
-    :param argsparse_groups: list of the group of option for argparse
+    :param configuration_groups: list of the group of option for argparse
     :param entry_points: entry point where load blok
-    :param useseparator: boolean, indicate if argsparse option are split
+    :param useseparator: boolean, indicate if configuration option are split
         betwwen two application
     :rtype: registry if the database name is in the configuration
     """
     from .blok import BlokManager
-    from ._argsparse import ArgsParseManager
+    from .config import Configuration
     from .registry import RegistryManager
 
     if entry_points:
@@ -42,12 +42,12 @@ def start(processName, version=release.version, prompt=PROMPT,
         BlokManager.load()
 
     description = prompt % {'processName': processName, 'version': version}
-    if argsparse_groups is not None:
-        ArgsParseManager.load(description=description,
-                              argsparse_groups=argsparse_groups,
-                              useseparator=useseparator)
+    if configuration_groups is not None:
+        Configuration.load(description=description,
+                           configuration_groups=configuration_groups,
+                           useseparator=useseparator)
 
-    db_name = ArgsParseManager.get('db_name')
+    db_name = Configuration.get('db_name')
     if not db_name:
         return None
 

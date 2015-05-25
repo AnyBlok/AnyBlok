@@ -28,12 +28,12 @@ anyblok.declarations module
     :members:
     :noindex:
 
-anyblok._argsparse module
--------------------------
+anyblok.config module
+---------------------
 
-.. automodule:: anyblok._argsparse
+.. automodule:: anyblok.config
 
-.. autoclass:: ArgsParseManager
+.. autoclass:: Configuration
     :members:
     :noindex:
 

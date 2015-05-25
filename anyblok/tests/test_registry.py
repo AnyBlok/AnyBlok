@@ -28,7 +28,7 @@ class TestRegistry(TestCase):
     @classmethod
     def setUpClass(cls):
         super(TestRegistry, cls).setUpClass()
-        cls.init_argsparse_manager()
+        cls.init_configuration_manager()
         cls.createdb()
         BlokManager.load()
 

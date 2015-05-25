@@ -1,6 +1,6 @@
 import anyblok
 from ..logging import log
-from anyblok._argsparse import ArgsParseManager
+from anyblok.config import Configuration
 from sqlalchemy import create_engine
 from contextlib import contextmanager
 from logging import getLogger
@@ -17,7 +17,7 @@ class SqlAlchemyPostgres:
         """ Context manager to get a connection to database """
         cnx = None
         try:
-            postgres = ArgsParseManager.get_url(db_name='postgres')
+            postgres = Configuration.get_url(db_name='postgres')
             engine = create_engine(postgres)
             cnx = engine.connect()
             cnx.execute("commit")
@@ -59,7 +59,7 @@ class SqlAlchemyPostgres:
         where_clause = " where pg_db.datname not in (%s)"
         values = ', '.join(["'template0'", "'template1'", "'postgres'"])
 
-        username = ArgsParseManager.get('db_user_name')
+        username = Configuration.get('db_user_name')
         if username:
             from_clause += ", pg_user pg_u"
             where_clause += " and pg_u.username = %s"

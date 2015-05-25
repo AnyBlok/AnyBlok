@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import anyblok
 from anyblok.blok import BlokManager
-from anyblok._argsparse import ArgsParseManager
+from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok._graphviz import ModelSchema, SQLSchema
 from anyblok.common import format_bloks
@@ -17,27 +17,27 @@ import sys
 from os.path import join, exists
 
 
-def format_argsparse(argsparse_groups, *confs):
-    if argsparse_groups is None:
-        argsparse_groups = []
+def format_configuration(configuration_groups, *confs):
+    if configuration_groups is None:
+        configuration_groups = []
 
     for conf in confs:
-        if conf not in argsparse_groups:
-            argsparse_groups.append(conf)
+        if conf not in configuration_groups:
+            configuration_groups.append(conf)
 
 
-def createdb(description, argsparse_groups):
+def createdb(description, configuration_groups):
     """ Create a database and install blok from config
 
-    :param description: description of argsparse
-    :param argsparse_groups: list argsparse groupe to load
+    :param description: description of configuration
+    :param configuration_groups: list configuration groupe to load
     """
-    format_argsparse(argsparse_groups, 'install-bloks')
+    format_configuration(configuration_groups, 'install-bloks')
     BlokManager.load()
-    ArgsParseManager.load(description=description,
-                          argsparse_groups=argsparse_groups)
-    drivername = ArgsParseManager.get('db_driver_name')
-    db_name = ArgsParseManager.get('db_name')
+    Configuration.load(description=description,
+                       configuration_groups=configuration_groups)
+    drivername = Configuration.get('db_driver_name')
+    db_name = Configuration.get('db_name')
 
     bdd = anyblok.BDD[drivername]
     bdd.createdb(db_name)
@@ -46,36 +46,36 @@ def createdb(description, argsparse_groups):
     if registry is None:
         return
 
-    if ArgsParseManager.get('install_all_bloks'):
+    if Configuration.get('install_all_bloks'):
         bloks = registry.System.Blok.list_by_state('uninstalled')
     else:
-        bloks = format_bloks(ArgsParseManager.get('install_bloks'))
+        bloks = format_bloks(Configuration.get('install_bloks'))
 
     registry.upgrade(install=bloks)
     registry.commit()
     registry.close()
 
 
-def updatedb(description, version, argsparse_groups):
+def updatedb(description, version, configuration_groups):
     """ Update an existing database
 
-    :param description: description of argsparse
+    :param description: description of configuration
     :param version: version of script for argparse
-    :param argsparse_groups: list argsparse groupe to load
+    :param configuration_groups: list configuration groupe to load
     """
-    format_argsparse(argsparse_groups, 'install-bloks', 'uninstall-bloks',
-                     'update-bloks')
+    format_configuration(configuration_groups, 'install-bloks',
+                         'uninstall-bloks', 'update-bloks')
 
     registry = anyblok.start(description, version,
-                             argsparse_groups=argsparse_groups)
+                             configuration_groups=configuration_groups)
 
-    if ArgsParseManager.get('install_all_bloks'):
+    if Configuration.get('install_all_bloks'):
         install_bloks = registry.System.Blok.list_by_state('uninstalled')
     else:
-        install_bloks = format_bloks(ArgsParseManager.get('install_bloks'))
+        install_bloks = format_bloks(Configuration.get('install_bloks'))
 
-    uninstall_bloks = format_bloks(ArgsParseManager.get('uninstall_bloks'))
-    update_bloks = format_bloks(ArgsParseManager.get('update_bloks'))
+    uninstall_bloks = format_bloks(Configuration.get('uninstall_bloks'))
+    update_bloks = format_bloks(Configuration.get('update_bloks'))
     if registry:
         registry.upgrade(install=install_bloks, update=update_bloks,
                          uninstall=uninstall_bloks)
@@ -83,26 +83,26 @@ def updatedb(description, version, argsparse_groups):
         registry.close()
 
 
-def run_exit(description, version, argsparse_groups):
+def run_exit(description, version, configuration_groups):
     """ Update an existing database
 
-    :param description: description of argsparse
+    :param description: description of configuration
     :param version: version of script for argparse
-    :param argsparse_groups: list argsparse groupe to load
+    :param configuration_groups: list configuration groupe to load
     """
-    format_argsparse(argsparse_groups, 'unittest')
+    format_configuration(configuration_groups, 'unittest')
     registry = anyblok.start(description, version,
-                             argsparse_groups=argsparse_groups,
+                             configuration_groups=configuration_groups,
                              useseparator=True)
 
     defaultTest = []
     if registry:
         installed_bloks = registry.System.Blok.list_by_state("installed")
-        selected_bloks = format_bloks(ArgsParseManager.get('selected_bloks'))
+        selected_bloks = format_bloks(Configuration.get('selected_bloks'))
         if not selected_bloks:
             selected_bloks = installed_bloks
 
-        unwanted_bloks = format_bloks(ArgsParseManager.get('unwanted_bloks'))
+        unwanted_bloks = format_bloks(Configuration.get('unwanted_bloks'))
         if unwanted_bloks is None:
             unwanted_bloks = []
 
@@ -115,17 +115,17 @@ def run_exit(description, version, argsparse_groups):
     sys.exit(main(defaultTest=defaultTest))
 
 
-def interpreter(description, version, argsparse_groups):
+def interpreter(description, version, configuration_groups):
     """ Execute a script or open an interpreter
 
-    :param description: description of argsparse
+    :param description: description of configuration
     :param version: version of script for argparse
-    :param argsparse_groups: list argsparse groupe to load
+    :param configuration_groups: list configuration groupe to load
     """
-    format_argsparse(argsparse_groups, 'interpreter')
+    format_configuration(configuration_groups, 'interpreter')
     registry = anyblok.start(description, version,
-                             argsparse_groups=argsparse_groups)
-    python_script = ArgsParseManager.get('python_script')
+                             configuration_groups=configuration_groups)
+    python_script = Configuration.get('python_script')
     if python_script:
         with open(python_script, "r") as fh:
             exec(fh.read(), None, locals())
@@ -138,22 +138,22 @@ def interpreter(description, version, argsparse_groups):
             code.interact(local=locals())
 
 
-def sqlschema(description, version, argsparse_groups):
+def sqlschema(description, version, configuration_groups):
     """ Create a Table model schema of the registry
 
-    :param description: description of argsparse
+    :param description: description of configuration
     :param version: version of script for argparse
-    :param argsparse_groups: list argsparse groupe to load
+    :param configuration_groups: list configuration groupe to load
     """
-    format_argsparse(argsparse_groups, 'schema')
+    format_configuration(configuration_groups, 'schema')
     registry = anyblok.start(description, version,
-                             argsparse_groups=argsparse_groups)
+                             configuration_groups=configuration_groups)
     if registry is None:
         return
 
-    format_ = ArgsParseManager.get('schema_format')
-    name_ = ArgsParseManager.get('schema_output')
-    models_ = format_bloks(ArgsParseManager.get('schema_models'))
+    format_ = Configuration.get('schema_format')
+    name_ = Configuration.get('schema_output')
+    models_ = format_bloks(Configuration.get('schema_models'))
     models_ = [] if models_ is None else models_
 
     Column = registry.System.Column
@@ -199,22 +199,22 @@ def sqlschema(description, version, argsparse_groups):
     registry.close()
 
 
-def modelschema(description, version, argsparse_groups):
+def modelschema(description, version, configuration_groups):
     """ Create a UML model schema of the registry
 
-    :param description: description of argsparse
+    :param description: description of configuration
     :param version: version of script for argparse
-    :param argsparse_groups: list argsparse groupe to load
+    :param configuration_groups: list configuration groupe to load
     """
-    format_argsparse(argsparse_groups, 'schema')
+    format_configuration(configuration_groups, 'schema')
     registry = anyblok.start(description, version,
-                             argsparse_groups=argsparse_groups)
+                             configuration_groups=configuration_groups)
     if registry is None:
         return
 
-    format_ = ArgsParseManager.get('schema_format')
-    name_ = ArgsParseManager.get('schema_output')
-    models_ = format_bloks(ArgsParseManager.get('schema_models'))
+    format_ = Configuration.get('schema_format')
+    name_ = Configuration.get('schema_output')
+    models_ = format_bloks(Configuration.get('schema_models'))
     models_ = [] if models_ is None else models_
 
     models_by_table = {}

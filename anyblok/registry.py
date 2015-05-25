@@ -7,7 +7,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-from anyblok._argsparse import ArgsParseManager
+from anyblok.config import Configuration
 from anyblok.imp import ImportManager
 from anyblok.blok import BlokManager
 from .logging import log
@@ -380,7 +380,7 @@ class Registry:
 
     def __init__(self, db_name):
         self.db_name = db_name
-        url = ArgsParseManager.get_url(db_name=db_name)
+        url = Configuration.get_url(db_name=db_name)
         self.engine = create_engine(url)
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
@@ -735,11 +735,11 @@ class Registry:
             self.close()
             raise
 
-        test_blok = blok2install and ArgsParseManager.get(
+        test_blok = blok2install and Configuration.get(
             'test_blok_at_install')
-        selected_bloks = format_bloks(ArgsParseManager.get('selected_bloks'))
+        selected_bloks = format_bloks(Configuration.get('selected_bloks'))
         in_selected_bloks = blok2install in (selected_bloks or [blok2install])
-        unwanted_bloks = format_bloks(ArgsParseManager.get('unwanted_bloks'))
+        unwanted_bloks = format_bloks(Configuration.get('unwanted_bloks'))
         not_in_unwanted_bloks = blok2install not in (unwanted_bloks or [])
 
         if test_blok and in_selected_bloks and not_in_unwanted_bloks:

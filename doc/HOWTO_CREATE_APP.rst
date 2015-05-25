@@ -177,7 +177,7 @@ File tree::
 
     employee_blok
     ├── __init__.py
-    ├── argsparse.py
+    ├── config.py
     └── employee.py
 
 ``__init__.py`` file::
@@ -219,7 +219,7 @@ File tree::
 
         @classmethod
         def import_declaration_module(cls):
-            from . import argsparse  # noqa
+            from . import config  # noqa
             from . import employee  # noqa
 
     # employee.py describe the model Employee
@@ -431,18 +431,18 @@ get the real model
             return "%s (%s)" % (res, self.position)
 
 
-Add entries in the argsparse configuration
-------------------------------------------
+Add entries in the argparse configuration
+-----------------------------------------
 
 Some applications may require options. Options are grouped by
 category. And the application chooses the option category to display.
 
-**employee_blok.arsparse**::
+**employee_blok.config
 
-    from anyblok._argsparse import ArgsParseManager
+    from anyblok.config import Configuration
 
 
-    @ArgsParseManager.add('message', label="This is the group message")
+    @Configuration.add('message', label="This is the group message")
     def add_interpreter(parser, configuration):
         parser.add_argument('--message-before', dest='message_before')
         parser.add_argument('--message-after', dest='message_after')
@@ -472,7 +472,7 @@ The script must display:
 
     import anyblok
     from logging import getLogger
-    from anyblok._argsparse import ArgsParseManager
+    from anyblok.config import Configuration
 
     logger = getLogger(__name__)
 
@@ -483,13 +483,13 @@ The script must display:
         # return a registry if the database are selected
         registry = anyblok.start(
             'Example Blok', '1.0', 
-            argsparse_groups=['config', 'database', 'message'])
+            argparse_groups=['config', 'database', 'message'])
 
         if not registry:
             return
 
-        message_before = ArgsParseManager.get('message_before')
-        message_after = ArgsParseManager.get('message_after')
+        message_before = Configuration.get('message_before')
+        message_after = Configuration.get('message_after')
 
         if message_before:
             logger.info(message_before)

@@ -7,7 +7,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase
-from anyblok._argsparse import ArgsParseManager
+from anyblok.config import Configuration
 from datetime import datetime
 import anyblok
 
@@ -26,7 +26,7 @@ class TestDataBase(TestCase):
         if self.drivername is None:
             return
 
-        if ArgsParseManager.get('db_drivername') == 'postgres':
+        if Configuration.get('db_drivername') == 'postgres':
             self.ready_to_test = True
 
 
@@ -38,7 +38,7 @@ class TestPostgres(TestDataBase):
         if not self.ready_to_test:
             return
 
-        db_name = ArgsParseManager.get('db_name') + datetime.strftime(
+        db_name = Configuration.get('db_name') + datetime.strftime(
             datetime.today(), '%Y-%m-%d_%H:%M:%S')
         bdd = anyblok.BDD[self.drivername]
         bdd.createdb(db_name)
