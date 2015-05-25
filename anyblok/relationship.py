@@ -5,16 +5,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
+from sqlalchemy import Table, Column, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import backref
+from sqlalchemy.schema import Column as SA_Column
+from .field import Field, FieldException
 
 
-FieldException = Declarations.Exception.FieldException
-
-
-@Declarations.add_declaration_type()
-class RelationShip(Declarations.Field):
+class RelationShip(Field):
     """ RelationShip class
 
     The RelationShip class is used to define the type of SQL field Declarations
@@ -162,3 +160,403 @@ class RelationShip(Declarations.Field):
     def must_be_declared_as_attr(self):
         """ Return True, because it is a relationship """
         return True
+
+
+class Many2One(RelationShip):
+    """ Define a relationship attribute on the model
+
+    ::
+
+        @register(Model)
+        class TheModel:
+
+            relationship = Many2One(label="The relationship",
+                                    model=Model.RemoteModel,
+                                    remote_column="The remote column",
+                                    column_name="The column which have the "
+                                                "foreigh key",
+                                    nullable=True,
+                                    unique=False,
+                                    one2many="themodels")
+
+    If the ``remote_column`` are not define then, the system takes the primary
+    key of the remote model
+
+    If the column doesn't exist, the column will be created. Use the
+    nullable option.
+    If the name is not filled, the name is "'remote table'_'remote colum'"
+
+    :param model: the remote model
+    :param remote_column: the column name on the remote model
+    :param column_name: the column on the model which have the foreign key
+    :param nullable: If the column_name is nullable
+    :param unique: If True, add the unique constraint on the column
+    :param one2many: create the one2many link with this many2one
+    """
+
+    def __init__(self, **kwargs):
+        super(Many2One, self).__init__(**kwargs)
+
+        self.remote_column = None
+        if 'remote_column' in kwargs:
+            self.remote_column = self.kwargs.pop('remote_column')
+
+        self.nullable = True
+        if 'nullable' in kwargs:
+            self.nullable = self.kwargs.pop('nullable')
+            self.kwargs['info']['nullable'] = self.nullable
+
+        self.unique = False
+        if 'unique' in kwargs:
+            self.unique = self.kwargs.pop('unique')
+            self.kwargs['info']['unique'] = self.unique
+
+        if 'one2many' in kwargs:
+            self.kwargs['backref'] = self.kwargs.pop('one2many')
+            self.kwargs['info']['remote_name'] = self.kwargs['backref']
+
+        self.column_name = None
+        if 'column_name' in kwargs:
+            self.column_name = self.kwargs.pop('column_name')
+
+    def update_properties(self, registry, namespace, fieldname, properties):
+        """ Create the column which has the foreign key if the column doesn't
+        exist
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param fieldname: fieldname of the relationship
+        :param propertie: the properties known
+        """
+        self.check_existing_remote_model(registry)
+        remote_properties = registry.loaded_namespaces_first_step.get(
+            self.get_registry_name())
+
+        if self.remote_column is None:
+            self.remote_column = self.find_primary_key(remote_properties)
+
+        self.kwargs['info']['remote_column'] = self.remote_column
+
+        if self.column_name is None:
+            self.column_name = "%s_%s" % (self.get_tablename(registry),
+                                          self.remote_column)
+
+        self.kwargs['info']['local_column'] = self.column_name
+
+        self_properties = registry.loaded_namespaces_first_step.get(namespace)
+        if self.column_name not in self_properties:
+            from sqlalchemy.ext.declarative import declared_attr
+            remote_type = remote_properties[self.remote_column].native_type()
+            foreign_key = '%s.%s' % (self.get_tablename(registry),
+                                     self.remote_column)
+
+            def wrapper(cls):
+                return SA_Column(
+                    remote_type, ForeignKey(foreign_key),
+                    nullable=self.nullable,
+                    unique=self.unique,
+                    info=dict(label=self.label, foreign_key=foreign_key))
+
+            properties[self.column_name] = declared_attr(wrapper)
+
+        if namespace == self.get_registry_name():
+            self.kwargs['remote_side'] = [properties[self.remote_column]]
+
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
+                               properties):
+        """ Create the relationship
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param fieldname: fieldname of the relationship
+        :param propertie: the properties known
+        :rtype: Many2One relationship
+        """
+        self.kwargs['foreign_keys'] = "%s.%s" % (properties['__tablename__'],
+                                                 self.column_name)
+
+        return super(Many2One, self).get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties)
+
+
+class One2One(Many2One):
+    """ Define a relationship attribute on the model
+
+    ::
+
+        @register(Model)
+        class TheModel:
+
+            relationship = One2One(label="The relationship",
+                                   model=Model.RemoteModel,
+                                   remote_column="The remote column",
+                                   column_name="The column which have the "
+                                               "foreigh key",
+                                   nullable=False,
+                                   backref="themodels")
+
+    If the remote_column are not define then, the system take the primary key
+    of the remote model
+
+    If the column doesn't exist, then the column will be create. Use the
+    nullable option.
+    If the name is not filled then the name is "'remote table'_'remote colum'"
+
+    :param model: the remote model
+    :param remote_column: the column name on the remote model
+    :param column_name: the column on the model which have the foreign key
+    :param nullable: If the column_name is nullable
+    :param backref: create the one2one link with this one2one
+    """
+
+    def __init__(self, **kwargs):
+        super(One2One, self).__init__(**kwargs)
+
+        if 'backref' not in kwargs:
+            raise FieldException("backref is a required argument")
+
+        if 'one2many' in kwargs:
+            raise FieldException("Unknow argmument 'one2many'")
+
+        self.kwargs['info']['remote_name'] = self.kwargs['backref']
+
+    def define_backref_properties(self, registry, namespace, properties):
+        """ Add option uselist = False
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param propertie: the properties known
+        """
+        self.backref_properties.update({'uselist': False})
+
+
+class Many2Many(RelationShip):
+    """ Define a relationship attribute on the model
+
+    ::
+
+        @register(Model)
+        class TheModel:
+
+            relationship = Many2Many(label="The relationship",
+                                     model=Model.RemoteModel,
+                                     join_table="many2many table",
+                                     remote_column="The remote column",
+                                     m2m_remote_column="Name in many2many"
+                                     local_column="local primary key"
+                                     m2m_local_column="Name in many2many"
+                                     many2many="themodels")
+
+    if the join_table is not defined, then the table join is
+        "join_'local table'_and_'remote table'"
+
+    .. warning::
+
+        The join_table must be filled when the declaration of the
+        Many2Many is done in a Mixin
+
+    If the remote_column are not define then, the system take the primary key
+    of the remote model
+
+    if the local_column are not define the take the primary key of the local
+        model
+
+    :param model: the remote model
+    :param join_table: the many2many table to join local and remote models
+    :param remote_column: the column name on the remote model
+    :param m2m_remote_column: the column name to remote model in m2m table
+    :param local_column: the column on the model
+    :param m2m_local_column: the column name to local model in m2m table
+    :param many2many: create the opposite many2many on the remote model
+    """
+
+    def __init__(self, **kwargs):
+        super(Many2Many, self).__init__(**kwargs)
+
+        self.join_table = None
+        if 'join_table' in kwargs:
+            self.join_table = self.kwargs.pop('join_table')
+
+        self.remote_column = None
+        if 'remote_column' in kwargs:
+            self.remote_column = self.kwargs.pop('remote_column')
+            self.kwargs['info']['remote_column'] = self.remote_column
+
+        self.m2m_remote_column = None
+        if 'm2m_remote_column' in kwargs:
+            self.m2m_remote_column = self.kwargs.pop('m2m_remote_column')
+
+        self.local_column = None
+        if 'local_column' in kwargs:
+            self.local_column = self.kwargs.pop('local_column')
+            self.kwargs['info']['local_column'] = self.local_column
+
+        self.m2m_local_column = None
+        if 'm2m_local_column' in kwargs:
+            self.m2m_local_column = self.kwargs.pop('m2m_local_column')
+
+        if 'many2many' in kwargs:
+            self.kwargs['backref'] = self.kwargs.pop('many2many')
+            self.kwargs['info']['remote_name'] = self.kwargs['backref']
+
+    def get_m2m_column_info(self, tablename, properties, column, m2m_column):
+        if column is None:
+            column = self.find_primary_key(properties)
+        elif column not in properties:
+            raise FieldException("%r does not exist in %r" % (column,
+                                                              tablename))
+
+        if m2m_column is None:
+            m2m_column = '%s_%s' % (tablename, column)
+
+        foreignkey = '%s.%s' % (tablename, column)
+
+        return m2m_column, properties[column].native_type(), foreignkey
+
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
+                               properties):
+        """ Create the relationship
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param fieldname: fieldname of the relationship
+        :param properties: the properties known
+        :rtype: Many2One relationship
+        """
+        self.check_existing_remote_model(registry)
+        remote_properties = registry.loaded_namespaces_first_step.get(
+            self.get_registry_name())
+        local_properties = registry.loaded_namespaces_first_step.get(namespace)
+
+        local_tablename = properties['__tablename__']
+        remote_tablename = self.get_tablename(registry)
+        join_table = self.join_table
+        if self.join_table is None:
+            join_table = 'join_%s_and_%s' % (local_tablename, remote_tablename)
+
+        if join_table not in registry.declarativebase.metadata.tables:
+            rname, rtype, rfk = self.get_m2m_column_info(
+                remote_tablename, remote_properties, self.remote_column,
+                self.m2m_remote_column)
+
+            lname, ltype, lfk = self.get_m2m_column_info(
+                local_tablename, local_properties, self.local_column,
+                self.m2m_local_column)
+
+            Table(join_table, registry.declarativebase.metadata,
+                  Column(lname, ltype, ForeignKey(lfk)),
+                  Column(rname, rtype, ForeignKey(rfk)))
+
+        self.kwargs['secondary'] = join_table
+
+        return super(Many2Many, self).get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties)
+
+
+class One2Many(RelationShip):
+    """ Define a relationship attribute on the model
+
+    ::
+
+        @register(Model)
+        class TheModel:
+
+            relationship = One2Many(label="The relationship",
+                                    model=Model.RemoteModel,
+                                    remote_column="The remote column",
+                                    primaryjoin="Join condition"
+                                    many2one="themodel")
+
+    If the primaryjoin is not filled then the join condition is
+        "'local table'.'local promary key' == 'remote table'.'remote colum'"
+
+    :param model: the remote model
+    :param remote_column: the column name on the remote model
+    :param primaryjoin: the join condition between the remote column
+    :param many2one: create the many2one link with this one2many
+    """
+    def __init__(self, **kwargs):
+        super(One2Many, self).__init__(**kwargs)
+
+        self.remote_column = None
+        if 'remote_column' in kwargs:
+            self.remote_column = self.kwargs.pop('remote_column')
+
+        if 'many2one' in kwargs:
+            self.kwargs['backref'] = self.kwargs.pop('many2one')
+            self.kwargs['info']['remote_name'] = self.kwargs['backref']
+
+    def find_foreign_key(self, registry, properties, tablename):
+        """ Return the primary key come from the first step property
+
+        :param registry: the registry which load the relationship
+        :param properties: first step properties for the model
+        :param tablename: the name of the table for the foreign key
+        :rtype: column name of the primary key
+        """
+        fks = []
+        for f, p in properties.items():
+            if f == '__tablename__':
+                continue
+
+            if not hasattr(p, 'foreign_key'):
+                continue
+
+            if p.foreign_key:
+                model, _ = p.foreign_key
+                if self.get_tablename(registry, model=model) == tablename:
+                    fks.append(f)
+
+        if len(fks) != 1:
+            raise FieldException(
+                "We must have one and only one foreign key")
+
+        return fks[0]
+
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
+                               properties):
+        """ Create the relationship
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param fieldname: fieldname of the relationship
+        :param propertie: the properties known
+        :rtype: Many2One relationship
+        """
+        self.check_existing_remote_model(registry)
+        remote_properties = registry.loaded_namespaces_first_step.get(
+            self.get_registry_name())
+        self_properties = registry.loaded_namespaces_first_step.get(namespace)
+
+        tablename = properties['__tablename__']
+        if self.remote_column is None:
+            self.remote_column = self.find_foreign_key(registry,
+                                                       remote_properties,
+                                                       tablename)
+
+        self.kwargs['info']['remote_column'] = self.remote_column
+
+        if 'primaryjoin' not in self.kwargs:
+            local_column = self.find_primary_key(self_properties)
+
+            primaryjoin = tablename + '.' + local_column + " == "
+            primaryjoin += self.get_tablename(registry)
+            primaryjoin += '.' + self.remote_column
+            self.kwargs['primaryjoin'] = primaryjoin
+
+        return super(One2Many, self).get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties)
+
+    def define_backref_properties(self, registry, namespace, properties):
+        """ Add option in the backref if both model and remote model are the
+        same, it is for the One2Many on the same model
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param propertie: the properties known
+        """
+        if namespace == self.get_registry_name():
+            self_properties = registry.loaded_namespaces_first_step.get(
+                namespace)
+            pk = self.find_primary_key(self_properties)
+            self.backref_properties.update({'remote_side': [properties[pk]]})

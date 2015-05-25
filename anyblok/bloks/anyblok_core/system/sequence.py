@@ -7,11 +7,10 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from sqlalchemy import Sequence as SQLASequence
+from anyblok.column import Integer, String
 
 
 register = Declarations.register
-Integer = Declarations.Column.Integer
-String = Declarations.Column.String
 System = Declarations.Model.System
 
 

@@ -6,11 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-Integer = Declarations.Column.Integer
-LargeBinary = Declarations.Column.LargeBinary
-Boolean = Declarations.Column.Boolean
-Selection = Declarations.Column.Selection
-String = Declarations.Column.String
+from anyblok.column import Integer, Selection, String
 
 
 @Declarations.register(Declarations.Mixin)

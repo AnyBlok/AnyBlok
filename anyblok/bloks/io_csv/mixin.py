@@ -6,11 +6,11 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from anyblok.column import String, Integer
+
+
 register = Declarations.register
 Mixin = Declarations.Mixin
-String = Declarations.Column.String
-Integer = Declarations.Column.Integer
-Boolean = Declarations.Column.Boolean
 
 
 @register(Mixin)

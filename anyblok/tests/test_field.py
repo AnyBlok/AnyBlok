@@ -6,17 +6,14 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase, DBTestCase
+from anyblok.field import Field, FieldException, Function
+from anyblok.column import Integer, String
 from anyblok import Declarations
 from sqlalchemy import func
 from unittest import skipIf
 import sqlalchemy
 Model = Declarations.Model
-Field = Declarations.Field
-Column = Declarations.Column
-RelationShip = Declarations.RelationShip
 register = Declarations.register
-unregister = Declarations.unregister
-FieldException = Declarations.Exception.FieldException
 
 
 class OneField(Field):
@@ -33,62 +30,18 @@ class TestField(TestCase):
             pass
 
     def test_without_label(self):
-        register(Field, cls_=OneField, name_='RealField')
-        field = Field.RealField()
+        field = OneField()
         field.get_sqlalchemy_mapping(None, None, 'a_field', None)
         self.assertEqual(field.label, 'A field')
-
-    def test_add_interface(self):
-        register(Field, cls_=OneField, name_='OneField')
-        self.assertEqual('Field', Field.OneField.__declaration_type__)
-        dir(Declarations.Field.OneField)
-
-    def test_add_interface_with_decorator(self):
-
-        @register(Field)
-        class OneDecoratorField(OneField):
-            pass
-
-        self.assertEqual('Field', Field.OneDecoratorField.__declaration_type__)
-        dir(Declarations.Field.OneDecoratorField)
-
-    def test_add_same_interface(self):
-
-        register(Field, cls_=OneField, name_="SameField")
-
-        try:
-            @register(Field)
-            class SameField(OneField):
-                pass
-
-            self.fail('No watch dog to add 2 same field')
-        except FieldException:
-            pass
-
-    def test_remove_interface(self):
-
-        register(Field, cls_=OneField, name_="Field2Remove")
-        try:
-            unregister(Field.Field2Remove, OneField)
-            self.fail('No watch dog to remove field')
-        except FieldException:
-            pass
-
-
-@register(Field)
-class OneFieldForTest(Field):
-    pass
 
 
 def field_without_name():
 
-    OneFieldForTest = Field.OneFieldForTest
-
     @register(Model)
     class Test:
 
-        id = Column.Integer(primary_key=True)
-        field = OneFieldForTest()
+        id = Integer(primary_key=True)
+        field = OneField()
 
 
 class TestField2(DBTestCase):
@@ -101,11 +54,11 @@ class TestField2(DBTestCase):
         @register(Model)
         class Test:
 
-            id = Column.Integer(primary_key=True)
-            first_name = Column.String()
-            last_name = Column.String()
-            name = Field.Function(
-                fget='fget', fset='fset', fdel='fdel', fexpr='fexpr')
+            id = Integer(primary_key=True)
+            first_name = String()
+            last_name = String()
+            name = Function(fget='fget', fset='fset', fdel='fdel',
+                            fexpr='fexpr')
 
             def fget(self):
                 return '{0} {1}'.format(self.first_name, self.last_name)
@@ -165,9 +118,9 @@ class TestField2(DBTestCase):
             @register(Model)
             class Test:
 
-                id = Column.Integer(primary_key=True)
-                val1 = Column.Integer()
-                val2 = Field.Function(fget='fget', fset='fset')
+                id = Integer(primary_key=True)
+                val1 = Integer()
+                val2 = Function(fget='fget', fset='fset')
 
                 def fget(self):
                     return 2 * self.val1

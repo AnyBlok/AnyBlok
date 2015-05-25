@@ -7,6 +7,8 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.registry import RegistryManager
 from anyblok import Declarations
+from anyblok.field import Field
+from anyblok.relationship import RelationShip
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
@@ -54,7 +56,6 @@ def has_sql_fields(bases):
     :param bases: list of Model's Class
     :rtype: boolean
     """
-    Field = Declarations.Field
     for base in bases:
         for p in dir(base):
             if hasattr(getattr(base, p), '__class__'):
@@ -72,8 +73,6 @@ def get_fields(base, without_relationship=False, only_relationship=False):
     :param only_relationship: return only the relationship field
     :rtype: dict with name of the field in key and instance of Field in value
     """
-    Field = Declarations.Field
-    RelationShip = Declarations.RelationShip
     fields = {}
     for p in dir(base):
         if hasattr(getattr(base, p), '__class__'):

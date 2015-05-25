@@ -437,7 +437,7 @@ Add entries in the argparse configuration
 Some applications may require options. Options are grouped by
 category. And the application chooses the option category to display.
 
-**employee_blok.config
+**employee_blok.config**::
 
     from anyblok.config import Configuration
 

@@ -5,48 +5,18 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
-from anyblok.environment import EnvironmentManager
-from logging import getLogger
-logger = getLogger(__name__)
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
-@Declarations.register(Declarations.Exception)
 class FieldException(Exception):
     """ Simple Exception for Field """
 
 
-@Declarations.add_declaration_type()
 class Field:
     """ Field class
 
-    This class can't be instanciated
+    This class must not be instanciated
     """
-
-    @classmethod
-    def register(self, parent, name, cls_, **kwargs):
-        """ add new sub registry in the registry
-
-        :param parent: Parent to attach the declaration to
-        :param name: Name of the new field
-        :param cls_: Class to add in the declaration
-        :exception: FieldException
-        """
-        _registryname = parent.__registry_name__ + '.' + name
-        if hasattr(parent, name) and not EnvironmentManager.get('reload',
-                                                                False):
-            raise FieldException("The Field %r already exist" % _registryname)
-
-        setattr(parent, name, cls_)
-        logger.info("Add new type field : %r" % _registryname)
-
-    @classmethod
-    def unregister(self, child, cls_):
-        """ Forbidden method
-
-        :exception: FieldException
-        """
-        raise FieldException("Removing a field is forbidden")
 
     def __init__(self, *args, **kwargs):
         """ Initialize the field
@@ -120,3 +90,55 @@ class Field:
     def must_be_duplicate_before_added(self):
         """ Return False, it is the default value """
         return False
+
+
+class Function(Field):
+    """ Function Field
+
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.field import Function
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+            x = Function(fget='fget', fset='fset', fdel='fdel', fexp='fexpr')
+
+    """
+
+    def update_properties(self, registry, namespace, fieldname, properties):
+
+        def wrap(method, ormethod=None):
+            m = self.kwargs.get(method)
+            if m is None:
+                if ormethod:
+                    m = self.kwargs.get(method)
+                    if m is None:
+                        return None
+
+            def function_method(model_self, *args, **kwargs):
+                if method == 'fexpr':
+                    return getattr(model_self, m)(model_self, *args, **kwargs)
+                elif method == 'fget':
+                    loaded_namespaces = model_self.registry.loaded_namespaces
+                    registry_name = model_self.__registry_name__
+                    if model_self is loaded_namespaces[registry_name]:
+                        return getattr(model_self, m)(model_self, *args,
+                                                      **kwargs)
+                    else:
+                        return getattr(model_self, m)(*args, **kwargs)
+                else:
+                    return getattr(model_self, m)(*args, **kwargs)
+
+            return function_method
+
+        fget = wrap('fget')
+        fset = wrap('fset')
+        fdel = wrap('fdel')
+        fexpr = wrap('fexpr', 'fget')
+
+        self.format_label(fieldname)
+        properties['loaded_fields'][fieldname] = self.label
+        properties[fieldname] = hybrid_property(
+            fget, fset, fdel=fdel, expr=fexpr)

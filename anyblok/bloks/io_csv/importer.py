@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from anyblok.column import Selection
 from csv import DictReader
 from io import StringIO
 
@@ -13,7 +14,6 @@ from io import StringIO
 register = Declarations.register
 Mixin = Declarations.Mixin
 IO = Declarations.Model.IO
-Selection = Declarations.Column.Selection
 ImporterException = Declarations.Exception.ImporterException
 
 

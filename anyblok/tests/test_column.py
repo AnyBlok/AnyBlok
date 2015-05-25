@@ -8,13 +8,29 @@
 from anyblok.tests.testcase import TestCase, DBTestCase
 from sqlalchemy import Integer as SA_Integer
 from anyblok import Declarations
+from anyblok.field import FieldException
+from anyblok.column import (Column,
+                            Boolean,
+                            Json,
+                            String,
+                            BigInteger,
+                            SmallInteger,
+                            uString,
+                            Text,
+                            uText,
+                            Selection,
+                            Date,
+                            DateTime,
+                            Time,
+                            Interval,
+                            Decimal,
+                            Float,
+                            LargeBinary,
+                            Integer)
+
+
 Model = Declarations.Model
-Field = Declarations.Field
-Column = Declarations.Column
-RelationShip = Declarations.RelationShip
 register = Declarations.register
-unregister = Declarations.unregister
-FieldException = Declarations.Exception.FieldException
 
 
 class OneColumn(Column):
@@ -31,52 +47,12 @@ class TestColumn(TestCase):
             pass
 
     def test_without_label(self):
-        register(Column, cls_=OneColumn, name_='RealColumn')
-        column = Column.RealColumn()
+        column = OneColumn()
         column.get_sqlalchemy_mapping(None, None, 'a_column', None)
         self.assertEqual(column.label, 'A column')
 
-    def test_add_interface(self):
-        register(Column, cls_=OneColumn, name_='OneColumn')
-        self.assertEqual('Column', Column.OneColumn.__declaration_type__)
-        dir(Declarations.Column.OneColumn)
-
-    def test_add_interface_with_decorator(self):
-
-        @register(Column)
-        class OneDecoratorColumn(Column):
-            sqlalchemy_type = SA_Integer
-
-        self.assertEqual('Column',
-                         Column.OneDecoratorColumn.__declaration_type__)
-        dir(Declarations.Column.OneDecoratorColumn)
-
-    def test_add_same_interface(self):
-
-        register(Field, cls_=OneColumn, name_="SameColumn")
-
-        try:
-            @register(Column)
-            class SameColumn(Column):
-                sqlalchemy_type = SA_Integer
-
-            self.fail('No watch dog to add 2 same Column')
-        except FieldException:
-            pass
-
-    def test_remove_interface(self):
-
-        register(Column, cls_=OneColumn, name_="Column2Remove")
-        try:
-            unregister(Column.Column2Remove, OneColumn)
-            self.fail('No watch dog to remove Column')
-        except FieldException:
-            pass
-
 
 def simple_column(ColumnType=None, **kwargs):
-
-    Integer = Declarations.Column.Integer
 
     @register(Model)
     class Test:
@@ -86,9 +62,6 @@ def simple_column(ColumnType=None, **kwargs):
 
 
 def column_with_foreign_key():
-
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class Test:
@@ -105,11 +78,9 @@ def column_with_foreign_key():
 class TestColumns(DBTestCase):
 
     def test_column_with_type_in_kwargs(self):
-        Integer = Declarations.Column.Integer
         self.init_registry(simple_column, ColumnType=Integer, type_=Integer)
 
     def test_column_with_db_column_name_in_kwargs(self):
-        Integer = Declarations.Column.Integer
         registry = self.init_registry(simple_column, ColumnType=Integer,
                                       db_column_name='another_name')
         test = registry.Test.insert(col=1)
@@ -123,13 +94,11 @@ class TestColumns(DBTestCase):
         registry.Test2.insert(test='test')
 
     def test_integer(self):
-        Integer = Declarations.Column.Integer
         registry = self.init_registry(simple_column, ColumnType=Integer)
         test = registry.Test.insert(col=1)
         self.assertEqual(test.col, 1)
 
     def test_integer_str_foreign_key(self):
-        Integer = Declarations.Column.Integer
         registry = self.init_registry(
             simple_column, ColumnType=Integer,
             foreign_key=('Model.Test', 'id'))
@@ -138,19 +107,16 @@ class TestColumns(DBTestCase):
         self.assertEqual(test2.col, test.id)
 
     def test_big_integer(self):
-        BigInteger = Declarations.Column.BigInteger
         registry = self.init_registry(simple_column, ColumnType=BigInteger)
         test = registry.Test.insert(col=1)
         self.assertEqual(test.col, 1)
 
     def test_small_integer(self):
-        SmallInteger = Declarations.Column.SmallInteger
         registry = self.init_registry(simple_column, ColumnType=SmallInteger)
         test = registry.Test.insert(col=1)
         self.assertEqual(test.col, 1)
 
     def test_Float(self):
-        Float = Declarations.Column.Float
         registry = self.init_registry(simple_column, ColumnType=Float)
         test = registry.Test.insert(col=1.0)
         self.assertEqual(test.col, 1.0)
@@ -158,51 +124,43 @@ class TestColumns(DBTestCase):
     def test_decimal(self):
         from decimal import Decimal as D
 
-        Decimal = Declarations.Column.Decimal
         registry = self.init_registry(simple_column, ColumnType=Decimal)
         test = registry.Test.insert(col=D('1.0'))
         self.assertEqual(test.col, D('1.0'))
 
     def test_boolean(self):
-        Boolean = Declarations.Column.Boolean
         registry = self.init_registry(simple_column, ColumnType=Boolean)
         test = registry.Test.insert(col=True)
         self.assertEqual(test.col, True)
 
     def test_string(self):
-        String = Declarations.Column.String
         registry = self.init_registry(simple_column, ColumnType=String)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_string_with_size(self):
-        String = Declarations.Column.String
         registry = self.init_registry(simple_column, ColumnType=String,
                                       size=100)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_text(self):
-        Text = Declarations.Column.Text
         registry = self.init_registry(simple_column, ColumnType=Text)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_ustring(self):
-        uString = Declarations.Column.uString
         registry = self.init_registry(simple_column, ColumnType=uString)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_ustring_with_size(self):
-        uString = Declarations.Column.uString
         registry = self.init_registry(simple_column, ColumnType=uString,
                                       size=100)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_utext(self):
-        uText = Declarations.Column.uText
         registry = self.init_registry(simple_column, ColumnType=uText)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
@@ -210,7 +168,6 @@ class TestColumns(DBTestCase):
     def test_date(self):
         from datetime import date
 
-        Date = Declarations.Column.Date
         now = date.today()
         registry = self.init_registry(simple_column, ColumnType=Date)
         test = registry.Test.insert(col=now)
@@ -219,7 +176,6 @@ class TestColumns(DBTestCase):
     def test_datetime(self):
         import datetime
 
-        DateTime = Declarations.Column.DateTime
         now = datetime.datetime.now()
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert(col=now)
@@ -228,7 +184,6 @@ class TestColumns(DBTestCase):
     def test_interval(self):
         from datetime import timedelta
 
-        Interval = Declarations.Column.Interval
         dt = timedelta(days=5)
         registry = self.init_registry(simple_column, ColumnType=Interval)
         test = registry.Test.insert(col=dt)
@@ -237,7 +192,6 @@ class TestColumns(DBTestCase):
     def test_time(self):
         from datetime import time
 
-        Time = Declarations.Column.Time
         now = time()
         registry = self.init_registry(simple_column, ColumnType=Time)
         test = registry.Test.insert(col=now)
@@ -247,7 +201,6 @@ class TestColumns(DBTestCase):
         from os import urandom
 
         blob = urandom(100000)
-        LargeBinary = Declarations.Column.LargeBinary
         registry = self.init_registry(simple_column, ColumnType=LargeBinary)
 
         test = registry.Test.insert(col=blob)
@@ -259,7 +212,6 @@ class TestColumns(DBTestCase):
             ('regular-user', 'Regular user')
         ]
 
-        Selection = Declarations.Column.Selection
         registry = self.init_registry(
             simple_column, ColumnType=Selection, selections=SELECTIONS)
         test = registry.Test.insert(col=SELECTIONS[0][0])
@@ -280,7 +232,6 @@ class TestColumns(DBTestCase):
             (1, 'Regular user')
         ]
 
-        Selection = Declarations.Column.Selection
         try:
             self.init_registry(
                 simple_column, ColumnType=Selection, selections=SELECTIONS)
@@ -294,7 +245,6 @@ class TestColumns(DBTestCase):
             ('regular-user', 'Regular user')
         ]
 
-        Selection = Declarations.Column.Selection
         registry = self.init_registry(
             simple_column, ColumnType=Selection, selections=SELECTIONS)
         registry.Test.insert(col=SELECTIONS[0][0])
@@ -308,8 +258,6 @@ class TestColumns(DBTestCase):
         ]
 
         def add_selection():
-            Integer = Declarations.Column.Integer
-            Selection = Declarations.Column.Selection
 
             @register(Model)
             class Test:
@@ -327,21 +275,18 @@ class TestColumns(DBTestCase):
             registry.Test.col.in_(['admin', 'regular-user'])).first()
 
     def test_json(self):
-        Json = Declarations.Column.Json
         registry = self.init_registry(simple_column, ColumnType=Json)
         val = {'a': 'Test'}
         test = registry.Test.insert(col=val)
         self.assertEqual(test.col, val)
 
     def test_json_update(self):
-        Json = Declarations.Column.Json
         registry = self.init_registry(simple_column, ColumnType=Json)
         test = registry.Test.insert(col={'a': 'test'})
         test.col['b'] = 'test'
         self.assertEqual(test.col, {'a': 'test', 'b': 'test'})
 
     def test_json_simple_filter(self):
-        Json = Declarations.Column.Json
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test
         Test.insert(col={'a': 'test'})
@@ -389,7 +334,6 @@ class TestColumns(DBTestCase):
     #         Test.col['a'].cast(Integer) == 1).first(), t1)
 
     def test_json_null(self):
-        Json = Declarations.Column.Json
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test
         Test.insert(col=None)

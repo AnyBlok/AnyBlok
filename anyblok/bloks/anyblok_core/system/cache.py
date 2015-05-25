@@ -6,14 +6,11 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.declarations import Declarations
+from anyblok.column import String, Integer
 
 
 register = Declarations.register
 System = Declarations.Model.System
-
-Integer = Declarations.Column.Integer
-String = Declarations.Column.String
-Text = Declarations.Column.Text
 
 
 @register(Declarations.Exception)

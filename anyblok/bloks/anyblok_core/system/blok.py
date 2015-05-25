@@ -7,6 +7,8 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import BlokManager
 from anyblok import Declarations
+from anyblok.column import String, Integer, Selection
+from anyblok.field import Function
 from logging import getLogger
 from os.path import join, isfile
 
@@ -14,10 +16,6 @@ from os.path import join, isfile
 logger = getLogger(__name__)
 register = Declarations.register
 System = Declarations.Model.System
-String = Declarations.Column.String
-Integer = Declarations.Column.Integer
-Selection = Declarations.Column.Selection
-Function = Declarations.Field.Function
 
 
 @register(System)

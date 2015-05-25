@@ -6,6 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from anyblok.relationship import Many2One
+from anyblok.column import String, Selection
 from io import StringIO
 from csv import DictWriter
 
@@ -13,9 +15,6 @@ from csv import DictWriter
 register = Declarations.register
 IO = Declarations.Model.IO
 Mixin = Declarations.Mixin
-Many2One = Declarations.RelationShip.Many2One
-String = Declarations.Column.String
-Selection = Declarations.Column.Selection
 ExporterException = Declarations.Exception.ExporterException
 
 

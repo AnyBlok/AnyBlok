@@ -6,10 +6,11 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from anyblok.column import String, Json
+
+
 register = Declarations.register
 Model = Declarations.Model
-String = Declarations.Column.String
-Json = Declarations.Column.Json
 IOException = Declarations.Exception.IOException
 
 
