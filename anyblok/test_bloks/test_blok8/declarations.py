@@ -7,7 +7,6 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 
-
 register = Declarations.register
 Model = Declarations.Model
 Integer = Declarations.Column.Integer

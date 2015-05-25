@@ -27,6 +27,7 @@ class AnyBlokCore(Blok):
         from . import relationship  # noqa
         from . import core  # noqa
         from . import system  # noqa
+        from . import authz_policy  # noqa
 
     @classmethod
     def reload_declaration_module(cls, reload):
@@ -40,3 +41,5 @@ class AnyBlokCore(Blok):
         reload(core)
         from . import system
         reload(system)
+        from . import authz_policy
+        reload(authz_policy)

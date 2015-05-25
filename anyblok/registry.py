@@ -11,7 +11,7 @@ from anyblok._argsparse import ArgsParseManager
 from anyblok._imp import ImportManager
 from anyblok.blok import BlokManager
 from .logging import log
-from anyblok.environment import EnvironmentManager
+from .environment import EnvironmentManager
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -468,6 +468,35 @@ class Registry:
                 toinstall.append(blok)
 
         return toinstall
+
+    def check_permission(self, record, principals, permission):
+        """Check that one of the principals has permisson on given record.
+
+        :param principals: list, set or tuple of strings
+        :rtype: bool
+
+        Must be implemented by concrete subclasses.
+        """
+        return self.lookup_policy(record, permission).check(
+            record, principals, permission)
+
+    def lookup_policy(self, record, permission):
+        """Return the policy instance that applies to record's model
+
+        If a policy is declared for the precise permission, it is returned.
+        Otherwise, the default policy for that model is returned.
+        By ultimate default the special :class:`DenyAllPolicy` is returned.
+        """
+        model_name = record.__registry_name__
+        policy = self._authnz_policies.get((model_name, permission))
+        if policy is not None:
+            return policy
+
+        policy = self._authnz_policies.get(model_name)
+        if policy is not None:
+            return policy
+
+        return self._authnz_policies.get(None)
 
     def load_entry(self, blok, entry):
         """ load one entry type for one blok
