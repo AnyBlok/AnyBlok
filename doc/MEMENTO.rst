@@ -96,7 +96,7 @@ And the methods that define blok behaviours:
     setup(
         ...
         entry_points={
-            'AnyBlok': [
+            'bloks': [
                 'web=anyblok_web_server.bloks.web:Web',
             ],
         },
