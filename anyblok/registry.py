@@ -894,14 +894,17 @@ class Registry:
             query = query.filter(Association.mode.in_(filter_modes))
             return query.all().name
 
-        def apply_state(blok, state, in_states):
-            query = Blok.query().filter(Blok.name == blok)
-            query = query.filter(Blok.state.in_(in_states))
-            if not query.count():
+        def apply_state(blok_name, state, in_states):
+            query = Blok.query().filter(Blok.name == blok_name)
+            blok = query.first()
+            if blok is None:
                 raise Declarations.Exception.RegistryException(
-                    "Apply state %r is forbidden because the blok %r is in"
-                    " the state %r" % (
-                        state, blok, ', '.join(in_states)))
+                    "Blok %r not found in entry point declarations" % blok_name)
+            if blok.state not in in_states:
+                raise Declarations.Exception.RegistryException(
+                    "Apply state %r is forbidden because the state %r of "
+                    "blok %r is not one of %r" % (
+                        blok.state, blok_name, in_states))
             query.update({Blok.state: state}, synchronize_session='fetch')
 
         def upgrade_state_bloks(state):
