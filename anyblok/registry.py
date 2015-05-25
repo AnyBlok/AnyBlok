@@ -899,7 +899,8 @@ class Registry:
             blok = query.first()
             if blok is None:
                 raise Declarations.Exception.RegistryException(
-                    "Blok %r not found in entry point declarations" % blok_name)
+                    "Blok %r not found in entry point declarations" %
+                    blok_name)
             if blok.state not in in_states:
                 raise Declarations.Exception.RegistryException(
                     "Apply state %r is forbidden because the state %r of "

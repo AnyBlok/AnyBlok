@@ -131,7 +131,8 @@ class TestConfiguration(TestCase):
     def test_add_other_part(self):
         Configuration.add(
             'new-group', part='other', function_=fnct_configuration)
-        self.assertAdded('new-group', part='other', function_=fnct_configuration)
+        self.assertAdded('new-group', part='other',
+                         function_=fnct_configuration)
 
     def test_add_other_part_with_label(self):
         Configuration.add('new-group', part='other', label="One label",
@@ -188,7 +189,8 @@ class TestConfiguration(TestCase):
         Configuration.add('new-group', function_=fnct_configuration)
         Configuration.add('new-group', function_=fnct_other_configuration)
         Configuration.add('old-group', function_=fnct_configuration)
-        Configuration.add('old-group', part='other', function_=fnct_configuration)
+        Configuration.add('old-group', part='other',
+                          function_=fnct_configuration)
         groups = Configuration._merge_groups('AnyBlok')
         self.assertEqual(groups, {
             'new-group': [fnct_configuration, fnct_other_configuration],
@@ -248,7 +250,8 @@ class TestConfiguration(TestCase):
         self.assertEqual(Configuration.groups['AnyBlok']['new-group'], [])
 
     def test_remove_other_part(self):
-        Configuration.add('new-group', part='other', function_=fnct_configuration)
+        Configuration.add('new-group', part='other',
+                          function_=fnct_configuration)
         Configuration.remove('new-group', part='other',
                              function_=fnct_configuration)
         self.assertEqual(Configuration.groups['other']['new-group'], [])
