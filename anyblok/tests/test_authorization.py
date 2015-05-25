@@ -22,7 +22,7 @@ class TestAuthorizationDeclaration(DBTestCase):
 
     def test_association(self):
         registry = self.init_registry(None)
-        self.upgrade(registry, install=('test-blok8',))
+        self.upgrade(registry, install=('test-blok7',))
         record = registry.Test(id=23, label='Hop')
         self.assertIsInstance(registry.lookup_policy(record, 'Read'),
                               TestPolicyOne)
@@ -31,3 +31,16 @@ class TestAuthorizationDeclaration(DBTestCase):
 
         record = registry.Test2(id=2, label='Hop')
         self.assertIs(registry.lookup_policy(record, 'Read'), deny_all)
+
+    def test_override(self):
+        registry = self.init_registry(None)
+        # test-blok8 depends on test-blok7
+        self.upgrade(registry, install=('test-blok8',))
+        # lookup can be made on model itself
+        model = registry.Test
+        self.assertIsInstance(registry.lookup_policy(model, 'Read'),
+                              TestPolicyOne)
+        self.assertIsInstance(registry.lookup_policy(model, 'Other'),
+                              TestPolicyOne)
+        self.assertIsInstance(registry.lookup_policy(model, 'Write'),
+                              TestPolicyTwo)

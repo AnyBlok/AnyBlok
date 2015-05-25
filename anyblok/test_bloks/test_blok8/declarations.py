@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from ..authorization import TestPolicyOne, TestPolicyTwo
 
 register = Declarations.register
 Model = Declarations.Model
@@ -17,3 +18,12 @@ String = Declarations.Column.String
 class Test:
 
     test2 = Integer(foreign_key=(Model.Test2, 'id'))
+
+Declarations.AuthorizationPolicyAssociation(Declarations.Model.Test,
+                                            TestPolicyOne(),
+                                            permission='Other')
+Declarations.AuthorizationPolicyAssociation(Declarations.Model.Test,
+                                            TestPolicyOne())
+Declarations.AuthorizationPolicyAssociation(Declarations.Model.Test,
+                                            TestPolicyTwo(),
+                                            permission='Write')
