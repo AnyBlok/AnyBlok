@@ -16,6 +16,8 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
+* [REF] rename **import_cfg_file** by **import_file** method on blok
+* [REF] Consistency the argsparse configuration
 * [REF] refactor part_to_load, the entry points loaded is bloks
 * [IMP] Allow to define another column name in the table versus model
 * [FIX] add importer for import configuration file

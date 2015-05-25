@@ -281,7 +281,7 @@ class Blok:
         """ Call at the launch of the application
         """
 
-    def import_cfg_file(self, importer_name, model, *file_path, **kwargs):
+    def import_file(self, importer_name, model, *file_path, **kwargs):
         """ Import data file
 
         :param importer_name: Name of the importer (need installation of the

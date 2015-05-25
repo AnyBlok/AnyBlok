@@ -81,7 +81,7 @@ And the methods that define blok behaviours:
 +-------------------------------+---------------------------------------------+
 | ``load``                      | Action to do when the server starts         |
 +-------------------------------+---------------------------------------------+
-| ``import_cfg_file``           | facility to import data                     |
+| ``import_file``               | facility to import data                     |
 +-------------------------------+---------------------------------------------+
 
 .. note::
