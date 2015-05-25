@@ -26,18 +26,16 @@ def format_argsparse(argsparse_groups, *confs):
             argsparse_groups.append(conf)
 
 
-def createdb(description, argsparse_groups, parts_to_load):
+def createdb(description, argsparse_groups):
     """ Create a database and install blok from config
 
     :param description: description of argsparse
     :param argsparse_groups: list argsparse groupe to load
-    :param parts_to_load: group of blok to load
     """
     format_argsparse(argsparse_groups, 'install-bloks')
-    BlokManager.load(*parts_to_load)
+    BlokManager.load()
     ArgsParseManager.load(description=description,
-                          argsparse_groups=argsparse_groups,
-                          parts_to_load=parts_to_load)
+                          argsparse_groups=argsparse_groups)
     drivername = ArgsParseManager.get('dbdrivername')
     dbname = ArgsParseManager.get('dbname')
 
@@ -58,20 +56,18 @@ def createdb(description, argsparse_groups, parts_to_load):
     registry.close()
 
 
-def updatedb(description, version, argsparse_groups, parts_to_load):
+def updatedb(description, version, argsparse_groups):
     """ Update an existing database
 
     :param description: description of argsparse
     :param version: version of script for argparse
     :param argsparse_groups: list argsparse groupe to load
-    :param parts_to_load: group of blok to load
     """
     format_argsparse(argsparse_groups, 'install-bloks', 'uninstall-bloks',
                      'update-bloks')
 
     registry = anyblok.start(description, version,
-                             argsparse_groups=argsparse_groups,
-                             parts_to_load=parts_to_load)
+                             argsparse_groups=argsparse_groups)
 
     if ArgsParseManager.get('install_all_bloks'):
         install_bloks = registry.System.Blok.list_by_state('uninstalled')
@@ -87,18 +83,17 @@ def updatedb(description, version, argsparse_groups, parts_to_load):
         registry.close()
 
 
-def run_exit(description, version, argsparse_groups, parts_to_load):
+def run_exit(description, version, argsparse_groups):
     """ Update an existing database
 
     :param description: description of argsparse
     :param version: version of script for argparse
     :param argsparse_groups: list argsparse groupe to load
-    :param parts_to_load: group of blok to load
     """
     format_argsparse(argsparse_groups, 'unittest')
     registry = anyblok.start(description, version,
                              argsparse_groups=argsparse_groups,
-                             parts_to_load=parts_to_load, useseparator=True)
+                             useseparator=True)
 
     defaultTest = []
     if registry:
@@ -120,18 +115,16 @@ def run_exit(description, version, argsparse_groups, parts_to_load):
     sys.exit(main(defaultTest=defaultTest))
 
 
-def interpreter(description, version, argsparse_groups, parts_to_load):
+def interpreter(description, version, argsparse_groups):
     """ Execute a script or open an interpreter
 
     :param description: description of argsparse
     :param version: version of script for argparse
     :param argsparse_groups: list argsparse groupe to load
-    :param parts_to_load: group of blok to load
     """
     format_argsparse(argsparse_groups, 'interpreter')
     registry = anyblok.start(description, version,
-                             argsparse_groups=argsparse_groups,
-                             parts_to_load=parts_to_load)
+                             argsparse_groups=argsparse_groups)
     python_script = ArgsParseManager.get('python_script')
     if python_script:
         with open(python_script, "r") as fh:
@@ -145,18 +138,16 @@ def interpreter(description, version, argsparse_groups, parts_to_load):
             code.interact(local=locals())
 
 
-def sqlschema(description, version, argsparse_groups, parts_to_load):
+def sqlschema(description, version, argsparse_groups):
     """ Create a Table model schema of the registry
 
     :param description: description of argsparse
     :param version: version of script for argparse
     :param argsparse_groups: list argsparse groupe to load
-    :param parts_to_load: group of blok to load
     """
     format_argsparse(argsparse_groups, 'schema')
     registry = anyblok.start(description, version,
-                             argsparse_groups=argsparse_groups,
-                             parts_to_load=parts_to_load)
+                             argsparse_groups=argsparse_groups)
     if registry is None:
         return
 
@@ -208,18 +199,16 @@ def sqlschema(description, version, argsparse_groups, parts_to_load):
     registry.close()
 
 
-def modelschema(description, version, argsparse_groups, parts_to_load):
+def modelschema(description, version, argsparse_groups):
     """ Create a UML model schema of the registry
 
     :param description: description of argsparse
     :param version: version of script for argparse
     :param argsparse_groups: list argsparse groupe to load
-    :param parts_to_load: group of blok to load
     """
     format_argsparse(argsparse_groups, 'schema')
     registry = anyblok.start(description, version,
-                             argsparse_groups=argsparse_groups,
-                             parts_to_load=parts_to_load)
+                             argsparse_groups=argsparse_groups)
     if registry is None:
         return
 
@@ -339,25 +328,21 @@ def modelschema(description, version, argsparse_groups, parts_to_load):
 def anyblok_createdb():
     from anyblok.release import version
     description = "Anyblok-%s create db" % version
-    createdb(description, ['config', 'database', 'unittest'], ['AnyBlok'])
+    createdb(description, ['config', 'database', 'unittest'])
 
 
 def anyblok_updatedb():
     from anyblok.release import version
     updatedb("AnyBlok - update db", version,
-             ['config', 'database', 'unittest'],
-             ['AnyBlok'])
+             ['config', 'database', 'unittest'])
 
 
 def anyblok_nose():
     from anyblok.release import version
-    run_exit("Nose test for AnyBlok", version, ['config', 'database'],
-             ['AnyBlok'])
+    run_exit("Nose test for AnyBlok", version, ['config', 'database'])
 
 
 def anyblok_interpreter():
     from anyblok.release import version
-    interpreter(
-        'AnyBlok interpreter', version,
-        argsparse_groups=['config', 'database', 'interpreter', 'logging'],
-        parts_to_load=['AnyBlok'])
+    interpreter('AnyBlok interpreter', version,
+                ['config', 'database', 'interpreter', 'logging'])

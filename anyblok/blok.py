@@ -33,7 +33,7 @@ class BlokManager:
     """ Manage the bloks for one process
 
     A blok has a `setuptools` entrypoint, this entry point is defined
-    by the ``bloks_groups`` attribute in the first load
+    by the ``entry_points`` attribute in the first load
 
     The ``bloks`` attribute is a dict with all the loaded entry points
 
@@ -44,7 +44,7 @@ class BlokManager:
     """
 
     bloks = {}
-    bloks_groups = None
+    entry_points = None
     ordered_bloks = []
     auto_install = []
     importers = {}
@@ -98,19 +98,19 @@ class BlokManager:
     def reload(cls):
         """ Reload the entry points
 
-        Empty the ``bloks`` dict and use the ``bloks_groups`` attribute to
+        Empty the ``bloks`` dict and use the ``entry_points`` attribute to
         load bloks
         :exception: BlokManagerException
         """
-        if cls.bloks_groups is None:
+        if cls.entry_points is None:
             raise BlokManagerException(
                 """You must use the ``load`` classmethod before using """
                 """``reload``""")
 
-        bloks_groups = []
-        bloks_groups += cls.bloks_groups
+        entry_points = []
+        entry_points += cls.entry_points
         cls.unload()
-        cls.load(*bloks_groups)
+        cls.load(entry_points=entry_points)
 
     @classmethod
     @log(logger)
@@ -118,21 +118,21 @@ class BlokManager:
         """ Unload all the bloks but not the registry """
         cls.bloks = {}
         cls.ordered_bloks = []
-        cls.bloks_groups = None
+        cls.entry_points = None
         cls.auto_install = []
 
     @classmethod
     @log(logger)
-    def load(cls, *bloks_groups):
+    def load(cls, entry_points=('bloks',)):
         """ Load all the bloks and import them
 
-        :param bloks_groups: Use by ``iter_entry_points`` to get the blok
+        :param entry_points: Use by ``iter_entry_points`` to get the blok
         :exception: BlokManagerException
         """
-        if not bloks_groups:
-            raise BlokManagerException("The bloks_groups mustn't be empty")
+        if not entry_points:
+            raise BlokManagerException("The entry_points mustn't be empty")
 
-        cls.bloks_groups = bloks_groups
+        cls.entry_points = entry_points
 
         if EnvironmentManager.get('current_blok'):
             while EnvironmentManager.get('current_blok'):
@@ -141,9 +141,9 @@ class BlokManager:
         EnvironmentManager.set('current_blok', 'start')
 
         bloks = []
-        for bloks_group in bloks_groups:
+        for entry_point in entry_points:
             count = 0
-            for i in iter_entry_points(bloks_group):
+            for i in iter_entry_points(entry_point):
                 count += 1
                 try:
                     blok = i.load()
@@ -155,7 +155,7 @@ class BlokManager:
 
             if not count:
                 raise BlokManagerException(
-                    "Invalid bloks group %r" % bloks_group)
+                    "Invalid bloks group %r" % entry_point)
 
         # Empty the ordered blok to reload it depending on the priority
         cls.ordered_bloks = []

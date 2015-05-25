@@ -27,7 +27,7 @@ class TestMigration(TestCase):
         super(TestMigration, cls).setUpClass()
         cls.init_argsparse_manager()
         cls.createdb()
-        BlokManager.load('AnyBlok')
+        BlokManager.load()
 
         register = Declarations.register
         Model = Declarations.Model

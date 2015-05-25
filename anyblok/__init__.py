@@ -13,7 +13,7 @@ PROMPT = "%(processName)s - %(version)s"
 
 
 def start(processName, version=release.version, prompt=PROMPT,
-          argsparse_groups=None, parts_to_load=None,
+          argsparse_groups=None, entry_points=None,
           useseparator=False):
     """ Function which initialize the application
 
@@ -21,13 +21,13 @@ def start(processName, version=release.version, prompt=PROMPT,
 
         registry = start('My application',
                          argsparse_groups=['config', 'database'],
-                         parts_to_load=['AnyBlok'])
+                         entry_points=['AnyBlok'])
 
     :param processName: Name of the application
     :param version: Version of the application
     :param prompt: Prompt message for the help
     :param argsparse_groups: list of the group of option for argparse
-    :param parts_to_load: group of blok to load
+    :param entry_points: entry point where load blok
     :param useseparator: boolean, indicate if argsparse option are split
         betwwen two application
     :rtype: registry if the database name is in the configuration
@@ -36,15 +36,15 @@ def start(processName, version=release.version, prompt=PROMPT,
     from ._argsparse import ArgsParseManager
     from .registry import RegistryManager
 
-    if parts_to_load is None:
-        parts_to_load = ['AnyBlok']
+    if entry_points:
+        BlokManager.load(entry_points=entry_points)
+    else:
+        BlokManager.load()
 
-    BlokManager.load(*parts_to_load)
     description = prompt % {'processName': processName, 'version': version}
     if argsparse_groups is not None:
         ArgsParseManager.load(description=description,
                               argsparse_groups=argsparse_groups,
-                              parts_to_load=parts_to_load,
                               useseparator=useseparator)
 
     dbname = ArgsParseManager.get('dbname')

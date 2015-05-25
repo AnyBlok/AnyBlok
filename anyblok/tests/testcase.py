@@ -117,8 +117,8 @@ class DBTestCase(TestCase):
 
     """
 
-    parts_to_load = ['AnyBlok']
-    """ blok group to load """
+    blok_entry_points = ('bloks',)
+    """ setuptools entry points to load blok """
     current_blok = 'anyblok-core'
     """ In the blok to add the new model """
 
@@ -132,7 +132,7 @@ class DBTestCase(TestCase):
         """ Create a database and load the blok manager """
         super(DBTestCase, self).setUp()
         self.createdb()
-        BlokManager.load(*self.parts_to_load)
+        BlokManager.load(entry_points=self.blok_entry_points)
 
     def tearDown(self):
         """ Clear the registry, unload the blok manager and  drop the database

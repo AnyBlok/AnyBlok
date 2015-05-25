@@ -12,6 +12,11 @@ CHANGELOG
 Future
 ------
 
+.. warning::
+
+    Break the compatibility with the previous version of anyblok
+
+* [REF] refactor part_to_load, the entry points loaded is bloks
 * [IMP] Allow to define another column name in the table versus model
 * [FIX] add importer for import configuration file
 * [FIX] x2M importer without field just, external id

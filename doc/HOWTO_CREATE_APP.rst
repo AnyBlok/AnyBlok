@@ -38,16 +38,10 @@ We will write a simple application that connects to a new empty database:
 * Position
     - name: position name
 
-Create a Blok group
--------------------
+Declare bloks in the entry points
+---------------------------------
 
-A blok group is a ``setuptools`` entry point. Splitting the project into
-several groups allows to select the bloks needed by the application. This
-separation also allows a blok to come from more than one blok group: it is not
-the same blok but they have the same name. You can provide two implementations
-for the same thing and use the right implementation depending on the context.
-
-For this example, the blok group ``WorkBlok`` will be used
+A blok must be declared in a ``setuptools`` entry point named **bloks**. 
 
 File tree::
 
@@ -57,7 +51,7 @@ File tree::
 
 We declare 4 bloks in the ``setup.py`` file that we will define explain after::
 
-    WorkBlok = [
+    bloks = [
         'office=exampleblok.office_blok:OfficeBlok',
         'employee=exampleblok.employee_blok:EmployeeBlok',
         'position=exampleblok.position_blok:PositionBlok',
@@ -67,7 +61,7 @@ We declare 4 bloks in the ``setup.py`` file that we will define explain after::
     setup(
         # (...)
         entry_points={
-            'WorkBlok': WorkBlok,
+            'bloks': bloks,
         },
     )
 
@@ -486,12 +480,10 @@ The script must display:
     def exampleblok():
         # Initialise the application, with a name and a version number
         # select the groupe of options to display
-        # select the groups of bloks availlable
         # return a registry if the database are selected
         registry = anyblok.start(
-            'Example Blok', '1.0',
-            argsparse_groups=['config', 'database', 'message'],
-            parts_to_load=['AnyBlok', 'WorkBlok'])
+            'Example Blok', '1.0', 
+            argsparse_groups=['config', 'database', 'message'])
 
         if not registry:
             return
@@ -666,53 +658,19 @@ The registry is loaded twice:
 The registry is loaded only once, because the bloks are already installed
 
 
-Create an interpreter
----------------------
+Generique application of AnyBlok
+--------------------------------
 
-Anyblok provides some functions to help creating an application:
+Anyblok provides some console script to help :
 
-* createdb
-* updatedb
-* interpreter
+* anyblok_createdb
+* anyblok_updatedb
+* anyblok_interpreter
   .. note::
 
       if IPython is in the sys.modules then the interpreter is an IPython interpreter
 
-* run_exit (nose test)
-
-Here is how to create an interpreter::
-
-    from anyblok.scripts import interpreter
-
-
-    def exampleblok_interpreter():
-        interpreter(
-            'Interpreter', '1.0',
-            argsparse_groups=['config', 'database', 'interpreter'],
-            parts_to_load=['AnyBlok', 'WorkBlok'])
-
-::
-
-    jssuzanne:anyblok jssuzanne$ ./bin/exampleblok_interpreter -c anyblok.cfg
-    2014-0428 20:57:38 INFO - anyblok:root - Registry.load
-    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'anyblok-core' loaded
-    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'office' loaded
-    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'position' loaded
-    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'employee' loaded
-    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Blok 'employee-position' loaded
-    2014-0428 20:57:38 INFO - anyblok:anyblok.registry - Assemble 'Model' entry
-    2014-0428 20:57:39 INFO - anyblok:alembic.migration - Context impl PostgresqlImpl.
-    2014-0428 20:57:39 INFO - anyblok:alembic.migration - Will assume transactional DDL.
-    2014-0428 20:57:39 INFO - anyblok:anyblok.registry - Initialize 'Model' entry
-    Python 3.3.5 (default, Mar 12 2014, 15:18:42)
-    [GCC 4.2.1 Compatible Apple LLVM 5.1 (clang-503.0.38)] on darwin
-    Type "help", "copyright", "credits" or "license" for more information.
-    (InteractiveConsole)
-    >>> [emp.name for emp in registry.Employee.query()]
-    ['Clovis Nzouendjou', 'Franck Bret', 'Florent Jouatte', 'Georges Racinet',
-     'Sandrine Chaufournais', 'Simon André', 'Pierre Verkest',
-     'Jean-Sébastien Suzanne', 'Christophe Combelles']
-
+* anyblok_nose (nose test)
 
 TODO: I know it's not a setuptools documentation but it could be kind to show
 a complete minimalist exampe of `setup.py` with requires (to anyblok).
@@ -723,8 +681,7 @@ A direct link to download the full working example.
 Create the configuration file
 -----------------------------
 
-The configuration file allow to load all the initialisation variable. All the 
-section which have the name of a group of group are loaded::
+The configuration file allow to load all the initialisation variable::
 
     [AnyBlok]
     key = value

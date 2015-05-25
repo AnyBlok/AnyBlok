@@ -67,13 +67,13 @@ setup(
             'anyblok_nose=anyblok.scripts:anyblok_nose',
             'anyblok_interpreter=anyblok.scripts:anyblok_interpreter',
         ],
-        'AnyBlok': [
+        'bloks': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
             'anyblok-io=anyblok.bloks.io:AnyBlokIO',
             'anyblok-io-csv=anyblok.bloks.io_csv:AnyBlokIOCSV',
             'anyblok-io-xml=anyblok.bloks.io_xml:AnyBlokIOXML',
         ],
-        'TestAnyBlok': [
+        'test.bloks': [
             'test-blok1=anyblok.test_bloks.test_blok1:TestBlok',
             'test-blok2=anyblok.test_bloks.test_blok2:TestBlok',
             'test-blok3=anyblok.test_bloks.test_blok3:TestBlok',

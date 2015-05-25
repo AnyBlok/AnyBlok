@@ -30,7 +30,7 @@ class TestRegistry(TestCase):
         super(TestRegistry, cls).setUpClass()
         cls.init_argsparse_manager()
         cls.createdb()
-        BlokManager.load('AnyBlok')
+        BlokManager.load()
 
     def setUp(self):
         super(TestRegistry, self).setUp()

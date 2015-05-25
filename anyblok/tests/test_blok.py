@@ -21,7 +21,7 @@ class TestBlokManager(TestCase):
         BlokManager.unload()
 
     def test_load_anyblok(self):
-        BlokManager.load('AnyBlok')
+        BlokManager.load()
         if not BlokManager.list():
             self.fail('No blok load')
         if not BlokManager.has('anyblok-core'):
@@ -31,20 +31,20 @@ class TestBlokManager(TestCase):
 
     def test_load_with_invalid_blok_group(self):
         try:
-            BlokManager.load('Invalid blok group')
+            BlokManager.load(entry_points=('Invalid blok group',))
             self.fail('Load with invalid blok group')
         except BlokManagerException:
             pass
 
     def test_load_without_blok_group(self):
         try:
-            BlokManager.load()
+            BlokManager.load(entry_points=())
             self.fail('No watchdog to load without blok groups')
         except BlokManagerException:
             pass
 
     def test_reload(self):
-        BlokManager.load('AnyBlok')
+        BlokManager.load()
         BlokManager.set('invalid blok', None)
         BlokManager.get('invalid blok')
         BlokManager.reload()
@@ -63,7 +63,7 @@ class TestBlokManager(TestCase):
 
     def test_get_invalid_blok(self):
         try:
-            BlokManager.load('AnyBlok')
+            BlokManager.load()
             BlokManager.get('invalid blok')
             self.fail('No exception when get invalid blok')
         except BlokManagerException:
@@ -86,7 +86,7 @@ class TestBlokManager(TestCase):
 
 class TestBlok(DBTestCase):
 
-    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+    blok_entry_points = ('bloks', 'test.bloks')
 
     def test_blok_exist(self):
         registry = self.init_registry(None)
@@ -161,7 +161,7 @@ class TestBlok(DBTestCase):
 
 class TestBlokRequired(DBTestCase):
 
-    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+    blok_entry_points = ('bloks', 'test.bloks')
 
     def test_blok_exist(self):
         registry = self.init_registry(None)
@@ -276,7 +276,7 @@ class TestBlokRequired(DBTestCase):
 
 class TestBlokRequired2(DBTestCase):
 
-    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+    blok_entry_points = ('bloks', 'test.bloks')
 
     def test_blok_exist(self):
         registry = self.init_registry(None)
@@ -482,7 +482,7 @@ class TestBlokRequired2(DBTestCase):
 
 class TestBlokConditionnal(DBTestCase):
 
-    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+    blok_entry_points = ('bloks', 'test.bloks')
 
     def test_install_1by1(self):
         registry = self.init_registry(None)
@@ -605,7 +605,7 @@ class TestBlokConditionnal(DBTestCase):
 
 class TestBlokOptional(DBTestCase):
 
-    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+    blok_entry_points = ('bloks', 'test.bloks')
 
     def test_install_1by1(self):
         registry = self.init_registry(None)
@@ -709,7 +709,7 @@ class TestBlokOptional(DBTestCase):
 
 class TestBlokOrder(DBTestCase):
 
-    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+    blok_entry_points = ('bloks', 'test.bloks')
 
     def check_order(self, registry, mode, wanted):
         Test = registry.Test
@@ -759,7 +759,7 @@ class TestBlokOrder(DBTestCase):
 
 class TestBlokModel(DBTestCase):
 
-    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+    blok_entry_points = ('bloks', 'test.bloks')
 
     def test_remove_foreign_key_after_uninstallation(self):
         registry = self.init_registry(None)

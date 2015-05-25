@@ -64,7 +64,7 @@ class TestRegistryManager(TestCase):
                          {'registry_names': []})
 
     def test_anyblok_core_loaded(self):
-        BlokManager.load('AnyBlok')
+        BlokManager.load()
         is_exist = 'anyblok-core' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
         anyblokcore = RegistryManager.loaded_bloks['anyblok-core']
@@ -138,7 +138,7 @@ class TestRegistryManager(TestCase):
         self.assertEqual(hasOther, True)
 
     def test_reload_blok(self):
-        BlokManager.load('AnyBlok')
+        BlokManager.load()
         try:
             RegistryManager.reload('anyblok-core')
         finally:
