@@ -54,12 +54,31 @@ class AuthorizationPolicyAssociation:
                 RegistryManager.loaded_bloks[blok][cls.__name__])
 
 
+class PolicyNotForModelClasses(Exception):
+    """Raised by authorization policies that don't make sense on model classes.
+
+    For instance, if a permission check is done on a model class, and the
+    policy associations are made with a policy that needs to check attributes,
+    then the association must be corrected.
+    """
+
+    def __init__(self, policy, model):
+        self.policy = policy
+        self.model = model
+        self.message = "Policy %r cannot be used on a model class (got %r)" % (
+            policy, model)
+
+
 class AuthorizationPolicy:
     """Base class to define the interface and provide some helpers"""
 
-    def check(self, record, principals, permission):
+    def check(self, target, principals, permission):
         """Check that one of the principals has permisson on given record.
 
+        :param target: model instance (record) or class. Checking a permission
+                       on a model class with a policy that is designed to work
+                       on records is considered a configuration error,
+                       expressed by :exc:`PolicyNotForModelClasses`.
         :param principals: list, set or tuple of strings
         :rtype: bool
 

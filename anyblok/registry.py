@@ -469,25 +469,31 @@ class Registry:
 
         return toinstall
 
-    def check_permission(self, record, principals, permission):
-        """Check that one of the principals has permisson on given record.
+    def check_permission(self, target, principals, permission):
+        """Check that one of the principals has permisson on target.
 
+        :param target: model instance (record) or class. Checking a permission
+                       on a model class with a policy that needs to work on
+                       records is considered a configuration error: the policy
+                       has the right to fail.
         :param principals: list, set or tuple of strings
         :rtype: bool
 
         Must be implemented by concrete subclasses.
         """
-        return self.lookup_policy(record, permission).check(
-            record, principals, permission)
+        return self.lookup_policy(target, permission).check(
+            target, principals, permission)
 
-    def lookup_policy(self, record, permission):
-        """Return the policy instance that applies to record's model
+    def lookup_policy(self, target, permission):
+        """Return the policy instance that applies to target or its model.
+
+        :param target: model class or instance
 
         If a policy is declared for the precise permission, it is returned.
         Otherwise, the default policy for that model is returned.
         By ultimate default the special :class:`DenyAllPolicy` is returned.
         """
-        model_name = record.__registry_name__
+        model_name = target.__registry_name__
         policy = self._authnz_policies.get((model_name, permission))
         if policy is not None:
             return policy
