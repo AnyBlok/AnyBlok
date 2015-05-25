@@ -163,10 +163,10 @@ Management of the database
 
 ::
 
-    adapter = getUtility(ISqlAlchemyDataBase, drivername)
-    adapter.createdb(dbname)
-    logger.info(adapter.listdb())
-    adapter.dropdb(dbname)
+    bdd = anyblok.BDD[db_driver_name]
+    bdd.createdb(db_name)
+    logger.info(bdd.listdb())
+    bdd.dropdb()
 
 anyblok.databases.postgres module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -73,7 +73,7 @@ setup(
             'anyblok-io-csv=anyblok.bloks.io_csv:AnyBlokIOCSV',
             'anyblok-io-xml=anyblok.bloks.io_xml:AnyBlokIOXML',
         ],
-        'test.bloks': [
+        'test_bloks': [
             'test-blok1=anyblok.test_bloks.test_blok1:TestBlok',
             'test-blok2=anyblok.test_bloks.test_blok2:TestBlok',
             'test-blok3=anyblok.test_bloks.test_blok3:TestBlok',

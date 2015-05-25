@@ -60,7 +60,7 @@ class TestMigration(TestCase):
 
     def setUp(self):
         super(TestMigration, self).setUp()
-        self.registry = Registry(ArgsParseManager.get('dbname'))
+        self.registry = Registry(ArgsParseManager.get('db_name'))
         self.registry.init_migration()
 
     @classmethod

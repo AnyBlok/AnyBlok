@@ -17,7 +17,7 @@ class SqlAlchemyPostgres:
         """ Context manager to get a connection to database """
         cnx = None
         try:
-            postgres = ArgsParseManager.get_url(dbname='postgres')
+            postgres = ArgsParseManager.get_url(db_name='postgres')
             engine = create_engine(postgres)
             cnx = engine.connect()
             cnx.execute("commit")
@@ -32,22 +32,22 @@ class SqlAlchemyPostgres:
                 cnx.close()
 
     @log(logger, withargs=True)
-    def createdb(self, dbname):
+    def createdb(self, db_name):
         """ Create a database
 
-        :param dbname: database name to create
+        :param db_name: database name to create
         """
         with self.cnx() as conn:
-            conn.execute("""create database "%s";""" % dbname)
+            conn.execute("""create database "%s";""" % db_name)
 
     @log(logger, withargs=True)
-    def dropdb(self, dbname):
+    def dropdb(self, db_name):
         """ Drop a database
 
-        :param dbname: database name to drop
+        :param db_name: database name to drop
         """
         with self.cnx() as conn:
-            conn.execute("""drop database "%s";""" % dbname)
+            conn.execute("""drop database "%s";""" % db_name)
 
     def listdb(self):
         """ list database
@@ -59,7 +59,7 @@ class SqlAlchemyPostgres:
         where_clause = " where pg_db.datname not in (%s)"
         values = ', '.join(["'template0'", "'template1'", "'postgres'"])
 
-        username = ArgsParseManager.get('dbusername')
+        username = ArgsParseManager.get('db_user_name')
         if username:
             from_clause += ", pg_user pg_u"
             where_clause += " and pg_u.username = %s"

@@ -40,15 +40,15 @@ class TestEnvironment(TestCase):
         EnvironmentManager.define_environment_cls(ThreadEnvironment)
 
     def test_set_and_get_variable(self):
-        dbname = 'test db name'
-        EnvironmentManager.set('dbname', dbname)
-        self.assertEqual(EnvironmentManager.get('dbname'), dbname)
+        db_name = 'test db name'
+        EnvironmentManager.set('db_name', db_name)
+        self.assertEqual(EnvironmentManager.get('db_name'), db_name)
 
     def test_without_environment_for_set(self):
         # don't use define_environment_cls, because she must be verify
         EnvironmentManager.environment = None
         try:
-            EnvironmentManager.set('dbname', 'test')
+            EnvironmentManager.set('db_name', 'test')
             self.fail('No watchdog for None environment')
         except EnvironmentException:
             pass
@@ -57,7 +57,7 @@ class TestEnvironment(TestCase):
         # don't use define_environment_cls, because she must be verify
         EnvironmentManager.environment = None
         try:
-            EnvironmentManager.get('dbname')
+            EnvironmentManager.get('db_name')
             self.fail('No watchdog for None environment')
         except EnvironmentException:
             pass
@@ -158,9 +158,9 @@ class TestEnvironment(TestCase):
 class TestThreadEnvironment(TestCase):
 
     def test_set_and_get_variable(self):
-        dbname = 'test db name'
-        EnvironmentManager.set('dbname', dbname)
-        self.assertEqual(EnvironmentManager.get('dbname'), dbname)
+        db_name = 'test db name'
+        EnvironmentManager.set('db_name', db_name)
+        self.assertEqual(EnvironmentManager.get('db_name'), db_name)
 
     def test_scoped_function_session(self):
         self.assertEqual(EnvironmentManager.scoped_function_for_session(),

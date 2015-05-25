@@ -86,21 +86,21 @@ class RegistryManager:
             registry.close()
 
     @classmethod
-    def get(cls, dbname):
+    def get(cls, db_name):
         """ Return an existing Registry
 
         If the Registry doesn't exist then the Registry are created and added
         to registries dict
 
-        :param dbname: the name of the database linked to this registry
+        :param db_name: the name of the database linked to this registry
         :rtype: ``Registry``
         """
-        EnvironmentManager.set('dbname', dbname)
-        if dbname in cls.registries:
-            return cls.registries[dbname]
+        EnvironmentManager.set('db_name', db_name)
+        if db_name in cls.registries:
+            return cls.registries[db_name]
 
-        registry = Registry(dbname)
-        cls.registries[dbname] = registry
+        registry = Registry(db_name)
+        cls.registries[db_name] = registry
         return registry
 
     @classmethod
@@ -378,9 +378,9 @@ class Registry:
         registry = Registry('My database')
     """
 
-    def __init__(self, dbname):
-        self.dbname = dbname
-        url = ArgsParseManager.get_url(dbname=dbname)
+    def __init__(self, db_name):
+        self.db_name = db_name
+        url = ArgsParseManager.get_url(db_name=db_name)
         self.engine = create_engine(url)
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
@@ -729,7 +729,8 @@ class Registry:
             self.close()
             raise
 
-        test_blok = blok2install and ArgsParseManager.get('test_blok')
+        test_blok = blok2install and ArgsParseManager.get(
+            'test_blok_at_install')
         selected_bloks = format_bloks(ArgsParseManager.get('selected_bloks'))
         in_selected_bloks = blok2install in (selected_bloks or [blok2install])
         unwanted_bloks = format_bloks(ArgsParseManager.get('unwanted_bloks'))
@@ -793,8 +794,8 @@ class Registry:
         """Release the session, connection and engine"""
         self.close_session()
         self.engine.dispose()
-        if self.dbname in RegistryManager.registries:
-            del RegistryManager.registries[self.dbname]
+        if self.db_name in RegistryManager.registries:
+            del RegistryManager.registries[self.db_name]
 
     def __getattr__(self, attribute):
         # TODO safe the call of session for reload

@@ -86,7 +86,7 @@ class TestBlokManager(TestCase):
 
 class TestBlok(DBTestCase):
 
-    blok_entry_points = ('bloks', 'test.bloks')
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_blok_exist(self):
         registry = self.init_registry(None)
@@ -161,7 +161,7 @@ class TestBlok(DBTestCase):
 
 class TestBlokRequired(DBTestCase):
 
-    blok_entry_points = ('bloks', 'test.bloks')
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_blok_exist(self):
         registry = self.init_registry(None)
@@ -276,7 +276,7 @@ class TestBlokRequired(DBTestCase):
 
 class TestBlokRequired2(DBTestCase):
 
-    blok_entry_points = ('bloks', 'test.bloks')
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_blok_exist(self):
         registry = self.init_registry(None)
@@ -482,7 +482,7 @@ class TestBlokRequired2(DBTestCase):
 
 class TestBlokConditionnal(DBTestCase):
 
-    blok_entry_points = ('bloks', 'test.bloks')
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_install_1by1(self):
         registry = self.init_registry(None)
@@ -605,7 +605,7 @@ class TestBlokConditionnal(DBTestCase):
 
 class TestBlokOptional(DBTestCase):
 
-    blok_entry_points = ('bloks', 'test.bloks')
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_install_1by1(self):
         registry = self.init_registry(None)
@@ -709,7 +709,7 @@ class TestBlokOptional(DBTestCase):
 
 class TestBlokOrder(DBTestCase):
 
-    blok_entry_points = ('bloks', 'test.bloks')
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def check_order(self, registry, mode, wanted):
         Test = registry.Test
@@ -759,7 +759,7 @@ class TestBlokOrder(DBTestCase):
 
 class TestBlokModel(DBTestCase):
 
-    blok_entry_points = ('bloks', 'test.bloks')
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_remove_foreign_key_after_uninstallation(self):
         registry = self.init_registry(None)

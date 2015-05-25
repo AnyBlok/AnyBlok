@@ -38,13 +38,13 @@ class TestPostgres(TestDataBase):
         if not self.ready_to_test:
             return
 
-        dbname = ArgsParseManager.get('dbname') + datetime.strftime(
+        db_name = ArgsParseManager.get('db_name') + datetime.strftime(
             datetime.today(), '%Y-%m-%d_%H:%M:%S')
         bdd = anyblok.BDD[self.drivername]
-        bdd.createdb(dbname)
-        has_dblist = dbname in bdd.listdb()
+        bdd.createdb(db_name)
+        has_dblist = db_name in bdd.listdb()
         self.assertEqual(has_dblist, True)
 
-        bdd.dropdb(dbname)
-        has_dblist = dbname in bdd.listdb()
+        bdd.dropdb(db_name)
+        has_dblist = db_name in bdd.listdb()
         self.assertEqual(has_dblist, False)

@@ -30,11 +30,11 @@ class TestCase(unittest.TestCase):
         :param prefix: prefix the database name
         :param env: add another dict to merge with environ variable
         """
-        dbname = ArgsParseManager.get('dbname', 'test_anyblok')
-        dbdrivername = ArgsParseManager.get('dbdrivername', 'postgres')
+        db_name = ArgsParseManager.get('db_name', 'test_anyblok')
+        db_driver_name = ArgsParseManager.get('db_driver_name', 'postgres')
         env.update({
-            'dbname': dbname,
-            'dbdrivername': dbdrivername,
+            'db_name': db_name,
+            'db_driver_name': db_driver_name,
         })
         ArgsParseManager.configuration.update(env)
 
@@ -49,15 +49,15 @@ class TestCase(unittest.TestCase):
 
         :param keep_existing: If false drop the previous db before create it
         """
-        bdd = anyblok.BDD[ArgsParseManager.get('dbdrivername')]
-        dbname = ArgsParseManager.get('dbname')
-        if dbname in bdd.listdb():
+        bdd = anyblok.BDD[ArgsParseManager.get('db_driver_name')]
+        db_name = ArgsParseManager.get('db_name')
+        if db_name in bdd.listdb():
             if keep_existing:
                 return True
 
-            bdd.dropdb(dbname)
+            bdd.dropdb(db_name)
 
-        bdd.createdb(dbname)
+        bdd.createdb(db_name)
 
     @classmethod
     def dropdb(cls):
@@ -69,8 +69,8 @@ class TestCase(unittest.TestCase):
             cls.dropdb()
 
         """
-        bdd = anyblok.BDD[ArgsParseManager.get('dbdrivername')]
-        bdd.dropdb(ArgsParseManager.get('dbname'))
+        bdd = anyblok.BDD[ArgsParseManager.get('db_driver_name')]
+        bdd.dropdb(ArgsParseManager.get('db_name'))
 
     def getRegistry(self):
         """ Return the registry for the database in argsparse i
@@ -81,7 +81,7 @@ class TestCase(unittest.TestCase):
 
         :rtype: registry instance
         """
-        return RegistryManager.get(ArgsParseManager.get('dbname'))
+        return RegistryManager.get(ArgsParseManager.get('db_name'))
 
 
 class DBTestCase(TestCase):
@@ -215,7 +215,7 @@ class BlokTestCase(unittest.TestCase):
         """
         super(BlokTestCase, cls).setUpClass()
         if not hasattr(cls, 'registry'):
-            cls.registry = RegistryManager.get(ArgsParseManager.get('dbname'))
+            cls.registry = RegistryManager.get(ArgsParseManager.get('db_name'))
 
         def session_commit(*args, **kwargs):
             pass

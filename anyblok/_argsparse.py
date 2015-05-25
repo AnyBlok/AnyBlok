@@ -120,12 +120,12 @@ class ArgsParseManager:
 
             from anyblok._argsparse import ArgsParseManager
 
-            database = ArgsParseManager.get('dbname')
+            database = ArgsParseManager.get('db_name')
 
         ..warning::
 
             Some options are used as a default value not real value, such
-            as the dbname
+            as the db_name
 
         :param opt: name of the option
         :param default: default value if the option doesn't exist
@@ -226,38 +226,38 @@ class ArgsParseManager:
         return labels
 
     @classmethod
-    def get_url(cls, dbname=None):
+    def get_url(cls, db_name=None):
         """ Return an sqlalchemy URL for database
 
         Get the options of the database, the only option which can be
         overloaded is the name of the database::
 
-            url = ArgsParseManager.get_url(dbname='Mydb')
+            url = ArgsParseManager.get_url(db_name='Mydb')
 
-        :param dbname: Name of the database
+        :param db_name: Name of the database
         :rtype: SqlAlchemy URL
         :exception: ArgsParseManagerException
         """
         config = cls.configuration
         drivername = username = password = host = port = database = None
-        if config.get('dbdrivername'):
-            drivername = config['dbdrivername']
-        if config.get('dbusername'):
-            username = config['dbusername']
-        if config.get('dbpassword'):
-            password = config['dbpassword']
-        if config.get('dbhost'):
-            host = config['dbhost']
-        if config.get('dbport'):
-            port = config['dbport']
-        if config.get('dbname'):
-            database = config['dbname']
+        if config.get('db_driver_name'):
+            drivername = config['db_driver_name']
+        if config.get('db_user_name'):
+            username = config['db_user_name']
+        if config.get('db_password'):
+            password = config['db_password']
+        if config.get('db_host'):
+            host = config['db_host']
+        if config.get('db_port'):
+            port = config['db_port']
+        if config.get('db_name'):
+            database = config['db_name']
 
         if drivername is None:
             raise ArgsParseManagerException('No Drivername defined')
 
-        if dbname is not None:
-            database = dbname
+        if db_name is not None:
+            database = db_name
 
         from sqlalchemy.engine.url import URL
         return URL(drivername, username=username, password=password, host=host,
@@ -361,51 +361,51 @@ def add_configuration_file(parser, configuration):
 
 @ArgsParseManager.add('database', label="Database")
 def add_database(group, configuration):
-    group.add_argument('--db_name', dest='dbname', default='',
+    group.add_argument('--db-name', default='',
                        help="Name of the database")
-    group.add_argument('--db_drivername', dest='dbdrivername', default='',
+    group.add_argument('--db-driver-name', default='',
                        help="the name of the database backend. This name "
                             "will correspond to a module in "
                             "sqlalchemy/databases or a third party plug-in")
-    group.add_argument('--db_username', dest='dbusername', default='',
+    group.add_argument('--db-user-name', default='',
                        help="The user name")
-    group.add_argument('--db_password', dest='dbpassword', default='',
+    group.add_argument('--db-password', default='',
                        help="database password")
-    group.add_argument('--db_host', dest='dbhost', default='',
+    group.add_argument('--db-host', default='',
                        help="The name of the host")
-    group.add_argument('--db_port', dest='dbport', default='',
+    group.add_argument('--db-port', default='',
                        help="The port number")
 
     configuration.update({
-        'dbname': os.environ.get('ANYBLOK_DATABASE_NAME'),
-        'dbdrivername': os.environ.get('ANYBLOK_DATABASE_DRIVER'),
-        'dbusername': os.environ.get('ANYBLOK_DATABASE_USER'),
-        'dbpassword': os.environ.get('ANYBLOK_DATABASE_PASSWORD'),
-        'dbhost': os.environ.get('ANYBLOK_DATABASE_HOST'),
-        'dbport': os.environ.get('ANYBLOK_DATABASE_PORT'),
+        'db_name': os.environ.get('ANYBLOK_DATABASE_NAME'),
+        'db_driver_name': os.environ.get('ANYBLOK_DATABASE_DRIVER'),
+        'db_user_name': os.environ.get('ANYBLOK_DATABASE_USER'),
+        'db_password': os.environ.get('ANYBLOK_DATABASE_PASSWORD'),
+        'db_host': os.environ.get('ANYBLOK_DATABASE_HOST'),
+        'db_port': os.environ.get('ANYBLOK_DATABASE_PORT'),
     })
 
 
 @ArgsParseManager.add('install-bloks')
 def add_install_bloks(parser, configuration):
-    parser.add_argument('--install-bloks', dest='install_bloks', default='',
+    parser.add_argument('--install-bloks', default='',
                         help="blok to install")
-    parser.add_argument('--install-all-bloks', dest='install_all_bloks',
+    parser.add_argument('--install-all-bloks',
                         action='store_true')
-    parser.add_argument('--test-blok-at-install', dest='test_blok',
+    parser.add_argument('--test-blok-at-install',
                         action='store_true')
     parser.set_defaults(test_blok=False)
 
 
 @ArgsParseManager.add('uninstall-bloks')
 def add_uninstall_bloks(parser, configuration):
-    parser.add_argument('--uninstall-bloks', dest='uninstall_bloks',
+    parser.add_argument('--uninstall-bloks',
                         default='', help="bloks to uninstall")
 
 
 @ArgsParseManager.add('update-bloks')
 def add_update_bloks(parser, configuration):
-    parser.add_argument('--update-bloks', dest='update_bloks', default='',
+    parser.add_argument('--update-bloks', default='',
                         help="bloks to update")
 
 
@@ -418,17 +418,17 @@ def add_interpreter(parser, configuration):
 @ArgsParseManager.add('schema', label="Schema options")
 def add_schema(group, configuration):
     from graphviz.files import FORMATS
-    group.add_argument('--schema-format', dest='schema_format',
+    group.add_argument('--schema-format',
                        default='png', choices=tuple(FORMATS))
-    group.add_argument('--schema-output', dest='schema_output',
+    group.add_argument('--schema-output',
                        default='anyblok-schema')
-    group.add_argument('--schema-models', dest='schema_model',
+    group.add_argument('--schema-models',
                        help='Detail only these models separated by ","')
 
 
 @ArgsParseManager.add('unittest', label="Unittest")
 def add_unittest(group, configuration):
-    group.add_argument('--selected-bloks', dest='selected_bloks', default='',
+    group.add_argument('--selected-bloks', default='',
                        help="Name of the bloks to test")
-    group.add_argument('--unwanted-bloks', dest='unwanted_bloks', default='',
+    group.add_argument('--unwanted-bloks', default='',
                        help="Name of the bloks to no test")

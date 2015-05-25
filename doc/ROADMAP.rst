@@ -11,16 +11,11 @@
 ROADMAP
 =======
 
-Next step for the 0.2
----------------------
-
-* Access Rules / Roles
-* Add logo and slogan
-* Update doc
-
 To implement
 ------------
 
+* Add logo and slogan
+* Update doc
 * Add RelationShip model in anyblok-core and refactor the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
 * Put postgres database in his own distribution with the good import
 * Need improve alembic
@@ -42,7 +37,5 @@ Functionnality which need a sprint
 * Cron
 * Tasks Management
 * Event by messaging bus
-* Import / Export
 * Internalization
 * Ancestor left / right
-* Access Rules / Roles

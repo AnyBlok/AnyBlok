@@ -47,11 +47,11 @@ def start(processName, version=release.version, prompt=PROMPT,
                               argsparse_groups=argsparse_groups,
                               useseparator=useseparator)
 
-    dbname = ArgsParseManager.get('dbname')
-    if not dbname:
+    db_name = ArgsParseManager.get('db_name')
+    if not db_name:
         return None
 
-    registry = RegistryManager.get(dbname)
+    registry = RegistryManager.get(db_name)
     registry.commit()
     return registry
 

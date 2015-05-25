@@ -36,13 +36,13 @@ def createdb(description, argsparse_groups):
     BlokManager.load()
     ArgsParseManager.load(description=description,
                           argsparse_groups=argsparse_groups)
-    drivername = ArgsParseManager.get('dbdrivername')
-    dbname = ArgsParseManager.get('dbname')
+    drivername = ArgsParseManager.get('db_driver_name')
+    db_name = ArgsParseManager.get('db_name')
 
     bdd = anyblok.BDD[drivername]
-    bdd.createdb(dbname)
+    bdd.createdb(db_name)
 
-    registry = RegistryManager.get(dbname)
+    registry = RegistryManager.get(db_name)
     if registry is None:
         return
 
@@ -153,7 +153,7 @@ def sqlschema(description, version, argsparse_groups):
 
     format_ = ArgsParseManager.get('schema_format')
     name_ = ArgsParseManager.get('schema_output')
-    models_ = format_bloks(ArgsParseManager.get('schema_model'))
+    models_ = format_bloks(ArgsParseManager.get('schema_models'))
     models_ = [] if models_ is None else models_
 
     Column = registry.System.Column
@@ -214,7 +214,7 @@ def modelschema(description, version, argsparse_groups):
 
     format_ = ArgsParseManager.get('schema_format')
     name_ = ArgsParseManager.get('schema_output')
-    models_ = format_bloks(ArgsParseManager.get('schema_model'))
+    models_ = format_bloks(ArgsParseManager.get('schema_models'))
     models_ = [] if models_ is None else models_
 
     models_by_table = {}

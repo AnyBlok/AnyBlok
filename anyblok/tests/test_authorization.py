@@ -14,7 +14,7 @@ from anyblok.authorization import deny_all
 
 class TestAuthorizationDeclaration(DBTestCase):
 
-    parts_to_load = ['AnyBlok', 'TestAnyBlok']
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def tearDown(self):
         super(TestAuthorizationDeclaration, self).tearDown()

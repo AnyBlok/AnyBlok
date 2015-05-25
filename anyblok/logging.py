@@ -39,7 +39,7 @@ class consoleFormatter(logging.Formatter):
         fg_color, bg_color = CYAN, DEFAULT
         record.database = COLOR_PATTERN % (
             30 + fg_color, 40 + bg_color,
-            EnvironmentManager.get('dbname', 'No database'))
+            EnvironmentManager.get('db_name', 'No database'))
 
         return logging.Formatter.format(self, record)
 
@@ -53,7 +53,7 @@ class anyblokFormatter(logging.Formatter):
         :param record: logging record instance
         :rtype: logging record formatted
         """
-        record.database = EnvironmentManager.get('dbname', 'No database')
+        record.database = EnvironmentManager.get('db_name', 'No database')
         return logging.Formatter.format(self, record)
 
 

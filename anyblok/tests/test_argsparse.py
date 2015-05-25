@@ -160,23 +160,23 @@ class TestArgsParseManager(TestCase):
 
     def test_get_url(self):
         ArgsParseManager.configuration.update(dict(
-            dbname='anyblok',
-            dbdrivername='postgres',
-            dbhost='localhost',
-            dbusername=None,
-            dbpassword=None,
-            dbport=None,
+            db_name='anyblok',
+            db_driver_name='postgres',
+            db_host='localhost',
+            db_user_name=None,
+            db_password=None,
+            db_port=None,
         ))
         ArgsParseManager.get_url()
 
     def test_get_url_without_drivername(self):
         ArgsParseManager.configuration.update(dict(
-            dbname=None,
-            dbdrivername=None,
-            dbhost=None,
-            dbusername=None,
-            dbpassword=None,
-            dbport=None,
+            db_name=None,
+            db_driver_name=None,
+            db_host=None,
+            db_user_name=None,
+            db_password=None,
+            db_port=None,
         ))
         try:
             ArgsParseManager.get_url()
@@ -296,12 +296,12 @@ class TestArgsParseManager(TestCase):
                                      kwargs=kwargs)
         ArgsParseManager.parse_options(args, ['AnyBlok'])
         kwargs.update({
-            'dbname': 'anyblok',
-            'dbdrivername': 'postgres',
-            'dbusername': '',
-            'dbpassword': '',
-            'dbhost': 'localhost',
-            'dbport': '',
+            'db_name': 'anyblok',
+            'db_driver_name': 'postgres',
+            'db_user_name': '',
+            'db_password': '',
+            'db_host': 'localhost',
+            'db_port': '',
         })
         self.assertEqual(ArgsParseManager.configuration, kwargs)
 
@@ -309,12 +309,12 @@ class TestArgsParseManager(TestCase):
         args = MockArgParseArguments(configfile="mock_configuration_file.cfg")
         ArgsParseManager.parse_options(args, ['AnyBlok'])
         self.assertEqual(ArgsParseManager.configuration, {
-            'dbname': 'anyblok',
-            'dbdrivername': 'postgres',
-            'dbusername': '',
-            'dbpassword': '',
-            'dbhost': 'localhost',
-            'dbport': '',
+            'db_name': 'anyblok',
+            'db_driver_name': 'postgres',
+            'db_user_name': '',
+            'db_password': '',
+            'db_host': 'localhost',
+            'db_port': '',
         })
 
     def test_parse_option_kwargs(self):
