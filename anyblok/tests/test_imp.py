@@ -9,7 +9,7 @@ import anyblok
 from anyblok.tests.testcase import TestCase
 from anyblok.blok import BlokManager
 from sys import modules
-from anyblok._imp import ImportManager
+from anyblok.imp import ImportManager
 from os.path import join
 from unittest import skipIf
 from .mockblok import mockblok

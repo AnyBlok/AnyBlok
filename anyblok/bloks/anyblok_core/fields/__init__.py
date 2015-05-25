@@ -5,6 +5,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import reload_module_if_blok_is_reloaded
+from anyblok import reload_module_if_blok_is_reloading
 from . import function
-reload_module_if_blok_is_reloaded(function)
+reload_module_if_blok_is_reloading(function)

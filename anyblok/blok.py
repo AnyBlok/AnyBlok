@@ -8,7 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from pkg_resources import iter_entry_points
 import anyblok
-from anyblok._imp import ImportManager
+from anyblok.imp import ImportManager
 from .logging import log
 from anyblok.environment import EnvironmentManager
 from time import sleep

@@ -16,6 +16,8 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
+* [REF] rename **reload_module_if_blok_is_reloaded** by 
+        **reload_module_if_blok_is_reloading** method on blok
 * [REF] rename **import_cfg_file** by **import_file** method on blok
 * [REF] Consistency the argsparse configuration
 * [REF] refactor part_to_load, the entry points loaded is bloks

@@ -32,7 +32,7 @@ def reload_wraper(module):
     reload_module(module2reload)
 
 
-def reload_module_if_blok_is_reloaded(module):
+def reload_module_if_blok_is_reloading(module):
     from anyblok.environment import EnvironmentManager
 
     if EnvironmentManager.get('reload', default=False):

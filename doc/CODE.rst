@@ -37,10 +37,10 @@ anyblok._argsparse module
     :members:
     :noindex:
 
-anyblok._imp module
--------------------
+anyblok.imp module
+------------------
 
-.. automodule:: anyblok._imp
+.. automodule:: anyblok.imp
 
 .. autoclass:: ImportManager
     :members:

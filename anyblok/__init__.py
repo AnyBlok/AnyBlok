@@ -70,4 +70,4 @@ from . import relationship  # noqa
 from . import model  # noqa
 from . import mixin  # noqa
 from . import authorization  # noqa
-from ._imp import reload_module_if_blok_is_reloaded  # noqa
+from .imp import reload_module_if_blok_is_reloading  # noqa

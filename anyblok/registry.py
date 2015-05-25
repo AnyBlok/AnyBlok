@@ -8,7 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok._argsparse import ArgsParseManager
-from anyblok._imp import ImportManager
+from anyblok.imp import ImportManager
 from anyblok.blok import BlokManager
 from .logging import log
 from .environment import EnvironmentManager
