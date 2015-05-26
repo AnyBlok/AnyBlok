@@ -276,7 +276,7 @@ class Configuration:
     @classmethod
     @log(logger)
     def load(cls, description='AnyBlok :', configuration_groups=None,
-             parts_to_load=None, useseparator=False):
+             parts_to_load=('AnyBlok',), useseparator=False):
         """ Load the argparse definition and parse them
 
         :param description: description of configuration
@@ -301,9 +301,6 @@ class Configuration:
 
         if configuration_groups is None:
             return
-
-        if parts_to_load is None:
-            parts_to_load = ['AnyBlok']
 
         groups = cls._merge_groups(*parts_to_load)
         labels = cls._merge_labels(*parts_to_load)

@@ -16,6 +16,8 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
+* [REF] Remove the Declarations typs Field, Column, RelationShip, they are
+        replaced by python import
 * [REF] rename **ArgsParseManager** by **Configuration**
 * [REF] rename **reload_module_if_blok_is_reloaded** by 
         **reload_module_if_blok_is_reloading** method on blok

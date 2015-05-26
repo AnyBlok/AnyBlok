@@ -88,12 +88,8 @@ file of a package::
         """ This is valid blok """
 
 The blok class must be in the init file of the package so that all modules and
-sub-packages will be imported by anyblok.
-
-.. warning::
-
-    Modules and packages starting with ``_`` are not imported, the package tests
-    are also not imported.
+sub-packages which have declarations have to be imported by anyblok, in the
+**import_declaration_module** method
 
 
 **Office blok**
@@ -310,9 +306,10 @@ models. This example uses ``insert`` and ``multi_insert`` added by the
 An SQL model can define columns::
 
     from anyblok import Declarations
+    from anyblok.column import String
+
     register = Declarations.register
     Model = Declarations.Model
-    String = Declarations.Column.String
 
 
     @register(Model)
@@ -332,11 +329,11 @@ An SQL model can define columns::
 **office_blok.office**::
 
     from anyblok import Declarations
+    from anyblok.column import Integer, String
+    from anyblok.relationship import Many2One
+
     register = Declarations.register
     Model = Declarations.Model
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2One = Declarations.RelationShip.Many2One
 
 
     @register(Model)
@@ -374,9 +371,10 @@ column with the same type as the remote_column.
 **position_blok.position**::
 
     from anyblok import Declarations
+    from anyblok.column import String
+
     register = Declarations.register
     Model = Declarations.Model
-    String = Declarations.Column.String
 
 
     @register(Model)
@@ -390,10 +388,11 @@ column with the same type as the remote_column.
 **employee_blok.employee**::
 
     from anyblok import Declarations
+    from anyblok.column import String
+    from anyblok.relationship import Many2One
+
     register = Declarations.register
     Model = Declarations.Model
-    String = Declarations.Column.String
-    Many2One = Declarations.RelationShip.Many2One
 
 
     @register(Model)
@@ -416,9 +415,10 @@ get the real model
 **employee_position_blok.employee**::
 
     from anyblok import Declarations
+    from anyblok.relationship import Many2One
+
     register = Declarations.register
     Model = Declarations.Model
-    Many2One = Declarations.RelationShip.Many2One
 
 
     @register(Model)
@@ -458,7 +458,7 @@ script, add this in the ``setup.py``::
         ...
         entry_points={
             'console_scripts': ['exampleblok=exampleblok.scripts:exampleblok'],
-            'WorkBlok': WorkBlok,
+            'bloks': bloks,
         },
     )
 
@@ -474,7 +474,7 @@ The script must display:
     from logging import getLogger
     from anyblok.config import Configuration
 
-    logger = getLogger(__name__)
+    logger = getLogger()
 
 
     def exampleblok():
@@ -523,17 +523,17 @@ The script must display:
         --message-after MESSAGE_AFTER
 
     Database:
-        --db_name DBNAME      Name of the database
-        --db_drivername DBDRIVERNAME
+        --db-name DB_NAME      Name of the database
+        --db-driver-name DB_DRIVER_NAME
                               the name of the database backend. This name will
                               correspond to a module in sqlalchemy/databases or a
                               third party plug-in
-        --db_username DBUSERNAME
-    The user name
-        --db_password DBPASSWORD
-    database password
-        --db_host DBHOST      The name of the host
-        --db_port DBPORT      The port number
+        --db-user-name DB_USER_NAME
+                              The user name
+        --db-password DB_PASSWORD
+                              database password
+        --db-host DB_HOST      The name of the host
+        --db-port DB_PORT      The port number
 
 **Create an empty database and call the script**::
 

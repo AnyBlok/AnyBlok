@@ -103,10 +103,15 @@ And the methods that define blok behaviours:
         ...
     )
 
+.. note::
+    
+    The version 0.4.0, required all the declaration of the bloks on the entry
+    point **bloks**
+
 Declaration
 -----------
 
-In AnyBlok, everything is a declaration (Model, Column, ...) and you have to
+In AnyBlok, everything is a declaration (Model, Mixin, ...) and you have to
 import the ``Declarations`` class::
 
     from anyblok.declarations import Declarations
@@ -147,7 +152,6 @@ The ``Declarations`` has two main methods
     ``Declarations.type`` must be replaced by:
 
     * Model
-    * Column
     * ...
 
     ``Declarations.type`` defines the behaviour of the ``register`` and
@@ -336,13 +340,10 @@ request of the SQL view.
 Column
 ------
 
-To declare a ``Column`` in a model, add a column on the table of the model.
-All the column type are in the ``Declarations``::
+To declare a ``Column`` in a model, add a column on the table of the model.::
 
     from anyblok.declarations import Declarations
-
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
+    from anyblok.column import Integer, String
 
 
     @Declarations.register(Declaration.Model)
@@ -351,7 +352,11 @@ All the column type are in the ``Declarations``::
         id = Integer(primary_key=True)
         name = String()
 
-List of the ``Declarations`` of the column type:
+.. note::
+
+    Since the version 0.4.0 the ``Columns`` are not ``Declarations``
+
+List of the column type:
 
  * ``DateTime``: use datetime.datetime
  * ``Decimal``: use decimal.Decimal
@@ -420,7 +425,7 @@ Other attribute for ``String`` and ``uString``:
 +-------------+---------------------------------------------------------------+
 | Param       | Description                                                   |
 +=============+===============================================================+
-| ``size``    | Column size in the bdd                                        |
+| ``size``    | Column size in the table                                      |
 +-------------+---------------------------------------------------------------+
 
 Other attribute for ``Selection``:
@@ -428,7 +433,7 @@ Other attribute for ``Selection``:
 +----------------+------------------------------------------------------------+
 | Param          | Description                                                |
 +================+============================================================+
-| ``size``       | column size in the bdd                                     |
+| ``size``       | column size in the table                                   |
 +----------------+------------------------------------------------------------+
 | ``selections`` | ``dict`` or ``dict.items`` to give the available key with  |
 |                | the associate label                                        |
@@ -438,12 +443,11 @@ RelationShip
 ------------
 
 To declare a ``RelationShip`` in a model, add a RelationShip on the table of
-the model. All the RelationShip types are in the ``Declarations``::
+the model.::
 
     from anyblok.declarations import Declarations
-
-    Integer = Declarations.Column.Integer
-    Many2One = Declarations.RelationShip.Many2One
+    from anyblok.column import Integer
+    from anyblok.relationship import Many2One
 
 
     @Declarations.register(Declaration.Model)
@@ -458,7 +462,11 @@ the model. All the RelationShip types are in the ``Declarations``::
         id = Integer(primary_key=True)
         mymodel = Many2One(model=Declaration.Model.MyModel)
 
-List of the ``Declarations`` of the RelationShip type:
+.. note::
+
+    Since the version 0.4.0 the ``RelationShip`` are not ``Declarations``
+
+List of the RelationShip type:
 
 * ``One2One``
 * ``Many2One``
@@ -549,12 +557,11 @@ Field
 -----
 
 To declare a ``Field`` in a model, add a Field on the Model, this is not a
-SQL column. All the Field type are in the ``Declarations``::
+SQL column.::
 
     from anyblok.declarations import Declarations
-
-    Integer = Declarations.Column.Integer
-    Fuction = Declarations.Field.Function
+    from anyblok.field import Function
+    from anyblok.column import Integer
 
 
     @Declarations.register(Declaration.Model)
@@ -566,7 +573,7 @@ SQL column. All the Field type are in the ``Declarations``::
         def get_my_id(self):
             return self.id
 
-List of the ``Declarations`` of the ``Field`` type:
+List of the ``Field`` type:
 
 * ``Function``
 

@@ -38,7 +38,7 @@ The known ``Type`` declarations are:
 * Model
 * Mixin
 * Core
-* Field
+* AuthorizationPolicyAssociation
 * Exception
 
 Some are directly see as a database declaration (entry ``Type``):
@@ -46,10 +46,10 @@ Some are directly see as a database declaration (entry ``Type``):
 * Model
 * Mixin
 * Core
+* AuthorizationPolicyAssociation
 
 Other have not depends with the installation of not of the bloks:
 
-* Field
 * Exception
 
 .. warning::

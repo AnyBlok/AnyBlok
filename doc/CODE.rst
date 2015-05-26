@@ -131,6 +131,109 @@ anyblok.migration module
     :members:
     :noindex:
 
+anyblok.field module
+--------------------
+
+.. automodule:: anyblok.field
+
+.. autoclass:: Field
+    :members:
+    :noindex:
+
+.. autoclass:: Function
+    :members:
+    :noindex:
+
+anyblok.column module
+----------------------
+
+.. automodule:: anyblok.column
+
+.. autoclass:: Column
+    :members:
+    :noindex:
+
+.. autoclass:: Integer
+    :members:
+    :noindex:
+
+.. autoclass:: SmallInteger
+    :members:
+    :noindex:
+
+.. autoclass:: BigInteger
+    :members:
+    :noindex:
+
+.. autoclass:: Boolean
+    :members:
+    :noindex:
+
+.. autoclass:: Float
+    :members:
+    :noindex:
+
+.. autoclass:: Decimal
+    :members:
+    :noindex:
+
+.. autoclass:: Date
+    :members:
+    :noindex:
+
+.. autoclass:: DateTime
+    :members:
+    :noindex:
+
+.. autoclass:: Time
+    :members:
+    :noindex:
+
+.. autoclass:: Interval
+    :members:
+    :noindex:
+
+.. autoclass:: String
+    :members:
+    :noindex:
+
+.. autoclass:: uString
+    :members:
+    :noindex:
+
+.. autoclass:: Text
+    :members:
+    :noindex:
+
+.. autoclass:: uText
+    :members:
+    :noindex:
+
+.. autoclass:: StrSelection
+    :members:
+    :noindex:
+
+.. autoclass:: SelectionType
+    :members:
+    :noindex:
+
+.. autoclass:: Selection
+    :members:
+    :noindex:
+
+.. autoclass:: JsonType
+    :members:
+    :noindex:
+
+.. autoclass:: Json
+    :members:
+    :noindex:
+
+.. autoclass:: LargeBinary
+    :members:
+    :noindex:
+
+
 anyblok._graphviz module
 ------------------------
 

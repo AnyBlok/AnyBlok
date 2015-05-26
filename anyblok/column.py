@@ -422,6 +422,7 @@ class uText(Column):
 
 
 class StrSelection(str):
+    """ Class representing the data of one column Selection """
     selections = {}
     registry = None
     namespace = None
@@ -444,6 +445,7 @@ class StrSelection(str):
 
 
 class SelectionType(types.UserDefinedType):
+    """ Generic type for Column Selection """
 
     def __init__(self, selections, size, registry=None, namespace=None):
         super(SelectionType, self).__init__()
@@ -566,6 +568,7 @@ json_null = object()
 
 
 class JsonType(types.TypeDecorator):
+    """ Generic type for Column JSON """
     impl = types.Unicode
 
     def process_bind_param(self, value, dialect):
