@@ -11,15 +11,14 @@ from anyblok.blok import BlokManager
 from sys import modules
 from anyblok.imp import ImportManager
 from os.path import join
-from unittest import skipIf
+# from unittest import skipIf
 from .mockblok import mockblok
 ImportManagerException = anyblok.Declarations.Exception.ImportManagerException
 
 
 tests_path = join('/'.join(__file__.split('/')[:-1]), 'mockblok')
-fp = open(join(tests_path, 'mockfile.py'), 'r')
-initial_file = fp.read()
-fp.close()
+with open(join(tests_path, 'mockfile.py'), 'r') as fp:
+    initial_file = fp.read()
 
 
 def python_version():
@@ -64,7 +63,7 @@ class TestImportManager(TestCase):
         except ImportManagerException:
             pass
 
-    @skipIf(python_version() < '3.3', "Reload doesn't work in python 3.2")
+    # @skipIf(python_version() < '3.3', "Reload doesn't work in python 3.2")
     def test_reload(self):
         blok = ImportManager.add('mockblok')
         blok.imports()
@@ -72,48 +71,35 @@ class TestImportManager(TestCase):
         from .mockblok.mockpackage import submockpackage
         from .mockblok import mockfile
 
-        fp = open(join(tests_path, 'mockpackage', 'mockfile1.py'), 'w')
-        fp.write("""foo = 'reload'""")
-        fp.close()
+        with open(join(tests_path, 'mockpackage', 'mockfile1.py'), 'w') as fp:
+            fp.write("""foo = 'reload'""")
 
-        fp = open(join(tests_path, 'mockpackage', 'submockpackage',
-                       'mockfile2.py'), 'w')
-        fp.write("""foo = 'reload'""")
-        fp.close()
+        with open(join(tests_path, 'mockpackage', 'submockpackage',
+                       'mockfile2.py'), 'w') as fp:
+            fp.write("""foo = 'reload'""")
 
-        fp = open(join(tests_path, 'mockfile.py'), 'w')
-        fp.write("""foo = 'reload'""")
-        fp.close()
+        with open(join(tests_path, 'mockfile.py'), 'w') as fp:
+            fp.write("""foo = 'reload'""")
 
-        blok.reload()
         try:
+            blok.reload()
             self.assertEqual(mockfile1.foo, 'reload')
             self.assertEqual(mockfile2.foo, 'bar')
             self.assertEqual(submockpackage.mockfile1.foo, 'bar')
             self.assertEqual(submockpackage.mockfile2.foo, 'reload')
             self.assertEqual(mockfile.foo, 'reload')
         finally:
-            fp = open(join(tests_path, 'mockfile.py'), 'w')
-            fp.write(initial_file)
-            fp.close()
+            with open(join(tests_path, 'mockfile.py'), 'w') as fp:
+                fp.write(initial_file)
 
-            fp = open(join(tests_path, 'mockpackage', 'mockfile1.py'), 'w')
-            fp.write(initial_file)
-            fp.close()
+            with open(join(tests_path, 'mockpackage',
+                           'mockfile1.py'), 'w') as fp:
+                fp.write(initial_file)
 
-            fp = open(join(tests_path, 'mockpackage', 'submockpackage',
-                           'mockfile2.py'), 'w')
-            fp.write(initial_file)
-            fp.close()
+            with open(join(tests_path, 'mockpackage', 'submockpackage',
+                           'mockfile2.py'), 'w') as fp:
+                fp.write(initial_file)
 
     def test_imports(self):
         blok = ImportManager.add('mockblok')
         blok.imports()
-        from .mockblok.mockfile import foo
-        self.assertEqual(foo, 'bar')
-        from .mockblok.mockpackage import mockfile1, mockfile2
-        from .mockblok.mockpackage import submockpackage
-        self.assertEqual(mockfile1.foo, 'bar')
-        self.assertEqual(mockfile2.foo, 'bar')
-        self.assertEqual(submockpackage.mockfile1.foo, 'bar')
-        self.assertEqual(submockpackage.mockfile2.foo, 'bar')

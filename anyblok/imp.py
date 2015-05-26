@@ -19,7 +19,23 @@ except ImportError:
 
 def reload_wraper(module):
     if isimp:
-        module2reload = module
+        if python_version() == (3, 2):
+            from imp import find_module, load_module
+            from os.path import dirname
+            files = [dirname(module.__file__)]
+            paths = module.__file__.split('/')
+            if len(paths) > 2:
+                files.append('/'.join(paths[:-2]))
+
+            fp, pathname, description = find_module(
+                module.__name__.split('.')[-1], files)
+
+            module2reload = load_module(
+                module.__name__, fp, pathname, description)
+
+        else:
+            module2reload = module
+
     elif python_version() == (3, 3):
         module2reload = module.__name__
     elif python_version() >= (3, 4):
