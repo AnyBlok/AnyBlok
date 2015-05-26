@@ -8,13 +8,13 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from sqlalchemy.sql import select
+from anyblok.column import Integer, String
+
 register = Declarations.register
 Model = Declarations.Model
 
 
 def simple_view():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class T1:
@@ -45,8 +45,6 @@ def simple_view():
 
 
 def simple_view_with_same_table_by_declaration_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class T1:
@@ -83,8 +81,6 @@ def simple_view_with_same_table_by_declaration_model():
 
 
 def simple_view_with_same_table_by_name():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class T1:
@@ -121,8 +117,6 @@ def simple_view_with_same_table_by_name():
 
 
 def simple_view_with_same_table_by_inherit():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class T1:
@@ -159,8 +153,6 @@ def simple_view_with_same_table_by_inherit():
 
 
 def simple_view_without_primary_key():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class T1:
@@ -191,8 +183,6 @@ def simple_view_without_primary_key():
 
 
 def simple_view_without_view_declaration():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class T1:

@@ -8,15 +8,15 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-FieldException = Declarations.Exception.FieldException
+from anyblok.field import FieldException
+from anyblok.column import Integer, String
+from anyblok.relationship import One2One
+
 register = Declarations.register
 Model = Declarations.Model
 
 
 def _complete_one2one(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2One = Declarations.RelationShip.One2One
 
     @register(Model)
     class Address:
@@ -36,9 +36,6 @@ def _complete_one2one(**kwargs):
 
 
 def _minimum_one2one(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2One = Declarations.RelationShip.One2One
 
     @register(Model)
     class Address:
@@ -53,9 +50,6 @@ def _minimum_one2one(**kwargs):
 
 
 def _one2one_with_str_method(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2One = Declarations.RelationShip.One2One
 
     @register(Model)
     class Address:
@@ -70,9 +64,6 @@ def _one2one_with_str_method(**kwargs):
 
 
 def _minimum_one2one_without_backref(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2One = Declarations.RelationShip.One2One
 
     @register(Model)
     class Address:
@@ -87,9 +78,6 @@ def _minimum_one2one_without_backref(**kwargs):
 
 
 def _minimum_one2one_with_one2many(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2One = Declarations.RelationShip.One2One
 
     @register(Model)
     class Address:

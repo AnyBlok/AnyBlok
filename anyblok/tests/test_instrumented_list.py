@@ -6,6 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
+from anyblok.column import Integer
+from anyblok.relationship import Many2Many, One2Many, Many2One
 
 
 class TestInstrumentedList(DBTestCase):
@@ -25,8 +27,6 @@ class TestInstrumentedList(DBTestCase):
         def m2m_with_instrumentedlist():
 
             from anyblok import Declarations
-            Integer = Declarations.Column.Integer
-            Many2Many = Declarations.RelationShip.Many2Many
             Model = Declarations.Model
 
             @Declarations.register(Model)
@@ -54,8 +54,6 @@ class TestInstrumentedList(DBTestCase):
         def o2m_with_instrumentedlist():
 
             from anyblok import Declarations
-            Integer = Declarations.Column.Integer
-            One2Many = Declarations.RelationShip.One2Many
             Model = Declarations.Model
 
             @Declarations.register(Model)
@@ -84,8 +82,6 @@ class TestInstrumentedList(DBTestCase):
         def o2m_with_instrumentedlist():
 
             from anyblok import Declarations
-            Integer = Declarations.Column.Integer
-            Many2One = Declarations.RelationShip.Many2One
             Model = Declarations.Model
 
             @Declarations.register(Model)
@@ -110,7 +106,6 @@ class TestInstrumentedList(DBTestCase):
         def call_column():
 
             from anyblok import Declarations
-            Integer = Declarations.Column.Integer
             Model = Declarations.Model
 
             @Declarations.register(Model)
@@ -127,7 +122,6 @@ class TestInstrumentedList(DBTestCase):
         def call_method():
 
             from anyblok import Declarations
-            Integer = Declarations.Column.Integer
             Model = Declarations.Model
 
             @Declarations.register(Model)

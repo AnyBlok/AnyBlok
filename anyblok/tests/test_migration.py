@@ -10,6 +10,7 @@ from anyblok.registry import Registry, RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.config import Configuration
 from anyblok.environment import EnvironmentManager
+from anyblok.column import Integer as Int, String as Str
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
 from anyblok import Declarations
@@ -31,8 +32,6 @@ class TestMigration(TestCase):
 
         register = Declarations.register
         Model = Declarations.Model
-        Int = Declarations.Column.Integer
-        Str = Declarations.Column.String
 
         cls.loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
         EnvironmentManager.set('current_blok', 'anyblok-core')

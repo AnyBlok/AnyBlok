@@ -7,12 +7,8 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase
 from anyblok import Declarations
-Field = Declarations.Field
-Column = Declarations.Column
-RelationShip = Declarations.RelationShip
 register = Declarations.register
 unregister = Declarations.unregister
-FieldException = Declarations.Exception.FieldException
 
 
 class OneInterface:

@@ -7,6 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
+from anyblok.column import Integer
 
 register = Declarations.register
 Model = Declarations.Model
@@ -33,7 +34,6 @@ class TestHybridMethod(DBTestCase):
     def test_hybrid_method_model(self):
 
         def add_in_registry():
-            Integer = Declarations.Column.Integer
 
             @register(Model)
             class Test:
@@ -50,7 +50,6 @@ class TestHybridMethod(DBTestCase):
     def test_hybrid_method_model2(self):
 
         def add_in_registry():
-            Integer = Declarations.Column.Integer
 
             @register(Model)
             class Test:
@@ -68,7 +67,6 @@ class TestHybridMethod(DBTestCase):
     def test_hybrid_method_core(self):
 
         def add_in_registry():
-            Integer = Declarations.Column.Integer
 
             @register(Core)
             class SqlBase:
@@ -88,7 +86,6 @@ class TestHybridMethod(DBTestCase):
     def test_hybrid_method_mixin(self):
 
         def add_in_registry():
-            Integer = Declarations.Column.Integer
 
             @register(Mixin)
             class MTest:
@@ -108,7 +105,6 @@ class TestHybridMethod(DBTestCase):
 
     def add_inherited_hybrid_method(self, withcore=False, withmixin=False,
                                     withmodel=False):
-        Integer = Declarations.Column.Integer
 
         @register(Core)
         class SqlBase:

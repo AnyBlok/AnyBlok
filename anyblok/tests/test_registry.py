@@ -9,6 +9,7 @@
 from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager, Blok
+from anyblok.column import Integer
 
 
 class Test:
@@ -175,7 +176,6 @@ class TestRegistry2(DBTestCase):
 
         register = Declarations.register
         Model = Declarations.Model
-        Integer = Declarations.Column.Integer
 
         @register(Model)
         class Test:

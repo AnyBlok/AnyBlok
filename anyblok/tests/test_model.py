@@ -10,6 +10,8 @@ from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
 from anyblok.model import has_sql_fields, get_fields
 from anyblok import Declarations
+from anyblok.column import Integer, String
+
 register = Declarations.register
 unregister = Declarations.unregister
 Model = Declarations.Model
@@ -103,8 +105,6 @@ class TestModel(TestCase):
 
 
 def simple_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class Test:
@@ -113,8 +113,6 @@ def simple_model():
 
 
 def simple_model_with_tablename():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model, tablename='othername')
     class Test:
@@ -123,8 +121,6 @@ def simple_model_with_tablename():
 
 
 def simple_models_with_same_table():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class Test:
@@ -138,8 +134,6 @@ def simple_models_with_same_table():
 
 
 def simple_models_with_same_table_by_declaration_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class Test:
@@ -153,8 +147,6 @@ def simple_models_with_same_table_by_declaration_model():
 
 
 def simple_models_with_same_table_by_inherit():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class Test:
@@ -172,8 +164,6 @@ def simple_models_with_same_table_by_inherit():
 
 
 def simple_models_with_inherit_sqlmodel():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class Test:
@@ -190,8 +180,6 @@ def simple_models_with_inherit_sqlmodel():
 
 
 def model_with_foreign_key():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class TestFk:
@@ -271,7 +259,7 @@ class TestModelAssembling(TestCase):
     def test_has_sql_fields_ok(self):
 
         class MyModel:
-            one_field = Declarations.Column.String()
+            one_field = String()
 
         self.assertEqual(has_sql_fields([MyModel]), True)
 
@@ -285,6 +273,6 @@ class TestModelAssembling(TestCase):
     def test_get_fields(self):
 
         class MyModel:
-            one_field = Declarations.Column.String()
+            one_field = String()
 
         self.assertEqual(get_fields(MyModel), {'one_field': MyModel.one_field})

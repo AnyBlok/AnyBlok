@@ -905,7 +905,7 @@ class Registry:
                 raise Declarations.Exception.RegistryException(
                     "Apply state %r is forbidden because the state %r of "
                     "blok %r is not one of %r" % (
-                        blok.state, blok_name, in_states))
+                        state, blok.state, blok_name, in_states))
             query.update({Blok.state: state}, synchronize_session='fetch')
 
         def upgrade_state_bloks(state):

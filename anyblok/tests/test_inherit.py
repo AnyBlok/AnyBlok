@@ -7,6 +7,8 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
+from anyblok.column import Integer, String
+
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
@@ -14,8 +16,6 @@ Core = Declarations.Core
 
 
 def simple_subclass_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class Test:
@@ -47,7 +47,6 @@ def simple_subclass_Core_Base():
 
 
 def simple_subclass_Core_SqlBase():
-    Integer = Declarations.Column.Integer
 
     @register(Core)
     class SqlBase:
@@ -67,8 +66,6 @@ def simple_subclass_Core_SqlBase():
 
 
 def simple_subclass_model_change_type():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class Test:
@@ -81,8 +78,6 @@ def simple_subclass_model_change_type():
 
 
 def simple_subclass_model_change_type_and_subclass_add_field():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class Test:
@@ -99,8 +94,6 @@ def simple_subclass_model_change_type_and_subclass_add_field():
 
 
 def mixin_one_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Mixin)
     class MixinName:
@@ -115,8 +108,6 @@ def mixin_one_model():
 
 
 def mixin_two_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Mixin)
     class MixinName:
@@ -137,8 +128,6 @@ def mixin_two_model():
 
 
 def mixin_one_model_with_subclass():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Mixin)
     class MixinName:
@@ -157,8 +146,6 @@ def mixin_one_model_with_subclass():
 
 
 def mixin_one_model_by_subclass():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Mixin)
     class MixinName:
@@ -177,8 +164,6 @@ def mixin_one_model_by_subclass():
 
 
 def mixin_with_foreign_key_one_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class TestFk:
@@ -197,8 +182,6 @@ def mixin_with_foreign_key_one_model():
 
 
 def mixin_with_foreign_key_two_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class TestFk:
@@ -222,8 +205,6 @@ def mixin_with_foreign_key_two_model():
 
 
 def mixin_one_model_by_subclass_and_with():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Mixin)
     class MixinName:
@@ -246,8 +227,6 @@ def mixin_one_model_by_subclass_and_with():
 
 
 def mixin_one_model_with_subclass_and_subclass_mixin():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Mixin)
     class MixinName:
@@ -270,8 +249,6 @@ def mixin_one_model_with_subclass_and_subclass_mixin():
 
 
 def inherit_by_another_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class MainModel:
@@ -288,8 +265,6 @@ def inherit_by_another_model():
 
 
 def inherit_by_two_another_model():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class MainModel:
@@ -313,8 +288,6 @@ def inherit_by_two_another_model():
 
 
 def inherit_by_another_model_and_subclass_mainmodel():
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
 
     @register(Model)
     class MainModel:
@@ -414,7 +387,6 @@ def inherit_sql_base_on_simple_model():
 
 
 def inherit_sql_base_on_sql_model():
-    Integer = Declarations.Column.Integer
 
     @register(Core)
     class Base:

@@ -9,16 +9,26 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
-FieldException = Declarations.Exception.FieldException
+from anyblok.field import FieldException
+from anyblok.column import (Integer,
+                            String,
+                            SmallInteger,
+                            BigInteger,
+                            Float,
+                            Decimal,
+                            uString,
+                            Boolean,
+                            DateTime,
+                            Date,
+                            Time)
+from anyblok.relationship import Many2One
+
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
 
 
 def _complete_many2one(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2One = Declarations.RelationShip.Many2One
 
     @register(Model)
     class Address:
@@ -38,9 +48,6 @@ def _complete_many2one(**kwargs):
 
 
 def _minimum_many2one(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2One = Declarations.RelationShip.Many2One
 
     @register(Model)
     class Address:
@@ -55,9 +62,6 @@ def _minimum_many2one(**kwargs):
 
 
 def _many2one_with_str_model(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2One = Declarations.RelationShip.Many2One
 
     @register(Model)
     class Address:
@@ -72,9 +76,6 @@ def _many2one_with_str_model(**kwargs):
 
 
 def _minimum_many2one_without_model(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2One = Declarations.RelationShip.Many2One
 
     @register(Model)
     class Address:
@@ -89,8 +90,6 @@ def _minimum_many2one_without_model(**kwargs):
 
 
 def _auto_detect_type(ColumnType=None, **kwargs):
-    String = Declarations.Column.String
-    Many2One = Declarations.RelationShip.Many2One
 
     @register(Model)
     class Address:
@@ -105,9 +104,6 @@ def _auto_detect_type(ColumnType=None, **kwargs):
 
 
 def _two_remote_primary_keys(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2One = Declarations.RelationShip.Many2One
 
     @register(Model)
     class Address:
@@ -194,53 +190,40 @@ class TestMany2One(DBTestCase):
             str(registry.Person.address_id.property.columns[0].type))
 
     def test_autodetect_type_integer(self):
-        Integer = Declarations.Column.Integer
         self.check_autodetect_type(Integer)
 
     def test_autodetect_type_small_integer(self):
-        SmallInteger = Declarations.Column.SmallInteger
         self.check_autodetect_type(SmallInteger)
 
     def test_autodetect_type_big_integer(self):
-        BigInteger = Declarations.Column.BigInteger
         self.check_autodetect_type(BigInteger)
 
     def test_autodetect_type_float(self):
-        Float = Declarations.Column.Float
         self.check_autodetect_type(Float)
 
     def test_autodetect_type_decimal(self):
-        Decimal = Declarations.Column.Decimal
         self.check_autodetect_type(Decimal)
 
     def test_autodetect_type_string(self):
-        String = Declarations.Column.String
         self.check_autodetect_type(String)
 
     def test_autodetect_type_ustring(self):
-        uString = Declarations.Column.uString
         self.check_autodetect_type(uString)
 
     def test_autodetect_type_boolean(self):
-        Boolean = Declarations.Column.Boolean
         self.check_autodetect_type(Boolean)
 
     def test_autodetect_type_datetime(self):
-        DateTime = Declarations.Column.DateTime
         self.check_autodetect_type(DateTime)
 
     def test_autodetect_type_date(self):
-        Date = Declarations.Column.Date
         self.check_autodetect_type(Date)
 
     def test_autodetect_type_time(self):
-        Time = Declarations.Column.Time
         self.check_autodetect_type(Time)
 
     def test_same_model(self):
         def add_in_registry():
-            Integer = Declarations.Column.Integer
-            Many2One = Declarations.RelationShip.Many2One
 
             @register(Model)
             class Test:
@@ -256,8 +239,6 @@ class TestMany2One(DBTestCase):
 
     def test_same_model_pk_by_inherit(self):
         def add_in_registry():
-            Integer = Declarations.Column.Integer
-            Many2One = Declarations.RelationShip.Many2One
 
             @register(Model)
             class Test:
@@ -277,8 +258,6 @@ class TestMany2One(DBTestCase):
 
     def test_same_model_pk_by_mixin(self):
         def add_in_registry():
-            Integer = Declarations.Column.Integer
-            Many2One = Declarations.RelationShip.Many2One
 
             @register(Mixin)
             class MTest:
@@ -298,9 +277,6 @@ class TestMany2One(DBTestCase):
 
     def test_add_unique_constraint(self):
         def add_in_registry():
-            Integer = Declarations.Column.Integer
-            String = Declarations.Column.String
-            Many2One = Declarations.RelationShip.Many2One
 
             @register(Model)
             class Address:

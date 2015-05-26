@@ -8,17 +8,17 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-FieldException = Declarations.Exception.FieldException
+from anyblok.field import FieldException
+from anyblok.column import Integer, String
+from anyblok.relationship import One2Many
+
+
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
 
 
 def _complete_one2many(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2Many = Declarations.RelationShip.One2Many
-
     primaryjoin = "address.id == person.address_id"
 
     @register(Model)
@@ -45,9 +45,6 @@ def _complete_one2many(**kwargs):
 
 
 def _minimum_one2many(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2Many = Declarations.RelationShip.One2Many
 
     @register(Model)
     class Address:
@@ -70,9 +67,6 @@ def _minimum_one2many(**kwargs):
 
 
 def _minimum_one2many_remote_field_in_mixin(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2Many = Declarations.RelationShip.One2Many
 
     @register(Model)
     class Address:
@@ -98,9 +92,6 @@ def _minimum_one2many_remote_field_in_mixin(**kwargs):
 
 
 def _one2many_with_str_model(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2Many = Declarations.RelationShip.One2Many
 
     @register(Model)
     class Address:
@@ -123,9 +114,6 @@ def _one2many_with_str_model(**kwargs):
 
 
 def _autodetect_two_foreign_key(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    One2Many = Declarations.RelationShip.One2Many
 
     @register(Model)
     class Address:
@@ -198,8 +186,6 @@ class TestOne2Many(DBTestCase):
     def test_same_model_backref(self):
 
         def add_in_registry():
-            Integer = Declarations.Column.Integer
-            One2Many = Declarations.RelationShip.One2Many
 
             @register(Model)
             class Test:

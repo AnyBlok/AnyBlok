@@ -8,16 +8,16 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-FieldException = Declarations.Exception.FieldException
+from anyblok.field import FieldException
+from anyblok.column import Integer, String
+from anyblok.relationship import Many2Many
+
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
 
 
 def _complete_many2many(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2Many = Declarations.RelationShip.Many2Many
 
     @register(Model)
     class Address:
@@ -40,9 +40,6 @@ def _complete_many2many(**kwargs):
 
 
 def _minimum_many2many(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2Many = Declarations.RelationShip.Many2Many
 
     @register(Model)
     class Address:
@@ -60,9 +57,6 @@ def _minimum_many2many(**kwargs):
 
 
 def _minimum_many2many_by_mixin(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2Many = Declarations.RelationShip.Many2Many
 
     @register(Model)
     class Address:
@@ -83,9 +77,6 @@ def _minimum_many2many_by_mixin(**kwargs):
 
 
 def _many2many_with_str_model(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2Many = Declarations.RelationShip.Many2Many
 
     @register(Model)
     class Address:
@@ -103,9 +94,6 @@ def _many2many_with_str_model(**kwargs):
 
 
 def auto_detect_two_primary_keys(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2Many = Declarations.RelationShip.Many2Many
 
     @register(Model)
     class Address:
@@ -121,9 +109,6 @@ def auto_detect_two_primary_keys(**kwargs):
 
 
 def unexisting_remote_column(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2Many = Declarations.RelationShip.Many2Many
 
     @register(Model)
     class Address:
@@ -138,9 +123,6 @@ def unexisting_remote_column(**kwargs):
 
 
 def reuse_many2many_table(**kwargs):
-    Integer = Declarations.Column.Integer
-    String = Declarations.Column.String
-    Many2Many = Declarations.RelationShip.Many2Many
 
     @register(Model)
     class Address:
@@ -278,7 +260,6 @@ class TestMany2Many(DBTestCase):
 
     def test_declared_in_mixin_inherit_by_two_models(self):
         def add_in_registry():
-            String = Declarations.Column.String
             _minimum_many2many_by_mixin()
 
             @register(Model)
