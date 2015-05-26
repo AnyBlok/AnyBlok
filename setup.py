@@ -23,6 +23,7 @@ requires = [
     'graphviz',
     'nose',  # for unittest during the blok install
     'lxml',
+    'six',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

@@ -80,6 +80,11 @@ class TestImportManager(TestCase):
             fp.write("""foo = 'reload'""")
 
         try:
+            self.assertEqual(mockfile1.foo, 'bar')
+            self.assertEqual(mockfile2.foo, 'bar')
+            self.assertEqual(submockpackage.mockfile1.foo, 'bar')
+            self.assertEqual(submockpackage.mockfile2.foo, 'bar')
+            self.assertEqual(mockfile.foo, 'bar')
             blok.reload()
             self.assertEqual(mockfile1.foo, 'reload')
             self.assertEqual(mockfile2.foo, 'bar')
@@ -101,3 +106,11 @@ class TestImportManager(TestCase):
     def test_imports(self):
         blok = ImportManager.add('mockblok')
         blok.imports()
+        from .mockblok.mockpackage import mockfile1, mockfile2
+        from .mockblok.mockpackage import submockpackage
+        from .mockblok import mockfile
+        self.assertEqual(mockfile1.foo, 'bar')
+        self.assertEqual(mockfile2.foo, 'bar')
+        self.assertEqual(submockpackage.mockfile1.foo, 'bar')
+        self.assertEqual(submockpackage.mockfile2.foo, 'bar')
+        self.assertEqual(mockfile.foo, 'bar')
