@@ -26,14 +26,8 @@ class AnyBlokIO(Blok):
     @classmethod
     def declare_io(cls):
         from anyblok import Declarations
-        register = Declarations.register
-        Model = Declarations.Model
 
-        @register(Declarations.Exception)
-        class IOException(Exception):
-            """ IO exception """
-
-        @register(Model)
+        @Declarations.register(Declarations.Model)
         class IO:
             pass
 

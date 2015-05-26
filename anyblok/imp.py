@@ -6,7 +6,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import anyblok
 from .common import python_version
 
 issix = False
@@ -40,8 +39,7 @@ def reload_module_if_blok_is_reloading(module):
         reload_wraper(module)
 
 
-@anyblok.Declarations.register(anyblok.Declarations.Exception)
-class ImportManagerException(Exception):
+class ImportManagerException(AttributeError):
     """ Exception for Import Manager """
 
 

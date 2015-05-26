@@ -7,15 +7,11 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.declarations import Declarations
 from anyblok.column import String, Integer
+from ..exceptions import CacheException
 
 
 register = Declarations.register
 System = Declarations.Model.System
-
-
-@register(Declarations.Exception)
-class CacheException(Exception):
-    """ Simple Exception for the cache Model """
 
 
 @register(System)
@@ -72,10 +68,10 @@ class Cache:
                 if method in caches[registry_name]:
                     cls.insert(registry_name=registry_name, method=method)
                 else:
-                    raise Declarations.Exception.CacheException(
+                    raise CacheException(
                         "Unknown cached method %r" % method)
             else:
-                raise Declarations.Exception.CacheException(
+                raise CacheException(
                     "Unknown cached model %r" % registry_name)
 
         if isinstance(registry_name, str):

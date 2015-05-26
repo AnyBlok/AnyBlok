@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import BlokTestCase
+from ..exceptions import ParameterException
 
 
 class TestSystemParameter(BlokTestCase):
@@ -43,9 +44,8 @@ class TestSystemParameter(BlokTestCase):
         self.assertEqual(Parameter.get('test.parameter'), {'test': True})
 
     def test_unexisting_get(self):
-        from anyblok import Declarations
         Parameter = self.registry.System.Parameter
-        with self.assertRaises(Declarations.Exception.ExceptionParameter):
+        with self.assertRaises(ParameterException):
             Parameter.get('test.parameter')
 
     def test_count(self):

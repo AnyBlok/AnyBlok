@@ -9,7 +9,6 @@
 from .logging import log
 from argparse import ArgumentParser
 from configparser import ConfigParser
-from anyblok import Declarations
 import sys
 import os
 from logging import getLogger
@@ -25,8 +24,7 @@ def getParser(description):
     return ArgumentParser(description=description)
 
 
-@Declarations.register(Declarations.Exception)
-class ConfigurationException(Exception):
+class ConfigurationException(LookupError):
     """ Simple Exception for Configuration"""
 
 

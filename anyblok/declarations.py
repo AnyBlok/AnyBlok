@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 
 
-class DeclarationsException(Exception):
+class DeclarationsException(AttributeError):
     """ Simple Exception for Declarations """
 
 

@@ -10,12 +10,6 @@ from anyblok import Declarations
 
 register = Declarations.register
 IO = Declarations.Model.IO
-ExporterException = Declarations.Exception.ExporterException
-
-
-@register(ExporterException)
-class XMLExporterException(Exception):
-    """ Simple exception for exporter """
 
 
 @register(IO)
@@ -44,5 +38,4 @@ class XML:
         return cls.registry.IO.Exporter.insert(**kwargs)
 
     def run(self, entries):
-        # TODO
-        raise ExporterException.XMLExporterException('Not implemented yet')
+        raise NotImplemented

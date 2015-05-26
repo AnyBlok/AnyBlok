@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import BlokTestCase
+from ..exceptions import CSVImporterException
 from os import urandom
 from csv import DictReader
 from io import StringIO
@@ -271,9 +272,7 @@ class TestImportCSV(BlokTestCase):
         importer.header_fields = ['model', 'mode']
         importer.fields_description = Importer.fields_description(
             fields=importer.header_fields)
-        from anyblok import Declarations
-        ImporterException = Declarations.Exception.ImporterException
-        with self.assertRaises(ImporterException.CSVImporterException):
+        with self.assertRaises(CSVImporterException):
             importer.parse_row({'mode': 'Model.IO.Exporter.CSV'})
 
     def test_parse_row(self):
@@ -472,9 +471,7 @@ class TestImportCSV(BlokTestCase):
 
     def test_run_raise_at_end(self):
         importer = self.create_csv_importer()
-        from anyblok import Declarations
-        ImporterException = Declarations.Exception.ImporterException
-        with self.assertRaises(ImporterException.CSVImporterException):
+        with self.assertRaises(CSVImporterException):
             importer.run()
 
         self.assertEqual(len(importer.created_entries), 0)

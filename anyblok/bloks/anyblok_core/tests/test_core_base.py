@@ -6,22 +6,22 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import BlokTestCase
-from anyblok import Declarations
+from ..exceptions import CoreBaseException
 
 
 class TestCoreBase(BlokTestCase):
 
     def test_to_primary_keys(self):
-        with self.assertRaises(Declarations.Exception.CoreBaseException):
+        with self.assertRaises(CoreBaseException):
             test = self.registry.System()
             test.to_primary_keys()
 
     def test_from_primary_keys(self):
-        with self.assertRaises(Declarations.Exception.CoreBaseException):
+        with self.assertRaises(CoreBaseException):
             self.registry.System.from_primary_keys()
 
     def test_get_primary_keys(self):
-        with self.assertRaises(Declarations.Exception.CoreBaseException):
+        with self.assertRaises(CoreBaseException):
             self.registry.System.get_primary_keys()
 
     def test_get_model(self):

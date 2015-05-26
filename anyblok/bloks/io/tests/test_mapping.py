@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import BlokTestCase
+from ..exceptions import IOMappingSetException
 
 
 class TestIOMapping(BlokTestCase):
@@ -110,9 +111,6 @@ class TestIOMapping(BlokTestCase):
             self.assertEqual(mapping, None)
 
     def test_multi_set_the_same_key_with_raise(self):
-        from anyblok import Declarations
-        IOException = Declarations.Exception.IOException
-        IOMappingSetException = IOException.IOMappingSetException
         column = self.Column.query().first()
         self.Mapping.set('test_set', column)
         with self.assertRaises(IOMappingSetException):

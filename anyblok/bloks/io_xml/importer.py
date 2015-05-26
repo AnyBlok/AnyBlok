@@ -7,21 +7,14 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from lxml import etree
+from .exceptions import XMLImporterException
 
 
 register = Declarations.register
 IO = Declarations.Model.IO
-ImporterException = Declarations.Exception.ImporterException
-
-
 if_exist = 'update'
 if_does_not_exist = 'create'
 on_error = 'ignore'
-
-
-@register(ImporterException)
-class XMLImporterException(Exception):
-    """ Simple exception for importer exception """
 
 
 @register(IO)
@@ -55,7 +48,7 @@ class XML:
     def _raise(self, msg, on_error=on_error, **kwargs):
         self.error_found.append(str(msg))
         if on_error == 'raise':
-            raise ImporterException.XMLImporterException(msg)
+            raise XMLImporterException(msg)
 
     def find_entry(self, model=None, external_id=None, param=None, **kwargs):
         if (model, param) in self.params:
@@ -317,7 +310,7 @@ class XML:
         if self.error_found:
             if records.attrib.get('on_error', 'raise') == 'raise':
                 msg = "Exception found : \n %s" % '\n'.join(self.error_found)
-                raise ImporterException.XMLImporterException(msg)
+                raise XMLImporterException(msg)
 
         return {
             'error_found': self.error_found,
@@ -329,7 +322,7 @@ class XML:
     def insert(cls, delimiter=None, quotechar=None, **kwargs):
         kwargs['mode'] = cls.__registry_name__
         if 'model' not in kwargs:
-            raise ImporterException.CSVImporterException(
+            raise XMLImporterException(
                 "The column 'model' is required")
 
         if not isinstance(kwargs['model'], str):

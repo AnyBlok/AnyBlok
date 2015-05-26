@@ -18,13 +18,11 @@ from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
 
 
-@Declarations.register(Declarations.Exception)
 class ModelException(Exception):
     """Exception for Model declaration"""
 
 
-@Declarations.register(Declarations.Exception)
-class ViewException(Declarations.Exception.ModelException):
+class ViewException(ModelException):
     """Exception for View declaration"""
 
 
@@ -410,7 +408,7 @@ class Model:
                 elif brn in registry.loaded_registries['Model_names']:
                     bs, ps = cls.load_namespace_second_step(registry, brn)
                 else:
-                    raise Declarations.Exception.ModelException(
+                    raise ModelException(
                         "You have not to inherit the %r "
                         "Only the 'Mixin' and %r types are allowed" % (
                             brn, cls.__name__))
@@ -493,7 +491,7 @@ class Model:
             view = registry.loaded_views[tablename]
         else:
             if not hasattr(base, 'sqlalchemy_view_declaration'):
-                raise Declarations.Exception.ViewException(
+                raise ViewException(
                     "%r.'sqlalchemy_view_declaration' is required to "
                     "define the query to apply of the view" % namespace)
 
@@ -520,7 +518,7 @@ class Model:
                 pks.append(col)
 
         if not pks:
-            raise Declarations.Exception.ViewException(
+            raise ViewException(
                 "%r have any primary key defined" % namespace)
 
         pks = [getattr(view.c, x) for x in pks]

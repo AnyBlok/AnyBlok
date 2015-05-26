@@ -61,7 +61,6 @@ BDD = {
 
 
 from .declarations import Declarations  # noqa
-from . import exception  # noqa
 from . import databases  # noqa
 from . import core  # noqa
 from . import model  # noqa

@@ -6,10 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase
-from anyblok.environment import EnvironmentManager
-from anyblok.environment import ThreadEnvironment
-from anyblok import Declarations
-EnvironmentException = Declarations.Exception.EnvironmentException
+from anyblok.environment import (EnvironmentManager,
+                                 ThreadEnvironment,
+                                 EnvironmentException)
 
 
 class MockEnvironment:

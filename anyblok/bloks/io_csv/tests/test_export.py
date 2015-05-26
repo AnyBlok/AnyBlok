@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import BlokTestCase
+from ..exceptions import CSVExporterException
 from csv import DictReader
 
 
@@ -75,9 +76,7 @@ class TestExportCSV(BlokTestCase):
         Exporter = self.registry.IO.Exporter
         fields = [{'name': 'id.other', 'mode': 'external_id'}]
         exporter = self.create_exporter(Exporter, fields=fields)
-        from anyblok import Declarations
-        ExporterException = Declarations.Exception.ExporterException
-        with self.assertRaises(ExporterException.CSVExporterException):
+        with self.assertRaises(CSVExporterException):
             exporter.fields_to_export[0].value2str(exporter, exporter)
 
     def test_format_browsed_field_with_mapping_any(self):

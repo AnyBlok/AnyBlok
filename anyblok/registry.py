@@ -25,12 +25,10 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
-@Declarations.register(Declarations.Exception)
 class RegistryManagerException(Exception):
     """ Simple Exception for Registry """
 
 
-@Declarations.register(Declarations.Exception)
 class RegistryException(Exception):
     """ Simple Exception for Registry """
 
@@ -898,11 +896,11 @@ class Registry:
             query = Blok.query().filter(Blok.name == blok_name)
             blok = query.first()
             if blok is None:
-                raise Declarations.Exception.RegistryException(
+                raise RegistryException(
                     "Blok %r not found in entry point declarations" %
                     blok_name)
             if blok.state not in in_states:
-                raise Declarations.Exception.RegistryException(
+                raise RegistryException(
                     "Apply state %r is forbidden because the state %r of "
                     "blok %r is not one of %r" % (
                         state, blok.state, blok_name, in_states))
@@ -925,7 +923,7 @@ class Registry:
                 def wrap(bloks):
                     for blok in bloks:
                         if Blok.check_if_the_conditional_are_installed(blok):
-                            raise Declarations.Exception.RegistryException(
+                            raise RegistryException(
                                 "the blok %r can not be unistalled because "
                                 "this blok is a conditional blok and all the "
                                 "bloks in his conditional list are installed "

@@ -9,17 +9,12 @@ from anyblok import Declarations
 from anyblok.column import Selection
 from csv import DictReader
 from io import StringIO
+from .exceptions import CSVImporterException
 
 
 register = Declarations.register
 Mixin = Declarations.Mixin
 IO = Declarations.Model.IO
-ImporterException = Declarations.Exception.ImporterException
-
-
-@register(ImporterException)
-class CSVImporterException(Exception):
-    """ Simple exception for importer exception """
 
 
 @register(IO)
@@ -155,7 +150,7 @@ class CSV:
                     entry = Model.insert(**values)
                     self.created_entries.append(entry)
                 elif self.importer.csv_if_exist == 'raise':
-                    raise ImporterException.CSVImporterException(
+                    raise CSVImporterException(
                         "Row %r already an entry %r " % (
                             row, entry.to_primary_keys()))
             else:
@@ -169,14 +164,14 @@ class CSV:
                         Mapping.set(row[self.header_external_id], entry)
 
                 elif self.importer.csv_if_does_not_exist == 'raise':
-                    raise ImporterException.CSVImporterException(
+                    raise CSVImporterException(
                         "Create row are not allowed")
 
         except Exception as e:
             msg = '%r: %r' % (e.__class__.__name__, e)
             self.error_found.append(msg)
             if self.importer.csv_on_error == 'raise_now':
-                raise ImporterException.CSVImporterException(msg)
+                raise CSVImporterException(msg)
 
     def run(self):
         try:
@@ -199,7 +194,7 @@ class CSV:
         if self.error_found:
             if self.importer.csv_on_error == 'raise_at_the_end':
                 msg = "Exception found : \n %s" % '\n'.join(self.error_found)
-                raise ImporterException.CSVImporterException(msg)
+                raise CSVImporterException(msg)
 
         return {
             'error': self.error_found,
@@ -211,8 +206,7 @@ class CSV:
     def insert(cls, delimiter=None, quotechar=None, **kwargs):
         kwargs['mode'] = cls.__registry_name__
         if 'model' not in kwargs:
-            raise ImporterException.CSVImporterException(
-                "The column 'model' is required")
+            raise CSVImporterException("The column 'model' is required")
 
         if not isinstance(kwargs['model'], str):
             kwargs['model'] = kwargs['model'].__registry_name__

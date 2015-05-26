@@ -5,7 +5,6 @@ from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from sqlalchemy import schema
 from contextlib import contextmanager
-from anyblok import Declarations
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -23,8 +22,7 @@ def cnx(migration):
         raise
 
 
-@Declarations.register(Declarations.Exception)
-class MigrationException(Exception):
+class MigrationException(AttributeError):
     """ Simple Exception class for Migration """
 
 

@@ -7,7 +7,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from pkg_resources import iter_entry_points
-import anyblok
 from anyblok.imp import ImportManager
 from .logging import log
 from anyblok.environment import EnvironmentManager
@@ -20,8 +19,7 @@ from os.path import join
 logger = getLogger(__name__)
 
 
-@anyblok.Declarations.register(anyblok.Declarations.Exception)
-class BlokManagerException(Exception):
+class BlokManagerException(LookupError):
     """ Simple exception to BlokManager """
 
     def __init__(self, *args, **kwargs):
@@ -39,7 +37,7 @@ class BlokManager:
 
     Use this class to import all the bloks in the entrypoint::
 
-        BlokManager.load('AnyBlok')
+        BlokManager.load()
 
     """
 
@@ -145,13 +143,10 @@ class BlokManager:
             count = 0
             for i in iter_entry_points(entry_point):
                 count += 1
-                try:
-                    blok = i.load()
-                    cls.set(i.name, blok)
-                    blok.name = i.name
-                    bloks.append((blok.priority, i.name))
-                except Exception as e:
-                    raise BlokManagerException(str(e))
+                blok = i.load()
+                cls.set(i.name, blok)
+                blok.name = i.name
+                bloks.append((blok.priority, i.name))
 
             if not count:
                 raise BlokManagerException(
@@ -233,7 +228,7 @@ class BlokManager:
         :exception: BlokManagerException
         """
         if not cls.has_importer(key):
-            raise anyblok.Declarations.Exception.BlokManagerException(
+            raise BlokManagerException(
                 "No importer found for the key %r" % key)
 
         return cls.importers[key]

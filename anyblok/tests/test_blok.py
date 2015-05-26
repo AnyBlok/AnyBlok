@@ -6,12 +6,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.blok import BlokManager, Blok
+from anyblok.blok import BlokManager, Blok, BlokManagerException
 from anyblok.tests.testcase import TestCase, DBTestCase
-from anyblok import Declarations
-
-
-BlokManagerException = Declarations.Exception.BlokManagerException
+from anyblok.registry import RegistryException
 
 
 class TestBlokManager(TestCase):
@@ -117,7 +114,7 @@ class TestBlok(DBTestCase):
         try:
             self.upgrade(registry, install=('test-blok1',))
             self.fail('No watchdog to install an installed blok')
-        except Declarations.Exception.RegistryException:
+        except RegistryException:
             pass
 
     def test_uninstall(self):
@@ -135,7 +132,7 @@ class TestBlok(DBTestCase):
         try:
             self.upgrade(registry, uninstall=('test-blok1',))
             self.fail('No watchdog to uninstall an uninstalled blok')
-        except Declarations.Exception.RegistryException:
+        except RegistryException:
             pass
 
     def test_update(self):
@@ -155,7 +152,7 @@ class TestBlok(DBTestCase):
         try:
             self.upgrade(registry, update=('test-blok1',))
             self.fail('No watchdog to update an uninstalled blok')
-        except Declarations.Exception.RegistryException:
+        except RegistryException:
             pass
 
 
@@ -537,7 +534,7 @@ class TestBlokConditionnal(DBTestCase):
         try:
             self.upgrade(registry, uninstall=('test-blok5',))
             self.fail('No watchdog to uninstall conditionnal blok')
-        except Declarations.Exception.RegistryException:
+        except RegistryException:
             pass
 
     def test_uninstall_conditionnal(self):

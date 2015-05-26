@@ -6,13 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from ..exceptions import QueryException
 from sqlalchemy.orm import query
 from inspect import ismethod
-
-
-@Declarations.register(Declarations.Exception)
-class QueryException(Exception):
-    """ Simple Exception for query """
 
 
 @Declarations.register(Declarations.Core)
@@ -36,7 +32,6 @@ class Query(query.Query):
         ``sqlalchemy_query_method`` method
 
         :rtype: list of the method name
-        :exception: QueryException
         """
         return ['update', 'delete']
 

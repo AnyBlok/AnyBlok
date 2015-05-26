@@ -9,16 +9,7 @@ from anyblok import Declarations
 from anyblok.column import LargeBinary, Boolean, Integer
 
 
-register = Declarations.register
-IO = Declarations.Model.IO
-
-
-@register(Declarations.Exception)
-class ImporterException(Exception):
-    """Simple Exception for importer"""
-
-
-@register(IO)
+@Declarations.register(Declarations.Model.IO)
 class Importer(Declarations.Mixin.IOMixin):
 
     file_to_import = LargeBinary(nullable=False)

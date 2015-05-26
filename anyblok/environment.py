@@ -9,7 +9,7 @@ import threading
 from inspect import ismethod
 
 
-class EnvironmentException(Exception):
+class EnvironmentException(AttributeError):
     """ Exception for the Environment """
 
 

@@ -6,15 +6,11 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql import functions
 from sqlalchemy import or_, and_
-
-
-@Declarations.register(Declarations.Exception)
-class SqlBaseException(Exception):
-    """ Simple Exception for sql base """
 
 
 def query_method(name):

@@ -7,15 +7,11 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok.column import String, Json, Boolean
+from ..exceptions import ParameterException
 
 
 register = Declarations.register
 System = Declarations.Model.System
-
-
-@register(Declarations.Exception)
-class ExceptionParameter(Exception):
-    """ Simple exception for System.Parameter """
 
 
 @register(Declarations.Model.System)
@@ -61,10 +57,10 @@ class Parameter:
 
         :param key: key to check
         :rtype: return value
-        :exception: Declarations.Exception.ExceptionParameter
+        :exception: ExceptionParameter
         """
         if not cls.is_exist(key):
-            raise Declarations.Exception.ExceptionParameter(
+            raise ParameterException(
                 "unexisting key %r" % key)
 
         param = cls.from_primary_keys(key=key)

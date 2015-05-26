@@ -11,6 +11,7 @@ from anyblok.blok import BlokManager
 from anyblok.config import Configuration
 from anyblok.environment import EnvironmentManager
 from anyblok.column import Integer as Int, String as Str
+from anyblok.migration import MigrationException
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
 from anyblok import Declarations
@@ -18,7 +19,6 @@ from sqlalchemy.exc import InternalError
 from unittest import skipIf
 import alembic
 from copy import deepcopy
-MigrationException = Declarations.Exception.MigrationException
 
 
 class TestMigration(TestCase):

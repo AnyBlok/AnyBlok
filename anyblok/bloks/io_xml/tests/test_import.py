@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import BlokTestCase
+from ..exceptions import XMLImporterException
 from lxml import etree
 from os import urandom
 
@@ -36,10 +37,8 @@ class TestImportCSV(BlokTestCase):
 
     def test_raise_now(self):
         importer = self.create_XML_importer()
-        from anyblok import Declarations
-        ImporterException = Declarations.Exception.ImporterException
         msg = 'test'
-        with self.assertRaises(ImporterException.XMLImporterException):
+        with self.assertRaises(XMLImporterException):
             importer._raise(msg, on_error='raise')
 
         self.assertIn(msg, importer.error_found)
@@ -443,9 +442,7 @@ class TestImportCSV(BlokTestCase):
         field.text = model + '.XML'
         file_to_import = etree.tostring(records)
         importer = self.create_XML_importer(file_to_import=file_to_import)
-        from anyblok import Declarations
-        ImporterException = Declarations.Exception.ImporterException
-        with self.assertRaises(ImporterException.XMLImporterException):
+        with self.assertRaises(XMLImporterException):
             importer.run()
 
         self.assertEqual(len(importer.error_found), 1)

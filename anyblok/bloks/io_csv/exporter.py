@@ -10,17 +10,12 @@ from anyblok.relationship import Many2One
 from anyblok.column import String, Selection
 from io import StringIO
 from csv import DictWriter
+from .exceptions import CSVExporterException
 
 
 register = Declarations.register
 IO = Declarations.Model.IO
 Mixin = Declarations.Mixin
-ExporterException = Declarations.Exception.ExporterException
-
-
-@register(ExporterException)
-class CSVExporterException(Exception):
-    """ Simple exception for exporter """
 
 
 @register(IO)
@@ -54,7 +49,7 @@ class Field(Mixin.IOCSVFieldMixin):
             Model = self.get_model(entry.__registry_name__)
             fields_description = Model.fields_description(fields=[name])
             if name not in fields_description:
-                raise ExporterException.CSVExporterException(
+                raise CSVExporterException(
                     "unknow field %r in exporter field %r" % (
                         name, self.name))
 
@@ -82,13 +77,13 @@ class Field(Mixin.IOCSVFieldMixin):
                 if len(pks) == 1:
                     pks = {pks[0]: getattr(entry, name)}
                 else:
-                    raise ExporterException.CSVExporterException(
+                    raise CSVExporterException(
                         "Not implemented yet")
 
                 return Model.from_primary_keys(**pks)
 
             else:
-                raise ExporterException.CSVExporterException(
+                raise CSVExporterException(
                     "the field %r of %r is not in (Many2One, One2One) "
                     "or has not a foreign key")
 

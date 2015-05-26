@@ -6,11 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-
-
-@Declarations.register(Declarations.Exception)
-class ExporterException(Exception):
-    """Simple Exception for exporter"""
+from .exceptions import ExporterException
 
 
 @Declarations.register(Declarations.Model.IO)
@@ -19,7 +15,7 @@ class Exporter(Declarations.Mixin.IOMixin):
     def run(self, entries):
         for entry in entries:
             if entry.__registry_name__ != self.model:
-                raise Declarations.Exception.ExporterException(
+                raise ExporterException(
                     "The entries must be instance of %r" % self.model)
 
         return self.get_model(self.mode)(self).run(entries)

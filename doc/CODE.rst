@@ -24,6 +24,12 @@ anyblok.declarations module
 
 .. automodule:: anyblok.declarations
 
+.. autoexception:: DeclarationsException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
 .. autoclass:: Declarations
     :members:
     :noindex:
@@ -33,14 +39,46 @@ anyblok.config module
 
 .. automodule:: anyblok.config
 
+.. autoexception:: ConfigurationException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
 .. autoclass:: Configuration
     :members:
+    :noindex:
+
+anyblok.logging module
+----------------------
+
+.. automodule:: anyblok.logging
+
+.. autoclass:: consoleFormatter
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoclass:: anyblokFormatter
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autofunction:: log
     :noindex:
 
 anyblok.imp module
 ------------------
 
 .. automodule:: anyblok.imp
+
+.. autoexception:: ImportManagerException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
 
 .. autoclass:: ImportManager
     :members:
@@ -50,6 +88,12 @@ anyblok.environment module
 --------------------------
 
 .. automodule:: anyblok.environment
+
+.. autoexception:: EnvironmentException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
 
 .. autoclass:: EnvironmentManager
     :members:
@@ -64,6 +108,12 @@ anyblok.blok module
 
 .. automodule:: anyblok.blok
 
+.. autoexception:: BlokManagerException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
 .. autoclass:: BlokManager
     :members:
     :noindex:
@@ -76,6 +126,18 @@ anyblok.registry module
 -----------------------
 
 .. automodule:: anyblok.registry
+
+.. autoexception:: RegistryManagerException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoexception:: RegistryException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
 
 .. autoclass:: RegistryManager
     :members:
@@ -92,8 +154,14 @@ anyblok.migration module
 
 .. warning::
     AnyBlok use Alembic to do the dynamic migration, but Alembic does'nt detect
-    all the change (Foreifn key, primary key), we must wait the Alembic or
+    all the change (primary key, ...), we must wait the Alembic or
     implement it in Alembic project before use it in AnyBlok
+
+.. autoexception:: MigrationException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
 
 .. autoclass:: MigrationReport
     :members:
@@ -141,6 +209,8 @@ anyblok.field module
     :noindex:
 
 .. autoclass:: Function
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
@@ -150,62 +220,92 @@ anyblok.column module
 .. automodule:: anyblok.column
 
 .. autoclass:: Column
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: Integer
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: SmallInteger
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: BigInteger
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: Boolean
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: Float
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: Decimal
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: Date
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: DateTime
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: Time
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: Interval
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: String
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: uString
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: Text
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: uText
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
@@ -218,6 +318,8 @@ anyblok.column module
     :noindex:
 
 .. autoclass:: Selection
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
@@ -226,10 +328,49 @@ anyblok.column module
     :noindex:
 
 .. autoclass:: Json
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 
 .. autoclass:: LargeBinary
+    :show-inheritance:
+    :inherited-members:
+    :members:
+    :noindex:
+
+anyblok.relationship module
+---------------------------
+
+.. automodule:: anyblok.relationship
+
+.. autoclass:: RelationShip
+    :show-inheritance:
+    :inherited-members:
+    :members:
+    :noindex:
+
+.. autoclass:: Many2One
+    :show-inheritance:
+    :inherited-members:
+    :members:
+    :noindex:
+
+.. autoclass:: One2One
+    :show-inheritance:
+    :inherited-members:
+    :members:
+    :noindex:
+
+.. autoclass:: Many2Many
+    :show-inheritance:
+    :inherited-members:
+    :members:
+    :noindex:
+
+.. autoclass:: One2Many
+    :show-inheritance:
+    :inherited-members:
     :members:
     :noindex:
 

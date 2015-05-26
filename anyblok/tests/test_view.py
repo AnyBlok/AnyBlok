@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
+from anyblok.model import ViewException
 from anyblok import Declarations
 from sqlalchemy.sql import select
 from anyblok.column import Integer, String
@@ -258,11 +259,8 @@ class TestView(DBTestCase):
         registry.T1.insert(code='test2', val=3)
         registry.T2.insert(code='test2', val=4)
 
-        try:
+        with self.assertRaises(ViewException):
             registry.TestView.query().update({'val2': 3})
-            self.fail('No watchdog for update')
-        except Declarations.Exception.ViewException:
-            pass
 
     def test_view_delete_method(self):
         registry = self.init_registry(simple_view)
@@ -272,22 +270,13 @@ class TestView(DBTestCase):
         registry.T1.insert(code='test2', val=3)
         registry.T2.insert(code='test2', val=4)
 
-        try:
+        with self.assertRaises(ViewException):
             registry.TestView.query().delete()
-            self.fail('No watchdog for delete')
-        except Declarations.Exception.ViewException:
-            pass
 
     def test_simple_view_without_primary_key(self):
-        try:
+        with self.assertRaises(ViewException):
             self.init_registry(simple_view_without_primary_key)
-            self.fail('No error when any primary key column are declared')
-        except Declarations.Exception.ViewException:
-            pass
 
     def test_simple_view_without_view_declaration(self):
-        try:
+        with self.assertRaises(ViewException):
             self.init_registry(simple_view_without_view_declaration)
-            self.fail('No error when any view declaration method are declared')
-        except Declarations.Exception.ViewException:
-            pass

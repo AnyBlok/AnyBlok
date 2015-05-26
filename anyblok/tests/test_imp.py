@@ -5,14 +5,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import anyblok
 from anyblok.tests.testcase import TestCase
 from anyblok.blok import BlokManager
 from sys import modules
-from anyblok.imp import ImportManager
+from anyblok.imp import ImportManager, ImportManagerException
 from os.path import join
 from .mockblok import mockblok
-ImportManagerException = anyblok.Declarations.Exception.ImportManagerException
 
 
 tests_path = join('/'.join(__file__.split('/')[:-1]), 'mockblok')

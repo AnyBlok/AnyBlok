@@ -8,6 +8,7 @@
 from random import random
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
+from anyblok.bloks.anyblok_core.exceptions import CacheException
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
@@ -40,11 +41,8 @@ class TestCache(DBTestCase):
     def test_invalid_cache_invalidation(self):
         registry = self.init_registry(self.add_model_with_method_cached)
         Cache = registry.System.Cache
-        try:
+        with self.assertRaises(CacheException):
             Cache.invalidate('Model.Test2', 'method_cached')
-            self.fail('No watchdog for bad invalidation cache')
-        except Declarations.Exception.CacheException:
-            pass
 
     def test_detect_cache_invalidation(self):
         registry = self.init_registry(self.add_model_with_method_cached)

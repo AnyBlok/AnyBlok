@@ -8,15 +8,11 @@
 from anyblok import Declarations
 import datetime
 from json import loads, dumps
+from .exceptions import FormaterException
 
 
 register = Declarations.register
 IO = Declarations.Model.IO
-
-
-@register(Declarations.Exception)
-class FormaterException(Exception):
-    """Simple Exception for importer"""
 
 
 @register(IO)
@@ -28,7 +24,7 @@ class Formater:
     def _externalIdStr2value(self, value, model):
         mapping = self.registry.IO.Mapping.get(model, value)
         if mapping is None:
-            raise Declarations.Exception.FormaterException(
+            raise FormaterException(
                 "Unexisting maping key %r with model %r" % (value, model))
 
         return mapping
@@ -37,7 +33,7 @@ class Formater:
         entry = self._externalIdStr2value(value, model)
         pks = entry.to_primary_keys()
         if len(pks.keys()) > 1:
-            raise Declarations.Exception.FormaterException(
+            raise FormaterException(
                 "Foreign key on multi primary keys does not implemented yet")
 
         return [x for x in pks.values()][0]
@@ -53,7 +49,7 @@ class Formater:
         Mapping = self.registry.IO.Mapping
         pks = Model.get_primary_keys()
         if len(pks) > 1:
-            raise Declarations.Exception.FormaterException(
+            raise FormaterException(
                 "Foreign key on multi primary keys does not implemented yet")
 
         pks = {x: value for x in pks}
@@ -129,7 +125,7 @@ class Boolean(IO.Formater):
         elif value in ("0", "false", "False", '', 0, False):
             return False
 
-        raise Declarations.Exception.FormaterException(
+        raise FormaterException(
             "Value %r is not a boolean" % value)
 
     def value2str(self, value, model):
@@ -172,7 +168,7 @@ class Many2One(IO.Formater):
             return None
 
         if not isinstance(pks, dict):
-            raise Declarations.Exception.FormaterException(
+            raise FormaterException(
                 "Value %r for %r must be dict" % (
                     value, self.__registry_name__))
 
@@ -211,7 +207,7 @@ class Many2Many(IO.Formater):
         pks = loads(value)
 
         if not all(isinstance(x, dict) for x in pks):
-            raise Declarations.Exception.FormaterException(
+            raise FormaterException(
                 "All values in %r for %r must be dict" % (
                     value, self.__registry_name__))
 

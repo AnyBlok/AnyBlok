@@ -39,22 +39,6 @@ The known ``Type`` declarations are:
 * Mixin
 * Core
 * AuthorizationPolicyAssociation
-* Exception
-
-Some are directly see as a database declaration (entry ``Type``):
-
-* Model
-* Mixin
-* Core
-* AuthorizationPolicyAssociation
-
-Other have not depends with the installation of not of the bloks:
-
-* Exception
-
-.. warning::
-
-    All declaration of new entry must be done out of any bloks
 
 This is an example to declare new entry ``Type``::
 

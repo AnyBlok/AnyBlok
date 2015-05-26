@@ -7,21 +7,11 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok.column import String, Json
+from .exceptions import IOMappingCheckException, IOMappingSetException
 
 
 register = Declarations.register
 Model = Declarations.Model
-IOException = Declarations.Exception.IOException
-
-
-@register(IOException)
-class IOMappingCheckException(IOException):
-    """ IO Exception for setter """
-
-
-@register(IOException)
-class IOMappingSetException(IOException):
-    """ IO Exception for setter """
 
 
 @register(Model.IO)

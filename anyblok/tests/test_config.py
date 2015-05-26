@@ -15,12 +15,11 @@ from anyblok.config import (Configuration,
                             add_update_bloks,
                             add_interpreter,
                             add_schema,
-                            add_unittest)
+                            add_unittest,
+                            ConfigurationException)
 from anyblok.tests.testcase import TestCase
-from anyblok import Declarations
 
 
-ConfigurationException = Declarations.Exception.ConfigurationException
 old_getParser = config.getParser
 
 
