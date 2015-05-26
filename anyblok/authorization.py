@@ -48,9 +48,9 @@ class AuthorizationPolicyAssociation:
 
     @classmethod
     def assemble_callback(cls, registry):
-        registry._authnz_policies = {}
+        registry._authz_policies = {}
         for blok in registry.ordered_loaded_bloks:
-            registry._authnz_policies.update(
+            registry._authz_policies.update(
                 RegistryManager.loaded_bloks[blok][cls.__name__])
 
 

@@ -492,15 +492,15 @@ class Registry:
         By ultimate default the special :class:`DenyAllPolicy` is returned.
         """
         model_name = target.__registry_name__
-        policy = self._authnz_policies.get((model_name, permission))
+        policy = self._authz_policies.get((model_name, permission))
         if policy is not None:
             return policy
 
-        policy = self._authnz_policies.get(model_name)
+        policy = self._authz_policies.get(model_name)
         if policy is not None:
             return policy
 
-        return self._authnz_policies.get(None)
+        return self._authz_policies.get(None)
 
     def load_entry(self, blok, entry):
         """ load one entry type for one blok
