@@ -16,6 +16,7 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
+* [FIX] Reload fonctionnality in python 3.2
 * [REF] Remove the Declarations typs Field, Column, RelationShip, they are
         replaced by python import
 * [REF] rename **ArgsParseManager** by **Configuration**

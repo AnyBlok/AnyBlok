@@ -11,7 +11,6 @@ from anyblok.blok import BlokManager
 from sys import modules
 from anyblok.imp import ImportManager
 from os.path import join
-# from unittest import skipIf
 from .mockblok import mockblok
 ImportManagerException = anyblok.Declarations.Exception.ImportManagerException
 
@@ -63,7 +62,6 @@ class TestImportManager(TestCase):
         except ImportManagerException:
             pass
 
-    # @skipIf(python_version() < '3.3', "Reload doesn't work in python 3.2")
     def test_reload(self):
         blok = ImportManager.add('mockblok')
         blok.imports()
