@@ -70,6 +70,8 @@ setup(
         ],
         'bloks': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
+            'model_authz='
+            'anyblok.bloks.model_authz:ModelBasedAuthorizationBlok',
             'anyblok-io=anyblok.bloks.io:AnyBlokIO',
             'anyblok-io-csv=anyblok.bloks.io_csv:AnyBlokIOCSV',
             'anyblok-io-xml=anyblok.bloks.io_xml:AnyBlokIOXML',
@@ -83,6 +85,7 @@ setup(
             'test-blok6=anyblok.test_bloks.test_blok6:TestBlok',
             'test-blok7=anyblok.test_bloks.test_blok7:TestBlok',
             'test-blok8=anyblok.test_bloks.test_blok8:TestBlok',
+            'test-blok9=anyblok.test_bloks.test_blok9:TestBlok',
         ],
     },
     extras_require={},

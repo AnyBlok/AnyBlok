@@ -23,6 +23,7 @@ The declarations at the edge will *associate* the policies with the
 models. The edge user-aware methods will call the check and query facilities
 provided by the core that themselves apply the relevant policies.
 """
+from copy import deepcopy
 from .declarations import Declarations
 from .environment import EnvironmentManager
 from .registry import RegistryManager
@@ -31,10 +32,16 @@ from .registry import RegistryManager
 @Declarations.add_declaration_type(isAnEntry=True,
                                    assemble='assemble_callback')
 class AuthorizationPolicyAssociation:
-    """Encodes which policy to use per model or permission."""
+    """Encodes which policy to use per model or (model, permission).
+
+    In the assembly phase, copies of the policy are issued, and the registry
+    is set as an attribute on them. This is a bit memory inefficient, but
+    otherwise, passing the registry would have to be in all AuthorizationPolicy
+    API calls.
+    """
 
     def __new__(cls, model_declaration, policy, permission=None):
-        """Declare for given model than policy should be used.
+        """Declare for given model that policy should be used.
 
         :param permission: if provided, the policy will apply for this
                            permission only, otherwise, it will act as the
@@ -48,10 +55,15 @@ class AuthorizationPolicyAssociation:
 
     @classmethod
     def assemble_callback(cls, registry):
-        registry._authz_policies = {}
+        policies = {}
         for blok in registry.ordered_loaded_bloks:
-            registry._authz_policies.update(
-                RegistryManager.loaded_bloks[blok][cls.__name__])
+            policies.update(RegistryManager.loaded_bloks[blok][cls.__name__])
+
+        # for this registry entry, the list of names is irrelevant pollution:
+        del policies['registry_names']
+        registry._authz_policies = deepcopy(policies)
+        for policy in registry._authz_policies.values():
+            policy.registry = registry
 
 
 class PolicyNotForModelClasses(Exception):
@@ -71,6 +83,12 @@ class PolicyNotForModelClasses(Exception):
 
 class AuthorizationPolicy:
     """Base class to define the interface and provide some helpers"""
+
+    registry = None
+    """Set during assembly phase."""
+
+    def is_declaration(self):
+        return self.registry is None
 
     def check(self, target, principals, permission):
         """Check that one of the principals has permisson on given record.
@@ -117,46 +135,6 @@ class AuthorizationPolicy:
         The default implementation is to keep all records
         """
         return records
-
-
-class ModelBasedAuthorizationPolicy(AuthorizationPolicy):
-    """Policy to grant authorization uniformly for all records of one model.
-
-    The grants are themselves stored using a model
-    """
-
-    def __init__(self, grant_by=None):
-        """.
-
-        :params: grant_by is a model declaration
-        """
-        if grant_by is not None:
-            self.grant_model_name = grant_by.__registry_name__
-        else:
-            self.grant_model_name = 'Model.Authorization.ModelPermissionGrant'
-
-    @property
-    def grant_model(self):
-        return self.registry.get(self.grant_model_name)
-
-    def _check_on_model(self, model, principals, permission):
-        Grant = self.grant_model
-        return bool(Grant.query().filter(
-            Grant.model == model,
-            Grant.principal.in_(principals),
-            Grant.permission == permission).limit(1).count())
-
-    def check(self, record, principals, permission):
-        return self.check_on_model(record.__registry_name__,
-                                   principals,
-                                   permission)
-
-    def filter(self, query, principals, permission):
-        model = self.query.get_model().__registry_name__
-
-        if self._check_on_model(model, principals, permission):
-            return query
-        return False
 
 
 class DenyAll(AuthorizationPolicy):

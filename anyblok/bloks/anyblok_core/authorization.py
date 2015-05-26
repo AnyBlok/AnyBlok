@@ -10,6 +10,11 @@ from anyblok import Declarations
 from anyblok.authorization import deny_all
 
 
+@Declarations.register(Declarations.Model)
+class Authorization:
+    """Namespace for models supporting authorization policies."""
+
+
 class DefaultModelDeclaration:
     """Pseudo model to represent the default value."""
 

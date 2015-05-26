@@ -44,3 +44,24 @@ class TestAuthorizationDeclaration(DBTestCase):
                               TestPolicyOne)
         self.assertIsInstance(registry.lookup_policy(model, 'Write'),
                               TestPolicyTwo)
+
+    def test_model_based_policy(self):
+        """Test the model based policy using the default Grant model.
+
+        The policy is defined in the ``model_authz`` blok
+        The supporting default model is installed by the same blok.
+        #TODO move this test to the 'model_authz' blok
+        """
+        registry = self.init_registry(None)
+        self.upgrade(registry, install=('test-blok9',))
+        model = registry.Test2
+        Grant = registry.Authorization.ModelPermissionGrant
+        Grant.insert(model='Model.Test2',
+                     principal="Franck",
+                     permission="Read")
+
+        record = model.insert(id=2)
+        self.assertTrue(
+            registry.check_permission(record, ('Franck',), 'Read'))
+        self.assertFalse(
+            registry.check_permission(record, ('Franck',), 'Write'))
