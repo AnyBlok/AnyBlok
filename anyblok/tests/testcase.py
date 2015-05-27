@@ -5,6 +5,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+"""Base classes for unit/integration tests with anyblok.
+
+This module provides :class:`BlokTestCase`, which is the main one meant for
+blok tests, and :class:`DBTestCase`, whose primary purpose is to test anyblok
+itself, in so-called "framework tests".
+"""
+
 import unittest
 from logging import getLogger
 from anyblok.config import Configuration
@@ -17,7 +24,8 @@ logger = getLogger(__name__)
 
 
 class TestCase(unittest.TestCase):
-    """ Unittest class add helper for unit test in anyblok """
+    """Common helpers, not meant to be used directly."""
+
     @classmethod
     def init_configuration_manager(cls, **env):
         """ Initialise the configuration manager with environ variable
@@ -85,9 +93,19 @@ class TestCase(unittest.TestCase):
 
 
 class DBTestCase(TestCase):
-    """ Test case for all the Field, Column, RelationShip
+    """Base class for tests that need to work on an empty database.
 
-    ::
+    .. warning::
+
+        The database is created and dropped with each unit test
+
+    For instance, this is the one used for Field, Column, RelationShip, and
+    more generally core framework tests.
+
+    The drawback of using this base class is that tests will be slow. The
+    advantage is ultimate test isolation.
+
+    Sample usage::
 
         from anyblok.tests.testcase import DBTestCase
 
@@ -111,16 +129,13 @@ class DBTestCase(TestCase):
                 test = registry.Test.insert(col=1)
                 self.assertEqual(test.col, 1)
 
-    .. warning::
-
-        The database are create and drop for each unit test
-
     """
 
     blok_entry_points = ('bloks',)
-    """ setuptools entry points to load blok """
+    """setuptools entry points to load blok """
+
     current_blok = 'anyblok-core'
-    """ In the blok to add the new model """
+    """In the blok to add the new model """
 
     @classmethod
     def setUpClass(cls):
@@ -192,9 +207,30 @@ class DBTestCase(TestCase):
 
 
 class BlokTestCase(unittest.TestCase):
-    """ Use to test bloks without have to create new database for each test
+    """Base class for tests meant to run on a preinstalled database.
 
-    ::
+    The tests written with this class don't need to start afresh on a new
+    database, and therefore run much faster than those inheriting
+    :class:`DBTestCase``. Instead, they expect the tested bloks to be already
+    installed and up to date.
+
+    The session gets rollbacked after each test.
+
+    Such tests are appropriate for a typical blok developper workflow:
+
+    * create and install the bloks once
+    * run the tests of the blok under development repeatedly
+    * upgrade the bloks in database when needed (schema change, update of
+      dependencies)
+
+    They are also appropriate for on the fly testing while installing the
+    bloks: the tests of each blok get run on the database state they expect,
+    before dependent (downstream) bloks, that could. e.g., alter the database
+    schema, get themselves installed.
+    This is useful to test a whole stack at once using only one
+    database (typically in CI bots).
+
+    Sample usage::
 
         from anyblok.tests.testcase import BlokTestCase
 
@@ -202,19 +238,24 @@ class BlokTestCase(unittest.TestCase):
         class MyBlokTest(BlokTestCase):
 
             def test_1(self):
-                # access of the registry by ``self.registry``
+                # access to the registry by ``self.registry``
                 ...
 
     """
 
+    registry = None
+    """The instance of :class:`anyblok.registry.Registry`` to use in tests.
+
+    The ``session_commit()`` method is disabled to avoid side effects from one
+    test to the other.
+    """
+
     @classmethod
     def setUpClass(cls):
-        """ Intialialise the configuration manager
-
-        Deactivate the commit method of the registry
+        """ Initialize the registry.
         """
         super(BlokTestCase, cls).setUpClass()
-        if not hasattr(cls, 'registry'):
+        if cls.registry is None:
             cls.registry = RegistryManager.get(Configuration.get('db_name'))
 
         def session_commit(*args, **kwargs):
