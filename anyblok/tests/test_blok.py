@@ -788,11 +788,11 @@ class TestBlokSession(DBTestCase):
     def test_session_with_change_query(self):
         registry = self.init_registry(None)
         Session = registry.Session
-        self.upgrade(registry, install=('test-blok10',))
+        self.upgrade(registry, install=('test-blok11',))
         self.assertIsNot(Session, registry.Session)
 
     def test_session_with_change_session(self):
         registry = self.init_registry(None)
         Session = registry.Session
-        self.upgrade(registry, install=('test-blok11',))
+        self.upgrade(registry, install=('test-blok12',))
         self.assertIsNot(Session, registry.Session)
