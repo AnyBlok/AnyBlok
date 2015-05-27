@@ -241,6 +241,11 @@ class Many2One(RelationShip):
             self.column_name = "%s_%s" % (self.get_tablename(registry),
                                           self.remote_column)
 
+        if self.column_name == fieldname:
+            raise FieldException("The column_name and the fieldname %r is the "
+                                 "same, please choose another column_name" %
+                                 fieldname)
+
         self.kwargs['info']['local_column'] = self.column_name
 
         self_properties = registry.loaded_namespaces_first_step.get(namespace)

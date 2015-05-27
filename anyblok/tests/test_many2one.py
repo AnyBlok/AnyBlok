@@ -47,6 +47,24 @@ def _complete_many2one(**kwargs):
                            one2many="persons", nullable=False)
 
 
+def _many2one_with_same_name_for_column_name(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
+                           column_name="address")
+
+
 def _minimum_many2one(**kwargs):
 
     @register(Model)
@@ -136,6 +154,10 @@ class TestMany2One(DBTestCase):
             name="Jean-sébastien SUZANNE", address=address)
 
         self.assertEqual(address.persons, [person])
+
+    def test_2_many2one(self):
+        with self.assertRaises(FieldException):
+            self.init_registry(_many2one_with_same_name_for_column_name)
 
     def test_minimum_many2one(self):
         registry = self.init_registry(_minimum_many2one)
