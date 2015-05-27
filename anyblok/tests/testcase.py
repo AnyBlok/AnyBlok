@@ -48,7 +48,7 @@ class TestCase(unittest.TestCase):
 
     @classmethod
     def createdb(cls, keep_existing=False):
-        """ Create a database in fonction of variable of environment
+        """Create the database specified in configuration.
 
         ::
 
@@ -69,7 +69,7 @@ class TestCase(unittest.TestCase):
 
     @classmethod
     def dropdb(cls):
-        """ Drop a database in fonction of variable of environment
+        """Drop the database specified in configuration.
 
         ::
 
@@ -81,9 +81,10 @@ class TestCase(unittest.TestCase):
         bdd.dropdb(Configuration.get('db_name'))
 
     def getRegistry(self):
-        """ Return the registry for the database in configuration i
+        """Return the registry for the test database.
 
-        ::
+        This assumes the database is created, and the registry has already
+        been initialized::
 
             registry = self.getRegistry()
 
@@ -211,7 +212,7 @@ class BlokTestCase(unittest.TestCase):
 
     The tests written with this class don't need to start afresh on a new
     database, and therefore run much faster than those inheriting
-    :class:`DBTestCase``. Instead, they expect the tested bloks to be already
+    :class:`DBTestCase`. Instead, they expect the tested bloks to be already
     installed and up to date.
 
     The session gets rollbacked after each test.
