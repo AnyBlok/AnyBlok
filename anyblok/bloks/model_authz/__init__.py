@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import Blok
 from anyblok import release
-from anyblok.authorization import AuthorizationPolicy
+from anyblok.authorization.policy import AuthorizationPolicy
 from anyblok.registry import RegistryManagerException
 
 

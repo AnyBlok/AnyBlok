@@ -6,73 +6,26 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
-from anyblok.config import Configuration
-from anyblok.imp import ImportManager
-from anyblok.blok import BlokManager
-from .logging import log
-from .environment import EnvironmentManager
+from os.path import join, exists
+from logging import getLogger
+import nose
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
-from anyblok.migration import Migration
 from sqlalchemy.exc import ProgrammingError, OperationalError
-from anyblok.common import format_bloks
-from os.path import join, exists
-import nose
-from logging import getLogger
+
+from anyblok import Declarations
+from .config import Configuration
+from .imp import ImportManager
+from .blok import BlokManager
+from .logging import log
+from .environment import EnvironmentManager
+from .migration import Migration
+from .common import format_bloks
+from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
 
 logger = getLogger(__name__)
-
-
-class QueryWithNoResults:  # TODO move elsewhere, beware of import loops
-
-    def count(self):
-        return 0
-
-    def all(self):
-        return []
-
-    def first(self):
-        return None  # TODO exc ?
-
-QUERY_WITH_NO_RESULTS = QueryWithNoResults()
-
-
-class PostFilteredQuery:  # TODO move elsewhere, beware of import loops
-
-    def __init__(self, query, postfilters):
-        self.query = query
-        self.postfilters = postfilters
-
-    def count(self):
-        if self.postfilters:
-            # TODO add policy information (needs to change __init__)
-            raise RuntimeError(
-                "Cannot apply count to a permission postfiltered query")
-        return self.query.count()
-
-    def filter_one(self, result):
-        pfs = self.postfilters
-        for rec in result:
-            pf = pfs.get(result.__class__)
-            if pf is None:
-                continue
-            if not pf(rec):
-                return False
-
-        return True
-
-    def all(self):
-        if not self.postfilters:
-            return self.query.all()
-        return filter(self.filter_one, self.query.all())
-
-    def first(self):
-        if not self.postfilters:
-            return self.query.first()
-        else:
-            raise NotImplementedError
 
 
 class RegistryManagerException(Exception):

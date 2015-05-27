@@ -65,5 +65,5 @@ from . import databases  # noqa
 from . import core  # noqa
 from . import model  # noqa
 from . import mixin  # noqa
-from . import authorization  # noqa
+from .authorization import association  # noqa
 from .imp import reload_module_if_blok_is_reloading  # noqa

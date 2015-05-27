@@ -7,9 +7,9 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .testcase import DBTestCase
 from ..blok import BlokManager
+from ..authorization.policy import deny_all
 from anyblok.test_bloks.authorization import TestPolicyOne
 from anyblok.test_bloks.authorization import TestPolicyTwo
-from anyblok.authorization import deny_all
 
 
 class TestAuthorizationDeclaration(DBTestCase):
