@@ -16,6 +16,9 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
+* [REF] Commit and re-create the SQLA Session Factory, at installation, only
+        if the number of Session inheritance of the number of Query inheritance
+        change, else keep the same session
 * [REF] Exception is not a Declarations type
 * [FIX] Reload fonctionnality in python 3.2
 * [REF] Remove the Declarations typs Field, Column, RelationShip, they are
