@@ -773,3 +773,26 @@ class TestBlokModel(DBTestCase):
         registry.rollback()
         self.upgrade(registry, uninstall=('test-blok8',))
         registry.Test2.query().delete()
+
+
+class TestBlokSession(DBTestCase):
+
+    blok_entry_points = ('bloks', 'test_bloks')
+
+    def test_session_with_no_change(self):
+        registry = self.init_registry(None)
+        Session = registry.Session
+        self.upgrade(registry, install=('test-blok1',))
+        self.assertIs(Session, registry.Session)
+
+    def test_session_with_change_query(self):
+        registry = self.init_registry(None)
+        Session = registry.Session
+        self.upgrade(registry, install=('test-blok10',))
+        self.assertIsNot(Session, registry.Session)
+
+    def test_session_with_change_session(self):
+        registry = self.init_registry(None)
+        Session = registry.Session
+        self.upgrade(registry, install=('test-blok11',))
+        self.assertIsNot(Session, registry.Session)

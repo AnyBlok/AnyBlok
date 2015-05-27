@@ -86,6 +86,8 @@ setup(
             'test-blok7=anyblok.test_bloks.test_blok7:TestBlok',
             'test-blok8=anyblok.test_bloks.test_blok8:TestBlok',
             'test-blok9=anyblok.test_bloks.test_blok9:TestBlok',
+            'test-blok10=anyblok.test_bloks.test_blok10:TestBlok',
+            'test-blok11=anyblok.test_bloks.test_blok11:TestBlok',
         ],
     },
     extras_require={},

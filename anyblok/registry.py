@@ -388,6 +388,7 @@ class Registry:
             'Env': EnvironmentManager})
         self.ini_var()
         self.Session = None
+        self.nb_query_bases = self.nb_session_bases = 0
         self.load()
 
     def ini_var(self):
@@ -712,6 +713,37 @@ class Registry:
 
         update_namespaces(self, namespace)
 
+    def create_session_factory(self):
+        """Create the SQLA Session factory
+
+        in function of the Core Session class ans the Core Qery class
+        """
+        query_bases = [] + self.loaded_cores['Query']
+        query_bases += [self.registry_base]
+        Query = type('Query', tuple(query_bases), {})
+        Session = type('Session', tuple(self.loaded_cores['Session']), {
+            'registry_query': Query})
+        self.Session = scoped_session(
+            sessionmaker(bind=self.engine, class_=Session),
+            EnvironmentManager.scoped_function_for_session)
+        self.nb_query_bases = len(self.loaded_cores['Query'])
+        self.nb_session_bases = len(self.loaded_cores['Session'])
+
+    def must_recreate_session_factory(self):
+        """Check if the SQLA Session Factory must be destroy and recreate
+
+        :rtype: Boolean, True if nb Core Session/Query inheritance change
+        """
+        nb_query_bases = len(self.loaded_cores['Query'])
+        if nb_query_bases != self.nb_query_bases:
+            return True
+
+        nb_session_bases = len(self.loaded_cores['Session'])
+        if nb_session_bases != self.nb_session_bases:
+            return True
+
+        return False
+
     @log(logger)
     def load(self):
         """ Load all the namespaces of the registry
@@ -748,14 +780,14 @@ class Registry:
 
             self.declarativebase.metadata.create_all(self.engine)
 
-            query_bases = [] + self.loaded_cores['Query']
-            query_bases += [self.registry_base]
-            Query = type('Query', tuple(query_bases), {})
-            Session = type('Session', tuple(self.loaded_cores['Session']), {
-                'registry_query': Query})
-            self.Session = scoped_session(
-                sessionmaker(bind=self.engine, class_=Session),
-                EnvironmentManager.scoped_function_for_session)
+            if self.Session is None:
+                self.create_session_factory()
+            elif self.must_recreate_session_factory():
+                self.commit()
+                self.Session.close_all()
+                self.create_session_factory()
+            else:
+                self.flush()
 
             self.init_migration()
             self.migration.auto_upgrade_database()
