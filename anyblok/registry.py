@@ -508,8 +508,21 @@ class Registry:
         principals should not grant access to the relevant Model2 records.
         """
         if not models:
-            raise NotImplementedError("For now, you have to indicate models "
-                                      "explicitely.")
+            models = []
+            for column in query.column_descriptions:
+                if column['aliased']:
+                    # actually, think aliases could work almost direcly
+                    # it's just a matter of documenting that what the policy
+                    # gets may be an alias instead of a model.
+                    raise NotImplementedError(
+                        "Sorry, table/model aliases aren't supported yet. "
+                        "Here's the unsupported column: %r" % column)
+                if not issubclass(column['type'], self.registry_base):
+                    raise NotImplementedError(
+                        "Sorry, only model columns are supported for now. "
+                        "Here is the unsupported one: %r" % column)
+                models.append(column['type'])
+
         postfilters = {}
         for model in models:
             policy = self.lookup_policy(model, permission)
