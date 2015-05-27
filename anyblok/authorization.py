@@ -104,13 +104,15 @@ class AuthorizationPolicy:
         """
         raise NotImplementedError
 
-    def filter(self, query, principals, permission):
+    def filter(self, model, query, principals, permission):
         """Return a new query with added permission filtering.
 
         Must be implemented by concrete subclasses.
 
-        :param query: the query to add permission to
-        :rtype: modified query
+        :param query: the :class:`Query` instance to modify to express
+                      the permission for these principals.
+        :param model: the model on which the policy is applied
+        :rtype: :class:`Query`)
 
         It's not necessary that the resulting query expresses fully
         the permission check: this can be complemented if needed
@@ -126,15 +128,21 @@ class AuthorizationPolicy:
         """
         raise NotImplementedError
 
-    def postfilter(self, records, principals, permission):
-        """Filter by permission records obtained by a filtered query.
+    postfilter = None
+    """Filter by permission records obtained by a filtered query.
 
-        Implementation can (and usually, for performance, should) assume
-        that the query that produced the records was a filtered one.
+    By default, this is ``None``, to indicate that the policy does not perform
+    any post filtering, but concrete policies can implement
+    a method with the following signature::
 
-        The default implementation is to keep all records
-        """
-        return records
+        def postfilter(self, record, principals, permission):
+
+    Such implementations can (and usually, for performance, should) assume
+    that the query that produced the records was a filtered one.
+
+    The purpose of using the explicit ``None`` marker is to permit some calls
+    that don't make sense on a postfiltered operation (such as ``count()``).
+    """
 
 
 class DenyAll(AuthorizationPolicy):

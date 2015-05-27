@@ -71,9 +71,8 @@ class ModelBasedAuthorizationPolicy(AuthorizationPolicy):
                                    principals,
                                    permission)
 
-    def filter(self, query, principals, permission):
-        model = self.query.get_model().__registry_name__
-
-        if self._check_on_model(model, principals, permission):
+    def filter(self, model, query, principals, permission):
+        if self.check_on_model(model.__registry_name__,
+                               principals, permission):
             return query
         return False

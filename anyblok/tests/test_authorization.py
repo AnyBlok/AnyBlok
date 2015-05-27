@@ -65,3 +65,25 @@ class TestAuthorizationDeclaration(DBTestCase):
             registry.check_permission(record, ('Franck',), 'Read'))
         self.assertFalse(
             registry.check_permission(record, ('Franck',), 'Write'))
+
+        # With this policy, permission can be checked on the model
+        self.assertTrue(
+            registry.check_permission(model, ('Franck',), 'Read'))
+        self.assertFalse(
+            registry.check_permission(model, ('Franck',), 'Write'))
+
+        query = model.query().filter(model.id != 1)
+        self.assertEqual(query.count(), 1)
+
+        filtered = registry.query_permission(query, ('Franck',), 'Read',
+                                             models=(model,))
+        self.assertEqual(filtered.count(), 1)
+        self.assertEqual(filtered.first().id, 2)
+        all_results = filtered.all()
+        self.assertEqual(all_results[0].id, 2)
+
+        filtered = registry.query_permission(query, ('Franck',), 'Write',
+                                             models=(model,))
+        self.assertEqual(filtered.count(), 0)
+        self.assertIsNone(filtered.first())
+        self.assertEqual(len(filtered.all()), 0)

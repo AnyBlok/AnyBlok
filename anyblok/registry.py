@@ -25,6 +25,56 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
+class QueryWithNoResults:  # TODO move elsewhere, beware of import loops
+
+    def count(self):
+        return 0
+
+    def all(self):
+        return []
+
+    def first(self):
+        return None  # TODO exc ?
+
+QUERY_WITH_NO_RESULTS = QueryWithNoResults()
+
+
+class PostFilteredQuery:  # TODO move elsewhere, beware of import loops
+
+    def __init__(self, query, postfilters):
+        self.query = query
+        self.postfilters = postfilters
+
+    def count(self):
+        if self.postfilters:
+            # TODO add policy information (needs to change __init__)
+            raise RuntimeError(
+                "Cannot apply count to a permission postfiltered query")
+        return self.query.count()
+
+    def filter_one(self, result):
+        pfs = self.postfilters
+        for rec in result:
+            pf = pfs.get(result.__class__)
+            if pf is None:
+                continue
+            if not pf(rec):
+                return False
+
+        return True
+
+    def all(self):
+        if not self.postfilters:
+            return self.query.all()
+        return filter(self.filter_one, self.query.all())
+
+    def first(self):
+        if not self.postfilters:
+            return self.query.first()
+        else:
+            raise NotImplementedError
+
+
 class RegistryManagerException(Exception):
     """ Simple Exception for Registry """
 
@@ -476,11 +526,47 @@ class Registry:
                        has the right to fail.
         :param principals: list, set or tuple of strings
         :rtype: bool
-
-        Must be implemented by concrete subclasses.
         """
         return self.lookup_policy(target, permission).check(
             target, principals, permission)
+
+    def query_permission(self, query, principals, permission, models=()):
+        """Add permission filtering to query.
+
+        :param principals: list, set or tuple of strings
+        :param models: models on which to apply security filtering. If
+                       not supplied, it will be infered from the query. The
+                       length and ordering much match that of expected results.
+        :returns: a query-like object, implementing the results fetching API,
+                  but that can't be further filtered.
+
+        This method calls all the relevant policies to apply pre- and
+        post-filtering. Although postfiltering is discouraged in authorization
+        policies, there are cases where it is unavoidable.
+
+        In normal operation, the relevant models are infered directly from
+        the query.
+        For join situations, and more complex queries, the caller has control
+        on the models on which to exert permission checking.
+
+        For instance, it might make sense to use a join between Model1 and
+        Model2 to actually constrain Model1 (on which permission filtering
+        should occur) by information contained in Model2, even if the passed
+        principals should not grant access to the relevant Model2 records.
+        """
+        if not models:
+            raise NotImplementedError("For now, you have to indicate models "
+                                      "explicitely.")
+        postfilters = {}
+        for model in models:
+            policy = self.lookup_policy(model, permission)
+            query = policy.filter(model, query, principals, permission)
+            if query is False:  # TODO use a dedicated singleton ?
+                return QUERY_WITH_NO_RESULTS
+            if policy.postfilter is not None:
+                postfilters[model] = lambda rec: policy.postfilter(
+                    rec, principals, permission)
+        return PostFilteredQuery(query, postfilters)
 
     def lookup_policy(self, target, permission):
         """Return the policy instance that applies to target or its model.
