@@ -672,20 +672,24 @@ class Registry:
             check_dependencies(blok)
 
         if dependencies_to_install:
-            conn = None
-            try:
-                conn = self.engine.connect()
-                conn.execute("""
-                    update system_blok
-                    set state='toinstall'
-                    where name in ('%s')
-                    and state = 'uninstalled'""" % "', '".join(
-                    dependencies_to_install))
-            except (ProgrammingError, OperationalError):
-                pass
-            finally:
-                if conn:
-                    conn.close()
+            query = """
+                update system_blok
+                set state='toinstall'
+                where name in ('%s')
+                and state = 'uninstalled'""" % "', '".join(
+                dependencies_to_install)
+            if self.Session:
+                self.execute(query)
+            else:
+                conn = None
+                try:
+                    conn = self.engine.connect()
+                    conn.execute(query)
+                except (ProgrammingError, OperationalError):
+                    pass
+                finally:
+                    if conn:
+                        conn.close()
 
             return True
 
