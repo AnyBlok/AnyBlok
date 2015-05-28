@@ -7,9 +7,9 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .testcase import DBTestCase
 from ..blok import BlokManager
-from ..authorization.rule import deny_all
-from ..authorization.rule import RuleNotForModelClasses
-from anyblok.bloks.attr_authz import AttributeBasedAuthorizationRule
+from ..authorization.rule.base import deny_all
+from ..authorization.rule.base import RuleNotForModelClasses
+from ..authorization.rule.attraccess import AttributeAccessRule
 from anyblok.test_bloks.authorization import TestRuleOne
 from anyblok.test_bloks.authorization import TestRuleTwo
 
@@ -125,7 +125,7 @@ class TestAuthorizationDeclaration(DBTestCase):
         with self.assertRaises(RuleNotForModelClasses) as arc:
             registry.check_permission(model, ('Franck',), 'Write')
         self.assertIsInstance(arc.exception.policy,
-                              AttributeBasedAuthorizationRule)
+                              AttributeAccessRule)
 
         model.insert(id=2, owner='Franck')
         model.insert(id=3, owner='JS')

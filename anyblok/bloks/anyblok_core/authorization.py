@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 
 from anyblok import Declarations
-from anyblok.authorization.rule import deny_all
+from anyblok.authorization.rule.base import deny_all
 
 
 @Declarations.register(Declarations.Model)

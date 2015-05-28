@@ -5,18 +5,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.blok import Blok
-from anyblok import release
-from anyblok.authorization.rule import AuthorizationRule
-from anyblok.authorization.rule import RuleNotForModelClasses
+from .base import AuthorizationRule
+from .base import RuleNotForModelClasses
 
 
-class AttributeBasedAuthorization(Blok):
-
-    version = release.version
-
-
-class AttributeBasedAuthorizationRule(AuthorizationRule):
+class AttributeAccessRule(AuthorizationRule):
     """Grant authorization to principals coinciding with a record attribute.
 
     Whatever the permission is associated to this policy, it will be granted

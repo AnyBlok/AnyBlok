@@ -7,8 +7,8 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok.column import String
-from anyblok.bloks.model_authz import ModelBasedAuthorizationRule
-from anyblok.bloks.attr_authz import AttributeBasedAuthorizationRule
+from anyblok.authorization.rule.modelaccess import ModelAccessRule
+from anyblok.authorization.rule.attraccess import AttributeAccessRule
 
 
 register = Declarations.register
@@ -23,9 +23,9 @@ class Test2:
 
 Declarations.AuthorizationRuleAssociation(
     Declarations.Model.Test2,
-    ModelBasedAuthorizationRule())
+    ModelAccessRule())
 
 Declarations.AuthorizationRuleAssociation(
     Declarations.Model.Test2,
-    AttributeBasedAuthorizationRule('owner'),
+    AttributeAccessRule('owner'),
     permission='Write')
