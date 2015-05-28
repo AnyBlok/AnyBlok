@@ -32,12 +32,12 @@ from ..registry import RegistryManager
 
 @Declarations.add_declaration_type(isAnEntry=True,
                                    assemble='assemble_callback')
-class AuthorizationPolicyAssociation:
+class AuthorizationRuleAssociation:
     """Encodes which policy to use per model or (model, permission).
 
     In the assembly phase, copies of the policy are issued, and the registry
     is set as an attribute on them. This is a bit memory inefficient, but
-    otherwise, passing the registry would have to be in all AuthorizationPolicy
+    otherwise, passing the registry would have to be in all AuthorizationRule
     API calls.
     """
 

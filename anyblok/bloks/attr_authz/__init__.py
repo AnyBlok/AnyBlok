@@ -7,8 +7,8 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import Blok
 from anyblok import release
-from anyblok.authorization.policy import AuthorizationPolicy
-from anyblok.authorization.policy import PolicyNotForModelClasses
+from anyblok.authorization.rule import AuthorizationRule
+from anyblok.authorization.rule import RuleNotForModelClasses
 
 
 class AttributeBasedAuthorization(Blok):
@@ -16,7 +16,7 @@ class AttributeBasedAuthorization(Blok):
     version = release.version
 
 
-class AttributeBasedAuthorizationPolicy(AuthorizationPolicy):
+class AttributeBasedAuthorizationRule(AuthorizationRule):
     """Grant authorization to principals coinciding with a record attribute.
 
     Whatever the permission is associated to this policy, it will be granted
@@ -24,7 +24,7 @@ class AttributeBasedAuthorizationPolicy(AuthorizationPolicy):
 
     A common use-case is to associate it to a precise permission, in
     conjunction with a flatter default policy, such as
-    :class:`..model_authz.ModelBasedAutorizationPolicy`
+    :class:`..model_authz.ModelBasedAutorizationRule`
     """
 
     def __init__(self, attr):
@@ -36,7 +36,7 @@ class AttributeBasedAuthorizationPolicy(AuthorizationPolicy):
 
     def check(self, record, principals, permission):
         if hasattr(record, '__name__'):
-            raise PolicyNotForModelClasses(self, record)
+            raise RuleNotForModelClasses(self, record)
         return getattr(record, self.attr) in principals
 
     def filter(self, model, query, principals, permission):

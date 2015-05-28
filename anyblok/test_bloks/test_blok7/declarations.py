@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok.column import Integer, String
-from ..authorization import TestPolicyOne, TestPolicyTwo
+from ..authorization import TestRuleOne, TestRuleTwo
 
 
 register = Declarations.register
@@ -27,8 +27,8 @@ class Test2:
     id = Integer(primary_key=True)
     label = String()
 
-Declarations.AuthorizationPolicyAssociation(Declarations.Model.Test,
-                                            TestPolicyOne(),
+Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
+                                            TestRuleOne(),
                                             permission='Read')
-Declarations.AuthorizationPolicyAssociation(Declarations.Model.Test,
-                                            TestPolicyTwo())
+Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
+                                            TestRuleTwo())

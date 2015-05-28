@@ -7,11 +7,11 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .testcase import DBTestCase
 from ..blok import BlokManager
-from ..authorization.policy import deny_all
-from ..authorization.policy import PolicyNotForModelClasses
-from anyblok.bloks.attr_authz import AttributeBasedAuthorizationPolicy
-from anyblok.test_bloks.authorization import TestPolicyOne
-from anyblok.test_bloks.authorization import TestPolicyTwo
+from ..authorization.rule import deny_all
+from ..authorization.rule import RuleNotForModelClasses
+from anyblok.bloks.attr_authz import AttributeBasedAuthorizationRule
+from anyblok.test_bloks.authorization import TestRuleOne
+from anyblok.test_bloks.authorization import TestRuleTwo
 
 
 class TestAuthorizationDeclaration(DBTestCase):
@@ -27,9 +27,9 @@ class TestAuthorizationDeclaration(DBTestCase):
         self.upgrade(registry, install=('test-blok7',))
         record = registry.Test(id=23, label='Hop')
         self.assertIsInstance(registry.lookup_policy(record, 'Read'),
-                              TestPolicyOne)
+                              TestRuleOne)
         self.assertIsInstance(registry.lookup_policy(record, 'Other'),
-                              TestPolicyTwo)
+                              TestRuleTwo)
 
         record = registry.Test2(id=2, label='Hop')
         self.assertIs(registry.lookup_policy(record, 'Read'), deny_all)
@@ -41,11 +41,11 @@ class TestAuthorizationDeclaration(DBTestCase):
         # lookup can be made on model itself
         model = registry.Test
         self.assertIsInstance(registry.lookup_policy(model, 'Read'),
-                              TestPolicyOne)
+                              TestRuleOne)
         self.assertIsInstance(registry.lookup_policy(model, 'Other'),
-                              TestPolicyOne)
+                              TestRuleOne)
         self.assertIsInstance(registry.lookup_policy(model, 'Write'),
-                              TestPolicyTwo)
+                              TestRuleTwo)
 
     def test_model_based_policy(self):
         """Test the model based policy using the default Grant model.
@@ -122,10 +122,10 @@ class TestAuthorizationDeclaration(DBTestCase):
             registry.check_permission(record, ('Franck',), 'Write'))
 
         # With this policy, permission cannot be checked on the model
-        with self.assertRaises(PolicyNotForModelClasses) as arc:
+        with self.assertRaises(RuleNotForModelClasses) as arc:
             registry.check_permission(model, ('Franck',), 'Write')
         self.assertIsInstance(arc.exception.policy,
-                              AttributeBasedAuthorizationPolicy)
+                              AttributeBasedAuthorizationRule)
 
         model.insert(id=2, owner='Franck')
         model.insert(id=3, owner='JS')

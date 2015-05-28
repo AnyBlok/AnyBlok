@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import Blok
 from anyblok import release
-from anyblok.authorization.policy import AuthorizationPolicy
+from anyblok.authorization.rule import AuthorizationRule
 from anyblok.registry import RegistryManagerException
 
 
@@ -25,8 +25,8 @@ class ModelBasedAuthorizationBlok(Blok):
         reload(models)
 
 
-class ModelBasedAuthorizationPolicy(AuthorizationPolicy):
-    """Policy to grant authorization uniformly for all records of one model.
+class ModelBasedAuthorizationRule(AuthorizationRule):
+    """Rule to grant authorization uniformly for all records of one model.
 
     The grants are themselves stored using a model class, that's provided
     in this blok. The users don't need to install the blok to use this class,

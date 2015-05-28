@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 
 from anyblok import Declarations
-from anyblok.authorization.policy import deny_all
+from anyblok.authorization.rule import deny_all
 
 
 @Declarations.register(Declarations.Model)
@@ -20,4 +20,4 @@ class DefaultModelDeclaration:
 
     __registry_name__ = None
 
-Declarations.AuthorizationPolicyAssociation(DefaultModelDeclaration, deny_all)
+Declarations.AuthorizationRuleAssociation(DefaultModelDeclaration, deny_all)

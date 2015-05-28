@@ -550,7 +550,8 @@ class Registry:
 
         If a policy is declared for the precise permission, it is returned.
         Otherwise, the default policy for that model is returned.
-        By ultimate default the special :class:`DenyAllPolicy` is returned.
+        By ultimate default the special
+        :class:`anyblok.authorization.rule.DenyAll` is returned.
         """
         model_name = target.__registry_name__
         policy = self._authz_policies.get((model_name, permission))
