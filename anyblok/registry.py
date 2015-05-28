@@ -431,22 +431,30 @@ class Registry:
         """
         if not states:
             return []
-        conn = None
-        try:
-            conn = self.engine.connect()
-            res = conn.execute("""
-                select system_blok.name
-                from system_blok
-                where system_blok.state in ('%s')
-                order by system_blok.order""" % "', '".join(states)).fetchall()
-            toload = [x[0] for x in res]
-        except (ProgrammingError, OperationalError):
-            toload = []
-        finally:
-            if conn:
-                conn.close()
 
-        return toload
+        res = []
+        query = """
+            SELECT system_blok.name
+            FROM system_blok
+            WHERE system_blok.state in ('%s')
+            ORDER BY system_blok.order""" % "', '".join(states)
+        if self.Session:
+            res = self.execute(query).fetchall()
+        else:
+            conn = None
+            try:
+                conn = self.engine.connect()
+                res = conn.execute(query).fetchall()
+            except (ProgrammingError, OperationalError):
+                pass
+            finally:
+                if conn:
+                    conn.close()
+
+        if res:
+            return [x[0] for x in res]
+
+        return []
 
     def get_bloks_to_load(self):
         """ Return the bloks to load by the registry
@@ -797,7 +805,7 @@ class Registry:
                 self.create_session_factory()
             elif self.must_recreate_session_factory():
                 self.commit()
-                self.Session.close_all()
+                self.close_session()
                 self.create_session_factory()
             else:
                 self.flush()
@@ -812,7 +820,6 @@ class Registry:
                         self)
                     mustreload = mustreload or r
 
-            self.commit()
         except:
             self.close()
             raise
@@ -836,7 +843,6 @@ class Registry:
                 self.reload()
             else:
                 self.System.Blok.load_all()
-                self.commit()
 
     def run_test(registry, blok2install):
         defaultTest = join(BlokManager.getPath(blok2install), 'tests')
@@ -946,7 +952,7 @@ class Registry:
     @log(logger)
     def reload(self):
         """ Reload the registry, close session, clean registry, reinit var """
-        self.close_session()
+        # self.close_session()
         self.clean_model()
         self.ini_var()
         self.load()

@@ -125,6 +125,7 @@ def interpreter(description, version, configuration_groups):
     format_configuration(configuration_groups, 'interpreter')
     registry = anyblok.start(description, version,
                              configuration_groups=configuration_groups)
+    registry.commit()
     python_script = Configuration.get('python_script')
     if python_script:
         with open(python_script, "r") as fh:

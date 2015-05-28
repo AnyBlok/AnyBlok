@@ -16,6 +16,8 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
+* [REF] Limit the commit in the registry only when the SQLA Session factory
+        is recreated
 * [REF] Commit and re-create the SQLA Session Factory, at installation, only
         if the number of Session inheritance of the number of Query inheritance
         change, else keep the same session
