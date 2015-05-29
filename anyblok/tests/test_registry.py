@@ -197,10 +197,11 @@ class TestRegistry2(DBTestCase):
 
     def test_check_dbtestcase_desable_ci(self):
         registry = self.init_registry(self.add_model)
+        registry.begin_nested()  # add SAVEPOINT
         registry.Test.insert()
         registry.commit()
         self.assertEqual(registry.Test.query().count(), 1)
-        registry.rollback()
+        registry.rollback()  # rollback() to SAVEPOINT
         self.assertEqual(registry.Test.query().count(), 0)
 
     def test_precommit_hook(self):
