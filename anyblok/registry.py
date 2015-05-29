@@ -804,8 +804,6 @@ class Registry:
                     logger.info('Assemble %r entry' % entry)
                     RegistryManager.callback_assemble_entries[entry](self)
 
-            self.declarativebase.metadata.create_all(self.engine)
-
             if self.Session is None:
                 self.create_session_factory()
             elif self.must_recreate_session_factory():
@@ -815,6 +813,14 @@ class Registry:
             else:
                 self.flush()
 
+            # replace the engine by the session.connection for bind attribute
+            # because session.connection is already the connection use
+            # by blok, migration and all write on the data base
+            # or use engine for bind, force create_all method to create new
+            # new connection, this new connection have not acknowedge of the
+            # data in the session.connection, and risk of bad lock on the
+            # tables
+            self.declarativebase.metadata.create_all(self.connection())
             self.init_migration()
             self.migration.auto_upgrade_database()
 
