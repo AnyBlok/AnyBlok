@@ -150,6 +150,19 @@ class TestAuthorizationDeclaration(DBTestCase):
         self.assertIsInstance(arc.exception.policy,
                               AttributeAccessRule)
 
+        # ... unless one defines a model_rule to handle the case
+        self.assertFalse(registry.check_permission(
+            model, ('Franck',), 'PermWithModelRule'))
+
+        Grant = registry.Authorization.ModelPermissionGrant
+        Grant.insert(model=model.__registry_name__,
+                     principal="Franck",
+                     permission="PermWithModelRule")
+        self.assertTrue(registry.check_permission(
+            model, ('Franck',), 'PermWithModelRule'))
+
+        # Query wrapping tests
+
         model.insert(id=2, owner='Franck')
         model.insert(id=3, owner='JS')
 

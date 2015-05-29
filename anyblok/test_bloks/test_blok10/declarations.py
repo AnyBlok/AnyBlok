@@ -29,3 +29,8 @@ Declarations.AuthorizationBinding(
     Declarations.Model.Test2,
     AttributeAccessRule('owner'),
     permission='Write')
+
+Declarations.AuthorizationBinding(
+    Declarations.Model.Test2,
+    AttributeAccessRule('owner', model_rule=ModelAccessRule()),
+    permission='Manage')

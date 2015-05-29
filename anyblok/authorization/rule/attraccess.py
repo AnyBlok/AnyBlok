@@ -20,16 +20,32 @@ class AttributeAccessRule(AuthorizationRule):
     :class:`..model_authz.ModelBasedAutorizationRule`
     """
 
-    def __init__(self, attr):
+    def __init__(self, attr, model_rule=None):
         """.
 
         :param attr: The attribute that is being compared with principal.
+        :param model_rule: If set, checks done on model classes will be
+                           relayed to this other rule. Otherwise, the
+                           standard exception that the rule does not apply
+                           to model classes is raised.
+
+        The ``model_rule`` allows to express conveniently that some
+        principal has a "general" Read right on some model,
+        while still allowing it to read only some of the
+        records, and to protect the querying by the same
+        'Read' permission. Similar and finer effects can
+        be obtained by creating a separate 'Search' permission, but that may
+        not be appropriate in a given context.
         """
         self.attr = attr
+        self.model_rule = model_rule
 
     def check(self, record, principals, permission):
-        if hasattr(record, '__name__'):
+        if isinstance(record, type):
+            if self.model_rule is not None:
+                return self.model_rule(record, principals, permission)
             raise RuleNotForModelClasses(self, record)
+
         return getattr(record, self.attr) in principals
 
     def filter(self, model, query, principals, permission):
