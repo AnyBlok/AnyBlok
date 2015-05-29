@@ -33,4 +33,4 @@ Declarations.AuthorizationBinding(
 Declarations.AuthorizationBinding(
     Declarations.Model.Test2,
     AttributeAccessRule('owner', model_rule=ModelAccessRule()),
-    permission='Manage')
+    permission='PermWithModelRule')

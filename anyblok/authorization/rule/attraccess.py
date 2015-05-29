@@ -40,10 +40,24 @@ class AttributeAccessRule(AuthorizationRule):
         self.attr = attr
         self.model_rule = model_rule
 
+        self._registry = None
+
+    @property
+    def registry(self):
+        """On this rule, we'll need a setter for registry"""
+        return self._registry
+
+    @registry.setter
+    def registry(self, registry):
+        """Apply registry also to model_rule if needed"""
+        self._registry = registry
+        if self.model_rule is not None:
+            self.model_rule.registry = registry
+
     def check(self, record, principals, permission):
         if isinstance(record, type):
             if self.model_rule is not None:
-                return self.model_rule(record, principals, permission)
+                return self.model_rule.check(record, principals, permission)
             raise RuleNotForModelClasses(self, record)
 
         return getattr(record, self.attr) in principals

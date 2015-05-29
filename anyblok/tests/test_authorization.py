@@ -160,6 +160,7 @@ class TestAuthorizationDeclaration(DBTestCase):
                      permission="PermWithModelRule")
         self.assertTrue(registry.check_permission(
             model, ('Franck',), 'PermWithModelRule'))
+        self.assertFalse(record.has_perm(('Franck',), 'PermWithModelRule'))
 
         # Query wrapping tests
 
