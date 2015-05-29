@@ -20,4 +20,4 @@ class DefaultModelDeclaration:
 
     __registry_name__ = None
 
-Declarations.AuthorizationRuleAssociation(DefaultModelDeclaration, deny_all)
+Declarations.AuthorizationBinding(DefaultModelDeclaration, deny_all)

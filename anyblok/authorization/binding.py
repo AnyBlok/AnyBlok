@@ -32,7 +32,7 @@ from ..registry import RegistryManager
 
 @Declarations.add_declaration_type(isAnEntry=True,
                                    assemble='assemble_callback')
-class AuthorizationRuleAssociation:
+class AuthorizationBinding:
     """Encodes which policy to use per model or (model, permission).
 
     In the assembly phase, copies of the policy are issued, and the registry

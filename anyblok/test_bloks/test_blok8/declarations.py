@@ -18,11 +18,11 @@ class Test:
 
     test2 = Integer(foreign_key=(Model.Test2, 'id'))
 
-Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                          TestRuleOne(),
-                                          permission='Other')
-Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                          TestRuleOne())
-Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                          TestRuleTwo(),
-                                          permission='Write')
+Declarations.AuthorizationBinding(Declarations.Model.Test,
+                                  TestRuleOne(),
+                                  permission='Other')
+Declarations.AuthorizationBinding(Declarations.Model.Test,
+                                  TestRuleOne())
+Declarations.AuthorizationBinding(Declarations.Model.Test,
+                                  TestRuleTwo(),
+                                  permission='Write')

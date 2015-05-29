@@ -21,11 +21,11 @@ class Test2:
     """
     owner = String()
 
-Declarations.AuthorizationRuleAssociation(
+Declarations.AuthorizationBinding(
     Declarations.Model.Test2,
     ModelAccessRule())
 
-Declarations.AuthorizationRuleAssociation(
+Declarations.AuthorizationBinding(
     Declarations.Model.Test2,
     AttributeAccessRule('owner'),
     permission='Write')

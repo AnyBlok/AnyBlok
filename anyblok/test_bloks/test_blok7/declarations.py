@@ -27,8 +27,8 @@ class Test2:
     id = Integer(primary_key=True)
     label = String()
 
-Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                          TestRuleOne(),
-                                          permission='Read')
-Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                          TestRuleTwo())
+Declarations.AuthorizationBinding(Declarations.Model.Test,
+                                  TestRuleOne(),
+                                  permission='Read')
+Declarations.AuthorizationBinding(Declarations.Model.Test,
+                                  TestRuleTwo())

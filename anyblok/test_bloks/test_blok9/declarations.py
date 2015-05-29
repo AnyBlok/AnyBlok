@@ -10,5 +10,4 @@ from anyblok.authorization.rule.modelaccess import ModelAccessRule
 
 
 # Normally, this blok should be part of the edge
-Declarations.AuthorizationRuleAssociation(Declarations.Model.Test2,
-                                          ModelAccessRule())
+Declarations.AuthorizationBinding(Declarations.Model.Test2, ModelAccessRule())
