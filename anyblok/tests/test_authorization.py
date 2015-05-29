@@ -74,6 +74,12 @@ class TestAuthorizationDeclaration(DBTestCase):
         self.assertFalse(
             registry.check_permission(model, ('Franck',), 'Write'))
 
+        # This can be also called directly from the model class
+        self.assertTrue(model.has_model_perm(('Franck',), 'Read'))
+        self.assertFalse(model.has_model_perm(('Franck',), 'Write'))
+        with self.assertRaises(TypeError):
+            model.has_perm(('Franck',), 'Write')
+
         query = model.query().filter(model.id != 1)
         self.assertEqual(query.count(), 1)
 
@@ -120,6 +126,11 @@ class TestAuthorizationDeclaration(DBTestCase):
             registry.check_permission(record, ('Georges',), 'Write'))
         self.assertFalse(
             registry.check_permission(record, ('Franck',), 'Write'))
+
+        # The same checks can be done from the record
+        self.assertTrue(record.has_perm(('Franck',), 'Read'))
+        self.assertTrue(record.has_perm(('Georges',), 'Write'))
+        self.assertFalse(record.has_perm(('Franck',), 'Write'))
 
         # With this policy, permission cannot be checked on the model
         with self.assertRaises(RuleNotForModelClasses) as arc:

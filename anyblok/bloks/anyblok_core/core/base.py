@@ -54,3 +54,20 @@ class Base:
     def to_primary_keys(self):
         """ No SQL Model has not primary key """
         raise CoreBaseException("No primary key for No SQL Model")
+
+    def has_perm(self, principals, permission):
+        """Check that one of principals has permission on given record.
+
+        Since this is an ordinary instance method, it can't be used on the
+        model class itself. For this use case, see :meth:`has_model_perm`
+        """
+        return self.registry.check_permission(self, principals, permission)
+
+    @classmethod
+    def has_model_perm(cls, principals, permission):
+        """Check that one of principals has permission on given model.
+
+        Since this is a classmethod, even if called on a record, only its
+        model class will be considered for the permission check.
+        """
+        return cls.registry.check_permission(cls, principals, permission)
