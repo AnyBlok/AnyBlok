@@ -107,7 +107,7 @@ class TestCase(unittest.TestCase):
 
     def tearDown(self):
         """ Roll back the session """
-        super(BlokTestCase, self).tearDown()
+        super(TestCase, self).tearDown()
         self._transaction_case_teared_down = True
 
 

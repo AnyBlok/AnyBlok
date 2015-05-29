@@ -8,7 +8,7 @@
 from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
-from anyblok.model import has_sql_fields, get_fields
+from anyblok.model import has_sql_fields, get_fields, ModelException
 from anyblok import Declarations
 from anyblok.column import Integer, String
 
@@ -252,6 +252,111 @@ class TestModel2(DBTestCase):
         registry = self.init_registry(model_with_foreign_key)
         registry.TestFk.insert(name='test')
         self.check_registry(registry.Test)
+
+    def test_table_args(self):
+        val = 'one arg'
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                @classmethod
+                def define_table_args(cls, table_args):
+                    return (val,)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(len(registry.Test.__table_args__), 1)
+        self.assertEqual(registry.Test.__table_args__[0], val)
+
+    def test_table_args_with_inherit(self):
+        val = 'first arg'
+        val2 = 'second arg'
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                @classmethod
+                def define_table_args(cls, table_args):
+                    return (val,)
+
+            @register(Model)  # noqa
+            class Test:
+
+                @classmethod
+                def define_table_args(cls, table_args):
+                    return table_args + (val2,)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(len(registry.Test.__table_args__), 2)
+        self.assertIn(val, registry.Test.__table_args__)
+        self.assertIn(val2, registry.Test.__table_args__)
+
+    def test_table_args_in_cls_attribute(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                __table_args__ = ('one value',)
+
+        with self.assertRaises(ModelException):
+            self.init_registry(add_in_registry)
+
+    def test_mapper_args(self):
+        val = 'one arg'
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                @classmethod
+                def define_mapper_args(cls, mapper_args):
+                    return {val: val}
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(len(registry.Test.__mapper_args__), 1)
+        self.assertEqual(registry.Test.__mapper_args__[val], val)
+
+    def test_mapper_args_with_inherit(self):
+        val = 'first arg'
+        val2 = 'second arg'
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                @classmethod
+                def define_mapper_args(cls, mapper_args):
+                    return {val: val}
+
+            @register(Model)  # noqa
+            class Test:
+
+                @classmethod
+                def define_mapper_args(cls, mapper_args):
+                    mapper_args.update({val2: val2})
+                    return mapper_args
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(len(registry.Test.__mapper_args__), 2)
+        self.assertEqual(registry.Test.__mapper_args__[val], val)
+        self.assertEqual(registry.Test.__mapper_args__[val2], val2)
+
+    def test_mapper_args_in_cls_attribute(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                __mapper_args__ = {'foo': 'bar'}
+
+        with self.assertRaises(ModelException):
+            self.init_registry(add_in_registry)
 
 
 class TestModelAssembling(TestCase):
