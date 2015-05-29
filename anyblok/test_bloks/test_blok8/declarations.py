@@ -19,10 +19,10 @@ class Test:
     test2 = Integer(foreign_key=(Model.Test2, 'id'))
 
 Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                            TestRuleOne(),
-                                            permission='Other')
+                                          TestRuleOne(),
+                                          permission='Other')
 Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                            TestRuleOne())
+                                          TestRuleOne())
 Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                            TestRuleTwo(),
-                                            permission='Write')
+                                          TestRuleTwo(),
+                                          permission='Write')

@@ -28,7 +28,7 @@ class Test2:
     label = String()
 
 Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                            TestRuleOne(),
-                                            permission='Read')
+                                          TestRuleOne(),
+                                          permission='Read')
 Declarations.AuthorizationRuleAssociation(Declarations.Model.Test,
-                                            TestRuleTwo())
+                                          TestRuleTwo())
