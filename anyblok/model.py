@@ -257,7 +257,8 @@ class Model:
                     properties['hybrid_method'].append(attr)
 
     @classmethod
-    def detect_table_and_mapper_args(cls, registry, namespace, base, properties):
+    def detect_table_and_mapper_args(cls, registry, namespace, base,
+                                     properties):
         """Test if define_table/mapper_args are in the base, and call them
         save the value in the properties
 
@@ -302,7 +303,8 @@ class Model:
         new_base = apply_cache(registry, namespace, base, properties)
         cls.apply_event_listner(registry, namespace, new_base, properties)
         cls.detect_hybrid_method(registry, namespace, new_base, properties)
-        cls.detect_table_and_mapper_args(registry, namespace, new_base, properties)
+        cls.detect_table_and_mapper_args(
+            registry, namespace, new_base, properties)
         return new_base
 
     @classmethod
@@ -340,7 +342,8 @@ class Model:
         bases.insert(0, new_base)
 
     @classmethod
-    def apply_table_and_mapper_args(cls, registry, namespace, bases, properties):
+    def apply_table_and_mapper_args(cls, registry, namespace, bases,
+                                    properties):
         """ Create overwrite to define table and mapper args to define some
         options for SQLAlchemy
 
