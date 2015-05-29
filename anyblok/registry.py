@@ -846,7 +846,6 @@ class Registry:
 
         if test_blok and in_selected_bloks and not_in_unwanted_bloks:
             self.System.Blok.load_all()
-            self.commit()
             self.run_test(blok2install)
             if len(toinstall) > 1 or mustreload:
                 self.reload()

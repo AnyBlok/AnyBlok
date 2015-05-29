@@ -26,6 +26,8 @@ logger = getLogger(__name__)
 class TestCase(unittest.TestCase):
     """Common helpers, not meant to be used directly."""
 
+    _transaction_case_teared_down = False
+
     @classmethod
     def init_configuration_manager(cls, **env):
         """ Initialise the configuration manager with environ variable
@@ -91,6 +93,22 @@ class TestCase(unittest.TestCase):
         :rtype: registry instance
         """
         return RegistryManager.get(Configuration.get('db_name'))
+
+    def setUp(self):
+        super(TestCase, self).setUp()
+        self.addCleanup(self.callCleanUp)
+
+    def callCleanUp(self):
+        if not self._transaction_case_teared_down:
+            self.cleanUp()
+
+    def cleanUp(self):
+        self.tearDown()
+
+    def tearDown(self):
+        """ Roll back the session """
+        super(BlokTestCase, self).tearDown()
+        self._transaction_case_teared_down = True
 
 
 class DBTestCase(TestCase):
@@ -270,7 +288,21 @@ class BlokTestCase(unittest.TestCase):
         super(BlokTestCase, cls).tearDownClass()
         cls.registry.session_commit = cls.old_session_commit
 
+    def setUp(self):
+        super(BlokTestCase, self).setUp()
+        self.addCleanup(self.callCleanUp)
+        self.registry.begin_nested()  # add SAVEPOINT
+
+    def callCleanUp(self):
+        if not self._transaction_case_teared_down:
+            self.cleanUp()
+
+    def cleanUp(self):
+        self.tearDown()
+
     def tearDown(self):
         """ Roll back the session """
+        super(BlokTestCase, self).tearDown()
         self.registry.System.Cache.invalidate_all()
         self.registry.rollback()
+        self._transaction_case_teared_down = True
