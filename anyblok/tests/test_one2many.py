@@ -199,3 +199,15 @@ class TestOne2Many(DBTestCase):
         t2 = registry.Test.insert(parent=t1)
         self.assertEqual(t1.children[0], t2)
         self.assertEqual(t2.parent, t1)
+
+    def test_complet_with_multi_foreign_key(self):
+        raise
+
+    def test_with_multi_foreign_key_on_existing_column(self):
+        raise
+
+    def test_with_multi_foreign_key_on_unexisting_column(self):
+        raise
+
+    def test_with_multi_foreign_key_on_unexisting_column2(self):
+        raise

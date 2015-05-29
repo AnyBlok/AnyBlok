@@ -282,3 +282,39 @@ class TestMany2Many(DBTestCase):
         self.assertEqual(join_table_exist, True)
         join_table_exist = 'join_person2_and_address' in jt
         self.assertEqual(join_table_exist, True)
+
+    def test_comlet_with_multi_primary_keys_remote_and_local(self):
+        raise
+
+    def test_comlet_with_multi_primary_keys_remote(self):
+        raise
+
+    def test_comlet_with_multi_primary_keys_local(self):
+        raise
+
+    def test_minimum_with_multi_primary_keys_remote_and_local(self):
+        raise
+
+    def test_minimum_with_multi_primary_keys_remote(self):
+        raise
+
+    def test_minimum_with_multi_primary_keys_local(self):
+        raise
+
+    def test_minimum_with_multi_primary_keys_unexisting_remote_and_local(self):
+        raise
+
+    def test_minimum_with_multi_primary_keys_unexisting_remote(self):
+        raise
+
+    def test_minimum_with_multi_primary_keys_unexisting_local(self):
+        raise
+
+    def test_minimum_with_multi_primarykeys_unexisting_remote_and_local2(self):
+        raise
+
+    def test_minimum_with_multi_primary_keys_unexisting_remote2(self):
+        raise
+
+    def test_minimum_with_multi_primary_keys_unexisting_local2(self):
+        raise
