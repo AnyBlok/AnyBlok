@@ -492,8 +492,8 @@ class Registry:
         return self.lookup_policy(target, permission).check(
             target, principals, permission)
 
-    def query_permission(self, query, principals, permission, models=()):
-        """Add permission filtering to query.
+    def wrap_query_permission(self, query, principals, permission, models=()):
+        """Wrap query to return only authorized results
 
         :param principals: list, set or tuple of strings
         :param models: models on which to apply security filtering. If
@@ -504,7 +504,9 @@ class Registry:
 
         This method calls all the relevant policies to apply pre- and
         post-filtering. Although postfiltering is discouraged in authorization
-        policies, there are cases where it is unavoidable.
+        policies for performance and expressiveness (limit, offset),
+        there are cases for which it is unavoidable, or in which the tradeoff
+        goes the other way.
 
         In normal operation, the relevant models are infered directly from
         the query.

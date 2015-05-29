@@ -35,6 +35,21 @@ class Query(query.Query):
         """
         return ['update', 'delete']
 
+    def with_perm(self, principals, permission):
+        """Add authorization pre- and post-filtering to query.
+
+        This must be last in the construction chain of the query.
+        Queries too complicated for the authorization system to infer
+        safely will be refused.
+
+        :param principals: list, set or tuple of strings
+        :param str permission: the permission to filter for
+        :returns: a query-like object, with only the returning methods, such
+        as ``all()``, ``count()`` etc. available.
+        """
+        return self.registry.wrap_query_permission(
+            self, principals, permission)
+
     def __getattribute__(self, name):
         validate = False
         model_function = "sqlalchemy_query_" + name

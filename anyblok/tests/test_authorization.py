@@ -83,13 +83,25 @@ class TestAuthorizationDeclaration(DBTestCase):
         query = model.query().filter(model.id != 1)
         self.assertEqual(query.count(), 1)
 
-        filtered = registry.query_permission(query, ('Franck',), 'Read')
+        filtered = registry.wrap_query_permission(query, ('Franck',), 'Read')
         self.assertEqual(filtered.count(), 1)
         self.assertEqual(filtered.first().id, 2)
         all_results = filtered.all()
         self.assertEqual(all_results[0].id, 2)
 
-        filtered = registry.query_permission(query, ('Franck',), 'Write')
+        filtered = registry.wrap_query_permission(query, ('Franck',), 'Write')
+        self.assertEqual(filtered.count(), 0)
+        self.assertIsNone(filtered.first())
+        self.assertEqual(len(filtered.all()), 0)
+
+        # the same can be achieved from the query
+        filtered = query.with_perm(('Franck',), 'Read')
+        self.assertEqual(filtered.count(), 1)
+        self.assertEqual(filtered.first().id, 2)
+        all_results = filtered.all()
+        self.assertEqual(all_results[0].id, 2)
+
+        filtered = query.with_perm(('Franck',), 'Write')
         self.assertEqual(filtered.count(), 0)
         self.assertIsNone(filtered.first())
         self.assertEqual(len(filtered.all()), 0)
@@ -144,18 +156,25 @@ class TestAuthorizationDeclaration(DBTestCase):
         query = model.query()
         self.assertEqual(query.count(), 3)
 
-        filtered = registry.query_permission(query, ('Franck',), 'Write')
+        filtered = registry.wrap_query_permission(query, ('Franck',), 'Write')
 
         self.assertEqual(filtered.count(), 1)
         self.assertEqual(filtered.first().id, 2)
         all_results = filtered.all()
         self.assertEqual(all_results[0].id, 2)
 
-        filtered = registry.query_permission(query, ('Franck',), 'Read')
+        # The same can be achieved directly on query
+        filtered = query.with_perm(('Franck',), 'Write')
+        self.assertEqual(filtered.count(), 1)
+        self.assertEqual(filtered.first().id, 2)
+        all_results = filtered.all()
+        self.assertEqual(all_results[0].id, 2)
+
+        filtered = registry.wrap_query_permission(query, ('Franck',), 'Read')
         self.assertEqual(filtered.count(), 3)
 
-        filtered = registry.query_permission(query,
-                                             ('Franck', 'Georges',),
-                                             'Write')
+        filtered = registry.wrap_query_permission(query,
+                                                  ('Franck', 'Georges',),
+                                                  'Write')
         self.assertEqual(filtered.count(), 2)
         self.assertEqual([r.id for r in filtered.all()], [1, 2])
