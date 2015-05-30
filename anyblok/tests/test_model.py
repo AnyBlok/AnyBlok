@@ -262,7 +262,7 @@ class TestModel2(DBTestCase):
             class Test:
 
                 @classmethod
-                def define_table_args(cls, table_args):
+                def define_table_args(cls, table_args, properties):
                     return (val,)
 
         registry = self.init_registry(add_in_registry)
@@ -279,14 +279,14 @@ class TestModel2(DBTestCase):
             class Test:
 
                 @classmethod
-                def define_table_args(cls, table_args):
+                def define_table_args(cls, table_args, properties):
                     return (val,)
 
             @register(Model)  # noqa
             class Test:
 
                 @classmethod
-                def define_table_args(cls, table_args):
+                def define_table_args(cls, table_args, properties):
                     return table_args + (val2,)
 
         registry = self.init_registry(add_in_registry)
@@ -300,7 +300,7 @@ class TestModel2(DBTestCase):
 
             @register(Model)
             class Test:
-                __table_args__ = ('one value',)
+                __table_args__ = ()
 
         with self.assertRaises(ModelException):
             self.init_registry(add_in_registry)
@@ -314,7 +314,7 @@ class TestModel2(DBTestCase):
             class Test:
 
                 @classmethod
-                def define_mapper_args(cls, mapper_args):
+                def define_mapper_args(cls, mapper_args, properties):
                     return {val: val}
 
         registry = self.init_registry(add_in_registry)
@@ -331,14 +331,14 @@ class TestModel2(DBTestCase):
             class Test:
 
                 @classmethod
-                def define_mapper_args(cls, mapper_args):
+                def define_mapper_args(cls, mapper_args, properties):
                     return {val: val}
 
             @register(Model)  # noqa
             class Test:
 
                 @classmethod
-                def define_mapper_args(cls, mapper_args):
+                def define_mapper_args(cls, mapper_args, properties):
                     mapper_args.update({val2: val2})
                     return mapper_args
 
@@ -353,7 +353,7 @@ class TestModel2(DBTestCase):
 
             @register(Model)
             class Test:
-                __mapper_args__ = {'foo': 'bar'}
+                __mapper_args__ = {}
 
         with self.assertRaises(ModelException):
             self.init_registry(add_in_registry)

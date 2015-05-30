@@ -262,7 +262,7 @@ class Model:
         """Test if define_table/mapper_args are in the base, and call them
         save the value in the properties
 
-        if  __table/mapper_args__ are in the base then raise ModelException
+        if  __table/mapper_args\_\_ are in the base then raise ModelException
 
         :param registry: the current registry
         :param namespace: the namespace of the model
@@ -308,7 +308,8 @@ class Model:
         return new_base
 
     @classmethod
-    def apply_hybrid_method(cls, registry, namespace, bases, properties):
+    def apply_hybrid_method(cls, registry, namespace, bases,
+                            transformation_properties, properties):
         """ Create overload to define the write declaration of sqlalchemy
         hybrid method, add the overload in the declared bases of the
         namespace
@@ -316,9 +317,10 @@ class Model:
         :param registry: the current registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
-        :param properties: the properties of the model
+        :param transformation_properties: the properties of the model
+        :param properties: assembled attributes of the namespace
         """
-        if not properties['hybrid_method']:
+        if not transformation_properties['hybrid_method']:
             return
 
         new_base = type(namespace, tuple(), {})
@@ -336,32 +338,33 @@ class Model:
 
             setattr(new_base, attr, hybrid_method(wrapper))
 
-        for attr in properties['hybrid_method']:
+        for attr in transformation_properties['hybrid_method']:
             apply_wrapper(attr)
 
         bases.insert(0, new_base)
 
     @classmethod
     def apply_table_and_mapper_args(cls, registry, namespace, bases,
-                                    properties):
+                                    transformation_properties, properties):
         """ Create overwrite to define table and mapper args to define some
         options for SQLAlchemy
 
         :param registry: the current registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
-        :param properties: the properties of the model
+        :param transformation_properties: the properties of the model
+        :param properties: assembled attributes of the namespace
         """
         table_args = ()
         mapper_args = {}
-        for meth in properties['table_args']:
-            table_args = meth(table_args)
+        for meth in transformation_properties['table_args']:
+            table_args = meth(table_args, properties.copy())
             if not isinstance(table_args, tuple):
                 raise ModelException("'define_table_args' must return a tuple "
                                      "not %r" % table_args)
 
-        for meth in properties['mapper_args']:
-            mapper_args = meth(mapper_args)
+        for meth in transformation_properties['mapper_args']:
+            mapper_args = meth(mapper_args, properties.copy())
             if not isinstance(mapper_args, dict):
                 raise ModelException("'define_mapper_args' must return a dict "
                                      "not %r" % mapper_args)
@@ -372,16 +375,20 @@ class Model:
         bases.insert(0, new_base)
 
     @classmethod
-    def insert_in_bases(cls, registry, namespace, bases, properties):
+    def insert_in_bases(cls, registry, namespace, bases,
+                        transformation_properties, properties):
         """ Add in the declared namespaces new base.
 
         :param registry: the current registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
-        :param properties: the properties of the model
+        :param transformation_properties: the properties of the model
+        :param properties: assembled attributes of the namespace
         """
-        cls.apply_hybrid_method(registry, namespace, bases, properties)
-        cls.apply_table_and_mapper_args(registry, namespace, bases, properties)
+        cls.apply_hybrid_method(registry, namespace, bases,
+                                transformation_properties, properties)
+        cls.apply_table_and_mapper_args(registry, namespace, bases,
+                                        transformation_properties, properties)
 
     @classmethod
     def load_namespace_first_step(cls, registry, namespace):
@@ -529,7 +536,7 @@ class Model:
 
             bases.append(registry.registry_base)
             cls.insert_in_bases(registry, namespace, bases,
-                                transformation_properties)
+                                transformation_properties, properties)
             bases = [type(tablename, tuple(bases), properties)]
 
             if properties['is_sql_view']:
