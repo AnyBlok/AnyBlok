@@ -11,7 +11,7 @@ from anyblok.column import String
 
 @Declarations.register(Declarations.Model.Authorization)
 class ModelPermissionGrant:
-    """Default model for ModelBasedAuthorizationPolicy"""
+    """Default model for ModelBasedAuthorizationRule"""
 
     model = String(primary_key=True)
     principal = String(primary_key=True)

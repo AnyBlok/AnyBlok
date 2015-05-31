@@ -7,8 +7,8 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok.column import String
-from anyblok.bloks.model_authz import ModelBasedAuthorizationPolicy
-from anyblok.bloks.attr_authz import AttributeBasedAuthorizationPolicy
+from anyblok.authorization.rule.modelaccess import ModelAccessRule
+from anyblok.authorization.rule.attraccess import AttributeAccessRule
 
 
 register = Declarations.register
@@ -21,11 +21,16 @@ class Test2:
     """
     owner = String()
 
-Declarations.AuthorizationPolicyAssociation(
+Declarations.AuthorizationBinding(
     Declarations.Model.Test2,
-    ModelBasedAuthorizationPolicy())
+    ModelAccessRule())
 
-Declarations.AuthorizationPolicyAssociation(
+Declarations.AuthorizationBinding(
     Declarations.Model.Test2,
-    AttributeBasedAuthorizationPolicy('owner'),
+    AttributeAccessRule('owner'),
     permission='Write')
+
+Declarations.AuthorizationBinding(
+    Declarations.Model.Test2,
+    AttributeAccessRule('owner', model_rule=ModelAccessRule()),
+    permission='PermWithModelRule')

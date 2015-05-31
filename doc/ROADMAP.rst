@@ -33,9 +33,7 @@ Library to include
 Functionnality which need a sprint
 ----------------------------------
 
-* Back Task
 * Cron
 * Tasks Management
-* Event by messaging bus
 * Internalization
 * Ancestor left / right

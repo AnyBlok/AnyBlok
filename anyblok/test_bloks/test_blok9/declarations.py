@@ -6,9 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-from anyblok.bloks.model_authz import ModelBasedAuthorizationPolicy
+from anyblok.authorization.rule.modelaccess import ModelAccessRule
 
 
 # Normally, this blok should be part of the edge
-Declarations.AuthorizationPolicyAssociation(Declarations.Model.Test2,
-                                            ModelBasedAuthorizationPolicy())
+Declarations.AuthorizationBinding(Declarations.Model.Test2, ModelAccessRule())

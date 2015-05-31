@@ -492,8 +492,8 @@ class Registry:
         return self.lookup_policy(target, permission).check(
             target, principals, permission)
 
-    def query_permission(self, query, principals, permission, models=()):
-        """Add permission filtering to query.
+    def wrap_query_permission(self, query, principals, permission, models=()):
+        """Wrap query to return only authorized results
 
         :param principals: list, set or tuple of strings
         :param models: models on which to apply security filtering. If
@@ -504,7 +504,9 @@ class Registry:
 
         This method calls all the relevant policies to apply pre- and
         post-filtering. Although postfiltering is discouraged in authorization
-        policies, there are cases where it is unavoidable.
+        policies for performance and expressiveness (limit, offset),
+        there are cases for which it is unavoidable, or in which the tradeoff
+        goes the other way.
 
         In normal operation, the relevant models are infered directly from
         the query.
@@ -550,7 +552,8 @@ class Registry:
 
         If a policy is declared for the precise permission, it is returned.
         Otherwise, the default policy for that model is returned.
-        By ultimate default the special :class:`DenyAllPolicy` is returned.
+        By ultimate default the special
+        :class:`anyblok.authorization.rule.DenyAll` is returned.
         """
         model_name = target.__registry_name__
         policy = self._authz_policies.get((model_name, permission))
@@ -671,20 +674,24 @@ class Registry:
             check_dependencies(blok)
 
         if dependencies_to_install:
-            conn = None
-            try:
-                conn = self.engine.connect()
-                conn.execute("""
-                    update system_blok
-                    set state='toinstall'
-                    where name in ('%s')
-                    and state = 'uninstalled'""" % "', '".join(
-                    dependencies_to_install))
-            except (ProgrammingError, OperationalError):
-                pass
-            finally:
-                if conn:
-                    conn.close()
+            query = """
+                update system_blok
+                set state='toinstall'
+                where name in ('%s')
+                and state = 'uninstalled'""" % "', '".join(
+                dependencies_to_install)
+            if self.Session:
+                self.execute(query)
+            else:
+                conn = None
+                try:
+                    conn = self.engine.connect()
+                    conn.execute(query)
+                except (ProgrammingError, OperationalError):
+                    pass
+                finally:
+                    if conn:
+                        conn.close()
 
             return True
 
@@ -799,8 +806,6 @@ class Registry:
                     logger.info('Assemble %r entry' % entry)
                     RegistryManager.callback_assemble_entries[entry](self)
 
-            self.declarativebase.metadata.create_all(self.engine)
-
             if self.Session is None:
                 self.create_session_factory()
             elif self.must_recreate_session_factory():
@@ -810,6 +815,14 @@ class Registry:
             else:
                 self.flush()
 
+            # replace the engine by the session.connection for bind attribute
+            # because session.connection is already the connection use
+            # by blok, migration and all write on the data base
+            # or use engine for bind, force create_all method to create new
+            # new connection, this new connection have not acknowedge of the
+            # data in the session.connection, and risk of bad lock on the
+            # tables
+            self.declarativebase.metadata.create_all(self.connection())
             self.init_migration()
             self.migration.auto_upgrade_database()
 
@@ -833,7 +846,6 @@ class Registry:
 
         if test_blok and in_selected_bloks and not_in_unwanted_bloks:
             self.System.Blok.load_all()
-            self.commit()
             self.run_test(blok2install)
             if len(toinstall) > 1 or mustreload:
                 self.reload()
