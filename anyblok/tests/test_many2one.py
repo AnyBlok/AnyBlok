@@ -23,6 +23,7 @@ from anyblok.column import (Integer,
                             Time)
 from anyblok.relationship import Many2One
 
+
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
@@ -318,8 +319,8 @@ class TestMany2One(DBTestCase):
             @register(Model)
             class Test:
 
-                id = Integer(primary_key=True)
-                id2 = Integer(primary_key=True)
+                id = Integer(primary_key=True, unique=True)
+                id2 = Integer(primary_key=True, unique=True)
 
             @register(Model)
             class Test2:
@@ -344,8 +345,8 @@ class TestMany2One(DBTestCase):
             @register(Model)
             class Test:
 
-                id = Integer(primary_key=True)
-                id2 = Integer(primary_key=True)
+                id = Integer(primary_key=True, unique=True)
+                id2 = Integer(primary_key=True, unique=True)
 
             @register(Model)
             class Test2:
@@ -368,8 +369,8 @@ class TestMany2One(DBTestCase):
             @register(Model)
             class Test:
 
-                id = Integer(primary_key=True)
-                id2 = Integer(primary_key=True)
+                id = Integer(primary_key=True, unique=True)
+                id2 = Integer(primary_key=True, unique=True)
 
             @register(Model)
             class Test2:
@@ -392,8 +393,8 @@ class TestMany2One(DBTestCase):
             @register(Model)
             class Test:
 
-                id = Integer(primary_key=True)
-                id2 = Integer(primary_key=True)
+                id = Integer(primary_key=True, unique=True)
+                id2 = Integer(primary_key=True, unique=True)
 
             @register(Model)
             class Test2:
@@ -414,8 +415,8 @@ class TestMany2One(DBTestCase):
             @register(Model)
             class Test:
 
-                id = Integer(primary_key=True)
-                id2 = Integer(primary_key=True)
+                id = Integer(primary_key=True, unique=True)
+                id2 = Integer(primary_key=True, unique=True)
 
             @register(Model)
             class Test2:
@@ -437,8 +438,8 @@ class TestMany2One(DBTestCase):
             @register(Model)
             class Test:
 
-                id = Integer(primary_key=True)
-                id2 = Integer(primary_key=True)
+                id = Integer(primary_key=True, unique=True)
+                id2 = Integer(primary_key=True, unique=True)
 
             @register(Model)
             class Test2:
@@ -457,8 +458,8 @@ class TestMany2One(DBTestCase):
             @register(Model)
             class Test:
 
-                id = Integer(primary_key=True)
-                id2 = Integer(primary_key=True)
+                id = Integer(primary_key=True, unique=True)
+                id2 = Integer(primary_key=True, unique=True)
 
             @register(Model)
             class Test2:
@@ -472,6 +473,3 @@ class TestMany2One(DBTestCase):
         test2 = registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.name, test2.test_name)
-
-# auto_detetect ou col_name bien nommé ok
-# test type avec 1 seule instannce possible
