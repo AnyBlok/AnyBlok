@@ -314,6 +314,55 @@ each model, one table will be created.::
 
 .. warning:: Each SQL Model have to have got one or more primary key
 
+In the case or you need to add some configuration in the SQLAlchemy class
+attrinute:
+
+* __table_args\_\_
+* __mapper_args\_\_
+
+you can use the next class methods
+
++--------------------+--------------------------------------------------------+
+| method             | description                                            |
++====================+========================================================+
+| define_table_args  | Add options for SQLAlchemy table build:                |
+|                    |                                                        |
+|                    | * Constraints on multiple columns                      |
+|                    | * ...                                                  |
+|                    |                                                        |
+|                    | ::                                                     |
+|                    |                                                        |
+|                    |     @classmethod                                       |
+|                    |     def define_table_args(cls, table_args, properties):|
+|                    |         # table_args: tuple of the known               |
+|                    |         #             __table_args\_\_                 |
+|                    |         # properties: properties of the assembled model|
+|                    |         #             columns, registry name           |
+|                    |         return my_tuple_value                          |
+|                    |                                                        |
++--------------------+--------------------------------------------------------+
+| define_mapper_args | Add options for SQLAlchemy mappers build:              |
+|                    |                                                        |
+|                    | * polymorphisme                                        |
+|                    | * ...                                                  |
+|                    |                                                        |
+|                    | ::                                                     |
+|                    |                                                        |
+|                    |     @classmethod                                       |
+|                    |     def define_mapper_args(cls, mapper_args,           |
+|                    |                            properties):                |
+|                    |         # table_args: dict of the known                |
+|                    |         #             __mapper_args\_\_                |
+|                    |         # properties: properties of the assembled model|
+|                    |         #             columns, registry name           |
+|                    |         return my_dict_value                           |
+|                    |                                                        |
++--------------------+--------------------------------------------------------+
+
+.. note:: 
+
+    New in 0.4.0
+
 View Model
 ~~~~~~~~~~
 

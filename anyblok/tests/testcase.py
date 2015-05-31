@@ -262,6 +262,7 @@ class BlokTestCase(unittest.TestCase):
 
     """
 
+    _transaction_case_teared_down = False
     registry = None
     """The instance of :class:`anyblok.registry.Registry`` to use in tests.
 
@@ -306,3 +307,4 @@ class BlokTestCase(unittest.TestCase):
         self.registry.System.Cache.invalidate_all()
         self.registry.rollback()
         self._transaction_case_teared_down = True
+
