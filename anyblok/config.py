@@ -379,7 +379,7 @@ def add_database(group, configuration):
         'db_password': os.environ.get('ANYBLOK_DATABASE_PASSWORD'),
         'db_host': os.environ.get('ANYBLOK_DATABASE_HOST'),
         'db_port': os.environ.get('ANYBLOK_DATABASE_PORT'),
-        'db_echo': os.environ.get('ANYBLOK_DATABASE_ECHO'),
+        'db_echo': os.environ.get('ANYBLOK_DATABASE_ECHO') or False,
     })
 
 
