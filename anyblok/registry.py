@@ -382,7 +382,8 @@ class Registry:
     def __init__(self, db_name):
         self.db_name = db_name
         url = Configuration.get_url(db_name=db_name)
-        self.engine = create_engine(url)
+        echo = bool(int(Configuration.get('db_echo', False)))
+        self.engine = create_engine(url, echo=echo)
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})

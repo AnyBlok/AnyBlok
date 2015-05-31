@@ -370,6 +370,7 @@ def add_database(group, configuration):
                        help="The name of the host")
     group.add_argument('--db-port', default='',
                        help="The port number")
+    group.add_argument('--db-echo', action="store_true")
 
     configuration.update({
         'db_name': os.environ.get('ANYBLOK_DATABASE_NAME'),
@@ -378,6 +379,7 @@ def add_database(group, configuration):
         'db_password': os.environ.get('ANYBLOK_DATABASE_PASSWORD'),
         'db_host': os.environ.get('ANYBLOK_DATABASE_HOST'),
         'db_port': os.environ.get('ANYBLOK_DATABASE_PORT'),
+        'db_echo': os.environ.get('ANYBLOK_DATABASE_ECHO'),
     })
 
 
