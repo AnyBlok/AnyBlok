@@ -117,3 +117,21 @@ class TestCoreSqlBase(BlokTestCase):
         self.assertEqual(Model.fields_description(fields=['table']), res)
         Model.fire('Update Model', 'Model.System.Model')
         self.assertNotEqual(Model.fields_description(fields=['table']), res)
+
+    def test_to_dict(self):
+        M = self.registry.System.Model
+        model = M.query().first()
+        self.assertEqual(model.to_dict(), {
+            'name': model.name,
+            'table': model.table,
+            'is_sql_model': model.is_sql_model,
+            'description': model.description,
+        })
+
+    def test_to_dict_on_some_columns(self):
+        M = self.registry.System.Model
+        model = M.query().first()
+        self.assertEqual(model.to_dict('name', 'table'), {
+            'name': model.name,
+            'table': model.table,
+        })

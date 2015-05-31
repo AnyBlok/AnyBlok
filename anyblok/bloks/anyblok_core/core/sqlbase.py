@@ -198,6 +198,16 @@ class SqlMixin:
 
         return res
 
+    def to_dict(self, *fields):
+        """ Transform a record to the dict of value
+
+        :param fields: list of fields to put in dict, if not selected fields
+            them take all
+        :rtype: dict
+        """
+        fields = self.__class__.fields_description(fields=fields).keys()
+        return {x: getattr(self, x) for x in fields}
+
 
 @Declarations.register(Declarations.Core)
 class SqlBase(SqlMixin):
