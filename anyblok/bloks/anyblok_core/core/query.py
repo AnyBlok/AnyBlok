@@ -77,3 +77,30 @@ class Query(query.Query):
             return wrapper
         else:
             return super(Query, self).__getattribute__(name)
+
+    def dictone(self):
+        val = self.one()
+        field2get = [x['name'] for x in self.column_descriptions
+                     if not hasattr(x['type'], '__table__')]
+        if field2get:
+            return {x: getattr(val, x) for x in field2get}
+        else:
+            return val.to_dict()
+
+    def dictfirst(self):
+        val = self.first()
+        field2get = [x['name'] for x in self.column_descriptions
+                     if not hasattr(x['type'], '__table__')]
+        if field2get:
+            return {x: getattr(val, x) for x in field2get}
+        else:
+            return val.to_dict()
+
+    def dictall(self):
+        vals = self.all()
+        field2get = [x['name'] for x in self.column_descriptions
+                     if not hasattr(x['type'], '__table__')]
+        if field2get:
+            return [{x: getattr(y, x) for x in field2get} for y in vals]
+        else:
+            return vals.to_dict()

@@ -185,8 +185,7 @@ class SqlMixin:
 
         query = get_query(RelationShip).union_all(get_query(Column)).union_all(
             get_query(Field))
-        fields2get = ['id', 'label', 'type', 'nullable', 'primary_key',
-                      'model']
+        fields2get = [x['name'] for x in query.column_descriptions]
         return {x.id: {y: getattr(x, y) for y in fields2get}
                 for x in query.all()}
 
@@ -205,7 +204,9 @@ class SqlMixin:
             them take all
         :rtype: dict
         """
-        fields = self.__class__.fields_description(fields=fields).keys()
+        if not fields:
+            fields = self.__class__.fields_description().keys()
+
         return {x: getattr(self, x) for x in fields}
 
 
