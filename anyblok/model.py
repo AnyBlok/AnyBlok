@@ -205,6 +205,7 @@ class Model:
                     registry, namespace, name, properties)
 
             properties[name] = declared_attr(wrapper)
+            properties[name].anyblok_field = field
         else:
             properties[name] = field.get_sqlalchemy_mapping(
                 registry, namespace, name, properties)
@@ -355,7 +356,7 @@ class Model:
         :param transformation_properties: the properties of the model
         :param properties: assembled attributes of the namespace
         """
-        table_args = ()
+        table_args = tuple(properties['add_in_table_args'])
         mapper_args = {}
         for meth in transformation_properties['table_args']:
             table_args = meth(table_args, properties.copy())
@@ -453,6 +454,7 @@ class Model:
         bases = TypeList(cls, registry, namespace, transformation_properties)
         ns = registry.loaded_registries[namespace]
         properties = ns['properties'].copy()
+        properties['add_in_table_args'] = []
 
         if 'is_sql_view' not in properties:
             properties['is_sql_view'] = False

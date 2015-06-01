@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from sqlalchemy import Table, Column, ForeignKey
+from sqlalchemy import Table, Column, ForeignKey, ForeignKeyConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import backref
 from sqlalchemy.schema import Column as SA_Column
@@ -220,6 +220,36 @@ class Many2One(RelationShip):
             if not isinstance(self.column_names, (list, tuple)):
                 self.column_names = [self.column_names]
 
+    def find_foreign_key(self, registry, namespace, fieldname, properties):
+        """Find and return the field name with a foreign key to the remote
+        model, if no exist, the generate the fieldname with remote primary keys
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param fieldname: fieldname of the relationship
+        :param propertie: the properties known
+        """
+        remote_model = self.get_registry_name()
+        remote_table = self.get_tablename(registry)
+        cnames = []
+        for cname in properties['loaded_columns']:
+            col = properties[cname]
+            if hasattr(col, 'anyblok_field'):
+                if hasattr(col.anyblok_field, 'foreign_key'):
+                    rn = col.anyblok_field.foreign_key[0]
+                    if not isinstance(rn, str):
+                        rn = rn.__registry_name__
+
+                    if rn != remote_model:
+                        continue
+
+                    cnames.append(cname)
+
+        if not cnames:
+            cnames = ["%s_%s" % (remote_table, x) for x in self.remote_columns]
+
+        self.column_names = cnames
+
     def update_properties(self, registry, namespace, fieldname, properties):
         """ Create the column which has the foreign key if the column doesn't
         exist
@@ -240,8 +270,7 @@ class Many2One(RelationShip):
         self.kwargs['info']['remote_columns'] = self.remote_columns
 
         if self.column_names is None:
-            self.column_names = ["%s_%s" % (remote_table, x)
-                                 for x in self.remote_columns]
+            self.find_foreign_key(registry, namespace, fieldname, properties)
 
         if fieldname in self.column_names:
             raise FieldException("The column_names and the fieldname %r are "
@@ -257,6 +286,8 @@ class Many2One(RelationShip):
             if cname in self_properties:
                 del remote_types[self_properties[cname].foreign_key[1]]
 
+        col_names = []
+        ref_cols = []
         for cname in self.column_names:
             if cname not in self_properties:
                 if len(remote_types) == 1:
@@ -268,20 +299,37 @@ class Many2One(RelationShip):
                         remote_type = remote_types[rc]
                         foreign_key = '%s.%s' % (remote_table, rc)
                     else:
-                        continue
+                        raise FieldException("Can not create the local "
+                                             "column %r" % cname)
 
-                def wrapper(cls):
-                    return SA_Column(
-                        remote_type, ForeignKey(foreign_key),
-                        nullable=self.nullable,
-                        unique=self.unique,
-                        info=dict(label=self.label, foreign_key=foreign_key))
-
-                properties[cname] = declared_attr(wrapper)
+                self.create_column(cname, remote_type, foreign_key, properties)
+                col_names.append(cname)
+                ref_cols.append(foreign_key)
+            else:
+                col_names.append(cname)
+                foreign_key = properties[cname].anyblok_field.foreign_key
+                foreign_key = '%s.%s' % (foreign_key[0].__tablename__,
+                                         foreign_key[1])
+                ref_cols.append(foreign_key)
 
         if namespace == self.get_registry_name():
             self.kwargs['remote_side'] = [properties[x]
                                           for x in self.remote_columns]
+
+        if len(self.column_names) > 1 and col_names and ref_cols:
+            properties['add_in_table_args'].append(
+                ForeignKeyConstraint(col_names, ref_cols))
+
+    def create_column(self, cname, remote_type, foreign_key, properties):
+
+        def wrapper(cls):
+            return SA_Column(
+                remote_type, ForeignKey(foreign_key),
+                nullable=self.nullable,
+                unique=self.unique,
+                info=dict(label=self.label, foreign_key=foreign_key))
+
+        properties[cname] = declared_attr(wrapper)
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
