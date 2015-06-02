@@ -259,6 +259,7 @@ class Many2One(RelationShip):
         :param fieldname: fieldname of the relationship
         :param propertie: the properties known
         """
+        add_fksc = False
         self.check_existing_remote_model(registry)
         remote_table = self.get_tablename(registry)
         remote_properties = registry.loaded_namespaces_first_step.get(
@@ -302,6 +303,7 @@ class Many2One(RelationShip):
                         raise FieldException("Can not create the local "
                                              "column %r" % cname)
 
+                add_fksc = True
                 self.create_column(cname, remote_type, foreign_key, properties)
                 col_names.append(cname)
                 ref_cols.append(foreign_key)
@@ -316,7 +318,7 @@ class Many2One(RelationShip):
             self.kwargs['remote_side'] = [properties[x]
                                           for x in self.remote_columns]
 
-        if len(self.column_names) > 1 and col_names and ref_cols:
+        if (len(self.column_names) > 1 or add_fksc) and col_names and ref_cols:
             properties['add_in_table_args'].append(
                 ForeignKeyConstraint(col_names, ref_cols))
 
@@ -324,7 +326,7 @@ class Many2One(RelationShip):
 
         def wrapper(cls):
             return SA_Column(
-                remote_type, ForeignKey(foreign_key),
+                remote_type,
                 nullable=self.nullable,
                 unique=self.unique,
                 info=dict(label=self.label, foreign_key=foreign_key))
