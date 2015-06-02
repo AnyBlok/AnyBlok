@@ -177,8 +177,10 @@ class TestOne2One(DBTestCase):
                         ['test_id', 'test_id2'], ['test.id', 'test.id2']),)
 
                 id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=(Model.Test, 'id'), nullable=False)
-                test_id2 = String(foreign_key=(Model.Test, 'id2'), nullable=False)
+                test_id = Integer(
+                    foreign_key=(Model.Test, 'id'), nullable=False)
+                test_id2 = String(
+                    foreign_key=(Model.Test, 'id2'), nullable=False)
                 test = One2One(model=Model.Test,
                                remote_columns=('id', 'id2'),
                                column_names=('test_id', 'test_id2'),
@@ -204,8 +206,10 @@ class TestOne2One(DBTestCase):
             class Test2:
 
                 id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=(Model.Test, 'id'), nullable=False)
-                test_id2 = String(foreign_key=(Model.Test, 'id2'), nullable=False)
+                test_id = Integer(
+                    foreign_key=(Model.Test, 'id'), nullable=False)
+                test_id2 = String(
+                    foreign_key=(Model.Test, 'id2'), nullable=False)
                 test = One2One(model=Model.Test,
                                remote_columns=('id', 'id2'),
                                column_names=('test_id', 'test_id2'),
@@ -231,8 +235,10 @@ class TestOne2One(DBTestCase):
             class Test2:
 
                 id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=(Model.Test, 'id'), nullable=False)
-                test_id2 = String(foreign_key=(Model.Test, 'id2'), nullable=False)
+                test_id = Integer(
+                    foreign_key=(Model.Test, 'id'), nullable=False)
+                test_id2 = String(
+                    foreign_key=(Model.Test, 'id2'), nullable=False)
                 test = One2One(model=Model.Test, backref="test2")
 
         registry = self.init_registry(add_in_registry)
@@ -255,8 +261,10 @@ class TestOne2One(DBTestCase):
             class Test2:
 
                 id = Integer(primary_key=True)
-                other_test_id = Integer(foreign_key=(Model.Test, 'id'), nullable=False)
-                other_test_id2 = String(foreign_key=(Model.Test, 'id2'), nullable=False)
+                other_test_id = Integer(
+                    foreign_key=(Model.Test, 'id'), nullable=False)
+                other_test_id2 = String(
+                    foreign_key=(Model.Test, 'id2'), nullable=False)
                 test = One2One(model=Model.Test, backref="test2")
 
         registry = self.init_registry(add_in_registry)

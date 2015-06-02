@@ -33,9 +33,9 @@ def _complete_many2many(**kwargs):
         name = String(primary_key=True)
         address = Many2Many(model=Model.Address,
                             join_table="join_addresses_by_persons",
-                            remote_column="id", local_column="name",
-                            m2m_remote_column='a_id',
-                            m2m_local_column='p_name',
+                            remote_columns="id", local_columns="name",
+                            m2m_remote_columns='a_id',
+                            m2m_local_columns='p_name',
                             many2many="persons")
 
 
@@ -108,7 +108,7 @@ def auto_detect_two_primary_keys(**kwargs):
         address = Many2Many(model=Model.Address)
 
 
-def unexisting_remote_column(**kwargs):
+def unexisting_remote_columns(**kwargs):
 
     @register(Model)
     class Address:
@@ -119,7 +119,7 @@ def unexisting_remote_column(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address = Many2Many(model=Model.Address, remote_column="id2")
+        address = Many2Many(model=Model.Address, remote_columns="id2")
 
 
 def reuse_many2many_table(**kwargs):
@@ -211,20 +211,9 @@ class TestMany2Many(DBTestCase):
 
         self.assertEqual(person.address, [address])
 
-    def test_auto_detect_two_primary_keys(self):
-        try:
-            self.init_registry(auto_detect_two_primary_keys)
-            self.fail('No watch dog when two primary key')
-        except FieldException:
-            pass
-
-    def test_unexisting_remote_column(self):
-        try:
-            self.init_registry(unexisting_remote_column)
-            self.fail(
-                "No watch dog when the remote or local column doesn't exist")
-        except FieldException:
-            pass
+    def test_unexisting_remote_columns(self):
+        with self.assertRaises(FieldException):
+            self.init_registry(unexisting_remote_columns)
 
     def test_reuse_many2many_table(self):
         registry = self.init_registry(reuse_many2many_table)
@@ -284,37 +273,141 @@ class TestMany2Many(DBTestCase):
         self.assertEqual(join_table_exist, True)
 
     def test_comlet_with_multi_primary_keys_remote_and_local(self):
-        raise
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+                id2 = String(primary_key=True)
+
+            @register(Model)
+            class Test2:
+                id = Integer(primary_key=True)
+                id2 = String(primary_key=True)
+                test = Many2Many(model=Model.Test,
+                                 join_table="join_test_and_test2",
+                                 remote_columns=['id', 'id2'],
+                                 m2m_remote_columns=['t2_id', 't2_id2'],
+                                 local_columns=['id', 'id2'],
+                                 m2m_local_columns=['t1_id', 't1_id2'],
+                                 many2many="test2")
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert(id2="test1")
+        t2 = registry.Test2.insert(id2="test2")
+        t2.test.append(t1)
+        self.assertIs(t1.test2[0], t2)
 
     def test_comlet_with_multi_primary_keys_remote(self):
-        raise
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+                id2 = String(primary_key=True)
+
+            @register(Model)
+            class Test2:
+                id = Integer(primary_key=True)
+                test = Many2Many(model=Model.Test,
+                                 join_table="join_test_and_test2",
+                                 remote_columns=['id', 'id2'],
+                                 m2m_remote_columns=['t2_id', 't2_id2'],
+                                 local_columns='id',
+                                 m2m_local_columns='t1_id',
+                                 many2many="test2")
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert(id2="test1")
+        t2 = registry.Test2.insert()
+        t2.test.append(t1)
+        self.assertIs(t1.test2[0], t2)
 
     def test_comlet_with_multi_primary_keys_local(self):
-        raise
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Test2:
+                id = Integer(primary_key=True)
+                id2 = String(primary_key=True)
+                test = Many2Many(model=Model.Test,
+                                 join_table="join_test_and_test2",
+                                 remote_columns='id',
+                                 m2m_remote_columns='t2_id',
+                                 local_columns=['id', 'id2'],
+                                 m2m_local_columns=['t1_id', 't1_id2'],
+                                 many2many="test2")
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test2.insert(id2='test2')
+        t2.test.append(t1)
+        self.assertIs(t1.test2[0], t2)
 
     def test_minimum_with_multi_primary_keys_remote_and_local(self):
-        raise
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+                id2 = String(primary_key=True)
+
+            @register(Model)
+            class Test2:
+                id = Integer(primary_key=True)
+                id2 = String(primary_key=True)
+                test = Many2Many(model=Model.Test, many2many="test2")
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert(id2="test1")
+        t2 = registry.Test2.insert(id2="test2")
+        t2.test.append(t1)
+        self.assertIs(t1.test2[0], t2)
 
     def test_minimum_with_multi_primary_keys_remote(self):
-        raise
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+                id2 = String(primary_key=True)
+
+            @register(Model)
+            class Test2:
+                id = Integer(primary_key=True)
+                test = Many2Many(model=Model.Test, many2many="test2")
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert(id2="test1")
+        t2 = registry.Test2.insert()
+        t2.test.append(t1)
+        self.assertIs(t1.test2[0], t2)
 
     def test_minimum_with_multi_primary_keys_local(self):
-        raise
 
-    def test_minimum_with_multi_primary_keys_unexisting_remote_and_local(self):
-        raise
+        def add_in_registry():
 
-    def test_minimum_with_multi_primary_keys_unexisting_remote(self):
-        raise
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
 
-    def test_minimum_with_multi_primary_keys_unexisting_local(self):
-        raise
+            @register(Model)
+            class Test2:
+                id = Integer(primary_key=True)
+                id2 = String(primary_key=True)
+                test = Many2Many(model=Model.Test, many2many="test2")
 
-    def test_minimum_with_multi_primarykeys_unexisting_remote_and_local2(self):
-        raise
-
-    def test_minimum_with_multi_primary_keys_unexisting_remote2(self):
-        raise
-
-    def test_minimum_with_multi_primary_keys_unexisting_local2(self):
-        raise
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test2.insert(id2="test2")
+        t2.test.append(t1)
+        self.assertIs(t1.test2[0], t2)

@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from sqlalchemy import Table, Column, ForeignKey, ForeignKeyConstraint
+from sqlalchemy import Table, Column, ForeignKeyConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import backref
 from sqlalchemy.schema import Column as SA_Column
@@ -278,7 +278,7 @@ class Many2One(RelationShip):
                                  "the same, please choose another "
                                  "column_names" % fieldname)
 
-        self.kwargs['info']['local_column'] = ', '.join(self.column_names)
+        self.kwargs['info']['local_columns'] = ', '.join(self.column_names)
         remote_types = {x: remote_properties[x].native_type()
                         for x in self.remote_columns}
 
@@ -416,8 +416,8 @@ class Many2Many(RelationShip):
                                      join_table="many2many table",
                                      remote_columns="The remote column",
                                      m2m_remote_columns="Name in many2many"
-                                     local_column="local primary key"
-                                     m2m_local_column="Name in many2many"
+                                     local_columns="local primary key"
+                                     m2m_local_columns="Name in many2many"
                                      many2many="themodels")
 
     if the join_table is not defined, then the table join is
@@ -431,15 +431,15 @@ class Many2Many(RelationShip):
     If the remote_columns are not define then, the system take the primary key
     of the remote model
 
-    if the local_column are not define the take the primary key of the local
+    if the local_columns are not define the take the primary key of the local
         model
 
     :param model: the remote model
     :param join_table: the many2many table to join local and remote models
     :param remote_columns: the column name on the remote model
     :param m2m_remote_columns: the column name to remote model in m2m table
-    :param local_column: the column on the model
-    :param m2m_local_column: the column name to local model in m2m table
+    :param local_columns: the column on the model
+    :param m2m_local_columns: the column name to local model in m2m table
     :param many2many: create the opposite many2many on the remote model
     """
 
@@ -453,38 +453,58 @@ class Many2Many(RelationShip):
         self.remote_columns = None
         if 'remote_columns' in kwargs:
             self.remote_columns = self.kwargs.pop('remote_columns')
+            if not isinstance(self.remote_columns, list):
+                self.remote_columns = [self.remote_columns]
+
             self.kwargs['info']['remote_columns'] = self.remote_columns
 
         self.m2m_remote_columns = None
         if 'm2m_remote_columns' in kwargs:
             self.m2m_remote_columns = self.kwargs.pop('m2m_remote_columns')
+            if not isinstance(self.m2m_remote_columns, list):
+                self.m2m_remote_columns = [self.m2m_remote_columns]
 
-        self.local_column = None
-        if 'local_column' in kwargs:
-            self.local_column = self.kwargs.pop('local_column')
-            self.kwargs['info']['local_column'] = self.local_column
+        self.local_columns = None
+        if 'local_columns' in kwargs:
+            self.local_columns = self.kwargs.pop('local_columns')
+            if not isinstance(self.local_columns, list):
+                self.local_columns = [self.local_columns]
 
-        self.m2m_local_column = None
-        if 'm2m_local_column' in kwargs:
-            self.m2m_local_column = self.kwargs.pop('m2m_local_column')
+            self.kwargs['info']['local_columns'] = self.local_columns
+
+        self.m2m_local_columns = None
+        if 'm2m_local_columns' in kwargs:
+            self.m2m_local_columns = self.kwargs.pop('m2m_local_columns')
+            if not isinstance(self.m2m_local_columns, list):
+                self.m2m_local_columns = [self.m2m_local_columns]
 
         if 'many2many' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('many2many')
             self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
-    def get_m2m_column_info(self, tablename, properties, column, m2m_column):
-        if column is None:
-            column = self.find_primary_key(properties)
-        elif column not in properties:
-            raise FieldException("%r does not exist in %r" % (column,
-                                                              tablename))
+    def get_m2m_columns(self, tablename, properties, columns, m2m_columns):
+        if not columns:
+            columns = self.find_primary_key(properties)
+        else:
+            for column in columns:
+                if column not in properties:
+                    raise FieldException(
+                        "%r does not exist in %r" % (column, tablename))
 
-        if m2m_column is None:
-            m2m_column = '%s_%s' % (tablename, column)
+        if m2m_columns is None:
+            m2m_columns = ['%s_%s' % (tablename, column) for column in columns]
 
-        foreignkey = '%s.%s' % (tablename, column)
+        cols = []
+        col_names = []
+        ref_cols = []
+        for i, column in enumerate(m2m_columns):
+            sqltype = properties[columns[i]].native_type()
+            foreignkey = "%s.%s" % (tablename, columns[i])
+            cols.append(Column(column, sqltype))
+            col_names.append(column)
+            ref_cols.append(foreignkey)
 
-        return m2m_column, properties[column].native_type(), foreignkey
+        return cols, ForeignKeyConstraint(col_names, ref_cols)
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -508,17 +528,15 @@ class Many2Many(RelationShip):
             join_table = 'join_%s_and_%s' % (local_tablename, remote_tablename)
 
         if join_table not in registry.declarativebase.metadata.tables:
-            rname, rtype, rfk = self.get_m2m_column_info(
+            remote_columns, remote_fk = self.get_m2m_columns(
                 remote_tablename, remote_properties, self.remote_columns,
                 self.m2m_remote_columns)
+            local_columns, local_fk = self.get_m2m_columns(
+                local_tablename, local_properties, self.local_columns,
+                self.m2m_local_columns)
 
-            lname, ltype, lfk = self.get_m2m_column_info(
-                local_tablename, local_properties, self.local_column,
-                self.m2m_local_column)
-
-            Table(join_table, registry.declarativebase.metadata,
-                  Column(lname, ltype, ForeignKey(lfk)),
-                  Column(rname, rtype, ForeignKey(rfk)))
+            Table(join_table, registry.declarativebase.metadata, *(
+                local_columns + remote_columns + [local_fk, remote_fk]))
 
         self.kwargs['secondary'] = join_table
 
@@ -610,9 +628,9 @@ class One2Many(RelationShip):
         self.kwargs['info']['remote_columns'] = self.remote_columns
 
         if 'primaryjoin' not in self.kwargs:
-            local_column = self.find_primary_key(self_properties)
+            local_columns = self.find_primary_key(self_properties)
 
-            primaryjoin = tablename + '.' + local_column + " == "
+            primaryjoin = tablename + '.' + local_columns + " == "
             primaryjoin += self.get_tablename(registry)
             primaryjoin += '.' + self.remote_columns
             self.kwargs['primaryjoin'] = primaryjoin

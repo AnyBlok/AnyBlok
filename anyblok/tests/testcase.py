@@ -307,4 +307,3 @@ class BlokTestCase(unittest.TestCase):
         self.registry.System.Cache.invalidate_all()
         self.registry.rollback()
         self._transaction_case_teared_down = True
-
