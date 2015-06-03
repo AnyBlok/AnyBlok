@@ -752,8 +752,10 @@ class Registry:
         Query = type('Query', tuple(query_bases), {})
         Session = type('Session', tuple(self.loaded_cores['Session']), {
             'registry_query': Query})
+
+        bind = self.connection() if self.Session else self.engine
         self.Session = scoped_session(
-            sessionmaker(bind=self.engine, class_=Session),
+            sessionmaker(bind=bind, class_=Session),
             EnvironmentManager.scoped_function_for_session)
         self.nb_query_bases = len(self.loaded_cores['Query'])
         self.nb_session_bases = len(self.loaded_cores['Session'])
@@ -807,11 +809,7 @@ class Registry:
                     logger.info('Assemble %r entry' % entry)
                     RegistryManager.callback_assemble_entries[entry](self)
 
-            if self.Session is None:
-                self.create_session_factory()
-            elif self.must_recreate_session_factory():
-                self.commit()
-                self.close_session()
+            if self.Session is None or self.must_recreate_session_factory():
                 self.create_session_factory()
             else:
                 self.flush()
