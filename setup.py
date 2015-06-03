@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
