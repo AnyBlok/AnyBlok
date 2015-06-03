@@ -143,7 +143,7 @@ class TestOne2Many(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-Sebastien SUZANNE")
         address.persons.append(person)
 
         self.assertEqual(person.address, address)
@@ -154,7 +154,7 @@ class TestOne2Many(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-Sebastien SUZANNE")
         address.persons.append(person)
 
     def test_minimum_one2many_remote_field_in_mixin(self):
@@ -163,7 +163,7 @@ class TestOne2Many(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-Sebastien SUZANNE")
         address.persons.append(person)
 
     def test_one2many_with_str_model(self):
@@ -172,7 +172,7 @@ class TestOne2Many(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-Sebastien SUZANNE")
         address.persons.append(person)
 
     def test_same_model_backref(self):

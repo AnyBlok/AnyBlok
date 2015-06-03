@@ -161,7 +161,7 @@ class TestMany2Many(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-Sébastien SUZANNE")
 
         person.address.append(address)
 
@@ -183,7 +183,7 @@ class TestMany2Many(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-Sebastien SUZANNE")
 
         person.address.append(address)
 
@@ -205,7 +205,7 @@ class TestMany2Many(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-Sebastien SUZANNE")
 
         person.address.append(address)
 
@@ -219,7 +219,7 @@ class TestMany2Many(DBTestCase):
         registry = self.init_registry(reuse_many2many_table)
 
         address = registry.Address.insert()
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-Sebastien SUZANNE")
 
         person.address.append(address)
 
@@ -241,7 +241,7 @@ class TestMany2Many(DBTestCase):
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = registry.Person.insert(name="Jean-Sebastien SUZANNE")
 
         person.address.append(address)
 
