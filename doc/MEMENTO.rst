@@ -104,7 +104,7 @@ And the methods that define blok behaviours:
     )
 
 .. note::
-    
+
     The version 0.4.0, required all the declaration of the bloks on the entry
     point **bloks**
 
@@ -359,7 +359,7 @@ you can use the next class methods
 |                    |                                                        |
 +--------------------+--------------------------------------------------------+
 
-.. note:: 
+.. note::
 
     New in 0.4.0
 
@@ -465,7 +465,7 @@ All the columns have the following optional parameters:
 |                |     foo: Integer(foreign_key=('Model.Foo', 'id'))          |
 |                |                                                            |
 +----------------+------------------------------------------------------------+
-| db_column_name | String to define the real column name in the table,        | 
+| db_column_name | String to define the real column name in the table,        |
 |                | different from the model attribute name                    |
 +----------------+------------------------------------------------------------+
 
@@ -524,28 +524,28 @@ List of the RelationShip type:
 
 Parameters of a ``RelationShip``:
 
-+-------------------+---------------------------------------------------------+
-| Param             | Description                                             |
-+===================+=========================================================+
-| ``label``         | The label of the column                                 |
-+-------------------+---------------------------------------------------------+
-| ``model``         | The remote model                                        |
-+-------------------+---------------------------------------------------------+
-| ``remote_column`` | The column name on the remote model, if no remote       |
-|                   | columns are defined the remote column will be the       |
-|                   | primary column of the remote model                      |
-+-------------------+---------------------------------------------------------+
++--------------------+--------------------------------------------------------+
+| Param              | Description                                            |
++====================+========================================================+
+| ``label``          | The label of the column                                |
++--------------------+--------------------------------------------------------+
+| ``model``          | The remote model                                       |
++--------------------+--------------------------------------------------------+
+| ``remote_columns`` | The column name on the remote model, if no remote      |
+|                    | columns are defined the remote column will be the      |
+|                    | primary column of the remote model                     |
++--------------------+--------------------------------------------------------+
 
 Parameters of the ``One2One`` field:
 
 +-------------------+---------------------------------------------------------+
 | Param             | Description                                             |
 +===================+=========================================================+
-| ``column_name``   | Name of the local column.                               |
+| ``column_names``  | Name of the local column.                               |
 |                   | If the column doesn't exist then this column will be    |
 |                   | created.                                                |
 |                   | If no column name then the name will be 'tablename' +   |
-|                   | '_' + name of the relationship                          |
+|                   | '_' + name of the relationships                         |
 +-------------------+---------------------------------------------------------+
 | ``nullable``      | Indicates if the column name is nullable or not         |
 +-------------------+---------------------------------------------------------+
@@ -557,11 +557,11 @@ Parameters of the ``Many2One`` field:
 +-------------------+---------------------------------------------------------+
 | Parameter         | Description                                             |
 +===================+=========================================================+
-| ``column_name``   | Name of the local column.                               |
+| ``column_names``  | Name of the local column.                               |
 |                   | If the column doesn't exist then this column will be    |
 |                   | created.                                                |
 |                   | If no column name then the name will be 'tablename' +   |
-|                   | '_' + name of the relation ship                         |
+|                   | '_' + name of the relationships                         |
 +-------------------+---------------------------------------------------------+
 | ``nullable``      | Indicate if the column name is nullable or not          |
 +-------------------+---------------------------------------------------------+
@@ -581,26 +581,26 @@ Parameters of the ``One2Many`` field:
 
 Parameters of the ``Many2Many`` field:
 
-+-----------------------+-----------------------------------------------------+
-| Parameter             | Description                                         |
-+=======================+=====================================================+
-| ``join_table``        | many2many intermediate table between both models    |
-+-----------------------+-----------------------------------------------------+
-| ``m2m_remote_column`` | Column name in the join table which have got the    |
-|                       | foreign key to the remote model                     |
-+-----------------------+-----------------------------------------------------+
-| ``local_column``      | Name of the local column which holds the foreign    |
-|                       | key to the join table.                              |
-|                       | If the column does not exist then this column will  |
-|                       | be created.                                         |
-|                       | If no column name then the name will be 'tablename' |
-|                       | + '_' + name of the relationship                    |
-+-----------------------+-----------------------------------------------------+
-| ``m2m_local_column``  | Column name in the join table which holds the       |
-|                       | foreign key to the model                            |
-+-----------------------+-----------------------------------------------------+
-| ``many2many``         | Opposite Many2Many link with this relationship      |
-+-----------------------+-----------------------------------------------------+
++------------------------+----------------------------------------------------+
+| Parameter              | Description                                        |
++========================+====================================================+
+| ``join_table``         | many2many intermediate table between both models   |
++------------------------+----------------------------------------------------+
+| ``m2m_remote_columns`` | Column name in the join table which have got the   |
+|                        | foreign key to the remote model                    |
++------------------------+----------------------------------------------------+
+| ``local_columns``      | Name of the local column which holds the foreign   |
+|                        | key to the join table.                             |
+|                        | If the column does not exist then this column will |
+|                        | be created.                                        |
+|                        | If no column name then the name will be 'tablename'|
+|                        | + '_' + name of the relationship                   |
++------------------------+----------------------------------------------------+
+| ``m2m_local_columns``  | Column name in the join table which holds the      |
+|                        | foreign key to the model                           |
++------------------------+----------------------------------------------------+
+| ``many2many``          | Opposite Many2Many link with this relationship     |
++------------------------+----------------------------------------------------+
 
 Field
 -----

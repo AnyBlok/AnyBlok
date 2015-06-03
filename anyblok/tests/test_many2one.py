@@ -22,6 +22,8 @@ from anyblok.column import (Integer,
                             Date,
                             Time)
 from anyblok.relationship import Many2One
+from sqlalchemy import ForeignKeyConstraint
+
 
 register = Declarations.register
 Model = Declarations.Model
@@ -43,11 +45,11 @@ def _complete_many2one(**kwargs):
 
         name = String(primary_key=True)
         address = Many2One(model=Model.Address,
-                           remote_column="id", column_name="id_of_address",
+                           remote_columns="id", column_names="id_of_address",
                            one2many="persons", nullable=False)
 
 
-def _many2one_with_same_name_for_column_name(**kwargs):
+def _many2one_with_same_name_for_column_names(**kwargs):
 
     @register(Model)
     class Address:
@@ -62,7 +64,7 @@ def _many2one_with_same_name_for_column_name(**kwargs):
 
         name = String(primary_key=True)
         address = Many2One(model=Model.Address,
-                           column_name="address")
+                           column_names="address")
 
 
 def _minimum_many2one(**kwargs):
@@ -157,7 +159,7 @@ class TestMany2One(DBTestCase):
 
     def test_2_many2one(self):
         with self.assertRaises(FieldException):
-            self.init_registry(_many2one_with_same_name_for_column_name)
+            self.init_registry(_many2one_with_same_name_for_column_names)
 
     def test_minimum_many2one(self):
         registry = self.init_registry(_minimum_many2one)
@@ -195,13 +197,6 @@ class TestMany2One(DBTestCase):
         try:
             self.init_registry(_minimum_many2one_without_model)
             self.fail("No watch dog when more no model")
-        except FieldException:
-            pass
-
-    def test_two_remote_primary_keys(self):
-        try:
-            self.init_registry(_two_remote_primary_keys)
-            self.fail("No watch dog when more than one primary keys")
         except FieldException:
             pass
 
@@ -317,3 +312,181 @@ class TestMany2One(DBTestCase):
 
         with self.assertRaises(IntegrityError):
             registry.Person.insert(name="Other", address=address)
+
+    def test_complet_with_multi_foreign_key(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True, unique=True)
+                id2 = String(primary_key=True, unique=True)
+
+            @register(Model)
+            class Test2:
+
+                @classmethod
+                def define_table_args(cls, table_args, properties):
+                    return table_args + (ForeignKeyConstraint(
+                        ['test_id', 'test_id2'], ['test.id', 'test.id2']),)
+
+                id = Integer(primary_key=True)
+                test_id = Integer(
+                    foreign_key=(Model.Test, 'id'), nullable=False)
+                test_id2 = String(
+                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                test = Many2One(model=Model.Test,
+                                remote_columns=('id', 'id2'),
+                                column_names=('test_id', 'test_id2'))
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert(id2="10")
+        test2 = registry.Test2.insert(test=test)
+        self.assertEqual(test.id, test2.test_id)
+        self.assertEqual(test.id2, test2.test_id2)
+
+    def test_complet_with_multi_foreign_key_without_constraint(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True, unique=True)
+                id2 = String(primary_key=True, unique=True)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                test_id = Integer(
+                    foreign_key=(Model.Test, 'id'), nullable=False)
+                test_id2 = String(
+                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                test = Many2One(model=Model.Test,
+                                remote_columns=('id', 'id2'),
+                                column_names=('test_id', 'test_id2'))
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert(id2="10")
+        test2 = registry.Test2.insert(test=test)
+        self.assertEqual(test.id, test2.test_id)
+        self.assertEqual(test.id2, test2.test_id2)
+
+    def test_with_multi_foreign_key_on_existing_column(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True, unique=True)
+                id2 = String(primary_key=True, unique=True)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                test_id = Integer(
+                    foreign_key=(Model.Test, 'id'), nullable=False)
+                test_id2 = String(
+                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                test = Many2One(model=Model.Test)
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert(id2="10")
+        test2 = registry.Test2.insert(test=test)
+        self.assertEqual(test.id, test2.test_id)
+        self.assertEqual(test.id2, test2.test_id2)
+
+    def test_with_multi_foreign_key_on_existing_column2(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True, unique=True)
+                id2 = String(primary_key=True, unique=True)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                other_test_id = Integer(
+                    foreign_key=(Model.Test, 'id'), nullable=False)
+                other_test_id2 = String(
+                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                test = Many2One(model=Model.Test)
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert(id2="10")
+        test2 = registry.Test2.insert(test=test)
+        self.assertEqual(test.id, test2.other_test_id)
+        self.assertEqual(test.id2, test2.other_test_id2)
+
+    def test_with_multi_foreign_key_on_unexisting_column(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True, unique=True)
+                id2 = String(primary_key=True, unique=True)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                test = Many2One(model=Model.Test)
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert(id2="10")
+        test2 = registry.Test2.insert(test=test)
+        self.assertEqual(test.id, test2.test_id)
+        self.assertEqual(test.id2, test2.test_id2)
+
+    def test_with_multi_foreign_key_on_unexisting_named_column(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True, unique=True)
+                id2 = String(primary_key=True, unique=True)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                test = Many2One(model=Model.Test,
+                                column_names=('test_id', 'test_id2'))
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert(id2="10")
+        test2 = registry.Test2.insert(test=test)
+        self.assertEqual(test.id, test2.test_id)
+        self.assertEqual(test.id2, test2.test_id2)
+
+    def test_with_multi_foreign_key_on_unexisting_named_column2(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True, unique=True)
+                id2 = Integer(primary_key=True, unique=True)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                test = Many2One(model=Model.Test, column_names=(
+                    'other_test_id', 'other_test_id2'))
+
+        with self.assertRaises(FieldException):
+            self.init_registry(add_in_registry)
