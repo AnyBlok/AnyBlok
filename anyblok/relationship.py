@@ -453,7 +453,7 @@ class Many2Many(RelationShip):
         self.remote_columns = None
         if 'remote_columns' in kwargs:
             self.remote_columns = self.kwargs.pop('remote_columns')
-            if not isinstance(self.remote_columns, list):
+            if not isinstance(self.remote_columns, (list, tuple)):
                 self.remote_columns = [self.remote_columns]
 
             self.kwargs['info']['remote_columns'] = self.remote_columns
@@ -461,13 +461,13 @@ class Many2Many(RelationShip):
         self.m2m_remote_columns = None
         if 'm2m_remote_columns' in kwargs:
             self.m2m_remote_columns = self.kwargs.pop('m2m_remote_columns')
-            if not isinstance(self.m2m_remote_columns, list):
+            if not isinstance(self.m2m_remote_columns, (list, tuple)):
                 self.m2m_remote_columns = [self.m2m_remote_columns]
 
         self.local_columns = None
         if 'local_columns' in kwargs:
             self.local_columns = self.kwargs.pop('local_columns')
-            if not isinstance(self.local_columns, list):
+            if not isinstance(self.local_columns, (list, tuple)):
                 self.local_columns = [self.local_columns]
 
             self.kwargs['info']['local_columns'] = self.local_columns
@@ -475,7 +475,7 @@ class Many2Many(RelationShip):
         self.m2m_local_columns = None
         if 'm2m_local_columns' in kwargs:
             self.m2m_local_columns = self.kwargs.pop('m2m_local_columns')
-            if not isinstance(self.m2m_local_columns, list):
+            if not isinstance(self.m2m_local_columns, (list, tuple)):
                 self.m2m_local_columns = [self.m2m_local_columns]
 
         if 'many2many' in kwargs:
@@ -572,10 +572,12 @@ class One2Many(RelationShip):
         self.remote_columns = None
         if 'remote_columns' in kwargs:
             self.remote_columns = self.kwargs.pop('remote_columns')
+            if not isinstance(self.remote_columns, (list, tuple)):
+                self.remote_columns = [self.remote_columns]
 
         if 'many2one' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('many2one')
-            self.kwargs['info']['remote_name'] = self.kwargs['backref']
+            self.kwargs['info']['remote_names'] = self.kwargs['backref']
 
     def find_foreign_key(self, registry, properties, tablename):
         """ Return the primary key come from the first step property
@@ -598,11 +600,7 @@ class One2Many(RelationShip):
                 if self.get_tablename(registry, model=model) == tablename:
                     fks.append(f)
 
-        if len(fks) != 1:
-            raise FieldException(
-                "We must have one and only one foreign key")
-
-        return fks[0]
+        return fks
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -617,7 +615,6 @@ class One2Many(RelationShip):
         self.check_existing_remote_model(registry)
         remote_properties = registry.loaded_namespaces_first_step.get(
             self.get_registry_name())
-        self_properties = registry.loaded_namespaces_first_step.get(namespace)
 
         tablename = properties['__tablename__']
         if self.remote_columns is None:
@@ -628,12 +625,16 @@ class One2Many(RelationShip):
         self.kwargs['info']['remote_columns'] = self.remote_columns
 
         if 'primaryjoin' not in self.kwargs:
-            local_columns = self.find_primary_key(self_properties)
+            remote_table = self.get_tablename(registry)
+            pjs = []
+            for cname in self.remote_columns:
+                col = remote_properties[cname]
+                pjs.append("%s.%s == %s.%s" % (
+                    tablename, col.foreign_key[1], remote_table, cname))
 
-            primaryjoin = tablename + '.' + local_columns + " == "
-            primaryjoin += self.get_tablename(registry)
-            primaryjoin += '.' + self.remote_columns
-            self.kwargs['primaryjoin'] = primaryjoin
+            # This must be a python and not a SQL AND cause of eval do
+            # on the primaryjoin
+            self.kwargs['primaryjoin'] = ' and '.join(pjs)
 
         return super(One2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
@@ -649,5 +650,6 @@ class One2Many(RelationShip):
         if namespace == self.get_registry_name():
             self_properties = registry.loaded_namespaces_first_step.get(
                 namespace)
-            pk = self.find_primary_key(self_properties)
-            self.backref_properties.update({'remote_side': [properties[pk]]})
+            pks = self.find_primary_key(self_properties)
+            self.backref_properties.update({'remote_side': [
+                properties[pk] for pk in pks]})

@@ -8,7 +8,6 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-from anyblok.field import FieldException
 from anyblok.column import Integer, String
 from anyblok.relationship import One2Many
 
@@ -39,7 +38,7 @@ def _complete_one2many(**kwargs):
     class Address:
 
         persons = One2Many(model=Model.Person,
-                           remote_column="address_id",
+                           remote_columns="address_id",
                            primaryjoin=primaryjoin,
                            many2one="address")
 
@@ -176,13 +175,6 @@ class TestOne2Many(DBTestCase):
         person = registry.Person.insert(name="Jean-sébastien SUZANNE")
         address.persons.append(person)
 
-    def test_autodetect_two_foreign_key(self):
-        try:
-            self.init_registry(_autodetect_two_foreign_key)
-            self.fail('No watch dog to more than one foreign key')
-        except FieldException:
-            pass
-
     def test_same_model_backref(self):
 
         def add_in_registry():
@@ -197,17 +189,66 @@ class TestOne2Many(DBTestCase):
         registry = self.init_registry(add_in_registry)
         t1 = registry.Test.insert()
         t2 = registry.Test.insert(parent=t1)
-        self.assertEqual(t1.children[0], t2)
-        self.assertEqual(t2.parent, t1)
+        self.assertIs(t1.children[0], t2)
+        self.assertIs(t2.parent, t1)
 
     def test_complet_with_multi_foreign_key(self):
-        raise
 
-    def test_with_multi_foreign_key_on_existing_column(self):
-        raise
+        def add_in_registry():
+            primaryjoin = "test.id == test2.test_id and "
+            primaryjoin += "test.id2 == test2.test_id2"
 
-    def test_with_multi_foreign_key_on_unexisting_column(self):
-        raise
+            @register(Model)
+            class Test:
 
-    def test_with_multi_foreign_key_on_unexisting_column2(self):
-        raise
+                id = Integer(primary_key=True, unique=True)
+                id2 = String(primary_key=True, unique=True)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                test_id = Integer(foreign_key=(Model.Test, 'id'))
+                test_id2 = String(foreign_key=(Model.Test, 'id2'))
+
+            @register(Model)  # noqa
+            class Test:
+
+                test2 = One2Many(model=Model.Test2,
+                                 remote_columns=['test_id', 'test_id2'],
+                                 primaryjoin=primaryjoin,
+                                 many2one="test")
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert(id2="test")
+        t2 = registry.Test2.insert(test=t1)
+        self.assertEqual(len(t1.test2), 1)
+        self.assertIs(t1.test2[0], t2)
+
+    def test_with_multi_foreign_key(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True, unique=True)
+                id2 = String(primary_key=True, unique=True)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                test_id = Integer(foreign_key=(Model.Test, 'id'))
+                test_id2 = String(foreign_key=(Model.Test, 'id2'))
+
+            @register(Model)  # noqa
+            class Test:
+
+                test2 = One2Many(model=Model.Test2, many2one="test")
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert(id2="test")
+        t2 = registry.Test2.insert(test=t1)
+        self.assertEqual(len(t1.test2), 1)
+        self.assertIs(t1.test2[0], t2)
