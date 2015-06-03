@@ -16,7 +16,8 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
-* [IMP] Add define_table/mapper_args methods to fill \_\_table/mapper\_args\_\_
+* [REF] The relation ship can be reference more than one foreign key
+* [IMP] Add define_table/mapper_args methods to fill __table/mapper\_args\_\_
         class attribute need to configure SQLAlachemy models
 * [REF] Limit the commit in the registry only when the SQLA Session factory
         is recreated
