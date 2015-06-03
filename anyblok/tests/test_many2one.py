@@ -153,7 +153,7 @@ class TestMany2One(DBTestCase):
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
         person = registry.Person.insert(
-            name="Jean-Sebastien SUZANNE", address=address)
+            name="Jean-sébastien SUZANNE", address=address)
 
         self.assertEqual(address.persons, [person])
 
@@ -173,7 +173,7 @@ class TestMany2One(DBTestCase):
         address = registry.Address.insert()
 
         person = registry.Person.insert(
-            name="Jean-Sebastien SUZANNE", address=address)
+            name="Jean-sébastien SUZANNE", address=address)
 
         self.assertEqual(person.address, address)
 
@@ -189,7 +189,7 @@ class TestMany2One(DBTestCase):
         address = registry.Address.insert()
 
         person = registry.Person.insert(
-            name="Jean-Sebastien SUZANNE", address=address)
+            name="Jean-sébastien SUZANNE", address=address)
 
         self.assertEqual(person.address, address)
 
@@ -308,7 +308,7 @@ class TestMany2One(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         address = registry.Address.insert()
-        registry.Person.insert(name="Jean-Sebastien SUZANNE", address=address)
+        registry.Person.insert(name="Jean-sébastien SUZANNE", address=address)
 
         with self.assertRaises(IntegrityError):
             registry.Person.insert(name="Other", address=address)

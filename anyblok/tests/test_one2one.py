@@ -108,7 +108,7 @@ class TestOne2One(DBTestCase):
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
         person = registry.Person.insert(
-            name="Jean-Sebastien SUZANNE", address=address)
+            name="Jean-sébastien SUZANNE", address=address)
 
         self.assertEqual(address.person, person)
 
@@ -124,7 +124,7 @@ class TestOne2One(DBTestCase):
         address = registry.Address.insert()
 
         person = registry.Person.insert(
-            name="Jean-Sebastien SUZANNE", address=address)
+            name="Jean-sébastien SUZANNE", address=address)
 
         self.assertEqual(address.person, person)
 
@@ -140,7 +140,7 @@ class TestOne2One(DBTestCase):
         address = registry.Address.insert()
 
         person = registry.Person.insert(
-            name="Jean-Sebastien SUZANNE", address=address)
+            name="Jean-sébastien SUZANNE", address=address)
 
         self.assertEqual(address.person, person)
 
