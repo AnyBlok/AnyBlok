@@ -16,6 +16,7 @@ from sqlalchemy.orm import Query, mapper
 from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
+from inspect import ismethod, isfunction, getmembers
 
 
 class ModelException(Exception):
@@ -55,7 +56,7 @@ def has_sql_fields(bases):
     :rtype: boolean
     """
     for base in bases:
-        for p in dir(base):
+        for p in base.__dict__.keys():
             if hasattr(getattr(base, p), '__class__'):
                 if Field in getattr(base, p).__class__.__mro__:
                     return True
@@ -72,7 +73,7 @@ def get_fields(base, without_relationship=False, only_relationship=False):
     :rtype: dict with name of the field in key and instance of Field in value
     """
     fields = {}
-    for p in dir(base):
+    for p in base.__dict__.keys():
         if hasattr(getattr(base, p), '__class__'):
             if without_relationship:
                 if RelationShip in getattr(base, p).__class__.__mro__:
@@ -214,48 +215,52 @@ class Model:
         field.update_properties(registry, namespace, name, properties)
 
     @classmethod
-    def apply_event_listner(cls, registry, namespace, base, properties):
+    def apply_event_listner(cls, attr, method, registry, namespace, base,
+                            properties):
         """ Find the event listener methods in the base to save the
         namespace and the method in the registry
 
+        :param attr: name of the attibute
+        :param method: method pointer
         :param registry: the current  registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
         :param properties: the properties of the model
         """
-        for attr in dir(base):
-            method = getattr(base, attr)
-            if not hasattr(method, 'is_an_event_listener'):
-                continue
-            elif method.is_an_event_listener is True:
-                model = method.model
-                event = method.event
-                if model not in registry.events:
-                    registry.events[model] = {event: []}
-                elif event not in registry.events[model]:
-                    registry.events[model][event] = []
+        if not hasattr(method, 'is_an_event_listener'):
+            return
+        elif method.is_an_event_listener is True:
+            model = method.model
+            event = method.event
+            events = registry.events
+            if model not in events:
+                events[model] = {event: []}
+            elif event not in events[model]:
+                events[model][event] = []
 
-                val = (namespace, attr)
-                if val not in registry.events[model][event]:
-                    registry.events[model][event].append(val)
+            val = (namespace, attr)
+            ev = events[model][event]
+            if val not in ev:
+                ev.append(val)
 
     @classmethod
-    def detect_hybrid_method(cls, registry, namespace, base, properties):
+    def detect_hybrid_method(cls, attr, method, registry, namespace, base,
+                             properties):
         """ Find the sqlalchemy hybrid methods in the base to save the
         namespace and the method in the registry
 
+        :param attr: name of the attibute
+        :param method: method pointer
         :param registry: the current registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
         :param properties: the properties of the model
         """
-        for attr in dir(base):
-            method = getattr(base, attr)
-            if not hasattr(method, 'is_an_hybrid_method'):
-                continue
-            elif method.is_an_hybrid_method is True:
-                if attr not in properties['hybrid_method']:
-                    properties['hybrid_method'].append(attr)
+        if not hasattr(method, 'is_an_hybrid_method'):
+            return
+        elif method.is_an_hybrid_method is True:
+            if attr not in properties['hybrid_method']:
+                properties['hybrid_method'].append(attr)
 
     @classmethod
     def detect_table_and_mapper_args(cls, registry, namespace, base,
@@ -301,15 +306,29 @@ class Model:
         :param properties: the properties of the model
         :rtype: new base
         """
-        new_base = apply_cache(registry, namespace, base, properties)
-        cls.apply_event_listner(registry, namespace, new_base, properties)
-        cls.detect_hybrid_method(registry, namespace, new_base, properties)
+        new_type_properties = {}
+        for attr, method in getmembers(base, predicate=ismethod):
+            new_type_properties.update(apply_cache(
+                attr, method, registry, namespace, base, properties))
+            cls.apply_event_listner(
+                attr, method, registry, namespace, base, properties)
+
+        for attr, method in getmembers(base, predicate=isfunction):
+            new_type_properties.update(apply_cache(
+                attr, method, registry, namespace, base, properties))
+            cls.detect_hybrid_method(
+                attr, method, registry, namespace, base, properties)
+
         cls.detect_table_and_mapper_args(
-            registry, namespace, new_base, properties)
-        return new_base
+            registry, namespace, base, properties)
+
+        if new_type_properties:
+            return type(namespace, (base,), new_type_properties)
+
+        return base
 
     @classmethod
-    def apply_hybrid_method(cls, registry, namespace, bases,
+    def apply_hybrid_method(cls, base, registry, namespace, bases,
                             transformation_properties, properties):
         """ Create overload to define the write declaration of sqlalchemy
         hybrid method, add the overload in the declared bases of the
@@ -321,31 +340,29 @@ class Model:
         :param transformation_properties: the properties of the model
         :param properties: assembled attributes of the namespace
         """
-        if not transformation_properties['hybrid_method']:
-            return
-
-        new_base = type(namespace, tuple(), {})
+        type_properties = {}
 
         def apply_wrapper(attr):
 
             def wrapper(self, *args, **kwargs):
                 self_ = self.registry.loaded_namespaces[self.__registry_name__]
                 if self is self_:
-                    return getattr(super(new_base, self), attr)(
+                    return getattr(super(base, self), attr)(
                         self, *args, **kwargs)
                 else:
-                    return getattr(super(new_base, self), attr)(
+                    return getattr(super(base, self), attr)(
                         *args, **kwargs)
 
-            setattr(new_base, attr, hybrid_method(wrapper))
+            setattr(base, attr, hybrid_method(wrapper))
 
-        for attr in transformation_properties['hybrid_method']:
-            apply_wrapper(attr)
+        if transformation_properties['hybrid_method']:
+            for attr in transformation_properties['hybrid_method']:
+                apply_wrapper(attr)
 
-        bases.insert(0, new_base)
+        return type_properties
 
     @classmethod
-    def apply_table_and_mapper_args(cls, registry, namespace, bases,
+    def apply_table_and_mapper_args(cls, base, registry, namespace, bases,
                                     transformation_properties, properties):
         """ Create overwrite to define table and mapper args to define some
         options for SQLAlchemy
@@ -370,10 +387,11 @@ class Model:
                 raise ModelException("'define_mapper_args' must return a dict "
                                      "not %r" % mapper_args)
 
-        new_base = type(namespace, tuple(), {
-            '__table_args__': table_args,
-            '__mapper_args__': mapper_args})
-        bases.insert(0, new_base)
+        if table_args:
+            setattr(base, '__table_args__', table_args)
+
+        if mapper_args:
+            setattr(base, '__mapper_args__', mapper_args)
 
     @classmethod
     def insert_in_bases(cls, registry, namespace, bases,
@@ -386,9 +404,11 @@ class Model:
         :param transformation_properties: the properties of the model
         :param properties: assembled attributes of the namespace
         """
-        cls.apply_hybrid_method(registry, namespace, bases,
+        new_base = type(namespace, (), {})
+        bases.insert(0, new_base)
+        cls.apply_hybrid_method(new_base, registry, namespace, bases,
                                 transformation_properties, properties)
-        cls.apply_table_and_mapper_args(registry, namespace, bases,
+        cls.apply_table_and_mapper_args(new_base, registry, namespace, bases,
                                         transformation_properties, properties)
 
     @classmethod
