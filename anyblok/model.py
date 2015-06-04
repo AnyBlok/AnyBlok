@@ -16,7 +16,6 @@ from sqlalchemy.orm import Query, mapper
 from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
-from inspect import ismethod, isfunction, getmembers
 
 
 class ModelException(Exception):
@@ -307,15 +306,12 @@ class Model:
         :rtype: new base
         """
         new_type_properties = {}
-        for attr, method in getmembers(base, predicate=ismethod):
+        for attr in dir(base):
+            method = getattr(base, attr)
             new_type_properties.update(apply_cache(
                 attr, method, registry, namespace, base, properties))
             cls.apply_event_listner(
                 attr, method, registry, namespace, base, properties)
-
-        for attr, method in getmembers(base, predicate=isfunction):
-            new_type_properties.update(apply_cache(
-                attr, method, registry, namespace, base, properties))
             cls.detect_hybrid_method(
                 attr, method, registry, namespace, base, properties)
 
