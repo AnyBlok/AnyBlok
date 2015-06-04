@@ -55,7 +55,7 @@ def has_sql_fields(bases):
     :rtype: boolean
     """
     for base in bases:
-        for p in dir(base):
+        for p in base.__dict__.keys():
             if hasattr(getattr(base, p), '__class__'):
                 if Field in getattr(base, p).__class__.__mro__:
                     return True
@@ -72,7 +72,7 @@ def get_fields(base, without_relationship=False, only_relationship=False):
     :rtype: dict with name of the field in key and instance of Field in value
     """
     fields = {}
-    for p in dir(base):
+    for p in base.__dict__.keys():
         if hasattr(getattr(base, p), '__class__'):
             if without_relationship:
                 if RelationShip in getattr(base, p).__class__.__mro__:
@@ -223,7 +223,7 @@ class Model:
         :param base: One of the base of the model
         :param properties: the properties of the model
         """
-        for attr in dir(base):
+        for attr in list(base.__dict__.keys()) + list(base().__dict__.keys()):
             method = getattr(base, attr)
             if not hasattr(method, 'is_an_event_listener'):
                 continue
@@ -249,7 +249,7 @@ class Model:
         :param base: One of the base of the model
         :param properties: the properties of the model
         """
-        for attr in dir(base):
+        for attr in list(base.__dict__.keys()) + list(base().__dict__.keys()):
             method = getattr(base, attr)
             if not hasattr(method, 'is_an_hybrid_method'):
                 continue

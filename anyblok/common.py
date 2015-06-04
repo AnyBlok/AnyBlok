@@ -90,7 +90,7 @@ def apply_cache(registry, namespace, base, properties):
         else:
             methods_cached[attr] = wrapper
 
-    for attr in dir(base):
+    for attr in list(base.__dict__.keys()) + list(base().__dict__.keys()):
         method = getattr(base, attr)
         if not hasattr(method, 'is_cache_method'):
             continue
