@@ -76,12 +76,15 @@ class AnyBlokPlugin(Plugin):
 
             registry = RegistryManager.get(db_name)
             if registry:
-                installed_bloks = registry.System.Blok.list_by_state("installed")
-                selected_bloks = format_bloks(Configuration.get('selected_bloks'))
+                installed_bloks = registry.System.Blok.list_by_state(
+                    "installed")
+                selected_bloks = format_bloks(
+                    Configuration.get('selected_bloks'))
                 if not selected_bloks:
                     selected_bloks = installed_bloks
 
-                unwanted_bloks = format_bloks(Configuration.get('unwanted_bloks'))
+                unwanted_bloks = format_bloks(
+                    Configuration.get('unwanted_bloks'))
                 if unwanted_bloks is None:
                     unwanted_bloks = []
 
