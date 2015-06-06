@@ -125,18 +125,19 @@ def interpreter(description, version, configuration_groups):
     format_configuration(configuration_groups, 'interpreter')
     registry = anyblok.start(description, version,
                              configuration_groups=configuration_groups)
-    registry.commit()
-    python_script = Configuration.get('python_script')
-    if python_script:
-        with open(python_script, "r") as fh:
-            exec(fh.read(), None, locals())
-    else:
-        try:
-            from IPython import embed
-            embed()
-        except ImportError:
-            import code
-            code.interact(local=locals())
+    if registry:
+        registry.commit()
+        python_script = Configuration.get('python_script')
+        if python_script:
+            with open(python_script, "r") as fh:
+                exec(fh.read(), None, locals())
+        else:
+            try:
+                from IPython import embed
+                embed()
+            except ImportError:
+                import code
+                code.interact(local=locals())
 
 
 def sqlschema(description, version, configuration_groups):
