@@ -15,8 +15,11 @@ class Arg2OptOptions:
         return False
 
     def _get_kwargs(self):
+        keys = ['configfile', 'db_name', 'db_driver_name', 'db_user_name',
+                'db_password', 'db_host', 'db_port']
+
         return [(x, getattr(self.options, x))
-                for x in Configuration.configuration.keys()]
+                for x in keys]
 
     def __getattr__(self, name, default=None):
         return getattr(self.options, name, default)
