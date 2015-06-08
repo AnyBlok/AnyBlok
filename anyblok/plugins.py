@@ -6,26 +6,6 @@ from anyblok.common import format_bloks
 from os.path import join, exists
 
 
-@Configuration.add('nose-config')
-def add_configuration_file(parser, configuration):
-    """Add configuration file for anyblok"""
-    parser.add_argument('--anyblok-config', dest='configfile', default='',
-                        help="Relative path of the config file")
-    configuration['configfile'] = None
-
-
-class Arg2OptParser:
-
-    def __init__(self, parser):
-        self.parser = parser
-
-    def add_argument_group(self, *args, **kwargs):
-        return self
-
-    def add_argument(self, *args, **kwargs):
-        self.parser.add_option(*args, **kwargs)
-
-
 class Arg2OptOptions:
 
     def __init__(self, options):
@@ -54,9 +34,27 @@ class AnyBlokPlugin(Plugin):
 
     def options(self, parser, env):
         super(AnyBlokPlugin, self).options(parser, env)
-        Configuration._load(Arg2OptParser(parser),
-                            ('nose-config', 'database', 'unittest'),
-                            ('bloks',))
+        parser.add_option("--anyblok-config", dest="configfile")
+        parser.add_option('--anyblok-db-name', dest='db_name',
+                          default=env.get('ANYBLOK_DATABASE_NAME'),
+                          help="Name of the database")
+        parser.add_option('--anyblok-db-driver-name', dest='db_driver_name',
+                          default=env.get('ANYBLOK_DATABASE_DRIVER'),
+                          help="the name of the database backend. This name "
+                               "will correspond to a module in "
+                               "sqlalchemy/databases or a third party plug-in")
+        parser.add_option('--anyblo-db-user-name', dest='db_user_name',
+                          default=env.get('ANYBLOK_DATABASE_USER'),
+                          help="The user name")
+        parser.add_option('--anyblok-db-password', dest='db_password',
+                          default=env.get('ANYBLOK_DATABASE_PASSWORD'),
+                          help="database password")
+        parser.add_option('--anyblok-db-host', dest='db_host',
+                          default=env.get('ANYBLOK_DATABASE_HOST'),
+                          help="The name of the host")
+        parser.add_option('--anyblok-db-port', dest='db_port',
+                          default=env.get('ANYBLOK_DATABASE_PORT'),
+                          help="The port number")
 
     def configure(self, options, conf):
         super(AnyBlokPlugin, self).configure(options, conf)
@@ -64,7 +62,7 @@ class AnyBlokPlugin(Plugin):
             self.AnyBlokOptions = Arg2OptOptions(options)
 
     def wantModule(self, module):
-        if self.registryLoaded is False:
+        if self.enabled and self.registryLoaded is False:
             # Load the registry here not in configuration,
             # because the configuration are not load in order of score
             self.registryLoaded = True
