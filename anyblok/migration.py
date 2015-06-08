@@ -279,7 +279,9 @@ class MigrationColumn:
                     'column': column.name,
                     'value': val}
             if column.default.is_scalar:
-                if isinstance(val, int):
+                if isinstance(val, bool):
+                    query += " SET %(column)s = '%(value)s'"
+                elif isinstance(val, int):
                     query += " SET %(column)s = %(value)d"
                 elif isinstance(val, float):
                     query += " SET %(column)s = %(value)f"
