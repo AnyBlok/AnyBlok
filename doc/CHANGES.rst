@@ -16,6 +16,7 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
+* [ADD] No auto migration option
 * [ADD] Plugin for nose to run unit test of the installed bloks
 * [REF] The relation ship can be reference more than one foreign key
 * [IMP] Add define_table/mapper_args methods to fill __table/mapper\_args\_\_

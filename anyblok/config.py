@@ -361,7 +361,12 @@ class Configuration:
 def add_configuration_file(parser, configuration):
     parser.add_argument('-c', dest='configfile', default='',
                         help="Relative path of the config file")
-    configuration['configfile'] = None
+    parser.add_argument('--no-auto-migration', dest='noautomigration',
+                        action='store_true')
+    configuration.update({
+        'configfile': None,
+        'noautomigration': False,
+    })
 
 
 @Configuration.add('database', label="Database")

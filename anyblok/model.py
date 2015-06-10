@@ -655,11 +655,12 @@ class Model:
         for Model in registry.loaded_namespaces.values():
             Model.initialize_model()
 
-        Model = registry.System.Model
-        Model.update_list()
-
         Blok = registry.System.Blok
-        Blok.update_list()
+        if not registry.noautomigration:
+            Model = registry.System.Model
+            Model.update_list()
+            Blok.update_list()
+
         bloks = Blok.list_by_state('touninstall')
         Blok.uninstall_all(*bloks)
         return Blok.apply_state(*registry.ordered_loaded_bloks)

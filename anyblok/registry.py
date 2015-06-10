@@ -387,6 +387,7 @@ class Registry:
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
+        self.noautomigration = Configuration.get('noautomigration')
         self.ini_var()
         self.Session = None
         self.nb_query_bases = self.nb_session_bases = 0
@@ -796,6 +797,10 @@ class Registry:
                 self.load_blok(blok, False, toload)
 
             if toinstall:
+                if self.noautomigration:
+                    raise RegistryManager("Install module is forbidden with "
+                                          "no auto migration mode")
+
                 blok2install = toinstall[0]
                 self.load_blok(blok2install, True, toload)
 
@@ -814,23 +819,7 @@ class Registry:
             else:
                 self.flush()
 
-            # replace the engine by the session.connection for bind attribute
-            # because session.connection is already the connection use
-            # by blok, migration and all write on the data base
-            # or use engine for bind, force create_all method to create new
-            # new connection, this new connection have not acknowedge of the
-            # data in the session.connection, and risk of bad lock on the
-            # tables
-            self.declarativebase.metadata.create_all(self.connection())
-            self.init_migration()
-            self.migration.auto_upgrade_database()
-
-            for entry in RegistryManager.declared_entries:
-                if entry in RegistryManager.callback_initialize_entries:
-                    logger.info('Initialize %r entry' % entry)
-                    r = RegistryManager.callback_initialize_entries[entry](
-                        self)
-                    mustreload = mustreload or r
+            mustreload = self.apply_model_schema_on_table() or mustreload
 
         except:
             self.close()
@@ -881,9 +870,28 @@ class Registry:
             logger.warning("Blok %r has no %r directory" % (
                 blok2install, defaultTest))
 
-    def init_migration(self):
-        self.migration = Migration(self.session,
-                                   self.declarativebase.metadata)
+    def apply_model_schema_on_table(self):
+        # replace the engine by the session.connection for bind attribute
+        # because session.connection is already the connection use
+        # by blok, migration and all write on the data base
+        # or use engine for bind, force create_all method to create new
+        # new connection, this new connection have not acknowedge of the
+        # data in the session.connection, and risk of bad lock on the
+        # tables
+        if not self.noautomigration:
+            self.declarativebase.metadata.create_all(self.connection())
+
+        self.migration = Migration(self)
+        self.migration.auto_upgrade_database()
+        mustreload = False
+        for entry in RegistryManager.declared_entries:
+            if entry in RegistryManager.callback_initialize_entries:
+                logger.info('Initialize %r entry' % entry)
+                r = RegistryManager.callback_initialize_entries[entry](
+                    self)
+                mustreload = mustreload or r
+
+        return mustreload
 
     def close_session(self):
         """ Close only the session, not the registry

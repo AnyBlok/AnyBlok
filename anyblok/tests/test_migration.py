@@ -60,7 +60,6 @@ class TestMigration(TestCase):
     def setUp(self):
         super(TestMigration, self).setUp()
         self.registry = Registry(Configuration.get('db_name'))
-        self.registry.init_migration()
 
     @classmethod
     def tearDownClass(cls):
@@ -220,6 +219,19 @@ class TestMigration(TestCase):
         name = 'chk_name_on_test'
         t.check().add(name, Test.other != 'test')
         t.check(name).drop()
+
+    def test_detect_under_noautocommit_flag(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) NOT NULL
+                );""")
+        self.registry.migration.detect_changed()
+        self.registry.migration.noautomigration = True
+        with self.assertRaises(MigrationException):
+            self.registry.migration.detect_changed()
 
     def test_detect_column_added(self):
         # Remove a column on the table force the detection to found new column
