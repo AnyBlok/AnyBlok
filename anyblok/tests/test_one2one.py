@@ -12,7 +12,6 @@ from anyblok.field import FieldException
 from anyblok.column import Integer, String
 from anyblok.relationship import One2One
 from sqlalchemy import ForeignKeyConstraint
-from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.exc import IntegrityError
 
 register = Declarations.register
@@ -121,20 +120,12 @@ class TestOne2One(DBTestCase):
     def test_one2one_multi_entry_for_same(self):
         registry = self.init_registry(_minimum_one2one)
         address = registry.Address.insert()
-        registry.Person.insert(
+        p1 = registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
-        with self.assertRaises(FlushError):
-            registry.Person.insert(
-                name="Jean-sébastien SUZANNE", address=address)
-
-    def test_one2one_multi_entry_for_same_by_id(self):
-        registry = self.init_registry(_minimum_one2one)
-        address = registry.Address.insert()
-        registry.Person.insert(
-            name="Jean-sébastien SUZANNE", address_id=address.id)
-        with self.assertRaises(IntegrityError):
-            registry.Person.insert(
-                name="Jean-sébastien SUZANNE", address_id=address.id)
+        self.assertIs(p1.address, address)
+        p2 = registry.Person.insert(name="Franck BRET", address=address)
+        self.assertIs(p2.address, address)
+        self.assertIsNone(p1.address_id)
 
     def test_one2one_with_str_model(self):
         registry = self.init_registry(_one2one_with_str_method)
