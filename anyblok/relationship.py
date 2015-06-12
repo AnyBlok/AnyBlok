@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Pierre Verkest <pverkest@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -500,7 +501,7 @@ class Many2Many(RelationShip):
         for i, column in enumerate(m2m_columns):
             sqltype = properties[columns[i]].native_type()
             foreignkey = "%s.%s" % (tablename, columns[i])
-            cols.append(Column(column, sqltype))
+            cols.append(Column(column, sqltype, primary_key=True))
             col_names.append(column)
             ref_cols.append(foreignkey)
 

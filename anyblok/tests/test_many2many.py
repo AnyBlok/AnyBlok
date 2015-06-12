@@ -2,6 +2,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Pierre Verkest <pverkest@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -158,6 +159,14 @@ class TestMany2Many(DBTestCase):
         join_table_exist = 'join_addresses_by_persons' in jt
         self.assertEqual(join_table_exist, True)
 
+        self.assertEqual(
+            len(jt['join_addresses_by_persons'].primary_key.columns),
+            2)
+        self.assertTrue('a_id' in jt[
+            'join_addresses_by_persons'].primary_key.columns)
+        self.assertTrue('p_name' in jt[
+            'join_addresses_by_persons'].primary_key.columns)
+
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
@@ -298,6 +307,19 @@ class TestMany2Many(DBTestCase):
         t2 = registry.Test2.insert(id2="test2")
         t2.test.append(t1)
         self.assertIs(t1.test2[0], t2)
+
+        jt = registry.declarativebase.metadata.tables
+        self.assertEqual(
+            len(jt['join_test_and_test2'].primary_key.columns),
+            4)
+        self.assertTrue('t1_id' in jt[
+            'join_test_and_test2'].primary_key.columns)
+        self.assertTrue('t1_id2' in jt[
+            'join_test_and_test2'].primary_key.columns)
+        self.assertTrue('t2_id' in jt[
+            'join_test_and_test2'].primary_key.columns)
+        self.assertTrue('t2_id2' in jt[
+            'join_test_and_test2'].primary_key.columns)
 
     def test_comlet_with_multi_primary_keys_remote(self):
 
