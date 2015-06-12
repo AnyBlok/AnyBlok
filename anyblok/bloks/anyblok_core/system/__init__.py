@@ -28,3 +28,5 @@ from . import parameter
 reload_module_if_blok_is_reloading(parameter)
 from . import sequence
 reload_module_if_blok_is_reloading(sequence)
+from . import cron
+reload_module_if_blok_is_reloading(cron)

@@ -140,6 +140,20 @@ def interpreter(description, version, configuration_groups):
                 code.interact(local=locals())
 
 
+def cron_worker(description, version, configuration_groups):
+    """ Execute a script or open an interpreter
+
+    :param description: description of configuration
+    :param version: version of script for argparse
+    :param configuration_groups: list configuration groupe to load
+    """
+    registry = anyblok.start(description, version,
+                             configuration_groups=configuration_groups)
+    if registry:
+        registry.commit()
+        registry.System.Cron.run()
+
+
 def sqlschema(description, version, configuration_groups):
     """ Create a Table model schema of the registry
 
@@ -348,3 +362,9 @@ def anyblok_interpreter():
     from anyblok.release import version
     interpreter('AnyBlok interpreter', version,
                 ['config', 'database', 'interpreter', 'logging'])
+
+
+def anyblok_cron_worker():
+    from anyblok.release import version
+    cron_worker('AnyBlok interpreter', version,
+                ['config', 'database', 'logging'])

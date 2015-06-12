@@ -901,6 +901,7 @@ class Registry:
         if self.Session:
             session = self.Session()
             session.rollback()
+            session.expunge_all()
             session.close_all()
 
     def close(self):

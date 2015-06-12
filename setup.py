@@ -68,6 +68,7 @@ setup(
             'anyblok_updatedb=anyblok.scripts:anyblok_updatedb',
             'anyblok_nose=anyblok.scripts:anyblok_nose',
             'anyblok_interpreter=anyblok.scripts:anyblok_interpreter',
+            'anyblok_cron_worker=anyblok.scripts:anyblok_cron_worker',
         ],
         'bloks': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
