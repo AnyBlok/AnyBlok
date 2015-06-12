@@ -12,7 +12,6 @@ from anyblok.field import FieldException
 from anyblok.column import Integer, String
 from anyblok.relationship import One2One
 from sqlalchemy import ForeignKeyConstraint
-from sqlalchemy.exc import IntegrityError
 
 register = Declarations.register
 Model = Declarations.Model

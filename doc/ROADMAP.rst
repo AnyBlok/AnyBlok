@@ -32,7 +32,6 @@ Library to include
 Functionnality which need a sprint
 ----------------------------------
 
-* Cron
 * Tasks Management
 * Internalization
 * Ancestor left / right

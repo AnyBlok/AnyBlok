@@ -173,3 +173,5 @@ class Worker(Thread):
             self.registry.rollback()
         else:
             logger.info("Worker for %r finish with success", self.job)
+        finally:
+            self.registry.session.close()
