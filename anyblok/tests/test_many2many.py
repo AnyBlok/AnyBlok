@@ -31,12 +31,12 @@ def _complete_many2many(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address = Many2Many(model=Model.Address,
-                            join_table="join_addresses_by_persons",
-                            remote_columns="id", local_columns="name",
-                            m2m_remote_columns='a_id',
-                            m2m_local_columns='p_name',
-                            many2many="persons")
+        addresses = Many2Many(model=Model.Address,
+                              join_table="join_addresses_by_persons",
+                              remote_columns="id", local_columns="name",
+                              m2m_remote_columns='a_id',
+                              m2m_local_columns='p_name',
+                              many2many="persons")
 
 
 def _minimum_many2many(**kwargs):
@@ -53,7 +53,7 @@ def _minimum_many2many(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address = Many2Many(model=Model.Address)
+        addresses = Many2Many(model=Model.Address)
 
 
 def _minimum_many2many_by_mixin(**kwargs):
@@ -68,7 +68,7 @@ def _minimum_many2many_by_mixin(**kwargs):
 
     @register(Mixin)
     class MixinM2M:
-        address = Many2Many(model=Model.Address)
+        addresses = Many2Many(model=Model.Address)
 
     @register(Model)
     class Person(Mixin.MixinM2M):
@@ -90,7 +90,7 @@ def _many2many_with_str_model(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address = Many2Many(model='Model.Address')
+        addresses = Many2Many(model='Model.Address')
 
 
 def auto_detect_two_primary_keys(**kwargs):
@@ -105,7 +105,7 @@ def auto_detect_two_primary_keys(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address = Many2Many(model=Model.Address)
+        addresses = Many2Many(model=Model.Address)
 
 
 def unexisting_remote_columns(**kwargs):
@@ -119,7 +119,7 @@ def unexisting_remote_columns(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address = Many2Many(model=Model.Address, remote_columns="id2")
+        addresses = Many2Many(model=Model.Address, remote_columns="id2")
 
 
 def reuse_many2many_table(**kwargs):
@@ -133,7 +133,7 @@ def reuse_many2many_table(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address = Many2Many(model=Model.Address)
+        addresses = Many2Many(model=Model.Address)
 
     @register(Model)  # noqa
     class Address:
@@ -148,7 +148,7 @@ class TestMany2Many(DBTestCase):
     def test_complete_many2many(self):
         registry = self.init_registry(_complete_many2many)
 
-        address_exist = hasattr(registry.Person, 'address')
+        address_exist = hasattr(registry.Person, 'addresses')
         self.assertEqual(address_exist, True)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
@@ -163,14 +163,14 @@ class TestMany2Many(DBTestCase):
 
         person = registry.Person.insert(name="Jean-sébastien SUZANNE")
 
-        person.address.append(address)
+        person.addresses.append(address)
 
         self.assertEqual(address.persons, [person])
 
     def test_minimum_many2many(self):
         registry = self.init_registry(_minimum_many2many)
 
-        address_exist = hasattr(registry.Person, 'address')
+        address_exist = hasattr(registry.Person, 'addresses')
         self.assertEqual(address_exist, True)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
@@ -185,14 +185,14 @@ class TestMany2Many(DBTestCase):
 
         person = registry.Person.insert(name="Jean-sébastien SUZANNE")
 
-        person.address.append(address)
+        person.addresses.append(address)
 
-        self.assertEqual(person.address, [address])
+        self.assertEqual(person.addresses, [address])
 
     def test_many2many_with_str_model(self):
         registry = self.init_registry(_many2many_with_str_model)
 
-        address_exist = hasattr(registry.Person, 'address')
+        address_exist = hasattr(registry.Person, 'addresses')
         self.assertEqual(address_exist, True)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
@@ -207,9 +207,9 @@ class TestMany2Many(DBTestCase):
 
         person = registry.Person.insert(name="Jean-sébastien SUZANNE")
 
-        person.address.append(address)
+        person.addresses.append(address)
 
-        self.assertEqual(person.address, [address])
+        self.assertEqual(person.addresses, [address])
 
     def test_unexisting_remote_columns(self):
         with self.assertRaises(FieldException):
@@ -221,14 +221,14 @@ class TestMany2Many(DBTestCase):
         address = registry.Address.insert()
         person = registry.Person.insert(name="Jean-sébastien SUZANNE")
 
-        person.address.append(address)
+        person.addresses.append(address)
 
         self.assertEqual(address.persons, [person])
 
     def test_declared_in_mixin(self):
         registry = self.init_registry(_minimum_many2many_by_mixin)
 
-        address_exist = hasattr(registry.Person, 'address')
+        address_exist = hasattr(registry.Person, 'addresses')
         self.assertEqual(address_exist, True)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
@@ -243,9 +243,9 @@ class TestMany2Many(DBTestCase):
 
         person = registry.Person.insert(name="Jean-sébastien SUZANNE")
 
-        person.address.append(address)
+        person.addresses.append(address)
 
-        self.assertEqual(person.address, [address])
+        self.assertEqual(person.addresses, [address])
 
     def test_declared_in_mixin_inherit_by_two_models(self):
         def add_in_registry():
@@ -258,9 +258,9 @@ class TestMany2Many(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
 
-        address_exist = hasattr(registry.Person, 'address')
+        address_exist = hasattr(registry.Person, 'addresses')
         self.assertEqual(address_exist, True)
-        address_exist = hasattr(registry.Person2, 'address')
+        address_exist = hasattr(registry.Person2, 'addresses')
         self.assertEqual(address_exist, True)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
