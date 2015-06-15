@@ -602,6 +602,12 @@ Parameters of the ``Many2Many`` field:
 | ``many2many``          | Opposite Many2Many link with this relationship     |
 +------------------------+----------------------------------------------------+
 
+.. note::
+    
+    Since 0.4.0, when the relationnal table is created by AnyBlok, the 
+    m2m_columns becomme foreign keys
+
+
 Field
 -----
 
