@@ -134,7 +134,8 @@ class TestColumns(DBTestCase):
         self.assertEqual(test.col, True)
 
     def test_boolean_with_default(self):
-        registry = self.init_registry(simple_column, ColumnType=Boolean, default=False)
+        registry = self.init_registry(simple_column, ColumnType=Boolean,
+                                      default=False)
         test = registry.Test.insert()
         self.assertEqual(test.col, False)
 
