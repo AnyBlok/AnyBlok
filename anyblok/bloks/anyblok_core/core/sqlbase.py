@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from ..exceptions import SqlBaseException
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, ColumnProperty
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql import functions
 from sqlalchemy import or_, and_
@@ -197,17 +197,32 @@ class SqlMixin:
 
         return res
 
-    def to_dict(self, *fields):
+    def to_dict(self, *fields, **related_fields):
         """ Transform a record to the dict of value
 
         :param fields: list of fields to put in dict, if not selected fields
             them take all
         :rtype: dict
         """
+
         if not fields:
             fields = self.__class__.fields_description().keys()
 
-        return {x: getattr(self, x) for x in fields}
+        model = self.__class__
+
+        result = {}
+
+        for x in fields:
+            field_value, field_property = getattr(self, x), getattr(model, x).property
+            if field_value is None or type(field_property) == ColumnProperty:
+                # If value is None, then do not go any further whatever the column property tells you.
+                result[x] = field_value
+            elif field_property.uselist:
+                result[x] = [r.to_dict(*related_fields.get(x, ("id",)), **related_fields) for r in field_value]
+            else:
+                result[x] = field_value.to_dict(*related_fields.get(x, ("id",)), **related_fields)
+
+        return result
 
 
 @Declarations.register(Declarations.Core)
