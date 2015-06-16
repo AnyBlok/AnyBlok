@@ -382,11 +382,12 @@ class Registry:
     def __init__(self, db_name):
         self.db_name = db_name
         url = Configuration.get_url(db_name=db_name)
-        echo = bool(int(Configuration.get('db_echo', False)))
+        echo = bool(int(Configuration.get('db_echo') or False))
         self.engine = create_engine(url, echo=echo)
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
+        self.noautomigration = Configuration.get('noautomigration')
         self.ini_var()
         self.Session = None
         self.nb_query_bases = self.nb_session_bases = 0
@@ -752,8 +753,10 @@ class Registry:
         Query = type('Query', tuple(query_bases), {})
         Session = type('Session', tuple(self.loaded_cores['Session']), {
             'registry_query': Query})
+
+        bind = self.connection() if self.Session else self.engine
         self.Session = scoped_session(
-            sessionmaker(bind=self.engine, class_=Session),
+            sessionmaker(bind=bind, class_=Session),
             EnvironmentManager.scoped_function_for_session)
         self.nb_query_bases = len(self.loaded_cores['Query'])
         self.nb_session_bases = len(self.loaded_cores['Session'])
@@ -794,6 +797,10 @@ class Registry:
                 self.load_blok(blok, False, toload)
 
             if toinstall:
+                if self.noautomigration:
+                    raise RegistryManager("Install module is forbidden with "
+                                          "no auto migration mode")
+
                 blok2install = toinstall[0]
                 self.load_blok(blok2install, True, toload)
 
@@ -807,32 +814,12 @@ class Registry:
                     logger.info('Assemble %r entry' % entry)
                     RegistryManager.callback_assemble_entries[entry](self)
 
-            if self.Session is None:
-                self.create_session_factory()
-            elif self.must_recreate_session_factory():
-                self.commit()
-                self.close_session()
+            if self.Session is None or self.must_recreate_session_factory():
                 self.create_session_factory()
             else:
                 self.flush()
 
-            # replace the engine by the session.connection for bind attribute
-            # because session.connection is already the connection use
-            # by blok, migration and all write on the data base
-            # or use engine for bind, force create_all method to create new
-            # new connection, this new connection have not acknowedge of the
-            # data in the session.connection, and risk of bad lock on the
-            # tables
-            self.declarativebase.metadata.create_all(self.connection())
-            self.init_migration()
-            self.migration.auto_upgrade_database()
-
-            for entry in RegistryManager.declared_entries:
-                if entry in RegistryManager.callback_initialize_entries:
-                    logger.info('Initialize %r entry' % entry)
-                    r = RegistryManager.callback_initialize_entries[entry](
-                        self)
-                    mustreload = mustreload or r
+            mustreload = self.apply_model_schema_on_table() or mustreload
 
         except:
             self.close()
@@ -883,9 +870,28 @@ class Registry:
             logger.warning("Blok %r has no %r directory" % (
                 blok2install, defaultTest))
 
-    def init_migration(self):
-        self.migration = Migration(self.session,
-                                   self.declarativebase.metadata)
+    def apply_model_schema_on_table(self):
+        # replace the engine by the session.connection for bind attribute
+        # because session.connection is already the connection use
+        # by blok, migration and all write on the data base
+        # or use engine for bind, force create_all method to create new
+        # new connection, this new connection have not acknowedge of the
+        # data in the session.connection, and risk of bad lock on the
+        # tables
+        if not self.noautomigration:
+            self.declarativebase.metadata.create_all(self.connection())
+
+        self.migration = Migration(self)
+        self.migration.auto_upgrade_database()
+        mustreload = False
+        for entry in RegistryManager.declared_entries:
+            if entry in RegistryManager.callback_initialize_entries:
+                logger.info('Initialize %r entry' % entry)
+                r = RegistryManager.callback_initialize_entries[entry](
+                    self)
+                mustreload = mustreload or r
+
+        return mustreload
 
     def close_session(self):
         """ Close only the session, not the registry
@@ -895,6 +901,7 @@ class Registry:
         if self.Session:
             session = self.Session()
             session.rollback()
+            session.expunge_all()
             session.close_all()
 
     def close(self):

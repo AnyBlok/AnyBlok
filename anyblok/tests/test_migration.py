@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Pierre Verkest <pverkest@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -12,6 +13,7 @@ from anyblok.config import Configuration
 from anyblok.environment import EnvironmentManager
 from anyblok.column import Integer as Int, String as Str
 from anyblok.migration import MigrationException
+from anyblok.relationship import Many2Many
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
 from anyblok import Declarations
@@ -55,12 +57,26 @@ class TestMigration(TestCase):
             integer = Int(primary_key=True)
             other = Int(foreign_key=(Model.TestFKTarget, 'integer'))
 
+        @register(Model)
+        class TestM2M1:
+            idmodel1 = Int(primary_key=True)
+
+        @register(Model)
+        class TestM2M2:
+            idmodel2 = Int(primary_key=True)
+            rel_m2m = Many2Many(label="Rel", model=Model.TestM2M1,
+                                join_table='reltable',
+                                remote_columns='idmodel1',
+                                m2m_remote_columns='idmodel1',
+                                local_columns='idmodel2',
+                                m2m_local_columns='idmodel2',
+                                many2many='rel_m2m_inv')
+
         EnvironmentManager.set('current_blok', None)
 
     def setUp(self):
         super(TestMigration, self).setUp()
         self.registry = Registry(Configuration.get('db_name'))
-        self.registry.init_migration()
 
     @classmethod
     def tearDownClass(cls):
@@ -72,7 +88,7 @@ class TestMigration(TestCase):
     def tearDown(self):
         super(TestMigration, self).tearDown()
         for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget',
-                      'testunique'):
+                      'testunique', 'reltab', 'testm2m1', 'testm2m2'):
             try:
                 self.registry.migration.table(table).drop()
             except:
@@ -221,6 +237,19 @@ class TestMigration(TestCase):
         t.check().add(name, Test.other != 'test')
         t.check(name).drop()
 
+    def test_detect_under_noautocommit_flag(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) NOT NULL
+                );""")
+        self.registry.migration.detect_changed()
+        self.registry.migration.noautomigration = True
+        with self.assertRaises(MigrationException):
+            self.registry.migration.detect_changed()
+
     def test_detect_column_added(self):
         # Remove a column on the table force the detection to found new column
         # which is existing in metadata but not in table
@@ -279,6 +308,25 @@ class TestMigration(TestCase):
         report.apply_change()
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
+
+    @skipIf(alembic.__version__ < "0.7.7", "Alembic doesn't implement yet")
+    def test_detect_m2m_primary_key(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE reltable")
+            conn.execute(
+                """CREATE TABLE reltable (
+                    idmodel1 INT,
+                    idmodel2 INT,
+                    FOREIGN KEY (idmodel1) REFERENCES testm2m1 (idmodel1),
+                    FOREIGN KEY (idmodel2) REFERENCES testm2m2 (idmodel2)
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Alter reltable.idmodel1"))
+        self.assertTrue(report.log_has("Alter reltable.idmodel2"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Alter reltable.idmodel1"))
+        self.assertFalse(report.log_has("Alter reltable.idmodel2"))
 
     def test_detect_server_default(self):
         with self.cnx() as conn:

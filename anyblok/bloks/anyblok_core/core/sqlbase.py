@@ -146,10 +146,6 @@ class SqlMixin:
         query = query.filter(Column.primary_key == true())
         return query.all().name
 
-    @Declarations.addListener('Model.System.Model', 'Update Model')
-    def listener_update_model(cls, model):
-        cls.registry.System.Cache.invalidate(model, '_fields_description')
-
     @Declarations.classmethod_cache()
     def _fields_description(cls):
         """ Return the information of the Field, Column, RelationShip """

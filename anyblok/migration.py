@@ -34,6 +34,11 @@ class MigrationReport:
         report = MigrationReport(migrationinstance, change_detected)
 
     """
+    def raise_if_noautomigration(self):
+        if self.migration.noautomigration:
+            raise MigrationException("The metadata and the base structue are "
+                                     "different, or this difference is "
+                                     "forbidden in 'no auto migration' mode")
 
     def __init__(self, migration, diffs):
         """ Initializer
@@ -49,6 +54,7 @@ class MigrationReport:
         log_names = []
         for diff in diffs:
             if isinstance(diff, list):
+                self.raise_if_noautomigration()
                 for change in diff:
                     _, _, table, column, _, _, _ = change
                     log_names.append('Alter %s.%s' % (table, column))
@@ -56,17 +62,21 @@ class MigrationReport:
             else:
                 name = diff[0]
                 if name == 'add_column':
+                    self.raise_if_noautomigration()
                     _, _, table, column = diff
                     log_names.append('Add %s.%s' % (table, column.name))
                 elif name == 'remove_constraint':
+                    self.raise_if_noautomigration()
                     _, constraint = diff
                     log_names.append('Drop constraint %s on %s' % (
                         constraint.name, constraint.table))
                 elif name == 'remove_index':
+                    self.raise_if_noautomigration()
                     _, index = diff
                     log_names.append('Drop index %s on %s' % (
                         index.name, index.table))
                 elif name == 'add_fk':
+                    self.raise_if_noautomigration()
                     _, fk = diff
                     for column in fk.columns:
                         for fk_ in column.foreign_keys:
@@ -75,6 +85,7 @@ class MigrationReport:
                                     fk.table.name, column.name,
                                     fk_.target_fullname))
                 elif name == 'remove_fk':
+                    self.raise_if_noautomigration()
                     _, fk = diff
                     for column in fk.columns:
                         for fk_ in column.foreign_keys:
@@ -83,6 +94,7 @@ class MigrationReport:
                                     fk.table.name, column.name,
                                     fk_.target_fullname))
                 elif name == 'add_constraint':
+                    self.raise_if_noautomigration()
                     _, constraint = diff
                     columns = [x.name for x in constraint.columns]
                     log_names.append('Add unique constraint on %s (%s)' % (
@@ -92,6 +104,7 @@ class MigrationReport:
                     msg = "Drop Column %s.%s" % (column.table.name,
                                                  column.name)
                     if column.nullable is False:
+                        self.raise_if_noautomigration()
                         msg += " (not null)"
                         log_names.append(msg)
                         self.actions.append(
@@ -279,7 +292,9 @@ class MigrationColumn:
                     'column': column.name,
                     'value': val}
             if column.default.is_scalar:
-                if isinstance(val, int):
+                if isinstance(val, bool):
+                    query += " SET %(column)s = '%(value)s'"
+                elif isinstance(val, int):
                     query += " SET %(column)s = %(value)d"
                 elif isinstance(val, float):
                     query += " SET %(column)s = %(value)f"
@@ -706,9 +721,10 @@ class Migration:
         c = t.column('My column name from t')
     """
 
-    def __init__(self, session, metadata):
-        self.conn = session.connection()
-        self.metadata = metadata
+    def __init__(self, registry):
+        self.noautomigration = registry.noautomigration
+        self.conn = registry.session.connection()
+        self.metadata = registry.declarativebase.metadata
 
         opts = {
             'compare_type': True,

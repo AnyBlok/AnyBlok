@@ -111,7 +111,7 @@ class TestConfiguration(TestCase):
         Configuration.labels = {}
         Configuration.configuration = {}
 
-    def assertAdded(self, group, part='AnyBlok', label=None, function_=None):
+    def assertAdded(self, group, part='bloks', label=None, function_=None):
         self.assertEqual(Configuration.groups[part][group], [function_])
 
         if label:
@@ -190,7 +190,7 @@ class TestConfiguration(TestCase):
         Configuration.add('old-group', function_=fnct_configuration)
         Configuration.add('old-group', part='other',
                           function_=fnct_configuration)
-        groups = Configuration._merge_groups('AnyBlok')
+        groups = Configuration._merge_groups('bloks')
         self.assertEqual(groups, {
             'new-group': [fnct_configuration, fnct_other_configuration],
             'old-group': [fnct_configuration]})
@@ -201,7 +201,7 @@ class TestConfiguration(TestCase):
         Configuration.add('old-group', function_=fnct_configuration)
         Configuration.add('old-group', part='other',
                           function_=fnct_other_configuration)
-        groups = Configuration._merge_groups('AnyBlok', 'other')
+        groups = Configuration._merge_groups('bloks', 'other')
         self.assertEqual(groups, {
             'new-group': [fnct_configuration, fnct_other_configuration],
             'old-group': [fnct_configuration, fnct_other_configuration]})
@@ -221,7 +221,7 @@ class TestConfiguration(TestCase):
                           function_=fnct_other_configuration)
         Configuration.add('old-group', label="Label 2", part='other',
                           function_=fnct_configuration)
-        labels = Configuration._merge_labels('AnyBlok')
+        labels = Configuration._merge_labels('bloks')
         self.assertEqual(labels, {'new-group': "Label 1"})
 
     def test_merge_label_with_more_parts(self):
@@ -229,7 +229,7 @@ class TestConfiguration(TestCase):
                           function_=fnct_other_configuration)
         Configuration.add('old-group', label="Label 2", part='other',
                           function_=fnct_configuration)
-        labels = Configuration._merge_labels('AnyBlok', 'other')
+        labels = Configuration._merge_labels('bloks', 'other')
         self.assertEqual(labels, {'new-group': "Label 1",
                                   'old-group': "Label 2"})
 
@@ -246,7 +246,7 @@ class TestConfiguration(TestCase):
     def test_remove(self):
         Configuration.add('new-group', function_=fnct_configuration)
         Configuration.remove('new-group', function_=fnct_configuration)
-        self.assertEqual(Configuration.groups['AnyBlok']['new-group'], [])
+        self.assertEqual(Configuration.groups['bloks']['new-group'], [])
 
     def test_remove_other_part(self):
         Configuration.add('new-group', part='other',
@@ -259,7 +259,7 @@ class TestConfiguration(TestCase):
         Configuration.add('new-group', function_=fnct_configuration)
         Configuration.add('new-group', function_=fnct_other_configuration)
         Configuration.remove('new-group', function_=fnct_configuration)
-        self.assertEqual(Configuration.groups['AnyBlok']['new-group'],
+        self.assertEqual(Configuration.groups['bloks']['new-group'],
                          [fnct_other_configuration])
 
     def test_remove_label(self):
@@ -294,7 +294,7 @@ class TestConfiguration(TestCase):
         kwargs = {'test': 'value'}
         args = MockArgParseArguments(configfile="mock_configuration_file.cfg",
                                      kwargs=kwargs)
-        Configuration.parse_options(args, ['AnyBlok'])
+        Configuration.parse_options(args, ())
         kwargs.update({
             'db_name': 'anyblok',
             'db_driver_name': 'postgres',
@@ -307,7 +307,7 @@ class TestConfiguration(TestCase):
 
     def test_parse_option_configuration(self):
         args = MockArgParseArguments(configfile="mock_configuration_file.cfg")
-        Configuration.parse_options(args, ['AnyBlok'])
+        Configuration.parse_options(args, ())
         self.assertEqual(Configuration.configuration, {
             'db_name': 'anyblok',
             'db_driver_name': 'postgres',

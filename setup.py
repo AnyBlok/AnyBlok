@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
@@ -67,6 +68,7 @@ setup(
             'anyblok_updatedb=anyblok.scripts:anyblok_updatedb',
             'anyblok_nose=anyblok.scripts:anyblok_nose',
             'anyblok_interpreter=anyblok.scripts:anyblok_interpreter',
+            'anyblok_cron_worker=anyblok.scripts:anyblok_cron_worker',
         ],
         'bloks': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
@@ -89,6 +91,9 @@ setup(
             'test-blok10=anyblok.test_bloks.test_blok10:TestBlok',
             'test-blok11=anyblok.test_bloks.test_blok11:TestBlok',
             'test-blok12=anyblok.test_bloks.test_blok12:TestBlok',
+        ],
+        'nose.plugins.0.10': [
+            'anyblok-bloks=anyblok.plugins:AnyBlokPlugin',
         ],
     },
     extras_require={},

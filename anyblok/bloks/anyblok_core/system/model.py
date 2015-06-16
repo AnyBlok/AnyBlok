@@ -40,6 +40,10 @@ class Model:
 
         return ''
 
+    @Declarations.addListener('Model.System.Model', 'Update Model')
+    def listener_update_model(cls, model):
+        cls.registry.System.Cache.invalidate(model, '_fields_description')
+
     @classmethod
     def update_list(cls):
         """ Insert and update the table of models

@@ -133,6 +133,12 @@ class TestColumns(DBTestCase):
         test = registry.Test.insert(col=True)
         self.assertEqual(test.col, True)
 
+    def test_boolean_with_default(self):
+        registry = self.init_registry(simple_column, ColumnType=Boolean,
+                                      default=False)
+        test = registry.Test.insert()
+        self.assertEqual(test.col, False)
+
     def test_string(self):
         registry = self.init_registry(simple_column, ColumnType=String)
         test = registry.Test.insert(col='col')

@@ -48,7 +48,7 @@ class Configuration:
     configuration = {}
 
     @classmethod
-    def add(cls, group, part='AnyBlok', label=None, function_=None):
+    def add(cls, group, part='bloks', label=None, function_=None):
         """ Add a function in a part and a group.
 
         The function must have two arguments:
@@ -137,7 +137,7 @@ class Configuration:
         return res
 
     @classmethod
-    def remove_label(cls, group, part='AnyBlok'):
+    def remove_label(cls, group, part='bloks'):
         """ Remove an existing label
 
         The goal of this function is to remove an existing label of a specific
@@ -157,7 +157,7 @@ class Configuration:
                 del cls.labels[part][group]
 
     @classmethod
-    def remove(cls, group, function_, part='AnyBlok'):
+    def remove(cls, group, function_, part='bloks'):
         """ Remove an existing function
 
         If your application inherits some unwanted options from a specific
@@ -274,7 +274,7 @@ class Configuration:
     @classmethod
     @log(logger)
     def load(cls, description='AnyBlok :', configuration_groups=None,
-             parts_to_load=('AnyBlok',), useseparator=False):
+             parts_to_load=('bloks',), useseparator=False):
         """ Load the argparse definition and parse them
 
         :param description: description of configuration
@@ -297,6 +297,22 @@ class Configuration:
         else:
             parser = getParser(description)
 
+        cls._load(parser, configuration_groups, parts_to_load)
+        args = parser.parse_args(our_argv)
+        if sep is not None:
+            del sys.argv[1:sep+1]
+
+        cls.parse_options(args, parts_to_load)
+
+    @classmethod
+    def _load(cls, parser, configuration_groups, parts_to_load):
+        """ Load the argparse definition and parse them
+
+        :param description: description of configuration
+        :param configuration_groups: list configuration groupe to load
+        :param parts_to_load: group of blok to load
+        :param useseparator: boolean(default False)
+        """
         if configuration_groups is None:
             return
 
@@ -316,12 +332,6 @@ class Configuration:
             for function in groups[group]:
                 function(g, cls.configuration)
 
-        args = parser.parse_args(our_argv)
-        if sep is not None:
-            del sys.argv[1:sep+1]
-
-        cls.parse_options(args, parts_to_load)
-
     @classmethod
     def parse_options(cls, arguments, parts_to_load):
 
@@ -333,7 +343,7 @@ class Configuration:
         if arguments.configfile:
             cparser = ConfigParser()
             cparser.read(arguments.configfile)
-            for section in parts_to_load:
+            for section in parts_to_load + ('AnyBlok',):
                 if cparser.has_section(section):
                     for opt, value in cparser.items(section):
                         cls.configuration[opt] = value
@@ -351,7 +361,12 @@ class Configuration:
 def add_configuration_file(parser, configuration):
     parser.add_argument('-c', dest='configfile', default='',
                         help="Relative path of the config file")
-    configuration['configfile'] = None
+    parser.add_argument('--no-auto-migration', dest='noautomigration',
+                        action='store_true')
+    configuration.update({
+        'configfile': None,
+        'noautomigration': False,
+    })
 
 
 @Configuration.add('database', label="Database")

@@ -66,19 +66,24 @@ class TypeList(list):
             super(TypeList, self).extend(newbases)
 
 
-def apply_cache(registry, namespace, base, properties):
+def apply_cache(attr, method, registry, namespace, base, properties):
     """ Find the cached methods in the base to apply the real cache
     decorator
 
+    :param attr: name of the attibute
+    :param method: method pointer
     :param registry: the current  registry
     :param namespace: the namespace of the model
     :param base: One of the base of the model
     :param properties: the properties of the model
     :rtype: new base
     """
-    methods_cached = {}
+    if hasattr(method, 'is_cache_method') and method.is_cache_method is True:
+        if namespace not in registry.caches:
+            registry.caches[namespace] = {attr: []}
+        elif attr not in registry.caches[namespace]:
+            registry.caches[namespace][attr] = []
 
-    def apply_wrapper(attr, method):
         @lru_cache(maxsize=method.size)
         def wrapper(*args, **kwargs):
             return method(*args, **kwargs)
@@ -86,23 +91,8 @@ def apply_cache(registry, namespace, base, properties):
         wrapper.indentify = (namespace, attr)
         registry.caches[namespace][attr].append(wrapper)
         if method.is_cache_classmethod:
-            methods_cached[attr] = classmethod(wrapper)
+            return {attr: classmethod(wrapper)}
         else:
-            methods_cached[attr] = wrapper
+            return {attr: wrapper}
 
-    for attr in dir(base):
-        method = getattr(base, attr)
-        if not hasattr(method, 'is_cache_method'):
-            continue
-        elif method.is_cache_method is True:
-            if namespace not in registry.caches:
-                registry.caches[namespace] = {attr: []}
-            elif attr not in registry.caches[namespace]:
-                registry.caches[namespace][attr] = []
-
-            apply_wrapper(attr, method)
-
-    if methods_cached:
-        return type(namespace, (base,), methods_cached)
-
-    return base
+    return {}

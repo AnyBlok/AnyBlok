@@ -25,3 +25,7 @@ class CacheException(Exception):
 
 class ParameterException(Exception):
     """ Simple exception for System.Parameter """
+
+
+class CronWorkerException(Exception):
+    """ Simple exception for System.Parameter """

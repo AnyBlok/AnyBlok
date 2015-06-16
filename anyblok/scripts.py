@@ -125,18 +125,33 @@ def interpreter(description, version, configuration_groups):
     format_configuration(configuration_groups, 'interpreter')
     registry = anyblok.start(description, version,
                              configuration_groups=configuration_groups)
-    registry.commit()
-    python_script = Configuration.get('python_script')
-    if python_script:
-        with open(python_script, "r") as fh:
-            exec(fh.read(), None, locals())
-    else:
-        try:
-            from IPython import embed
-            embed()
-        except ImportError:
-            import code
-            code.interact(local=locals())
+    if registry:
+        registry.commit()
+        python_script = Configuration.get('python_script')
+        if python_script:
+            with open(python_script, "r") as fh:
+                exec(fh.read(), None, locals())
+        else:
+            try:
+                from IPython import embed
+                embed()
+            except ImportError:
+                import code
+                code.interact(local=locals())
+
+
+def cron_worker(description, version, configuration_groups):
+    """ Execute a script or open an interpreter
+
+    :param description: description of configuration
+    :param version: version of script for argparse
+    :param configuration_groups: list configuration groupe to load
+    """
+    registry = anyblok.start(description, version,
+                             configuration_groups=configuration_groups)
+    if registry:
+        registry.commit()
+        registry.System.Cron.run()
 
 
 def sqlschema(description, version, configuration_groups):
@@ -347,3 +362,9 @@ def anyblok_interpreter():
     from anyblok.release import version
     interpreter('AnyBlok interpreter', version,
                 ['config', 'database', 'interpreter', 'logging'])
+
+
+def anyblok_cron_worker():
+    from anyblok.release import version
+    cron_worker('AnyBlok interpreter', version,
+                ['config', 'database', 'logging'])

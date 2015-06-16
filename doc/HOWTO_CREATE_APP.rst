@@ -678,6 +678,14 @@ We could also display the full tree from root
 
 A direct link to download the full working example.
 
+AnyBlok plugin for nosetests
+----------------------------
+
+You can test your bloks in your anyblok distribution with nose. use the option
+*--with-anyblok-bloks*. The plugin load the ``BlokManager`` et the 
+``RegistryManager`` after load the ``coverage`` plugin.
+
+
 Create the configuration file
 -----------------------------
 

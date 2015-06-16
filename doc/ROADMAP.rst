@@ -16,7 +16,6 @@ To implement
 
 * Add logo and slogan
 * Update doc
-* Add RelationShip model in anyblok-core and refactor the get column http://docs.sqlalchemy.org/en/latest/faq.html#how-do-i-get-a-list-of-all-columns-relationships-mapped-attributes-etc-given-a-mapped-class
 * Put postgres database in his own distribution with the good import
 * Need improve alembic
 
@@ -33,7 +32,6 @@ Library to include
 Functionnality which need a sprint
 ----------------------------------
 
-* Cron
 * Tasks Management
 * Internalization
 * Ancestor left / right
