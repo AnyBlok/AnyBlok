@@ -193,7 +193,7 @@ class SqlMixin:
 
         return res
 
-    def to_dict(self, *fields, **related_fields):
+    def to_dict(self, *fields):
         """ Transform a record to the dict of value
 
         :param fields: list of fields to put in dict, if not selected fields
@@ -209,22 +209,31 @@ class SqlMixin:
         result = {}
 
         for field in fields:
+            # if field is ("relation_name", ("list", "of", "relation", "fields")), deal with it.
+            related_fields = ()
+            if type(field) == tuple:
+                if len(field) > 2:
+                    raise
+                elif len(field) == 2:
+                    related_fields = field[1]
+                field = field[0]
+
+            # Get the actual data
             field_value, field_property = getattr(self, field), getattr(model, field).property
+
+            # Deal with this data
             if field_value is None or type(field_property) == ColumnProperty:
                 # If value is None, then do not go any further whatever the column property tells you.
                 result[field] = field_value
             else:
-                field_related_fields = related_fields.get(field)
-                if not field_related_fields:
-                    field_related_fields = field_property.mapper.entity.get_primary_keys
-                    sub_related_fields = {}
-                else:
-                    sub_related_fields = {e[0]: e[1] for e in field_related_fields if (type(e) == tuple and len(e) == 2)}
-                    field_related_fields = [e[0] if type(e) == tuple else e for e in field_related_fields]
+                if not related_fields:
+                    # If there is no field list to the relation, use only primary keys
+                    related_fields = field_property.mapper.entity.get_primary_keys()
+                # One2One, One2Many, Many2One or Many2Many ?
                 if field_property.uselist:
-                    result[field] = [r.to_dict(*field_related_fields, **sub_related_fields) for r in field_value]
+                    result[field] = [r.to_dict(*related_fields) for r in field_value]
                 else:
-                    result[field] = field_value.to_dict(*field_related_fields, **sub_related_fields)
+                    result[field] = field_value.to_dict(*related_fields)
 
         return result
 
