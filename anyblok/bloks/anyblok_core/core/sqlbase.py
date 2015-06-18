@@ -207,6 +207,7 @@ class SqlMixin:
         model = self.__class__
 
         result = {}
+        pks = tuple(self.get_primary_keys())
 
         for x in fields:
             field_value, field_property = getattr(self, x), getattr(model, x).property
@@ -214,9 +215,9 @@ class SqlMixin:
                 # If value is None, then do not go any further whatever the column property tells you.
                 result[x] = field_value
             elif field_property.uselist:
-                result[x] = [r.to_dict(*related_fields.get(x, ("id",)), **related_fields) for r in field_value]
+                result[x] = [r.to_dict(*related_fields.get(x, pks), **related_fields) for r in field_value]
             else:
-                result[x] = field_value.to_dict(*related_fields.get(x, ("id",)), **related_fields)
+                result[x] = field_value.to_dict(*related_fields.get(x, pks), **related_fields)
 
         return result
 
