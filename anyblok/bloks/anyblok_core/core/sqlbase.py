@@ -214,10 +214,18 @@ class SqlMixin:
             if field_value is None or type(field_property) == ColumnProperty:
                 # If value is None, then do not go any further whatever the column property tells you.
                 result[x] = field_value
-            elif field_property.uselist:
-                result[x] = [r.to_dict(*related_fields.get(x, pks), **related_fields) for r in field_value]
             else:
-                result[x] = field_value.to_dict(*related_fields.get(x, pks), **related_fields)
+                x_related_fields = related_fields.get(x)
+                if not x_related_fields:
+                    x_related_fields = pks  # TODO MAJOR ISSUE: Get relation pks, not local pks.
+                    sub_related_fields = {}
+                else:
+                    sub_related_fields = {e[0]: e[1] for e in x_related_fields if (type(e) == tuple and len(e) == 2)}
+                    x_related_fields = [e[0] if type(e) == tuple else e for e in x_related_fields]
+                if field_property.uselist:
+                    result[x] = [r.to_dict(*x_related_fields, **sub_related_fields) for r in field_value]
+                else:
+                    result[x] = field_value.to_dict(*x_related_fields, **sub_related_fields)
 
         return result
 
