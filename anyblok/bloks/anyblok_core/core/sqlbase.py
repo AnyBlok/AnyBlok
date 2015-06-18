@@ -207,7 +207,6 @@ class SqlMixin:
         model = self.__class__
 
         result = {}
-        pks = tuple(self.get_primary_keys())
 
         for x in fields:
             field_value, field_property = getattr(self, x), getattr(model, x).property
@@ -217,7 +216,7 @@ class SqlMixin:
             else:
                 x_related_fields = related_fields.get(x)
                 if not x_related_fields:
-                    x_related_fields = pks  # TODO MAJOR ISSUE: Get relation pks, not local pks.
+                    x_related_fields = field_property.mapper.entity.get_primary_keys
                     sub_related_fields = {}
                 else:
                     sub_related_fields = {e[0]: e[1] for e in x_related_fields if (type(e) == tuple and len(e) == 2)}
