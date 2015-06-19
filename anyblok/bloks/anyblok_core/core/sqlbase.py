@@ -196,45 +196,53 @@ class SqlMixin:
     def to_dict(self, *fields):
         """ Transform a record to the dict of value
 
-        :param fields: list of fields to put in dict; if not selected, fields then take them all.
-            A field is either one of these:
+        :param fields: list of fields to put in dict; if not selected, fields
+            then take them all. A field is either one of these:
                 * a string (which is the name of the field)
-                * a 2-tuple if the field is a relationship (name of the field, tuple of foreign model fields)
+                * a 2-tuple if the field is a relationship (name of the field,
+                    tuple of foreign model fields)
         :rtype: dict
 
-        Here are some examples:
-        >>> instance.to_dict()  # get all fields
-        {"id": 1,
-         "column1": "value 1",
-         "column2": "value 2",
-         "column3": "value 3",
-         "relation1": {"relation_pk_1": 42, "relation_pk_2": "also 42"}  # m2o or o2o : this is a dictionary
-         "relation2": [{"id": 28}, {"id": 1}, {"id": 34}]  # o2m or m2m : this is a list of dictionaries
-         }
-        >>> instance.to_dict("column1", "column2", "relation1")  # get selected fields only (without any constraints)
-        {"column1": "value 1",
-         "column2": "value 2",
-         "relation1": {"relation_pk_1": 42, "relation_pk_2": "also 42"}
-         }
-        >>> instance.to_dict("column1", "column2", (  # select fields to use in the relation related model
-            "relation1", ("relation_pk1", "name", "value")  # there is no constraints in the choice of fields
-            ))
-        {"column1": "value",
-         "column2": "value",
-         "relation1": {"relation_pk_1": 42, "name": "H2G2", "value": "42"}
-         }
-        >>> instance.to_dict("column1", "column2", (  # select relation fields recursively
-            "relation1", ("name", "value", (
-                "relation", ("a", "b", "c")
+        Here are some examples::
+
+            >>> instance.to_dict()  # get all fields
+            {"id": 1,
+             "column1": "value 1",
+             "column2": "value 2",
+             "column3": "value 3",
+             "relation1": {"relation_pk_1": 42, "relation_pk_2": "also 42"}
+                                            # m2o or o2o : this is a dictionary
+             "relation2": [{"id": 28}, {"id": 1}, {"id": 34}]
+                                # o2m or m2m : this is a list of dictionaries
+             }
+            >>> instance.to_dict("column1", "column2", "relation1")
+                        # get selected fields only (without any constraints)
+            {"column1": "value 1",
+             "column2": "value 2",
+             "relation1": {"relation_pk_1": 42, "relation_pk_2": "also 42"}
+             }
+            >>> instance.to_dict("column1", "column2", (
+                        # select fields to use in the relation related model
+                "relation1", ("relation_pk1", "name", "value")
+                            # there is no constraints in the choice of fields
                 ))
-            ))
-        {"column1": "value",
-         "column2": "value",
-         "relation1": {"name": "H2G2", "value": "42", "relation": [
-             {"a": 10, "b": 20, "c": 30},
-             {"a": 11, "b": 22, "c": 33},
-             ]}
-         }
+            {"column1": "value",
+             "column2": "value",
+             "relation1": {"relation_pk_1": 42, "name": "H2G2", "value": "42"}
+             }
+            >>> instance.to_dict("column1", "column2", (
+                                        # select relation fields recursively
+                "relation1", ("name", "value", (
+                    "relation", ("a", "b", "c")
+                    ))
+                ))
+            {"column1": "value",
+             "column2": "value",
+             "relation1": {"name": "H2G2", "value": "42", "relation": [
+                 {"a": 10, "b": 20, "c": 30},
+                 {"a": 11, "b": 22, "c": 33},
+                 ]}
+             }
         """
 
         if not fields:
@@ -245,7 +253,8 @@ class SqlMixin:
         result = {}
 
         for field in fields:
-            # if field is ("relation_name", ("list", "of", "relation", "fields")), deal with it.
+            # if field is ("relation_name", ("list", "of", "relation",
+            # "fields")), deal with it.
             related_fields = ()
             if type(field) == tuple:
                 if len(field) > 2:
@@ -255,19 +264,24 @@ class SqlMixin:
                 field = field[0]
 
             # Get the actual data
-            field_value, field_property = getattr(self, field), getattr(model, field).property
+            field_value, field_property = (getattr(self, field),
+                                           getattr(model, field).property)
 
             # Deal with this data
             if field_value is None or type(field_property) == ColumnProperty:
-                # If value is None, then do not go any further whatever the column property tells you.
+                # If value is None, then do not go any further whatever
+                # the column property tells you.
                 result[field] = field_value
             else:
                 if not related_fields:
-                    # If there is no field list to the relation, use only primary keys
-                    related_fields = field_property.mapper.entity.get_primary_keys()
+                    # If there is no field list to the relation,
+                    # use only primary keys
+                    related_fields = field_property.mapper.entity
+                    related_fields = related_fields.get_primary_keys()
                 # One2One, One2Many, Many2One or Many2Many ?
                 if field_property.uselist:
-                    result[field] = [r.to_dict(*related_fields) for r in field_value]
+                    result[field] = [r.to_dict(*related_fields)
+                                     for r in field_value]
                 else:
                     result[field] = field_value.to_dict(*related_fields)
 
