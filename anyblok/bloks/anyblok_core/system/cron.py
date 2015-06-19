@@ -66,6 +66,7 @@ class Cron:
         while cls.started:
             job = cls.lock_one_job()
             if job is not None:
+                cls.registry.System.Cache.clear_invalidate_cache()
                 worker = cls.add_worker_for(job)
                 worker.join(timeout)
                 error = worker.get_error()
