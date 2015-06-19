@@ -25,6 +25,7 @@ requires = [
     'nose',  # for unittest during the blok install
     'lxml',
     'six',
+    'PyYAML',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

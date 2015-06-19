@@ -344,18 +344,19 @@ def modelschema(description, version, configuration_groups):
 def anyblok_createdb():
     from anyblok.release import version
     description = "Anyblok-%s create db" % version
-    createdb(description, ['config', 'database', 'unittest'])
+    createdb(description, ['config', 'database', 'unittest', 'logging'])
 
 
 def anyblok_updatedb():
     from anyblok.release import version
     updatedb("AnyBlok - update db", version,
-             ['config', 'database', 'unittest'])
+             ['config', 'database', 'unittest', 'logging'])
 
 
 def anyblok_nose():
     from anyblok.release import version
-    run_exit("Nose test for AnyBlok", version, ['config', 'database'])
+    run_exit("Nose test for AnyBlok", version,
+             ['config', 'database', 'logging'])
 
 
 def anyblok_interpreter():

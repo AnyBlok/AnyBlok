@@ -11,7 +11,10 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 import sys
 import os
-from logging import getLogger
+import json
+import yaml
+from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
+                     CRITICAL, basicConfig, Logger)
 logger = getLogger(__name__)
 
 
@@ -236,20 +239,19 @@ class Configuration:
         :rtype: SqlAlchemy URL
         :exception: ConfigurationException
         """
-        config = cls.configuration
         drivername = username = password = host = port = database = None
-        if config.get('db_driver_name'):
-            drivername = config['db_driver_name']
-        if config.get('db_user_name'):
-            username = config['db_user_name']
-        if config.get('db_password'):
-            password = config['db_password']
-        if config.get('db_host'):
-            host = config['db_host']
-        if config.get('db_port'):
-            port = config['db_port']
-        if config.get('db_name'):
-            database = config['db_name']
+        if cls.configuration.get('db_driver_name'):
+            drivername = cls.configuration['db_driver_name']
+        if cls.configuration.get('db_user_name'):
+            username = cls.configuration['db_user_name']
+        if cls.configuration.get('db_password'):
+            password = cls.configuration['db_password']
+        if cls.configuration.get('db_host'):
+            host = cls.configuration['db_host']
+        if cls.configuration.get('db_port'):
+            port = cls.configuration['db_port']
+        if cls.configuration.get('db_name'):
+            database = cls.configuration['db_name']
 
         if drivername is None:
             raise ConfigurationException('No Drivername defined')
@@ -352,9 +354,42 @@ class Configuration:
             if opt not in cls.configuration or value:
                 cls.configuration[opt] = value
 
-        if cparser and cparser.has_section('loggers'):
-            from logging import config
+        level = {
+            'NOTSET': NOTSET,
+            'DEBUG': DEBUG,
+            'INFO': INFO,
+            'WARNING': WARNING,
+            'ERROR': ERROR,
+            'CRITICAL': CRITICAL
+        }.get(arguments.logging_level)
+
+        if level:
+            basicConfig(level=level)
+
+        if arguments.logging_configfile:
+            config.fileConfig(arguments.logging_configfile)
+        elif arguments.json_logging_configfile:
+            with open(arguments.json_logging_configfile, 'rt') as f:
+                configfile = json.load(f.read())
+                config.dictConfig(configfile)
+        elif arguments.yaml_logging_configfile:
+            with open(arguments.yaml_logging_configfile, 'rt') as f:
+                configfile = yaml.load(f.read())
+                config.dictConfig(configfile)
+        elif cparser and cparser.has_section('loggers'):
             config.fileConfig(arguments.configfile)
+
+        if level:
+            if arguments.logging_level_qualnames:
+                qualnames = set(x.split('.')[0]
+                                for x in Logger.manager.loggerDict.keys()
+                                if x in arguments.logging_level_qualnames)
+            else:
+                qualnames = set(x.split('.')[0]
+                                for x in Logger.manager.loggerDict.keys())
+
+            for qualname in qualnames:
+                getLogger(qualname).setLevel(level)
 
 
 @Configuration.add('config')
@@ -444,3 +479,25 @@ def add_unittest(group, configuration):
                        help="Name of the bloks to test")
     group.add_argument('--unwanted-bloks', default='',
                        help="Name of the bloks to no test")
+
+
+@Configuration.add('logging', label="Logging")
+def add_logging(group, configuration):
+    group.add_argument('--logging-level', dest='logging_level',
+                       choices=['NOTSET', 'DEBUG', 'INFO', 'WARNING',
+                                'ERROR', 'CRITICAL'], default='')
+    group.add_argument('--logging-level-qualnames', nargs='+',
+                       dest='logging_level_qualnames',
+                       help="Limit the log level on a qualnames list")
+    group.add_argument('--logging-config-file', dest='logging_configfile',
+                       default='',
+                       help="Relative path of the logging config file")
+    group.add_argument('--logging-json-config-file',
+                       dest='json_logging_configfile', default='',
+                       help="Relative path of the logging config file (json). "
+                            "Only if the logging config file doesn't filled")
+    group.add_argument('--logging-yaml-config-file',
+                       dest='yaml_logging_configfile', default='',
+                       help="Relative path of the logging config file (yaml). "
+                            "Only if the logging and json config file doesn't "
+                            "filled")
