@@ -16,6 +16,7 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
+* [REF] Add the possibility to add a logging file by argparse
 * [ADD] No auto migration option
 * [ADD] Plugin for nose to run unit test of the installed bloks
 * [REF] The relation ship can be reference more than one foreign key
