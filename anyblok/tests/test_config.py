@@ -41,6 +41,10 @@ class MockArgParseArguments:
             self.configfile = None
         self.args = args
         self.kwargs = kwargs
+        self.logging_level = None
+        self.logging_configfile = None
+        self.json_logging_configfile = None
+        self.yaml_logging_configfile = None
 
     def _get_args(self):
         return self.args
@@ -54,6 +58,10 @@ class MockArgParseArguments:
 class MockArguments:
 
     configfile = None
+    logging_level = None
+    logging_configfile = None
+    json_logging_configfile = None
+    yaml_logging_configfile = None
     vals = {'var1': 'val1',
             'var2': 'val2',
             'var3': 'val3'}
