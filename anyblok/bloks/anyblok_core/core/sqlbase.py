@@ -205,7 +205,7 @@ class SqlMixin:
 
         Here are some examples::
 
-            >>> instance.to_dict()  # get all fields
+            >> instance.to_dict()  # get all fields
             {"id": 1,
              "column1": "value 1",
              "column2": "value 2",
@@ -215,13 +215,13 @@ class SqlMixin:
              "relation2": [{"id": 28}, {"id": 1}, {"id": 34}]
                                 # o2m or m2m : this is a list of dictionaries
              }
-            >>> instance.to_dict("column1", "column2", "relation1")
+            >> instance.to_dict("column1", "column2", "relation1")
                         # get selected fields only (without any constraints)
             {"column1": "value 1",
              "column2": "value 2",
              "relation1": {"relation_pk_1": 42, "relation_pk_2": "also 42"}
              }
-            >>> instance.to_dict("column1", "column2", (
+            >> instance.to_dict("column1", "column2", (
                         # select fields to use in the relation related model
                 "relation1", ("relation_pk1", "name", "value")
                             # there is no constraints in the choice of fields
@@ -230,7 +230,7 @@ class SqlMixin:
              "column2": "value",
              "relation1": {"relation_pk_1": 42, "name": "H2G2", "value": "42"}
              }
-            >>> instance.to_dict("column1", "column2", (
+            >> instance.to_dict("column1", "column2", (
                                         # select relation fields recursively
                 "relation1", ("name", "value", (
                     "relation", ("a", "b", "c")
@@ -244,13 +244,9 @@ class SqlMixin:
                  ]}
              }
         """
-
+        result = {}
         if not fields:
             fields = self.__class__.fields_description().keys()
-
-        model = self.__class__
-
-        result = {}
 
         for field in fields:
             # if field is ("relation_name", ("list", "of", "relation",
@@ -264,15 +260,20 @@ class SqlMixin:
                 field = field[0]
 
             # Get the actual data
-            field_value, field_property = (getattr(self, field),
-                                           getattr(model, field).property)
+            field_value, field_property = getattr(self, field), None
+            if hasattr(field_value, 'property'):
+                field_property = field_value.property
 
             # Deal with this data
-            if field_value is None or type(field_property) == ColumnProperty:
+            if field_property is None:
+                # it is the case of field function (hyprid property)
+                result[field] = field_value
+            elif field_value is None or type(field_property) == ColumnProperty:
                 # If value is None, then do not go any further whatever
                 # the column property tells you.
                 result[field] = field_value
             else:
+                # it is should be RelationshipProperty
                 if not related_fields:
                     # If there is no field list to the relation,
                     # use only primary keys
