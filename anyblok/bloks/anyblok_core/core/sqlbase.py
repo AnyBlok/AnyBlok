@@ -274,9 +274,14 @@ class SqlMixin:
                     if related_fields is None:
                         related_fields = ()
                     elif not isinstance(related_fields, (tuple, list)):
-                        related_fields = (related_fields,)
+                        raise SqlBaseException("%r the related fields wanted "
+                                               "must be a tuple or empty or "
+                                               "None value" % related_fields)
                 else:
-                    raise
+                    raise SqlBaseException("%r the number of argument is "
+                                           "wrong, waiting 1 or 2 arguments "
+                                           "(name of the relation[, (related "
+                                           "fields)])" % (field,))
 
                 field = field[0]
 

@@ -9,6 +9,7 @@ from anyblok.tests.testcase import DBTestCase
 from anyblok.column import Integer, String
 from anyblok.relationship import Many2One, One2One, Many2Many
 from anyblok.declarations import Declarations
+from anyblok.bloks.anyblok_core.exceptions import SqlBaseException
 
 
 Model = Declarations.Model
@@ -159,16 +160,12 @@ class TestCoreSQLBase(DBTestCase):
         t2 = registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t2.to_dict('name', ('test', ('name',))),
                          {'name': 't2', 'test': {'name': 't1'}})
-        self.assertEqual(t2.to_dict('name', ('test', 'name')),
-                         {'name': 't2', 'test': {'name': 't1'}})
 
     def test_to_dict_o2o_with_column(self):
         registry = self.init_registry(self.add_in_registry_o2o)
         t1 = registry.Test.insert(name='t1')
         t2 = registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t2.to_dict('name', ('test', ('name',))),
-                         {'name': 't2', 'test': {'name': 't1'}})
-        self.assertEqual(t2.to_dict('name', ('test', 'name')),
                          {'name': 't2', 'test': {'name': 't1'}})
         self.assertEqual(t1.to_dict('name', ('test2', ('name',))),
                          {'name': 't1', 'test2': {'name': 't2'}})
@@ -180,11 +177,7 @@ class TestCoreSQLBase(DBTestCase):
         t2.test.append(t1)
         self.assertEqual(t2.to_dict('name', ('test', ('name',))),
                          {'name': 't2', 'test': [{'name': 't1'}]})
-        self.assertEqual(t2.to_dict('name', ('test', 'name')),
-                         {'name': 't2', 'test': [{'name': 't1'}]})
         self.assertEqual(t1.to_dict('name', ('test2', ('name',))),
-                         {'name': 't1', 'test2': [{'name': 't2'}]})
-        self.assertEqual(t1.to_dict('name', ('test2', 'name')),
                          {'name': 't1', 'test2': [{'name': 't2'}]})
 
     def test_to_dict_o2m_with_column(self):
@@ -192,8 +185,6 @@ class TestCoreSQLBase(DBTestCase):
         t1 = registry.Test.insert(name='t1')
         registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t1.to_dict('name', ('test2', ('name',))),
-                         {'name': 't1', 'test2': [{'name': 't2'}]})
-        self.assertEqual(t1.to_dict('name', ('test2', 'name')),
                          {'name': 't1', 'test2': [{'name': 't2'}]})
 
     def test_to_dict_m2o_with_all_columns(self):
@@ -276,3 +267,24 @@ class TestCoreSQLBase(DBTestCase):
                          {'name': 't1', 'test2': [{'name': 't2',
                                                    'id': t2.id,
                                                    'test': {'id': t1.id}}]})
+
+    def test_bad_definition_of_relation(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        with self.assertRaises(SqlBaseException):
+            t2.to_dict('name', ('test', 'name'))
+
+    def test_bad_definition_of_relation2(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        with self.assertRaises(SqlBaseException):
+            t2.to_dict('name', ('test', ('name',), ()))
+
+    def test_bad_definition_of_relation3(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        with self.assertRaises(SqlBaseException):
+            t2.to_dict('name', ())
