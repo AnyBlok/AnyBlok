@@ -205,7 +205,7 @@ class SqlMixin:
 
         Here are some examples::
 
-            >> instance.to_dict()  # get all fields
+            =>> instance.to_dict()  # get all fields
             {"id": 1,
              "column1": "value 1",
              "column2": "value 2",
@@ -215,13 +215,15 @@ class SqlMixin:
              "relation2": [{"id": 28}, {"id": 1}, {"id": 34}]
                                 # o2m or m2m : this is a list of dictionaries
              }
-            >> instance.to_dict("column1", "column2", "relation1")
+
+            =>> instance.to_dict("column1", "column2", "relation1")
                         # get selected fields only (without any constraints)
             {"column1": "value 1",
              "column2": "value 2",
              "relation1": {"relation_pk_1": 42, "relation_pk_2": "also 42"}
              }
-            >> instance.to_dict("column1", "column2", (
+
+            =>> instance.to_dict("column1", "column2", (
                         # select fields to use in the relation related model
                 "relation1", ("relation_pk1", "name", "value")
                             # there is no constraints in the choice of fields
@@ -230,7 +232,19 @@ class SqlMixin:
              "column2": "value",
              "relation1": {"relation_pk_1": 42, "name": "H2G2", "value": "42"}
              }
-            >> instance.to_dict("column1", "column2", (
+
+            =>> instance.to_dict("column1", "column2", ("relation1", ))
+            # or
+            =>> instance.to_dict("column1", "column2", ("relation1", None))
+            # or
+            =>> instance.to_dict("column1", "column2", ("relation1", ()))
+                                  # select all the fields of the relation ship
+            {"column1": "value",
+             "column2": "value",
+             "relation1": {"relation_pk_1": 42, "name": "H2G2", "value": "42"}
+             }
+
+            =>> instance.to_dict("column1", "column2", (
                                         # select relation fields recursively
                 "relation1", ("name", "value", (
                     "relation", ("a", "b", "c")
