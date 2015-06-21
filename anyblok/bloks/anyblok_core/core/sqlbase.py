@@ -251,18 +251,25 @@ class SqlMixin:
         for field in fields:
             # if field is ("relation_name", ("list", "of", "relation",
             # "fields")), deal with it.
-            related_fields = ()
-            if type(field) == tuple:
-                if len(field) > 2:
-                    raise
+            related_fields = None
+            if isinstance(field, (tuple, list)):
+                if len(field) == 1:
+                    related_fields = ()
                 elif len(field) == 2:
                     related_fields = field[1]
+                    if related_fields is None:
+                        related_fields = ()
+                    elif not isinstance(related_fields, (tuple, list)):
+                        related_fields = (related_fields,)
+                else:
+                    raise
+
                 field = field[0]
 
             # Get the actual data
-            field_value, field_property = getattr(self, field), None
-            if hasattr(field_value, 'property'):
-                field_property = field_value.property
+            field_value = getattr(self, field)
+            field_property = getattr(getattr(self.__class__, field),
+                                     'property', None)
 
             # Deal with this data
             if field_property is None:
@@ -274,7 +281,7 @@ class SqlMixin:
                 result[field] = field_value
             else:
                 # it is should be RelationshipProperty
-                if not related_fields:
+                if related_fields is None:
                     # If there is no field list to the relation,
                     # use only primary keys
                     related_fields = field_property.mapper.entity
