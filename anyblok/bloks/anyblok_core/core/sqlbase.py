@@ -286,9 +286,12 @@ class SqlMixin:
                 field = field[0]
 
             # Get the actual data
-            field_value = getattr(self, field)
-            field_property = getattr(getattr(self.__class__, field),
-                                     'property', None)
+            field_value, field_property = getattr(self, field), None
+            try:
+                field_property = getattr(getattr(self.__class__, field),
+                                         'property', None)
+            except Exception:
+                pass
 
             # Deal with this data
             if field_property is None:
