@@ -32,7 +32,7 @@ def simple_subclass_poly():
             })
             return mapper_args
 
-    @register(Model.MainModel, tablename="mainmodel")
+    @register(Model.MainModel, tablename=Model.MainModel)
     class Test(Model.MainModel):
         other = String()
 
