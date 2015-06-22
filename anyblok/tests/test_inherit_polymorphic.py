@@ -32,14 +32,14 @@ def simple_subclass_poly():
             })
             return mapper_args
 
-    @register(Model.MainModel, tablename="test")
+    @register(Model.MainModel, tablename="mainmodel")
     class Test(Model.MainModel):
         other = String()
 
         @classmethod
         def define_mapper_args(cls, mapper_args, properties):
             mapper_args.update({
-                'polymorphic_identity': 'subtest',
+                'polymorphic_identity': 'sub',
             })
             return mapper_args
 
@@ -53,4 +53,4 @@ class TestInheritPolymorphic(DBTestCase):
 
     def test_simple_subclass_poly(self):
         registry = self.init_registry(simple_subclass_poly)
-        self.check_registry(registry.SubTest)
+        self.check_registry(registry.MainModel.Test)
