@@ -354,42 +354,43 @@ class Configuration:
             if opt not in cls.configuration or value:
                 cls.configuration[opt] = value
 
-        level = {
-            'NOTSET': NOTSET,
-            'DEBUG': DEBUG,
-            'INFO': INFO,
-            'WARNING': WARNING,
-            'ERROR': ERROR,
-            'CRITICAL': CRITICAL
-        }.get(arguments.logging_level)
+        if 'logging_level' in dict(arguments._get_kwargs()).keys():
+            level = {
+                'NOTSET': NOTSET,
+                'DEBUG': DEBUG,
+                'INFO': INFO,
+                'WARNING': WARNING,
+                'ERROR': ERROR,
+                'CRITICAL': CRITICAL
+            }.get(arguments.logging_level)
 
-        if level:
-            basicConfig(level=level)
+            if level:
+                basicConfig(level=level)
 
-        if arguments.logging_configfile:
-            config.fileConfig(arguments.logging_configfile)
-        elif arguments.json_logging_configfile:
-            with open(arguments.json_logging_configfile, 'rt') as f:
-                configfile = json.load(f.read())
-                config.dictConfig(configfile)
-        elif arguments.yaml_logging_configfile:
-            with open(arguments.yaml_logging_configfile, 'rt') as f:
-                configfile = yaml.load(f.read())
-                config.dictConfig(configfile)
-        elif cparser and cparser.has_section('loggers'):
-            config.fileConfig(arguments.configfile)
+            if arguments.logging_configfile:
+                config.fileConfig(arguments.logging_configfile)
+            elif arguments.json_logging_configfile:
+                with open(arguments.json_logging_configfile, 'rt') as f:
+                    configfile = json.load(f.read())
+                    config.dictConfig(configfile)
+            elif arguments.yaml_logging_configfile:
+                with open(arguments.yaml_logging_configfile, 'rt') as f:
+                    configfile = yaml.load(f.read())
+                    config.dictConfig(configfile)
+            elif cparser and cparser.has_section('loggers'):
+                config.fileConfig(arguments.configfile)
 
-        if level:
-            if arguments.logging_level_qualnames:
-                qualnames = set(x.split('.')[0]
-                                for x in Logger.manager.loggerDict.keys()
-                                if x in arguments.logging_level_qualnames)
-            else:
-                qualnames = set(x.split('.')[0]
-                                for x in Logger.manager.loggerDict.keys())
+            if level:
+                if arguments.logging_level_qualnames:
+                    qualnames = set(x.split('.')[0]
+                                    for x in Logger.manager.loggerDict.keys()
+                                    if x in arguments.logging_level_qualnames)
+                else:
+                    qualnames = set(x.split('.')[0]
+                                    for x in Logger.manager.loggerDict.keys())
 
-            for qualname in qualnames:
-                getLogger(qualname).setLevel(level)
+                for qualname in qualnames:
+                    getLogger(qualname).setLevel(level)
 
 
 @Configuration.add('config')
