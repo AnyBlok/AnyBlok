@@ -115,8 +115,8 @@ class TestInheritPolymorphic(DBTestCase):
 
     def check_registry(self, Model):
         t = Model.insert(name="test", other="other")
-        # Here we do not understand yet why polymorphic criteria
-        # is not automatically use on query
+        # Here we do not understand yet why polymorphic criteria is not
+        # automatically use on query
         t2 = Model.query().filter(
             Model.type_entity == Model.__mapper__.polymorphic_identity).first()
         self.assertEqual(t2, t)
