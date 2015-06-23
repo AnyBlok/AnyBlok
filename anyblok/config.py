@@ -341,14 +341,15 @@ class Configuration:
             raise ConfigurationException(
                 'Positional arguments are forbidden')
 
-        cparser = None
-        if arguments.configfile:
-            cparser = ConfigParser()
-            cparser.read(arguments.configfile)
-            for section in parts_to_load + ('AnyBlok',):
-                if cparser.has_section(section):
-                    for opt, value in cparser.items(section):
-                        cls.configuration[opt] = value
+        if 'configfile' in dict(arguments._get_kwargs()).keys():
+            cparser = None
+            if arguments.configfile:
+                cparser = ConfigParser()
+                cparser.read(arguments.configfile)
+                for section in parts_to_load + ('AnyBlok',):
+                    if cparser.has_section(section):
+                        for opt, value in cparser.items(section):
+                            cls.configuration[opt] = value
 
         for opt, value in arguments._get_kwargs():
             if opt not in cls.configuration or value:
