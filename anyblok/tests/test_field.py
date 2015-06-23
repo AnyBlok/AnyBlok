@@ -69,6 +69,7 @@ class TestField2(DBTestCase):
             def fdel(self):
                 self.first_name = self.last_name = None
 
+            @classmethod
             def fexpr(cls):
                 return func.concat(cls.first_name, ' ', cls.last_name)
 

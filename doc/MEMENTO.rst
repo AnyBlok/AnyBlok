@@ -603,8 +603,8 @@ Parameters of the ``Many2Many`` field:
 +------------------------+----------------------------------------------------+
 
 .. note::
-    
-    Since 0.4.0, when the relationnal table is created by AnyBlok, the 
+
+    Since 0.4.0, when the relationnal table is created by AnyBlok, the
     m2m_columns becomme foreign keys
 
 
@@ -623,10 +623,22 @@ SQL column.::
     class MyModel:
 
         id = Integer(primary_key=True)
-        myid = Function(fget='get_my_id')
+        first_name = String()
+        last_name = String()
+        name = Function(fget='fget', fset='fset', fdel='fdel', fexpr='fexpr')
 
-        def get_my_id(self):
-            return self.id
+        def fget(self):
+            return '{0} {1}'.format(self.first_name, self.last_name)
+
+        def fset(self, value):
+            self.first_name, self.last_name = value.split(' ', 1)
+
+        def fdel(self):
+            self.first_name = self.last_name = None
+
+        @classmethod
+        def fexpr(cls):
+            return func.concat(cls.first_name, ' ', cls.last_name)
 
 List of the ``Field`` type:
 
@@ -640,14 +652,31 @@ Parameters for ``Field.Function``
 | ``fget``          | name of the method to call to get the value of field::  |
 |                   |                                                         |
 |                   |   def fget(self):                                       |
-|                   |       return self.id                                    |
+|                   |       return '{0} {1}'.format(self.first_name,          |
+|                   |                               self.last_name)           |
 |                   |                                                         |
 +-------------------+---------------------------------------------------------+
-| ``model``         | The remote model                                        |
+| ``fset``          | name of the method to call to set the value of field::  |
+|                   |                                                         |
+|                   |   def fset(self):                                       |
+|                   |       self.first_name, self.last_name = value.split(' ',|
+|                   |                                                     1)  |
+|                   |                                                         |
 +-------------------+---------------------------------------------------------+
-| ``remote_column`` | The column name on the remote model, if no remote       |
-|                   | columns are given, the remote column will be the        |
-|                   | primary column of the remote model                      |
+| ``fdel``          | name of the method to call to del the value of field::  |
+|                   |                                                         |
+|                   |   def fdel(self):                                       |
+|                   |       self.first_name = self.last_name = None           |
+|                   |                                                         |
++-------------------+---------------------------------------------------------+
+| ``fexp``          | name of the class method to call to filter on the       |
+|                   | field::                                                 |
+|                   |                                                         |
+|                   |   @classmethod                                          |
+|                   |   def fexp(self):                                       |
+|                   |       return func.concat(cls.first_name, ' ',           |
+|                   |                          cls.last_name)                 |
+|                   |                                                         |
 +-------------------+---------------------------------------------------------+
 
 Mixin

@@ -105,6 +105,10 @@ class Function(Field):
         class Test:
             x = Function(fget='fget', fset='fset', fdel='fdel', fexp='fexpr')
 
+        ..warning::
+
+            fexp must be a classmethod
+
     """
 
     def update_properties(self, registry, namespace, fieldname, properties):
@@ -118,12 +122,9 @@ class Function(Field):
                         return None
 
             def function_method(model_self, *args, **kwargs):
-                if method == 'fexpr':
-                    return getattr(model_self, m)(model_self, *args, **kwargs)
-                elif method == 'fget':
-                    loaded_namespaces = model_self.registry.loaded_namespaces
+                if method == 'fget':
                     registry_name = model_self.__registry_name__
-                    if model_self is loaded_namespaces[registry_name]:
+                    if model_self is model_self.registry.get(registry_name):
                         return getattr(model_self, m)(model_self, *args,
                                                       **kwargs)
                     else:

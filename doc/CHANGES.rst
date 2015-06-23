@@ -12,6 +12,8 @@ CHANGELOG
 Future
 ------
 
+* [FIX] Field.Function, fexp is now a class method 
+
 0.4.0
 -----
 
