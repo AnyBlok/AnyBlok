@@ -111,41 +111,14 @@ def simple_subclass_poly_with_mixin():
             return mapper_args
 
 
-def simple_subclass_poly_with_mod():
-    @register(Model)
-    class MainModel:
-        id = Integer(primary_key=True)
-        type_entity = String(label="Entity type")
-        name = String()
-
-        @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
-            mapper_args.update({
-                'polymorphic_identity': 'main',
-                'polymorphic_on': properties['type_entity'],
-            })
-            return mapper_args
-
-    @register(Mixin)
-    class MixinName:
-        other = String()
-
-    @register(Model.MainModel, tablename=Model.MainModel)
-    class Test(Model.MainModel, Mixin.MixinName):
-        @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
-            mapper_args.update({
-                'polymorphic_identity': 'sub',
-            })
-            return mapper_args
-
-
 class TestInheritPolymorphic(DBTestCase):
 
     def check_registry(self, Model):
         t = Model.insert(name="test", other="other")
-        # Here we do not understand yet why polymorphic criteria is not automatically use on query
-        t2 = Model.query().filter(Model.type_entity == Model.__mapper__.polymorphic_identity).first()
+        # Here we do not understand yet why polymorphic criteria
+        # is not automatically use on query
+        t2 = Model.query().filter(
+            Model.type_entity == Model.__mapper__.polymorphic_identity).first()
         self.assertEqual(t2, t)
 
     def test_simple_subclass_poly(self):
