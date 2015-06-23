@@ -37,6 +37,10 @@ class MockArgParseArguments:
         if configfile:
             cfile = join('/'.join(__file__.split('/')[:-1]), configfile)
             self.configfile = cfile
+            if kwargs is None:
+                kwargs = {}
+
+            kwargs['configfile'] = configfile
         else:
             self.configfile = None
         self.args = args
@@ -323,6 +327,7 @@ class TestConfiguration(TestCase):
             'db_password': '',
             'db_host': 'localhost',
             'db_port': '',
+            'configfile': 'mock_configuration_file.cfg',
         })
 
     def test_parse_option_kwargs(self):
