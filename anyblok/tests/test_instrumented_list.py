@@ -13,14 +13,18 @@ from anyblok.relationship import Many2Many, One2Many, Many2One
 class TestInstrumentedList(DBTestCase):
 
     def test_all_method_on_query_return_InstrumentedList(self):
-
-        def dummy():
-            pass
-
-        registry = self.init_registry(dummy)
+        registry = self.init_registry(None)
         check = isinstance(registry.System.Blok.query().all(),
                            registry.InstrumentedList)
-        self.assertEqual(check, True)
+        self.assertTrue(check)
+
+    def test_empty_result_on_query_return_InstrumentedList(self):
+        registry = self.init_registry(None)
+        Blok = registry.System.Blok
+        bloks = Blok.query().filter(Blok.name == 'Unexisting blok').all()
+        check = isinstance(bloks, registry.InstrumentedList)
+        self.assertTrue(check)
+        self.assertEqual(bloks.name, [])
 
     def test_M2M_with_InstrumentedList(self):
 
@@ -45,9 +49,9 @@ class TestInstrumentedList(DBTestCase):
         t.tests2.append(t2)
         self.assertEqual(t2.tests, [t])
         check = isinstance(t.tests2, registry.InstrumentedList)
-        self.assertEqual(check, True)
+        self.assertTrue(check)
         check = isinstance(t2.tests, registry.InstrumentedList)
-        self.assertEqual(check, True)
+        self.assertTrue(check)
 
     def test_O2M_is_InstrumentedList(self):
 
@@ -75,7 +79,7 @@ class TestInstrumentedList(DBTestCase):
         t2 = registry.Test2.insert()
         t2.tests.append(t)
         check = isinstance(t2.tests, registry.InstrumentedList)
-        self.assertEqual(check, True)
+        self.assertTrue(check)
 
     def test_O2M_linked_is_InstrumentedList(self):
 
@@ -99,7 +103,7 @@ class TestInstrumentedList(DBTestCase):
         t2 = registry.Test2.insert()
         t.tests2.append(t2)
         check = isinstance(t.tests2, registry.InstrumentedList)
-        self.assertEqual(check, True)
+        self.assertTrue(check)
 
     def test_call_column(self):
 
@@ -150,4 +154,4 @@ class TestInstrumentedList(DBTestCase):
                     return True
 
         registry = self.init_registry(inherit)
-        self.assertEqual(registry.System.Blok.query().all().foo(), True)
+        self.assertTrue(registry.System.Blok.query().all().foo())

@@ -154,6 +154,22 @@ def cron_worker(description, version, configuration_groups):
         registry.System.Cron.run()
 
 
+def registry2rst(description, version, configuration_groups):
+    """ Execute a script or open an interpreter
+
+    :param description: description of configuration
+    :param version: version of script for argparse
+    :param configuration_groups: list configuration groupe to load
+    """
+    registry = anyblok.start(description, version,
+                             configuration_groups=configuration_groups)
+    if registry:
+        registry.commit()
+        doc = registry.Documentation()
+        doc.create()
+        print(doc.toRST())
+
+
 def sqlschema(description, version, configuration_groups):
     """ Create a Table model schema of the registry
 
@@ -369,3 +385,9 @@ def anyblok_cron_worker():
     from anyblok.release import version
     cron_worker('AnyBlok interpreter', version,
                 ['config', 'database', 'logging'])
+
+
+def anyblok2rst():
+    from anyblok.release import version
+    registry2rst('AnyBlok extract rst documentation', version,
+                 ['config', 'database', 'logging'])

@@ -98,6 +98,9 @@ class Query(query.Query):
 
     def dictall(self):
         vals = self.all()
+        if not vals:
+            return []
+
         field2get = [x['name'] for x in self.column_descriptions
                      if not hasattr(x['type'], '__table__')]
         if field2get:
