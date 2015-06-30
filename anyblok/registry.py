@@ -15,7 +15,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import ProgrammingError, OperationalError
 
-from anyblok import Declarations
 from .config import Configuration
 from .imp import ImportManager
 from .blok import BlokManager
@@ -440,18 +439,10 @@ class Registry:
             FROM system_blok
             WHERE system_blok.state in ('%s')
             ORDER BY system_blok.order""" % "', '".join(states)
-        if self.Session:
+        try:
             res = self.execute(query).fetchall()
-        else:
-            conn = None
-            try:
-                conn = self.engine.connect()
-                res = conn.execute(query).fetchall()
-            except (ProgrammingError, OperationalError):
-                pass
-            finally:
-                if conn:
-                    conn.close()
+        except (ProgrammingError, OperationalError):
+            pass
 
         if res:
             return [x[0] for x in res]
@@ -478,6 +469,10 @@ class Registry:
         for blok in RegistryManager.get_needed_bloks():
             if blok not in (toinstall + loaded):
                 toinstall.append(blok)
+
+        if toinstall and self.noautomigration:
+            raise RegistryManager("Install module is forbidden with "
+                                  "no auto migration mode")
 
         return toinstall
 
@@ -613,6 +608,15 @@ class Registry:
             if removed not in self.removed:
                 self.removed.append(removed)
 
+    def load_bloks(self, bloks, toinstall, toload, required=True):
+        for blok in bloks:
+            if required:
+                if not self.load_blok(blok, toinstall, toload):
+                    raise RegistryManagerException(
+                        "Required blok %r not found" % blok)
+            elif toinstall or blok in toload:
+                self.load_blok(blok, toinstall, toload)
+
     def load_blok(self, blok, toinstall, toload):
         """ load on blok, load all the core and all the entry for one blok
 
@@ -626,14 +630,8 @@ class Registry:
             return False
 
         b = BlokManager.bloks[blok](self)
-        for required in b.required + b.conditional:
-            if not self.load_blok(required, toinstall, toload):
-                raise RegistryManagerException(
-                    "Required blok not found")
-
-        for optional in b.optional:
-            if toinstall or optional in toload:
-                self.load_blok(optional, toinstall, toload)
+        self.load_bloks(b.required + b.conditional, toinstall, toload)
+        self.load_bloks(b.optional, toinstall, toload, required=False)
 
         for core in RegistryManager.declared_cores:
             self.load_core(blok, core)
@@ -648,32 +646,34 @@ class Registry:
         logger.info("Blok %r loaded" % blok)
         return True
 
+    def check_dependencies(self, blok, dependencies_to_install, toinstall):
+        if blok in dependencies_to_install:
+            return True
+
+        if blok not in BlokManager.bloks:
+            return False
+
+        b = BlokManager.bloks[blok](self)
+        for required in b.required:
+            if not self.check_dependencies(required, dependencies_to_install,
+                                           toinstall):
+                raise RegistryManagerException(
+                    "%r: Required blok not found %r" % (blok, required))
+
+        for optional in b.optional:
+            self.check_dependencies(
+                optional, dependencies_to_install, toinstall)
+
+        if blok not in toinstall:
+            dependencies_to_install.append(blok)
+
+        return True
+
     def update_to_install_blok_dependencies_state(self, toinstall):
         dependencies_to_install = []
 
-        def check_dependencies(blok):
-            if blok in dependencies_to_install:
-                return True
-
-            if blok not in BlokManager.bloks:
-                return False
-
-            b = BlokManager.bloks[blok](self)
-            for required in b.required:
-                if not check_dependencies(required):
-                    raise RegistryManagerException(
-                        "%r: Required blok not found %r" % (blok, required))
-
-            for optional in b.optional:
-                check_dependencies(optional)
-
-            if blok not in toinstall:
-                dependencies_to_install.append(blok)
-
-            return True
-
         for blok in toinstall:
-            check_dependencies(blok)
+            self.check_dependencies(blok, dependencies_to_install, toinstall)
 
         if dependencies_to_install:
             query = """
@@ -682,22 +682,53 @@ class Registry:
                 where name in ('%s')
                 and state = 'uninstalled'""" % "', '".join(
                 dependencies_to_install)
-            if self.Session:
+            try:
                 self.execute(query)
-            else:
-                conn = None
-                try:
-                    conn = self.engine.connect()
-                    conn.execute(query)
-                except (ProgrammingError, OperationalError):
-                    pass
-                finally:
-                    if conn:
-                        conn.close()
+            except (ProgrammingError, OperationalError):
+                pass
 
             return True
 
         return False
+
+    def execute(self, *args, **kwargs):
+        if self.Session:
+            return self.session.execute(*args, **kwargs)
+        else:
+            conn = None
+            try:
+                conn = self.engine.connect()
+                return conn.execute(*args, **kwargs)
+            finally:
+                if conn:
+                    conn.close()
+
+    def get_namespace(self, parent, child):
+        if hasattr(parent, child) and getattr(parent, child):
+            return getattr(parent, child)
+
+        tmpns = type(child, tuple(), {'children_namespaces': {}})
+        if hasattr(parent, 'children_namespaces'):
+            parent.children_namespaces[child] = tmpns
+
+        setattr(parent, child, tmpns)
+        return tmpns
+
+    def final_namespace(self, parent, child, base):
+        if hasattr(parent, child) and getattr(parent, child):
+            other_base = self.get_namespace(parent, child)
+            other_base = other_base.children_namespaces.copy()
+            for ns, cns in other_base.items():
+                setattr(base, ns, cns)
+
+            if hasattr(parent, 'children_namespaces'):
+                if child in parent.children_namespaces:
+                    parent.children_namespaces[child] = base
+
+        elif hasattr(parent, 'children_namespaces'):
+            parent.children_namespaces[child] = base
+
+        setattr(parent, child, base)
 
     def add_in_registry(self, namespace, base):
         """ Add a class as an attribute of the registry
@@ -707,38 +738,11 @@ class Registry:
         """
         namespace = namespace.split('.')[1:]
 
-        def final_namespace(parent, child):
-            if hasattr(parent, child) and getattr(parent, child):
-                other_base = get_namespace(parent, child)
-                other_base = other_base.children_namespaces.copy()
-                for ns, cns in other_base.items():
-                    setattr(base, ns, cns)
-
-                if hasattr(parent, 'children_namespaces'):
-                    if child in parent.children_namespaces:
-                        parent.children_namespaces[child] = base
-
-            elif hasattr(parent, 'children_namespaces'):
-                parent.children_namespaces[child] = base
-
-            setattr(parent, child, base)
-
-        def get_namespace(parent, child):
-            if hasattr(parent, child) and getattr(parent, child):
-                return getattr(parent, child)
-
-            tmpns = type(child, tuple(), {'children_namespaces': {}})
-            if hasattr(parent, 'children_namespaces'):
-                parent.children_namespaces[child] = tmpns
-
-            setattr(parent, child, tmpns)
-            return tmpns
-
         def update_namespaces(parent, namespaces):
             if len(namespaces) == 1:
-                final_namespace(parent, namespaces[0])
+                self.final_namespace(parent, namespaces[0], base)
             else:
-                new_parent = get_namespace(parent, namespaces[0])
+                new_parent = self.get_namespace(parent, namespaces[0])
                 update_namespaces(new_parent, namespaces[1:])
 
         update_namespaces(self, namespace)
@@ -793,14 +797,8 @@ class Registry:
             if self.update_to_install_blok_dependencies_state(toinstall):
                 toinstall = self.get_bloks_to_install(toload)
 
-            for blok in toload:
-                self.load_blok(blok, False, toload)
-
+            self.load_bloks(toload, False, toload)
             if toinstall:
-                if self.noautomigration:
-                    raise RegistryManager("Install module is forbidden with "
-                                          "no auto migration mode")
-
                 blok2install = toinstall[0]
                 self.load_blok(blok2install, True, toload)
 
@@ -808,12 +806,7 @@ class Registry:
             instrumentedlist_base += [list]
             self.InstrumentedList = type(
                 'InstrumentedList', tuple(instrumentedlist_base), {})
-
-            for entry in RegistryManager.declared_entries:
-                if entry in RegistryManager.callback_assemble_entries:
-                    logger.info('Assemble %r entry' % entry)
-                    RegistryManager.callback_assemble_entries[entry](self)
-
+            self.assemble_entries()
             if self.Session is None or self.must_recreate_session_factory():
                 self.create_session_factory()
             else:
@@ -869,6 +862,12 @@ class Registry:
         else:
             logger.warning("Blok %r has no %r directory" % (
                 blok2install, defaultTest))
+
+    def assemble_entries(self):
+        for entry in RegistryManager.declared_entries:
+            if entry in RegistryManager.callback_assemble_entries:
+                logger.info('Assemble %r entry' % entry)
+                RegistryManager.callback_assemble_entries[entry](self)
 
     def apply_model_schema_on_table(self):
         # replace the engine by the session.connection for bind attribute
@@ -977,6 +976,43 @@ class Registry:
         self.ini_var()
         self.load()
 
+    def get_bloks(self, blok, filter_states, filter_modes=None):
+        Blok = self.System.Blok
+        Association = Blok.Association
+        Blok2 = Blok.aliased()
+        if filter_modes is None:
+            filter_modes = Association.MODES.keys()
+
+        query = Blok.query()
+        query = query.join(Association, Association.blok == Blok.name)
+        query = query.join(Blok2, Association.linked_blok == Blok2.name)
+        query = query.filter(Blok2.name == blok)
+        query = query.filter(Blok.state.in_(filter_states))
+        query = query.filter(Association.mode.in_(filter_modes))
+        return query.all().name
+
+    def apply_state(self, blok_name, state, in_states):
+        """Apply the state of the blok name
+
+        :param blok_name: the name of the blok
+        :param state: the state to apply
+        :param in_states: the blok must be in this state
+        :exception: RegistryException
+        """
+        Blok = self.System.Blok
+        query = Blok.query().filter(Blok.name == blok_name)
+        blok = query.first()
+        if blok is None:
+            raise RegistryException(
+                "Blok %r not found in entry point declarations" %
+                blok_name)
+        if blok.state not in in_states:
+            raise RegistryException(
+                "Apply state %r is forbidden because the state %r of "
+                "blok %r is not one of %r" % (
+                    state, blok.state, blok_name, in_states))
+        query.update({Blok.state: state}, synchronize_session='fetch')
+
     @log(logger, withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):
         """ Upgrade the current registry
@@ -987,67 +1023,30 @@ class Registry:
         :exception: RegistryException
         """
         Blok = self.System.Blok
-        Association = Blok.Association
-        Blok2 = Blok.aliased()
-
-        def get_bloks(blok, filter_states, filter_modes=None):
-            if filter_modes is None:
-                filter_modes = Association.MODES.keys()
-
-            query = Blok.query()
-            query = query.join(Association, Association.blok == Blok.name)
-            query = query.join(Blok2, Association.linked_blok == Blok2.name)
-            query = query.filter(Blok2.name == blok)
-            query = query.filter(Blok.state.in_(filter_states))
-            query = query.filter(Association.mode.in_(filter_modes))
-            return query.all().name
-
-        def apply_state(blok_name, state, in_states):
-            query = Blok.query().filter(Blok.name == blok_name)
-            blok = query.first()
-            if blok is None:
-                raise RegistryException(
-                    "Blok %r not found in entry point declarations" %
-                    blok_name)
-            if blok.state not in in_states:
-                raise RegistryException(
-                    "Apply state %r is forbidden because the state %r of "
-                    "blok %r is not one of %r" % (
-                        state, blok.state, blok_name, in_states))
-            query.update({Blok.state: state}, synchronize_session='fetch')
 
         def upgrade_state_bloks(state):
-            if state == 'toinstall':
-                def wrap(bloks):
-                    for blok in bloks:
-                        apply_state(blok, state, ['uninstalled', state])
-
-            elif state == 'toupdate':
-                def wrap(bloks):
-                    for blok in bloks:
-                        apply_state(blok, state, ['installed', state])
-                        upgrade_state_bloks(state)(get_bloks(blok,
-                                                             ['installed']))
-
-            elif state == 'touninstall':
-                def wrap(bloks):
-                    for blok in bloks:
+            def wrap(bloks):
+                for blok in bloks:
+                    if state == 'toinstall':
+                        self.apply_state(blok, state, ['uninstalled', state])
+                    elif state == 'toupdate':
+                        self.apply_state(blok, state, ['installed', state])
+                        upgrade_state_bloks(state)(
+                            self.get_bloks(blok, ['installed']))
+                    elif state == 'touninstall':
                         if Blok.check_if_the_conditional_are_installed(blok):
                             raise RegistryException(
                                 "the blok %r can not be unistalled because "
                                 "this blok is a conditional blok and all the "
                                 "bloks in his conditional list are installed "
                                 "You must uninstall one of them" % blok)
-                        apply_state(blok, state, ['installed', state])
-                        upgrade_state_bloks(state)(get_bloks(blok, [
+                        self.apply_state(blok, state, ['installed', state])
+                        upgrade_state_bloks(state)(self.get_bloks(blok, [
                             'installed', 'toinstall', 'touninstall'],
                             filter_modes=['required', 'conditional']))
-                        upgrade_state_bloks('toupdate')(get_bloks(blok, [
+                        upgrade_state_bloks('toupdate')(self.get_bloks(blok, [
                             'installed', 'toinstall', 'touninstall'],
                             filter_modes=['optional']))
-
-            else:
-                raise Declarations.RegistryManager("Unknow state %r" % state)
 
             return wrap
 
