@@ -5,6 +5,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from base64 import b64encode
+
 from anyblok import Declarations
 from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty
@@ -300,7 +302,10 @@ class SqlMixin:
             elif field_value is None or type(field_property) == ColumnProperty:
                 # If value is None, then do not go any further whatever
                 # the column property tells you.
-                result[field] = field_value
+                if field_property.expression.type.python_type == bytes:
+                    result[field] = b64encode(field_value).decode("utf-8")
+                else:
+                    result[field] = field_value
             else:
                 # it is should be RelationshipProperty
                 if related_fields is None:
