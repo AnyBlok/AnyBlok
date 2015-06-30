@@ -70,6 +70,7 @@ setup(
             'anyblok_nose=anyblok.scripts:anyblok_nose',
             'anyblok_interpreter=anyblok.scripts:anyblok_interpreter',
             'anyblok_cron_worker=anyblok.scripts:anyblok_cron_worker',
+            'anyblok_doc=anyblok.scripts:anyblok2rst',
         ],
         'bloks': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',

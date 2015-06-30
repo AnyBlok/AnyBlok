@@ -25,6 +25,7 @@ class AnyBlokCore(Blok):
         from . import core  # noqa
         from . import system  # noqa
         from . import authorization  # noqa
+        from . import documentation  # noqa
 
     @classmethod
     def reload_declaration_module(cls, reload):
@@ -34,3 +35,5 @@ class AnyBlokCore(Blok):
         reload(system)
         from . import authorization
         reload(authorization)
+        from . import documentation
+        reload(documentation)
