@@ -40,6 +40,66 @@ class MigrationReport:
                                      "different, or this difference is "
                                      "forbidden in 'no auto migration' mode")
 
+    def init_add_column(self, diff):
+        self.raise_if_noautomigration()
+        _, _, table, column = diff
+        self.log_names.append('Add %s.%s' % (table, column.name))
+
+    def init_remove_constraint(self, diff):
+        self.raise_if_noautomigration()
+        _, constraint = diff
+        self.log_names.append('Drop constraint %s on %s' % (
+            constraint.name, constraint.table))
+
+    def init_remove_index(self, diff):
+        self.raise_if_noautomigration()
+        _, index = diff
+        self.log_names.append('Drop index %s on %s' % (index.name,
+                                                       index.table))
+
+    def init_add_fk(self, diff):
+        self.raise_if_noautomigration()
+        _, fk = diff
+        for column in fk.columns:
+            for fk_ in column.foreign_keys:
+                self.log_names.append('Add Foreign keys on %s.%s => %s' % (
+                    fk.table.name, column.name, fk_.target_fullname))
+
+    def init_remove_fk(self, diff):
+        self.raise_if_noautomigration()
+        _, fk = diff
+        for column in fk.columns:
+            for fk_ in column.foreign_keys:
+                self.log_names.append('Drop Foreign keys on %s.%s => %s' % (
+                    fk.table.name, column.name, fk_.target_fullname))
+
+    def init_add_constraint(self, diff):
+        self.raise_if_noautomigration()
+        _, constraint = diff
+        columns = [x.name for x in constraint.columns]
+        self.log_names.append('Add unique constraint on %s (%s)' % (
+            constraint.table.name, ', '.join(columns)))
+
+    def init_remove_column(self, diff):
+        column = diff[3]
+        msg = "Drop Column %s.%s" % (column.table.name,
+                                     column.name)
+        if column.nullable is False:
+            self.raise_if_noautomigration()
+            msg += " (not null)"
+            self.log_names.append(msg)
+            self.actions.append(
+                ('modify_nullable', None, column.table.name,
+                 column.name, {}, False, True))
+            return True
+
+        self.log_names.append(msg)
+
+    def init_remove_table(self, diff):
+        # No save remove table or column
+        # Remove table or column is
+        return True
+
     def __init__(self, migration, diffs):
         """ Initializer
 
@@ -51,78 +111,35 @@ class MigrationReport:
         self.logs = []
         self.actions = []
         self.diffs = diffs
-        log_names = []
+        self.log_names = []
+        mappers = {
+            'add_column': self.init_add_column,
+            'remove_constraint': self.init_remove_constraint,
+            'remove_index': self.init_remove_index,
+            'add_fk': self.init_add_fk,
+            'remove_fk': self.init_remove_fk,
+            'add_constraint': self.init_add_constraint,
+            'remove_column': self.init_remove_column,
+            'remove_table': self.init_remove_table,
+        }
         for diff in diffs:
             if isinstance(diff, list):
                 self.raise_if_noautomigration()
                 for change in diff:
                     _, _, table, column, _, _, _ = change
-                    log_names.append('Alter %s.%s' % (table, column))
+                    self.log_names.append('Alter %s.%s' % (table, column))
                     self.actions.append(change)
             else:
-                name = diff[0]
-                if name == 'add_column':
-                    self.raise_if_noautomigration()
-                    _, _, table, column = diff
-                    log_names.append('Add %s.%s' % (table, column.name))
-                elif name == 'remove_constraint':
-                    self.raise_if_noautomigration()
-                    _, constraint = diff
-                    log_names.append('Drop constraint %s on %s' % (
-                        constraint.name, constraint.table))
-                elif name == 'remove_index':
-                    self.raise_if_noautomigration()
-                    _, index = diff
-                    log_names.append('Drop index %s on %s' % (
-                        index.name, index.table))
-                elif name == 'add_fk':
-                    self.raise_if_noautomigration()
-                    _, fk = diff
-                    for column in fk.columns:
-                        for fk_ in column.foreign_keys:
-                            log_names.append(
-                                'Add Foreign keys on %s.%s => %s' % (
-                                    fk.table.name, column.name,
-                                    fk_.target_fullname))
-                elif name == 'remove_fk':
-                    self.raise_if_noautomigration()
-                    _, fk = diff
-                    for column in fk.columns:
-                        for fk_ in column.foreign_keys:
-                            log_names.append(
-                                'Drop Foreign keys on %s.%s => %s' % (
-                                    fk.table.name, column.name,
-                                    fk_.target_fullname))
-                elif name == 'add_constraint':
-                    self.raise_if_noautomigration()
-                    _, constraint = diff
-                    columns = [x.name for x in constraint.columns]
-                    log_names.append('Add unique constraint on %s (%s)' % (
-                        constraint.table.name, ', '.join(columns)))
-                elif name == 'remove_column':
-                    column = diff[3]
-                    msg = "Drop Column %s.%s" % (column.table.name,
-                                                 column.name)
-                    if column.nullable is False:
-                        self.raise_if_noautomigration()
-                        msg += " (not null)"
-                        log_names.append(msg)
-                        self.actions.append(
-                            ('modify_nullable', None, column.table.name,
-                             column.name, {}, False, True))
+                fnct = mappers.get(diff[0])
+                if fnct:
+                    if fnct(diff):
                         continue
-
-                    log_names.append(msg)
-                elif name == 'remove_table':
-                    # No save remove table or column
-                    # Remove table or column is
-                    continue
                 else:
                     print(diff)
 
                 self.actions.append(diff)
 
-        for log_name in log_names:
+        for log_name in self.log_names:
             if log_name and not self.log_has(log_name):
                 self.logs.append(log_name)
 
@@ -135,6 +152,56 @@ class MigrationReport:
         """
         return log in self.logs
 
+    def apply_change_add_column(self, action):
+        _, _, table, column = action
+        self.migration.table(table).column().add(column)
+
+    def apply_change_modify_nullable(self, action):
+        _, _, table, column, kwargs, oldvalue, newvalue = action
+        self.migration.table(table).column(column).alter(
+            nullable=newvalue, existing_nullable=oldvalue, **kwargs)
+
+    def apply_change_modify_type(self, action):
+        _, _, table, column, kwargs, oldvalue, newvalue = action
+        self.migration.table(table).column(column).alter(
+            type_=newvalue, existing_type=oldvalue, **kwargs)
+
+    def apply_change_modify_default(self, action):
+        _, _, table, column, kwargs, oldvalue, newvalue = action
+        self.migration.table(table).column(column).alter(
+            server_default=newvalue, existing_server_default=oldvalue,
+            **kwargs)
+
+    def apply_change_remove_constraint(self, action):
+        _, constraint = action
+        if constraint.__class__ is schema.UniqueConstraint:
+            table = self.migration.table(constraint.table)
+            table.unique(name=constraint.name).drop()
+
+    def apply_change_remove_index(self, action):
+        _, index = action
+        if not index.unique:
+            table = self.migration.table(index.table.name)
+            table.index(name=index.name).drop()
+
+    def apply_change_add_fk(self, action):
+        _, fk = action
+        t = self.migration.table(fk.table.name)
+        for column in fk.columns:
+            for fk_ in column.foreign_keys:
+                t.column(name=column.name).foreign_key().add(fk_.column)
+
+    def apply_change_remove_fk(self, action):
+        _, fk = action
+        t = self.migration.table(fk.table.name)
+        for column in fk.columns:
+            t.column(name=column.name).foreign_key().drop()
+
+    def apply_change_add_constraint(self, action):
+        _, constraint = action
+        table = self.migration.table(constraint.table.name)
+        table.unique(name=constraint.name).add(*constraint.columns)
+
     def apply_change(self):
         """ Apply the migration
 
@@ -144,49 +211,22 @@ class MigrationReport:
         for log in self.logs:
             logger.info(log)
 
+        mappers = {
+            'add_column': self.apply_change_add_column,
+            'modify_nullable': self.apply_change_modify_nullable,
+            'modify_type': self.apply_change_modify_type,
+            'modify_default': self.apply_change_modify_default,
+            'add_fk': self.apply_change_add_fk,
+            'add_constraint': self.apply_change_add_constraint,
+            'remove_constraint': self.apply_change_remove_constraint,
+            'remove_index': self.apply_change_remove_index,
+            'remove_fk': self.apply_change_remove_fk,
+        }
+
         for action in self.actions:
-            if action[0] == 'add_column':
-                _, _, table, column = action
-                self.migration.table(table).column().add(column)
-            elif action[0] == 'modify_nullable':
-                _, _, table, column, kwargs, oldvalue, newvalue = action
-                self.migration.table(table).column(column).alter(
-                    nullable=newvalue, existing_nullable=oldvalue, **kwargs)
-            elif action[0] == 'modify_type':
-                _, _, table, column, kwargs, oldvalue, newvalue = action
-                self.migration.table(table).column(column).alter(
-                    type_=newvalue, existing_type=oldvalue, **kwargs)
-            elif action[0] == 'modify_default':
-                _, _, table, column, kwargs, oldvalue, newvalue = action
-                self.migration.table(table).column(column).alter(
-                    server_default=newvalue, existing_server_default=oldvalue,
-                    **kwargs)
-            elif action[0] == 'remove_constraint':
-                _, constraint = action
-                if constraint.__class__ is schema.UniqueConstraint:
-                    table = self.migration.table(constraint.table)
-                    table.unique(name=constraint.name).drop()
-            elif action[0] == 'remove_index':
-                _, index = action
-                if not index.unique:
-                    table = self.migration.table(index.table.name)
-                    table.index(name=index.name).drop()
-            elif action[0] == 'add_fk':
-                _, fk = action
-                t = self.migration.table(fk.table.name)
-                for column in fk.columns:
-                    for fk_ in column.foreign_keys:
-                        t.column(name=column.name).foreign_key().add(
-                            fk_.column)
-            elif action[0] == 'remove_fk':
-                _, fk = action
-                t = self.migration.table(fk.table.name)
-                for column in fk.columns:
-                    t.column(name=column.name).foreign_key().drop()
-            elif action[0] == 'add_constraint':
-                _, constraint = action
-                table = self.migration.table(constraint.table.name)
-                table.unique(name=constraint.name).add(*constraint.columns)
+            fnct = mappers.get(action[0])
+            if fnct:
+                fnct(action)
 
 
 class MigrationConstraintForeignKey:
@@ -269,6 +309,20 @@ class MigrationColumn:
                 raise MigrationException(
                     "No column %r found on %r" % (name, self.table.name))
 
+    def set_formated_value(self, column, val):
+        if column.default.is_scalar:
+            # TODO chech callable, sequence and other
+            if isinstance(val, bool):
+                return " SET %(column)s = '%(value)s'"
+            elif isinstance(val, int):
+                return " SET %(column)s = %(value)d"
+            elif isinstance(val, float):
+                return " SET %(column)s = %(value)f"
+            else:
+                return " SET %(column)s = '%(value)s'"
+        else:
+            return " SET %(column)s = '%(value)s'"
+
     def add(self, column):
         """ Add a new column
 
@@ -291,19 +345,7 @@ class MigrationColumn:
             vals = {'table': self.table.name,
                     'column': column.name,
                     'value': val}
-            if column.default.is_scalar:
-                if isinstance(val, bool):
-                    query += " SET %(column)s = '%(value)s'"
-                elif isinstance(val, int):
-                    query += " SET %(column)s = %(value)d"
-                elif isinstance(val, float):
-                    query += " SET %(column)s = %(value)f"
-                else:
-                    query += " SET %(column)s = '%(value)s'"
-            # TODO chech callable, sequence and other
-            else:
-                query += " SET %(column)s = '%(value)s'"
-
+            query += self.set_formated_value(column, val)
             query += " WHERE %(column)s is null"
             query = query % vals
             self.table.migration.conn.execute(query)
