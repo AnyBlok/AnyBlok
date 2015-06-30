@@ -120,6 +120,38 @@ class BlokManager:
         cls.auto_install = []
 
     @classmethod
+    def get_need_blok(cls, blok):
+        if cls.has(blok):
+            return True
+
+        if blok not in cls.bloks:
+            return False
+
+        for required in cls.bloks[blok].required:
+            if not cls.get_need_blok(required):
+                raise BlokManagerException(
+                    "Not %s required bloks found" % required)
+
+        for optional in cls.bloks[blok].optional:
+            cls.get_need_blok(optional)
+
+        cls.ordered_bloks.append(blok)
+        EnvironmentManager.set('current_blok', blok)
+
+        if not ImportManager.has(blok):
+            # Import only if not exist don't reload here
+            mod = ImportManager.add(blok)
+            mod.imports()
+        else:
+            mod = ImportManager.get(blok)
+            mod.reload()
+
+        if cls.bloks[blok].autoinstall:
+            cls.auto_install.append(blok)
+
+        return True
+
+    @classmethod
     @log(logger)
     def load(cls, entry_points=('bloks',)):
         """ Load all the bloks and import them
@@ -156,41 +188,10 @@ class BlokManager:
         cls.ordered_bloks = []
         bloks.sort()
 
-        def get_need_blok(blok):
-            if cls.has(blok):
-                return True
-
-            if blok not in cls.bloks:
-                return False
-
-            for required in cls.bloks[blok].required:
-                if not get_need_blok(required):
-                    raise BlokManagerException(
-                        "Not %s required bloks found" % required)
-
-            for optional in cls.bloks[blok].optional:
-                get_need_blok(optional)
-
-            cls.ordered_bloks.append(blok)
-            EnvironmentManager.set('current_blok', blok)
-
-            if not ImportManager.has(blok):
-                # Import only if not exist don't reload here
-                mod = ImportManager.add(blok)
-                mod.imports()
-            else:
-                mod = ImportManager.get(blok)
-                mod.reload()
-
-            if cls.bloks[blok].autoinstall:
-                cls.auto_install.append(blok)
-
-            return True
-
         try:
             while bloks:
                 blok = bloks.pop(0)[1]
-                get_need_blok(blok)
+                cls.get_need_blok(blok)
 
         finally:
             EnvironmentManager.set('current_blok', None)
