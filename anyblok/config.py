@@ -51,6 +51,19 @@ class Configuration:
     configuration = {}
 
     @classmethod
+    def init_groups_for(cls, group, part, label):
+        if part not in cls.groups:
+            cls.groups[part] = {group: []}
+        elif group not in cls.groups[part]:
+            cls.groups[part][group] = []
+
+        if label:
+            if part not in cls.labels:
+                cls.labels[part] = {group: label}
+            else:
+                cls.labels[part][group] = label
+
+    @classmethod
     def add(cls, group, part='bloks', label=None, function_=None):
         """ Add a function in a part and a group.
 
@@ -88,17 +101,7 @@ class Configuration:
             group are put in group parser
         :param function_: function to add
         """
-        if part not in cls.groups:
-            cls.groups[part] = {group: []}
-        elif group not in cls.groups[part]:
-            cls.groups[part][group] = []
-
-        if label:
-            if part not in cls.labels:
-                cls.labels[part] = {group: label}
-            else:
-                cls.labels[part][group] = label
-
+        cls.init_groups_for(group, part, label)
         if function_:
             if function_ not in cls.groups[part][group]:
                 cls.groups[part][group].append(function_)
@@ -239,19 +242,12 @@ class Configuration:
         :rtype: SqlAlchemy URL
         :exception: ConfigurationException
         """
-        drivername = username = password = host = port = database = None
-        if cls.configuration.get('db_driver_name'):
-            drivername = cls.configuration['db_driver_name']
-        if cls.configuration.get('db_user_name'):
-            username = cls.configuration['db_user_name']
-        if cls.configuration.get('db_password'):
-            password = cls.configuration['db_password']
-        if cls.configuration.get('db_host'):
-            host = cls.configuration['db_host']
-        if cls.configuration.get('db_port'):
-            port = cls.configuration['db_port']
-        if cls.configuration.get('db_name'):
-            database = cls.configuration['db_name']
+        drivername = cls.configuration.get('db_driver_name', None)
+        username = cls.configuration.get('db_user_name', None)
+        password = cls.configuration.get('db_password', None)
+        host = cls.configuration.get('db_host', None)
+        port = cls.configuration.get('db_port', None)
+        database = cls.configuration.get('db_name', None)
 
         if drivername is None:
             raise ConfigurationException('No Drivername defined')
@@ -335,63 +331,67 @@ class Configuration:
                 function(g, cls.configuration)
 
     @classmethod
+    def initialize_logging(cls, arguments, cparser):
+        level = {
+            'NOTSET': NOTSET,
+            'DEBUG': DEBUG,
+            'INFO': INFO,
+            'WARNING': WARNING,
+            'ERROR': ERROR,
+            'CRITICAL': CRITICAL
+        }.get(arguments.logging_level)
+
+        if arguments.logging_configfile:
+            config.fileConfig(arguments.logging_configfile)
+        elif arguments.json_logging_configfile:
+            with open(arguments.json_logging_configfile, 'rt') as f:
+                configfile = json.load(f.read())
+                config.dictConfig(configfile)
+        elif arguments.yaml_logging_configfile:
+            with open(arguments.yaml_logging_configfile, 'rt') as f:
+                configfile = yaml.load(f.read())
+                config.dictConfig(configfile)
+        elif cparser and cparser.has_section('loggers'):
+            config.fileConfig(arguments.configfile)
+
+        if level:
+            basicConfig(level=level)
+            if arguments.logging_level_qualnames:
+                qualnames = set(x.split('.')[0]
+                                for x in Logger.manager.loggerDict.keys()
+                                if x in arguments.logging_level_qualnames)
+            else:
+                qualnames = set(x.split('.')[0]
+                                for x in Logger.manager.loggerDict.keys())
+
+            for qualname in qualnames:
+                getLogger(qualname).setLevel(level)
+
+    @classmethod
     def parse_options(cls, arguments, parts_to_load):
 
         if arguments._get_args():
             raise ConfigurationException(
                 'Positional arguments are forbidden')
 
+        cparser = None
         if 'configfile' in dict(arguments._get_kwargs()).keys():
-            cparser = None
             if arguments.configfile:
                 cparser = ConfigParser()
                 cparser.read(arguments.configfile)
-                for section in parts_to_load + ('AnyBlok',):
-                    if cparser.has_section(section):
-                        for opt, value in cparser.items(section):
-                            cls.configuration[opt] = value
+                sections = [y for x in parts_to_load + ('AnyBlok',)
+                            for y in cparser.items(x)
+                            if cparser.has_section(x)]
+
+                for opt, value in sections:
+                    cls.configuration[opt] = value
 
         for opt, value in arguments._get_kwargs():
             if opt not in cls.configuration or value:
                 cls.configuration[opt] = value
 
         if 'logging_level' in dict(arguments._get_kwargs()).keys():
-            level = {
-                'NOTSET': NOTSET,
-                'DEBUG': DEBUG,
-                'INFO': INFO,
-                'WARNING': WARNING,
-                'ERROR': ERROR,
-                'CRITICAL': CRITICAL
-            }.get(arguments.logging_level)
-
-            if level:
-                basicConfig(level=level)
-
-            if arguments.logging_configfile:
-                config.fileConfig(arguments.logging_configfile)
-            elif arguments.json_logging_configfile:
-                with open(arguments.json_logging_configfile, 'rt') as f:
-                    configfile = json.load(f.read())
-                    config.dictConfig(configfile)
-            elif arguments.yaml_logging_configfile:
-                with open(arguments.yaml_logging_configfile, 'rt') as f:
-                    configfile = yaml.load(f.read())
-                    config.dictConfig(configfile)
-            elif cparser and cparser.has_section('loggers'):
-                config.fileConfig(arguments.configfile)
-
-            if level:
-                if arguments.logging_level_qualnames:
-                    qualnames = set(x.split('.')[0]
-                                    for x in Logger.manager.loggerDict.keys()
-                                    if x in arguments.logging_level_qualnames)
-                else:
-                    qualnames = set(x.split('.')[0]
-                                    for x in Logger.manager.loggerDict.keys())
-
-                for qualname in qualnames:
-                    getLogger(qualname).setLevel(level)
+            cls.initialize_logging(arguments, cparser)
 
 
 @Configuration.add('config')
