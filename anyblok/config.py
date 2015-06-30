@@ -247,6 +247,7 @@ class Configuration:
         password = cls.configuration.get('db_password', None)
         host = cls.configuration.get('db_host', None)
         port = cls.configuration.get('db_port', None)
+        port = int(port) if port else None
         database = cls.configuration.get('db_name', None)
 
         if drivername is None:
@@ -380,8 +381,8 @@ class Configuration:
                 cparser = ConfigParser()
                 cparser.read(arguments.configfile)
                 sections = [y for x in parts_to_load + ('AnyBlok',)
-                            for y in cparser.items(x)
-                            if cparser.has_section(x)]
+                            if cparser.has_section(x)
+                            for y in cparser.items(x)]
 
                 for opt, value in sections:
                     cls.configuration[opt] = value
