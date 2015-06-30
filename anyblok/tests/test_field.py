@@ -10,8 +10,8 @@ from anyblok.field import Field, FieldException, Function
 from anyblok.column import Integer, String
 from anyblok import Declarations
 from sqlalchemy import func
-from unittest import skipIf
-import sqlalchemy
+
+
 Model = Declarations.Model
 register = Declarations.register
 
@@ -81,20 +81,39 @@ class TestField2(DBTestCase):
         t = registry.Test.query().first()
         self.assertEqual(t.name, 'Jean-Sebastien SUZANNE')
 
-    @skipIf(sqlalchemy.__version__ < "1.0.6",
-            "https://bitbucket.org/zzzeek/sqlalchemy/issue/3228")
     def test_field_function_fset(self):
-        registry = self.init_registry(self.define_field_function)
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                _name = String()
+                name = Function(fget='fget', fset='fset', fdel='fdel',
+                                fexpr='fexpr')
+
+                def fget(self):
+                    return self._name
+
+                def fset(self, value):
+                    self._name = value
+
+                def fdel(self):
+                    self._name = None
+
+                @classmethod
+                def fexpr(cls):
+                    return cls._name
+
+        registry = self.init_registry(add_in_registry)
         t = registry.Test.insert(name='Jean-Sebastien SUZANNE')
-        self.assertEqual(t.first_name, 'Jean-Sebastien')
-        self.assertEqual(t.last_name, 'SUZANNE')
+        self.assertEqual(t._name, 'Jean-Sebastien SUZANNE')
         t = registry.Test.query().first()
         t.name = 'Mister ANYBLOK'
-        self.assertEqual(t.first_name, 'Mister')
-        self.assertEqual(t.last_name, 'ANYBLOK')
-        t.update({'name': 'Jean-Sebastien SUZANNE'})
-        self.assertEqual(t.first_name, 'Mister')
-        self.assertEqual(t.last_name, 'ANYBLOK')
+        self.assertEqual(t._name, 'Mister ANYBLOK')
+        t.update({registry.Test.name: 'Jean-Sebastien SUZANNE'})
+        self.assertEqual(t._name, 'Jean-Sebastien SUZANNE')
 
     def test_field_function_fdel(self):
         registry = self.init_registry(self.define_field_function)
