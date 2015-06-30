@@ -251,6 +251,17 @@ class Many2One(RelationShip):
 
         self.column_names = cnames
 
+    def update_local_and_remote_columns_names(self, registry, namespace,
+                                              fieldname, properties,
+                                              remote_properties):
+        if self.remote_columns is None:
+            self.remote_columns = self.find_primary_key(remote_properties)
+
+        self.kwargs['info']['remote_columns'] = self.remote_columns
+
+        if self.column_names is None:
+            self.find_foreign_key(registry, namespace, fieldname, properties)
+
     def update_properties(self, registry, namespace, fieldname, properties):
         """ Create the column which has the foreign key if the column doesn't
         exist
@@ -265,14 +276,8 @@ class Many2One(RelationShip):
         remote_table = self.get_tablename(registry)
         remote_properties = registry.loaded_namespaces_first_step.get(
             self.get_registry_name())
-
-        if self.remote_columns is None:
-            self.remote_columns = self.find_primary_key(remote_properties)
-
-        self.kwargs['info']['remote_columns'] = self.remote_columns
-
-        if self.column_names is None:
-            self.find_foreign_key(registry, namespace, fieldname, properties)
+        self.update_local_and_remote_columns_names(
+            registry, namespace, fieldname, properties, remote_properties)
 
         if fieldname in self.column_names:
             raise FieldException("The column_names and the fieldname %r are "
@@ -292,18 +297,8 @@ class Many2One(RelationShip):
         ref_cols = []
         for cname in self.column_names:
             if cname not in self_properties:
-                if len(remote_types) == 1:
-                    rc, remote_type = list(remote_types.items())[0]
-                    foreign_key = '%s.%s' % (remote_table, rc)
-                else:
-                    rc = cname[len(remote_table) + 1:]
-                    if rc in remote_types:
-                        remote_type = remote_types[rc]
-                        foreign_key = '%s.%s' % (remote_table, rc)
-                    else:
-                        raise FieldException("Can not create the local "
-                                             "column %r" % cname)
-
+                remote_type, foreign_key = self.get_column_information(
+                    cname, remote_types, remote_table)
                 add_fksc = True
                 self.create_column(cname, remote_type, foreign_key, properties)
                 col_names.append(cname)
@@ -322,6 +317,21 @@ class Many2One(RelationShip):
         if (len(self.column_names) > 1 or add_fksc) and col_names and ref_cols:
             properties['add_in_table_args'].append(
                 ForeignKeyConstraint(col_names, ref_cols))
+
+    def get_column_information(self, cname, remote_types, remote_table):
+        if len(remote_types) == 1:
+            rc, remote_type = list(remote_types.items())[0]
+            foreign_key = '%s.%s' % (remote_table, rc)
+        else:
+            rc = cname[len(remote_table) + 1:]
+            if rc in remote_types:
+                remote_type = remote_types[rc]
+                foreign_key = '%s.%s' % (remote_table, rc)
+            else:
+                raise FieldException("Can not create the local "
+                                     "column %r" % cname)
+
+        return remote_type, foreign_key
 
     def create_column(self, cname, remote_type, foreign_key, properties):
 
@@ -447,41 +457,30 @@ class Many2Many(RelationShip):
     def __init__(self, **kwargs):
         super(Many2Many, self).__init__(**kwargs)
 
-        self.join_table = None
-        if 'join_table' in kwargs:
-            self.join_table = self.kwargs.pop('join_table')
+        self.join_table = self.kwargs.pop('join_table', None)
+        self.remote_columns = self.kwargs.pop('remote_columns', None)
+        if self.remote_columns and not isinstance(self.remote_columns,
+                                                  (list, tuple)):
+            self.remote_columns = [self.remote_columns]
+        self.kwargs['info']['remote_columns'] = self.remote_columns
+        self.m2m_remote_columns = self.kwargs.pop('m2m_remote_columns', None)
+        if self.m2m_remote_columns and not isinstance(self.m2m_remote_columns,
+                                                      (list, tuple)):
+            self.m2m_remote_columns = [self.m2m_remote_columns]
 
-        self.remote_columns = None
-        if 'remote_columns' in kwargs:
-            self.remote_columns = self.kwargs.pop('remote_columns')
-            if not isinstance(self.remote_columns, (list, tuple)):
-                self.remote_columns = [self.remote_columns]
+        self.local_columns = self.kwargs.pop('local_columns', None)
+        if self.local_columns and not isinstance(self.local_columns,
+                                                 (list, tuple)):
+            self.local_columns = [self.local_columns]
 
-            self.kwargs['info']['remote_columns'] = self.remote_columns
+        self.kwargs['info']['local_columns'] = self.local_columns
+        self.m2m_local_columns = self.kwargs.pop('m2m_local_columns', None)
+        if self.m2m_local_columns and not isinstance(self.m2m_local_columns,
+                                                     (list, tuple)):
+            self.m2m_local_columns = [self.m2m_local_columns]
 
-        self.m2m_remote_columns = None
-        if 'm2m_remote_columns' in kwargs:
-            self.m2m_remote_columns = self.kwargs.pop('m2m_remote_columns')
-            if not isinstance(self.m2m_remote_columns, (list, tuple)):
-                self.m2m_remote_columns = [self.m2m_remote_columns]
-
-        self.local_columns = None
-        if 'local_columns' in kwargs:
-            self.local_columns = self.kwargs.pop('local_columns')
-            if not isinstance(self.local_columns, (list, tuple)):
-                self.local_columns = [self.local_columns]
-
-            self.kwargs['info']['local_columns'] = self.local_columns
-
-        self.m2m_local_columns = None
-        if 'm2m_local_columns' in kwargs:
-            self.m2m_local_columns = self.kwargs.pop('m2m_local_columns')
-            if not isinstance(self.m2m_local_columns, (list, tuple)):
-                self.m2m_local_columns = [self.m2m_local_columns]
-
-        if 'many2many' in kwargs:
-            self.kwargs['backref'] = self.kwargs.pop('many2many')
-            self.kwargs['info']['remote_name'] = self.kwargs['backref']
+        self.kwargs['backref'] = self.kwargs.pop('many2many', None)
+        self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
     def get_m2m_columns(self, tablename, properties, columns, m2m_columns):
         if not columns:
