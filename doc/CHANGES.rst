@@ -13,6 +13,7 @@ Future
 ------
 
 * [FIX] Field.Function, fexp is now a class method 
+* [REF] reduce flake8 complexity
 
 0.4.0
 -----
