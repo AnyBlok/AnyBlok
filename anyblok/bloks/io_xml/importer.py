@@ -85,44 +85,62 @@ class XML:
 
         return False, entry
 
+    def update_x2M(self, entry, inValues, notInValues):
+        for field in inValues.keys():
+            if field in notInValues:
+                continue
+
+            # temporaly deactivate auto flush to let time
+            # orm to fill the remote column with foreign_key
+            # which should be not null
+            with self.registry.session.no_autoflush:
+                getattr(entry, field).extend(inValues[field])
+
+    def create_entry(self, Model, values, two_way, **kwargs):
+        try:
+            insert_values = {x: y for x, y in values.items()
+                             if not isinstance(y, list)}
+            if two_way:
+                return_entry = Model(**insert_values)
+            else:
+                return_entry = Model.insert(**insert_values)
+
+            self.update_x2M(return_entry, values, insert_values)
+            self.created_entries.append(return_entry)
+            return return_entry
+        except Exception as e:
+            self._raise(e, **kwargs)
+
+    def map_imported_entry(self, model, param, external_id, two_way, entry,
+                           **kwargs):
+        if entry:
+            if model and param:
+                if (model, param) not in self.params:
+                    self.params[(model, param)] = entry
+                else:
+                    if self.params[(model, param)] != entry:
+                        self._raise("Overwrite the params (%r, %r)" % (
+                            model, param), **kwargs)
+
+            if external_id:
+                if two_way:
+                    self.two_way_external_id[(
+                        model, external_id)] = entry
+                else:
+                    self.registry.IO.Mapping.set(external_id, entry)
+
     def import_entry(self, entry, values, model=None, external_id=None,
                      param=None, if_exist=if_exist,
                      if_does_not_exist=if_does_not_exist,
                      two_way=False, **kwargs):
         Model = self.registry.get(model)
-
-        def update_x2M(entry, inValues, notInValues):
-            for field in inValues.keys():
-                if field in notInValues:
-                    continue
-
-                # temporaly deactivate auto flush to let time
-                # orm to fill the remote column with foreign_key
-                # which should be not null
-                with self.registry.session.no_autoflush:
-                    getattr(entry, field).extend(inValues[field])
-
-        def create_entry():
-            try:
-                insert_values = {x: y for x, y in values.items()
-                                 if not isinstance(y, list)}
-                if two_way:
-                    return_entry = Model(**insert_values)
-                else:
-                    return_entry = Model.insert(**insert_values)
-
-                update_x2M(return_entry, values, insert_values)
-                self.created_entries.append(return_entry)
-                return return_entry
-            except Exception as e:
-                self._raise(e, **kwargs)
-
         return_entry = entry
         if entry:
             if if_exist == 'continue':
                 return_entry = entry
             elif if_exist == 'create':
-                return_entry = create_entry()
+                return_entry = self.create_entry(
+                    Model, values, two_way, **kwargs)
             elif if_exist == 'update':
                 try:
                     insert_values = {x: y for x, y in values.items()
@@ -130,29 +148,16 @@ class XML:
                     if insert_values:
                         entry.update(values)
 
-                    update_x2M(entry, values, insert_values)
+                    self.update_x2M(entry, values, insert_values)
                     self.updated_entries.append(entry)
                 except Exception as e:
                     self._raise(e, **kwargs)
-        else:
-            if if_does_not_exist == 'create':
-                return_entry = create_entry()
+        elif if_does_not_exist == 'create':
+                return_entry = self.create_entry(
+                    Model, values, two_way, **kwargs)
 
-        if return_entry:
-            if model and param:
-                if (model, param) not in self.params:
-                    self.params[(model, param)] = return_entry
-                else:
-                    if self.params[(model, param)] != return_entry:
-                        self._raise("Overwrite the params (%r, %r)" % (
-                            model, param), **kwargs)
-
-            if external_id:
-                if two_way:
-                    self.two_way_external_id[(
-                        model, external_id)] = return_entry
-                else:
-                    self.registry.IO.Mapping.set(external_id, return_entry)
+        self.map_imported_entry(
+            model, param, external_id, two_way, return_entry, **kwargs)
 
         return return_entry
 
@@ -185,12 +190,7 @@ class XML:
 
             return vals[0]
 
-    def import_field(self, field, ctype, model=None, on_error=on_error):
-        if 'model' in field.attrib:
-            model = field.attrib['model']
-
-        param = field.attrib.get('param')
-
+    def get_from_param(self, param, model):
         if param:
             if model:
                 if (model, param) in self.params:
@@ -200,13 +200,21 @@ class XML:
                 self._raise('Param %r waiting for None model ' % param,
                             on_error=on_error)
 
-        val = None
+        return None
+
+    def import_field(self, field, ctype, model=None, on_error=on_error):
+        model = field.attrib.get('model', model)
+        param = field.attrib.get('param')
+
+        res = self.get_from_param(param, model)
+        if res:
+            return res
+
+        val = field.text
         external_id = False
         if 'external_id' in field.attrib:
             external_id = True
             val = field.attrib['external_id']
-        else:
-            val = field.text
 
         try:
             res = None
@@ -251,43 +259,58 @@ class XML:
             if 'on_error' in field.attrib:
                 _kw['on_error'] = field.attrib['on_error']
 
-            if field.tag is etree.Comment:
-                continue
-
-            if field.tag.lower() != 'field':
-                self._raise("Waitting 'field' node, not %r" % field.tag, **_kw)
-                continue
-
-            if 'name' not in field.attrib:
-                self._raise("field %r (%r) have not attribute name" % (
-                    field.tag, field.attrib), **_kw)
+            if not self.validate_field(field, Model, fields_description,
+                                       **_kw):
                 continue
 
             field_name = field.attrib['name']
-            if field_name not in fields_description:
-                self._raise('Model %r have not field %r' % (
-                    Model.__registry_name__, field_name))
-                continue
-
             field_model = fields_description[field_name]['model']
             field_type = fields_description[field_name]['type']
-            children = field.getchildren()
-
-            if children:
-                if field_type in ('One2Many', 'Many2Many'):
-                    vals = self.import_multi_values(children, field_model)
-                    if vals:
-                        values[field_name] = vals
-
-                else:
-                    values[field_name] = self.import_value(
-                        field, field_type, field_model, **_kw)
-
-            else:
-                values[field_name] = self.import_field(
-                    field, field_type, model=field_model, **_kw)
+            val = self._import_record(field, field_model, field_type, **_kw)
+            values[field_name] = val
 
         return self.import_entry(entry, values, two_way=two_way, **kwargs)
+
+    def validate_field(self, field, Model, fields_description, **_kw):
+        if field.tag is etree.Comment:
+            return False
+
+        if field.tag.lower() != 'field':
+            self._raise("Waitting 'field' node, not %r" % field.tag, **_kw)
+            return False
+
+        if 'name' not in field.attrib:
+            self._raise("field %r (%r) have not attribute name" % (
+                field.tag, field.attrib), **_kw)
+            return False
+
+        field_name = field.attrib['name']
+        if field_name not in fields_description:
+            self._raise('Model %r have not field %r' % (
+                Model.__registry_name__, field_name))
+            return False
+
+        return True
+
+    def _import_record(self, field, field_model, field_type, **_kw):
+        children = field.getchildren()
+
+        if children:
+            if field_type in ('One2Many', 'Many2Many'):
+                vals = self.import_multi_values(children, field_model)
+                if vals:
+                    return vals
+
+                return []
+            else:
+                return self.import_value(
+                    field, field_type, field_model, **_kw)
+
+        else:
+            return self.import_field(
+                field, field_type, model=field_model, **_kw)
+
+        return None
 
     def import_records(self, records):
         for record in records.getchildren():
