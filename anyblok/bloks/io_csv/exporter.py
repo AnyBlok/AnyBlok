@@ -43,59 +43,59 @@ class Field(Mixin.IOCSVFieldMixin):
             'external_id': 'External ID',
         }
 
-    def value2str(self, exporter, entry):
+    def _get_fields_description(self, name, entry):
+        Model = self.get_model(entry.__registry_name__)
+        fields_description = Model.fields_description(fields=[name])
+        if name not in fields_description:
+            raise CSVExporterException(
+                "unknow field %r in exporter field %r" % (
+                    name, self.name))
 
-        def _get_fields_description(name, entry):
-            Model = self.get_model(entry.__registry_name__)
-            fields_description = Model.fields_description(fields=[name])
-            if name not in fields_description:
-                raise CSVExporterException(
-                    "unknow field %r in exporter field %r" % (
-                        name, self.name))
+        return fields_description[name]
 
-            return fields_description[name]
+    def _value2str(self, exporter, name, entry, external_id):
+        fields_description = self._get_fields_description(name, entry)
+        if fields_description['primary_key'] and external_id:
+            return self.registry.IO.Exporter.get_key_mapping(entry)
 
-        def _value2str(name, entry, external_id):
-            fields_description = _get_fields_description(name, entry)
-            if fields_description['primary_key'] and external_id:
-                return self.registry.IO.Exporter.get_key_mapping(entry)
+        ctype = fields_description['type']
+        model = fields_description['model']
+        return exporter.value2str(getattr(entry, name), ctype,
+                                  external_id=external_id, model=model)
 
-            ctype = fields_description['type']
+    def _rc_get_sub_entry(self, name, entry):
+        fields_description = self._get_fields_description(name, entry)
+        if fields_description['type'] in ('Many2One', 'One2One'):
+            return getattr(entry, name)
+
+        elif fields_description['model']:
             model = fields_description['model']
-            return exporter.value2str(getattr(entry, name), ctype,
-                                      external_id=external_id, model=model)
-
-        def _rc_get_sub_entry(name, entry):
-            fields_description = _get_fields_description(name, entry)
-            if fields_description['type'] in ('Many2One', 'One2One'):
-                return getattr(entry, name)
-
-            elif fields_description['model']:
-                model = fields_description['model']
-                Model = self.registry.get(model)
-                pks = Model.get_primary_keys()
-                if len(pks) == 1:
-                    pks = {pks[0]: getattr(entry, name)}
-                else:
-                    raise CSVExporterException(
-                        "Not implemented yet")
-
-                return Model.from_primary_keys(**pks)
-
+            Model = self.registry.get(model)
+            pks = Model.get_primary_keys()
+            if len(pks) == 1:
+                pks = {pks[0]: getattr(entry, name)}
             else:
                 raise CSVExporterException(
-                    "the field %r of %r is not in (Many2One, One2One) "
-                    "or has not a foreign key")
+                    "Not implemented yet")
+
+            return Model.from_primary_keys(**pks)
+
+        else:
+            raise CSVExporterException(
+                "the field %r of %r is not in (Many2One, One2One) "
+                "or has not a foreign key")
+
+    def value2str(self, exporter, entry):
 
         def _rc_get_value(names, entry):
             if not names:
                 return ''
             elif len(names) == 1:
                 external_id = False if self.mode == 'any' else True
-                return _value2str(names[0], entry, external_id)
+                return self._value2str(exporter, names[0], entry, external_id)
             else:
                 return _rc_get_value(
-                    names[1:], _rc_get_sub_entry(names[0], entry))
+                    names[1:], self._rc_get_sub_entry(names[0], entry))
 
         return _rc_get_value(self.name.split('.'), entry)
 

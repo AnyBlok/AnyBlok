@@ -115,11 +115,43 @@ class CSV:
                 else:
                     self.header_fields.append(name)
 
+    def _parse_row_if_entry(self, row, entry, values, Model):
+        if self.importer.csv_if_exist == 'update':
+            entry.update(values)
+            self.updated_entries.append(entry)
+        elif self.importer.csv_if_exist == 'create':
+            entry = Model.insert(**values)
+            self.created_entries.append(entry)
+        elif self.importer.csv_if_exist == 'raise':
+            raise CSVImporterException(
+                "Row %r already an entry %r " % (
+                    row, entry.to_primary_keys()))
+
+    def _parse_row_if_not_entry(self, row, pks, values, Model):
+        Mapping = self.registry.IO.Mapping
+        if self.importer.csv_if_does_not_exist == 'create':
+            if pks:
+                values.update(pks)
+
+            entry = Model.insert(**values)
+            self.created_entries.append(entry)
+            if self.header_external_id:
+                Mapping.set(row[self.header_external_id], entry)
+
+        elif self.importer.csv_if_does_not_exist == 'raise':
+            raise CSVImporterException(
+                "Create row are not allowed")
+
+    def _parse_row(self, row, entry, pks, values, Model):
+        if entry:
+            self._parse_row_if_entry(row, entry, values, Model)
+        else:
+            self._parse_row_if_not_entry(row, pks, values, Model)
+
     def parse_row(self, row):
         try:
             entry = pks = None
             Model = self.registry.get(self.importer.model)
-            Mapping = self.registry.IO.Mapping
             values = {}
             for field in self.header_fields:
                 ctype = self.fields_description[field]['type']
@@ -142,31 +174,7 @@ class CSV:
 
                 entry = Model.from_primary_keys(**pks)
 
-            if entry:
-                if self.importer.csv_if_exist == 'update':
-                    entry.update(values)
-                    self.updated_entries.append(entry)
-                elif self.importer.csv_if_exist == 'create':
-                    entry = Model.insert(**values)
-                    self.created_entries.append(entry)
-                elif self.importer.csv_if_exist == 'raise':
-                    raise CSVImporterException(
-                        "Row %r already an entry %r " % (
-                            row, entry.to_primary_keys()))
-            else:
-                if self.importer.csv_if_does_not_exist == 'create':
-                    if pks:
-                        values.update(pks)
-
-                    entry = Model.insert(**values)
-                    self.created_entries.append(entry)
-                    if self.header_external_id:
-                        Mapping.set(row[self.header_external_id], entry)
-
-                elif self.importer.csv_if_does_not_exist == 'raise':
-                    raise CSVImporterException(
-                        "Create row are not allowed")
-
+            self._parse_row(row, entry, pks, values, Model)
         except Exception as e:
             msg = '%r: %r' % (e.__class__.__name__, e)
             self.error_found.append(msg)
