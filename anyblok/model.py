@@ -445,6 +445,91 @@ class Model:
         return properties
 
     @classmethod
+    def apply_inheritance_base(cls, registry, namespace, ns, bases,
+                               realregistryname, properties,
+                               transformation_properties):
+
+        # remove doublon
+        for b in ns['bases']:
+            if b in bases:
+                continue
+
+            kwargs = {
+                'namespace': realregistryname} if realregistryname else {}
+            bases.append(b, **kwargs)
+
+            if b.__doc__ and '__doc__' not in properties:
+                properties['__doc__'] = b.__doc__
+
+            for b_ns in b.__anyblok_bases__:
+                brn = b_ns.__registry_name__
+                if brn in registry.loaded_registries['Mixin_names']:
+                    tp = transformation_properties
+                    if realregistryname:
+                        bs, ps = cls.load_namespace_second_step(
+                            registry, brn, realregistryname=realregistryname,
+                            transformation_properties=tp)
+                    else:
+                        bs, ps = cls.load_namespace_second_step(
+                            registry, brn, realregistryname=namespace,
+                            transformation_properties=tp)
+                elif brn in registry.loaded_registries['Model_names']:
+                    bs, ps = cls.load_namespace_second_step(registry, brn)
+                else:
+                    raise ModelException(
+                        "You have not to inherit the %r "
+                        "Only the 'Mixin' and %r types are allowed" % (
+                            brn, cls.__name__))
+
+                bases += bs
+
+    @classmethod
+    def init_core_properties_and_bases(cls, registry, bases, properties):
+        properties['loaded_columns'] = []
+        properties['loaded_fields'] = {}
+        if properties['is_sql_view']:
+            bases.extend([x for x in registry.loaded_cores['SqlViewBase']])
+        elif has_sql_fields(bases):
+            bases.extend([x for x in registry.loaded_cores['SqlBase']])
+            bases.append(registry.declarativebase)
+        else:
+            # remove tablename to inherit from a sqlmodel
+            del properties['__tablename__']
+
+        bases.extend([x for x in registry.loaded_cores['Base']])
+
+    @classmethod
+    def declare_all_fields(cls, registry, namespace, bases, properties):
+        # do in the first time the fields and columns
+        # because for the relationship on the same model
+        # the primary keys must exist before the relationship
+        # load all the base before do relationship because primary key
+        # can be come from inherit
+        for b in bases:
+            for p, f in get_fields(b,
+                                   without_relationship=True).items():
+                cls.declare_field(
+                    registry, p, f, namespace, properties)
+
+        for b in bases:
+            for p, f in get_fields(b, only_relationship=True).items():
+                cls.declare_field(
+                    registry, p, f, namespace, properties)
+
+    @classmethod
+    def apply_existing_table(cls, registry, namespace, tablename, properties):
+        if '__tablename__' in properties:
+            del properties['__tablename__']
+
+        for t in registry.loaded_namespaces.keys():
+            m = registry.loaded_namespaces[t]
+            if m.is_sql:
+                if getattr(m, '__tablename__'):
+                    if m.__tablename__ == tablename:
+                        properties['__table__'] = m.__table__
+                        tablename = namespace.replace('.', '_').lower()
+
+    @classmethod
     def load_namespace_second_step(cls, registry, namespace,
                                    realregistryname=None,
                                    transformation_properties=None):
@@ -475,82 +560,19 @@ class Model:
         if 'is_sql_view' not in properties:
             properties['is_sql_view'] = False
 
-        for b in ns['bases']:
-            if b in bases:
-                continue
-
-            if realregistryname:
-                bases.append(b, namespace=realregistryname)
-            else:
-                bases.append(b)
-
-            if b.__doc__ and '__doc__' not in properties:
-                properties['__doc__'] = b.__doc__
-
-            for b_ns in b.__anyblok_bases__:
-                brn = b_ns.__registry_name__
-                if brn in registry.loaded_registries['Mixin_names']:
-                    tp = transformation_properties
-                    if realregistryname:
-                        bs, ps = cls.load_namespace_second_step(
-                            registry, brn, realregistryname=realregistryname,
-                            transformation_properties=tp)
-                    else:
-                        bs, ps = cls.load_namespace_second_step(
-                            registry, brn, realregistryname=namespace,
-                            transformation_properties=tp)
-                elif brn in registry.loaded_registries['Model_names']:
-                    bs, ps = cls.load_namespace_second_step(registry, brn)
-                else:
-                    raise ModelException(
-                        "You have not to inherit the %r "
-                        "Only the 'Mixin' and %r types are allowed" % (
-                            brn, cls.__name__))
-
-                bases += bs
+        cls.apply_inheritance_base(registry, namespace, ns, bases,
+                                   realregistryname, properties,
+                                   transformation_properties)
 
         if namespace in registry.loaded_registries['Model_names']:
-            properties['loaded_columns'] = []
-            properties['loaded_fields'] = {}
             tablename = properties['__tablename__']
-            if properties['is_sql_view']:
-                bases.extend([x for x in registry.loaded_cores['SqlViewBase']])
-            elif has_sql_fields(bases):
-                bases.extend([x for x in registry.loaded_cores['SqlBase']])
-                bases.append(registry.declarativebase)
-            else:
-                # remove tablename to inherit from a sqlmodel
-                del properties['__tablename__']
-
-            bases.extend([x for x in registry.loaded_cores['Base']])
+            cls.init_core_properties_and_bases(registry, bases, properties)
 
             if tablename in registry.declarativebase.metadata.tables:
-                if '__tablename__' in properties:
-                    del properties['__tablename__']
-
-                for t in registry.loaded_namespaces.keys():
-                    m = registry.loaded_namespaces[t]
-                    if m.is_sql:
-                        if getattr(m, '__tablename__'):
-                            if m.__tablename__ == tablename:
-                                properties['__table__'] = m.__table__
-                                tablename = namespace.replace('.', '_').lower()
+                cls.apply_existing_table(
+                    registry, namespace, tablename, properties)
             else:
-                # do in the first time the fields and columns
-                # because for the relationship on the same model
-                # the primary keys must exist before the relationship
-                # load all the base before do relationship because primary key
-                # can be come from inherit
-                for b in bases:
-                    for p, f in get_fields(b,
-                                           without_relationship=True).items():
-                        cls.declare_field(
-                            registry, p, f, namespace, properties)
-
-                for b in bases:
-                    for p, f in get_fields(b, only_relationship=True).items():
-                        cls.declare_field(
-                            registry, p, f, namespace, properties)
+                cls.declare_all_fields(registry, namespace, bases, properties)
 
             bases.append(registry.registry_base)
             cls.insert_in_bases(registry, namespace, bases,
@@ -606,10 +628,8 @@ class Model:
             DropView(tablename).execute_at(
                 'before-drop', registry.declarativebase.metadata)
 
-        pks = []
-        for col in properties['loaded_columns']:
-            if getattr(base, col).primary_key:
-                pks.append(col)
+        pks = [col for col in properties['loaded_columns']
+               if getattr(base, col).primary_key]
 
         if not pks:
             raise ViewException(
