@@ -45,33 +45,61 @@ class Model:
         cls.registry.System.Cache.invalidate(model, '_fields_description')
 
     @classmethod
+    def get_field_model(cls, field):
+        ftype = field.property.__class__.__name__
+        if ftype == 'ColumnProperty':
+            return cls.registry.System.Column
+        elif ftype == 'RelationshipProperty':
+            return cls.registry.System.RelationShip
+        else:
+            raise Exception('Not implemented yet')
+
+    @classmethod
+    def get_field(cls, model, cname):
+        if cname in model.loaded_fields.keys():
+            field = model.loaded_fields[cname]
+            Field = cls.registry.System.Field
+        else:
+            field = getattr(model, cname)
+            Field = cls.get_field_model(field)
+
+        return field, Field
+
+    @classmethod
+    def update_fields(cls, model, table):
+        fsp = cls.registry.loaded_namespaces_first_step
+        m = cls.registry.get(model)
+        for cname in m.loaded_columns:
+            ftype = fsp[model][cname].__class__.__name__
+            field, Field = cls.get_field(m, cname)
+            cname = Field.get_cname(field, cname)
+            query = Field.query()
+            query = query.filter(Field.model == model)
+            query = query.filter(Field.name == cname)
+            if query.count():
+                Field.alter_field(query.first(), field, ftype)
+            else:
+                Field.add_field(cname, field, model, table, ftype)
+
+    @classmethod
+    def add_fields(cls, model, table):
+        fsp = cls.registry.loaded_namespaces_first_step
+        m = cls.registry.get(model)
+        is_sql_model = len(m.loaded_columns) > 0
+        cls.insert(name=model, table=table,
+                   is_sql_model=is_sql_model)
+        for cname in m.loaded_columns:
+            field, Field = cls.get_field(m, cname)
+            cname = Field.get_cname(field, cname)
+            ftype = fsp[model][cname].__class__.__name__
+            Field.add_field(cname, field, model, table, ftype)
+
+    @classmethod
     def update_list(cls):
         """ Insert and update the table of models
 
         :exception: Exception
         """
-
-        def get_field_model(field):
-            ftype = field.property.__class__.__name__
-            if ftype == 'ColumnProperty':
-                return cls.registry.System.Column
-            elif ftype == 'RelationshipProperty':
-                return cls.registry.System.RelationShip
-            else:
-                raise Exception('Not implemented yet')
-
-        def get_field(model, cname):
-            if cname in model.loaded_fields.keys():
-                field = model.loaded_fields[cname]
-                Field = cls.registry.System.Field
-            else:
-                field = getattr(model, cname)
-                Field = get_field_model(field)
-
-            return field, Field
-
-        fsp = cls.registry.loaded_namespaces_first_step
-
         for model in cls.registry.loaded_namespaces.keys():
             try:
                 # TODO need refactor, then try except pass whenever refactor
@@ -83,26 +111,9 @@ class Model:
 
                 _m = cls.query('name').filter(cls.name == model)
                 if _m.count():
-                    for cname in m.loaded_columns:
-                        ftype = fsp[model][cname].__class__.__name__
-                        field, Field = get_field(m, cname)
-                        cname = Field.get_cname(field, cname)
-                        query = Field.query()
-                        query = query.filter(Field.model == model)
-                        query = query.filter(Field.name == cname)
-                        if query.count():
-                            Field.alter_field(query.first(), field, ftype)
-                        else:
-                            Field.add_field(cname, field, model, table, ftype)
+                    cls.update_fields(model, table)
                 else:
-                    is_sql_model = len(m.loaded_columns) > 0
-                    cls.insert(name=model, table=table,
-                               is_sql_model=is_sql_model)
-                    for cname in m.loaded_columns:
-                        field, Field = get_field(m, cname)
-                        cname = Field.get_cname(field, cname)
-                        ftype = fsp[model][cname].__class__.__name__
-                        Field.add_field(cname, field, model, table, ftype)
+                    cls.add_fields(model, table)
 
                 if m.loaded_columns:
                     cls.fire('Update Model', model)

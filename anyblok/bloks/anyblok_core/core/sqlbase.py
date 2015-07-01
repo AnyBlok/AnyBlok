@@ -195,6 +195,29 @@ class SqlMixin:
 
         return res
 
+    def _format_field(self, field):
+        related_fields = None
+        if isinstance(field, (tuple, list)):
+            if len(field) == 1:
+                related_fields = ()
+            elif len(field) == 2:
+                related_fields = field[1]
+                if related_fields is None:
+                    related_fields = ()
+                elif not isinstance(related_fields, (tuple, list)):
+                    raise SqlBaseException("%r the related fields wanted "
+                                           "must be a tuple or empty or "
+                                           "None value" % related_fields)
+            else:
+                raise SqlBaseException("%r the number of argument is "
+                                       "wrong, waiting 1 or 2 arguments "
+                                       "(name of the relation[, (related "
+                                       "fields)])" % (field,))
+
+            field = field[0]
+
+        return field, related_fields
+
     def to_dict(self, *fields):
         """ Transform a record to the dict of value
 
@@ -261,37 +284,17 @@ class SqlMixin:
              }
         """
         result = {}
-        if not fields:
-            fields = self.__class__.fields_description().keys()
+        cls = self.__class__
+        fields = fields if fields else cls.fields_description().keys()
 
         for field in fields:
             # if field is ("relation_name", ("list", "of", "relation",
             # "fields")), deal with it.
-            related_fields = None
-            if isinstance(field, (tuple, list)):
-                if len(field) == 1:
-                    related_fields = ()
-                elif len(field) == 2:
-                    related_fields = field[1]
-                    if related_fields is None:
-                        related_fields = ()
-                    elif not isinstance(related_fields, (tuple, list)):
-                        raise SqlBaseException("%r the related fields wanted "
-                                               "must be a tuple or empty or "
-                                               "None value" % related_fields)
-                else:
-                    raise SqlBaseException("%r the number of argument is "
-                                           "wrong, waiting 1 or 2 arguments "
-                                           "(name of the relation[, (related "
-                                           "fields)])" % (field,))
-
-                field = field[0]
-
+            field, related_fields = self._format_field(field)
             # Get the actual data
             field_value, field_property = getattr(self, field), None
             try:
-                field_property = getattr(getattr(self.__class__, field),
-                                         'property', None)
+                field_property = getattr(getattr(cls, field), 'property', None)
             except Exception:
                 pass
 
