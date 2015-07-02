@@ -17,34 +17,43 @@ Mixin = Declarations.Mixin
 Core = Declarations.Core
 
 
-def simple_subclass_poly():
+def single_table_poly():
     @register(Model)
-    class MainModel:
+    class Employee:
         id = Integer(primary_key=True)
         type_entity = String(label="Entity type")
         name = String()
+        engineer_name = String()
+        manager_name = String()
 
         @classmethod
         def define_mapper_args(cls, mapper_args, properties):
             mapper_args.update({
-                'polymorphic_identity': 'main',
+                'polymorphic_identity': 'employee',
                 'polymorphic_on': properties['type_entity'],
             })
             return mapper_args
 
-    @register(Model.MainModel, tablename=Model.MainModel)
-    class Test(Model.MainModel):
-        other = String()
-
+    @register(Model, tablename=Model.Employee)
+    class Engineer(Model.Employee):
         @classmethod
         def define_mapper_args(cls, mapper_args, properties):
             mapper_args.update({
-                'polymorphic_identity': 'sub',
+                'polymorphic_identity': 'engineer',
+            })
+            return mapper_args
+
+    @register(Model, tablename=Model.Employee)
+    class Manager(Model.Employee):
+        @classmethod
+        def define_mapper_args(cls, mapper_args, properties):
+            mapper_args.update({
+                'polymorphic_identity': 'manager',
             })
             return mapper_args
 
 
-def simple_subclass_poly2():
+def multi_table_poly():
     @register(Model)
     class Employee:
         id = Integer(primary_key=True)
@@ -84,73 +93,6 @@ def simple_subclass_poly2():
             return mapper_args
 
 
-def two_subclass_poly():
-    @register(Model)
-    class MainModel:
-        id = Integer(primary_key=True)
-        type_entity = String(label="Entity type")
-        name = String()
-
-        @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
-            mapper_args.update({
-                'polymorphic_identity': 'main',
-                'polymorphic_on': properties['type_entity'],
-            })
-            return mapper_args
-
-    @register(Model.MainModel, tablename=Model.MainModel)
-    class Test(Model.MainModel):
-        other = String()
-
-        @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
-            mapper_args.update({
-                'polymorphic_identity': 'sub',
-            })
-            return mapper_args
-
-    @register(Model.MainModel, tablename=Model.MainModel)
-    class Test2(Model.MainModel):
-        other = String()
-
-        @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
-            mapper_args.update({
-                'polymorphic_identity': 'sub2',
-            })
-            return mapper_args
-
-
-def simple_subclass_poly_with_mixin():
-    @register(Model)
-    class MainModel:
-        id = Integer(primary_key=True)
-        type_entity = String(label="Entity type")
-        name = String()
-
-        @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
-            mapper_args.update({
-                'polymorphic_identity': 'main',
-                'polymorphic_on': properties['type_entity'],
-            })
-            return mapper_args
-
-    @register(Mixin)
-    class MixinName:
-        other = String()
-
-    @register(Model.MainModel, tablename=Model.MainModel)
-    class Test(Model.MainModel, Mixin.MixinName):
-        @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
-            mapper_args.update({
-                'polymorphic_identity': 'sub',
-            })
-            return mapper_args
-
-
 class TestPolymorphic(DBTestCase):
 
     def check_registry(self, Model, **kwargs):
@@ -161,33 +103,20 @@ class TestPolymorphic(DBTestCase):
             Model.type_entity == Model.__mapper__.polymorphic_identity).first()
         self.assertEqual(t2, t)
 
-    def test_simple_subclass_poly(self):
-        registry = self.init_registry(simple_subclass_poly)
-        self.check_registry(registry.MainModel.Test, other='test')
-
-    def test_simple_subclass_poly2(self):
-        registry = self.init_registry(simple_subclass_poly2)
+    def test_single_table_poly(self):
+        registry = self.init_registry(single_table_poly)
         self.check_registry(registry.Employee)
         self.check_registry(registry.Engineer, engineer_name='An engineer')
         self.check_registry(registry.Manager, manager_name='An manager')
 
-    def test_two_subclass_poly(self):
-        registry = self.init_registry(two_subclass_poly)
-        self.check_registry(registry.MainModel.Test, other='test')
-        self.check_registry(registry.MainModel.Test2, other='test')
-
-    def test_simple_subclass_poly_with_mixin(self):
-        registry = self.init_registry(simple_subclass_poly_with_mixin)
-        self.check_registry(registry.MainModel.Test, other='test')
-
-    def test_field_insert_simple_subclass_poly(self):
-        registry = self.init_registry(simple_subclass_poly)
-        t = registry.MainModel.Test.insert(name="test", other="other")
-        self.assertEqual(t.name, "test")
-        self.assertEqual(t.other, "other")
+    def test_multi_table_poly(self):
+        registry = self.init_registry(multi_table_poly)
+        self.check_registry(registry.Employee)
+        self.check_registry(registry.Engineer, engineer_name='An engineer')
+        self.check_registry(registry.Manager, manager_name='An manager')
 
     def test_query_with_polymorphic(self):
-        registry = self.init_registry(simple_subclass_poly2)
+        registry = self.init_registry(multi_table_poly)
         registry.Employee.insert(name='employee')
         registry.Engineer.insert(name='engineer', engineer_name='john')
         registry.Manager.insert(name='manager', manager_name='doe')
