@@ -8,6 +8,7 @@
 from base64 import b64encode
 
 from anyblok import Declarations
+from anyblok.field import FieldException
 from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty
 from sqlalchemy.sql.expression import true
@@ -295,7 +296,7 @@ class SqlMixin:
             field_value, field_property = getattr(self, field), None
             try:
                 field_property = getattr(getattr(cls, field), 'property', None)
-            except Exception:
+            except FieldException:
                 pass
 
             # Deal with this data

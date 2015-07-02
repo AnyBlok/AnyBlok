@@ -150,6 +150,5 @@ class TestField2(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         registry.Test.insert(val1=1)
-        t = registry.Test.query().filter(registry.Test.val2 == 2).first()
-        self.assertEqual(t.val1, 1)
-        self.assertEqual(t.val2, 2)
+        with self.assertRaises(FieldException):
+            registry.Test.query().filter(registry.Test.val2 == 2).first()

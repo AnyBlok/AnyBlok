@@ -12,8 +12,13 @@ CHANGELOG
 Future
 ------
 
+.. warning::
+
+    Field Function change, fexp is required if you need filter
+
 * [FIX] Field.Function, fexp is now a class method 
 * [REF] reduce flake8 complexity
+* [REF] refactor field function
 
 0.4.0
 -----

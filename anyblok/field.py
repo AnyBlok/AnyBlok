@@ -113,31 +113,28 @@ class Function(Field):
 
     def update_properties(self, registry, namespace, fieldname, properties):
 
-        def wrap(method, ormethod=None):
+        def wrap(method):
             m = self.kwargs.get(method)
             if m is None:
-                if ormethod:
-                    m = self.kwargs.get(method)
-                    if m is None:
-                        return None
+                return None
 
             def function_method(model_self, *args, **kwargs):
-                if method == 'fget':
-                    registry_name = model_self.__registry_name__
-                    if model_self is model_self.registry.get(registry_name):
-                        return getattr(model_self, m)(model_self, *args,
-                                                      **kwargs)
-                    else:
-                        return getattr(model_self, m)(*args, **kwargs)
-                else:
+                try:
                     return getattr(model_self, m)(*args, **kwargs)
+                except TypeError:
+                    if method == 'fget':
+                        raise FieldException("You must declare 'fexp' for "
+                                             "'%s: %s' field" % (namespace,
+                                                                 fieldname))
+                    else:
+                        raise
 
             return function_method
 
         fget = wrap('fget')
         fset = wrap('fset')
         fdel = wrap('fdel')
-        fexpr = wrap('fexpr', 'fget')
+        fexpr = wrap('fexpr')
 
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
