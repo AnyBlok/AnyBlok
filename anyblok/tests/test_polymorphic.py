@@ -8,7 +8,9 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-from anyblok.column import Integer, String
+from anyblok.column import Integer, String, Date
+from anyblok.relationship import Many2One
+from datetime import date
 
 
 register = Declarations.register
@@ -93,12 +95,88 @@ def multi_table_poly():
             return mapper_args
 
 
+def multi_table_poly_mixins():
+    @register(Mixin)
+    class MyMixins:
+        birthday = Date()
+
+    @register(Model)
+    class Employee:
+        id = Integer(primary_key=True)
+        name = String()
+        type_entity = String()
+
+        @classmethod
+        def define_mapper_args(cls, mapper_args, properties):
+            mapper_args.update({
+                'polymorphic_identity': 'employee',
+                'polymorphic_on': properties['type_entity'],
+            })
+            return mapper_args
+
+    @register(Model)
+    class Engineer(Model.Employee):
+        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        engineer_name = String()
+
+        @classmethod
+        def define_mapper_args(cls, mapper_args, properties):
+            mapper_args.update({
+                'polymorphic_identity': 'engineer',
+            })
+            return mapper_args
+
+    @register(Model)
+    class Manager(Model.Employee, MyMixins):
+        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        manager_name = String()
+
+        @classmethod
+        def define_mapper_args(cls, mapper_args, properties):
+            mapper_args.update({
+                'polymorphic_identity': 'manager',
+            })
+            return mapper_args
+
+
+def multi_table_foreign_key():
+    @register(Model)
+    class Room:
+        id = Integer(primary_key=True)
+        name = String()
+
+    @register(Model)
+    class Employee:
+        id = Integer(primary_key=True)
+        name = String()
+        type_entity = String()
+        room = Many2One(model=Model.Room, one2many='employees')
+
+        @classmethod
+        def define_mapper_args(cls, mapper_args, properties):
+            mapper_args.update({
+                'polymorphic_identity': 'employee',
+                'polymorphic_on': properties['type_entity'],
+            })
+            return mapper_args
+
+    @register(Model)
+    class Engineer(Model.Employee):
+        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        engineer_name = String()
+
+        @classmethod
+        def define_mapper_args(cls, mapper_args, properties):
+            mapper_args.update({
+                'polymorphic_identity': 'engineer',
+            })
+            return mapper_args
+
+
 class TestPolymorphic(DBTestCase):
 
     def check_registry(self, Model, **kwargs):
         t = Model.insert(name="test", **kwargs)
-        # Here we do not understand yet why polymorphic criteria is not
-        # automatically use on query
         t2 = Model.query().filter(
             Model.type_entity == Model.__mapper__.polymorphic_identity).first()
         self.assertEqual(t2, t)
@@ -114,6 +192,22 @@ class TestPolymorphic(DBTestCase):
         self.check_registry(registry.Employee)
         self.check_registry(registry.Engineer, engineer_name='An engineer')
         self.check_registry(registry.Manager, manager_name='An manager')
+
+    def test_multi_table_poly_mixins(self):
+        registry = self.init_registry(multi_table_poly_mixins)
+        self.check_registry(registry.Employee)
+        self.check_registry(registry.Engineer, engineer_name='An engineer')
+        self.check_registry(registry.Manager, manager_name='An manager',
+                            birthday=date.today())
+
+    def test_multi_table_foreign_key(self):
+        registry = self.init_registry(multi_table_foreign_key)
+        room = registry.Room.insert()
+        self.check_registry(registry.Employee, room=room)
+        self.check_registry(registry.Engineer, engineer_name='An engineer',
+                            room=room)
+        self.check_registry(registry.Manager, manager_name='An manager',
+                            birthday=date.today(), room=room)
 
     def test_query_with_polymorphic(self):
         registry = self.init_registry(multi_table_poly)
