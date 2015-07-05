@@ -206,8 +206,6 @@ class TestPolymorphic(DBTestCase):
         self.check_registry(registry.Employee, room=room)
         self.check_registry(registry.Engineer, engineer_name='An engineer',
                             room=room)
-        self.check_registry(registry.Manager, manager_name='An manager',
-                            birthday=date.today(), room=room)
 
     def test_query_with_polymorphic(self):
         registry = self.init_registry(multi_table_poly)
