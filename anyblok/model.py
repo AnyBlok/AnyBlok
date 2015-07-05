@@ -383,11 +383,8 @@ class Model:
                 raise ModelException("'define_mapper_args' must return a dict "
                                      "not %r" % mapper_args)
 
-        if table_args:
-            setattr(base, '__table_args__', table_args)
-
-        if mapper_args:
-            setattr(base, '__mapper_args__', mapper_args)
+        setattr(base, '__table_args__', table_args)
+        setattr(base, '__mapper_args__', mapper_args)
 
     @classmethod
     def insert_in_bases(cls, registry, namespace, bases,
