@@ -19,6 +19,8 @@ Future
 * [FIX] Field.Function, fexp is now a class method 
 * [REF] reduce flake8 complexity
 * [REF] refactor field function
+* [FIX] inherit relation ship from another model, thank Simon ANDRÉ for the 
+  bug report
 
 0.4.0
 -----
