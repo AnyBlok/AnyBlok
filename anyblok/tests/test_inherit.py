@@ -8,6 +8,7 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from anyblok.column import Integer, String
+from anyblok.relationship import Many2One
 
 register = Declarations.register
 Model = Declarations.Model
@@ -586,3 +587,54 @@ class TestInherit(DBTestCase):
 
     def test_inherit_sql_base_on_sql_model(self):
         self.check_inherit_sql_base(inherit_sql_base_on_sql_model, True)
+
+    def test_inherit_model_with_relation_ship_auto_generate_column(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Test2:
+                id = Integer(primary_key=True)
+                test = Many2One(model=Model.Test, one2many='test2')
+
+            @register(Model)
+            class Test3(Model.Test2):
+                id = Integer(primary_key=True)
+                test2 = Integer(foreign_key=(Model.Test2, 'id'))
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        t3 = registry.Test3.insert(test=t)
+        t2 = registry.Test2.query().one()
+        self.assertEqual(t3.test2, t2.id)
+        self.assertEqual(t2.test, t)
+
+    def test_inherit_model_with_relation_ship(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Test2:
+                id = Integer(primary_key=True)
+                test_id = Integer(foreign_key=(Model.Test, 'id'))
+                test = Many2One(model=Model.Test, one2many='test2')
+
+            @register(Model)
+            class Test3(Model.Test2):
+                id = Integer(primary_key=True)
+                test2 = Integer(foreign_key=(Model.Test2, 'id'))
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        t3 = registry.Test3.insert(test=t)
+        t2 = registry.Test2.query().one()
+        self.assertEqual(t3.test2, t2.id)
+        self.assertEqual(t2.test, t)
