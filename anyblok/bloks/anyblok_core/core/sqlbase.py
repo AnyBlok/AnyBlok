@@ -30,6 +30,14 @@ def query_method(name):
 class SqlMixin:
 
     @classmethod
+    def define_table_args(cls):
+        return ()
+
+    @classmethod
+    def define_mapper_args(cls):
+        return {}
+
+    @classmethod
     def query(cls, *elements):
         """ Facility to do a SqlAlchemy query::
 

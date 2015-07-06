@@ -327,7 +327,8 @@ class TestMany2One(DBTestCase):
             class Test2:
 
                 @classmethod
-                def define_table_args(cls, table_args, properties):
+                def define_table_args(cls):
+                    table_args = super(Test2, cls).define_table_args()
                     return table_args + (ForeignKeyConstraint(
                         ['test_id', 'test_id2'], ['test.id', 'test.id2']),)
 

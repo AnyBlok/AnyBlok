@@ -29,17 +29,19 @@ def single_table_poly():
         manager_name = String()
 
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Employee, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'employee',
-                'polymorphic_on': properties['type_entity'],
+                'polymorphic_on': cls.type_entity,
             })
             return mapper_args
 
     @register(Model, tablename=Model.Employee)
     class Engineer(Model.Employee):
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Engineer, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'engineer',
             })
@@ -48,7 +50,8 @@ def single_table_poly():
     @register(Model, tablename=Model.Employee)
     class Manager(Model.Employee):
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Manager, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'manager',
             })
@@ -63,10 +66,11 @@ def multi_table_poly():
         type_entity = String()
 
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Employee, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'employee',
-                'polymorphic_on': properties['type_entity'],
+                'polymorphic_on': cls.type_entity,
             })
             return mapper_args
 
@@ -76,7 +80,8 @@ def multi_table_poly():
         engineer_name = String()
 
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Engineer, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'engineer',
             })
@@ -88,7 +93,8 @@ def multi_table_poly():
         manager_name = String()
 
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Manager, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'manager',
             })
@@ -107,10 +113,11 @@ def multi_table_poly_mixins():
         type_entity = String()
 
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Employee, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'employee',
-                'polymorphic_on': properties['type_entity'],
+                'polymorphic_on': cls.type_entity,
             })
             return mapper_args
 
@@ -120,7 +127,8 @@ def multi_table_poly_mixins():
         engineer_name = String()
 
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Engineer, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'engineer',
             })
@@ -132,7 +140,8 @@ def multi_table_poly_mixins():
         manager_name = String()
 
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Manager, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'manager',
             })
@@ -153,10 +162,11 @@ def multi_table_foreign_key():
         room = Many2One(model=Model.Room, one2many='employees')
 
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Employee, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'employee',
-                'polymorphic_on': properties['type_entity'],
+                'polymorphic_on': cls.type_entity,
             })
             return mapper_args
 
@@ -166,11 +176,44 @@ def multi_table_foreign_key():
         engineer_name = String()
 
         @classmethod
-        def define_mapper_args(cls, mapper_args, properties):
+        def define_mapper_args(cls):
+            mapper_args = super(Engineer, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'engineer',
             })
             return mapper_args
+
+
+def multi_table_foreign_key_with_one_define_mapper_args():
+    @register(Model)
+    class Room:
+        id = Integer(primary_key=True)
+        name = String()
+
+    @register(Model)
+    class Employee:
+        id = Integer(primary_key=True)
+        name = String()
+        type_entity = String()
+        room = Many2One(model=Model.Room, one2many='employees')
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Employee, cls).define_mapper_args()
+            if Model.Employee.__registry_name__ == cls.__registry_name__:
+                mapper_args.update({
+                    'polymorphic_on': cls.type_entity,
+                })
+
+            mapper_args.update({
+                'polymorphic_identity': cls.__registry_name__,
+            })
+            return mapper_args
+
+    @register(Model)
+    class Engineer(Model.Employee):
+        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        engineer_name = String()
 
 
 class TestPolymorphic(DBTestCase):
@@ -202,6 +245,14 @@ class TestPolymorphic(DBTestCase):
 
     def test_multi_table_foreign_key(self):
         registry = self.init_registry(multi_table_foreign_key)
+        room = registry.Room.insert()
+        self.check_registry(registry.Employee, room=room)
+        self.check_registry(registry.Engineer, engineer_name='An engineer',
+                            room=room)
+
+    def test_multi_table_foreign_key2_with_one_define_mapper_args(self):
+        registry = self.init_registry(
+            multi_table_foreign_key_with_one_define_mapper_args)
         room = registry.Room.insert()
         self.check_registry(registry.Employee, room=room)
         self.check_registry(registry.Engineer, engineer_name='An engineer',

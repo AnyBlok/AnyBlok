@@ -21,6 +21,7 @@ Future
 * [REF] refactor field function
 * [FIX] inherit relation ship from another model, thank Simon ANDRÉ for the 
   bug report
+* [REF] table/mapper args definition
 
 0.4.0
 -----

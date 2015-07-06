@@ -16,6 +16,7 @@ from sqlalchemy.orm import Query, mapper
 from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
+from sqlalchemy.ext.declarative import declared_attr
 
 
 class ModelException(Exception):
@@ -191,8 +192,6 @@ class Model:
         if name in properties:
             return
 
-        from sqlalchemy.ext.declarative import declared_attr
-
         if field.must_be_duplicate_before_added():
             field = deepcopy(field)
 
@@ -290,10 +289,10 @@ class Model:
                 "attribute" % (namespace, base.__mapper_args__))
 
         if hasattr(base, 'define_table_args'):
-            properties['table_args'].insert(0, base.define_table_args)
+            properties['table_args'] = True
 
         if hasattr(base, 'define_mapper_args'):
-            properties['mapper_args'].insert(0, base.define_mapper_args)
+            properties['mapper_args'] = True
 
     @classmethod
     def transform_base(cls, registry, namespace, base, properties):
@@ -370,21 +369,29 @@ class Model:
         :param properties: assembled attributes of the namespace
         """
         table_args = tuple(properties['add_in_table_args'])
-        mapper_args = {}
-        for meth in transformation_properties['table_args']:
-            table_args = meth(table_args, properties.copy())
-            if not isinstance(table_args, tuple):
-                raise ModelException("'define_table_args' must return a tuple "
-                                     "not %r" % table_args)
+        if table_args:
+            def define_table_args(cls_):
+                if cls_.__registry_name__ == namespace:
+                    return super(base, cls_).define_table_args() + table_args
 
-        for meth in transformation_properties['mapper_args']:
-            mapper_args = meth(mapper_args, properties.copy())
-            if not isinstance(mapper_args, dict):
-                raise ModelException("'define_mapper_args' must return a dict "
-                                     "not %r" % mapper_args)
+                return ()
 
-        setattr(base, '__table_args__', table_args)
-        setattr(base, '__mapper_args__', mapper_args)
+            base.define_table_args = classmethod(define_table_args)
+            transformation_properties['table_args'] = True
+
+        if transformation_properties['table_args']:
+
+            def __table_args__(cls_):
+                return cls_.define_table_args()
+
+            base.__table_args__ = declared_attr(__table_args__)
+
+        if transformation_properties['mapper_args']:
+
+            def __mapper_args__(cls_):
+                return cls_.define_mapper_args()
+
+            base.__mapper_args__ = declared_attr(__mapper_args__)
 
     @classmethod
     def insert_in_bases(cls, registry, namespace, bases,
@@ -545,8 +552,8 @@ class Model:
         if transformation_properties is None:
             transformation_properties = {
                 'hybrid_method': [],
-                'table_args': [],
-                'mapper_args': [],
+                'table_args': False,
+                'mapper_args': False,
             }
 
         bases = TypeList(cls, registry, namespace, transformation_properties)
