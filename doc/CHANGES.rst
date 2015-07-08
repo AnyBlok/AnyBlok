@@ -22,6 +22,7 @@ Future
 * [FIX] inherit relation ship from another model, thank Simon ANDRÉ for the 
   bug report
 * [REF] table/mapper args definition
+* [REF] Refactor Field, Column, RelationShip use now polymophic inherit
 
 0.4.0
 -----

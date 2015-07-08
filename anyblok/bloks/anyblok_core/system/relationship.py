@@ -15,14 +15,24 @@ Mixin = Declarations.Mixin
 
 
 @register(System)
-class RelationShip(Mixin.Field):
+class RelationShip(System.Field):
 
+    name = String(primary_key=True)
+    model = String(primary_key=True)
     local_column = String()
     remote_column = String()
     remote_name = String()
     remote_model = String(nullable=False)
     remote = Boolean(default=False)
     nullable = Boolean()
+
+    def _description(self):
+        res = super(RelationShip, self)._description()
+        res.update({
+            'nullable': self.nullable,
+            'model': self.remote_model,
+        })
+        return res
 
     @classmethod
     def add_field(cls, rname, relation, model, table, ftype):
@@ -66,3 +76,7 @@ class RelationShip(Mixin.Field):
                         label=remote_name.capitalize().replace('_', ' '),
                         nullable=True, ftype=remote_type, remote=True)
             cls.insert(**vals)
+
+    @classmethod
+    def alter_field(cls, field, label, ftype):
+        pass

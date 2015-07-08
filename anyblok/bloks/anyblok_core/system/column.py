@@ -15,14 +15,25 @@ Mixin = Declarations.Mixin
 
 
 @register(System)
-class Column(Mixin.Field):
+class Column(System.Field):
 
+    name = String(primary_key=True)
+    model = String(primary_key=True)
     autoincrement = Boolean(label="Auto increment")
     foreign_key = String()
     primary_key = Boolean()
     unique = Boolean()
     nullable = Boolean()
     remote_model = String()
+
+    def _description(self):
+        res = super(Column, self)._description()
+        res.update({
+            'nullable': self.nullable,
+            'primary_key': self.primary_key,
+            'model': self.remote_model,
+        })
+        return res
 
     @classmethod
     def get_cname(self, field, cname):

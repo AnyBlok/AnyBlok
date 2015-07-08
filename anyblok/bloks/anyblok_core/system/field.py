@@ -7,6 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok.column import String
+from sqlalchemy import ForeignKeyConstraint
 
 
 register = Declarations.register
@@ -14,7 +15,7 @@ System = Declarations.Model.System
 Mixin = Declarations.Mixin
 
 
-@register(Mixin)
+@register(System)  # noqa
 class Field:
 
     name = String(primary_key=True)
@@ -22,22 +23,45 @@ class Field:
     model = String(primary_key=True)
     label = String()
     ftype = String(label="Type", nullable=True)
+    entity_type = String(nullable=True)
+
+    @classmethod
+    def define_table_args(cls):
+        table_args = super(Field, cls).define_table_args()
+        if cls.__registry_name__ != System.Field.__registry_name__:
+            F = cls.registry.System.Field
+            return table_args + (ForeignKeyConstraint([cls.name, cls.model],
+                                                      [F.name, F.model]),)
+
+        return table_args
+
+    @classmethod
+    def define_mapper_args(cls):
+        mapper_args = super(Field, cls).define_mapper_args()
+        if cls.__registry_name__ == System.Field.__registry_name__:
+            mapper_args.update({
+                'polymorphic_identity': cls.__registry_name__,
+                'polymorphic_on': cls.entity_type,
+            })
+        else:
+            mapper_args.update({
+                'polymorphic_identity': cls.__registry_name__,
+            })
+        return mapper_args
 
     @classmethod
     def get_cname(self, field, cname):
         return cname
 
-    @classmethod
-    def add_field(cls, name, field, model, table, ftype):
-        pass
-
-    @classmethod
-    def alter_field(cls, field, meta_field, ftype):
-        pass
-
-
-@register(System)  # noqa
-class Field(Mixin.Field):
+    def _description(self):
+        return {
+            'id': self.name,
+            'label': self.label,
+            'type': self.ftype,
+            'nullable': True,
+            'primary_key': False,
+            'model': None,
+        }
 
     @classmethod
     def add_field(cls, rname, label, model, table, ftype):

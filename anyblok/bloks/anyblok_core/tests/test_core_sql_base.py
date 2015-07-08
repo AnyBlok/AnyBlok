@@ -103,6 +103,7 @@ class TestCoreSqlBase(BlokTestCase):
 
     def test_fields_description_cache(self):
         Model = self.registry.System.Model
+        Column = self.registry.System.Column
         self.maxDiff = None
         res = {'table': {'id': 'table',
                          'label': 'Table',
@@ -111,9 +112,9 @@ class TestCoreSqlBase(BlokTestCase):
                          'primary_key': False,
                          'type': 'String'}}
         self.assertEqual(Model.fields_description(fields=['table']), res)
-        column = self.registry.System.Column.from_primary_keys(
-            model='Model.System.Model', name='table')
-        column.update(dict(label='Test'))
+        column = Column.from_primary_keys(model='Model.System.Model',
+                                          name='table')
+        column.label = 'Test'
         self.assertEqual(Model.fields_description(fields=['table']), res)
         Model.fire('Update Model', 'Model.System.Model')
         self.assertNotEqual(Model.fields_description(fields=['table']), res)
