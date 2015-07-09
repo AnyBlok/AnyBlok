@@ -14,7 +14,7 @@ PROMPT = "%(processName)s - %(version)s"
 
 def start(processName, version=release.version, prompt=PROMPT,
           configuration_groups=None, entry_points=None,
-          useseparator=False):
+          useseparator=False, loadwithoutmigration=False):
     """ Function which initialize the application
 
     ::
@@ -30,6 +30,7 @@ def start(processName, version=release.version, prompt=PROMPT,
     :param entry_points: entry point where load blok
     :param useseparator: boolean, indicate if configuration option are split
         betwwen two application
+    :param noautomigration: if True, any
     :rtype: registry if the database name is in the configuration
     """
     from .blok import BlokManager
@@ -51,7 +52,8 @@ def start(processName, version=release.version, prompt=PROMPT,
     if not db_name:
         return None
 
-    registry = RegistryManager.get(db_name)
+    registry = RegistryManager.get(
+        db_name, loadwithoutmigration=loadwithoutmigration)
     registry.commit()
     return registry
 

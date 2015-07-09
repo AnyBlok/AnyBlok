@@ -269,6 +269,24 @@ class Blok:
                                been installing the latest_version will be None
         """
 
+    def pre_migration(self, latest_version):
+        """Call at update, before the automigration
+
+        .. warning::
+
+            You can not use the ORM
+
+        :param latest_version: latest version installed, if the blok have not
+                               been installing the latest_version will be None
+        """
+
+    def post_migration(self, latest_version):
+        """Call at update, after the automigration
+
+        :param latest_version: latest version installed, if the blok have not
+                               been installing the latest_version will be None
+        """
+
     def uninstall(self):
         """ Call at the uninstallation
         """

@@ -250,7 +250,9 @@ class Blok:
         """ Load all the installed bloks
         """
         query = cls.query().filter(cls.state == 'installed')
-        query.order_by(cls.order).all().load()
+        bloks = query.order_by(cls.order).all()
+        if bloks:
+            bloks.load()
 
 
 @register(System.Blok)

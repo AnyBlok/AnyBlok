@@ -7,6 +7,8 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import Blok
 from anyblok.release import version
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class AnyBlokCore(Blok):
@@ -19,6 +21,39 @@ class AnyBlokCore(Blok):
     version = version
     autoinstall = True
     priority = 0
+
+    def pre_migration(self, latest_version):
+        if latest_version is not None and latest_version < self.version:
+            logger.info("Pre Migration %s => %s: Field, Column, Relation Ship "
+                        "become prolymophic models" % (latest_version,
+                                                       self.version))
+            system_field = self.registry.migration.table('system_field')
+            system_field.column().add(self.registry.System.Field.entity_type)
+            self.registry.execute(
+                "UPDATE system_field SET entity_type='Model.System.Field'")
+            query = """
+                INSERT INTO system_field (
+                    name,
+                    model,
+                    code,
+                    label,
+                    ftype,
+                    entity_type)
+                SELECT
+                    name,
+                    model,
+                    code,
+                    label,
+                    ftype,
+                    '%(entity_type)s' AS entity_type
+                FROM %(table)s
+            """
+            self.registry.execute(
+                query % {'entity_type': 'Model.System.Column',
+                         'table': 'system_column'})
+            self.registry.execute(
+                query % {'entity_type': 'Model.System.RelationShip',
+                         'table': 'system_relationship'})
 
     @classmethod
     def import_declaration_module(cls):

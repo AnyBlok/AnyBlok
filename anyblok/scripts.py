@@ -67,7 +67,8 @@ def updatedb(description, version, configuration_groups):
                          'uninstall-bloks', 'update-bloks')
 
     registry = anyblok.start(description, version,
-                             configuration_groups=configuration_groups)
+                             configuration_groups=configuration_groups,
+                             loadwithoutmigration=True)
 
     if Configuration.get('install_all_bloks'):
         install_bloks = registry.System.Blok.list_by_state('uninstalled')

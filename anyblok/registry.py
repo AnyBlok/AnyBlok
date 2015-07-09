@@ -86,7 +86,7 @@ class RegistryManager:
             registry.close()
 
     @classmethod
-    def get(cls, db_name):
+    def get(cls, db_name, loadwithoutmigration=False):
         """ Return an existing Registry
 
         If the Registry doesn't exist then the Registry are created and added
@@ -97,9 +97,12 @@ class RegistryManager:
         """
         EnvironmentManager.set('db_name', db_name)
         if db_name in cls.registries:
+            if loadwithoutmigration:
+                logger.warning("loadwithoutmigration can not be used because "
+                               "the registry for %r is already load" % db_name)
             return cls.registries[db_name]
 
-        registry = Registry(db_name)
+        registry = Registry(db_name, loadwithoutmigration=loadwithoutmigration)
         cls.registries[db_name] = registry
         return registry
 
@@ -378,8 +381,9 @@ class Registry:
         registry = Registry('My database')
     """
 
-    def __init__(self, db_name):
+    def __init__(self, db_name, loadwithoutmigration=False):
         self.db_name = db_name
+        self.loadwithoutmigration = loadwithoutmigration
         url = Configuration.get_url(db_name=db_name)
         echo = bool(int(Configuration.get('db_echo') or False))
         self.engine = create_engine(url, echo=echo)
@@ -794,11 +798,12 @@ class Registry:
                 registry=self))
             toload = self.get_bloks_to_load()
             toinstall = self.get_bloks_to_install(toload)
+            print('1', toload, toinstall)
             if self.update_to_install_blok_dependencies_state(toinstall):
                 toinstall = self.get_bloks_to_install(toload)
 
             self.load_bloks(toload, False, toload)
-            if toinstall:
+            if toinstall and not self.loadwithoutmigration:
                 blok2install = toinstall[0]
                 self.load_blok(blok2install, True, toload)
 
@@ -812,7 +817,8 @@ class Registry:
             else:
                 self.flush()
 
-            mustreload = self.apply_model_schema_on_table() or mustreload
+            mustreload = self.apply_model_schema_on_table(
+                blok2install) or mustreload
 
         except:
             self.close()
@@ -836,6 +842,8 @@ class Registry:
                 self.reload()
             else:
                 self.System.Blok.load_all()
+
+        self.loadwithoutmigration = False
 
     def run_test(registry, blok2install):
         defaultTest = join(BlokManager.getPath(blok2install), 'tests')
@@ -869,7 +877,7 @@ class Registry:
                 logger.info('Assemble %r entry' % entry)
                 RegistryManager.callback_assemble_entries[entry](self)
 
-    def apply_model_schema_on_table(self):
+    def apply_model_schema_on_table(self, blok2install):
         # replace the engine by the session.connection for bind attribute
         # because session.connection is already the connection use
         # by blok, migration and all write on the data base
@@ -877,11 +885,33 @@ class Registry:
         # new connection, this new connection have not acknowedge of the
         # data in the session.connection, and risk of bad lock on the
         # tables
+        if self.loadwithoutmigration:
+            return
+
         if not self.noautomigration:
             self.declarativebase.metadata.create_all(self.connection())
 
         self.migration = Migration(self)
-        self.migration.auto_upgrade_database()
+        query = """
+            SELECT name, installed_version
+            FROM system_blok
+            WHERE
+                (state = 'toinstall' AND name = '%s')
+                OR state = 'toupdate'""" % blok2install
+        res = self.execute(query).fetchall()
+        if res:
+            for blok, installed_version in res:
+                b = BlokManager.get(blok)(self)
+                b.pre_migration(installed_version)
+
+            self.migration.auto_upgrade_database()
+            for blok, installed_version in res:
+                b = BlokManager.get(blok)(self)
+                b.post_migration(installed_version)
+
+        else:
+            self.migration.auto_upgrade_database()
+
         mustreload = False
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_initialize_entries:
