@@ -23,6 +23,8 @@ Future
   bug report
 * [REF] table/mapper args definition
 * [REF] Refactor Field, Column, RelationShip use now polymophic inherit
+* [FIX] Foreign key constraint, allow to add and drop constraint on more than
+        one foreign key
 
 0.4.0
 -----

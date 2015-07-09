@@ -221,9 +221,10 @@ class TestMigration(TestCase):
         t.primarykey().drop().add(t.column('other'))
 
     def test_alter_column_foreign_key(self):
-        c = self.registry.migration.table('test').column('other')
-        c.foreign_key().add(self.registry.System.Blok.name)
-        c.foreign_key().drop()
+        t = self.registry.migration.table('test')
+        t.foreign_key('my_fk').add(
+            ['other'], [self.registry.System.Blok.name])
+        t.foreign_key('my_fk').drop()
 
     def test_constraint_unique(self):
         t = self.registry.migration.table('test')
@@ -392,11 +393,11 @@ class TestMigration(TestCase):
                 );""")
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has(
-            "Add Foreign keys on testfk.other => testfktarget.integer"))
+            "Add Foreign keys on (testfk.other) => (testfktarget.integer)"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has(
-            "Add Foreign keys on testfk.other => testfktarget.integer"))
+            "Add Foreign keys on (testfk.other) => (testfktarget.integer)"))
 
     def test_detect_drop_foreign_key(self):
         with self.cnx() as conn:

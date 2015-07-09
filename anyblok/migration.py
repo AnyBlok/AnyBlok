@@ -60,10 +60,15 @@ class MigrationReport:
     def init_add_fk(self, diff):
         self.raise_if_noautomigration()
         _, fk = diff
+        from_ = []
+        to_ = []
         for column in fk.columns:
             for fk_ in column.foreign_keys:
-                self.log_names.append('Add Foreign keys on %s.%s => %s' % (
-                    fk.table.name, column.name, fk_.target_fullname))
+                from_.append('%s.%s' % (fk.table.name, column.name))
+                to_.append(fk_.target_fullname)
+
+        self.log_names.append('Add Foreign keys on (%s) => (%s)' % (
+            ', '.join(from_), ', '.join(to_)))
 
     def init_remove_fk(self, diff):
         self.raise_if_noautomigration()
@@ -187,15 +192,20 @@ class MigrationReport:
     def apply_change_add_fk(self, action):
         _, fk = action
         t = self.migration.table(fk.table.name)
+        from_ = []
+        to_ = []
         for column in fk.columns:
             for fk_ in column.foreign_keys:
-                t.column(name=column.name).foreign_key().add(fk_.column)
+                from_.append(column.name)
+                to_.append(fk_.column)
+
+        name = 'fk_%s' % '_'.join(from_)
+        t.foreign_key(name).add(from_, to_)
 
     def apply_change_remove_fk(self, action):
         _, fk = action
         t = self.migration.table(fk.table.name)
-        for column in fk.columns:
-            t.column(name=column.name).foreign_key().drop()
+        t.foreign_key(fk.name).drop()
 
     def apply_change_add_constraint(self, action):
         _, constraint = action
@@ -241,33 +251,36 @@ class MigrationConstraintForeignKey:
         table.column('my column').foreign_key().drop()
 
     """
-    def __init__(self, column):
-        self.column = column
-        self.name = self.format_name()
+    def __init__(self, table, name):
+        self.table = table
+        self.name = name
 
-    def format_name(self, *columns):
-        return '%s_%s_fkey' % (self.column.table.name, self.column.name)
-
-    def add(self, remote_field, **kwargs):
+    def add(self, local_columns, remote_columns, **kwargs):
         """ Add a new foreign key
 
         :param remote_field: The column of the remote model
         :rtype: MigrationConstraintForeignKey instance
         """
-        if hasattr(remote_field, 'propery'):
-            remote_field = remote_field.property.columns[0]
+        remote_columns = [
+            x.property.columns[0] if hasattr(x, 'property') else x
+            for x in remote_columns]
 
-        remote_table = remote_field.table.name
-        remote_column = remote_field.name
-        self.column.table.migration.operation.create_foreign_key(
-            self.name, self.column.table.name, remote_table,
-            [self.column.name], [remote_column], **kwargs)
+        remote_table = set(x.table.name for x in remote_columns)
+        if len(remote_table) != 1:
+            raise MigrationException("Remote column must have the same table "
+                                     "(%s)" % ', '.join(remote_table))
+
+        remote_table = remote_table.pop()
+        remote_columns = [x.name for x in remote_columns]
+        self.table.migration.operation.create_foreign_key(
+            self.name, self.table.name, remote_table,
+            local_columns, remote_columns, **kwargs)
         return self
 
     def drop(self):
         """ Drop the foreign key """
-        self.column.table.migration.operation.drop_constraint(
-            self.name, self.column.table.name, type_='foreignkey')
+        self.table.migration.operation.drop_constraint(
+            self.name, self.table.name, type_='foreignkey')
         return self
 
 
@@ -433,13 +446,6 @@ class MigrationColumn:
     def server_default(self):
         """ Use for unittest: return the default database value """
         return self.info['default']
-
-    def foreign_key(self):
-        """ Get a foreign key
-
-        :rtype: MigrationConstraintForeignKey instance
-        """
-        return MigrationConstraintForeignKey(self)
 
 
 class MigrationConstraintCheck:
@@ -751,6 +757,13 @@ class MigrationTable:
         name = kwargs['name']
         self.migration.operation.rename_table(self.name, name)
         return MigrationTable(self.migration, name)
+
+    def foreign_key(self, name):
+        """ Get a foreign key
+
+        :rtype: MigrationConstraintForeignKey instance
+        """
+        return MigrationConstraintForeignKey(self, name)
 
 
 class Migration:
