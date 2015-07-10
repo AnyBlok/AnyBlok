@@ -75,8 +75,12 @@ def updatedb(description, version, configuration_groups):
     else:
         install_bloks = format_bloks(Configuration.get('install_bloks'))
 
+    if Configuration.get('update_all_bloks'):
+        update_bloks = registry.System.Blok.list_by_state('installed')
+    else:
+        update_bloks = format_bloks(Configuration.get('update_bloks'))
+
     uninstall_bloks = format_bloks(Configuration.get('uninstall_bloks'))
-    update_bloks = format_bloks(Configuration.get('update_bloks'))
     if registry:
         registry.upgrade(install=install_bloks, update=update_bloks,
                          uninstall=uninstall_bloks)

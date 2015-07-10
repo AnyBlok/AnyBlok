@@ -457,6 +457,8 @@ def add_uninstall_bloks(parser, configuration):
 def add_update_bloks(parser, configuration):
     parser.add_argument('--update-bloks', default='',
                         help="bloks to update")
+    parser.add_argument('--update-all-bloks',
+                        action='store_true')
 
 
 @Configuration.add('interpreter')
