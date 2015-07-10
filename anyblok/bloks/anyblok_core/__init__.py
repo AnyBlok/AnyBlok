@@ -54,6 +54,15 @@ class AnyBlokCore(Blok):
             self.registry.execute(
                 query % {'entity_type': 'Model.System.RelationShip',
                          'table': 'system_relationship'})
+            system_column = self.registry.migration.table('system_column')
+            system_column.column('code').drop()
+            system_column.column('ftype').drop()
+            system_column.column('label').drop()
+            system_relationship = self.registry.migration.table(
+                'system_relationship')
+            system_relationship.column('code').drop()
+            system_relationship.column('ftype').drop()
+            system_relationship.column('label').drop()
 
     @classmethod
     def import_declaration_module(cls):
