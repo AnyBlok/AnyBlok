@@ -680,7 +680,7 @@ class Model:
             Model.initialize_model()
 
         Blok = registry.System.Blok
-        if not registry.noautomigration:
+        if not registry.withoutautomigration:
             Model = registry.System.Model
             Model.update_list()
             Blok.update_list()

@@ -247,7 +247,7 @@ class TestMigration(TestCase):
                     other CHAR(64) NOT NULL
                 );""")
         self.registry.migration.detect_changed()
-        self.registry.migration.noautomigration = True
+        self.registry.migration.withoutautomigration = True
         with self.assertRaises(MigrationException):
             self.registry.migration.detect_changed()
 

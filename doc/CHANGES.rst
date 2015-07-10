@@ -25,6 +25,7 @@ Future
 * [REF] Refactor Field, Column, RelationShip use now polymophic inherit
 * [FIX] Foreign key constraint, allow to add and drop constraint on more than
         one foreign key
+* [ADD] update-all-bloks option
 
 0.4.0
 -----

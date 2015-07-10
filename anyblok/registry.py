@@ -390,7 +390,7 @@ class Registry:
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
-        self.noautomigration = Configuration.get('noautomigration')
+        self.withoutautomigration = Configuration.get('withoutautomigration')
         self.ini_var()
         self.Session = None
         self.nb_query_bases = self.nb_session_bases = 0
@@ -474,7 +474,7 @@ class Registry:
             if blok not in (toinstall + loaded):
                 toinstall.append(blok)
 
-        if toinstall and self.noautomigration:
+        if toinstall and self.withoutautomigration:
             raise RegistryManager("Install module is forbidden with "
                                   "no auto migration mode")
 
@@ -890,7 +890,7 @@ class Registry:
         if self.loadwithoutmigration:
             return
 
-        if not self.noautomigration:
+        if not self.withoutautomigration:
             self.declarativebase.metadata.create_all(self.connection())
 
         self.migration = Migration(self)

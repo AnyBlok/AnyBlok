@@ -34,31 +34,31 @@ class MigrationReport:
         report = MigrationReport(migrationinstance, change_detected)
 
     """
-    def raise_if_noautomigration(self):
-        if self.migration.noautomigration:
+    def raise_if_withoutautomigration(self):
+        if self.migration.withoutautomigration:
             raise MigrationException("The metadata and the base structue are "
                                      "different, or this difference is "
                                      "forbidden in 'no auto migration' mode")
 
     def init_add_column(self, diff):
-        self.raise_if_noautomigration()
+        self.raise_if_withoutautomigration()
         _, _, table, column = diff
         self.log_names.append('Add %s.%s' % (table, column.name))
 
     def init_remove_constraint(self, diff):
-        self.raise_if_noautomigration()
+        self.raise_if_withoutautomigration()
         _, constraint = diff
         self.log_names.append('Drop constraint %s on %s' % (
             constraint.name, constraint.table))
 
     def init_remove_index(self, diff):
-        self.raise_if_noautomigration()
+        self.raise_if_withoutautomigration()
         _, index = diff
         self.log_names.append('Drop index %s on %s' % (index.name,
                                                        index.table))
 
     def init_add_fk(self, diff):
-        self.raise_if_noautomigration()
+        self.raise_if_withoutautomigration()
         _, fk = diff
         from_ = []
         to_ = []
@@ -71,7 +71,7 @@ class MigrationReport:
             ', '.join(from_), ', '.join(to_)))
 
     def init_remove_fk(self, diff):
-        self.raise_if_noautomigration()
+        self.raise_if_withoutautomigration()
         _, fk = diff
         for column in fk.columns:
             for fk_ in column.foreign_keys:
@@ -79,7 +79,7 @@ class MigrationReport:
                     fk.table.name, column.name, fk_.target_fullname))
 
     def init_add_constraint(self, diff):
-        self.raise_if_noautomigration()
+        self.raise_if_withoutautomigration()
         _, constraint = diff
         columns = [x.name for x in constraint.columns]
         self.log_names.append('Add unique constraint on %s (%s)' % (
@@ -90,7 +90,7 @@ class MigrationReport:
         msg = "Drop Column %s.%s" % (column.table.name,
                                      column.name)
         if column.nullable is False:
-            self.raise_if_noautomigration()
+            self.raise_if_withoutautomigration()
             msg += " (not null)"
             self.log_names.append(msg)
             self.actions.append(
@@ -129,7 +129,7 @@ class MigrationReport:
         }
         for diff in diffs:
             if isinstance(diff, list):
-                self.raise_if_noautomigration()
+                self.raise_if_withoutautomigration()
                 for change in diff:
                     _, _, table, column, _, _, _ = change
                     self.log_names.append('Alter %s.%s' % (table, column))
@@ -777,7 +777,7 @@ class Migration:
     """
 
     def __init__(self, registry):
-        self.noautomigration = registry.noautomigration
+        self.withoutautomigration = registry.withoutautomigration
         self.conn = registry.session.connection()
         self.metadata = registry.declarativebase.metadata
 

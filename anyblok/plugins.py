@@ -19,7 +19,7 @@ class Arg2OptOptions:
                 'db_password', 'db_host', 'db_port']
 
         return [(x, getattr(self.options, x))
-                for x in keys] + [('noautomigration', True)]
+                for x in keys] + [('withoutautomigration', True)]
 
     def __getattr__(self, name, default=None):
         return getattr(self.options, name, default)

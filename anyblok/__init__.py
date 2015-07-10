@@ -30,7 +30,7 @@ def start(processName, version=release.version, prompt=PROMPT,
     :param entry_points: entry point where load blok
     :param useseparator: boolean, indicate if configuration option are split
         betwwen two application
-    :param noautomigration: if True, any
+    :param withoutautomigration: if True, any
     :rtype: registry if the database name is in the configuration
     """
     from .blok import BlokManager
