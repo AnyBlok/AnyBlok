@@ -798,9 +798,11 @@ class Registry:
                 registry=self))
             toload = self.get_bloks_to_load()
             toinstall = self.get_bloks_to_install(toload)
-            print('1', toload, toinstall)
             if self.update_to_install_blok_dependencies_state(toinstall):
                 toinstall = self.get_bloks_to_install(toload)
+            if self.loadwithoutmigration and not toload and toinstall:
+                logger.warning("Impossible to use loadwithoumigration")
+                self.loadwithoutmigration = False
 
             self.load_bloks(toload, False, toload)
             if toinstall and not self.loadwithoutmigration:
