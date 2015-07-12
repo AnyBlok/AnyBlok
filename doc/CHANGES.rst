@@ -26,6 +26,7 @@ Future
 * [FIX] Foreign key constraint, allow to add and drop constraint on more than
         one foreign key
 * [ADD] update-all-bloks option
+* [ADD] pre / post migration
 
 0.4.0
 -----

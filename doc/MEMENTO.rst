@@ -81,6 +81,24 @@ And the methods that define blok behaviours:
 +-------------------------------+---------------------------------------------+
 | ``load``                      | Action to do when the server starts         |
 +-------------------------------+---------------------------------------------+
+| ``pre_migration``             | Action to do when the blok is being         |
+|                               | installed or updated to make some specific  |
+|                               | migration, before auto migration.           |
+|                               | This method has one argument                |
+|                               | ``latest_version`` (None for install)       |
++-------------------------------+---------------------------------------------+
+| ``post_migration``            | Action to do when the blok is being         |
+|                               | installed or updated to make some specific  |
+|                               | migration, after auto migration.            |
+|                               | This method has one argument                |
+|                               | ``latest_version`` (None for install)       |
++-------------------------------+---------------------------------------------+
+
+And some facility:
+
++-------------------------------+---------------------------------------------+
+| Method                        | Description                                 |
++===============================+=============================================+
 | ``import_file``               | facility to import data                     |
 +-------------------------------+---------------------------------------------+
 
