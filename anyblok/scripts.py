@@ -166,14 +166,16 @@ def registry2rst(description, version, configuration_groups):
     :param version: version of script for argparse
     :param configuration_groups: list configuration groupe to load
     """
+    format_configuration(configuration_groups, 'doc')
     registry = anyblok.start(description, version,
                              configuration_groups=configuration_groups)
     if registry:
         registry.commit()
         doc = registry.Documentation()
         doc.auto_doc()
-        with open('plop', 'w') as fp:
-            doc.toRST(fp)
+        with open(Configuration.get('doc_output'), 'w') as fp:
+            if Configuration.get('doc_format') == 'RST':
+                doc.toRST(fp)
 
 
 def add_tables(dot, registry, models_):

@@ -478,6 +478,18 @@ def add_schema(group, configuration):
                        help='Detail only these models separated by ","')
 
 
+@Configuration.add('doc', label="Doc options")
+def add_doc(group, configuration):
+    group.add_argument('--doc-format',
+                       default='RST', choices=('RST',))
+    group.add_argument('--doc-output',
+                       default='anyblok-documentation')
+    group.add_argument('--doc-wanted-models',
+                       help='Detail only these models separated by ","')
+    group.add_argument('--doc-unwanted-models',
+                       help='No detail these models separated by ","')
+
+
 @Configuration.add('unittest', label="Unittest")
 def add_unittest(group, configuration):
     group.add_argument('--selected-bloks', default='',
