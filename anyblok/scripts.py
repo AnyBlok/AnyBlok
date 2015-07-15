@@ -171,8 +171,9 @@ def registry2rst(description, version, configuration_groups):
     if registry:
         registry.commit()
         doc = registry.Documentation()
-        doc.create()
-        print(doc.toRST())
+        doc.auto_doc()
+        with open('plop', 'w') as fp:
+            doc.toRST(fp)
 
 
 def add_tables(dot, registry, models_):
