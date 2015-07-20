@@ -28,6 +28,7 @@ Future
 * [ADD] update-all-bloks option
 * [ADD] pre / post migration
 * [REF] UML Diagram is now with autodoc script
+* [REF] SQL Diagram is now with autodoc script
 
 0.4.0
 -----

@@ -175,80 +175,18 @@ def registry2doc(description, version, configuration_groups):
         if Configuration.get('doc_format') == 'RST':
             with open(Configuration.get('doc_output'), 'w') as fp:
                 doc.toRST(fp)
-        elif Configuration.get('doc_format') in ('UML', 'SQL'):
+        elif Configuration.get('doc_format') == 'UML':
             format_ = Configuration.get('schema_format')
             name_ = Configuration.get('schema_output')
             dot = ModelSchema(name_, format=format_)
-            if Configuration.get('doc_format') == 'UML':
-                doc.toUML(dot)
-            else:
-                doc.toSQL(dot)
-
+            doc.toUML(dot)
             dot.save()
-
-
-def add_tables(dot, registry, models_):
-    for model, cls in registry.loaded_namespaces.items():
-        if not hasattr(cls, '__tablename__'):
-            continue
-
-        if not models_:
-            dot.add_table(cls.__tablename__)
-        elif model in models_:
-            dot.add_table(cls.__tablename__)
-        else:
-            dot.add_label(cls.__tablename__)
-
-
-def add_columns(dot, registry, models_):
-    Column = registry.System.Column
-    for model, cls in registry.loaded_namespaces.items():
-        if models_ and model not in models_:
-            continue
-
-        if not hasattr(cls, '__tablename__'):
-            continue
-
-        t = dot.get_table(cls.__tablename__)
-        columns = Column.query('name', 'ctype', 'foreign_key', 'primary_key',
-                               'nullable')
-        columns = columns.filter(Column.model == model)
-        columns = columns.order_by(Column.primary_key.desc())
-        columns = {x[0]: x[1:] for x in columns.all()}
-
-        for k, v in columns.items():
-            ctype, foreign_key, primary_key, nullable = v
-            if foreign_key:
-                t2 = dot.get_table(foreign_key.split('.')[0])
-                t.add_foreign_key(t2, label=k, nullable=nullable)
-            else:
-                t.add_column(k, ctype, primary_key=primary_key)
-
-
-def sqlschema(description, version, configuration_groups):
-    """ Create a Table model schema of the registry
-
-    :param description: description of configuration
-    :param version: version of script for argparse
-    :param configuration_groups: list configuration groupe to load
-    """
-    format_configuration(configuration_groups, 'schema')
-    registry = anyblok.start(description, version,
-                             configuration_groups=configuration_groups)
-    if registry is None:
-        return
-
-    format_ = Configuration.get('schema_format')
-    name_ = Configuration.get('schema_output')
-    models_ = format_bloks(Configuration.get('schema_models'))
-    models_ = [] if models_ is None else models_
-    dot = SQLSchema(name_, format=format_)
-    # add all the class
-    add_tables(dot, registry, models_)
-    add_columns(dot, registry, models_)
-    dot.save()
-    registry.rollback()
-    registry.close()
+        elif Configuration.get('doc_format') == 'SQL':
+            format_ = Configuration.get('schema_format')
+            name_ = Configuration.get('schema_output')
+            dot = SQLSchema(name_, format=format_)
+            doc.toSQL(dot)
+            dot.save()
 
 
 def anyblok_createdb():

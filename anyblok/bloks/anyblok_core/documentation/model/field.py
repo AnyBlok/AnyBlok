@@ -115,3 +115,36 @@ class Field:
                         label_to=self.field.remote_name,
                         multiplicity_from=multiplicity,
                         multiplicity_to=multiplicity_to)
+
+    def toSQL(self, dot):
+        if self.field.entity_type == 'Model.System.Field':
+            self.toSQL_field(dot)
+        elif self.field.entity_type == 'Model.System.Column':
+            self.toSQL_column(dot)
+        elif self.field.entity_type == 'Model.System.RelationShip':
+            self.toSQL_relationship(dot)
+        else:
+            logger.warn("Unknown entity type %r" % self.field.entity_type)
+
+    def toSQL_field(self, dot):
+        # DO NOTHING
+        pass
+
+    def toSQL_relationship(self, dot):
+        # TODO
+        pass
+
+    def toSQL_column(self, dot):
+        table = dot.get_table(self.registry.get(
+            self.field.model).__tablename__)
+        if self.field.foreign_key:
+            remote_table = dot.get_table(self.field.foreign_key.split('.')[0])
+            if remote_table is None:
+                remote_table = dot.add_label(
+                    self.field.foreign_key.split('.')[0])
+
+            table.add_foreign_key(remote_table, label=self.field.name,
+                                  nullable=self.field.nullable)
+        else:
+            table.add_column(self.field.name, self.field.ftype,
+                             primary_key=self.field.primary_key)

@@ -99,6 +99,17 @@ class Model(Declarations.Mixin.DocElement):
         for attr in self.attributes:
             attr.toUML(dot, self.model.name)
 
+    def toSQL_add_table(self, dot):
+        Model = self.registry.get(self.model.name)
+        if hasattr(Model, '__tablename__'):
+            dot.add_table(Model.__tablename__)
+
+    def toSQL_add_fields(self, dot):
+        Model = self.registry.get(self.model.name)
+        if hasattr(Model, '__tablename__'):
+            for f in self.fields:
+                f.toSQL(dot)
+
 
 from . import field
 reload_module_if_blok_is_reloading(field)

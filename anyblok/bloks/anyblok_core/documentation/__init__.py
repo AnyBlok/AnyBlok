@@ -67,6 +67,13 @@ class Documentation(Declarations.Mixin.DocElement):
         for m in self.models:
             m.toUML_add_attributes(dot)
 
+    def toSQL(self, dot):
+        for m in self.models:
+            m.toSQL_add_table(dot)
+
+        for m in self.models:
+            m.toSQL_add_fields(dot)
+
     def toRST_blok(self, doc):
         self._toRST(doc, self.registry.Documentation.Blok, self.bloks)
 
