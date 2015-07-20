@@ -13,7 +13,9 @@ class DocElement:
 
     def _auto_doc(self, Model, elements, *args, **kwargs):
         for el in Model.getelements(*args, **kwargs):
-            elements.append(Model(el))
+            _el = Model(el)
+            if _el.exist(*args, **kwargs):
+                elements.append(_el)
 
     def _toRST(self, doc, Model, elements):
         Model.header2RST(doc)

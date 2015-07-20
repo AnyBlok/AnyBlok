@@ -16,11 +16,15 @@ class Model(Declarations.Mixin.DocElement):
     def __init__(self, model):
         self.model = model
         self.fields = []
-        self.methods = []
-        self._auto_doc(
-            self.registry.Documentation.Model.Field, self.fields, model.name)
-        self._auto_doc(
-            self.registry.Documentation.Model.Method, self.methods, model.name)
+        self.attributes = []
+        if self.exist():
+            self._auto_doc(
+                self.registry.Documentation.Model.Field, self.fields, self)
+            self._auto_doc(self.registry.Documentation.Model.Attribute,
+                           self.attributes, self)
+
+    def exist(self):
+        return self.registry.has(self.model.name)
 
     @classmethod
     def filterModel(cls, query):
@@ -62,10 +66,10 @@ class Model(Declarations.Mixin.DocElement):
                 doc, self.registry.Documentation.Model.Field, self.fields)
 
     def toRST_method(self, doc):
-        if self.methods:
+        if self.attributes:
             self._toRST(
-                doc, self.registry.Documentation.Model.Method,
-                self.methods)
+                doc, self.registry.Documentation.Model.Attribute,
+                self.attributes)
 
     def toRST_docstring(self, doc):
         Model = self.registry.get(self.model.name)
@@ -92,11 +96,11 @@ class Model(Declarations.Mixin.DocElement):
         for field in self.fields:
             field.toUML(dot)
 
-        for method in self.methods:
-            method.toUML(dot, self.model.name)
+        for attribute in self.attributes:
+            attribute.toUML(dot, self.model.name)
 
 
 from . import field
 reload_module_if_blok_is_reloading(field)
-from . import method
-reload_module_if_blok_is_reloading(method)
+from . import attribute
+reload_module_if_blok_is_reloading(attribute)

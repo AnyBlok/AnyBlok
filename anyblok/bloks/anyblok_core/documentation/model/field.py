@@ -24,6 +24,16 @@ class Field:
         ('One2One', False): ("o2o", "o2o"),
     }
 
+    def exist(self, model):
+        if not model.exist():
+            return False
+
+        M = self.registry.get(model.model.name)
+        if self.field.name in M.loaded_columns:
+            return True
+
+        return False
+
     def __init__(self, field):
         self.field = field
 
@@ -34,7 +44,8 @@ class Field:
     @classmethod
     def getelements(cls, model):
         query = cls.filterField(cls.registry.System.Field.query())
-        return query.filter(cls.registry.System.Field.model == model).all()
+        return query.filter(
+            cls.registry.System.Field.model == model.model.name).all()
 
     @classmethod
     def header2RST(cls, doc):

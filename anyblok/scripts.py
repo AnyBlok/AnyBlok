@@ -175,11 +175,15 @@ def registry2doc(description, version, configuration_groups):
         if Configuration.get('doc_format') == 'RST':
             with open(Configuration.get('doc_output'), 'w') as fp:
                 doc.toRST(fp)
-        elif Configuration.get('doc_format') == 'UML':
+        elif Configuration.get('doc_format') in ('UML', 'SQL'):
             format_ = Configuration.get('schema_format')
             name_ = Configuration.get('schema_output')
             dot = ModelSchema(name_, format=format_)
-            doc.toUML(dot)
+            if Configuration.get('doc_format') == 'UML':
+                doc.toUML(dot)
+            else:
+                doc.toSQL(dot)
+
             dot.save()
 
 

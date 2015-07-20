@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from anyblok.blok import BlokManager
 
 
 @Declarations.register(Declarations.Model.Documentation)
@@ -13,6 +14,9 @@ class Blok:
 
     def __init__(self, blok):
         self.blok = blok
+
+    def exist(self):
+        return BlokManager.has(self.blok.name)
 
     @classmethod
     def filterBloks(cls, query):

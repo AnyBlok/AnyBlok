@@ -7,17 +7,20 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok.field import FieldException
-from inspect import getmembers, ismethod, isfunction
+from inspect import getmembers, ismethod, isfunction, ismodule, isclass
 
 
 @Declarations.register(Declarations.Model.Documentation.Model)
-class Method:
+class Attribute:
 
-    def __init__(self, method):
-        self.name, self.method = method
+    def __init__(self, attribute):
+        self.name, self.attribute = attribute
+
+    def exist(self, model):
+        return model.exist()
 
     @classmethod
-    def filterMethod(cls, model, name):
+    def filterAttribute(cls, model, name):
         if name in ('insert', 'update', 'to_primary_keys',
                     'to_dict', 'sqlalchemy_query_update',
                     'sqlalchemy_query_delete', 'query',
@@ -26,7 +29,9 @@ class Method:
                     'get_where_clause_from_primary_keys', 'get_primary_keys',
                     'get_model', 'from_primary_keys',
                     'from_multi_primary_keys', 'fire', 'fields_description',
-                    '_fields_description', 'delete', 'aliased', '__init__'):
+                    '_fields_description', 'delete', 'aliased', '__init__',
+                    'loaded_columns', 'loaded_fields', 'registry',
+                    '_sa_class_manager', '_decl_class_registry'):
             return True
 
         return False
@@ -34,13 +39,16 @@ class Method:
     @classmethod
     def getelements(cls, model):
         res = []
-        Model = cls.registry.get(model)
+        Model = cls.registry.get(model.model.name)
         try:
             for k, v in getmembers(Model):
-                if not (ismethod(v) or isfunction(v)):
+                if ismodule(v) or isclass(v):
                     continue
 
-                if cls.filterMethod(model, k):
+                if k.startswith('__'):
+                    continue
+
+                if cls.filterAttribute(model, k):
                     continue
 
                 res.append((k, v))
@@ -51,7 +59,7 @@ class Method:
 
     @classmethod
     def header2RST(cls, doc):
-        title = "Methods and class methods"
+        title = "Attributes, methods and class methods"
         doc.write("%s\n%s\n\n" % (title, '~' * len(title)))
 
     @classmethod
@@ -63,12 +71,12 @@ class Method:
         self.toRST_docstring(doc)
 
     def toRST_docstring(self, doc):
-        if hasattr(self.method, '__doc__') and self.method.__doc__:
-            doc.write(self.method.__doc__ + '\n\n')
+        if hasattr(self.attribute, '__doc__') and self.attribute.__doc__:
+            doc.write(self.attribute.__doc__ + '\n\n')
 
     def toUML(self, dot, modelname):
         model = dot.get_class(modelname)
-        if type(self.method) is classmethod:
+        if ismethod(self.attribute) or isfunction(self.attribute):
             model.add_method(self.name)
         else:
             model.add_property(self.name)
