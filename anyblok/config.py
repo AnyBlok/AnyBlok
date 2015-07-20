@@ -472,16 +472,12 @@ def add_schema(group, configuration):
     from graphviz.files import FORMATS
     group.add_argument('--schema-format',
                        default='png', choices=tuple(FORMATS))
-    group.add_argument('--schema-output',
-                       default='anyblok-schema')
-    group.add_argument('--schema-models',
-                       help='Detail only these models separated by ","')
 
 
 @Configuration.add('doc', label="Doc options")
 def add_doc(group, configuration):
     group.add_argument('--doc-format',
-                       default='RST', choices=('RST',))
+                       default='RST', choices=('RST', 'UML', 'SQL'))
     group.add_argument('--doc-output',
                        default='anyblok-documentation')
     group.add_argument('--doc-wanted-models',

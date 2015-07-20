@@ -6,10 +6,23 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 @Declarations.register(Declarations.Model.Documentation.Model)
 class Field:
+
+    mappers = {
+        ('Many2One', True): ("m2o", "o2m"),
+        ('Many2One', False): ("m2o", None),
+        ('Many2Many', True): ("m2m", "m2m"),
+        ('Many2Many', False): ("m2m", None),
+        ('One2Many', True): ("o2m", "m2o"),
+        ('One2Many', False): ("o2m", None),
+        ('One2One', True): ("o2o", "o2o"),
+        ('One2One', False): ("o2o", "o2o"),
+    }
 
     def __init__(self, field):
         self.field = field
@@ -47,3 +60,47 @@ class Field:
         properties = self.toRST_properties_get()
         msg = ', '.join(' **%s** (%s)' % (x, y) for x, y in properties.items())
         doc.write(msg + '\n\n')
+
+    def toUML(self, dot):
+        if self.field.entity_type == 'Model.System.Field':
+            self.toUML_field(dot)
+        elif self.field.entity_type == 'Model.System.Column':
+            self.toUML_column(dot)
+        elif self.field.entity_type == 'Model.System.RelationShip':
+            self.toUML_relationship(dot)
+        else:
+            logger.warn("Unknown entity type %r" % self.field.entity_type)
+
+    def toUML_field(self, dot):
+        model = dot.get_class(self.field.model)
+        model.add_column(self.field.name)
+
+    def toUML_column(self, dot):
+        model = dot.get_class(self.field.model)
+        name = self.field.name
+        if self.field.primary_key:
+            name = '+PK+ ' + name
+
+        if self.field.remote_model:
+            remote_model = dot.get_class(self.field.remote_model)
+            multiplicity = "1"
+            if self.field.nullable:
+                multiplicity = "0..1"
+
+            model.agregate(remote_model, label_from=name,
+                           multiplicity_from=multiplicity)
+        else:
+            name += ' (%s)' % self.field.ftype
+            model.add_column(name)
+
+    def toUML_relationship(self, dot):
+        if self.field.remote:
+            return
+
+        model = dot.get_class(self.field.model)
+        multiplicity, multiplicity_to = self.mappers[(
+            self.field.ftype, True if self.field.remote_name else False)]
+        model.associate(self.field.remote_model, label_from=self.field.name,
+                        label_to=self.field.remote_name,
+                        multiplicity_from=multiplicity,
+                        multiplicity_to=multiplicity_to)

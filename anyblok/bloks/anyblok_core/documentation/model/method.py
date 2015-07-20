@@ -65,3 +65,10 @@ class Method:
     def toRST_docstring(self, doc):
         if hasattr(self.method, '__doc__') and self.method.__doc__:
             doc.write(self.method.__doc__ + '\n\n')
+
+    def toUML(self, dot, modelname):
+        model = dot.get_class(modelname)
+        if type(self.method) is classmethod:
+            model.add_method(self.name)
+        else:
+            model.add_property(self.name)

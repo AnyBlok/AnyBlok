@@ -12,7 +12,6 @@ from anyblok.registry import RegistryManager
 from anyblok._graphviz import ModelSchema, SQLSchema
 from anyblok.common import format_bloks
 from nose import main
-import inspect
 import sys
 from os.path import join, exists
 
@@ -159,23 +158,29 @@ def cron_worker(description, version, configuration_groups):
         registry.System.Cron.run()
 
 
-def registry2rst(description, version, configuration_groups):
+def registry2doc(description, version, configuration_groups):
     """ Execute a script or open an interpreter
 
     :param description: description of configuration
     :param version: version of script for argparse
     :param configuration_groups: list configuration groupe to load
     """
-    format_configuration(configuration_groups, 'doc')
+    format_configuration(configuration_groups, 'doc', 'schema')
     registry = anyblok.start(description, version,
                              configuration_groups=configuration_groups)
     if registry:
         registry.commit()
         doc = registry.Documentation()
         doc.auto_doc()
-        with open(Configuration.get('doc_output'), 'w') as fp:
-            if Configuration.get('doc_format') == 'RST':
+        if Configuration.get('doc_format') == 'RST':
+            with open(Configuration.get('doc_output'), 'w') as fp:
                 doc.toRST(fp)
+        elif Configuration.get('doc_format') == 'UML':
+            format_ = Configuration.get('schema_format')
+            name_ = Configuration.get('schema_output')
+            dot = ModelSchema(name_, format=format_)
+            doc.toUML(dot)
+            dot.save()
 
 
 def add_tables(dot, registry, models_):
@@ -242,140 +247,6 @@ def sqlschema(description, version, configuration_groups):
     registry.close()
 
 
-def add_models(dot, registry, models_, models_by_table):
-    for model, cls in registry.loaded_namespaces.items():
-        if not hasattr(cls, '__tablename__'):
-            continue
-
-        if not models_:
-            dot.add_class(model)
-        elif model in models_:
-            dot.add_class(model)
-        else:
-            dot.add_label(model)
-        models_by_table[cls.__tablename__] = model
-
-
-def add_attributes_columns(dot, registry, model, models_by_table):
-    m = dot.get_class(model)
-    Column = registry.System.Column
-    columns = Column.query('name', 'ctype', 'foreign_key', 'primary_key',
-                           'nullable')
-    columns = columns.filter(Column.model == model)
-    columns = columns.order_by(Column.primary_key.desc())
-    columns = {x[0]: x[1:] for x in columns.all()}
-
-    for k, v in columns.items():
-        ctype, foreign_key, primary_key, nullable = v
-        if foreign_key:
-            multiplicity = "1"
-            if nullable:
-                multiplicity = '0..1'
-            m2 = models_by_table.get(foreign_key.split('.')[0])
-            if m2:
-                m.agregate(m2, label_from=k,
-                           multiplicity_from=multiplicity)
-        elif primary_key:
-            m.add_column('+PK+ %s (%s)' % (k, ctype))
-        else:
-            m.add_column('%s (%s)' % (k, ctype))
-
-    return columns
-
-
-def add_attributes_relation(dot, registry, model, models_by_table):
-    m = dot.get_class(model)
-    RelationShip = registry.System.RelationShip
-    relations = RelationShip.query('name', 'rtype', 'remote_model',
-                                   'remote_name', 'remote')
-    relations = relations.filter(RelationShip.model == model)
-    relations = {x[0]: x[1:] for x in relations.all()}
-
-    mappers = {
-        ('Many2One', True): ("m2o", "o2m"),
-        ('Many2One', False): ("m2o", None),
-        ('Many2Many', True): ("m2m", "m2m"),
-        ('Many2Many', False): ("m2m", None),
-        ('One2Many', True): ("o2m", "m2o"),
-        ('One2Many', False): ("o2m", None),
-        ('One2One', True): ("o2o", "o2o"),
-        ('One2One', False): ("o2o", "o2o"),
-    }
-
-    for k, v in relations.items():
-        rtype, remote_model, remote_name, remote = v
-        if remote:
-            continue
-
-        multiplicity, multiplicity_to = mappers[(
-            rtype, True if remote_name else False)]
-        m.associate(remote_model, label_from=k, label_to=remote_name,
-                    multiplicity_from=multiplicity,
-                    multiplicity_to=multiplicity_to)
-
-    return relations
-
-
-def add_attributes(dot, registry, models_, models_by_table):
-    for model, cls in registry.loaded_namespaces.items():
-        if not hasattr(cls,
-                       '__tablename__') or (models_ and model not in models_):
-            continue
-
-        columns = add_attributes_columns(dot, registry, model, models_by_table)
-        relations = add_attributes_relation(
-            dot, registry, model, models_by_table)
-
-        m = dot.get_class(model)
-        for k, v in inspect.getmembers(cls):
-            if k.startswith('__') or k in ('registry', 'metadata',
-                                           'loaded_columns',
-                                           '_decl_class_registry',
-                                           '_sa_class_manager'):
-                # all the object have the registry
-                continue
-
-            if inspect.isclass(v) and registry.registry_base in v.__bases__:
-                # no display internal registry
-                continue
-            elif k in columns.keys() + relations.keys():
-                continue
-            elif type(v) is classmethod:
-                m.add_method(k)
-                continue
-
-            m.add_property(k)
-
-
-def modelschema(description, version, configuration_groups):
-    """ Create a UML model schema of the registry
-
-    :param description: description of configuration
-    :param version: version of script for argparse
-    :param configuration_groups: list configuration groupe to load
-    """
-    format_configuration(configuration_groups, 'schema')
-    registry = anyblok.start(description, version,
-                             configuration_groups=configuration_groups)
-    if registry is None:
-        return
-
-    format_ = Configuration.get('schema_format')
-    name_ = Configuration.get('schema_output')
-    models_ = format_bloks(Configuration.get('schema_models'))
-    models_ = [] if models_ is None else models_
-
-    models_by_table = {}
-    dot = ModelSchema(name_, format=format_)
-    models_by_table = {}
-    # add all the class
-    add_models(dot, registry, models_, models_by_table)
-    add_attributes(dot, registry, models_, models_by_table)
-    dot.save()
-    registry.rollback()
-    registry.close()
-
-
 def anyblok_createdb():
     from anyblok.release import version
     description = "Anyblok-%s create db" % version
@@ -406,7 +277,7 @@ def anyblok_cron_worker():
                 ['config', 'database', 'logging'])
 
 
-def anyblok2rst():
+def anyblok2doc():
     from anyblok.release import version
-    registry2rst('AnyBlok extract rst documentation', version,
+    registry2doc('AnyBlok extract rst documentation', version,
                  ['config', 'database', 'logging'])

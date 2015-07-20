@@ -85,6 +85,16 @@ class Model(Declarations.Mixin.DocElement):
                                                 for x, y in properties.items())
         doc.write(msg + '\n\n')
 
+    def toUML_add_model(self, dot):
+        dot.add_class(self.model.name)
+
+    def toUML_add_attributes(self, dot):
+        for field in self.fields:
+            field.toUML(dot)
+
+        for method in self.methods:
+            method.toUML(dot, self.model.name)
+
 
 from . import field
 reload_module_if_blok_is_reloading(field)
