@@ -281,8 +281,11 @@ class SqlMixin:
             elif field_value is None or type(field_property) == ColumnProperty:
                 # If value is None, then do not go any further whatever
                 # the column property tells you.
-                if field_property.expression.type.python_type == bytes:
-                    result[field] = b64encode(field_value).decode("utf-8")
+                if hasattr(field_property, 'expression'):
+                    if field_property.expression.type.python_type == bytes:
+                        result[field] = b64encode(field_value).decode("utf-8")
+                    else:
+                        result[field] = field_value
                 else:
                     result[field] = field_value
             else:
