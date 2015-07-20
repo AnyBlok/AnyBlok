@@ -27,6 +27,7 @@ Future
         one foreign key
 * [ADD] update-all-bloks option
 * [ADD] pre / post migration
+* [REF] UML Diagram is now with autodoc script
 
 0.4.0
 -----
