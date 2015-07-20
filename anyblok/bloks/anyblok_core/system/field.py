@@ -20,7 +20,8 @@ class Field:
 
     name = String(primary_key=True)
     code = String(nullable=True)
-    model = String(primary_key=True, foreign_key=(System.Model, 'name'))
+    model = String(primary_key=True)
+        # FIXME, foreign_key=(System.Model, 'name'))
     label = String()
     ftype = String(label="Type", nullable=True)
     entity_type = String(nullable=True)
