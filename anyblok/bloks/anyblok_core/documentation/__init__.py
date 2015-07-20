@@ -61,11 +61,11 @@ class Documentation(Declarations.Mixin.DocElement):
         self.footer2RST(doc)
 
     def toUML(self, dot):
-        for model in self.models:
-            model.toUML_add_model(dot)
+        for m in self.models:
+            m.toUML_add_model(dot)
 
-        for model in self.models:
-            model.toUML_add_attributes(dot)
+        for m in self.models:
+            m.toUML_add_attributes(dot)
 
     def toRST_blok(self, doc):
         self._toRST(doc, self.registry.Documentation.Blok, self.bloks)

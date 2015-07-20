@@ -93,11 +93,11 @@ class Model(Declarations.Mixin.DocElement):
         dot.add_class(self.model.name)
 
     def toUML_add_attributes(self, dot):
-        for field in self.fields:
-            field.toUML(dot)
+        for f in self.fields:
+            f.toUML(dot)
 
-        for attribute in self.attributes:
-            attribute.toUML(dot, self.model.name)
+        for attr in self.attributes:
+            attr.toUML(dot, self.model.name)
 
 
 from . import field
