@@ -20,17 +20,17 @@ Future
 * [REF] reduce flake8 complexity
 * [REF] refactor field function
 * [FIX] inherit relation ship from another model, thank Simon ANDRÉ for the 
- bug report
+  bug report
 * [REF] table/mapper args definition
 * [REF] Refactor Field, Column, RelationShip use now polymophic inherit
 * [FIX] Foreign key constraint, allow to add and drop constraint on more than
- one foreign key
+  one foreign key
 * [ADD] update-all-bloks option
 * [ADD] pre / post migration
 * [REF] UML Diagram is now with autodoc script
 * [REF] SQL Diagram is now with autodoc script
 * [REF] Add **extend** key word in configuration file to extend an existing 
- configuration
+  configuration
 
 0.4.0
 -----
