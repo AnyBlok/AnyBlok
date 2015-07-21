@@ -342,9 +342,12 @@ class Configuration:
             'CRITICAL': CRITICAL
         }.get(cls.configuration.get('logging_level'))
         logging_configfile = cls.configuration.get('logging_configfile')
-        json_logging_configfile = cls.configuration.get('json_logging_configfile')
-        yaml_logging_configfile = cls.configuration.get('yaml_logging_configfile')
-        logging_level_qualnames = cls.configuration.get('logging_level_qualnames')
+        json_logging_configfile = cls.configuration.get(
+            'json_logging_configfile')
+        yaml_logging_configfile = cls.configuration.get(
+            'yaml_logging_configfile')
+        logging_level_qualnames = cls.configuration.get(
+            'logging_level_qualnames')
 
         if logging_configfile:
             config.fileConfig(logging_configfile)
@@ -385,6 +388,11 @@ class Configuration:
                         for y in cparser.items(x)]
 
             for opt, value in sections:
+                if opt in ('logging_configfile', 'json_logging_configfile',
+                           'yaml_logging_configfile'):
+                    if value:
+                        value = os.path.abspath(value)
+
                 configuration[opt] = value
 
             if 'extend' in configuration:
