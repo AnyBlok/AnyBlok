@@ -15,6 +15,7 @@ from anyblok.config import (Configuration,
                             add_update_bloks,
                             add_interpreter,
                             add_schema,
+                            add_doc,
                             add_unittest,
                             ConfigurationException)
 from anyblok.tests.testcase import TestCase
@@ -330,6 +331,20 @@ class TestConfiguration(TestCase):
             'configfile': 'mock_configuration_file.cfg',
         })
 
+    def test_parse_option_configuration_with_depend(self):
+        args = MockArgParseArguments(
+            configfile="mockblok/mock_configuration_file.cfg")
+        Configuration.parse_options(args, ())
+        self.assertEqual(Configuration.configuration, {
+            'db_name': 'anyblok',
+            'db_driver_name': 'postgres',
+            'db_user_name': '',
+            'db_password': '',
+            'db_host': 'localhost',
+            'db_port': '',
+            'configfile': 'mockblok/mock_configuration_file.cfg',
+        })
+
     def test_parse_option_kwargs(self):
         kwargs = {'test': 'value'}
         args = MockArgParseArguments(kwargs=kwargs)
@@ -370,6 +385,7 @@ class TestConfigurationOption(TestCase):
             'add_update_bloks': add_update_bloks,
             'add_interpreter': add_interpreter,
             'add_schema': add_schema,
+            'add_doc': add_doc,
             'add_unittest': add_unittest,
         }
 
@@ -394,6 +410,9 @@ class TestConfigurationOption(TestCase):
 
     def test_add_schema(self):
         self.function['add_schema'](self.group, self.configuration)
+
+    def test_add_doc(self):
+        self.function['add_doc'](self.group, self.configuration)
 
     def test_add_unittest(self):
         self.function['add_unittest'](self.group, self.configuration)

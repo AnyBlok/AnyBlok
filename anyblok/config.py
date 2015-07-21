@@ -332,7 +332,7 @@ class Configuration:
                 function(g, cls.configuration)
 
     @classmethod
-    def initialize_logging(cls, arguments, cparser):
+    def initialize_logging(cls):
         level = {
             'NOTSET': NOTSET,
             'DEBUG': DEBUG,
@@ -340,27 +340,29 @@ class Configuration:
             'WARNING': WARNING,
             'ERROR': ERROR,
             'CRITICAL': CRITICAL
-        }.get(arguments.logging_level)
+        }.get(cls.configuration.get('logging_level'))
+        logging_configfile = cls.configuration.get('logging_configfile')
+        json_logging_configfile = cls.configuration.get('json_logging_configfile')
+        yaml_logging_configfile = cls.configuration.get('yaml_logging_configfile')
+        logging_level_qualnames = cls.configuration.get('logging_level_qualnames')
 
-        if arguments.logging_configfile:
-            config.fileConfig(arguments.logging_configfile)
-        elif arguments.json_logging_configfile:
-            with open(arguments.json_logging_configfile, 'rt') as f:
+        if logging_configfile:
+            config.fileConfig(logging_configfile)
+        elif json_logging_configfile:
+            with open(json_logging_configfile, 'rt') as f:
                 configfile = json.load(f.read())
                 config.dictConfig(configfile)
-        elif arguments.yaml_logging_configfile:
-            with open(arguments.yaml_logging_configfile, 'rt') as f:
+        elif yaml_logging_configfile:
+            with open(yaml_logging_configfile, 'rt') as f:
                 configfile = yaml.load(f.read())
                 config.dictConfig(configfile)
-        elif cparser and cparser.has_section('loggers'):
-            config.fileConfig(arguments.configfile)
 
         if level:
             basicConfig(level=level)
-            if arguments.logging_level_qualnames:
+            if logging_level_qualnames:
                 qualnames = set(x.split('.')[0]
                                 for x in Logger.manager.loggerDict.keys()
-                                if x in arguments.logging_level_qualnames)
+                                if x in logging_level_qualnames)
             else:
                 qualnames = set(x.split('.')[0]
                                 for x in Logger.manager.loggerDict.keys())
@@ -369,30 +371,49 @@ class Configuration:
                 getLogger(qualname).setLevel(level)
 
     @classmethod
+    def parse_configfile(cls, configfile, parts_to_load):
+        cur_cwd = os.getcwd()
+        configfile = os.path.abspath(configfile)
+        cwd_file, file_name = os.path.split(configfile)
+        configuration = {}
+        try:
+            os.chdir(cwd_file)
+            cparser = ConfigParser()
+            cparser.read(configfile)
+            sections = [y for x in parts_to_load + ('AnyBlok',)
+                        if cparser.has_section(x)
+                        for y in cparser.items(x)]
+
+            for opt, value in sections:
+                configuration[opt] = value
+
+            if 'depend' in configuration:
+                depend = configuration.pop('depend')
+                if depend:
+                    cls.parse_configfile(depend, parts_to_load)
+
+        finally:
+            os.chdir(cur_cwd)
+
+        cls.configuration.update(configuration)
+
+    @classmethod
     def parse_options(cls, arguments, parts_to_load):
 
         if arguments._get_args():
             raise ConfigurationException(
                 'Positional arguments are forbidden')
 
-        cparser = None
         if 'configfile' in dict(arguments._get_kwargs()).keys():
             if arguments.configfile:
-                cparser = ConfigParser()
-                cparser.read(arguments.configfile)
-                sections = [y for x in parts_to_load + ('AnyBlok',)
-                            if cparser.has_section(x)
-                            for y in cparser.items(x)]
-
-                for opt, value in sections:
-                    cls.configuration[opt] = value
+                cls.parse_configfile(arguments.configfile, parts_to_load)
 
         for opt, value in arguments._get_kwargs():
             if opt not in cls.configuration or value:
                 cls.configuration[opt] = value
 
-        if 'logging_level' in dict(arguments._get_kwargs()).keys():
-            cls.initialize_logging(arguments, cparser)
+        if 'logging_level' in cls.configuration:
+            cls.initialize_logging()
 
 
 @Configuration.add('config')
