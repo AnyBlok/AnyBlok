@@ -331,7 +331,7 @@ class TestConfiguration(TestCase):
             'configfile': 'mock_configuration_file.cfg',
         })
 
-    def test_parse_option_configuration_with_depend(self):
+    def test_parse_option_configuration_with_extend(self):
         args = MockArgParseArguments(
             configfile="mockblok/mock_configuration_file.cfg")
         Configuration.parse_options(args, ())

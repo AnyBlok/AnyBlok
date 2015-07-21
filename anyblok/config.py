@@ -387,10 +387,10 @@ class Configuration:
             for opt, value in sections:
                 configuration[opt] = value
 
-            if 'depend' in configuration:
-                depend = configuration.pop('depend')
-                if depend:
-                    cls.parse_configfile(depend, parts_to_load)
+            if 'extend' in configuration:
+                extend = configuration.pop('extend')
+                if extend:
+                    cls.parse_configfile(extend, parts_to_load)
 
         finally:
             os.chdir(cur_cwd)

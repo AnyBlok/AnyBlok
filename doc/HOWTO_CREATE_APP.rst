@@ -694,8 +694,16 @@ The configuration file allow to load all the initialisation variable::
     [AnyBlok]
     key = value
 
+You can extend an existing config file::
+
+    [AnyBlok]
+    extend = ``path of the configfile``
+
 The logging configuration are also loaded, see `logging configuration file format
 <https://docs.python.org/3/library/logging.config.html#configuration-file-format>`_::
+
+    [AnyBlok]
+    logging_configfile = ``name of the config file``
 
     loggers]
     keys=root,anyblok
