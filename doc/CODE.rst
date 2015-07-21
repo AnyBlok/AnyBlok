@@ -434,8 +434,11 @@ anyblok.scripts module
 .. autofunction:: interpreter
     :noindex:
 
-.. autofunction:: sqlschema
+.. autofunction:: run_exit
     :noindex:
 
-.. autofunction:: modelschema
+.. autofunction:: cron_worker
+    :noindex:
+
+.. autofunction:: registry2doc
     :noindex:

@@ -88,7 +88,7 @@ def updatedb(description, version, configuration_groups):
 
 
 def run_exit(description, version, configuration_groups):
-    """ Update an existing database
+    """Run nose unit test for the registry
 
     :param description: description of configuration
     :param version: version of script for argparse
@@ -120,7 +120,7 @@ def run_exit(description, version, configuration_groups):
 
 
 def interpreter(description, version, configuration_groups):
-    """ Execute a script or open an interpreter
+    """Execute a script or open an interpreter
 
     :param description: description of configuration
     :param version: version of script for argparse
@@ -145,7 +145,7 @@ def interpreter(description, version, configuration_groups):
 
 
 def cron_worker(description, version, configuration_groups):
-    """ Execute a script or open an interpreter
+    """Execute a cron worker
 
     :param description: description of configuration
     :param version: version of script for argparse
@@ -159,7 +159,7 @@ def cron_worker(description, version, configuration_groups):
 
 
 def registry2doc(description, version, configuration_groups):
-    """ Execute a script or open an interpreter
+    """Return auto documentation for the registry
 
     :param description: description of configuration
     :param version: version of script for argparse
