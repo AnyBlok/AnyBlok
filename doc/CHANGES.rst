@@ -12,6 +12,9 @@ CHANGELOG
 Future
 ------
 
+0.4.1
+-----
+
 .. warning::
 
     Field Function change, fexp is required if you need filter
@@ -44,19 +47,19 @@ Future
 * [ADD] Plugin for nose to run unit test of the installed bloks
 * [REF] The relation ship can be reference more than one foreign key
 * [IMP] Add define_table/mapper_args methods to fill __table/mapper\_args\_\_
-        class attribute need to configure SQLAlachemy models
+  class attribute need to configure SQLAlachemy models
 * [REF] Limit the commit in the registry only when the SQLA Session factory
-        is recreated
+  is recreated
 * [REF] Commit and re-create the SQLA Session Factory, at installation, only
-        if the number of Session inheritance of the number of Query inheritance
-        change, else keep the same session
+  if the number of Session inheritance of the number of Query inheritance
+  change, else keep the same session
 * [REF] Exception is not a Declarations type
 * [FIX] Reload fonctionnality in python 3.2
 * [REF] Remove the Declarations typs Field, Column, RelationShip, they are
-        replaced by python import
+  replaced by python import
 * [REF] rename **ArgsParseManager** by **Configuration**
 * [REF] rename **reload_module_if_blok_is_reloaded** by 
-        **reload_module_if_blok_is_reloading** method on blok
+  **reload_module_if_blok_is_reloading** method on blok
 * [REF] rename **import_cfg_file** by **import_file** method on blok
 * [REF] Consistency the argsparse configuration
 * [REF] refactor part_to_load, the entry points loaded is bloks
