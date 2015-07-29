@@ -48,7 +48,7 @@ Parameter is a simple model key / value:
 
 Add new value in the paramter model::
 
-    registry.System.Paramter.set(key, value)
+    registry.System.Parameter.set(key, value)
 
 .. note::
 
@@ -60,7 +60,7 @@ Get an existing value::
 
 .. warning::
 
-    If the key does not existing then an ExceptionParamter will raise
+    If the key does not existing then an ExceptionParameter will raise
 
 Check the key exist::
 
