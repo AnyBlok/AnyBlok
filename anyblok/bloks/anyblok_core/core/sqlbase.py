@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from base64 import b64encode
+from decimal import Decimal
 
 from anyblok import Declarations
 from anyblok.field import FieldException
@@ -284,6 +285,9 @@ class SqlMixin:
                 if hasattr(field_property, 'expression'):
                     if field_property.expression.type.python_type == bytes:
                         result[field] = b64encode(field_value).decode("utf-8")
+                    elif field_property.expression.type.python_type == Decimal or type(field_value) == Decimal:
+                        # convert to int, so it is json-serializable
+                        result[field] = float(field_value)
                     else:
                         result[field] = field_value
                 else:
