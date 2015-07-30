@@ -287,7 +287,7 @@ class SqlMixin:
                         result[field] = b64encode(field_value).decode("utf-8")
                     elif field_property.expression.type.python_type == Decimal or type(field_value) == Decimal:
                         # convert to int, so it is json-serializable
-                        result[field] = float(field_value)
+                        result[field] = str(field_value)
                     else:
                         result[field] = field_value
                 else:
