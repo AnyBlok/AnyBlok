@@ -19,7 +19,7 @@ class Query(query.Query):
     def all(self):
         """ Return an instrumented list of the result of the query
         """
-        return self.registry.InstrumentedList(self)
+        return self.registry.InstrumentedList(super(Query, self).all())
 
     def sqlalchemy_query_method(self, method, *args, **kwargs):
         """ Wrapper to call a specific method by getattr

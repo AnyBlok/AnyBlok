@@ -15,6 +15,7 @@ Future
 * [IMP] add ``pop`` behaviour on **Model.System.Parameter**
 * [REF] Load configuration befoare load bloks, to use Configuration during
   the declaration
+* [FIX] all must return InstrumentedList, also when the result is empty
 
 0.4.1
 -----
