@@ -13,6 +13,8 @@ Future
 ------
 
 * [IMP] add ``pop`` behaviour on **Model.System.Parameter**
+* [REF] Load configuration befoare load bloks, to use Configuration during
+  the declaration
 
 0.4.1
 -----

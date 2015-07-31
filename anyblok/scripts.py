@@ -32,9 +32,9 @@ def createdb(description, configuration_groups):
     :param configuration_groups: list configuration groupe to load
     """
     format_configuration(configuration_groups, 'install-bloks')
-    BlokManager.load()
     Configuration.load(description=description,
                        configuration_groups=configuration_groups)
+    BlokManager.load()
     drivername = Configuration.get('db_driver_name')
     db_name = Configuration.get('db_name')
 

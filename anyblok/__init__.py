@@ -37,16 +37,16 @@ def start(processName, version=release.version, prompt=PROMPT,
     from .config import Configuration
     from .registry import RegistryManager
 
-    if entry_points:
-        BlokManager.load(entry_points=entry_points)
-    else:
-        BlokManager.load()
-
     description = prompt % {'processName': processName, 'version': version}
     if configuration_groups is not None:
         Configuration.load(description=description,
                            configuration_groups=configuration_groups,
                            useseparator=useseparator)
+
+    if entry_points:
+        BlokManager.load(entry_points=entry_points)
+    else:
+        BlokManager.load()
 
     db_name = Configuration.get('db_name')
     if not db_name:
