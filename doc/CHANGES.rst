@@ -16,6 +16,7 @@ Future
 * [REF] Load configuration befoare load bloks, to use Configuration during
   the declaration
 * [FIX] all must return InstrumentedList, also when the result is empty
+* [FIX] to_dict must not cast column
 
 0.4.1
 -----

@@ -5,9 +5,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from base64 import b64encode
-from decimal import Decimal
-
 from anyblok import Declarations
 from anyblok.field import FieldException
 from ..exceptions import SqlBaseException
@@ -282,16 +279,7 @@ class SqlMixin:
             elif field_value is None or type(field_property) == ColumnProperty:
                 # If value is None, then do not go any further whatever
                 # the column property tells you.
-                if hasattr(field_property, 'expression'):
-                    if field_property.expression.type.python_type == bytes:
-                        result[field] = b64encode(field_value).decode("utf-8")
-                    elif field_property.expression.type.python_type == Decimal or type(field_value) == Decimal:
-                        # convert to int, so it is json-serializable
-                        result[field] = str(field_value)
-                    else:
-                        result[field] = field_value
-                else:
-                    result[field] = field_value
+                result[field] = field_value
             else:
                 # it is should be RelationshipProperty
                 if related_fields is None:
