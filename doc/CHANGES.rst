@@ -12,6 +12,8 @@ CHANGELOG
 Future
 ------
 
+* [IMP] add ``pop`` behaviour on **Model.System.Parameter**
+
 0.4.1
 -----
 

@@ -65,3 +65,7 @@ Get an existing value::
 Check the key exist::
 
     registry.System.Parameter.is_exist(key)  # return a Boolean
+
+Return and remove the parameter::
+
+    registry.System.Parameter.pop(key)

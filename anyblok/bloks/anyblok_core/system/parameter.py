@@ -68,3 +68,24 @@ class Parameter:
             return param.value
 
         return param.value['value']
+
+    @classmethod
+    def pop(cls, key):
+        """Remove return the value of the key
+
+        :param key: key to check
+        :rtype: return value
+        :exception: ExceptionParameter
+        """
+        if not cls.is_exist(key):
+            raise ParameterException(
+                "unexisting key %r" % key)
+
+        param = cls.from_primary_keys(key=key)
+        if param.multi:
+            res = param.value
+        else:
+            res = param.value['value']
+
+        param.delete()
+        return res
