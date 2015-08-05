@@ -96,52 +96,52 @@ def _minimum_one2one_with_one2many(**kwargs):
 class TestOne2One(DBTestCase):
 
     def test_complete_one2one(self):
-        registry = self.init_registry(_complete_one2one)
-        self.assertTrue(hasattr(registry.Person, 'address'))
-        self.assertTrue(hasattr(registry.Person, 'id_of_address'))
-        address = registry.Address.insert(
+        self.reload_registry_with(_complete_one2one)
+        self.assertTrue(hasattr(self.registry.Person, 'address'))
+        self.assertTrue(hasattr(self.registry.Person, 'id_of_address'))
+        address = self.registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
-        person = registry.Person.insert(
+        person = self.registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
 
         self.assertIs(address.person, person)
 
     def test_minimum_one2one(self):
-        registry = self.init_registry(_minimum_one2one)
-        self.assertTrue(hasattr(registry.Person, 'address'))
-        self.assertTrue(hasattr(registry.Person, 'address_id'))
-        address = registry.Address.insert()
-        person = registry.Person.insert(
+        self.reload_registry_with(_minimum_one2one)
+        self.assertTrue(hasattr(self.registry.Person, 'address'))
+        self.assertTrue(hasattr(self.registry.Person, 'address_id'))
+        address = self.registry.Address.insert()
+        person = self.registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
 
         self.assertIs(address.person, person)
 
     def test_one2one_multi_entry_for_same(self):
-        registry = self.init_registry(_minimum_one2one)
-        address = registry.Address.insert()
-        p1 = registry.Person.insert(
+        self.reload_registry_with(_minimum_one2one)
+        address = self.registry.Address.insert()
+        p1 = self.registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
         self.assertIs(p1.address, address)
-        p2 = registry.Person.insert(name="Franck BRET", address=address)
+        p2 = self.registry.Person.insert(name="Franck BRET", address=address)
         self.assertIs(p2.address, address)
         self.assertIsNone(p1.address_id)
 
     def test_one2one_with_str_model(self):
-        registry = self.init_registry(_one2one_with_str_method)
-        self.assertTrue(hasattr(registry.Person, 'address'))
-        self.assertTrue(hasattr(registry.Person, 'address_id'))
-        address = registry.Address.insert()
-        person = registry.Person.insert(
+        self.reload_registry_with(_one2one_with_str_method)
+        self.assertTrue(hasattr(self.registry.Person, 'address'))
+        self.assertTrue(hasattr(self.registry.Person, 'address_id'))
+        address = self.registry.Address.insert()
+        person = self.registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
         self.assertIs(address.person, person)
 
     def test_minimum_one2one_without_backref(self):
         with self.assertRaises(FieldException):
-            self.init_registry(_minimum_one2one_without_backref)
+            self.reload_registry_with(_minimum_one2one_without_backref)
 
     def test_minimum_one2one_with_one2many(self):
         with self.assertRaises(FieldException):
-            self.init_registry(_minimum_one2one_with_one2many)
+            self.reload_registry_with(_minimum_one2one_with_one2many)
 
     def test_complet_with_multi_foreign_key(self):
 
@@ -172,9 +172,9 @@ class TestOne2One(DBTestCase):
                                column_names=('test_id', 'test_id2'),
                                backref="test2")
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -201,9 +201,9 @@ class TestOne2One(DBTestCase):
                                column_names=('test_id', 'test_id2'),
                                backref="test2")
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -227,9 +227,9 @@ class TestOne2One(DBTestCase):
                     foreign_key=(Model.Test, 'id2'), nullable=False)
                 test = One2One(model=Model.Test, backref="test2")
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -253,9 +253,9 @@ class TestOne2One(DBTestCase):
                     foreign_key=(Model.Test, 'id2'), nullable=False)
                 test = One2One(model=Model.Test, backref="test2")
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.other_test_id)
         self.assertEqual(test.id2, test2.other_test_id2)
 
@@ -275,9 +275,9 @@ class TestOne2One(DBTestCase):
                 id = Integer(primary_key=True)
                 test = One2One(model=Model.Test, backref="test2")
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -299,9 +299,9 @@ class TestOne2One(DBTestCase):
                                column_names=('test_id', 'test_id2'),
                                backref="test2")
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -323,4 +323,4 @@ class TestOne2One(DBTestCase):
                     'other_test_id', 'other_test_id2'), backref="test2")
 
         with self.assertRaises(FieldException):
-            self.init_registry(add_in_registry)
+            self.reload_registry_with(add_in_registry)

@@ -138,41 +138,41 @@ def _autodetect_two_foreign_key(**kwargs):
 class TestOne2Many(DBTestCase):
 
     def test_complete_one2many(self):
-        registry = self.init_registry(_complete_one2many)
+        self.reload_registry_with(_complete_one2many)
 
-        address = registry.Address.insert(
+        address = self.registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = self.registry.Person.insert(name="Jean-sébastien SUZANNE")
         address.persons.append(person)
 
         self.assertEqual(person.address, address)
 
     def test_minimum_one2many(self):
-        registry = self.init_registry(_minimum_one2many)
+        self.reload_registry_with(_minimum_one2many)
 
-        address = registry.Address.insert(
+        address = self.registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = self.registry.Person.insert(name="Jean-sébastien SUZANNE")
         address.persons.append(person)
 
     def test_minimum_one2many_remote_field_in_mixin(self):
-        registry = self.init_registry(_minimum_one2many)
+        self.reload_registry_with(_minimum_one2many)
 
-        address = registry.Address.insert(
+        address = self.registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = self.registry.Person.insert(name="Jean-sébastien SUZANNE")
         address.persons.append(person)
 
     def test_one2many_with_str_model(self):
-        registry = self.init_registry(_one2many_with_str_model)
+        self.reload_registry_with(_one2many_with_str_model)
 
-        address = registry.Address.insert(
+        address = self.registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        person = self.registry.Person.insert(name="Jean-sébastien SUZANNE")
         address.persons.append(person)
 
     def test_same_model_backref(self):
@@ -186,9 +186,9 @@ class TestOne2Many(DBTestCase):
                 parent_id = Integer(foreign_key=('Model.Test', 'id'))
                 children = One2Many(model='Model.Test', many2one='parent')
 
-        registry = self.init_registry(add_in_registry)
-        t1 = registry.Test.insert()
-        t2 = registry.Test.insert(parent=t1)
+        self.reload_registry_with(add_in_registry)
+        t1 = self.registry.Test.insert()
+        t2 = self.registry.Test.insert(parent=t1)
         self.assertIs(t1.children[0], t2)
         self.assertIs(t2.parent, t1)
 
@@ -219,9 +219,9 @@ class TestOne2Many(DBTestCase):
                                  primaryjoin=primaryjoin,
                                  many2one="test")
 
-        registry = self.init_registry(add_in_registry)
-        t1 = registry.Test.insert(id2="test")
-        t2 = registry.Test2.insert(test=t1)
+        self.reload_registry_with(add_in_registry)
+        t1 = self.registry.Test.insert(id2="test")
+        t2 = self.registry.Test2.insert(test=t1)
         self.assertEqual(len(t1.test2), 1)
         self.assertIs(t1.test2[0], t2)
 
@@ -247,8 +247,8 @@ class TestOne2Many(DBTestCase):
 
                 test2 = One2Many(model=Model.Test2, many2one="test")
 
-        registry = self.init_registry(add_in_registry)
-        t1 = registry.Test.insert(id2="test")
-        t2 = registry.Test2.insert(test=t1)
+        self.reload_registry_with(add_in_registry)
+        t1 = self.registry.Test.insert(id2="test")
+        t2 = self.registry.Test2.insert(test=t1)
         self.assertEqual(len(t1.test2), 1)
         self.assertIs(t1.test2[0], t2)

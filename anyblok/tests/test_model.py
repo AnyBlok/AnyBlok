@@ -206,52 +206,45 @@ class TestModel2(DBTestCase):
         self.assertEqual(t2.name, t.name)
 
     def test_simple_model(self):
-        registry = self.init_registry(simple_model)
-        self.check_registry(registry.Test)
+        self.reload_registry_with(simple_model)
+        self.check_registry(self.registry.Test)
 
     def test_simple_model_with_tablename(self):
-        registry = self.init_registry(simple_model_with_tablename)
-        self.check_registry(registry.Test)
-        self.assertEqual(registry.Test.__table__.name, 'othername')
-        self.assertEqual(registry.Test.__tablename__, 'othername')
+        self.reload_registry_with(simple_model_with_tablename)
+        self.check_registry(self.registry.Test)
+        self.assertEqual(self.registry.Test.__table__.name, 'othername')
+        self.assertEqual(self.registry.Test.__tablename__, 'othername')
 
     def test_simple_models_with_same_table(self):
-        registry = self.init_registry(simple_models_with_same_table)
-        self.check_registry_same_table(registry.Test, registry.Test2)
+        self.reload_registry_with(simple_models_with_same_table)
+        self.check_registry_same_table(self.registry.Test, self.registry.Test2)
 
     def test_simple_models_with_same_table_by_declaration_model(self):
-        registry = self.init_registry(
+        self.reload_registry_with(
             simple_models_with_same_table_by_declaration_model)
-        self.check_registry_same_table(registry.Test, registry.Test2)
+        self.check_registry_same_table(self.registry.Test, self.registry.Test2)
 
     def test_simple_models_with_same_table_by_inherit(self):
-        registry = self.init_registry(simple_models_with_same_table_by_inherit)
-        self.check_registry_same_table(registry.Test, registry.Test2)
+        self.reload_registry_with(simple_models_with_same_table_by_inherit)
+        self.check_registry_same_table(self.registry.Test, self.registry.Test2)
 
     def test_simple_models_with_inherit_sqlmodel(self):
-        registry = self.init_registry(simple_models_with_inherit_sqlmodel)
-        self.check_registry_same_table(registry.Test, registry.Test2)
+        self.reload_registry_with(simple_models_with_inherit_sqlmodel)
+        self.check_registry_same_table(self.registry.Test, self.registry.Test2)
 
     def test_simple_model_with_wrong_column(self):
-        registry = self.init_registry(simple_model)
+        self.reload_registry_with(simple_model)
 
         try:
-            registry.Test.insert(name="test", other="other")
+            self.registry.Test.insert(name="test", other="other")
             self.fail('No error when an inexisting colomn has filled')
         except TypeError:
             pass
 
-    def test_simple_model_with_wrong_value(self):
-        registry = self.init_registry(simple_model)
-
-        t = registry.Test.insert(name=1)
-        registry.old_session_commit()
-        self.assertNotEqual(t.name, 1)
-
     def test_model_with_foreign_key(self):
-        registry = self.init_registry(model_with_foreign_key)
-        registry.TestFk.insert(name='test')
-        self.check_registry(registry.Test)
+        self.reload_registry_with(model_with_foreign_key)
+        self.registry.TestFk.insert(name='test')
+        self.check_registry(self.registry.Test)
 
     def test_table_args(self):
         val = 'one arg'
@@ -265,9 +258,9 @@ class TestModel2(DBTestCase):
                 def define_table_args(cls):
                     return (val,)
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(len(registry.Test.__table_args__), 1)
-        self.assertEqual(registry.Test.__table_args__[0], val)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(len(self.registry.Test.__table_args__), 1)
+        self.assertEqual(self.registry.Test.__table_args__[0], val)
 
     def test_table_args_with_inherit(self):
         val = 'first arg'
@@ -289,10 +282,10 @@ class TestModel2(DBTestCase):
                 def define_table_args(cls):
                     return super(Test, cls).define_table_args() + (val2,)
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(len(registry.Test.__table_args__), 2)
-        self.assertIn(val, registry.Test.__table_args__)
-        self.assertIn(val2, registry.Test.__table_args__)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(len(self.registry.Test.__table_args__), 2)
+        self.assertIn(val, self.registry.Test.__table_args__)
+        self.assertIn(val2, self.registry.Test.__table_args__)
 
     def test_table_args_in_cls_attribute(self):
 
@@ -303,7 +296,7 @@ class TestModel2(DBTestCase):
                 __table_args__ = ()
 
         with self.assertRaises(ModelException):
-            self.init_registry(add_in_registry)
+            self.reload_registry_with(add_in_registry)
 
     def test_mapper_args(self):
         val = 'one arg'
@@ -317,9 +310,9 @@ class TestModel2(DBTestCase):
                 def define_mapper_args(cls):
                     return {val: val}
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(len(registry.Test.__mapper_args__), 1)
-        self.assertEqual(registry.Test.__mapper_args__[val], val)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(len(self.registry.Test.__mapper_args__), 1)
+        self.assertEqual(self.registry.Test.__mapper_args__[val], val)
 
     def test_mapper_args_with_inherit(self):
         val = 'first arg'
@@ -343,10 +336,10 @@ class TestModel2(DBTestCase):
                     mapper_args.update({val2: val2})
                     return mapper_args
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(len(registry.Test.__mapper_args__), 2)
-        self.assertEqual(registry.Test.__mapper_args__[val], val)
-        self.assertEqual(registry.Test.__mapper_args__[val2], val2)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(len(self.registry.Test.__mapper_args__), 2)
+        self.assertEqual(self.registry.Test.__mapper_args__[val], val)
+        self.assertEqual(self.registry.Test.__mapper_args__[val2], val2)
 
     def test_mapper_args_in_cls_attribute(self):
 
@@ -357,7 +350,7 @@ class TestModel2(DBTestCase):
                 __mapper_args__ = {}
 
         with self.assertRaises(ModelException):
-            self.init_registry(add_in_registry)
+            self.reload_registry_with(add_in_registry)
 
 
 class TestModelAssembling(TestCase):

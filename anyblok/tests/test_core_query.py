@@ -31,16 +31,16 @@ class TestCoreQuery(DBTestCase):
                 def sqlalchemy_query_update(cls, query, *args, **kwargs):
                     raise TestException('test')
 
-        registry = self.init_registry(inherit_update)
+        self.reload_registry_with(inherit_update)
         try:
-            registry.Test.query().update({'id2': 1})
+            self.registry.Test.query().update({'id2': 1})
             self.fail('Update must fail')
         except TestException:
             pass
 
         try:
-            t = registry.System.Blok.query().first()
-            t.update({registry.System.Blok.state: 'undefined'})
+            t = self.registry.System.Blok.query().first()
+            t.update({self.registry.System.Blok.state: 'undefined'})
         except TestException:
             pass
 
@@ -57,5 +57,5 @@ class TestCoreQuery(DBTestCase):
                 def foo(self):
                     return True
 
-        registry = self.init_registry(inherit)
-        self.assertEqual(registry.System.Blok.query().foo(), True)
+        self.reload_registry_with(inherit)
+        self.assertEqual(self.registry.System.Blok.query().foo(), True)

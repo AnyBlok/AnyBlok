@@ -16,7 +16,6 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import ProgrammingError, OperationalError
 
 from .config import Configuration
-from .imp import ImportManager
 from .blok import BlokManager
 from .logging import log
 from .environment import EnvironmentManager
@@ -107,22 +106,16 @@ class RegistryManager:
         return registry
 
     @classmethod
-    def reload(cls, blok):
+    def reload(cls):
         """ Reload the blok
 
         The purpose is to reload the python module to get changes in python
         file
 
-        :param blok: the name of the blok to reload
         """
-        try:
-            mod = ImportManager.get(blok)
-            EnvironmentManager.set('current_blok', blok)
-            mod.reload()
-        finally:
-            EnvironmentManager.set('current_blok', None)
-
         for registry in cls.registries.values():
+            registry.close_session()
+            registry.Session = None
             registry.reload()
 
     @classmethod
@@ -952,7 +945,7 @@ class Registry:
                 return getattr(session, attribute)
 
         else:
-            super(Registry, self).__getattr__(attribute)
+            return super(Registry, self).__getattr__(attribute)
 
     def precommit_hook(self, registryname, method, put_at_the_if_exist):
         """ Add a method in the precommit_hook list
@@ -1001,9 +994,14 @@ class Registry:
                 setattr(self, name, None)
 
     @log(logger)
+    def complete_reload(self):
+        """ Reload the code and registry"""
+        BlokManager.reload()
+        RegistryManager.reload()
+
+    @log(logger)
     def reload(self):
-        """ Reload the registry, close session, clean registry, reinit var """
-        # self.close_session()
+        """ Reload the registry, clean registry, reinit var """
         self.clean_model()
         self.ini_var()
         self.load()
@@ -1085,6 +1083,4 @@ class Registry:
         upgrade_state_bloks('toinstall')(install or [])
         upgrade_state_bloks('toupdate')(update or [])
         upgrade_state_bloks('touninstall')(uninstall or [])
-
-        self.commit()
         self.reload()

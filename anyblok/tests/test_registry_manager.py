@@ -140,7 +140,7 @@ class TestRegistryManager(TestCase):
     def test_reload_blok(self):
         BlokManager.load()
         try:
-            RegistryManager.reload('anyblok-core')
+            RegistryManager.reload()
         finally:
             BlokManager.unload()
 

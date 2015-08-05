@@ -6,7 +6,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase, DBTestCase
+from anyblok.tests.testcase import DBTestCase
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager, Blok
 from anyblok.column import Integer
@@ -24,28 +24,10 @@ class TestTestTest:
     pass
 
 
-class TestRegistry(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestRegistry, cls).setUpClass()
-        cls.init_configuration_manager()
-        cls.createdb()
-        BlokManager.load()
-
-    def setUp(self):
-        super(TestRegistry, self).setUp()
-        self.registry = self.getRegistry()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(TestRegistry, cls).tearDownClass()
-        BlokManager.unload()
-        cls.dropdb()
+class TestRegistry(DBTestCase):
 
     def tearDown(self):
         super(TestRegistry, self).tearDown()
-        RegistryManager.clear()
         for cls in (Test, TestTest):
             if hasattr(cls, 'Test'):
                 delattr(cls, 'Test')
@@ -72,29 +54,28 @@ class TestRegistry(TestCase):
 
     def test_get_bloks_to_load(self):
         bloks = self.registry.get_bloks_to_load()
-        have_anyblokcore = 'anyblok-core' in bloks
-        self.assertEqual(have_anyblokcore, True)
+        self.assertIn('anyblok-core', bloks)
 
     def test_load_entry(self):
         self.registry.loaded_registries['entry_names'] = []
         RegistryManager.loaded_bloks['blok'] = {
             'entry': {
                 'registry_names': ['key'],
-                'key': {'properties': {'property': True}, 'bases': [TestCase]},
+                'key': {'properties': {'property': True},
+                        'bases': [DBTestCase]},
             },
         }
         self.registry.load_entry('blok', 'entry')
         self.assertEqual(self.registry.loaded_registries['key'],
                          {'properties': {'property': True},
-                          'bases': [TestCase]})
+                          'bases': [DBTestCase]})
 
     def test_load_core(self):
         RegistryManager.loaded_bloks['blok'] = {
-            'Core': {'Session': [TestCase]},
+            'Core': {'Session': [DBTestCase]},
         }
         self.registry.load_core('blok', 'Session')
-        have_session = TestCase in self.registry.loaded_cores['Session']
-        self.assertEqual(have_session, True)
+        self.assertIn(DBTestCase, self.registry.loaded_cores['Session'])
 
     def test_load_blok(self):
 
@@ -103,7 +84,7 @@ class TestRegistry(TestCase):
 
         BlokManager.bloks['blok'] = BlokTest
         RegistryManager.loaded_bloks['blok'] = {
-            'Core': {'Session': [TestCase],
+            'Core': {'Session': [DBTestCase],
                      'Base': [],
                      'SqlBase': [],
                      'SqlViewBase': [],
@@ -117,8 +98,7 @@ class TestRegistry(TestCase):
                 'registry_names': []}
 
         self.registry.load_blok('blok', False, [])
-        have_session = TestCase in self.registry.loaded_cores['Session']
-        self.assertEqual(have_session, True)
+        self.assertIn(DBTestCase, self.registry.loaded_cores['Session'])
 
     def check_added_in_regisry(self):
         self.assertEqual(self.registry.Test, Test)
@@ -196,41 +176,41 @@ class TestRegistry2(DBTestCase):
                 cls.precommit_hook('_precommit_hook')
 
     def test_check_dbtestcase_desable_ci(self):
-        registry = self.init_registry(self.add_model)
-        registry.begin_nested()  # add SAVEPOINT
-        registry.Test.insert()
-        registry.commit()
-        self.assertEqual(registry.Test.query().count(), 1)
-        registry.rollback()  # rollback() to SAVEPOINT
-        self.assertEqual(registry.Test.query().count(), 0)
+        self.reload_registry_with(self.add_model)
+        self.registry.begin_nested()  # add SAVEPOINT
+        self.registry.Test.insert()
+        self.registry.commit()
+        self.assertEqual(self.registry.Test.query().count(), 1)
+        self.registry.rollback()  # rollback() to SAVEPOINT
+        self.assertEqual(self.registry.Test.query().count(), 0)
 
     def test_precommit_hook(self):
-        registry = self.init_registry(self.add_model)
-        t1 = registry.Test.insert()
+        self.reload_registry_with(self.add_model)
+        t1 = self.registry.Test.insert()
         t1.add_precommit_hook()
-        t2 = registry.Test.insert()
+        t2 = self.registry.Test.insert()
         t2.add_precommit_hook()
         self.assertEqual(t1.val, 0)
         self.assertEqual(t2.val, 0)
-        registry.commit()
+        self.registry.commit()
         self.assertEqual(t1.val, t1.id)
         self.assertEqual(t2.val, t2.id)
-        registry.commit()
+        self.registry.commit()
         self.assertEqual(t1.val, t1.id)
         self.assertEqual(t2.val, t2.id)
-        registry.Test.add_cl_precommit_hook()
+        self.registry.Test.add_cl_precommit_hook()
         self.assertEqual(t1.val, t1.id)
         self.assertEqual(t2.val, t2.id)
-        registry.commit()
+        self.registry.commit()
         self.assertEqual(t1.val, 2 * t1.id)
         self.assertEqual(t2.val, 2 * t2.id)
-        registry.commit()
+        self.registry.commit()
         self.assertEqual(t1.val, 2 * t1.id)
         self.assertEqual(t2.val, 2 * t2.id)
         t1.add_precommit_hook()
         self.assertEqual(t1.val, 2 * t1.id)
         self.assertEqual(t2.val, 2 * t2.id)
-        registry.commit()
+        self.registry.commit()
         self.assertEqual(t1.val, 3 * t1.id)
         self.assertEqual(t2.val, 3 * t2.id)
 
@@ -263,8 +243,8 @@ class TestRegistry2(DBTestCase):
         def add_in_registry():
             self.define_cls()
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 1)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 1)
 
     def test_check_define_cls_with_inherit(self):
 
@@ -272,8 +252,8 @@ class TestRegistry2(DBTestCase):
             self.define_cls()
             self.define_cls(val=2, usesuper=True)
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 2)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 2)
 
     def test_check_define_cls_with_inherit_core(self):
 
@@ -281,8 +261,8 @@ class TestRegistry2(DBTestCase):
             self.define_cls(typename='Core', name='Base', val=2)
             self.define_cls(val=2, usesuper=True)
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 4)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 4)
 
     def test_check_define_cls_with_inherit_mixin(self):
 
@@ -290,8 +270,8 @@ class TestRegistry2(DBTestCase):
             self.define_cls(typename='Mixin', name='MTest', val=3)
             self.define_cls(val=3, usesuper=True, inherit='MTest')
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 9)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 9)
 
     def test_check_define_cls_with_inherit2(self):
 
@@ -300,8 +280,8 @@ class TestRegistry2(DBTestCase):
             self.define_cls(val=2, usesuper=True)
             self.define_cls(val=2, usesuper=True)
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 4)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 4)
 
     def test_check_define_cls_with_inherit_core2(self):
 
@@ -310,8 +290,8 @@ class TestRegistry2(DBTestCase):
             self.define_cls(typename='Core', name='Base', val=2, usesuper=True)
             self.define_cls(val=2, usesuper=True)
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 8)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 8)
 
     def test_check_define_cls_with_inherit_mixin2(self):
 
@@ -321,8 +301,8 @@ class TestRegistry2(DBTestCase):
                             usesuper=True)
             self.define_cls(val=3, usesuper=True, inherit='MTest')
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 27)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 27)
 
     def test_remove(self):
 
@@ -333,8 +313,8 @@ class TestRegistry2(DBTestCase):
             from anyblok import Declarations
             Declarations.unregister(Declarations.Model.Test, cls_)
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 2)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 2)
 
     def test_remove_core(self):
 
@@ -346,8 +326,8 @@ class TestRegistry2(DBTestCase):
             from anyblok import Declarations
             Declarations.unregister(Declarations.Core.Base, cls_)
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 4)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 4)
 
     def test_remove_mixin(self):
 
@@ -359,5 +339,5 @@ class TestRegistry2(DBTestCase):
             from anyblok import Declarations
             Declarations.unregister(Declarations.Mixin.MTest, cls_)
 
-        registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 9)
+        self.reload_registry_with(add_in_registry)
+        self.assertEqual(self.registry.Test.foo(), 9)

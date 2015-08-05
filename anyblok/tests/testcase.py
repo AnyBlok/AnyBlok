@@ -149,53 +149,40 @@ class DBTestCase(TestCase):
                 self.assertEqual(test.col, 1)
 
     """
-
-    blok_entry_points = ('bloks',)
-    """setuptools entry points to load blok """
-
-    current_blok = 'anyblok-core'
-    """In the blok to add the new model """
-
     @classmethod
     def setUpClass(cls):
         """ Intialialise the configuration manager """
         super(DBTestCase, cls).setUpClass()
         cls.init_configuration_manager()
+        cls.createdb(keep_existing=True)
+        BlokManager.load(entry_points=('bloks', 'test_bloks'))
+        cls.registry = RegistryManager.get(Configuration.get('db_name'))
+        if cls.registry.Session is None:
+            cls.registry.reload()
 
-    def setUp(self):
-        """ Create a database and load the blok manager """
-        super(DBTestCase, self).setUp()
-        self.createdb()
-        BlokManager.load(entry_points=self.blok_entry_points)
+        cls.registry.commit()
+
+        def session_commit(*args, **kwargs):
+            pass
+
+        cls.registry.old_session_commit = cls.registry.session_commit
+        cls.registry.session_commit = session_commit
+
+    @classmethod
+    def tearDownClass(cls):
+        """ Clear the registry, unload the blok manager and  drop the database
+        """
+        BlokManager.unload()
+        cls.registry.Session = None
+        super(DBTestCase, cls).tearDownClass()
 
     def tearDown(self):
         """ Clear the registry, unload the blok manager and  drop the database
         """
-        RegistryManager.clear()
-        BlokManager.unload()
-        self.dropdb()
+        self.registry.rollback()
         super(DBTestCase, self).tearDown()
 
-    def upgrade(self, registry, **kwargs):
-        """ Upgrade the registry::
-
-            class MyTest(DBTestCase):
-
-                def test_mytest(self):
-                    registry = self.init_registry(...)
-                    self.upgrade(registry, install=('MyBlok',))
-
-        :param registry: registry to upgrade
-        :param install: list the blok to install
-        :param update: list the blok to update
-        :param uninstall: list the blok to uninstall
-        """
-        session_commit = registry.session_commit
-        registry.session_commit = registry.old_session_commit
-        registry.upgrade(**kwargs)
-        registry.session_commit = session_commit
-
-    def init_registry(self, function, **kwargs):
+    def reload_registry_with(self, function, **kwargs):
         """ call a function to filled the blok manager with new model
 
         :param function: function to call
@@ -205,24 +192,17 @@ class DBTestCase(TestCase):
         from copy import deepcopy
         loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
         if function is not None:
-            EnvironmentManager.set('current_blok', self.current_blok)
+            EnvironmentManager.set('current_blok', 'anyblok-core')
             try:
                 function(**kwargs)
             finally:
                 EnvironmentManager.set('current_blok', None)
 
         try:
-            registry = self.getRegistry()
+            self.registry.Session = None
+            self.registry.reload()
         finally:
             RegistryManager.loaded_bloks = loaded_bloks
-
-        def session_commit(*args, **kwargs):
-            pass
-
-        registry.old_session_commit = registry.session_commit
-        registry.session_commit = session_commit
-
-        return registry
 
 
 class BlokTestCase(unittest.TestCase):

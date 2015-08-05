@@ -28,53 +28,57 @@ class TestCoreSQLBase(DBTestCase):
             id2 = Integer()
 
     def test_insert_and_query(self):
-        registry = self.init_registry(self.declare_model)
-        t1 = registry.Test.insert(id2=1)
-        self.assertEqual(registry.Test.query().first(), t1)
+        self.reload_registry_with(self.declare_model)
+        t1 = self.registry.Test.insert(id2=1)
+        self.assertEqual(self.registry.Test.query().first(), t1)
 
     def test_multi_insert(self):
-        registry = self.init_registry(self.declare_model)
+        self.reload_registry_with(self.declare_model)
         nb_value = 3
-        registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
-        self.assertEqual(registry.Test.query().count(), nb_value)
+        self.registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        self.assertEqual(self.registry.Test.query().count(), nb_value)
         for x in range(nb_value):
             self.assertEqual(
-                registry.Test.query().filter(registry.Test.id2 == x).count(),
+                self.registry.Test.query().filter(
+                    self.registry.Test.id2 == x).count(),
                 1)
 
     def test_delete(self):
-        registry = self.init_registry(self.declare_model)
+        self.reload_registry_with(self.declare_model)
         nb_value = 3
-        registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
-        self.assertEqual(registry.Test.query().count(), nb_value)
-        t = registry.Test.query().first()
+        self.registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        self.assertEqual(self.registry.Test.query().count(), nb_value)
+        t = self.registry.Test.query().first()
         id2 = t.id2
         t.delete()
-        self.assertEqual(registry.Test.query().count(), nb_value - 1)
+        self.assertEqual(self.registry.Test.query().count(), nb_value - 1)
         self.assertEqual(
-            registry.Test.query().filter(registry.Test.id2 != id2).count(),
+            self.registry.Test.query().filter(
+                self.registry.Test.id2 != id2).count(),
             nb_value - 1)
 
     def test_update(self):
-        registry = self.init_registry(self.declare_model)
+        self.reload_registry_with(self.declare_model)
         nb_value = 3
-        registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
-        t = registry.Test.query().first()
-        t.update({registry.Test.id2: 100})
+        self.registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        t = self.registry.Test.query().first()
+        t.update({self.registry.Test.id2: 100})
         self.assertEqual(
-            registry.Test.query().filter(registry.Test.id2 == 100).first(), t)
+            self.registry.Test.query().filter(
+                self.registry.Test.id2 == 100).first(),
+            t)
 
     def test_get_primary_keys(self):
-        registry = self.init_registry(self.declare_model)
-        self.assertEqual(registry.Test.get_primary_keys(), ['id'])
+        self.reload_registry_with(self.declare_model)
+        self.assertEqual(self.registry.Test.get_primary_keys(), ['id'])
 
     def test_to_and_from_primary_keys(self):
-        registry = self.init_registry(self.declare_model)
+        self.reload_registry_with(self.declare_model)
         nb_value = 3
-        registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
-        t = registry.Test.query().first()
+        self.registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        t = self.registry.Test.query().first()
         self.assertEqual(t.to_primary_keys(), {'id': t.id})
-        self.assertEqual(registry.Test.from_primary_keys(id=t.id), t)
+        self.assertEqual(self.registry.Test.from_primary_keys(id=t.id), t)
 
     def add_in_registry_m2o(self):
 
@@ -116,18 +120,18 @@ class TestCoreSQLBase(DBTestCase):
             test = Many2Many(model=Model.Test, many2many='test2')
 
     def test_to_dict_m2o_with_pks(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_m2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t1.to_dict('name'), {'name': 't1'})
         self.assertEqual(t2.to_dict('name'), {'name': 't2'})
         self.assertEqual(t2.to_dict('name', 'test'),
                          {'name': 't2', 'test': {'id': t1.id}})
 
     def test_to_dict_o2o_with_pks(self):
-        registry = self.init_registry(self.add_in_registry_o2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_o2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t1.to_dict('name'), {'name': 't1'})
         self.assertEqual(t2.to_dict('name'), {'name': 't2'})
         self.assertEqual(t2.to_dict('name', 'test'),
@@ -136,9 +140,9 @@ class TestCoreSQLBase(DBTestCase):
                          {'name': 't1', 'test2': {'id': t2.id}})
 
     def test_to_dict_m2m_with_pks(self):
-        registry = self.init_registry(self.add_in_registry_m2m)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2')
+        self.reload_registry_with(self.add_in_registry_m2m)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2')
         t2.test.append(t1)
         self.assertEqual(t1.to_dict('name'), {'name': 't1'})
         self.assertEqual(t2.to_dict('name'), {'name': 't2'})
@@ -148,32 +152,32 @@ class TestCoreSQLBase(DBTestCase):
                          {'name': 't1', 'test2': [{'id': t2.id}]})
 
     def test_to_dict_o2m_with_pks(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_m2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t1.to_dict('name', 'test2'),
                          {'name': 't1', 'test2': [{'id': t2.id}]})
 
     def test_to_dict_m2o_with_column(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_m2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t2.to_dict('name', ('test', ('name',))),
                          {'name': 't2', 'test': {'name': 't1'}})
 
     def test_to_dict_o2o_with_column(self):
-        registry = self.init_registry(self.add_in_registry_o2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_o2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t2.to_dict('name', ('test', ('name',))),
                          {'name': 't2', 'test': {'name': 't1'}})
         self.assertEqual(t1.to_dict('name', ('test2', ('name',))),
                          {'name': 't1', 'test2': {'name': 't2'}})
 
     def test_to_dict_m2m_with_column(self):
-        registry = self.init_registry(self.add_in_registry_m2m)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2')
+        self.reload_registry_with(self.add_in_registry_m2m)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2')
         t2.test.append(t1)
         self.assertEqual(t2.to_dict('name', ('test', ('name',))),
                          {'name': 't2', 'test': [{'name': 't1'}]})
@@ -181,16 +185,16 @@ class TestCoreSQLBase(DBTestCase):
                          {'name': 't1', 'test2': [{'name': 't2'}]})
 
     def test_to_dict_o2m_with_column(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_m2o)
+        t1 = self.registry.Test.insert(name='t1')
+        self.registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t1.to_dict('name', ('test2', ('name',))),
                          {'name': 't1', 'test2': [{'name': 't2'}]})
 
     def test_to_dict_m2o_with_all_columns(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_m2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t2.to_dict('name', ('test',)),
                          {'name': 't2', 'test': {'name': 't1',
                                                  'id': t1.id,
@@ -205,9 +209,9 @@ class TestCoreSQLBase(DBTestCase):
                                                  'test2': [{'id': t2.id}]}})
 
     def test_to_dict_o2o_with_all_columns(self):
-        registry = self.init_registry(self.add_in_registry_o2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_o2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t2.to_dict('name', ('test',)),
                          {'name': 't2', 'test': {'name': 't1',
                                                  'id': t1.id,
@@ -222,9 +226,9 @@ class TestCoreSQLBase(DBTestCase):
                                                  'test2': {'id': t2.id}}})
 
     def test_to_dict_m2m_with_all_columns(self):
-        registry = self.init_registry(self.add_in_registry_m2m)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2')
+        self.reload_registry_with(self.add_in_registry_m2m)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2')
         t2.test.append(t1)
         self.assertEqual(t2.to_dict('name', ('test',)),
                          {'name': 't2', 'test': [{'name': 't1',
@@ -252,9 +256,9 @@ class TestCoreSQLBase(DBTestCase):
                                                    'test': [{'id': t1.id}]}]})
 
     def test_to_dict_o2m_with_all_columns(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_m2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         self.assertEqual(t1.to_dict('name', ('test2',)),
                          {'name': 't1', 'test2': [{'name': 't2',
                                                    'id': t2.id,
@@ -269,22 +273,22 @@ class TestCoreSQLBase(DBTestCase):
                                                    'test': {'id': t1.id}}]})
 
     def test_bad_definition_of_relation(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_m2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         with self.assertRaises(SqlBaseException):
             t2.to_dict('name', ('test', 'name'))
 
     def test_bad_definition_of_relation2(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_m2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         with self.assertRaises(SqlBaseException):
             t2.to_dict('name', ('test', ('name',), ()))
 
     def test_bad_definition_of_relation3(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.reload_registry_with(self.add_in_registry_m2o)
+        t1 = self.registry.Test.insert(name='t1')
+        t2 = self.registry.Test2.insert(name='t2', test=t1)
         with self.assertRaises(SqlBaseException):
             t2.to_dict('name', ())

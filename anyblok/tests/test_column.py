@@ -78,138 +78,137 @@ def column_with_foreign_key():
 class TestColumns(DBTestCase):
 
     def test_column_with_type_in_kwargs(self):
-        self.init_registry(simple_column, ColumnType=Integer, type_=Integer)
+        self.reload_registry_with(
+            simple_column, ColumnType=Integer, type_=Integer)
 
     def test_column_with_db_column_name_in_kwargs(self):
-        registry = self.init_registry(simple_column, ColumnType=Integer,
-                                      db_column_name='another_name')
-        test = registry.Test.insert(col=1)
+        self.reload_registry_with(simple_column, ColumnType=Integer,
+                                  db_column_name='another_name')
+        test = self.registry.Test.insert(col=1)
         self.assertEqual(test.col, 1)
-        res = registry.execute('select id from test where another_name=1')
+        res = self.registry.execute('select id from test where another_name=1')
         self.assertEqual(res.fetchone()[0], test.id)
 
     def test_column_with_foreign_key(self):
-        registry = self.init_registry(column_with_foreign_key)
-        registry.Test.insert(name='test')
-        registry.Test2.insert(test='test')
+        self.reload_registry_with(column_with_foreign_key)
+        self.registry.Test.insert(name='test')
+        self.registry.Test2.insert(test='test')
 
     def test_integer(self):
-        registry = self.init_registry(simple_column, ColumnType=Integer)
-        test = registry.Test.insert(col=1)
+        self.reload_registry_with(simple_column, ColumnType=Integer)
+        test = self.registry.Test.insert(col=1)
         self.assertEqual(test.col, 1)
 
     def test_integer_str_foreign_key(self):
-        registry = self.init_registry(
+        self.reload_registry_with(
             simple_column, ColumnType=Integer,
             foreign_key=('Model.Test', 'id'))
-        test = registry.Test.insert()
-        test2 = registry.Test.insert(col=test.id)
+        test = self.registry.Test.insert()
+        test2 = self.registry.Test.insert(col=test.id)
         self.assertEqual(test2.col, test.id)
 
     def test_big_integer(self):
-        registry = self.init_registry(simple_column, ColumnType=BigInteger)
-        test = registry.Test.insert(col=1)
+        self.reload_registry_with(simple_column, ColumnType=BigInteger)
+        test = self.registry.Test.insert(col=1)
         self.assertEqual(test.col, 1)
 
     def test_small_integer(self):
-        registry = self.init_registry(simple_column, ColumnType=SmallInteger)
-        test = registry.Test.insert(col=1)
+        self.reload_registry_with(simple_column, ColumnType=SmallInteger)
+        test = self.registry.Test.insert(col=1)
         self.assertEqual(test.col, 1)
 
     def test_Float(self):
-        registry = self.init_registry(simple_column, ColumnType=Float)
-        test = registry.Test.insert(col=1.0)
+        self.reload_registry_with(simple_column, ColumnType=Float)
+        test = self.registry.Test.insert(col=1.0)
         self.assertEqual(test.col, 1.0)
 
     def test_decimal(self):
         from decimal import Decimal as D
 
-        registry = self.init_registry(simple_column, ColumnType=Decimal)
-        test = registry.Test.insert(col=D('1.0'))
+        self.reload_registry_with(simple_column, ColumnType=Decimal)
+        test = self.registry.Test.insert(col=D('1.0'))
         self.assertEqual(test.col, D('1.0'))
 
     def test_boolean(self):
-        registry = self.init_registry(simple_column, ColumnType=Boolean)
-        test = registry.Test.insert(col=True)
+        self.reload_registry_with(simple_column, ColumnType=Boolean)
+        test = self.registry.Test.insert(col=True)
         self.assertEqual(test.col, True)
 
     def test_boolean_with_default(self):
-        registry = self.init_registry(simple_column, ColumnType=Boolean,
-                                      default=False)
-        test = registry.Test.insert()
+        self.reload_registry_with(simple_column, ColumnType=Boolean,
+                                  default=False)
+        test = self.registry.Test.insert()
         self.assertEqual(test.col, False)
 
     def test_string(self):
-        registry = self.init_registry(simple_column, ColumnType=String)
-        test = registry.Test.insert(col='col')
+        self.reload_registry_with(simple_column, ColumnType=String)
+        test = self.registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_string_with_size(self):
-        registry = self.init_registry(simple_column, ColumnType=String,
-                                      size=100)
-        test = registry.Test.insert(col='col')
+        self.reload_registry_with(simple_column, ColumnType=String, size=100)
+        test = self.registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_text(self):
-        registry = self.init_registry(simple_column, ColumnType=Text)
-        test = registry.Test.insert(col='col')
+        self.reload_registry_with(simple_column, ColumnType=Text)
+        test = self.registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_ustring(self):
-        registry = self.init_registry(simple_column, ColumnType=uString)
-        test = registry.Test.insert(col='col')
+        self.reload_registry_with(simple_column, ColumnType=uString)
+        test = self.registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_ustring_with_size(self):
-        registry = self.init_registry(simple_column, ColumnType=uString,
-                                      size=100)
-        test = registry.Test.insert(col='col')
+        self.reload_registry_with(simple_column, ColumnType=uString, size=100)
+        test = self.registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_utext(self):
-        registry = self.init_registry(simple_column, ColumnType=uText)
-        test = registry.Test.insert(col='col')
+        self.reload_registry_with(simple_column, ColumnType=uText)
+        test = self.registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
     def test_date(self):
         from datetime import date
 
         now = date.today()
-        registry = self.init_registry(simple_column, ColumnType=Date)
-        test = registry.Test.insert(col=now)
+        self.reload_registry_with(simple_column, ColumnType=Date)
+        test = self.registry.Test.insert(col=now)
         self.assertEqual(test.col, now)
 
     def test_datetime(self):
         import datetime
 
         now = datetime.datetime.now()
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
-        test = registry.Test.insert(col=now)
+        self.reload_registry_with(simple_column, ColumnType=DateTime)
+        test = self.registry.Test.insert(col=now)
         self.assertEqual(test.col, now)
 
     def test_interval(self):
         from datetime import timedelta
 
         dt = timedelta(days=5)
-        registry = self.init_registry(simple_column, ColumnType=Interval)
-        test = registry.Test.insert(col=dt)
+        self.reload_registry_with(simple_column, ColumnType=Interval)
+        test = self.registry.Test.insert(col=dt)
         self.assertEqual(test.col, dt)
 
     def test_time(self):
         from datetime import time
 
         now = time()
-        registry = self.init_registry(simple_column, ColumnType=Time)
-        test = registry.Test.insert(col=now)
+        self.reload_registry_with(simple_column, ColumnType=Time)
+        test = self.registry.Test.insert(col=now)
         self.assertEqual(test.col, now)
 
     def test_large_binary(self):
         from os import urandom
 
         blob = urandom(100000)
-        registry = self.init_registry(simple_column, ColumnType=LargeBinary)
+        self.reload_registry_with(simple_column, ColumnType=LargeBinary)
 
-        test = registry.Test.insert(col=blob)
+        test = self.registry.Test.insert(col=blob)
         self.assertEqual(test.col, blob)
 
     def test_selection(self):
@@ -218,12 +217,12 @@ class TestColumns(DBTestCase):
             ('regular-user', 'Regular user')
         ]
 
-        registry = self.init_registry(
+        self.reload_registry_with(
             simple_column, ColumnType=Selection, selections=SELECTIONS)
-        test = registry.Test.insert(col=SELECTIONS[0][0])
+        test = self.registry.Test.insert(col=SELECTIONS[0][0])
         self.assertEqual(test.col, SELECTIONS[0][0])
         self.assertEqual(test.col.label, SELECTIONS[0][1])
-        test = registry.Test.query().first()
+        test = self.registry.Test.query().first()
         self.assertEqual(test.col, SELECTIONS[0][0])
         self.assertEqual(test.col.label, SELECTIONS[0][1])
         try:
@@ -239,7 +238,7 @@ class TestColumns(DBTestCase):
         ]
 
         try:
-            self.init_registry(
+            self.reload_registry_with(
                 simple_column, ColumnType=Selection, selections=SELECTIONS)
             self.fail('No watchdog to check if the key is not a str')
         except FieldException:
@@ -251,11 +250,11 @@ class TestColumns(DBTestCase):
             ('regular-user', 'Regular user')
         ]
 
-        registry = self.init_registry(
+        self.reload_registry_with(
             simple_column, ColumnType=Selection, selections=SELECTIONS)
-        registry.Test.insert(col=SELECTIONS[0][0])
-        registry.Test.query().filter(
-            registry.Test.col.in_(['admin', 'regular-user'])).first()
+        self.registry.Test.insert(col=SELECTIONS[0][0])
+        self.registry.Test.query().filter(
+            self.registry.Test.col.in_(['admin', 'regular-user'])).first()
 
     def test_selection_use_method(self):
         SELECTIONS = [
@@ -275,26 +274,26 @@ class TestColumns(DBTestCase):
                 def get_selection(cls):
                     return SELECTIONS
 
-        registry = self.init_registry(add_selection)
-        registry.Test.insert(col=SELECTIONS[0][0])
-        registry.Test.query().filter(
-            registry.Test.col.in_(['admin', 'regular-user'])).first()
+        self.reload_registry_with(add_selection)
+        self.registry.Test.insert(col=SELECTIONS[0][0])
+        self.registry.Test.query().filter(
+            self.registry.Test.col.in_(['admin', 'regular-user'])).first()
 
     def test_json(self):
-        registry = self.init_registry(simple_column, ColumnType=Json)
+        self.reload_registry_with(simple_column, ColumnType=Json)
         val = {'a': 'Test'}
-        test = registry.Test.insert(col=val)
+        test = self.registry.Test.insert(col=val)
         self.assertEqual(test.col, val)
 
     def test_json_update(self):
-        registry = self.init_registry(simple_column, ColumnType=Json)
-        test = registry.Test.insert(col={'a': 'test'})
+        self.reload_registry_with(simple_column, ColumnType=Json)
+        test = self.registry.Test.insert(col={'a': 'test'})
         test.col['b'] = 'test'
         self.assertEqual(test.col, {'a': 'test', 'b': 'test'})
 
     def test_json_simple_filter(self):
-        registry = self.init_registry(simple_column, ColumnType=Json)
-        Test = registry.Test
+        self.reload_registry_with(simple_column, ColumnType=Json)
+        Test = self.registry.Test
         Test.insert(col={'a': 'test'})
         Test.insert(col={'a': 'test'})
         Test.insert(col={'b': 'test'})
@@ -304,8 +303,8 @@ class TestColumns(DBTestCase):
     # WORKS with json postgres column but not with the generic AnyBlok column
     # def test_json_filter(self):
     #     Json = Declarations.Column.Json
-    #     registry = self.init_registry(simple_column, ColumnType=Json)
-    #     Test = registry.Test
+    #     self.reload_registry_with(simple_column, ColumnType=Json)
+    #     Test = self.registry.Test
     #     t1 = Test.insert(col={'a': 'Test1'})
     #     Test.insert(col={'a': 'Test2'})
     #     self.assertEqual(Test.query().filter(
@@ -313,8 +312,8 @@ class TestColumns(DBTestCase):
 
     # def test_json_filter_numeric(self):
     #     Json = Declarations.Column.Json
-    #     registry = self.init_registry(simple_column, ColumnType=Json)
-    #     Test = registry.Test
+    #     self.reload_registry_with(simple_column, ColumnType=Json)
+    #     Test = self.registry.Test
     #     t1 = Test.insert(col={'a': 1})
     #     Test.insert(col={'a': 2})
     #     self.assertEqual(Test.query().filter(
@@ -322,8 +321,8 @@ class TestColumns(DBTestCase):
 
     # def test_json_filter_astext(self):
     #     Json = Declarations.Column.Json
-    #     registry = self.init_registry(simple_column, ColumnType=Json)
-    #     Test = registry.Test
+    #     self.reload_registry_with(simple_column, ColumnType=Json)
+    #     Test = self.registry.Test
     #     t1 = Test.insert(col={'a': 'Test1'})
     #     Test.insert(col={'a': 'Test2'})
     #     self.assertEqual(Test.query().filter(
@@ -332,16 +331,16 @@ class TestColumns(DBTestCase):
     # def test_json_filter_cast(self):
     #     Json = Declarations.Column.Json
     #     Integer = Declarations.Column.Integer
-    #     registry = self.init_registry(simple_column, ColumnType=Json)
-    #     Test = registry.Test
+    #     self.reload_registry_with(simple_column, ColumnType=Json)
+    #     Test = self.registry.Test
     #     t1 = Test.insert(col={'a': '1'})
     #     Test.insert(col={'a': '2'})
     #     self.assertEqual(Test.query().filter(
     #         Test.col['a'].cast(Integer) == 1).first(), t1)
 
     def test_json_null(self):
-        registry = self.init_registry(simple_column, ColumnType=Json)
-        Test = registry.Test
+        self.reload_registry_with(simple_column, ColumnType=Json)
+        Test = self.registry.Test
         Test.insert(col=None)
         Test.insert(col=None)
         Test.insert(col={'a': 'test'})

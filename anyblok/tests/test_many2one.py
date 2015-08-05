@@ -141,70 +141,59 @@ def _two_remote_primary_keys(**kwargs):
 class TestMany2One(DBTestCase):
 
     def test_complete_many2one(self):
-        registry = self.init_registry(_complete_many2one)
+        self.reload_registry_with(_complete_many2one)
+        address_exist = hasattr(self.registry.Person, 'address')
+        self.assertTrue(address_exist)
+        id_of_address_exist = hasattr(self.registry.Person, 'id_of_address')
+        self.assertTrue(id_of_address_exist)
 
-        address_exist = hasattr(registry.Person, 'address')
-        self.assertEqual(address_exist, True)
-
-        id_of_address_exist = hasattr(registry.Person, 'id_of_address')
-        self.assertEqual(id_of_address_exist, True)
-
-        address = registry.Address.insert(
+        address = self.registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
 
-        person = registry.Person.insert(
+        person = self.registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
 
         self.assertEqual(address.persons, [person])
 
     def test_2_many2one(self):
         with self.assertRaises(FieldException):
-            self.init_registry(_many2one_with_same_name_for_column_names)
+            self.reload_registry_with(
+                _many2one_with_same_name_for_column_names)
 
     def test_minimum_many2one(self):
-        registry = self.init_registry(_minimum_many2one)
-
-        address_exist = hasattr(registry.Person, 'address')
-        self.assertEqual(address_exist, True)
-
-        address_id_exist = hasattr(registry.Person, 'address_id')
-        self.assertEqual(address_id_exist, True)
-
-        address = registry.Address.insert()
-
-        person = registry.Person.insert(
+        self.reload_registry_with(_minimum_many2one)
+        address_exist = hasattr(self.registry.Person, 'address')
+        self.assertTrue(address_exist)
+        address_id_exist = hasattr(self.registry.Person, 'address_id')
+        self.assertTrue(address_id_exist)
+        address = self.registry.Address.insert()
+        person = self.registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
-
         self.assertEqual(person.address, address)
 
     def test_many2one_with_str_model(self):
-        registry = self.init_registry(_many2one_with_str_model)
-
-        address_exist = hasattr(registry.Person, 'address')
-        self.assertEqual(address_exist, True)
-
-        address_id_exist = hasattr(registry.Person, 'address_id')
-        self.assertEqual(address_id_exist, True)
-
-        address = registry.Address.insert()
-
-        person = registry.Person.insert(
+        self.reload_registry_with(_many2one_with_str_model)
+        address_exist = hasattr(self.registry.Person, 'address')
+        self.assertTrue(address_exist)
+        address_id_exist = hasattr(self.registry.Person, 'address_id')
+        self.assertTrue(address_id_exist)
+        address = self.registry.Address.insert()
+        person = self.registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
-
-        self.assertEqual(person.address, address)
+        self.assertIs(person.address, address)
 
     def test_minimum_many2one_without_model(self):
         try:
-            self.init_registry(_minimum_many2one_without_model)
+            self.reload_registry_with(_minimum_many2one_without_model)
             self.fail("No watch dog when more no model")
         except FieldException:
             pass
 
     def check_autodetect_type(self, ColumnType):
-        registry = self.init_registry(_auto_detect_type, ColumnType=ColumnType)
+        self.reload_registry_with(_auto_detect_type, ColumnType=ColumnType)
         self.assertEqual(
-            str(registry.Address.id.property.columns[0].type),
-            str(registry.Person.address_id.property.columns[0].type))
+            str(self.registry.Address.id.property.columns[0].type),
+            str(self.registry.Person.address_id.property.columns[0].type))
 
     def test_autodetect_type_integer(self):
         self.check_autodetect_type(Integer)
@@ -248,9 +237,9 @@ class TestMany2One(DBTestCase):
                 id = Integer(primary_key=True)
                 parent = Many2One(model='Model.Test', one2many='children')
 
-        registry = self.init_registry(add_in_registry)
-        t1 = registry.Test.insert()
-        t2 = registry.Test.insert(parent=t1)
+        self.reload_registry_with(add_in_registry)
+        t1 = self.registry.Test.insert()
+        t2 = self.registry.Test.insert(parent=t1)
         self.assertEqual(t2.parent, t1)
         self.assertEqual(t1.children[0], t2)
 
@@ -267,9 +256,9 @@ class TestMany2One(DBTestCase):
 
                 parent = Many2One(model='Model.Test', one2many='children')
 
-        registry = self.init_registry(add_in_registry)
-        t1 = registry.Test.insert()
-        t2 = registry.Test.insert(parent=t1)
+        self.reload_registry_with(add_in_registry)
+        t1 = self.registry.Test.insert()
+        t2 = self.registry.Test.insert(parent=t1)
         self.assertEqual(t2.parent, t1)
         self.assertEqual(t1.children[0], t2)
 
@@ -286,9 +275,9 @@ class TestMany2One(DBTestCase):
 
                 parent = Many2One(model='Model.Test', one2many='children')
 
-        registry = self.init_registry(add_in_registry)
-        t1 = registry.Test.insert()
-        t2 = registry.Test.insert(parent=t1)
+        self.reload_registry_with(add_in_registry)
+        t1 = self.registry.Test.insert()
+        t2 = self.registry.Test.insert(parent=t1)
         self.assertEqual(t2.parent, t1)
         self.assertEqual(t1.children[0], t2)
 
@@ -306,12 +295,13 @@ class TestMany2One(DBTestCase):
                 name = String(primary_key=True)
                 address = Many2One(model=Model.Address, unique=True)
 
-        registry = self.init_registry(add_in_registry)
-        address = registry.Address.insert()
-        registry.Person.insert(name="Jean-sébastien SUZANNE", address=address)
+        self.reload_registry_with(add_in_registry)
+        address = self.registry.Address.insert()
+        self.registry.Person.insert(
+            name="Jean-sébastien SUZANNE", address=address)
 
         with self.assertRaises(IntegrityError):
-            registry.Person.insert(name="Other", address=address)
+            self.registry.Person.insert(name="Other", address=address)
 
     def test_complet_with_multi_foreign_key(self):
 
@@ -341,9 +331,9 @@ class TestMany2One(DBTestCase):
                                 remote_columns=('id', 'id2'),
                                 column_names=('test_id', 'test_id2'))
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -369,9 +359,9 @@ class TestMany2One(DBTestCase):
                                 remote_columns=('id', 'id2'),
                                 column_names=('test_id', 'test_id2'))
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -395,9 +385,9 @@ class TestMany2One(DBTestCase):
                     foreign_key=(Model.Test, 'id2'), nullable=False)
                 test = Many2One(model=Model.Test)
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -421,9 +411,9 @@ class TestMany2One(DBTestCase):
                     foreign_key=(Model.Test, 'id2'), nullable=False)
                 test = Many2One(model=Model.Test)
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.other_test_id)
         self.assertEqual(test.id2, test2.other_test_id2)
 
@@ -443,9 +433,9 @@ class TestMany2One(DBTestCase):
                 id = Integer(primary_key=True)
                 test = Many2One(model=Model.Test)
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -466,9 +456,9 @@ class TestMany2One(DBTestCase):
                 test = Many2One(model=Model.Test,
                                 column_names=('test_id', 'test_id2'))
 
-        registry = self.init_registry(add_in_registry)
-        test = registry.Test.insert(id2="10")
-        test2 = registry.Test2.insert(test=test)
+        self.reload_registry_with(add_in_registry)
+        test = self.registry.Test.insert(id2="10")
+        test2 = self.registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
 
@@ -490,4 +480,4 @@ class TestMany2One(DBTestCase):
                     'other_test_id', 'other_test_id2'))
 
         with self.assertRaises(FieldException):
-            self.init_registry(add_in_registry)
+            self.reload_registry_with(add_in_registry)

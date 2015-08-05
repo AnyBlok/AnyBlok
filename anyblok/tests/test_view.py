@@ -207,14 +207,12 @@ def simple_view_without_view_declaration():
 class TestView(DBTestCase):
 
     def test_simple_view(self):
-        registry = self.init_registry(simple_view)
-
-        registry.T1.insert(code='test1', val=1)
-        registry.T2.insert(code='test1', val=2)
-        registry.T1.insert(code='test2', val=3)
-        registry.T2.insert(code='test2', val=4)
-
-        TestView = registry.TestView
+        self.reload_registry_with(simple_view)
+        self.registry.T1.insert(code='test1', val=1)
+        self.registry.T2.insert(code='test1', val=2)
+        self.registry.T1.insert(code='test2', val=3)
+        self.registry.T2.insert(code='test2', val=4)
+        TestView = self.registry.TestView
         v1 = TestView.query().filter(TestView.code == 'test1').first()
         v2 = TestView.query().filter(TestView.code == 'test2').first()
         self.assertEqual(v1.val1, 1)
@@ -222,61 +220,55 @@ class TestView(DBTestCase):
         self.assertEqual(v2.val1, 3)
         self.assertEqual(v2.val2, 4)
 
-    def check_same_view(self, registry):
-        registry.T1.insert(code='test1', val=1)
-        registry.T2.insert(code='test1', val=2)
-        registry.T1.insert(code='test2', val=3)
-        registry.T2.insert(code='test2', val=4)
-
-        TestView = registry.TestView
-        TestView2 = registry.TestView2
-        self.assertEqual(
-            registry.TestView.__view__, registry.TestView2.__view__)
+    def check_same_view(self):
+        self.registry.T1.insert(code='test1', val=1)
+        self.registry.T2.insert(code='test1', val=2)
+        self.registry.T1.insert(code='test2', val=3)
+        self.registry.T2.insert(code='test2', val=4)
+        TestView = self.registry.TestView
+        TestView2 = self.registry.TestView2
+        self.assertEqual(self.registry.TestView.__view__,
+                         self.registry.TestView2.__view__)
         v1 = TestView.query().filter(TestView.code == 'test1').first()
         v2 = TestView.query().filter(TestView2.code == 'test1').first()
-
         self.assertEqual(v1.val1, v2.val1)
         self.assertEqual(v1.val2, v2.val2)
 
     def test_same_view_by_declaration_model(self):
-        registry = self.init_registry(
+        self.reload_registry_with(
             simple_view_with_same_table_by_declaration_model)
-        self.check_same_view(registry)
+        self.check_same_view()
 
     def test_same_view_by_name(self):
-        registry = self.init_registry(simple_view_with_same_table_by_name)
-        self.check_same_view(registry)
+        self.reload_registry_with(simple_view_with_same_table_by_name)
+        self.check_same_view()
 
     def test_same_view_by_inherit(self):
-        registry = self.init_registry(simple_view_with_same_table_by_inherit)
-        self.check_same_view(registry)
+        self.reload_registry_with(simple_view_with_same_table_by_inherit)
+        self.check_same_view()
 
     def test_view_update_method(self):
-        registry = self.init_registry(simple_view)
-
-        registry.T1.insert(code='test1', val=1)
-        registry.T2.insert(code='test1', val=2)
-        registry.T1.insert(code='test2', val=3)
-        registry.T2.insert(code='test2', val=4)
-
+        self.reload_registry_with(simple_view)
+        self.registry.T1.insert(code='test1', val=1)
+        self.registry.T2.insert(code='test1', val=2)
+        self.registry.T1.insert(code='test2', val=3)
+        self.registry.T2.insert(code='test2', val=4)
         with self.assertRaises(ViewException):
-            registry.TestView.query().update({'val2': 3})
+            self.registry.TestView.query().update({'val2': 3})
 
     def test_view_delete_method(self):
-        registry = self.init_registry(simple_view)
-
-        registry.T1.insert(code='test1', val=1)
-        registry.T2.insert(code='test1', val=2)
-        registry.T1.insert(code='test2', val=3)
-        registry.T2.insert(code='test2', val=4)
-
+        self.reload_registry_with(simple_view)
+        self.registry.T1.insert(code='test1', val=1)
+        self.registry.T2.insert(code='test1', val=2)
+        self.registry.T1.insert(code='test2', val=3)
+        self.registry.T2.insert(code='test2', val=4)
         with self.assertRaises(ViewException):
-            registry.TestView.query().delete()
+            self.registry.TestView.query().delete()
 
     def test_simple_view_without_primary_key(self):
         with self.assertRaises(ViewException):
-            self.init_registry(simple_view_without_primary_key)
+            self.reload_registry_with(simple_view_without_primary_key)
 
     def test_simple_view_without_view_declaration(self):
         with self.assertRaises(ViewException):
-            self.init_registry(simple_view_without_view_declaration)
+            self.reload_registry_with(simple_view_without_view_declaration)
