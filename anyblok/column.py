@@ -91,10 +91,15 @@ class Column(Field):
 
     def format_foreign_key(self, registry, args, kwargs):
         if self.foreign_key:
-            model, col = self.foreign_key
+            if len(self.foreign_key) == 2:
+                model, col = self.foreign_key
+                options = {}
+            else:
+                model, col, options = self.foreign_key
+
             tablename = self.get_tablename(registry, model)
             foreign_key = tablename + '.' + col
-            args = args + (ForeignKey(foreign_key),)
+            args = args + (ForeignKey(foreign_key, **options),)
             kwargs['info']['foreign_key'] = foreign_key
             kwargs['info']['remote_model'] = self.get_registry_name(model)
 

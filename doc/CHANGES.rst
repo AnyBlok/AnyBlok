@@ -17,6 +17,7 @@ Future
   the declaration
 * [FIX] all must return InstrumentedList, also when the result is empty
 * [FIX] to_dict must not cast column
+* [REF] add third entry in foreign key declaration to add options
 
 0.4.1
 -----
