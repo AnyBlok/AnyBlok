@@ -19,6 +19,7 @@ from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
 import anyblok
+import sqlalchemy
 
 logger = getLogger(__name__)
 
@@ -304,6 +305,11 @@ class BlokTestCase(unittest.TestCase):
     def tearDown(self):
         """ Roll back the session """
         super(BlokTestCase, self).tearDown()
-        self.registry.System.Cache.invalidate_all()
-        self.registry.rollback()
+        try:
+            self.registry.System.Cache.invalidate_all()
+        except sqlalchemy.exc.InvalidRequestError:
+            self.registry.Session.rollback()
+        finally:
+            self.registry.rollback()
+
         self._transaction_case_teared_down = True
