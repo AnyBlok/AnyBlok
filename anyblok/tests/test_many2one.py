@@ -334,9 +334,9 @@ class TestMany2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = Many2One(model=Model.Test,
                                 remote_columns=('id', 'id2'),
                                 column_names=('test_id', 'test_id2'))
@@ -362,9 +362,9 @@ class TestMany2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = Many2One(model=Model.Test,
                                 remote_columns=('id', 'id2'),
                                 column_names=('test_id', 'test_id2'))
@@ -390,9 +390,9 @@ class TestMany2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = Many2One(model=Model.Test)
 
         registry = self.init_registry(add_in_registry)
@@ -416,9 +416,9 @@ class TestMany2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 other_test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 other_test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = Many2One(model=Model.Test)
 
         registry = self.init_registry(add_in_registry)

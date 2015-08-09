@@ -237,10 +237,7 @@ class Many2One(RelationShip):
             col = properties[cname]
             if hasattr(col, 'anyblok_field'):
                 if hasattr(col.anyblok_field, 'foreign_key'):
-                    rn = col.anyblok_field.foreign_key[0]
-                    if not isinstance(rn, str):
-                        rn = rn.__registry_name__
-
+                    rn = col.anyblok_field.foreign_key.model_name
                     if rn != remote_model:
                         continue
 
@@ -291,7 +288,8 @@ class Many2One(RelationShip):
         self_properties = registry.loaded_namespaces_first_step.get(namespace)
         for cname in self.column_names:
             if cname in self_properties:
-                del remote_types[self_properties[cname].foreign_key[1]]
+                del remote_types[
+                    self_properties[cname].foreign_key.attribute_name]
 
         col_names = []
         ref_cols = []
@@ -306,8 +304,7 @@ class Many2One(RelationShip):
             else:
                 col_names.append(cname)
                 foreign_key = properties[cname].anyblok_field.foreign_key
-                foreign_key = '%s.%s' % (foreign_key[0].__tablename__,
-                                         foreign_key[1])
+                foreign_key = foreign_key.get_fk_name(registry)
                 ref_cols.append(foreign_key)
 
         if namespace == self.get_registry_name():
@@ -596,7 +593,7 @@ class One2Many(RelationShip):
                 continue
 
             if p.foreign_key:
-                model, _ = p.foreign_key
+                model = p.foreign_key.model_name
                 if self.get_tablename(registry, model=model) == tablename:
                     fks.append(f)
 
@@ -630,7 +627,8 @@ class One2Many(RelationShip):
             for cname in self.remote_columns:
                 col = remote_properties[cname]
                 pjs.append("%s.%s == %s.%s" % (
-                    tablename, col.foreign_key[1], remote_table, cname))
+                    tablename, col.foreign_key.get_column_name(registry),
+                    remote_table, cname))
 
             # This must be a python and not a SQL AND cause of eval do
             # on the primaryjoin

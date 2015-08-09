@@ -76,7 +76,7 @@ def multi_table_poly():
 
     @register(Model)
     class Engineer(Model.Employee):
-        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        id = Integer(primary_key=True, foreign_key=Model.Employee.use('id'))
         engineer_name = String()
 
         @classmethod
@@ -89,7 +89,7 @@ def multi_table_poly():
 
     @register(Model)
     class Manager(Model.Employee):
-        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        id = Integer(primary_key=True, foreign_key=Model.Employee.use('id'))
         manager_name = String()
 
         @classmethod
@@ -123,7 +123,7 @@ def multi_table_poly_mixins():
 
     @register(Model)
     class Engineer(Model.Employee):
-        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        id = Integer(primary_key=True, foreign_key=Model.Employee.use('id'))
         engineer_name = String()
 
         @classmethod
@@ -136,7 +136,7 @@ def multi_table_poly_mixins():
 
     @register(Model)
     class Manager(Model.Employee, MyMixins):
-        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        id = Integer(primary_key=True, foreign_key=Model.Employee.use('id'))
         manager_name = String()
 
         @classmethod
@@ -172,7 +172,7 @@ def multi_table_foreign_key():
 
     @register(Model)
     class Engineer(Model.Employee):
-        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        id = Integer(primary_key=True, foreign_key=Model.Employee.use('id'))
         engineer_name = String()
 
         @classmethod
@@ -212,7 +212,7 @@ def multi_table_foreign_key_with_one_define_mapper_args():
 
     @register(Model)
     class Engineer(Model.Employee):
-        id = Integer(primary_key=True, foreign_key=(Model.Employee, 'id'))
+        id = Integer(primary_key=True, foreign_key=Model.Employee.use('id'))
         engineer_name = String()
 
 

@@ -195,7 +195,7 @@ def model_with_foreign_key():
     class Test:
 
         id = Integer(primary_key=True)
-        name = String(foreign_key=(Model.TestFk, 'name'))
+        name = String(foreign_key=Model.TestFk.use('name'))
 
 
 class TestModel2(DBTestCase):
@@ -271,7 +271,7 @@ class TestModel2(DBTestCase):
             class Test:
 
                 id = Integer(primary_key=True)
-                name = String(foreign_key=(Model.TestFk, 'name'))
+                name = String(foreign_key=Model.TestFk.use('name'))
 
         registry = self.init_registry(model_with_foreign_key)
         registry.TestFk.insert(name='test')
@@ -475,6 +475,12 @@ class TestModelAttribute(DBTestCase):
             ondelete='cascade')
         mafk = ma.get_fk(registry)
         self.assertTrue(isinstance(mafk, ForeignKey))
+
+    def test_use(self):
+        ma = Declarations.Model.System.Model.use('name')
+        self.assertTrue(isinstance(ma, ModelAttribute))
+        self.assertEqual(ma.model_name, 'Model.System.Model')
+        self.assertEqual(ma.attribute_name, 'name')
 
 
 class TestModelAttributeAdapter(TestCase):

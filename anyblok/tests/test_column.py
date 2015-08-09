@@ -72,7 +72,7 @@ def column_with_foreign_key():
     class Test2:
 
         id = Integer(primary_key=True)
-        test = String(foreign_key=(Model.Test, 'name'))
+        test = String(foreign_key=Model.Test.use('name'))
 
 
 class TestColumns(DBTestCase):
@@ -100,8 +100,7 @@ class TestColumns(DBTestCase):
 
     def test_integer_str_foreign_key(self):
         registry = self.init_registry(
-            simple_column, ColumnType=Integer,
-            foreign_key=('Model.Test', 'id'))
+            simple_column, ColumnType=Integer, foreign_key='Model.Test=>id')
         test = registry.Test.insert()
         test2 = registry.Test.insert(col=test.id)
         self.assertEqual(test2.col, test.id)

@@ -12,6 +12,10 @@ CHANGELOG
 Future
 ------
 
+.. warning:: 
+
+    Break the compatibility with the previous version of anyblok
+
 * [IMP] add ``pop`` behaviour on **Model.System.Parameter**
 * [REF] Load configuration befoare load bloks, to use Configuration during
   the declaration
@@ -23,6 +27,7 @@ Future
 * [IMP] ModelAttributeAdapter, get a ModelAttribute from ModelAttribute or str
 * [IMP] ModelRepr, Speudo representation of a Model
 * [IMP] ModelAdapter, get a ModelRepr from ModelRepr or str
+* [REF] the foreign key must be declared with ModelAttribute
 
 0.4.1
 -----

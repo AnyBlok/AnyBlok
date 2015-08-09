@@ -264,8 +264,8 @@ class Association:
         'conditional': 'Conditional',
     }
 
-    blok = String(foreign_key=(System.Blok, 'name'),
+    blok = String(foreign_key=System.Blok.use('name'),
                   nullable=False, primary_key=True)
-    linked_blok = String(foreign_key=(System.Blok, 'name'),
+    linked_blok = String(foreign_key=System.Blok.use('name'),
                          nullable=False, primary_key=True)
     mode = Selection(selections=MODES, nullable=False, primary_key=True)

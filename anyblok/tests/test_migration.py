@@ -55,7 +55,7 @@ class TestMigration(TestCase):
         @register(Model)
         class TestFK:
             integer = Int(primary_key=True)
-            other = Int(foreign_key=(Model.TestFKTarget, 'integer'))
+            other = Int(foreign_key=Model.TestFKTarget.use('integer'))
 
         @register(Model)
         class TestM2M1:

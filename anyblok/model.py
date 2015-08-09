@@ -164,10 +164,10 @@ class Model:
                 tablename += '_' + name.lower()
 
         if not hasattr(parent, name):
-
             p = {
                 '__tablename__': tablename,
                 '__registry_name__': _registryname,
+                'use': lambda x: ModelAttribute(_registryname, x),
             }
             ns = type(name, tuple(), p)
             setattr(parent, name, ns)
@@ -440,9 +440,6 @@ class Model:
         bases = []
         properties = {}
         ns = registry.loaded_registries[namespace]
-        if '__tablename__' in ns['properties']:
-            properties['__tablename__'] = ns['properties']['__tablename__']
-
         for b in ns['bases']:
             bases.append(b)
 
@@ -457,6 +454,9 @@ class Model:
             for p, f in fields.items():
                 if p not in properties:
                     properties[p] = f
+
+        if '__tablename__' in ns['properties']:
+            properties['__tablename__'] = ns['properties']['__tablename__']
 
         registry.loaded_namespaces_first_step[namespace] = properties
         return properties
@@ -786,6 +786,37 @@ class ModelAttribute:
 
         return tablename + '.' + column_name
 
+    def get_column_name(self, registry):
+        """Return the name of the column
+
+        the need of foreign key may be before the creation of the model in
+        the registry, so we must use the first step of assembling
+
+        :param registry: instance of the registry
+        :rtype: str of the foreign key (tablename.columnname)
+        :exceptions: ModelAttributeException
+        """
+        if self.model_name not in registry.loaded_namespaces_first_step:
+            raise ModelAttributeException(
+                "Unknow model %r" % self.model_name)
+
+        Model = registry.loaded_namespaces_first_step[self.model_name]
+        if len(Model.keys()) == 1:
+            # No column found, so is not an sql model
+            raise ModelAttributeException(
+                "The Model %r is not an SQL Model" % self.model_name)
+
+        if self.attribute_name not in Model:
+            raise ModelAttributeException(
+                "the Model %s has not got attribute %s" % (
+                    self.model_name, self.attribute_name))
+
+        column_name = self.attribute_name
+        if Model[self.attribute_name].db_column_name:
+            column_name = Model[self.attribute_name].db_column_name
+
+        return column_name
+
 
 class ModelRepr:
     """Pseudo class to represent a model::
@@ -847,7 +878,7 @@ class ModelRepr:
                 continue
             elif v.foreign_key:
                 if v.foreign_key.model_name == remote_model:
-                    fks.append(v)
+                    fks.append(ModelAttribute(self.model_name, k))
 
         return fks
 

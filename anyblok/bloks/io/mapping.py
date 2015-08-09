@@ -19,7 +19,7 @@ class Mapping:
 
     key = String(primary_key=True)
     model = String(primary_key=True,
-                   foreign_key=(Model.System.Model, 'name'))
+                   foreign_key=Model.System.Model.use('name'))
     primary_key = Json(nullable=False)
 
     @Declarations.hybrid_method

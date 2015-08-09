@@ -6,8 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .field import Field, FieldException
-from sqlalchemy.schema import Column as SA_Column
-from sqlalchemy.schema import ForeignKey, Sequence
+from .model import ModelAttributeAdapter
+from sqlalchemy.schema import Sequence, Column as SA_Column
 from sqlalchemy import types
 from sqlalchemy.sql import sqltypes
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -53,7 +53,7 @@ class Column(Field):
             del kwargs['type_']
 
         if 'foreign_key' in kwargs:
-            self.foreign_key = kwargs.pop('foreign_key')
+            self.foreign_key = ModelAttributeAdapter(kwargs.pop('foreign_key'))
 
         if 'sequence' in kwargs:
             self.sequence = Sequence(kwargs.pop('sequence'))
@@ -68,40 +68,13 @@ class Column(Field):
         """ Return the native SqlAlchemy type """
         return cls.sqlalchemy_type
 
-    def get_tablename(self, registry, model):
-        """ Return the table name of the remote model
-
-        :rtype: str of the table name
-        """
-        if isinstance(model, str):
-            model = registry.loaded_namespaces_first_step[model]
-            return model['__tablename__']
-        else:
-            return model.__tablename__
-
-    def get_registry_name(self, model):
-        """ Return the registry name of the remote model
-
-        :rtype: str of the registry name
-        """
-        if isinstance(model, str):
-            return model
-        else:
-            return model.__registry_name__
-
     def format_foreign_key(self, registry, args, kwargs):
         if self.foreign_key:
-            if len(self.foreign_key) == 2:
-                model, col = self.foreign_key
-                options = {}
-            else:
-                model, col, options = self.foreign_key
-
-            tablename = self.get_tablename(registry, model)
-            foreign_key = tablename + '.' + col
-            args = args + (ForeignKey(foreign_key, **options),)
-            kwargs['info']['foreign_key'] = foreign_key
-            kwargs['info']['remote_model'] = self.get_registry_name(model)
+            args = args + (self.foreign_key.get_fk(registry),)
+            kwargs['info'].update({
+                'foreign_key': self.foreign_key.get_fk_name(registry),
+                'remote_model': self.foreign_key.model_name,
+            })
 
         return args
 
