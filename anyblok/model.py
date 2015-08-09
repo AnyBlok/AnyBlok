@@ -17,10 +17,15 @@ from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.schema import ForeignKey
 
 
 class ModelException(Exception):
     """Exception for Model declaration"""
+
+
+class ModelAttributeException(Exception):
+    """Exception for Model attribute"""
 
 
 class ViewException(ModelException):
@@ -688,3 +693,87 @@ class Model:
         bloks = Blok.list_by_state('touninstall')
         Blok.uninstall_all(*bloks)
         return Blok.apply_state(*registry.ordered_loaded_bloks)
+
+
+class ModelAttribute:
+    """The Model attribute represente the using of a declared attribute, in the
+    goal of get the real attribute after of the foreign_key::
+
+        ma = ModelAttribute('registry name', 'attribute name')
+
+    """
+
+    def __init__(self, model_name, attribute_name):
+        self.model_name = model_name
+        self.attribute_name = attribute_name
+        self._options = {}
+
+    def get_attribute(self, registry):
+        """Return the assembled attribute, the model need to be assembled
+
+        :param registry: instance of the registry
+        :rtype: instance of the attribute
+        :exceptions: ModelAttributeException
+        """
+        if self.model_name not in registry.loaded_namespaces:
+            raise ModelAttributeException(
+                "Unknow model %r, maybe the model doesn't exist or is not"
+                "assembled yet" % self.model_name)
+
+        Model = registry.get(self.model_name)
+        if not hasattr(Model, self.attribute_name):
+            raise ModelAttributeException(
+                "Model %r has not get %r attribute" % (
+                    self.model_name, self.attribute_name))
+
+        return getattr(Model, self.attribute_name)
+
+    def get_fk(self, registry):
+        """Return the foreign key which represent the attribute in the data
+        base
+
+        :param registry: instance of the sqlalchemy ForeignKey
+        :rtype: instance of the attribute
+        """
+        return ForeignKey(self.get_fk_name(registry), **self._options)
+
+    def options(self, **kwargs):
+        """Add foreign key options to create the sqlalchemy ForeignKey
+
+        :param \**kwargs: options
+        :rtype: the instance of the ModelAttribute
+        """
+        self._options.update(kwargs)
+        return self
+
+    def get_fk_name(self, registry):
+        """Return the name of the foreign key
+
+        the need of foreign key may be before the creation of the model in
+        the registry, so we must use the first step of assembling
+
+        :param registry: instance of the registry
+        :rtype: str of the foreign key (tablename.columnname)
+        :exceptions: ModelAttributeException
+        """
+        if self.model_name not in registry.loaded_namespaces_first_step:
+            raise ModelAttributeException(
+                "Unknow model %r" % self.model_name)
+
+        Model = registry.loaded_namespaces_first_step[self.model_name]
+        if len(Model.keys()) == 1:
+            # No column found, so is not an sql model
+            raise ModelAttributeException(
+                "The Model %r is not an SQL Model" % self.model_name)
+
+        if self.attribute_name not in Model:
+            raise ModelAttributeException(
+                "the Model %s has not got attribute %s" % (
+                    self.model_name, self.attribute_name))
+
+        tablename = Model['__tablename__']
+        column_name = self.attribute_name
+        if Model[self.attribute_name].db_column_name:
+            column_name = Model[self.attribute_name].db_column_name
+
+        return tablename + '.' + column_name

@@ -18,6 +18,8 @@ Future
 * [FIX] all must return InstrumentedList, also when the result is empty
 * [FIX] to_dict must not cast column
 * [REF] add third entry in foreign key declaration to add options
+* [IMP] ModelAttribute used to declarate the need of specific attribute and
+  get the attribute or the foreign key from this attribute
 
 0.4.1
 -----

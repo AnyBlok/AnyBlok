@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -8,7 +9,9 @@
 from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
-from anyblok.model import has_sql_fields, get_fields, ModelException
+from anyblok.model import (has_sql_fields, get_fields, ModelException,
+                           ModelAttribute, ModelAttributeException)
+from sqlalchemy.schema import ForeignKey
 from anyblok import Declarations
 from anyblok.column import Integer, String
 
@@ -253,6 +256,25 @@ class TestModel2(DBTestCase):
         registry.TestFk.insert(name='test')
         self.check_registry(registry.Test)
 
+    def test_model_with_foreign_key_with_db_column_name(self):
+
+        def model_with_foreign_key():
+
+            @register(Model)
+            class TestFk:
+
+                name = String(primary_key=True, db_column_name='other')
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                name = String(foreign_key=(Model.TestFk, 'name'))
+
+        registry = self.init_registry(model_with_foreign_key)
+        registry.TestFk.insert(name='test')
+        self.check_registry(registry.Test)
+
     def test_table_args(self):
         val = 'one arg'
 
@@ -382,3 +404,72 @@ class TestModelAssembling(TestCase):
             one_field = String()
 
         self.assertEqual(get_fields(MyModel), {'one_field': MyModel.one_field})
+
+
+class TestModelAttribute(DBTestCase):
+
+    def test_get_attribute(self):
+        registry = self.init_registry(None)
+        ma = ModelAttribute('Model.System.Model', 'name')
+        self.assertEqual(ma.get_attribute(registry),
+                         registry.get('Model.System.Model').name)
+
+    def test_get_attribute_unexisting_model(self):
+        registry = self.init_registry(None)
+        ma = ModelAttribute('Model.Unexisting.Model', 'name')
+        with self.assertRaises(ModelAttributeException):
+            ma.get_attribute(registry)
+
+    def test_get_attribute_unexisting_attribute(self):
+        registry = self.init_registry(None)
+        ma = ModelAttribute('Model.System.Model', 'id')
+        with self.assertRaises(ModelAttributeException):
+            ma.get_attribute(registry)
+
+    def test_get_fk_name_with_wrong_model(self):
+        registry = self.init_registry(None)
+        ma = ModelAttribute('Model.System', 'name')
+        with self.assertRaises(ModelAttributeException):
+            ma.get_fk_name(registry)
+
+    def test_get_fk_name_with_unexisting_model(self):
+        registry = self.init_registry(None)
+        ma = ModelAttribute('Model.Unexisting.Model', 'name')
+        with self.assertRaises(ModelAttributeException):
+            ma.get_fk_name(registry)
+
+    def test_get_fk_name_unexisting_attribute(self):
+        registry = self.init_registry(None)
+        ma = ModelAttribute('Model.System.Model', 'id')
+        with self.assertRaises(ModelAttributeException):
+            ma.get_fk_name(registry)
+
+    def test_get_fk_name(self):
+        registry = self.init_registry(None)
+        ma = ModelAttribute('Model.System.Model', 'name')
+        self.assertEqual(ma.get_fk_name(registry), 'system_model.name')
+
+    def test_get_fk_name_with_name_different_of_column_name(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                name = String(primary_key=True, db_column_name='other')
+
+        registry = self.init_registry(add_in_registry)
+        ma = ModelAttribute('Model.Test', 'name')
+        self.assertEqual(ma.get_fk_name(registry), 'test.other')
+
+    def test_get_fk(self):
+        registry = self.init_registry(None)
+        ma = ModelAttribute('Model.System.Model', 'name')
+        self.assertTrue(isinstance(ma.get_fk(registry), ForeignKey))
+
+    def test_get_fk_with_options(self):
+        registry = self.init_registry(None)
+        ma = ModelAttribute('Model.System.Model', 'name').options(
+            ondelete='cascade')
+        mafk = ma.get_fk(registry)
+        self.assertTrue(isinstance(mafk, ForeignKey))

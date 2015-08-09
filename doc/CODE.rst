@@ -34,6 +34,33 @@ anyblok.declarations module
     :members:
     :noindex:
 
+anyblok.model module
+--------------------
+
+.. automodule:: anyblok.model
+
+.. autoexception:: ModelException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoexception:: ViewException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoexception:: ModelAttributeException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoclass:: ModelAttribute
+    :members:
+    :noindex:
+
 anyblok.config module
 ---------------------
 
