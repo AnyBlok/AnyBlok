@@ -24,6 +24,10 @@ class ModelException(Exception):
     """Exception for Model declaration"""
 
 
+class ModelReprException(Exception):
+    """Exception for Model attribute"""
+
+
 class ModelAttributeException(Exception):
     """Exception for Model attribute"""
 
@@ -783,6 +787,71 @@ class ModelAttribute:
         return tablename + '.' + column_name
 
 
+class ModelRepr:
+    """Pseudo class to represent a model::
+
+        mr = ModelRepr('registry name')
+
+
+    """
+    def __init__(self, model_name):
+        self.model_name = model_name
+
+    def check_model(self, registry):
+        """Check if the model exist else raise an exception
+
+        :param registry: instance of the registry
+        :rtype: dict which represent the first step of the model
+        :exceptions: ModelReprException
+        """
+        if self.model_name not in registry.loaded_namespaces_first_step:
+            raise ModelReprException("Model %r unexisting" % self.model_name)
+
+        return registry.loaded_namespaces_first_step[self.model_name]
+
+    def tablename(self, registry):
+        """Return the  real tablename of the Model
+
+        :param registry: instance of the registry
+        :rtype: string
+        """
+        Model = self.check_model(registry)
+        return Model['__tablename__']
+
+    def primary_keys(self, registry):
+        """Return the  of the primary keys
+
+        :param registry: instance of the registry
+        :rtype: list of ModelAttribute
+        """
+        Model = self.check_model(registry)
+        pks = []
+        for k, v in Model.items():
+            if k == '__tablename__':
+                continue
+            elif 'primary_key' in v.kwargs:
+                pks.append(ModelAttribute(self.model_name, k))
+
+        return pks
+
+    def foreign_keys_for(self, registry, remote_model):
+        """Return the  of the primary keys
+
+        :param registry: instance of the registry
+        :rtype: list of ModelAttribute
+        """
+        Model = self.check_model(registry)
+        fks = []
+        for k, v in Model.items():
+            if k == '__tablename__':
+                continue
+            elif v.foreign_key:
+                if v.foreign_key.model_name == remote_model:
+                    fks.append(v)
+
+        return fks
+
+
 def ModelAttributeAdapter(Model):
     """ Return a ModelAttribute
 
@@ -797,5 +866,18 @@ def ModelAttributeAdapter(Model):
                     Model))
         model, attribute = Model.split('=>')
         return ModelAttribute(model, attribute)
+    else:
+        return Model
+
+
+def ModelAdapter(Model):
+    """ Return a ModelRepr
+
+    :param Model: ModelRepr or string
+    :rtype: instance of ModelRepr
+    :exceptions: ModelAdapterException
+    """
+    if isinstance(Model, str):
+        return ModelRepr(Model)
     else:
         return Model

@@ -57,13 +57,26 @@ anyblok.model module
     :show-inheritance:
     :inherited-members:
 
+.. autoexception:: ModelReprException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
 .. autoexception:: ModelAttributeAdapterException
     :members:
     :noindex:
     :show-inheritance:
     :inherited-members:
 
+.. autoclass:: ModelRepr
+    :members:
+    :noindex:
+
 .. autofunction:: ModelAttributeAdapter
+    :noindex:
+
+.. autofunction:: ModelAdapter
     :noindex:
 
 anyblok.config module

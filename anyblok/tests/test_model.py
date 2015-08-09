@@ -11,8 +11,8 @@ from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
 from anyblok.model import (has_sql_fields, get_fields, ModelException,
                            ModelAttribute, ModelAttributeException,
-                           ModelAttributeAdapter,
-                           ModelAttributeAdapterException)
+                           ModelAttributeAdapter, ModelAdapter, ModelRepr,
+                           ModelReprException, ModelAttributeAdapterException)
 from sqlalchemy.schema import ForeignKey
 from anyblok import Declarations
 from anyblok.column import Integer, String
@@ -493,3 +493,48 @@ class TestModelAttributeAdapter(TestCase):
     def test_from_registry_name_without_attribute(self):
         with self.assertRaises(ModelAttributeAdapterException):
             ModelAttributeAdapter("Model.System.Model")
+
+
+class TestModelRepr(DBTestCase):
+
+    def test_unexisting_model(self):
+        registry = self.init_registry(None)
+        mr = ModelRepr('Model.Unexisting.Model')
+        with self.assertRaises(ModelReprException):
+            mr.check_model(registry)
+
+    def test_get_tablename(self):
+        registry = self.init_registry(None)
+        mr = ModelRepr('Model.System.Model')
+        self.assertEqual(mr.tablename(registry), 'system_model')
+
+    def test_get_registry_name(self):
+        mr = ModelRepr('Model.System.Model')
+        self.assertEqual(mr.model_name, 'Model.System.Model')
+
+    def test_get_primary_keys(self):
+        registry = self.init_registry(None)
+        mr = ModelRepr('Model.System.Model')
+        mas = mr.primary_keys(registry)
+        self.assertEqual(len(mas), 1)
+        self.assertEqual([x.attribute_name for x in mas], ['name'])
+
+    def test_get_foreign_key_for(self):
+        registry = self.init_registry(None)
+        mr = ModelRepr('Model.System.Cron.Job')
+        mas = mr.foreign_keys_for(registry, 'Model.System.Model')
+        self.assertEqual(len(mas), 1)
+        self.assertEqual([x.attribute_name for x in mas], ['model'])
+
+
+class TestModelAdapter(TestCase):
+
+    def test_from_declaration(self):
+        mr = ModelRepr('Model.System.Model')
+        mra = ModelAdapter(mr)
+        self.assertIs(mr, mra)
+
+    def test_from_registry_name(self):
+        mra = ModelAdapter("Model.System.Model")
+        self.assertTrue(isinstance(mra, ModelRepr))
+        self.assertEqual(mra.model_name, 'Model.System.Model')
