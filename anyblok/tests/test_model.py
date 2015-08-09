@@ -10,7 +10,9 @@ from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
 from anyblok.model import (has_sql_fields, get_fields, ModelException,
-                           ModelAttribute, ModelAttributeException)
+                           ModelAttribute, ModelAttributeException,
+                           ModelAttributeAdapter,
+                           ModelAttributeAdapterException)
 from sqlalchemy.schema import ForeignKey
 from anyblok import Declarations
 from anyblok.column import Integer, String
@@ -473,3 +475,21 @@ class TestModelAttribute(DBTestCase):
             ondelete='cascade')
         mafk = ma.get_fk(registry)
         self.assertTrue(isinstance(mafk, ForeignKey))
+
+
+class TestModelAttributeAdapter(TestCase):
+
+    def test_from_declaration(self):
+        ma = ModelAttribute('Model.System.Model', 'name')
+        maa = ModelAttributeAdapter(ma)
+        self.assertIs(maa, ma)
+
+    def test_from_registry_name(self):
+        maa = ModelAttributeAdapter("Model.System.Model=>name")
+        self.assertTrue(isinstance(maa, ModelAttribute))
+        self.assertEqual(maa.model_name, 'Model.System.Model')
+        self.assertEqual(maa.attribute_name, 'name')
+
+    def test_from_registry_name_without_attribute(self):
+        with self.assertRaises(ModelAttributeAdapterException):
+            ModelAttributeAdapter("Model.System.Model")

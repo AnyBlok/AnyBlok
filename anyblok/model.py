@@ -28,6 +28,10 @@ class ModelAttributeException(Exception):
     """Exception for Model attribute"""
 
 
+class ModelAttributeAdapterException(Exception):
+    """Exception for Model attribute adapter"""
+
+
 class ViewException(ModelException):
     """Exception for View declaration"""
 
@@ -777,3 +781,21 @@ class ModelAttribute:
             column_name = Model[self.attribute_name].db_column_name
 
         return tablename + '.' + column_name
+
+
+def ModelAttributeAdapter(Model):
+    """ Return a ModelAttribute
+
+    :param Model: ModelAttribute or string ('registry name'=>'attribute name')
+    :rtype: instance of ModelAttribute
+    :exceptions: ModelAttributeAdapterException
+    """
+    if isinstance(Model, str):
+        if '=>' not in Model:
+            raise ModelAttributeAdapterException(
+                "Wrong value %r impossible to find model and attribtue" % (
+                    Model))
+        model, attribute = Model.split('=>')
+        return ModelAttribute(model, attribute)
+    else:
+        return Model

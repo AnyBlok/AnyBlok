@@ -20,6 +20,7 @@ Future
 * [REF] add third entry in foreign key declaration to add options
 * [IMP] ModelAttribute used to declarate the need of specific attribute and
   get the attribute or the foreign key from this attribute
+* [IMP] ModelAttributeAdapter, get a ModelAttribute from ModelAttribute or str
 
 0.4.1
 -----
