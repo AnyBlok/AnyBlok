@@ -703,6 +703,10 @@ class Model:
         return Blok.apply_state(*registry.ordered_loaded_bloks)
 
 
+class FakeColumn:
+    db_column_name = None
+
+
 class ModelAttribute:
     """The Model attribute represente the using of a declared attribute, in the
     goal of get the real attribute after of the foreign_key::
@@ -736,6 +740,23 @@ class ModelAttribute:
 
         return getattr(Model, self.attribute_name)
 
+    def get_fk_column(self, registry):
+        """Return the foreign key which represent the attribute in the data
+        base
+
+        :param registry: instance of the sqlalchemy ForeignKey
+        :rtype: instance of the attribute
+        """
+        Model = self.check_model_in_first_step(registry)
+        try:
+            column_name = self.check_column_in_first_step(registry, Model)
+            if Model[column_name].foreign_key:
+                return Model[column_name].foreign_key.attribute_name
+        except ModelAttributeException:
+            pass
+
+        return None
+
     def get_fk(self, registry):
         """Return the foreign key which represent the attribute in the data
         base
@@ -764,27 +785,29 @@ class ModelAttribute:
         :rtype: str of the foreign key (tablename.columnname)
         :exceptions: ModelAttributeException
         """
-        if self.model_name not in registry.loaded_namespaces_first_step:
-            raise ModelAttributeException(
-                "Unknow model %r" % self.model_name)
-
-        Model = registry.loaded_namespaces_first_step[self.model_name]
-        if len(Model.keys()) == 1:
-            # No column found, so is not an sql model
-            raise ModelAttributeException(
-                "The Model %r is not an SQL Model" % self.model_name)
-
-        if self.attribute_name not in Model:
-            raise ModelAttributeException(
-                "the Model %s has not got attribute %s" % (
-                    self.model_name, self.attribute_name))
-
+        Model = self.check_model_in_first_step(registry)
+        column_name = self.check_column_in_first_step(registry, Model)
         tablename = Model['__tablename__']
-        column_name = self.attribute_name
         if Model[self.attribute_name].db_column_name:
             column_name = Model[self.attribute_name].db_column_name
 
         return tablename + '.' + column_name
+
+    def get_fk_remote(self, registry):
+        Model = self.check_model_in_first_step(registry)
+        column_name = self.check_column_in_first_step(registry, Model)
+        remote = Model[column_name].foreign_key
+        if not remote:
+            return None
+
+        return remote.get_fk_name(registry)
+
+    def add_fake_column(self, registry):
+        Model = self.check_model_in_first_step(registry)
+        if self.attribute_name in registry.loaded_namespaces_first_step:
+            return
+
+        Model[self.attribute_name] = FakeColumn()
 
     def get_column_name(self, registry):
         """Return the name of the column
@@ -796,6 +819,14 @@ class ModelAttribute:
         :rtype: str of the foreign key (tablename.columnname)
         :exceptions: ModelAttributeException
         """
+        Model = self.check_model_in_first_step(registry)
+        column_name = self.check_column_in_first_step(registry, Model)
+        if Model[self.attribute_name].db_column_name:
+            column_name = Model[self.attribute_name].db_column_name
+
+        return column_name
+
+    def check_model_in_first_step(self, registry):
         if self.model_name not in registry.loaded_namespaces_first_step:
             raise ModelAttributeException(
                 "Unknow model %r" % self.model_name)
@@ -805,17 +836,25 @@ class ModelAttribute:
             # No column found, so is not an sql model
             raise ModelAttributeException(
                 "The Model %r is not an SQL Model" % self.model_name)
+        return Model
 
+    def check_column_in_first_step(self, registry, Model):
         if self.attribute_name not in Model:
             raise ModelAttributeException(
-                "the Model %s has not got attribute %s" % (
+                "the Model %r has not got attribute %r" % (
                     self.model_name, self.attribute_name))
 
-        column_name = self.attribute_name
-        if Model[self.attribute_name].db_column_name:
-            column_name = Model[self.attribute_name].db_column_name
+        return self.attribute_name
 
-        return column_name
+    def is_declared(self, registry):
+        Model = self.check_model_in_first_step(registry)
+        if self.attribute_name not in Model:
+            return False
+
+    def native_type(self, registry):
+        Model = self.check_model_in_first_step(registry)
+        column_name = self.check_column_in_first_step(registry, Model)
+        return Model[column_name].native_type()
 
 
 class ModelRepr:
@@ -855,13 +894,13 @@ class ModelRepr:
         :param registry: instance of the registry
         :rtype: list of ModelAttribute
         """
+        from anyblok.column import Column
         Model = self.check_model(registry)
         pks = []
         for k, v in Model.items():
-            if k == '__tablename__':
-                continue
-            elif 'primary_key' in v.kwargs:
-                pks.append(ModelAttribute(self.model_name, k))
+            if isinstance(v, Column):
+                if 'primary_key' in v.kwargs:
+                    pks.append(ModelAttribute(self.model_name, k))
 
         return pks
 
@@ -871,14 +910,14 @@ class ModelRepr:
         :param registry: instance of the registry
         :rtype: list of ModelAttribute
         """
+        from anyblok.column import Column
         Model = self.check_model(registry)
         fks = []
         for k, v in Model.items():
-            if k == '__tablename__':
-                continue
-            elif v.foreign_key:
-                if v.foreign_key.model_name == remote_model:
-                    fks.append(ModelAttribute(self.model_name, k))
+            if isinstance(v, Column):
+                if v.foreign_key:
+                    if v.foreign_key.model_name == remote_model:
+                        fks.append(ModelAttribute(self.model_name, k))
 
         return fks
 
@@ -910,5 +949,7 @@ def ModelAdapter(Model):
     """
     if isinstance(Model, str):
         return ModelRepr(Model)
-    else:
+    elif isinstance(Model, ModelRepr):
         return Model
+    else:
+        return ModelRepr(Model.__registry_name__)

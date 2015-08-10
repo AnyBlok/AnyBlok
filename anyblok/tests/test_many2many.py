@@ -9,7 +9,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-from anyblok.field import FieldException
+from anyblok.model import ModelAttributeException
 from anyblok.column import Integer, String
 from anyblok.relationship import Many2Many
 
@@ -221,7 +221,7 @@ class TestMany2Many(DBTestCase):
         self.assertEqual(person.addresses, [address])
 
     def test_unexisting_remote_columns(self):
-        with self.assertRaises(FieldException):
+        with self.assertRaises(ModelAttributeException):
             self.init_registry(unexisting_remote_columns)
 
     def test_reuse_many2many_table(self):

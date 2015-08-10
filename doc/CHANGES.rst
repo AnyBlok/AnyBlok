@@ -28,6 +28,7 @@ Future
 * [IMP] ModelRepr, Speudo representation of a Model
 * [IMP] ModelAdapter, get a ModelRepr from ModelRepr or str
 * [REF] the foreign key must be declared with ModelAttribute
+* [REF] Use Adapter for Model and attribute in relation ship
 
 0.4.1
 -----
