@@ -310,6 +310,7 @@ class TestColumns(DBTestCase):
         self.assertEqual(Test.query().filter(Test.col != Json.Null).count(), 1)
 
     def test_add_default_classmethod(self):
+        val = 'test'
 
         def add_in_registry():
 
@@ -317,12 +318,73 @@ class TestColumns(DBTestCase):
             class Test:
 
                 id = Integer(primary_key=True)
-                val = Integer(default="get_val")
+                val = String(default="get_val")
 
                 @classmethod
                 def get_val(cls):
-                    return 3
+                    return val
 
         registry = self.init_registry(add_in_registry)
         t = registry.Test.insert()
-        self.assertEqual(t.val, 3)
+        self.assertEqual(t.val, val)
+
+    def test_add_default_without_classmethod(self):
+        value = 'test'
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String(default="get_val")
+
+                def get_val(cls):
+                    return value
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, "get_val")
+
+    def test_add_default_by_var(self):
+        value = 'test'
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String(default=value)
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, value)
+
+    def test_add_default(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String(default='value')
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, 'value')
+
+    def test_add_field_as_default(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String(default='val')
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, 'val')

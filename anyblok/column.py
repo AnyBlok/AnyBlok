@@ -29,6 +29,9 @@ from sqlalchemy.types import UnicodeText
 from sqlalchemy.types import LargeBinary as SA_LargeBinary
 import json
 from copy import deepcopy
+from inspect import ismethod
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 def wrap_default(registry, namespace, default_val):
@@ -36,7 +39,24 @@ def wrap_default(registry, namespace, default_val):
     def wrapper():
         Model = registry.get(namespace)
         if hasattr(Model, default_val):
-            return getattr(Model, default_val)()
+            func = getattr(Model, default_val)
+            if ismethod(func):
+                if default_val not in Model.loaded_columns:
+                    if default_val not in Model.loaded_fields:
+                        return func()
+                    else:
+                        logger.warn("On a Model %r the attribute %r is "
+                                    "declared as a default value, a field "
+                                    "with the same name exist" % (namespace,
+                                                                  default_val))
+                else:
+                    logger.warn("On a Model %r the attribute %r is declared "
+                                "as a default value, a column with the same "
+                                "name exist" % (namespace, default_val))
+            else:
+                logger.warn("On a Model %r the attribute %r is declared as a "
+                            "default value, a instance method with the same "
+                            "name exist" % (namespace, default_val))
 
         return default_val
 
