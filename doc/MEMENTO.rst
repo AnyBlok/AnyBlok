@@ -453,7 +453,14 @@ All the columns have the following optional parameters:
 +----------------+------------------------------------------------------------+
 | default        | define a default value for this column.                    |
 |                |                                                            |
-|                | ..warning:: the default value depends of the column type   |
+|                | ..warning::                                                | 
+|                |                                                            |
+|                |     The default value depends of the column type           |
+|                |                                                            |
+|                | ..note::                                                   |
+|                |                                                            |
+|                |     Put the name of a classmethod to call it               |
+|                |                                                            |
 +----------------+------------------------------------------------------------+
 | index          | boolean flag to define whether the column is indexed       |
 +----------------+------------------------------------------------------------+

@@ -300,44 +300,6 @@ class TestColumns(DBTestCase):
         self.assertEqual(
             Test.query().filter(Test.col == {'a': 'test'}).count(), 2)
 
-    # WORKS with json postgres column but not with the generic AnyBlok column
-    # def test_json_filter(self):
-    #     Json = Declarations.Column.Json
-    #     registry = self.init_registry(simple_column, ColumnType=Json)
-    #     Test = registry.Test
-    #     t1 = Test.insert(col={'a': 'Test1'})
-    #     Test.insert(col={'a': 'Test2'})
-    #     self.assertEqual(Test.query().filter(
-    #         Test.col['a'] == 'Test1').first(), t1)
-
-    # def test_json_filter_numeric(self):
-    #     Json = Declarations.Column.Json
-    #     registry = self.init_registry(simple_column, ColumnType=Json)
-    #     Test = registry.Test
-    #     t1 = Test.insert(col={'a': 1})
-    #     Test.insert(col={'a': 2})
-    #     self.assertEqual(Test.query().filter(
-    #         Test.col['a'] == 1).first(), t1)
-
-    # def test_json_filter_astext(self):
-    #     Json = Declarations.Column.Json
-    #     registry = self.init_registry(simple_column, ColumnType=Json)
-    #     Test = registry.Test
-    #     t1 = Test.insert(col={'a': 'Test1'})
-    #     Test.insert(col={'a': 'Test2'})
-    #     self.assertEqual(Test.query().filter(
-    #         Test.col['a'].astext == 'Test1').first(), t1)
-
-    # def test_json_filter_cast(self):
-    #     Json = Declarations.Column.Json
-    #     Integer = Declarations.Column.Integer
-    #     registry = self.init_registry(simple_column, ColumnType=Json)
-    #     Test = registry.Test
-    #     t1 = Test.insert(col={'a': '1'})
-    #     Test.insert(col={'a': '2'})
-    #     self.assertEqual(Test.query().filter(
-    #         Test.col['a'].cast(Integer) == 1).first(), t1)
-
     def test_json_null(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test
@@ -346,3 +308,21 @@ class TestColumns(DBTestCase):
         Test.insert(col={'a': 'test'})
         self.assertEqual(Test.query().filter(Test.col == Json.Null).count(), 2)
         self.assertEqual(Test.query().filter(Test.col != Json.Null).count(), 1)
+
+    def test_add_default_classmethod(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = Integer(default="get_val")
+
+                @classmethod
+                def get_val(cls):
+                    return 3
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, 3)

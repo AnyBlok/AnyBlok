@@ -31,6 +31,22 @@ import json
 from copy import deepcopy
 
 
+def wrap_default(registry, namespace, default_val):
+
+    def wrapper():
+        Model = registry.get(namespace)
+        if hasattr(Model, default_val):
+            return getattr(Model, default_val)()
+
+        return default_val
+
+    return wrapper
+
+
+class NoDefaultValue:
+    pass
+
+
 class Column(Field):
     """ Column class
 
@@ -62,6 +78,10 @@ class Column(Field):
         self.db_column_name = None
         if 'db_column_name' in kwargs:
             self.db_column_name = kwargs.pop('db_column_name')
+
+        self.default_val = NoDefaultValue
+        if 'default' in kwargs:
+            self.default_val = kwargs.pop('default')
 
         super(Column, self).__init__(*args, **kwargs)
 
@@ -104,6 +124,13 @@ class Column(Field):
             kwargs['info']['use_db_column_name'] = db_column_name
         else:
             db_column_name = fieldname
+
+        if self.default_val is not NoDefaultValue:
+            if isinstance(self.default_val, str):
+                kwargs['default'] = wrap_default(registry, namespace,
+                                                 self.default_val)
+            else:
+                kwargs['default'] = self.default_val
 
         return SA_Column(db_column_name, self.sqlalchemy_type, *args, **kwargs)
 
