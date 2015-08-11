@@ -143,11 +143,11 @@ class Many2One(RelationShip):
     def __init__(self, **kwargs):
         super(Many2One, self).__init__(**kwargs)
 
-        self.remote_columns = None
+        self._remote_columns = None
         if 'remote_columns' in kwargs:
-            self.remote_columns = self.kwargs.pop('remote_columns')
-            if not isinstance(self.remote_columns, (list, tuple)):
-                self.remote_columns = [self.remote_columns]
+            self._remote_columns = self.kwargs.pop('remote_columns')
+            if not isinstance(self._remote_columns, (list, tuple)):
+                self._remote_columns = [self._remote_columns]
 
         self.nullable = True
         if 'nullable' in kwargs:
@@ -163,34 +163,35 @@ class Many2One(RelationShip):
             self.kwargs['backref'] = self.kwargs.pop('one2many')
             self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
-        self.column_names = None
+        self._column_names = None
         if 'column_names' in kwargs:
-            self.column_names = self.kwargs.pop('column_names')
-            if not isinstance(self.column_names, (list, tuple)):
-                self.column_names = [self.column_names]
+            self._column_names = self.kwargs.pop('column_names')
+            if not isinstance(self._column_names, (list, tuple)):
+                self._column_names = [self._column_names]
 
     def update_local_and_remote_columns_names(self, registry, namespace):
         from .model import ModelAttribute, ModelRepr
-        if self.remote_columns is None:
+        if self._remote_columns is None:
             self.remote_columns = self.model.primary_keys(registry)
         else:
             self.remote_columns = [ModelAttribute(self.model.model_name, x)
-                                   for x in self.remote_columns]
+                                   for x in self._remote_columns]
 
         self.kwargs['info']['remote_columns'] = [str(x)
                                                  for x in self.remote_columns]
 
-        if self.column_names is None:
+        if self._column_names is None:
             model = ModelRepr(namespace)
             self.column_names = model.foreign_keys_for(
                 registry, self.model.model_name)
             if not self.column_names:
+                self.column_names = []
                 for x in self.remote_columns:
                     cname = x.get_fk_name(registry).replace('.', '_')
                     self.column_names.append(ModelAttribute(namespace, cname))
         else:
             self.column_names = [ModelAttribute(namespace, x)
-                                 for x in self.column_names]
+                                 for x in self._column_names]
 
     def update_properties(self, registry, namespace, fieldname, properties):
         """ Create the column which has the foreign key if the column doesn't

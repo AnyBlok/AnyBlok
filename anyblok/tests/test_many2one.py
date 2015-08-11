@@ -492,3 +492,33 @@ class TestMany2One(DBTestCase):
 
         with self.assertRaises(FieldException):
             self.init_registry(add_in_registry)
+
+    def test_m2o_in_mixin(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+            @register(Mixin)
+            class MTest:
+
+                test = Many2One(model=Model.Test)
+
+            @register(Model)
+            class Test1(Mixin.MTest):
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Test2(Mixin.MTest):
+
+                id = Integer(primary_key=True)
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert()
+        test1 = registry.Test1.insert(test=test)
+        test2 = registry.Test2.insert(test=test)
+        self.assertEqual(test1.test_id, test2.test_id)

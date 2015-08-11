@@ -715,6 +715,9 @@ class ModelAttribute:
 
     """
 
+    def __repr__(self):
+        return "%s => %s" % (self.model_name, self.attribute_name)
+
     def __init__(self, model_name, attribute_name):
         self.model_name = model_name
         self.attribute_name = attribute_name
