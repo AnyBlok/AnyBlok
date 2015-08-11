@@ -16,16 +16,17 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
-    * cache and classmethod_cache
-      replace cache::
+    * cache and classmethod_cache and hybrid_method
+      replace::
         
         from anyblok import Declarations
         cache = Declarations.cache
         classmethod_cache = Declarations.classmethod_cache
+        hybrid_method = Declarations.hybrid_method
 
       by::
 
-        from anyblok.declarations import cache, classmethod_cache
+        from anyblok.declarations import cache, classmethod_cache, hybrid_method
 
     * declaration of the foreign key
       replace::
@@ -57,7 +58,7 @@ Future
 * [IMP] ModelAdapter, get a ModelRepr from ModelRepr or str
 * [REF] the foreign key must be declared with ModelAttribute
 * [REF] Use Adapter for Model and attribute in relation ship
-* [REF] cache and classmethod_cache are now only impotable decorator function
+* [REF] hybrid_method, cache and classmethod_cache are now only impotable decorator function
 
 0.4.1
 -----

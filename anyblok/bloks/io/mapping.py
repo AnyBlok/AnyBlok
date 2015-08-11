@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
+from anyblok.declarations import Declarations, hybrid_method
 from anyblok.column import String, Json
 from .exceptions import IOMappingCheckException, IOMappingSetException
 
@@ -22,7 +22,7 @@ class Mapping:
                    foreign_key=Model.System.Model.use('name'))
     primary_key = Json(nullable=False)
 
-    @Declarations.hybrid_method
+    @hybrid_method
     def filter_by_model_and_key(self, model, key):
         """ SQLAlechemy hybrid method to filter by model and key
 
@@ -31,7 +31,7 @@ class Mapping:
         """
         return (self.model == model) & (self.key == key)
 
-    @Declarations.hybrid_method
+    @hybrid_method
     def filter_by_model_and_keys(self, model, *keys):
         """ SQLAlechemy hybrid method to filter by model and key
 

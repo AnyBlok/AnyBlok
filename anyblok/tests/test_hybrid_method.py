@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
-from anyblok import Declarations
+from anyblok.declarations import Declarations, hybrid_method
 from anyblok.column import Integer
 
 register = Declarations.register
@@ -40,7 +40,7 @@ class TestHybridMethod(DBTestCase):
                 id = Integer(primary_key=True)
                 val = Integer(nullable=False)
 
-                @Declarations.hybrid_method
+                @hybrid_method
                 def val_is(self, val):
                     return self.val == val
 
@@ -57,7 +57,7 @@ class TestHybridMethod(DBTestCase):
                 val = Integer(nullable=False)
 
                 # check decorator with ()
-                @Declarations.hybrid_method()
+                @hybrid_method()
                 def val_is(self, val):
                     return self.val == val
 
@@ -71,7 +71,7 @@ class TestHybridMethod(DBTestCase):
             @register(Core)
             class SqlBase:
 
-                @Declarations.hybrid_method
+                @hybrid_method
                 def val_is(self, val):
                     return self.val == val
 
@@ -92,7 +92,7 @@ class TestHybridMethod(DBTestCase):
                 id = Integer(primary_key=True)
                 val = Integer(nullable=False)
 
-                @Declarations.hybrid_method
+                @hybrid_method
                 def val_is(self, val):
                     return self.val == val
 
@@ -110,7 +110,7 @@ class TestHybridMethod(DBTestCase):
         class SqlBase:
 
             if withcore:
-                @Declarations.hybrid_method
+                @hybrid_method
                 def val_is(self, val):
                     pass
 
@@ -120,7 +120,7 @@ class TestHybridMethod(DBTestCase):
             val = Integer(nullable=False)
 
             if withmixin:
-                @Declarations.hybrid_method
+                @hybrid_method
                 def val_is(self, val):
                     pass
 
@@ -128,7 +128,7 @@ class TestHybridMethod(DBTestCase):
         class Test(Mixin.MTest):
 
             if withmodel:
-                @Declarations.hybrid_method
+                @hybrid_method
                 def val_is(self, val):
                     pass
 

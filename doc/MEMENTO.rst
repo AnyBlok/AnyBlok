@@ -1102,10 +1102,12 @@ AnyBlok allows to define a hybrid_method which can be overloaded, because the
 real sqlalchemy decorator is applied after assembling in the last overload
 of the decorated method::
 
+    from anyblok.declarations import hybrid_method
+
     @register(Model)
     class Test:
 
-        @Declarations.hybrid_method
+        @hybrid_method
         def my_hybrid_method(self):
             return ...
 
