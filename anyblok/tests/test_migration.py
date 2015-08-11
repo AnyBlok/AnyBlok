@@ -147,6 +147,19 @@ class TestMigration(TestCase):
         t.column().add(Column('new_column', Integer, default='100'))
         t.column('new_column')
 
+    def test_add_column_with_default_callable_value(self):
+
+        def get_val():
+            return 100
+
+        self.fill_test_table()
+        t = self.registry.migration.table('test')
+        t.column().add(Column('new_column', Integer, default=get_val))
+        t.column('new_column')
+        res = [x for x in self.registry.execute(
+            "select count(*) from test where new_column is null")][0][0]
+        self.assertEqual(res, 0)
+
     def test_add_column_in_filled_table_with_default_value(self):
         self.fill_test_table()
         t = self.registry.migration.table('test')
