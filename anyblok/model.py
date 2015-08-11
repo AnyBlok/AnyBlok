@@ -861,11 +861,10 @@ class ModelAttribute:
 
 
 class ModelRepr:
-    """Pseudo class to represent a model::
+    """Pseudo class to represent a model
+    ::
 
         mr = ModelRepr('registry name')
-
-
     """
     def __init__(self, model_name):
         self.model_name = model_name

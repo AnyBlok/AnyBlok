@@ -958,13 +958,14 @@ model. The cache of anyblok can be put on a Model, a Core or a Mixin method. If
 the cache is on a Core or a Mixin then the usecase depends on the registry name
 of the assembled model.
 
-Use ``Declarations.cache`` or ``Declarations.classmethod_cache`` to apply a
-cache on a method
+Use ``cache`` or ``classmethod_cache`` to apply a cache on a method::
+
+    from anyblok.declarations import cache, classmethod_cache
 
 .. warning::
 
-    ``Declarations.cache`` depend of the instance, if you want add a cache for
-    any instance you must use ``Declarations.classmethod_cache``
+    ``cache`` depend of the instance, if you want add a cache for
+    any instance you must use ``classmethod_cache``
 
 Cache the method of a Model::
 

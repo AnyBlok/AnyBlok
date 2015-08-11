@@ -73,26 +73,6 @@ class Declarations:
         return cls_
 
     @classmethod
-    def cache(cls, size=128):
-        def wrapper(method):
-            method.is_cache_method = True
-            method.is_cache_classmethod = False
-            method.size = size
-            return method
-
-        return wrapper
-
-    @classmethod
-    def classmethod_cache(cls, size=128):
-        def wrapper(method):
-            method.is_cache_method = True
-            method.is_cache_classmethod = True
-            method.size = size
-            return method
-
-        return wrapper
-
-    @classmethod
     def addListener(cls, model, event):
         if not isinstance(model, str):
             model = model.__registry_name__
@@ -162,3 +142,23 @@ class Declarations:
             return wrapper(cls_)
         else:
             return wrapper
+
+
+def cache(size=128):
+    def wrapper(method):
+        method.is_cache_method = True
+        method.is_cache_classmethod = False
+        method.size = size
+        return method
+
+    return wrapper
+
+
+def classmethod_cache(size=128):
+    def wrapper(method):
+        method.is_cache_method = True
+        method.is_cache_classmethod = True
+        method.size = size
+        return method
+
+    return wrapper

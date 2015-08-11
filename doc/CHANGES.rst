@@ -16,6 +16,34 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
+    * cache and classmethod_cache
+      replace cache::
+        
+        from anyblok import Declarations
+        cache = Declarations.cache
+        classmethod_cache = Declarations.classmethod_cache
+
+      by::
+
+        from anyblok.declarations import cache, classmethod_cache
+
+    * declaration of the foreign key
+      replace::
+
+        @register(Model):
+        class MyClass:
+
+            myfield = Integer(foreign_key=(Model.System.Blok, 'name'))
+            myotherfield = Integer(foreign_key=('Model.System.Blok', 'name'))
+
+      by::
+
+        @register(Model):
+        class MyClass:
+
+            myfield = Integer(foreign_key=Model.System.Blok.use('name'))
+            myotherfield = Integer(foreign_key="Model.System.Blok=>name")
+
 * [IMP] add ``pop`` behaviour on **Model.System.Parameter**
 * [REF] Load configuration befoare load bloks, to use Configuration during
   the declaration
@@ -29,6 +57,7 @@ Future
 * [IMP] ModelAdapter, get a ModelRepr from ModelRepr or str
 * [REF] the foreign key must be declared with ModelAttribute
 * [REF] Use Adapter for Model and attribute in relation ship
+* [REF] cache and classmethod_cache are now only impotable decorator function
 
 0.4.1
 -----
