@@ -9,7 +9,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-from anyblok.model import ModelAttributeException
+from anyblok.mapper import ModelAttributeException
 from anyblok.column import Integer, String
 from anyblok.relationship import Many2Many
 

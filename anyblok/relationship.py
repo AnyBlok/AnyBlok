@@ -12,6 +12,7 @@ from sqlalchemy.orm import backref
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.ext.declarative import declared_attr
 from .field import Field, FieldException
+from .mapper import ModelAdapter, ModelAttribute, ModelRepr
 
 
 class RelationShip(Field):
@@ -32,7 +33,6 @@ class RelationShip(Field):
     def __init__(self, *args, **kwargs):
         self.forbid_instance(RelationShip)
         if 'model' in kwargs:
-            from .model import ModelAdapter
             self.model = ModelAdapter(kwargs.pop('model'))
         else:
             raise FieldException("model is required attribut")
@@ -170,7 +170,6 @@ class Many2One(RelationShip):
                 self._column_names = [self._column_names]
 
     def update_local_and_remote_columns_names(self, registry, namespace):
-        from .model import ModelAttribute, ModelRepr
         if self._remote_columns is None:
             self.remote_columns = self.model.primary_keys(registry)
         else:
@@ -426,7 +425,6 @@ class Many2Many(RelationShip):
         return cols, ForeignKeyConstraint(col_names, ref_cols)
 
     def get_local_and_remote_columns(self, registry):
-        from .model import ModelAttribute
         if not self.local_columns:
             local_columns = self.local_model.primary_keys(registry)
         else:
@@ -457,7 +455,6 @@ class Many2Many(RelationShip):
         :rtype: Many2One relationship
         """
         self.model.check_model(registry)
-        from .model import ModelRepr
         self.local_model = ModelRepr(namespace)
         local_columns, remote_columns = self.get_local_and_remote_columns(
             registry)
@@ -551,7 +548,6 @@ class One2Many(RelationShip):
         :rtype: Many2One relationship
         """
         self.model.check_model(registry)
-        from .model import ModelAttribute
         if self.remote_columns is None:
             self.remote_columns = self.model.foreign_keys_for(
                 registry, namespace)
@@ -585,7 +581,6 @@ class One2Many(RelationShip):
         :param propertie: the properties known
         """
         if namespace == self.model.model_name:
-            from .model import ModelRepr
             pks = ModelRepr(namespace).primary_keys(registry)
             self.backref_properties.update({'remote_side': [
                 properties[pk.attribute_name] for pk in pks]})

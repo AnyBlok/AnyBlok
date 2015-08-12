@@ -7,7 +7,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .field import Field, FieldException
-from .model import ModelAttributeAdapter
+from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types
 from sqlalchemy.sql import sqltypes
