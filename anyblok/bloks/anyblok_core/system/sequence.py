@@ -22,13 +22,9 @@ class Sequence:
 
     id = Integer(primary_key=True)
     code = String(nullable=False)
-    suffix = String()
-    suffix_separator = String(nullable=False, default="_")
     number = Integer(nullable=False)
-    prefix = String()
-    prefix_separator = String(nullable=False, default="_")
     seq_name = String(nullable=False)
-    zfill = Integer(nullable=False, default=1)
+    formater = String(nullable=False, default="{seq}")
 
     @classmethod
     def initialize_model(cls):
@@ -70,11 +66,7 @@ class Sequence:
         """ return the next value of the sequence """
         nextval = self.registry.execute(SQLASequence(self.seq_name))
         self.update(dict(number=nextval))
-        nextval = str(nextval).zfill(self.zfill)
-        return '%s%s%s' % (self.prefix + self.prefix_separator
-                           if self.prefix else '', nextval,
-                           self.suffix_separator + self.suffix
-                           if self.suffix else '')
+        return self.formater.format(code=self.code, seq=nextval, id=self.id)
 
     @classmethod
     def nextvalBy(cls, **kwargs):

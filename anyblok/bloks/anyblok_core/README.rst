@@ -31,12 +31,27 @@ Some behaviours need to have sequence::
 
     sequence = registry.System.Sequence.insert(
         code="string code",
-        prefix="One prefix",
-        suffix="One suffix")
+        formater="One prefix {seq} One suffix")
+
+.. note::
+
+    It is a python formater, you can use the variable:
+
+    * seq: numero of the current data base sequence
+    * code: code field
+    * id: id field
 
 Get the next value of the sequence::
 
     sequence.nextval()
+
+exemple::
+
+    seq = Sequence.insert(code='SO', formater="{code}-{seq:06d}")
+    seq.nextval()
+    >>> SO-000001
+    seq.nextval()
+    >>> SO-000002
 
 Parameter
 ~~~~~~~~~

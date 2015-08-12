@@ -60,6 +60,8 @@ Future
 * [REF] Use Adapter for Model and attribute in relation ship
 * [REF] hybrid_method, cache and classmethod_cache are now only impotable decorator function
 * [IMP] in column the default can be a classmethod name
+* [REF] replace all the field (prefix, suffic, ...) by a formater field.
+  It is a python formater string
 
 0.4.1
 -----

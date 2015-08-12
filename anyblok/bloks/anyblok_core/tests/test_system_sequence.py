@@ -29,7 +29,7 @@ class TestSystemSequence(BlokTestCase):
 
     def test_nextval_without_prefix_with_suffix(self):
         Sequence = self.registry.System.Sequence
-        seq = Sequence.insert(code='test.sequence', suffix='suffix')
+        seq = Sequence.insert(code='test.sequence', formater="{seq}_suffix")
         number = seq.number
         self.assertEqual(seq.nextval(), '%d_suffix' % (number + 1))
         self.assertEqual(seq.nextval(), '%d_suffix' % (number + 2))
@@ -37,7 +37,7 @@ class TestSystemSequence(BlokTestCase):
 
     def test_nextval_with_prefix_without_suffix(self):
         Sequence = self.registry.System.Sequence
-        seq = Sequence.insert(code='test.sequence', prefix='prefix')
+        seq = Sequence.insert(code='test.sequence', formater='prefix_{seq}')
         number = seq.number
         self.assertEqual(seq.nextval(), 'prefix_%d' % (number + 1))
         self.assertEqual(seq.nextval(), 'prefix_%d' % (number + 2))
@@ -45,8 +45,8 @@ class TestSystemSequence(BlokTestCase):
 
     def test_nextval_with_prefix_with_suffix(self):
         Sequence = self.registry.System.Sequence
-        seq = Sequence.insert(code='test.sequence', prefix='prefix',
-                              suffix='suffix')
+        seq = Sequence.insert(code='test.sequence',
+                              formater='prefix_{seq}_suffix')
         number = seq.number
         self.assertEqual(seq.nextval(), 'prefix_%d_suffix' % (number + 1))
         self.assertEqual(seq.nextval(), 'prefix_%d_suffix' % (number + 2))
