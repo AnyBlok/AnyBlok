@@ -9,24 +9,10 @@ from anyblok.tests.testcase import TestCase, DBTestCase
 from sqlalchemy import Integer as SA_Integer
 from anyblok import Declarations
 from anyblok.field import FieldException
-from anyblok.column import (Column,
-                            Boolean,
-                            Json,
-                            String,
-                            BigInteger,
-                            SmallInteger,
-                            uString,
-                            Text,
-                            uText,
-                            Selection,
-                            Date,
-                            DateTime,
-                            Time,
-                            Interval,
-                            Decimal,
-                            Float,
-                            LargeBinary,
-                            Integer)
+from anyblok.column import (Column, Boolean, Json, String, BigInteger,
+                            SmallInteger, uString, Text, uText, Selection,
+                            Date, DateTime, Time, Interval, Decimal, Float,
+                            LargeBinary, Integer, Sequence)
 
 
 Model = Declarations.Model
@@ -388,3 +374,33 @@ class TestColumns(DBTestCase):
         registry = self.init_registry(add_in_registry)
         t = registry.Test.insert()
         self.assertEqual(t.val, 'val')
+
+    def test_sequence(self):
+        registry = self.init_registry(simple_column, ColumnType=Sequence)
+        self.assertEqual(registry.Test.insert().col, "1")
+        self.assertEqual(registry.Test.insert().col, "2")
+        self.assertEqual(registry.Test.insert().col, "3")
+        self.assertEqual(registry.Test.insert().col, "4")
+        Seq = registry.System.Sequence
+        self.assertEqual(
+            Seq.query().filter(Seq.code == 'Model.Test=>col').count(), 1)
+
+    def test_sequence_with_code_and_formater(self):
+        registry = self.init_registry(simple_column, ColumnType=Sequence,
+                                      code="SO", formater="{code}-{seq:06d}")
+        self.assertEqual(registry.Test.insert().col, "SO-000001")
+        self.assertEqual(registry.Test.insert().col, "SO-000002")
+        self.assertEqual(registry.Test.insert().col, "SO-000003")
+        self.assertEqual(registry.Test.insert().col, "SO-000004")
+        Seq = registry.System.Sequence
+        self.assertEqual(Seq.query().filter(Seq.code == 'SO').count(), 1)
+
+    def test_sequence_with_foreign_key(self):
+        with self.assertRaises(FieldException):
+            self.init_registry(simple_column, ColumnType=Sequence,
+                               foreign_key=Model.System.Model.use('name'))
+
+    def test_sequence_with_default(self):
+        with self.assertRaises(FieldException):
+            self.init_registry(simple_column, ColumnType=Sequence,
+                               default='default value')

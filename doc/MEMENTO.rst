@@ -442,6 +442,7 @@ List of the column type:
  * ``uText``
  * ``Selection``
  * ``Json``
+ * ``Sequence``
 
 All the columns have the following optional parameters:
 
@@ -512,6 +513,18 @@ Other attribute for ``Selection``:
 | ``selections`` | ``dict`` or ``dict.items`` to give the available key with  |
 |                | the associate label                                        |
 +----------------+------------------------------------------------------------+
+
+Other attribute for ``Sequence``:
+
++--------------+--------------------------------------------------------------+
+| Param        | Description                                                  |
++==============+==============================================================+
+| ``size``     | column size in the table                                     |
++--------------+--------------------------------------------------------------+
+| ``code``     | code of the sequence                                         |
++--------------+--------------------------------------------------------------+
+| ``formater`` | formater of the sequence                                     |
++--------------+--------------------------------------------------------------+
 
 RelationShip
 ------------

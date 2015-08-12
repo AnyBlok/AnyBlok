@@ -8,7 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .field import Field, FieldException
 from .model import ModelAttributeAdapter
-from sqlalchemy.schema import Sequence, Column as SA_Column
+from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types
 from sqlalchemy.sql import sqltypes
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -63,6 +63,15 @@ def wrap_default(registry, namespace, default_val):
     return wrapper
 
 
+class ColumnDefaultValue:
+
+    def __init__(self, callable):
+        self.callable = callable
+
+    def get_default_callable(self, registry, namespace, fieldname, properties):
+        return self.callable(registry, namespace, fieldname, properties)
+
+
 class NoDefaultValue:
     pass
 
@@ -93,7 +102,7 @@ class Column(Field):
             self.foreign_key = ModelAttributeAdapter(kwargs.pop('foreign_key'))
 
         if 'sequence' in kwargs:
-            self.sequence = Sequence(kwargs.pop('sequence'))
+            self.sequence = SA_Sequence(kwargs.pop('sequence'))
 
         self.db_column_name = None
         if 'db_column_name' in kwargs:
@@ -149,6 +158,9 @@ class Column(Field):
             if isinstance(self.default_val, str):
                 kwargs['default'] = wrap_default(registry, namespace,
                                                  self.default_val)
+            elif isinstance(self.default_val, ColumnDefaultValue):
+                kwargs['default'] = self.default_val.get_default_callable(
+                    registry, namespace, fieldname, properties)
             else:
                 kwargs['default'] = self.default_val
 
@@ -653,3 +665,46 @@ class LargeBinary(Column):
 
     """
     sqlalchemy_type = SA_LargeBinary
+
+
+class Sequence(String):
+    """ Sequence column
+
+    ::
+
+        from anyblok.column import Sequence
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = Sequence()
+
+    """
+    def __init__(self, *args, **kwargs):
+        if 'foreign_key' in kwargs:
+            raise FieldException("Sequence column can not define a foreign key"
+                                 " %r" % kwargs['foreign_key'])
+        if 'default' in kwargs:
+            raise FieldException("Sequence column can not define a default "
+                                 "value")
+        kwargs['default'] = ColumnDefaultValue(self.wrap_default)
+
+        self.code = kwargs.pop('code') if 'code' in kwargs else None
+        self.formater = kwargs.pop(
+            'formater') if 'formater' in kwargs else None
+
+        super(Sequence, self).__init__(*args, **kwargs)
+
+    def wrap_default(self, registry, namespace, fieldname, properties):
+        if not hasattr(registry, '_wanted_sequence'):
+            registry._wanted_sequence = []
+
+        code = self.code if self.code else "%s=>%s" % (namespace, fieldname)
+        registry._wanted_sequence.append(
+            {'code': code, 'formater': self.formater})
+
+        def default_value():
+            return registry.System.Sequence.nextvalBy(code=code)
+
+        return default_value
