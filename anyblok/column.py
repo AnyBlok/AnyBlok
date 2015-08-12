@@ -697,11 +697,13 @@ class Sequence(String):
         super(Sequence, self).__init__(*args, **kwargs)
 
     def wrap_default(self, registry, namespace, fieldname, properties):
-        if not hasattr(registry, '_wanted_sequence'):
-            registry._wanted_sequence = []
+        if not hasattr(registry, '_need_sequence_to_create_if_not_exist'):
+            registry._need_sequence_to_create_if_not_exist = []
+        elif registry._need_sequence_to_create_if_not_exist is None:
+            registry._need_sequence_to_create_if_not_exist = []
 
         code = self.code if self.code else "%s=>%s" % (namespace, fieldname)
-        registry._wanted_sequence.append(
+        registry._need_sequence_to_create_if_not_exist.append(
             {'code': code, 'formater': self.formater})
 
         def default_value():

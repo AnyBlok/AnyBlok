@@ -337,13 +337,15 @@ class MigrationColumn:
                 j1 = join(Table, Column, Table.c.name == Column.c.model)
                 query = select([func.count()]).select_from(table)
                 nb_row = self.table.migration.conn.execute(query).fetchone()[0]
+                query = select([Column.c.name]).select_from(j1)
+                query = query.where(Column.c.primary_key.is_(True))
+                query = query.where(Table.c.table == self.table.name)
+                columns = [x[0] for x in execute(query).fetchall()]
+                where = and_(*[getattr(table.c, x) == getattr(table2.c, x)
+                               for x in columns])
                 for offset in range(nb_row):
-                    query = select([Column.c.name]).select_from(j1)
-                    query = query.where(Column.c.primary_key.is_(True))
-                    query = query.where(Table.c.table == self.table.name)
-                    columns = [x[0] for x in execute(query).fetchall()]
-                    where = and_(*[getattr(table.c, x) == getattr(table2.c, x)
-                                   for x in columns])
+                    # call for each row because the default value
+                    # could be a sequence or depend of other field
                     query = update(table).where(where).values(
                         {cname: val(None)})
                     execute(query)
@@ -382,6 +384,8 @@ class MigrationColumn:
                 if not isinstance(constraint, schema.ForeignKeyConstraint):
                     self.table.migration.operation.impl.add_constraint(
                         constraint)
+
+        # TODO get the default value of the column and apply it on null value
 
         return MigrationColumn(self.table, column.name)
 

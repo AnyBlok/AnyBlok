@@ -33,13 +33,16 @@ class Sequence:
         seq = SQLASequence(cls._cls_seq_name)
         seq.create(cls.registry.bind)
 
-        if hasattr(cls.registry, '_wanted_sequence'):
-            if cls.registry._wanted_sequence:
-                for sequence in cls.registry._wanted_sequence:
-                    if sequence['formater'] is None:
-                        del sequence['formater']
+        if hasattr(cls.registry, '_need_sequence_to_create_if_not_exist'):
+            if cls.registry._need_sequence_to_create_if_not_exist:
+                for vals in cls.registry._need_sequence_to_create_if_not_exist:
+                    if vals['formater'] is None:
+                        del vals['formater']
 
-                    cls.insert(**sequence)
+                    if cls.query().filter(cls.code == vals['code']).count():
+                        continue
+
+                    cls.insert(**vals)
 
     @classmethod
     def create_sequence(cls, values):
