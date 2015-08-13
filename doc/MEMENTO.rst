@@ -1057,7 +1057,7 @@ Cache the method coming from a Mixin::
 Event
 ~~~~~
 
-Simple implementation of a synchronous ``event``::
+Simple implementation of a synchronous ``event`` for AnyBlok or SQLAlchemy::
 
 
     @register(Model)
@@ -1069,7 +1069,7 @@ Simple implementation of a synchronous ``event``::
 
             x = 0
 
-            @Declarations.addListener(Model.Event, 'fireevent')
+            @listen(Model.Event, 'fireevent')
             def my_event(cls, a=1, b=1):
                 cls.x = a * b
 
@@ -1084,8 +1084,8 @@ Simple implementation of a synchronous ``event``::
 
 This API gives:
 
-* a decorator ``addListener`` which binds the decorated method to the event.
-* ``fire`` method with the following parameters:
+* a decorator ``listen`` which binds the decorated method to the event.
+* ``fire`` method with the following parameters (Only for AnyBlok event):
     - ``event``: string name of the event
     - ``*args``: positionnal arguments to pass att the decorated method
     - ``**kwargs``: named argument to pass at the decorated method
@@ -1108,9 +1108,12 @@ decorated method::
 
 .. warning::
 
-    The overload does not take the ``addListener`` decorator but the
+    The overload does not take the ``listen`` decorator but the
     classmethod decorator, because the method name is already seen as an
     event listener
+
+Some of the Attribute events of the Mapper events are implemented. See the 
+SQLAlchemy ORM Events http://docs.sqlalchemy.org/en/rel_0_7/orm/events.html#orm-events
 
 Hybrid method
 ~~~~~~~~~~~~~

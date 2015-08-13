@@ -159,7 +159,7 @@ class TestModelAdapter(TestCase):
         self.assertEqual(mra.model_name, 'Model.System.Model')
 
 
-class TestModelMapper(TestCase):
+class TestModelMapper(DBTestCase):
 
     def test_not_capable(self):
         self.assertFalse(ModelMapper.capable(None))
@@ -200,8 +200,13 @@ class TestModelMapper(TestCase):
         self.assertEqual(method.model, 'Model.System.Model')
         self.assertEqual(method.event, 'event')
 
+    def test_get_mapper(self):
+        registry = self.init_registry(None)
+        mm = ModelMapper(Model.System.Model, 'even')
+        self.assertIs(mm.mapper(registry), registry.System.Model)
 
-class TestModelAttributeMapper(TestCase):
+
+class TestModelAttributeMapper(DBTestCase):
 
     def test_not_str_capable(self):
         self.assertFalse(ModelAttributeMapper.capable('Model.System.Model'))
@@ -236,6 +241,11 @@ class TestModelAttributeMapper(TestCase):
         mam.listen(method)
         self.assertTrue(method.is_an_sqlalchemy_event_listener)
         self.assertEqual(method.sqlalchemy_listener, mam)
+
+    def test_get_mapper(self):
+        registry = self.init_registry(None)
+        mam = ModelAttributeMapper(Model.System.Model.use('name'), 'set')
+        self.assertIs(mam.mapper(registry), registry.System.Model.name)
 
 
 class TestMapperAdapter(TestCase):

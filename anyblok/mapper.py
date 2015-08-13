@@ -318,6 +318,10 @@ class ModelMapper:
             method.model = self.model.model_name
             method.event = self.event
 
+    def mapper(self, registry):
+        self.model.check_model(registry)
+        return registry.get(self.model.model_name)
+
 
 class ModelAttributeMapper:
 
@@ -346,6 +350,9 @@ class ModelAttributeMapper:
     def listen(self, method):
         method.is_an_sqlalchemy_event_listener = True
         method.sqlalchemy_listener = self
+
+    def mapper(self, registry):
+        return self.attribute.get_attribute(registry)
 
 
 def MapperAdapter(mapper, *args, **kwargs):

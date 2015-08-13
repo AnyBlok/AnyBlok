@@ -51,6 +51,11 @@ anyblok.model module
     :show-inheritance:
     :inherited-members:
 
+anyblok.mapper module
+---------------------
+
+.. automodule:: anyblok.mapper
+
 .. autoexception:: ModelAttributeException
     :members:
     :noindex:
@@ -69,7 +74,25 @@ anyblok.model module
     :show-inheritance:
     :inherited-members:
 
+.. autoexception:: MapperException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
 .. autoclass:: ModelRepr
+    :members:
+    :noindex:
+
+.. autoclass:: ModelAttribute
+    :members:
+    :noindex:
+
+.. autoclass:: ModelMapper
+    :members:
+    :noindex:
+
+.. autoclass:: ModelAttributeMapper
     :members:
     :noindex:
 
@@ -77,6 +100,9 @@ anyblok.model module
     :noindex:
 
 .. autofunction:: ModelAdapter
+    :noindex:
+
+.. autofunction:: MapperAdapter
     :noindex:
 
 anyblok.config module

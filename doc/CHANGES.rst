@@ -16,17 +16,23 @@ Future
 
     Break the compatibility with the previous version of anyblok
 
-    * cache and classmethod_cache and hybrid_method
+    * cache, classmethod_cache, hybrid_method and listen
       replace::
         
         from anyblok import Declarations
         cache = Declarations.cache
         classmethod_cache = Declarations.classmethod_cache
         hybrid_method = Declarations.hybrid_method
+        addListener = Declarations.addListener
 
       by::
 
-        from anyblok.declarations import cache, classmethod_cache, hybrid_method
+        from anyblok.declarations (import cache, classmethod_cache, 
+                                   hybrid_method, listen)
+
+      .. note::
+
+        The listener can declare SQLAlchemy event
 
     * declaration of the foreign key
       replace::
@@ -56,6 +62,8 @@ Future
 * [IMP] ModelAttributeAdapter, get a ModelAttribute from ModelAttribute or str
 * [IMP] ModelRepr, Speudo representation of a Model
 * [IMP] ModelAdapter, get a ModelRepr from ModelRepr or str
+* [IMP] ModelMapper and ModelAttributeMapper
+* [REF] Event, the declaration of an event can be an anyblok or a sqlalchemy event
 * [REF] the foreign key must be declared with ModelAttribute
 * [REF] Use Adapter for Model and attribute in relation ship
 * [REF] hybrid_method, cache and classmethod_cache are now only impotable decorator function

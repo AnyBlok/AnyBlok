@@ -6,7 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
-from anyblok import Declarations
+from anyblok.declarations import Declarations, listen
+from anyblok.column import Integer, Boolean, String
 
 
 register = Declarations.register
@@ -39,7 +40,7 @@ class TestEvent(DBTestCase):
 
                 x = 0
 
-                @Declarations.addListener(Model.Event, 'fireevent')
+                @listen(Model.Event, 'fireevent')
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
@@ -59,7 +60,7 @@ class TestEvent(DBTestCase):
 
                 x = 0
 
-                @Declarations.addListener('Model.Event', 'fireevent')
+                @listen('Model.Event', 'fireevent')
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
@@ -80,7 +81,7 @@ class TestEvent(DBTestCase):
 
                 x = 0
 
-                @Declarations.addListener(Model.Event, 'fireevent')
+                @listen(Model.Event, 'fireevent')
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
@@ -105,7 +106,7 @@ class TestEvent(DBTestCase):
 
                 x = 0
 
-                @Declarations.addListener(Model.Event, 'fireevent')
+                @listen(Model.Event, 'fireevent')
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
@@ -129,7 +130,7 @@ class TestEvent(DBTestCase):
             x = 0
 
             if withcore:
-                @Declarations.addListener(Model.Event, 'fireevent')
+                @listen(Model.Event, 'fireevent')
                 def my_event(cls, a=1, b=1):
                     pass
 
@@ -137,7 +138,7 @@ class TestEvent(DBTestCase):
         class MTest:
 
             if withmixin:
-                @Declarations.addListener(Model.Event, 'fireevent')
+                @listen(Model.Event, 'fireevent')
                 def my_event(cls, a=1, b=1):
                     pass
 
@@ -145,7 +146,7 @@ class TestEvent(DBTestCase):
         class Test(Mixin.MTest):
 
             if withmodel:
-                @Declarations.addListener(Model.Event, 'fireevent')
+                @listen(Model.Event, 'fireevent')
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
             else:
@@ -184,3 +185,42 @@ class TestEvent(DBTestCase):
                                       withmodel=True, withmixin=True)
         self.assertEqual(len(registry.events['Model.Event']['fireevent']), 1)
         self.check_event(registry)
+
+    def test_sqlalchemy_listen_on_model(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = Boolean(default=False)
+
+                @listen(Model.Test, 'before_insert')
+                def my_event(cls, mapper, connection, target):
+                    target.val = True
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertTrue(t.val)
+
+    def test_sqlalchemy_listen_on_column(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String()
+
+                @listen(Model.Test.use('val'), 'set', retval=True)
+                def my_event(cls, target, value, oldvalue, initiator):
+                    return 'test_' + value
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertIsNone(t.val)
+        t.val = 'test'
+        registry.flush()
+        self.assertEqual(t.val, 'test_test')

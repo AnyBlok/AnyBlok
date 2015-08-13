@@ -10,7 +10,7 @@ from os.path import join, exists
 from logging import getLogger
 import nose
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import ProgrammingError, OperationalError
@@ -411,6 +411,17 @@ class Registry:
         self.properties = {}
         self.removed = []
         self._precommit_hook = []
+        self._sqlalchemy_known_events = []
+
+    def listen_sqlalchemy_known_event(self):
+        for e, method in self._sqlalchemy_known_events:
+            event.listen(e.mapper(self), e.event, method.get_attribute(self),
+                         *e.args, **e.kwargs)
+
+    def remove_sqlalchemy_known_event(self):
+        for e, method in self._sqlalchemy_known_events:
+            event.remove(e.mapper(self), e.event, method.get_attribute(self),
+                         *e.args, **e.kwargs)
 
     def get(self, namespace):
         """ Return the namespace Class
@@ -914,6 +925,7 @@ class Registry:
         else:
             self.migration.auto_upgrade_database()
 
+        self.listen_sqlalchemy_known_event()
         mustreload = False
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_initialize_entries:
@@ -1004,6 +1016,7 @@ class Registry:
     def reload(self):
         """ Reload the registry, close session, clean registry, reinit var """
         # self.close_session()
+        self.remove_sqlalchemy_known_event()
         self.clean_model()
         self.ini_var()
         self.load()

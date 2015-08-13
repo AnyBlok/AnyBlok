@@ -5,6 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from .mapper import MapperAdapter
 
 
 class DeclarationsException(AttributeError):
@@ -162,3 +163,13 @@ def hybrid_method(method=None):
             return method
 
         return wrapper
+
+
+def listen(*args, **kwargs):
+    mapper = MapperAdapter(*args, **kwargs)
+
+    def wrapper(method):
+        mapper.listen(method)
+        return classmethod(method)
+
+    return wrapper
