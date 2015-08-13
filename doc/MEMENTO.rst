@@ -1113,7 +1113,7 @@ decorated method::
     event listener
 
 Some of the Attribute events of the Mapper events are implemented. See the 
-SQLAlchemy ORM Events http://docs.sqlalchemy.org/en/rel_0_7/orm/events.html#orm-events
+SQLAlchemy ORM Events http://docs.sqlalchemy.org/en/latest/orm/events.html#orm-events
 
 Hybrid method
 ~~~~~~~~~~~~~
