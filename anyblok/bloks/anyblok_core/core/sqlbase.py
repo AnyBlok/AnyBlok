@@ -384,7 +384,7 @@ class SqlBase(SqlMixin):
         return instances
 
     @classmethod
-    def precommit_hook(cls, method, put_at_the_end_if_exist=False):
+    def precommit_hook(cls, method, *args, **kwargs):
         """ Same in the registry a hook to call just before the commit
 
         .. warning:: Only one instance of the hook is called before the commit
@@ -393,5 +393,4 @@ class SqlBase(SqlMixin):
         put_at_the_end_if_exist: If ``True`` the hook is move at the end
         """
         cls.registry.precommit_hook(
-            cls.__registry_name__, method,
-            put_at_the_end_if_exist=put_at_the_end_if_exist)
+            cls.__registry_name__, method, *args, **kwargs)
