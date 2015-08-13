@@ -74,19 +74,6 @@ class Declarations:
         return cls_
 
     @classmethod
-    def addListener(cls, model, event):
-        if not isinstance(model, str):
-            model = model.__registry_name__
-
-        def wrapper(method):
-            method.is_an_event_listener = True
-            method.model = model
-            method.event = event
-            return classmethod(method)
-
-        return wrapper
-
-    @classmethod
     def add_declaration_type(cls, cls_=None, isAnEntry=False,
                              assemble=None, initialize=None):
         """ Add a declaration type
