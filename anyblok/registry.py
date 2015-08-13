@@ -966,7 +966,7 @@ class Registry:
         else:
             super(Registry, self).__getattr__(attribute)
 
-    def precommit_hook(self, registryname, method, put_at_the_if_exist):
+    def precommit_hook(self, registryname, method, *args, **kwargs):
         """ Add a method in the precommit_hook list
 
         a precommit hook is a method called just after the commit, it is used
@@ -974,12 +974,16 @@ class Registry:
 
         :param registryname: namespace of the model
         :param method: method to call on the registryname
-        :param put_at_the_if_exist: if true and hook allready exist then the
+        :param put_at_the_end_if_exist: if true and hook allready exist then the
             hook are moved at the end
         """
-        entry = (registryname, method)
+        put_at_the_end_if_exist = False
+        if 'put_at_the_end_if_exist' in kwargs:
+            put_at_the_end_if_exist = kwargs.pop('put_at_the_end_if_exist')
+
+        entry = (registryname, method, args, kwargs)
         if entry in self._precommit_hook:
-            if put_at_the_if_exist:
+            if put_at_the_end_if_exist:
                 self._precommit_hook.remove(entry)
                 self._precommit_hook.append(entry)
 
@@ -995,7 +999,9 @@ class Registry:
         for hook in hooks:
             Model = self.loaded_namespaces[hook[0]]
             method = hook[1]
-            getattr(Model, method)()
+            a = hook[2]
+            kw = hook[3]
+            getattr(Model, method)(*a, **kw)
             self._precommit_hook.remove(hook)
 
         self.session_commit(*args, **kwargs)

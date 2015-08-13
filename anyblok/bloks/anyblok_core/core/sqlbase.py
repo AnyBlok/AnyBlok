@@ -392,5 +392,6 @@ class SqlBase(SqlMixin):
         :param method: the method to call on this model
         put_at_the_end_if_exist: If ``True`` the hook is move at the end
         """
-        cls.registry.precommit_hook(cls.__registry_name__, method,
-                                    put_at_the_end_if_exist)
+        cls.registry.precommit_hook(
+            cls.__registry_name__, method,
+            put_at_the_end_if_exist=put_at_the_end_if_exist)
