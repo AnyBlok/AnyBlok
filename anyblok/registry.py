@@ -936,6 +936,10 @@ class Registry:
 
         return mustreload
 
+    def rollback(self, *args, **kwargs):
+        self.session.rollback(*args, **kwargs)
+        self._precommit_hook = []
+
     def close_session(self):
         """ Close only the session, not the registry
         After the call of this method the registry won't be usable
