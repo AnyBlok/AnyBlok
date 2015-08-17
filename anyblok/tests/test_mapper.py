@@ -203,7 +203,7 @@ class TestModelMapper(DBTestCase):
     def test_get_mapper(self):
         registry = self.init_registry(None)
         mm = ModelMapper(Model.System.Model, 'even')
-        self.assertIs(mm.mapper(registry), registry.System.Model)
+        self.assertIs(mm.mapper(registry, None), registry.System.Model)
 
 
 class TestModelAttributeMapper(DBTestCase):
@@ -245,7 +245,7 @@ class TestModelAttributeMapper(DBTestCase):
     def test_get_mapper(self):
         registry = self.init_registry(None)
         mam = ModelAttributeMapper(Model.System.Model.use('name'), 'set')
-        self.assertIs(mam.mapper(registry), registry.System.Model.name)
+        self.assertIs(mam.mapper(registry, None), registry.System.Model.name)
 
 
 class TestMapperAdapter(TestCase):

@@ -13,7 +13,8 @@ import nose
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import ProgrammingError, OperationalError
+from sqlalchemy.exc import (ProgrammingError, OperationalError,
+                            InvalidRequestError)
 
 from .config import Configuration
 from .imp import ImportManager
@@ -414,14 +415,18 @@ class Registry:
         self._sqlalchemy_known_events = []
 
     def listen_sqlalchemy_known_event(self):
-        for e, method in self._sqlalchemy_known_events:
-            event.listen(e.mapper(self), e.event, method.get_attribute(self),
-                         *e.args, **e.kwargs)
+        for e, namespace, method in self._sqlalchemy_known_events:
+            event.listen(e.mapper(self, namespace), e.event,
+                         method.get_attribute(self), *e.args, **e.kwargs)
 
     def remove_sqlalchemy_known_event(self):
-        for e, method in self._sqlalchemy_known_events:
-            event.remove(e.mapper(self), e.event, method.get_attribute(self),
-                         *e.args, **e.kwargs)
+        for e, namespace, method in self._sqlalchemy_known_events:
+            try:
+                event.remove(e.mapper(self, namespace), e.event,
+                             method.get_attribute(self),
+                             *e.args, **e.kwargs)
+            except InvalidRequestError:
+                pass
 
     def get(self, namespace):
         """ Return the namespace Class

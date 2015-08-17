@@ -258,7 +258,9 @@ class Model:
             return
         elif method.is_an_sqlalchemy_event_listener is True:
             registry._sqlalchemy_known_events.append(
-                (method.sqlalchemy_listener,  ModelAttribute(namespace, attr)))
+                (method.sqlalchemy_listener,
+                 namespace,
+                 ModelAttribute(namespace, attr)))
 
     @classmethod
     def detect_hybrid_method(cls, attr, method, registry, namespace, base,
