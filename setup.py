@@ -26,6 +26,7 @@ requires = [
     'lxml',
     'six',
     'PyYAML',
+    'appdirs',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))
