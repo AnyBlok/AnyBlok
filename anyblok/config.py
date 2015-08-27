@@ -13,6 +13,8 @@ import sys
 import os
 import json
 import yaml
+from appdirs import AppDirs
+from os.path import join, isfile
 from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
                      CRITICAL, basicConfig, Logger)
 logger = getLogger(__name__)
@@ -377,6 +379,10 @@ class Configuration:
     def parse_configfile(cls, configfile, parts_to_load):
         cur_cwd = os.getcwd()
         configfile = os.path.abspath(configfile)
+        print('Load config file %r' % configfile)
+        if not isfile(configfile):
+            return
+
         cwd_file, file_name = os.path.split(configfile)
         configuration = {}
         try:
@@ -407,11 +413,17 @@ class Configuration:
 
     @classmethod
     def parse_options(cls, arguments, parts_to_load):
-
         if arguments._get_args():
             raise ConfigurationException(
                 'Positional arguments are forbidden')
 
+        ad = AppDirs('AnyBlok')
+        # load the global configuration file
+        cls.parse_configfile(
+            join(ad.site_config_dir, 'conf.cfg'), parts_to_load)
+        # load the user configuration file
+        cls.parse_configfile(
+            join(ad.user_config_dir, 'conf.cfg'), parts_to_load)
         if 'configfile' in dict(arguments._get_kwargs()).keys():
             if arguments.configfile:
                 cls.parse_configfile(arguments.configfile, parts_to_load)
