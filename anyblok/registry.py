@@ -91,6 +91,7 @@ class RegistryManager:
     def unload(cls):
         for entry, unload_callback in cls.callback_unload_entries.items():
             logger.info('Unload: %r' % entry)
+            print('Unload: %r' % entry)
             unload_callback()
 
     @classmethod
@@ -165,7 +166,7 @@ class RegistryManager:
 
     @classmethod
     def declare_entry(cls, entry, assemble_callback=None,
-                      initialize_callback=None, unload_callback=None):
+                      initialize_callback=None):
         """ Add new entry in the declared entries
 
         ::
@@ -204,8 +205,9 @@ class RegistryManager:
             if initialize_callback:
                 cls.callback_initialize_entries[entry] = initialize_callback
 
-            if unload_callback:
-                cls.callback_unload_entries[entry] = unload_callback
+    @classmethod
+    def declare_unload_callback(cls, entry, unload_callback):
+        cls.callback_unload_entries[entry] = unload_callback
 
     @classmethod
     def undeclare_entry(cls, entry):

@@ -87,6 +87,7 @@ class Declarations:
         """
 
         def wrapper(self):
+            from anyblok.registry import RegistryManager
             name = self.__name__
             if name in cls.declaration_types:
                 raise DeclarationsException(
@@ -99,23 +100,20 @@ class Declarations:
             setattr(cls, name, self)
 
             if isAnEntry:
-                from anyblok.registry import RegistryManager
-
                 assemble_callback = initialize_callback = None
-                unload_callback = None
                 if assemble and hasattr(self, assemble):
                     assemble_callback = getattr(self, assemble)
 
                 if initialize and hasattr(self, initialize):
                     initialize_callback = getattr(self, initialize)
 
-                if unload and hasattr(self, unload):
-                    unload_callback = getattr(self, unload)
-
                 RegistryManager.declare_entry(
                     name, assemble_callback=assemble_callback,
-                    initialize_callback=initialize_callback,
-                    unload_callback=unload_callback)
+                    initialize_callback=initialize_callback)
+
+            if unload and hasattr(self, unload):
+                RegistryManager.declare_unload_callback(
+                    name, getattr(self, unload))
 
             return self
 
