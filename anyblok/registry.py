@@ -91,7 +91,6 @@ class RegistryManager:
     def unload(cls):
         for entry, unload_callback in cls.callback_unload_entries.items():
             logger.info('Unload: %r' % entry)
-            print('Unload: %r' % entry)
             unload_callback()
 
     @classmethod
