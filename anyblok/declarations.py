@@ -75,13 +75,14 @@ class Declarations:
 
     @classmethod
     def add_declaration_type(cls, cls_=None, isAnEntry=False,
-                             assemble=None, initialize=None):
+                             assemble=None, initialize=None, unload=None):
         """ Add a declaration type
 
         :param cls_: The ``class`` object to add as a world of the MetaData
         :param isAnEntry: if true the type will be assembled by the registry
         :param assemble: name of the method callback to call (classmethod)
         :param initialize: name of the method callback to call (classmethod)
+        :param unload: name of the method callback to call (classmethod)
         :exception: DeclarationsException
         """
 
@@ -101,15 +102,20 @@ class Declarations:
                 from anyblok.registry import RegistryManager
 
                 assemble_callback = initialize_callback = None
+                unload_callback = None
                 if assemble and hasattr(self, assemble):
                     assemble_callback = getattr(self, assemble)
 
                 if initialize and hasattr(self, initialize):
                     initialize_callback = getattr(self, initialize)
 
+                if unload and hasattr(self, unload):
+                    unload_callback = getattr(self, unload)
+
                 RegistryManager.declare_entry(
                     name, assemble_callback=assemble_callback,
-                    initialize_callback=initialize_callback)
+                    initialize_callback=initialize_callback,
+                    unload_callback=unload_callback)
 
             return self
 

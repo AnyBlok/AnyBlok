@@ -66,6 +66,7 @@ class RegistryManager:
     declared_cores = []
     callback_assemble_entries = {}
     callback_initialize_entries = {}
+    callback_unload_entries = {}
     registries = {}
     needed_bloks = []
 
@@ -85,6 +86,12 @@ class RegistryManager:
         registries = [r for r in cls.registries.values()]
         for registry in registries:
             registry.close()
+
+    @classmethod
+    def unload(cls):
+        for entry, unload_callback in cls.callback_unload_entries.items():
+            logger.info('Unload: %r' % entry)
+            unload_callback()
 
     @classmethod
     def get(cls, db_name, loadwithoutmigration=False):
@@ -158,7 +165,7 @@ class RegistryManager:
 
     @classmethod
     def declare_entry(cls, entry, assemble_callback=None,
-                      initialize_callback=None):
+                      initialize_callback=None, unload_callback=None):
         """ Add new entry in the declared entries
 
         ::
@@ -196,6 +203,9 @@ class RegistryManager:
 
             if initialize_callback:
                 cls.callback_initialize_entries[entry] = initialize_callback
+
+            if unload_callback:
+                cls.callback_unload_entries[entry] = unload_callback
 
     @classmethod
     def undeclare_entry(cls, entry):
@@ -607,9 +617,12 @@ class Registry:
         :param blok: name of the blok
         :param core: the core name to load
         """
-        bases = RegistryManager.loaded_bloks[blok]['Core'][core]
-        for base in bases:
-            self.loaded_cores[core].insert(0, base)
+        if core in RegistryManager.loaded_bloks[blok]['Core']:
+            bases = RegistryManager.loaded_bloks[blok]['Core'][core]
+            for base in bases:
+                self.loaded_cores[core].insert(0, base)
+        else:
+            logger.warning('No Core %r found' % core)
 
     def load_properties(self, blok):
         properties = RegistryManager.loaded_bloks[blok]['properties']

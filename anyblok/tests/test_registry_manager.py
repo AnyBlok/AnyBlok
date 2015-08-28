@@ -30,13 +30,13 @@ class TestRegistryManager(TestCase):
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Core'],
-                         {'Base': [],
-                          'SqlBase': [],
-                          'SqlViewBase': [],
-                          'Session': [],
-                          'Query': [],
-                          'InstrumentedList': []})
+        for core in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
+                     'InstrumentedList'):
+            self.assertIn(
+                core, RegistryManager.loaded_bloks['newblok']['Core'].keys())
+            self.assertEqual(
+                RegistryManager.loaded_bloks['newblok']['Core'][core], [])
+
         self.assertEqual(RegistryManager.loaded_bloks['newblok']['Model'],
                          {'registry_names': []})
         self.assertEqual(RegistryManager.loaded_bloks['newblok']['Mixin'],
@@ -49,13 +49,13 @@ class TestRegistryManager(TestCase):
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Core'],
-                         {'Base': [],
-                          'SqlBase': [],
-                          'SqlViewBase': [],
-                          'Session': [],
-                          'Query': [],
-                          'InstrumentedList': []})
+        for core in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
+                     'InstrumentedList'):
+            self.assertIn(
+                core, RegistryManager.loaded_bloks['newblok']['Core'].keys())
+            self.assertEqual(
+                RegistryManager.loaded_bloks['newblok']['Core'][core], [])
+
         self.assertEqual(RegistryManager.loaded_bloks['newblok']['Model'],
                          {'registry_names': []})
         self.assertEqual(RegistryManager.loaded_bloks['newblok']['Mixin'],

@@ -50,7 +50,7 @@ class TestRegistryEntry(TestCase):
                                                   'test'),
             True)
 
-    def test_remove_core(self):
+    def test_remove_entry(self):
         class test:
             pass
 
@@ -63,9 +63,9 @@ class TestRegistryEntry(TestCase):
 
         RegistryManager.add_entry_in_register('Other', 'test', test)
         self.assertInEntry('test', test)
-        self.assertEqual(has_test_in_removed(), False)
+        self.assertFalse(has_test_in_removed())
         RegistryManager.remove_in_register(test)
-        self.assertEqual(has_test_in_removed(), True)
+        self.assertTrue(has_test_in_removed())
 
     def test_get_entry_properties_in_register(self):
         class test:
@@ -77,5 +77,5 @@ class TestRegistryEntry(TestCase):
             'Other', 'test')
 
         hasproperty1 = 'property1' in properties
-        self.assertEqual(hasproperty1, True)
+        self.assertTrue(hasproperty1)
         self.assertEqual(properties['property1'], 'test')
