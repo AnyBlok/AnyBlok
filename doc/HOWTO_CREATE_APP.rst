@@ -734,3 +734,27 @@ The logging configuration are also loaded, see `logging configuration file forma
     class=anyblok.logging.consoleFormatter
     format=%(database)s:%(levelname)s - %(message)s
     datefmt=
+
+Default configuration file
+--------------------------
+
+You can define default *system* or *user* configuration file in fonction of
+your *OS*:
+
+* *linux*
+    - *system*: /etc/xdg/AnyBlok/conf.cfg
+    - *user*: /home/``user name``/.config/AnyBlok/conf.cfg
+* *mac os x*
+    - *system*: /Library/Application Support/AnyBlok/conf.cfg 
+    - *user*: /Users/``user name``/Library/Application Support/AnyBlok/conf.cfg
+
+.. note::
+
+    Works also for *windows*, See https://pypi.python.org/pypi/appdirs. The
+    entry used are:
+
+    * *system*: site_config_dir
+    * *user*: user_config_dir
+
+Theses configuration files are load before the specific configuration file. If
+the the configuration file does not exist then it will not raise error

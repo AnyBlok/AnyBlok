@@ -27,8 +27,8 @@ Future
 
       by::
 
-        from anyblok.declarations (import cache, classmethod_cache, 
-                                   hybrid_method, listen)
+        from anyblok.declarations import (cache, classmethod_cache, 
+                                          hybrid_method, listen)
 
       .. note::
 
@@ -71,6 +71,7 @@ Future
 * [REF] replace all the field (prefix, suffic, ...) by a formater field.
   It is a python formater string
 * [IMP] Sequence column
+* [IMP] add the default system or user configuration file
 
 0.4.1
 -----
