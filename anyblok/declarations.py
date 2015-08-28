@@ -111,6 +111,7 @@ class Declarations:
                     name, assemble_callback=assemble_callback,
                     initialize_callback=initialize_callback)
 
+            # All declaration type can need to be unload declarated values
             if unload and hasattr(self, unload):
                 RegistryManager.declare_unload_callback(
                     name, getattr(self, unload))

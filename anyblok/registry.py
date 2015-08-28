@@ -89,6 +89,7 @@ class RegistryManager:
 
     @classmethod
     def unload(cls):
+        """Call all the unload callbacks"""
         for entry, unload_callback in cls.callback_unload_entries.items():
             logger.info('Unload: %r' % entry)
             unload_callback()
@@ -206,6 +207,11 @@ class RegistryManager:
 
     @classmethod
     def declare_unload_callback(cls, entry, unload_callback):
+        """Save a unload callback in registry Manager
+
+        :param entry: declaration type name
+        :param unload_callback: classmethod pointer
+        """
         cls.callback_unload_entries[entry] = unload_callback
 
     @classmethod
