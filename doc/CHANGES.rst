@@ -12,6 +12,9 @@ CHANGELOG
 Future
 ------
 
+0.5.0
+-----
+
 .. warning:: 
 
     Break the compatibility with the previous version of anyblok
