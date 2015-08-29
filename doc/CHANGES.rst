@@ -12,6 +12,9 @@ CHANGELOG
 Future
 ------
 
+0.5.1
+-----
+
 * [IMP] unload declaration type callback
 
 0.5.0
