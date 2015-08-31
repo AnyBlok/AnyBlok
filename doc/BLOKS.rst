@@ -62,3 +62,16 @@ Blok IO XML
 
 .. include:: ../anyblok/bloks/io_xml/README.rst
 .. include:: ../anyblok/bloks/io_xml/CODE.rst
+
+Blok Model Auth
+---------------
+
+.. automodule:: anyblok.bloks.model_authz
+.. autoclass:: ModelBasedAuthorizationBlok
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :noindex:
+
+.. include:: ../anyblok/bloks/model_authz/README.rst
+.. include:: ../anyblok/bloks/model_authz/CODE.rst

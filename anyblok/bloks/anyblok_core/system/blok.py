@@ -173,10 +173,10 @@ class Blok:
 
         .. warning::
 
-            Use the ``desc order`` to uninstall because `we can't uninstall
+            Use the ``desc order`` to uninstall because we can't uninstall
             a dependancies before
 
-        :param bloks: list of the blok name to uninstall
+        :param bloksname: list of the blok name to uninstall
         """
         if not bloksname:
             return

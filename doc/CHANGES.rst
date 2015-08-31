@@ -12,6 +12,9 @@ CHANGELOG
 Future
 ------
 
+* [IMP] extension for Sphinx and autodoc
+* [ADD] API doc in doc
+
 0.5.1
 -----
 

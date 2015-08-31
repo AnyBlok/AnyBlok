@@ -45,7 +45,7 @@ class SqlMixin:
             query = self.registry.session.query(MyModel)
 
         :param elements: pass at the SqlAlchemy query, if the element is a
-        string then thet are see as field of the model
+                         string then thet are see as field of the model
         :rtype: SqlAlchemy Query
         """
         res = []
@@ -197,9 +197,11 @@ class SqlMixin:
 
         :param fields: list of fields to put in dict; if not selected, fields
             then take them all. A field is either one of these:
+
                 * a string (which is the name of the field)
                 * a 2-tuple if the field is a relationship (name of the field,
-                    tuple of foreign model fields)
+                  tuple of foreign model fields)
+
         :rtype: dict
 
         Here are some examples::
@@ -390,7 +392,7 @@ class SqlBase(SqlMixin):
         .. warning:: Only one instance of the hook is called before the commit
 
         :param method: the method to call on this model
-        put_at_the_end_if_exist: If ``True`` the hook is move at the end
+        :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
         """
         cls.registry.precommit_hook(
             cls.__registry_name__, method, *args, **kwargs)
