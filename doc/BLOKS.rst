@@ -22,6 +22,7 @@ Blok anyblok-core
     :noindex:
 
 .. include:: ../anyblok/bloks/anyblok_core/README.rst
+.. include:: ../anyblok/bloks/anyblok_core/CODE.rst
 
 Blok IO
 -------
@@ -34,6 +35,7 @@ Blok IO
     :noindex:
 
 .. include:: ../anyblok/bloks/io/README.rst
+.. include:: ../anyblok/bloks/io/CODE.rst
 
 Blok IO CSV
 -----------
@@ -46,6 +48,7 @@ Blok IO CSV
     :noindex:
 
 .. include:: ../anyblok/bloks/io_csv/README.rst
+.. include:: ../anyblok/bloks/io_csv/CODE.rst
 
 Blok IO XML
 -----------
@@ -58,3 +61,4 @@ Blok IO XML
     :noindex:
 
 .. include:: ../anyblok/bloks/io_xml/README.rst
+.. include:: ../anyblok/bloks/io_xml/CODE.rst
