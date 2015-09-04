@@ -508,8 +508,8 @@ class Registry:
                 toinstall.append(blok)
 
         if toinstall and self.withoutautomigration:
-            raise RegistryManager("Install module is forbidden with "
-                                  "no auto migration mode")
+            raise RegistryManagerException("Install module is forbidden with "
+                                           "no auto migration mode")
 
         return toinstall
 
