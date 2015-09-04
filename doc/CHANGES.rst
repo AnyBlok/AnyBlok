@@ -14,6 +14,7 @@ Future
 
 * [IMP] extension for Sphinx and autodoc
 * [ADD] API doc in doc
+* [ADD] add foreign key option in relation ship
 
 0.5.1
 -----

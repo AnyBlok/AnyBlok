@@ -169,6 +169,10 @@ class Many2One(RelationShip):
             if not isinstance(self._column_names, (list, tuple)):
                 self._column_names = [self._column_names]
 
+        self.foreign_key_options = {}
+        if 'foreign_key_options' in kwargs:
+            self.foreign_key_options = self.kwargs.pop('foreign_key_options')
+
     def update_local_and_remote_columns_names(self, registry, namespace):
         if self._remote_columns is None:
             self.remote_columns = self.model.primary_keys(registry)
@@ -243,7 +247,8 @@ class Many2One(RelationShip):
             properties['add_in_table_args'].append(
                 ForeignKeyConstraint(
                     [x.attribute_name for x in col_names],
-                    [x.get_fk_name(registry) for x in fk_names]))
+                    [x.get_fk_name(registry) for x in fk_names],
+                    **self.foreign_key_options))
 
     def get_column_information(self, registry, cname, remote_types):
         if len(remote_types) == 1:
