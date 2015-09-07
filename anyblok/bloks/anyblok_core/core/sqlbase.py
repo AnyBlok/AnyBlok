@@ -323,7 +323,8 @@ class SqlBase(SqlMixin):
         pks = self.get_primary_keys()
         where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
                         for pk in pks]
-        self.__class__.query().filter(*where_clause).update(*args, **kwargs)
+        return self.__class__.query().filter(*where_clause).update(
+            *args, **kwargs)
 
     def delete(self):
         """ Call the SqlAlchemy Query.delete method on the instance of the
