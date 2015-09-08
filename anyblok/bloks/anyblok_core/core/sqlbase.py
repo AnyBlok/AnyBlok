@@ -372,7 +372,7 @@ class SqlBase(SqlMixin):
 
         :exception: SqlBaseException
         """
-        instances = []
+        instances = cls.registry.InstrumentedList()
         for kwargs in args:
             if not isinstance(kwargs, dict):
                 raise SqlBaseException("multi_insert method wait list of dict")
