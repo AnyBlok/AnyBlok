@@ -17,6 +17,7 @@ Future
 * [ADD] add foreign key option in relation ship
 * [CRITICAL FIX] the EnvironnementManager didn't return the good scoped method 
   for SQLAlchemy
+* [CRITICAL FIX] the precommit_hook didn't be isolated by session
 
 0.5.1
 -----

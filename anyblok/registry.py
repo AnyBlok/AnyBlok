@@ -428,7 +428,7 @@ class Registry:
         self.children_namespaces = {}
         self.properties = {}
         self.removed = []
-        self._precommit_hook = []
+        EnvironmentManager.set('_precommit_hook', [])
         self._sqlalchemy_known_events = []
 
     def listen_sqlalchemy_known_event(self):
@@ -963,7 +963,7 @@ class Registry:
 
     def rollback(self, *args, **kwargs):
         self.session.rollback(*args, **kwargs)
-        self._precommit_hook = []
+        EnvironmentManager.set('_precommit_hook', [])
 
     def close_session(self):
         """ Close only the session, not the registry
@@ -1011,19 +1011,21 @@ class Registry:
             put_at_the_end_if_exist = kwargs.pop('put_at_the_end_if_exist')
 
         entry = (registryname, method, args, kwargs)
-        if entry in self._precommit_hook:
+        _precommit_hook = EnvironmentManager.get('_precommit_hook')
+        if entry in _precommit_hook:
             if put_at_the_end_if_exist:
-                self._precommit_hook.remove(entry)
-                self._precommit_hook.append(entry)
+                _precommit_hook.remove(entry)
+                _precommit_hook.append(entry)
 
         else:
-            self._precommit_hook.append(entry)
+            _precommit_hook.append(entry)
 
     def commit(self, *args, **kwargs):
         """ Overload the commit method of the SqlAlchemy session """
         hooks = []
-        if self._precommit_hook:
-            hooks.extend(self._precommit_hook)
+        _precommit_hook = EnvironmentManager.get('_precommit_hook')
+        if _precommit_hook:
+            hooks.extend(_precommit_hook)
 
         for hook in hooks:
             Model = self.loaded_namespaces[hook[0]]
@@ -1031,7 +1033,7 @@ class Registry:
             a = hook[2]
             kw = hook[3]
             getattr(Model, method)(*a, **kw)
-            self._precommit_hook.remove(hook)
+            _precommit_hook.remove(hook)
 
         self.session_commit(*args, **kwargs)
 

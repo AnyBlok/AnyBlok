@@ -10,6 +10,7 @@ from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager, Blok
 from anyblok.column import Integer
+from threading import Thread
 
 
 class Test:
@@ -233,6 +234,28 @@ class TestRegistry2(DBTestCase):
         registry.commit()
         self.assertEqual(t1.val, 3 * t1.id)
         self.assertEqual(t2.val, 3 * t2.id)
+
+    def test_precommit_hook_in_thread(self):
+        registry = self.init_registry(self.add_model)
+        t1 = registry.Test.insert()
+        t1.add_precommit_hook()
+        t2 = registry.Test.insert()
+        t2.add_precommit_hook()
+        self.assertEqual(t1.val, 0)
+        self.assertEqual(t2.val, 0)
+
+        def target():
+            registry.commit()
+
+        t = Thread(target=target)
+        t.start()
+        t.join()
+
+        self.assertEqual(t1.val, 0)
+        self.assertEqual(t2.val, 0)
+        registry.commit()
+        self.assertEqual(t1.val, t1.id)
+        self.assertEqual(t2.val, t2.id)
 
     def define_cls(self, typename='Model', name='Test', val=1, usesuper=False,
                    inherit=None):
