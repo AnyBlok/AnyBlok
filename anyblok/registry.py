@@ -801,7 +801,7 @@ class Registry:
         bind = self.connection() if self.Session else self.engine
         self.Session = scoped_session(
             sessionmaker(bind=bind, class_=Session),
-            EnvironmentManager.scoped_function_for_session)
+            EnvironmentManager.scoped_function_for_session())
         self.nb_query_bases = len(self.loaded_cores['Query'])
         self.nb_session_bases = len(self.loaded_cores['Session'])
 
