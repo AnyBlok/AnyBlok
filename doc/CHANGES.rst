@@ -15,6 +15,8 @@ Future
 * [IMP] extension for Sphinx and autodoc
 * [ADD] API doc in doc
 * [ADD] add foreign key option in relation ship
+* [CRITICAL FIX] the EnvironnementManager didn't return the good scoped method 
+  for SQLAlchemy
 
 0.5.1
 -----
