@@ -12,6 +12,9 @@ CHANGELOG
 Future
 ------
 
+0.5.2 (2015-09-28)
+------------------
+
 * [IMP] extension for Sphinx and autodoc
 * [ADD] API doc in doc
 * [ADD] add foreign key option in relation ship
@@ -23,13 +26,13 @@ Future
   initialisation of the unittest, generally for the configuration initialized 
   by Environ variable
 
-0.5.1
------
+0.5.1 (2015-08-29)
+------------------
 
 * [IMP] unload declaration type callback
 
-0.5.0
------
+0.5.0 (2015-08-28)
+------------------
 
 .. warning:: 
 
@@ -92,8 +95,8 @@ Future
 * [IMP] Sequence column
 * [IMP] add the default system or user configuration file
 
-0.4.1
------
+0.4.1 (2015-07-22)
+------------------
 
 .. warning::
 
@@ -115,8 +118,8 @@ Future
 * [REF] Add **extend** key word in configuration file to extend an existing 
   configuration
 
-0.4.0
------
+0.4.0 (2015-06-21)
+------------------
 
 .. warning::
 
@@ -147,39 +150,39 @@ Future
 * [FIX] add importer for import configuration file
 * [FIX] x2M importer without field just, external id
 
-0.3.5
------
+0.3.5 (2015-05-10)
+------------------
 
 * [IMP] When a new column is add, if the column have a default value, then 
   this value will be added in all the entries where the value is null for this
   column
 * [REF] import_cfg_file remove the importer when import has done
 
-0.3.4
------
+0.3.4 (2015-05-10)
+------------------
 
 * [ADD] logger.info on migration script to indicate what is changed
 * [IMP] Add sequence facility in the declaration of Column
 * [ADD] ADD XML Importer
 
-0.3.3
------
+0.3.3 (2015-05-04)
+------------------
 
 * [FIX] createdb script
 
-0.3.2
------
+0.3.2 (2015-05-04)
+------------------
 
 * [IMP] doc
 * [REF] Use logging.config.configFile
 
-0.3.1
------
+0.3.1 (2015-05-04)
+------------------
 
 * [IMP] Update setup to add documentation files and blok's README
 
-0.3.0
------
+0.3.0 (2015-05-03)
+------------------
 
 * [IMP] Update Doc
 * [FIX] Remove nullable column, the nullable constraint is removed not the column
@@ -187,8 +190,8 @@ Future
 * [ADD] CSV Importer
 * [REF] CSV Exporter to use Formater
 
-0.2.12
-------
+0.2.12 (2015-04-29)
+-------------------
 
 * [IMP] CSV Exporter
 * [IMP] Exporter Model give external ID behaviour
@@ -197,46 +200,46 @@ Future
 * [ADD] Parameter Model (Model.System.Parameter) 
 * [FIX] environnement variable for test unitaire
 
-0.2.11
-------
+0.2.11 (2015-04-26)
+-------------------
 
 * [FIX] UNIT test createdb with prefix
 
-0.2.10
-------
+0.2.10 (2015-04-26)
+-------------------
 
 * [IMP] add enviroment variable for database information
 * [ADD] argsparse option install all bloks
 * [FIX] Python 3.2 need that bloks directory are python modules, add empty __init__ file
 
-0.2.9
------
+0.2.9 (2015-04-18)
+------------------
 
 * [FIX] Add all rst at the main path of all the bloks
 
-0.2.8
------
+0.2.8 (2015-04-16)
+------------------
 
 * [IMP] unittest on SQLBase
 * [IMP] add delete method on SQLBase to delete une entry from an instance of the model
 * [REF] rename get_primary_keys to get_mapping_primary_keys, cause of get_primary_keys
   already exist in SQLBase
 
-0.2.7
------
+0.2.7 (2015-04-15)
+------------------
 
 * [IMP] Add IPython support for interpreter
 * [REF] Update and Standardize the method to field the models (Field, Column, RelationShip)
   now all the type of the column go on the ftype and comme from the name of the class
 
-0.2.6
------
+0.2.6 (2015-04-11)
+------------------
 
 * [FIX] use the backref name to get the label of the remote relation ship
 * [FIX] add type information of the simple field
 
-0.2.5
------
+0.2.5 (2015-03-23)
+------------------
 
 * [FIX] In the parent / children relationship, where the pk is on a mixin or
   from inherit
@@ -245,8 +248,8 @@ Future
 * [IMP] Many2One can now declared than the local column must be unique (
   only if the local column is not declared in the model)
 
-0.2.3
------
+0.2.3 (2015-03-23)
+------------------
 
 .. warning::
 
@@ -260,8 +263,8 @@ Future
 * [REF] standardize foreign_key and relation ship, if the str which replace
   the Model Declarations is now the registry name
 
-0.2.2
------
+0.2.2 (2015-03-15)
+------------------
 
 * [REF] Unittest
     * TestCase and DBTestCase are only used for framework
@@ -269,8 +272,8 @@ Future
         - by ``run_exit`` function to test all the installed bloks
         - at the installation of a blok if wanted
 
-0.2.0
------
+0.2.0 (2015-02-13)
+------------------
 
 .. warning::
 
@@ -284,13 +287,13 @@ Future
   it at each time
 * [IMP] doc add how to on the environment
 
-0.1.3
------
+0.1.3 (2015-02-03)
+------------------
 
 * [FIX] setup long description, good for pypi but not for easy_install
 
-0.1.2
------
+0.1.2 (2015-02-02)
+------------------
 
 * [REFACTOR] Allow to declare Core components
 * [ADD] Howto declare Core / Type
@@ -298,13 +301,13 @@ Future
 * [FIX] Mixin inherit chained
 * [FIX] Flake8
 
-0.1.1
------
+0.1.1 (2015-01-23)
+------------------
 
 * [FIX] version, documentation, setup
 
-0.1.0
------
+0.1.0 (2015-01-23)
+------------------
 
 Main version of AnyBlok. You can with this version
 
