@@ -83,13 +83,11 @@ class TestRegistryManager(TestCase):
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         self.assertEqual(is_exist, True)
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Core'],
-                         {'Base': [],
-                          'SqlBase': [],
-                          'SqlViewBase': [],
-                          'Session': [],
-                          'Query': [],
-                          'InstrumentedList': []})
+        for entry in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
+                      'InstrumentedList'):
+            self.assertEqual(
+                RegistryManager.loaded_bloks['newblok']['Core'][entry], [])
+
         self.assertEqual(RegistryManager.loaded_bloks['newblok']['Model'],
                          {'registry_names': []})
         self.assertEqual(RegistryManager.loaded_bloks['newblok']['Mixin'],
