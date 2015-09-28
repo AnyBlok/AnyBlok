@@ -18,6 +18,10 @@ Future
 * [CRITICAL FIX] the EnvironnementManager didn't return the good scoped method 
   for SQLAlchemy
 * [CRITICAL FIX] the precommit_hook was not isolated by session
+* [REF] add a named argument ``must_be_loaded_by_unittest``, by dafault False, 
+  in ``Configuration.add`` to indicate if the function must be call during the 
+  initialisation of the unittest, generally for the configuration initialized 
+  by Environ variable
 
 0.5.1
 -----
