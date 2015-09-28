@@ -66,7 +66,8 @@ class Configuration:
                 cls.labels[part][group] = label
 
     @classmethod
-    def add(cls, group, part='bloks', label=None, function_=None):
+    def add(cls, group, part='bloks', label=None, function_=None,
+            must_be_loaded_by_unittest=False):
         """ Add a function in a part and a group.
 
         The function must have two arguments:
@@ -102,15 +103,21 @@ class Configuration:
         :param label: If the group has a label then all the functions in the
             group are put in group parser
         :param function_: function to add
+        :param must_be_loaded_by_unittest: unittest call this function to init
+            configuration of AnyBlok for run unittest"
         """
         cls.init_groups_for(group, part, label)
         if function_:
             if function_ not in cls.groups[part][group]:
+                function_.must_be_loaded_by_unittest = \
+                    must_be_loaded_by_unittest
                 cls.groups[part][group].append(function_)
         else:
 
             def wrapper(function):
                 if function not in cls.groups[part][group]:
+                    function.must_be_loaded_by_unittest = \
+                        must_be_loaded_by_unittest
                     cls.groups[part][group].append(function)
                 return function
 
@@ -270,7 +277,8 @@ class Configuration:
             for part in cls.groups.values():
                 for fncts in part.values():
                     for fnct in fncts:
-                        fnct(parser, cls.configuration)
+                        if fnct.must_be_loaded_by_unittest:
+                            fnct(parser, cls.configuration)
 
     @classmethod
     @log(logger)
@@ -448,7 +456,8 @@ def add_configuration_file(parser, configuration):
     })
 
 
-@Configuration.add('database', label="Database")
+@Configuration.add('database', label="Database",
+                   must_be_loaded_by_unittest=True)
 def add_database(group, configuration):
     group.add_argument('--db-name', default='',
                        help="Name of the database")
