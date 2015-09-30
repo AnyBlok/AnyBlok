@@ -46,7 +46,7 @@ class AnyBlokPlugin(Plugin):
                           help="the name of the database backend. This name "
                                "will correspond to a module in "
                                "sqlalchemy/databases or a third party plug-in")
-        parser.add_option('--anyblo-db-user-name', dest='db_user_name',
+        parser.add_option('--anyblok-db-user-name', dest='db_user_name',
                           default=env.get('ANYBLOK_DATABASE_USER'),
                           help="The user name")
         parser.add_option('--anyblok-db-password', dest='db_password',
