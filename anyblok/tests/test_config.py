@@ -296,7 +296,7 @@ class TestConfiguration(TestCase):
             pass
 
     def test_load_without_configuration_groupes(self):
-        self.assertEqual(Configuration.load(), None)
+        self.assertEqual(Configuration.load('default'), None)
 
     def test_empty_parse_option(self):
         args = MockArgParseArguments()
@@ -361,11 +361,11 @@ class TestConfiguration(TestCase):
             pass
 
     def test_load_with_configuration_groupes(self):
-        Configuration.load(configuration_groups=['install-bloks'])
+        Configuration.load('default', configuration_groups=['install-bloks'])
         self.assertEqual(Configuration.configuration, MockArguments.vals)
 
     def test_load_with_bad_configuration_groupes(self):
-        Configuration.load(configuration_groups=['bad-groups'])
+        Configuration.load('default', configuration_groups=['bad-groups'])
         self.assertEqual(Configuration.configuration, MockArguments.vals)
 
 

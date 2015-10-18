@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import anyblok
+from anyblok.release import version
 from anyblok.blok import BlokManager
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
@@ -14,6 +15,45 @@ from anyblok.common import format_bloks
 from nose import main
 import sys
 from os.path import join, exists
+from argparse import RawDescriptionHelpFormatter
+from textwrap import dedent
+
+Configuration.applications.update({
+    'createdb': {
+        'prog': 'AnyBlok create database, version %r' % version,
+        'description': "Create a database and install bloks to populate it",
+        'configuration_groups': ['config', 'database', 'unittest'],
+    },
+    'updatedb': {
+        'prog': 'AnyBlok update database, version %r' % version,
+        'description': ("Update a database: install, upgrade or uninstall the "
+                        "bloks "),
+        'configuration_groups': ['config', 'database', 'unittest'],
+    },
+    'nose': {
+        'prog': 'AnyBlok nose, version %r' % version,
+        'description': "Run fonctionnal nosetest of the installed bloks",
+    },
+    'interpreter': {
+        'prog': 'AnyBlok interpretor, version %r' % version,
+        'description': "Run an interpreter on the registry",
+        'formatter_class': RawDescriptionHelpFormatter,
+        'epilog': dedent("Example\n"
+                         "-------\n"
+                         "  $ anyblok_interpreter [anyblok arguments] \n"
+                         "  $ => registry \n"
+                         "  ... <registry> \n\n"
+                         "  The interpreteur add in the local the registry of "
+                         "the selected database \n\n"
+                         "Note\n"
+                         "----\n"
+                         "  if the ipython is in the python path, then "
+                         "the interpretor will be an ipyton interpretor")
+    },
+    'worker': {
+        'prog': 'AnyBlok cron worker, version %r' % version,
+    },
+})
 
 
 def format_configuration(configuration_groups, *confs):
@@ -25,15 +65,16 @@ def format_configuration(configuration_groups, *confs):
             configuration_groups.append(conf)
 
 
-def createdb(description, configuration_groups):
+def createdb(application, configuration_groups, **kwargs):
     """ Create a database and install blok from config
 
-    :param description: description of configuration
+    :param application: name of the application
     :param configuration_groups: list configuration groupe to load
+    :param \**kwargs: ArgumentParser named arguments
     """
     format_configuration(configuration_groups, 'install-bloks')
-    Configuration.load(description=description,
-                       configuration_groups=configuration_groups)
+    Configuration.load(application, configuration_groups=configuration_groups,
+                       **kwargs)
     BlokManager.load()
     drivername = Configuration.get('db_driver_name')
     db_name = Configuration.get('db_name')
@@ -55,19 +96,19 @@ def createdb(description, configuration_groups):
     registry.close()
 
 
-def updatedb(description, version, configuration_groups):
+def updatedb(application, configuration_groups, **kwargs):
     """ Update an existing database
 
-    :param description: description of configuration
-    :param version: version of script for argparse
+    :param application: name of the application
     :param configuration_groups: list configuration groupe to load
+    :param \**kwargs: ArgumentParser named arguments
     """
     format_configuration(configuration_groups, 'install-bloks',
                          'uninstall-bloks', 'update-bloks')
 
-    registry = anyblok.start(description, version,
+    registry = anyblok.start(application,
                              configuration_groups=configuration_groups,
-                             loadwithoutmigration=True)
+                             loadwithoutmigration=True, **kwargs)
 
     if Configuration.get('install_all_bloks'):
         install_bloks = registry.System.Blok.list_by_state('uninstalled')
@@ -87,17 +128,17 @@ def updatedb(description, version, configuration_groups):
         registry.close()
 
 
-def run_exit(description, version, configuration_groups):
+def run_exit(application, configuration_groups, **kwargs):
     """Run nose unit test for the registry
 
-    :param description: description of configuration
-    :param version: version of script for argparse
+    :param application: name of the application
     :param configuration_groups: list configuration groupe to load
+    :param \**kwargs: ArgumentParser named arguments
     """
     format_configuration(configuration_groups, 'unittest')
-    registry = anyblok.start(description, version,
+    registry = anyblok.start(application,
                              configuration_groups=configuration_groups,
-                             useseparator=True)
+                             useseparator=True, **kwargs)
 
     defaultTest = []
     if registry:
@@ -119,16 +160,17 @@ def run_exit(description, version, configuration_groups):
     sys.exit(main(defaultTest=defaultTest))
 
 
-def interpreter(description, version, configuration_groups):
+def interpreter(application, configuration_groups, **kwargs):
     """Execute a script or open an interpreter
 
-    :param description: description of configuration
-    :param version: version of script for argparse
+    :param application: name of the application
     :param configuration_groups: list configuration groupe to load
+    :param \**kwargs: ArgumentParser named arguments
     """
     format_configuration(configuration_groups, 'interpreter')
-    registry = anyblok.start(description, version,
-                             configuration_groups=configuration_groups)
+    registry = anyblok.start(application,
+                             configuration_groups=configuration_groups,
+                             **kwargs)
     if registry:
         registry.commit()
         python_script = Configuration.get('python_script')
@@ -144,30 +186,32 @@ def interpreter(description, version, configuration_groups):
                 code.interact(local=locals())
 
 
-def cron_worker(description, version, configuration_groups):
+def cron_worker(application, configuration_groups, **kwargs):
     """Execute a cron worker
 
-    :param description: description of configuration
-    :param version: version of script for argparse
+    :param application: name of the application
     :param configuration_groups: list configuration groupe to load
+    :param \**kwargs: ArgumentParser named arguments
     """
-    registry = anyblok.start(description, version,
-                             configuration_groups=configuration_groups)
+    registry = anyblok.start(application,
+                             configuration_groups=configuration_groups,
+                             **kwargs)
     if registry:
         registry.commit()
         registry.System.Cron.run()
 
 
-def registry2doc(description, version, configuration_groups):
+def registry2doc(application, configuration_groups, **kwargs):
     """Return auto documentation for the registry
 
-    :param description: description of configuration
-    :param version: version of script for argparse
+    :param application: name of the application
     :param configuration_groups: list configuration groupe to load
+    :param \**kwargs: ArgumentParser named arguments
     """
     format_configuration(configuration_groups, 'doc', 'schema')
-    registry = anyblok.start(description, version,
-                             configuration_groups=configuration_groups)
+    registry = anyblok.start(application,
+                             configuration_groups=configuration_groups,
+                             **kwargs)
     if registry:
         registry.commit()
         doc = registry.Documentation()
@@ -190,36 +234,24 @@ def registry2doc(description, version, configuration_groups):
 
 
 def anyblok_createdb():
-    from anyblok.release import version
-    description = "Anyblok-%s create db" % version
-    createdb(description, ['config', 'database', 'unittest', 'logging'])
+    createdb('createdb', ['logging'])
 
 
 def anyblok_updatedb():
-    from anyblok.release import version
-    updatedb("AnyBlok - update db", version,
-             ['config', 'database', 'unittest', 'logging'])
+    updatedb('updatedb', ['logging'])
 
 
 def anyblok_nose():
-    from anyblok.release import version
-    run_exit("Nose test for AnyBlok", version,
-             ['config', 'database', 'logging'])
+    run_exit("nose", ['logging'])
 
 
 def anyblok_interpreter():
-    from anyblok.release import version
-    interpreter('AnyBlok interpreter', version,
-                ['config', 'database', 'interpreter', 'logging'])
+    interpreter('interpreter', ['logging'])
 
 
 def anyblok_cron_worker():
-    from anyblok.release import version
-    cron_worker('AnyBlok interpreter', version,
-                ['config', 'database', 'logging'])
+    cron_worker('worker', ['logging'])
 
 
 def anyblok2doc():
-    from anyblok.release import version
-    registry2doc('AnyBlok extract rst documentation', version,
-                 ['config', 'database', 'logging'])
+    registry2doc('autodoc', ['logging'])

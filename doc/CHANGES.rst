@@ -12,18 +12,21 @@ CHANGELOG
 Future
 ------
 
+* [REF] the argument of ArgumentParser can be add in the configuration to
+  improve the help of the application
+
 0.5.2 (2015-09-28)
 ------------------
 
 * [IMP] extension for Sphinx and autodoc
 * [ADD] API doc in doc
 * [ADD] add foreign key option in relation ship
-* [CRITICAL FIX] the EnvironnementManager didn't return the good scoped method 
+* [CRITICAL FIX] the EnvironnementManager didn't return the good scoped method
   for SQLAlchemy
 * [CRITICAL FIX] the precommit_hook was not isolated by session
-* [REF] add a named argument ``must_be_loaded_by_unittest``, by dafault False, 
-  in ``Configuration.add`` to indicate if the function must be call during the 
-  initialisation of the unittest, generally for the configuration initialized 
+* [REF] add a named argument ``must_be_loaded_by_unittest``, by dafault False,
+  in ``Configuration.add`` to indicate if the function must be call during the
+  initialisation of the unittest, generally for the configuration initialized
   by Environ variable
 
 0.5.1 (2015-08-29)
@@ -34,13 +37,13 @@ Future
 0.5.0 (2015-08-28)
 ------------------
 
-.. warning:: 
+.. warning::
 
     Break the compatibility with the previous version of anyblok
 
     * cache, classmethod_cache, hybrid_method and listen
       replace::
-        
+
         from anyblok import Declarations
         cache = Declarations.cache
         classmethod_cache = Declarations.classmethod_cache
@@ -49,7 +52,7 @@ Future
 
       by::
 
-        from anyblok.declarations import (cache, classmethod_cache, 
+        from anyblok.declarations import (cache, classmethod_cache,
                                           hybrid_method, listen)
 
       .. note::
@@ -102,10 +105,10 @@ Future
 
     Field Function change, fexp is required if you need filter
 
-* [FIX] Field.Function, fexp is now a class method 
+* [FIX] Field.Function, fexp is now a class method
 * [REF] reduce flake8 complexity
 * [REF] refactor field function
-* [FIX] inherit relation ship from another model, thank Simon ANDRÉ for the 
+* [FIX] inherit relation ship from another model, thank Simon ANDRÉ for the
   bug report
 * [REF] table/mapper args definition
 * [REF] Refactor Field, Column, RelationShip use now polymophic inherit
@@ -115,7 +118,7 @@ Future
 * [ADD] pre / post migration
 * [REF] UML Diagram is now with autodoc script
 * [REF] SQL Diagram is now with autodoc script
-* [REF] Add **extend** key word in configuration file to extend an existing 
+* [REF] Add **extend** key word in configuration file to extend an existing
   configuration
 
 0.4.0 (2015-06-21)
@@ -141,7 +144,7 @@ Future
 * [REF] Remove the Declarations typs Field, Column, RelationShip, they are
   replaced by python import
 * [REF] rename **ArgsParseManager** by **Configuration**
-* [REF] rename **reload_module_if_blok_is_reloaded** by 
+* [REF] rename **reload_module_if_blok_is_reloaded** by
   **reload_module_if_blok_is_reloading** method on blok
 * [REF] rename **import_cfg_file** by **import_file** method on blok
 * [REF] Consistency the argsparse configuration
@@ -153,7 +156,7 @@ Future
 0.3.5 (2015-05-10)
 ------------------
 
-* [IMP] When a new column is add, if the column have a default value, then 
+* [IMP] When a new column is add, if the column have a default value, then
   this value will be added in all the entries where the value is null for this
   column
 * [REF] import_cfg_file remove the importer when import has done
@@ -197,7 +200,7 @@ Future
 * [IMP] Exporter Model give external ID behaviour
 * [ADD] Sequence model (Model.System.Sequence)
 * [ADD] fields_description cached_classmethod with invalidation
-* [ADD] Parameter Model (Model.System.Parameter) 
+* [ADD] Parameter Model (Model.System.Parameter)
 * [FIX] environnement variable for test unitaire
 
 0.2.11 (2015-04-26)

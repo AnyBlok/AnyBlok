@@ -41,7 +41,7 @@ We will write a simple application that connects to a new empty database:
 Declare bloks in the entry points
 ---------------------------------
 
-A blok must be declared in a ``setuptools`` entry point named **bloks**. 
+A blok must be declared in a ``setuptools`` entry point named **bloks**.
 
 File tree::
 
@@ -482,8 +482,7 @@ The script must display:
         # select the groupe of options to display
         # return a registry if the database are selected
         registry = anyblok.start(
-            'Example Blok', '1.0', 
-            argparse_groups=['config', 'database', 'message'])
+            'Example Blok', argparse_groups=['message', 'logging'])
 
         if not registry:
             return
@@ -506,34 +505,50 @@ The script must display:
 **Display the help of your application**::
 
     jssuzanne:anyblok jssuzanne$ ./bin/exampleblok -h
-    usage: exampleblok [-h] [-c CONFIGFILE] [--message-before MESSAGE_BEFORE]
-                       [--message-after MESSAGE_AFTER] [--db_name DBNAME]
-                       [--db_drivername DBDRIVERNAME] [--db_username DBUSERNAME]
-                       [--db_password DBPASSWORD] [--db_host DBHOST]
-                       [--db_port DBPORT]
+    usage: exampleblok [-h]
+                       [--logging-level {NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+                       [--logging-level-qualnames LOGGING_LEVEL_QUALNAMES [LOGGING_LEVEL_QUALNAMES ...]]
+                       [--logging-config-file LOGGING_CONFIGFILE]
+                       [--logging-json-config-file JSON_LOGGING_CONFIGFILE]
+                       [--logging-yaml-config-file YAML_LOGGING_CONFIGFILE]
+                       [-c CONFIGFILE] [--without-auto-migration]
+                       [--db-name DB_NAME] [--db-driver-name DB_DRIVER_NAME]
+                       [--db-user-name DB_USER_NAME] [--db-password DB_PASSWORD]
+                       [--db-host DB_HOST] [--db-port DB_PORT] [--db-echo]
 
-    Example Blok - 1.0
+    [options] -- other arguments
 
     optional arguments:
-        -h, --help            show this help message and exit
-        -c CONFIGFILE         Relative path of the config file
+      -h, --help            show this help message and exit
+      -c CONFIGFILE         Relative path of the config file
+      --without-auto-migration
 
-    This is the 'message' group:
-        --message-before MESSAGE_BEFORE
-        --message-after MESSAGE_AFTER
+    Logging:
+      --logging-level {NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL}
+      --logging-level-qualnames LOGGING_LEVEL_QUALNAMES [LOGGING_LEVEL_QUALNAMES ...]
+                            Limit the log level on a qualnames list
+      --logging-config-file LOGGING_CONFIGFILE
+                            Relative path of the logging config file
+      --logging-json-config-file JSON_LOGGING_CONFIGFILE
+                            Relative path of the logging config file (json). Only
+                            if the logging config file doesn't filled
+      --logging-yaml-config-file YAML_LOGGING_CONFIGFILE
+                            Relative path of the logging config file (yaml). Only
+                            if the logging and json config file doesn't filled
 
     Database:
-        --db-name DB_NAME      Name of the database
-        --db-driver-name DB_DRIVER_NAME
-                              the name of the database backend. This name will
-                              correspond to a module in sqlalchemy/databases or a
-                              third party plug-in
-        --db-user-name DB_USER_NAME
-                              The user name
-        --db-password DB_PASSWORD
-                              database password
-        --db-host DB_HOST      The name of the host
-        --db-port DB_PORT      The port number
+      --db-name DB_NAME     Name of the database
+      --db-driver-name DB_DRIVER_NAME
+                            the name of the database backend. This name will
+                            correspond to a module in sqlalchemy/databases or a
+                            third party plug-in
+      --db-user-name DB_USER_NAME
+                            The user name
+      --db-password DB_PASSWORD
+                            database password
+      --db-host DB_HOST     The name of the host
+      --db-port DB_PORT     The port number
+      --db-echo
 
 **Create an empty database and call the script**::
 
@@ -682,7 +697,7 @@ AnyBlok plugin for nosetests
 ----------------------------
 
 You can test your bloks in your anyblok distribution with nose. use the option
-*--with-anyblok-bloks*. The plugin load the ``BlokManager`` et the 
+*--with-anyblok-bloks*. The plugin load the ``BlokManager`` et the
 ``RegistryManager`` after load the ``coverage`` plugin.
 
 
@@ -704,32 +719,34 @@ The logging configuration are also loaded, see `logging configuration file forma
 
     [AnyBlok]
     logging_configfile = ``name of the config file``
+    # json_logging_configfile = logging config file write with json
+    # yaml_logging_configfile = logging config file write with yaml
 
     loggers]
     keys=root,anyblok
-    
+
     [handlers]
     keys=consoleHandler
-    
+
     [formatters]
     keys=consoleFormatter
-    
+
     [logger_root]
     level=INFO
     handlers=consoleHandler
-    
+
     [logger_anyblok]
     level=INFO
     handlers=consoleHandler
     qualname=anyblok
     propagate=1
-    
+
     [handler_consoleHandler]
     class=StreamHandler
     level=INFO
     formatter=consoleFormatter
     args=(sys.stdout,)
-    
+
     [formatter_consoleFormatter]
     class=anyblok.logging.consoleFormatter
     format=%(database)s:%(levelname)s - %(message)s
@@ -745,7 +762,7 @@ your *OS*:
     - *system*: /etc/xdg/AnyBlok/conf.cfg
     - *user*: /home/``user name``/.config/AnyBlok/conf.cfg
 * *mac os x*
-    - *system*: /Library/Application Support/AnyBlok/conf.cfg 
+    - *system*: /Library/Application Support/AnyBlok/conf.cfg
     - *user*: /Users/``user name``/Library/Application Support/AnyBlok/conf.cfg
 
 .. note::

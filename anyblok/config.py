@@ -20,13 +20,13 @@ from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
 logger = getLogger(__name__)
 
 
-def getParser(description):
+def getParser(**kwargs):
     """ Return a parser
 
     :param description: label of the configuration help
     :rtype: ``ArgumentParser`` instance
     """
-    return ArgumentParser(description=description)
+    return ArgumentParser(**kwargs)
 
 
 class ConfigurationException(LookupError):
@@ -51,6 +51,12 @@ class Configuration:
     groups = {}
     labels = {}
     configuration = {}
+    applications = {
+        'default': {
+            'description': "[options] -- other arguments",
+            'configuration_groups': ['config', 'database'],
+        },
+    }
 
     @classmethod
     def init_groups_for(cls, group, part, label):
@@ -273,7 +279,7 @@ class Configuration:
     @log(logger)
     def load_config_for_test(cls):
         if not cls.configuration:
-            parser = getParser("Initialise unit test")
+            parser = getParser()
             for part in cls.groups.values():
                 for fncts in part.values():
                     for fnct in fncts:
@@ -282,21 +288,32 @@ class Configuration:
 
     @classmethod
     @log(logger)
-    def load(cls, description='AnyBlok :', configuration_groups=None,
-             parts_to_load=('bloks',), useseparator=False):
+    def load(cls, application, configuration_groups=None,
+             parts_to_load=('bloks',), useseparator=False, **kwargs):
         """ Load the argparse definition and parse them
 
-        :param description: description of configuration
-        :param configuration_groups: list configuration groupe to load
+        :param application: name of the application
+        :param configuration_groups: iterable configuration group to load
         :param parts_to_load: group of blok to load
         :param useseparator: boolean(default False)
+        :param \**kwargs: ArgumentParser named arguments
         """
 
         sep = len(sys.argv)
         our_argv = sys.argv[1:]
+        description = {}
+        if application in cls.applications:
+            description.update(cls.applications[application])
+        else:
+            description.update(cls.applications['default'])
+
+        description.update(kwargs)
+        _configuration_groups = description.pop('configuration_groups',
+                                                ['config', 'database'])
+        configuration_groups = set(configuration_groups or []).union(
+            _configuration_groups)
         if useseparator:
-            description += "[options] -- other arguments"
-            parser = getParser(description)
+            parser = getParser(**description)
 
             try:
                 sep = sys.argv.index('--')
@@ -304,7 +321,7 @@ class Configuration:
             except ValueError:
                 pass
         else:
-            parser = getParser(description)
+            parser = getParser(**description)
 
         cls._load(parser, configuration_groups, parts_to_load)
         args = parser.parse_args(our_argv)
