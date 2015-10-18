@@ -18,6 +18,9 @@ To implement
 * Update doc
 * Put postgres database in his own distribution with the good import
 * Need improve alembic
+* Refactor the group of options need by each application, and the description
+* Refactor type the arguments in the group of options
+* Refactor the engine declarations to have master / slave(s) configuration
 
 Library to include
 ------------------
