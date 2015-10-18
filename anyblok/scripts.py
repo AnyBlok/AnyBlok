@@ -43,7 +43,7 @@ Configuration.applications.update({
                          "  $ anyblok_interpreter [anyblok arguments] \n"
                          "  $ => registry \n"
                          "  ... <registry> \n\n"
-                         "  The interpreteur add in the local the registry of "
+                         "  The interpretor add in the local the registry of "
                          "the selected database \n\n"
                          "Note\n"
                          "----\n"
