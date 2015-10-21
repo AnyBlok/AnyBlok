@@ -19,6 +19,7 @@ if sys.version_info < (3, 2):
 
 requires = [
     'sqlalchemy',
+    'sqlalchemy-utils',
     'argparse',
     'alembic',
     'graphviz',
