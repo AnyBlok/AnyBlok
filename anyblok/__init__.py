@@ -55,12 +55,7 @@ def start(processName, configuration_groups=None, entry_points=None,
     return registry
 
 
-BDD = {
-}
-
-
 from .declarations import Declarations  # noqa
-from . import databases  # noqa
 from . import core  # noqa
 from . import model  # noqa
 from . import mixin  # noqa

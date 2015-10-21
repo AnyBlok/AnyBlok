@@ -503,6 +503,15 @@ def add_database(group, configuration):
     })
 
 
+@Configuration.add('create_db', must_be_loaded_by_unittest=True)
+def add_create_database(group, configuration):
+    group.add_argument('--db-template-name', default='',
+                       help="Name of the template")
+    configuration.update({
+        'db_template_name': os.environ.get('ANYBLOK_DATABASE_TEMPLATE_NAME'),
+    })
+
+
 @Configuration.add('install-bloks')
 def add_install_bloks(parser, configuration):
     parser.add_argument('--install-bloks', default='',

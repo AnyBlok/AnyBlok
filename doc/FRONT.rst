@@ -110,6 +110,10 @@ Contributors
 * Pierre Verkest
 * Franck Bret
 
+other:
+
+* Sébastien Chazallet
+
 Bugs
 ----
 

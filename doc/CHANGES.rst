@@ -14,6 +14,7 @@ Future
 
 * [REF] the argument of ArgumentParser can be add in the configuration to
   improve the help of the application
+* [REF] start to use sqlalchemy-utils, replace the database management
 
 0.5.2 (2015-09-28)
 ------------------

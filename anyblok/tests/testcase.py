@@ -13,13 +13,14 @@ itself, in so-called "framework tests".
 """
 
 import unittest
-from logging import getLogger
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
-import anyblok
 import sqlalchemy
+from sqlalchemy_utils.functions import (database_exists, create_database,
+                                        drop_database)
+from logging import getLogger
 
 logger = getLogger(__name__)
 
@@ -42,7 +43,7 @@ class TestCase(unittest.TestCase):
         :param env: add another dict to merge with environ variable
         """
         db_name = Configuration.get('db_name', 'test_anyblok')
-        db_driver_name = Configuration.get('db_driver_name', 'postgres')
+        db_driver_name = Configuration.get('db_driver_name', 'postgresql')
         env.update({
             'db_name': db_name,
             'db_driver_name': db_driver_name,
@@ -60,15 +61,15 @@ class TestCase(unittest.TestCase):
 
         :param keep_existing: If false drop the previous db before create it
         """
-        bdd = anyblok.BDD[Configuration.get('db_driver_name')]
-        db_name = Configuration.get('db_name')
-        if db_name in bdd.listdb():
+        url = Configuration.get_url()
+        db_template_name = Configuration.get('db_template_name', None)
+        if database_exists(url):
             if keep_existing:
                 return True
 
-            bdd.dropdb(db_name)
+            drop_database(url)
 
-        bdd.createdb(db_name)
+        create_database(url, template=db_template_name)
 
     @classmethod
     def dropdb(cls):
@@ -80,8 +81,9 @@ class TestCase(unittest.TestCase):
             cls.dropdb()
 
         """
-        bdd = anyblok.BDD[Configuration.get('db_driver_name')]
-        bdd.dropdb(Configuration.get('db_name'))
+        url = Configuration.get_url()
+        if database_exists(url):
+            drop_database(url)
 
     def getRegistry(self):
         """Return the registry for the test database.

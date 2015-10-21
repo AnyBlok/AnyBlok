@@ -471,26 +471,6 @@ anyblok._graphviz module
     :members:
     :noindex:
 
-anyblok.databases module
-------------------------
-
-Management of the database
-
-::
-
-    bdd = anyblok.BDD[db_driver_name]
-    bdd.createdb(db_name)
-    logger.info(bdd.listdb())
-    bdd.dropdb()
-
-anyblok.databases.postgres module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: anyblok.databases.postgres
-.. autoclass:: SqlAlchemyPostgres
-    :members:
-    :noindex:
-
 anyblok.scripts module
 ----------------------
 

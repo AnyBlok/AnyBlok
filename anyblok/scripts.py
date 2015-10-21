@@ -17,6 +17,7 @@ import sys
 from os.path import join, exists
 from argparse import RawDescriptionHelpFormatter
 from textwrap import dedent
+from sqlalchemy_utils.functions import create_database
 
 Configuration.applications.update({
     'createdb': {
@@ -72,16 +73,14 @@ def createdb(application, configuration_groups, **kwargs):
     :param configuration_groups: list configuration groupe to load
     :param \**kwargs: ArgumentParser named arguments
     """
-    format_configuration(configuration_groups, 'install-bloks')
+    format_configuration(configuration_groups, 'create_db', 'install-bloks')
     Configuration.load(application, configuration_groups=configuration_groups,
                        **kwargs)
     BlokManager.load()
-    drivername = Configuration.get('db_driver_name')
     db_name = Configuration.get('db_name')
-
-    bdd = anyblok.BDD[drivername]
-    bdd.createdb(db_name)
-
+    db_template_name = Configuration.get('db_template_name', None)
+    url = Configuration.get_url(db_name=db_name)
+    create_database(url, template=db_template_name)
     registry = RegistryManager.get(db_name)
     if registry is None:
         return

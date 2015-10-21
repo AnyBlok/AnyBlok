@@ -16,15 +16,14 @@ To implement
 
 * Add logo and slogan
 * Update doc
-* Put postgres database in his own distribution with the good import
 * Need improve alembic
 * Refactor type the arguments in the group of options
 * Refactor the engine declarations to have master / slave(s) configuration
+* Addons for sqlalchemy : http://sqlalchemy-utils.readthedocs.org/en/latest/installation.html
 
 Library to include
 ------------------
 
-* Addons for sqlalchemy : http://sqlalchemy-utils.readthedocs.org/en/latest/installation.html
 * full text search: https://pypi.python.org/pypi/SQLAlchemy-FullText-Search/0.2
 * internationalisation: https://pypi.python.org/pypi/SQLAlchemy-i18n/0.8.2
 * sqltap http://sqltap.inconshreveable.com, profiling and introspection for SQLAlchemy applications
