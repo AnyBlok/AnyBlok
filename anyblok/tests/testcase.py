@@ -13,16 +13,37 @@ itself, in so-called "framework tests".
 """
 
 import unittest
+import os
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
 import sqlalchemy
-from sqlalchemy_utils.functions import (database_exists, create_database,
-                                        drop_database)
+from sqlalchemy_utils.functions import database_exists, create_database, orm
+from copy import copy
 from logging import getLogger
 
 logger = getLogger(__name__)
+
+
+def drop_database(url):
+    url = copy(sqlalchemy.engine.url.make_url(url))
+    database = url.database
+    if url.drivername.startswith('postgresql'):
+        url.database = 'postgres'
+    elif not url.drivername.startswith('sqlite'):
+        url.database = None
+
+    engine = sqlalchemy.create_engine(url)
+    if engine.dialect.name == 'sqlite' and url.database != ':memory:':
+        os.remove(url.database)
+    else:
+        text = 'DROP DATABASE {0}'.format(orm.quote(engine, database))
+        cnx = engine.connect()
+        cnx.execute("ROLLBACK")
+        cnx.execute(text)
+        cnx.execute("commit")
+        cnx.close()
 
 
 class TestCase(unittest.TestCase):
