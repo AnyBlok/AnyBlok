@@ -673,8 +673,8 @@ The registry is loaded twice:
 The registry is loaded only once, because the bloks are already installed
 
 
-Generique application of AnyBlok
---------------------------------
+Generic application of AnyBlok
+------------------------------
 
 Anyblok provides some console script to help :
 
