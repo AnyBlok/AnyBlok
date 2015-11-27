@@ -19,6 +19,7 @@ from anyblok.config import (Configuration,
                             add_unittest,
                             ConfigurationException)
 from anyblok.tests.testcase import TestCase
+from sqlalchemy.engine.url import make_url
 
 
 old_getParser = config.getParser
@@ -171,6 +172,15 @@ class TestConfiguration(TestCase):
         res = Configuration.get('option', option)
         self.assertEqual(option, res)
 
+    def check_url(self, url, wanted_url):
+        wanted_url = make_url(wanted_url)
+        for x in ('drivername', 'host', 'port', 'username', 'password',
+                  'database'):
+            self.assertEqual(
+                getattr(url, x), getattr(wanted_url, x),
+                "check url(%s) == url(%s) on attribute %r" % (url, wanted_url,
+                                                              x))
+
     def test_get_url(self):
         Configuration.configuration.update(dict(
             db_name='anyblok',
@@ -180,7 +190,59 @@ class TestConfiguration(TestCase):
             db_password=None,
             db_port=None,
         ))
-        Configuration.get_url()
+        url = Configuration.get_url()
+        self.check_url(url, 'postgres://localhost/anyblok')
+
+    def test_get_url2(self):
+        Configuration.configuration.update(dict(
+            db_name='anyblok',
+            db_driver_name='postgres',
+            db_host='localhost',
+            db_user_name=None,
+            db_password=None,
+            db_port=None,
+        ))
+        url = Configuration.get_url(db_name='anyblok2')
+        self.check_url(url, 'postgres://localhost/anyblok2')
+
+    def test_get_url3(self):
+        Configuration.configuration.update(dict(
+            db_url='postgres:///anyblok',
+            db_name=None,
+            db_driver_name=None,
+            db_host=None,
+            db_user_name=None,
+            db_password=None,
+            db_port=None,
+        ))
+        url = Configuration.get_url()
+        self.check_url(url, 'postgres:///anyblok')
+
+    def test_get_url4(self):
+        Configuration.configuration.update(dict(
+            db_url='postgres:///anyblok',
+            db_name='anyblok2',
+            db_driver_name=None,
+            db_host=None,
+            db_user_name='jssuzanne',
+            db_password='secret',
+            db_port=None,
+        ))
+        url = Configuration.get_url()
+        self.check_url(url, 'postgres://jssuzanne:secret@/anyblok2')
+
+    def test_get_url5(self):
+        Configuration.configuration.update(dict(
+            db_url='postgres:///anyblok',
+            db_name='anyblok2',
+            db_driver_name=None,
+            db_host=None,
+            db_user_name='jssuzanne',
+            db_password='secret',
+            db_port=None,
+        ))
+        url = Configuration.get_url(db_name='anyblok3')
+        self.check_url(url, 'postgres://jssuzanne:secret@/anyblok3')
 
     def test_get_url_without_drivername(self):
         Configuration.configuration.update(dict(
@@ -191,11 +253,8 @@ class TestConfiguration(TestCase):
             db_password=None,
             db_port=None,
         ))
-        try:
+        with self.assertRaises(ConfigurationException):
             Configuration.get_url()
-            self.fail("No watchdog found for no drivername")
-        except ConfigurationException:
-            pass
 
     def test_merge_for_one_part(self):
         Configuration.add('new-group', function_=fnct_configuration)
@@ -220,11 +279,8 @@ class TestConfiguration(TestCase):
             'old-group': [fnct_configuration, fnct_other_configuration]})
 
     def test_merge_no_parts(self):
-        try:
+        with self.assertRaises(ConfigurationException):
             Configuration._merge_groups()
-            self.fail('No watchdog to merge no part')
-        except ConfigurationException:
-            pass
 
     def test_merge_inexisting_part(self):
         Configuration._merge_groups('other')
@@ -247,11 +303,8 @@ class TestConfiguration(TestCase):
                                   'old-group': "Label 2"})
 
     def test_merge_labels_with_no_parts(self):
-        try:
+        with self.assertRaises(ConfigurationException):
             Configuration._merge_labels()
-            self.fail('No watchdog to merge no part')
-        except ConfigurationException:
-            pass
 
     def test_merge_labels_inexisting_part(self):
         Configuration._merge_labels('other')
@@ -279,21 +332,15 @@ class TestConfiguration(TestCase):
         Configuration.add(
             'new-group', label="One label", function_=fnct_configuration)
         Configuration.remove_label('new-group')
-        try:
+        with self.assertRaises(KeyError):
             Configuration.labels['AnyBlok']['new-group']
-            self.fail("Label doesn't remove")
-        except:
-            pass
 
     def test_remove_label_other_part(self):
         Configuration.add('new-group', part='other', label="One label",
                           function_=fnct_configuration)
         Configuration.remove_label('new-group', part='other')
-        try:
+        with self.assertRaises(KeyError):
             Configuration.labels['other']['new-group']
-            self.fail("Label doesn't remove")
-        except:
-            pass
 
     def test_load_without_configuration_groupes(self):
         self.assertEqual(Configuration.load('default'), None)
@@ -354,11 +401,8 @@ class TestConfiguration(TestCase):
     def test_parse_option_args(self):
         args = ('test',)
         args = MockArgParseArguments(args=args)
-        try:
+        with self.assertRaises(ConfigurationException):
             Configuration.parse_options(args, ['AnyBlok'])
-            self.fail("No watchdog for positionnal arguments")
-        except ConfigurationException:
-            pass
 
     def test_load_with_configuration_groupes(self):
         Configuration.load('default', configuration_groups=['install-bloks'])

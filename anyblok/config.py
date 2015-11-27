@@ -15,6 +15,7 @@ import json
 import yaml
 from appdirs import AppDirs
 from os.path import join, isfile
+from sqlalchemy.engine.url import URL, make_url
 from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
                      CRITICAL, basicConfig, Logger)
 logger = getLogger(__name__)
@@ -253,25 +254,54 @@ class Configuration:
 
             url = Configuration.get_url(db_name='Mydb')
 
+        ..note::
+
+            Since 0.5.3, an URL can be define by the configuration file.
+            The *username*, *password* and *database* if overwrite by the
+            options if they are filled::
+
+                # db_url = 'postgresql:///db'
+                Configuration.get_url()
+                ==> 'postgresql:///db'
+                # db_user_name = 'jssuzanne'
+                # db_password = 'secret'
+                Configuration.get_url()
+                ==> 'postgresql://jssuzanne:secret@/db'
+                # db_name = 'db1'
+                Configuration.get_url()
+                ==> 'postgresql://jssuzanne:secret@/db1'
+                Configuration.get_url(db_name='Mydb')
+                ==> 'postgresql://jssuzanne:secret@/Mydb'
+
         :param db_name: Name of the database
         :rtype: SqlAlchemy URL
         :exception: ConfigurationException
         """
+        url = cls.configuration.get('db_url', None)
         drivername = cls.configuration.get('db_driver_name', None)
         username = cls.configuration.get('db_user_name', None)
         password = cls.configuration.get('db_password', None)
         host = cls.configuration.get('db_host', None)
         port = cls.configuration.get('db_port', None)
-        port = int(port) if port else None
         database = cls.configuration.get('db_name', None)
-
-        if drivername is None:
-            raise ConfigurationException('No Drivername defined')
 
         if db_name is not None:
             database = db_name
 
-        from sqlalchemy.engine.url import URL
+        if url:
+            url = make_url(url)
+            if username:
+                url.username = username
+            if password:
+                url.password = password
+            if database:
+                url.database = database
+
+            return url
+
+        if drivername is None:
+            raise ConfigurationException('No Drivername defined')
+
         return URL(drivername, username=username, password=password, host=host,
                    port=port, database=database)
 
@@ -478,6 +508,8 @@ def add_configuration_file(parser, configuration):
 def add_database(group, configuration):
     group.add_argument('--db-name', default='',
                        help="Name of the database")
+    group.add_argument('--db-url', default='',
+                       help="Complete URL for connection with the database")
     group.add_argument('--db-driver-name', default='',
                        help="the name of the database backend. This name "
                             "will correspond to a module in "

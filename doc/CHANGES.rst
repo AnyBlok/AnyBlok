@@ -12,6 +12,7 @@ CHANGELOG
 Future
 ------
 
+* [REF] Add options to give database url, No break compatibility
 * [REF] the argument of ArgumentParser can be add in the configuration to
   improve the help of the application
 * [REF] start to use sqlalchemy-utils, replace the database management
