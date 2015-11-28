@@ -63,13 +63,13 @@ class TestCase(unittest.TestCase):
         :param prefix: prefix the database name
         :param env: add another dict to merge with environ variable
         """
-        db_name = Configuration.get('db_name', 'test_anyblok')
-        db_driver_name = Configuration.get('db_driver_name', 'postgresql')
+        db_name = Configuration.get('db_name') or 'test_anyblok'
+        db_driver_name = Configuration.get('db_driver_name') or 'postgresql'
         env.update({
             'db_name': db_name,
             'db_driver_name': db_driver_name,
         })
-        Configuration.configuration.update(env)
+        Configuration.update(**env)
 
     @classmethod
     def createdb(cls, keep_existing=False):

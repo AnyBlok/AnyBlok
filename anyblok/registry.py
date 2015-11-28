@@ -403,7 +403,7 @@ class Registry:
         self.db_name = db_name
         self.loadwithoutmigration = loadwithoutmigration
         url = Configuration.get_url(db_name=db_name)
-        echo = bool(int(Configuration.get('db_echo') or False))
+        echo = Configuration.get('db_echo') or False
         self.engine = create_engine(url, echo=echo)
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,

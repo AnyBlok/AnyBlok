@@ -13,8 +13,9 @@ Future
 ------
 
 * [REF] Add options to give database url, No break compatibility
-* [REF] the argument of ArgumentParser can be add in the configuration to
-  improve the help of the application
+* [REF] the argument of ArgumentParser can be add in the configuration 
+    - Improve the help of the application
+    - Improve the type of the configuration, Work also with config file.
 * [REF] start to use sqlalchemy-utils, replace the database management
 
 0.5.2 (2015-09-28)

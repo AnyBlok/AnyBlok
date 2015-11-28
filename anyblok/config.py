@@ -7,7 +7,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .logging import log
-from argparse import ArgumentParser
+from argparse import ArgumentParser, _ArgumentGroup
 from configparser import ConfigParser
 import sys
 import os
@@ -21,17 +21,88 @@ from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
 logger = getLogger(__name__)
 
 
+class ConfigurationException(LookupError):
+    """ Simple Exception for Configuration"""
+
+
+class AnyBlokActionsContainer:
+
+    def add_argument(self, *args, **kwargs):
+        default = kwargs.pop('default', None)
+        type = kwargs.get('type')
+        arg = super(AnyBlokActionsContainer, self).add_argument(
+            *args, **kwargs)
+        if type is None:
+            if kwargs.get('action') == 'store_true':
+                type = bool
+                if default is None:
+                    default = False
+            else:
+                type = str
+
+        dest = arg.dest
+        Configuration.add_argument(dest, default, type=type)
+        return arg
+
+    def add_argument_group(self, *args, **kwargs):
+        group = AnyBlokArgumentGroup(self, *args, **kwargs)
+        self._action_groups.append(group)
+        return group
+
+
+class AnyBlokArgumentParser(AnyBlokActionsContainer, ArgumentParser):
+    """Over load the argparse in the goal to define type directly by
+    Configuration class for argparse and config files
+    """
+
+
+class AnyBlokArgumentGroup(AnyBlokActionsContainer, _ArgumentGroup):
+    """Over load the argparse group in the goal to define type directly by
+    Configuration class for argparse and config files
+    """
+
+
+class ConfigOption:
+
+    def __init__(self, value, type):
+        self.type = type
+        self.set(value)
+
+    def get(self):
+        return self.value
+
+    def is_none(self, value):
+        if value is None:
+            return True
+        if isinstance(value, str) and value.upper() == 'NONE':
+            return True
+        if value == '' and self.type is not str:
+            return True
+
+        return False
+
+    def set(self, value):
+        if self.is_none(value):
+            self.value = None
+        elif not self.type or type(self.type) is type:
+            # no type or custom Class
+            self.value = value
+        elif self.type is bool and isinstance(value, str):
+            if value.upper() == 'TRUE':
+                self.value = True
+            else:
+                self.value = False
+        else:
+            self.value = self.type(value)
+
+
 def getParser(**kwargs):
     """ Return a parser
 
     :param description: label of the configuration help
     :rtype: ``ArgumentParser`` instance
     """
-    return ArgumentParser(**kwargs)
-
-
-class ConfigurationException(LookupError):
-    """ Simple Exception for Configuration"""
+    return AnyBlokArgumentParser(**kwargs)
 
 
 class Configuration:
@@ -131,7 +202,7 @@ class Configuration:
             return wrapper
 
     @classmethod
-    def get(self, opt, default=None):
+    def get(cls, opt, default=None):
         """ Get a value from the configuration dict after loading
 
         After the loading of the application, all the options are saved in the
@@ -150,13 +221,48 @@ class Configuration:
         :param opt: name of the option
         :param default: default value if the option doesn't exist
         """
-        res = self.configuration.get(opt)
-        if res:
-            return res
-        elif default:
+        if opt in cls.configuration:
+            return cls.configuration[opt].get()
+        else:
             return default
 
-        return res
+    @classmethod
+    def set(cls, opt, value):
+        """ Set a value to the configuration dict
+
+        :param opt: name of the option
+        :param value: value to set
+        """
+
+        try:
+            if opt in cls.configuration:
+                cls.configuration[opt].set(value)
+            else:
+                cls.add_argument(opt, value, type(value))
+        except:
+            logger.exception("Error durring set the value %r on the option "
+                             "%r" % (value, opt))
+            raise
+
+    @classmethod
+    def update(cls, *args, **kwargs):
+        if args:
+            if len(args) > 1:
+                raise ConfigurationException("Wainting only one dict")
+
+            if not isinstance(args[0], dict):
+                raise ConfigurationException("Wainting a dict")
+
+            for k, v in args[0].items():
+                cls.set(k, v)
+
+        for k, v in kwargs.items():
+            cls.set(k, v)
+
+    @classmethod
+    def add_argument(cls, key, value, type=str):
+        print(key, value, type)
+        cls.configuration[key] = ConfigOption(value, type)
 
     @classmethod
     def remove_label(cls, group, part='bloks'):
@@ -277,13 +383,13 @@ class Configuration:
         :rtype: SqlAlchemy URL
         :exception: ConfigurationException
         """
-        url = cls.configuration.get('db_url', None)
-        drivername = cls.configuration.get('db_driver_name', None)
-        username = cls.configuration.get('db_user_name', None)
-        password = cls.configuration.get('db_password', None)
-        host = cls.configuration.get('db_host', None)
-        port = cls.configuration.get('db_port', None)
-        database = cls.configuration.get('db_name', None)
+        url = cls.get('db_url', None)
+        drivername = cls.get('db_driver_name', None)
+        username = cls.get('db_user_name', None)
+        password = cls.get('db_password', None)
+        host = cls.get('db_host', None)
+        port = cls.get('db_port', None)
+        database = cls.get('db_name', None)
 
         if db_name is not None:
             database = db_name
@@ -314,7 +420,7 @@ class Configuration:
                 for fncts in part.values():
                     for fnct in fncts:
                         if fnct.must_be_loaded_by_unittest:
-                            fnct(parser, cls.configuration)
+                            fnct(parser)
 
     @classmethod
     @log(logger)
@@ -386,7 +492,7 @@ class Configuration:
                 g = parser
 
             for function in groups[group]:
-                function(g, cls.configuration)
+                function(g)
 
     @classmethod
     def initialize_logging(cls):
@@ -397,14 +503,11 @@ class Configuration:
             'WARNING': WARNING,
             'ERROR': ERROR,
             'CRITICAL': CRITICAL
-        }.get(cls.configuration.get('logging_level'))
-        logging_configfile = cls.configuration.get('logging_configfile')
-        json_logging_configfile = cls.configuration.get(
-            'json_logging_configfile')
-        yaml_logging_configfile = cls.configuration.get(
-            'yaml_logging_configfile')
-        logging_level_qualnames = cls.configuration.get(
-            'logging_level_qualnames')
+        }.get(cls.get('logging_level'))
+        logging_configfile = cls.get('logging_configfile')
+        json_logging_configfile = cls.get('json_logging_configfile')
+        yaml_logging_configfile = cls.get('yaml_logging_configfile')
+        logging_level_qualnames = cls.get('logging_level_qualnames')
 
         if logging_configfile:
             config.fileConfig(logging_configfile)
@@ -464,7 +567,7 @@ class Configuration:
         finally:
             os.chdir(cur_cwd)
 
-        cls.configuration.update(configuration)
+        cls.update(**configuration)
 
     @classmethod
     def parse_options(cls, arguments, parts_to_load):
@@ -485,67 +588,61 @@ class Configuration:
 
         for opt, value in arguments._get_kwargs():
             if opt not in cls.configuration or value:
-                cls.configuration[opt] = value
+                cls.set(opt, value)
 
         if 'logging_level' in cls.configuration:
             cls.initialize_logging()
 
 
 @Configuration.add('config')
-def add_configuration_file(parser, configuration):
-    parser.add_argument('-c', dest='configfile', default='',
+def add_configuration_file(parser):
+    parser.add_argument('-c', dest='configfile', default=None,
                         help="Relative path of the config file")
     parser.add_argument('--without-auto-migration', dest='withoutautomigration',
                         action='store_true')
-    configuration.update({
-        'configfile': None,
-        'withoutautomigration': False,
-    })
 
 
 @Configuration.add('database', label="Database",
                    must_be_loaded_by_unittest=True)
-def add_database(group, configuration):
-    group.add_argument('--db-name', default='',
+def add_database(group):
+    group.add_argument('--db-name',
+                       default=os.environ.get('ANYBLOK_DATABASE_NAME'),
                        help="Name of the database")
-    group.add_argument('--db-url', default='',
+    group.add_argument('--db-url',
+                       default=os.environ.get('ANYBLOK_DATABASE_URL'),
                        help="Complete URL for connection with the database")
-    group.add_argument('--db-driver-name', default='',
+    group.add_argument('--db-driver-name',
+                       default=os.environ.get('ANYBLOK_DATABASE_DRIVER'),
                        help="the name of the database backend. This name "
                             "will correspond to a module in "
                             "sqlalchemy/databases or a third party plug-in")
-    group.add_argument('--db-user-name', default='',
+    group.add_argument('--db-user-name',
+                       default=os.environ.get('ANYBLOK_DATABASE_USER'),
                        help="The user name")
-    group.add_argument('--db-password', default='',
+    group.add_argument('--db-password',
+                       default=os.environ.get('ANYBLOK_DATABASE_PASSWORD'),
                        help="database password")
-    group.add_argument('--db-host', default='',
+    group.add_argument('--db-host',
+                       default=os.environ.get('ANYBLOK_DATABASE_HOST'),
                        help="The name of the host")
-    group.add_argument('--db-port', default='',
+    group.add_argument('--db-port', type=int,
+                       default=os.environ.get('ANYBLOK_DATABASE_PORT'),
                        help="The port number")
-    group.add_argument('--db-echo', action="store_true")
-
-    configuration.update({
-        'db_name': os.environ.get('ANYBLOK_DATABASE_NAME'),
-        'db_driver_name': os.environ.get('ANYBLOK_DATABASE_DRIVER'),
-        'db_user_name': os.environ.get('ANYBLOK_DATABASE_USER'),
-        'db_password': os.environ.get('ANYBLOK_DATABASE_PASSWORD'),
-        'db_host': os.environ.get('ANYBLOK_DATABASE_HOST'),
-        'db_port': os.environ.get('ANYBLOK_DATABASE_PORT'),
-        'db_echo': os.environ.get('ANYBLOK_DATABASE_ECHO') or False,
-    })
+    group.add_argument('--db-echo', action="store_true",
+                       default=(os.environ.get(
+                           'ANYBLOK_DATABASE_ECHO') or False))
 
 
 @Configuration.add('create_db', must_be_loaded_by_unittest=True)
-def add_create_database(group, configuration):
-    group.add_argument('--db-template-name', default='',
-                       help="Name of the template")
-    configuration.update({
-        'db_template_name': os.environ.get('ANYBLOK_DATABASE_TEMPLATE_NAME'),
-    })
+def add_create_database(group):
+    group.add_argument(
+        '--db-template-name',
+        default=os.environ.get('ANYBLOK_DATABASE_TEMPLATE_NAME'),
+        help="Name of the template")
 
 
 @Configuration.add('install-bloks')
-def add_install_bloks(parser, configuration):
+def add_install_bloks(parser):
     parser.add_argument('--install-bloks', default='',
                         help="blok to install")
     parser.add_argument('--install-all-bloks',
@@ -556,13 +653,13 @@ def add_install_bloks(parser, configuration):
 
 
 @Configuration.add('uninstall-bloks')
-def add_uninstall_bloks(parser, configuration):
+def add_uninstall_bloks(parser):
     parser.add_argument('--uninstall-bloks',
                         default='', help="bloks to uninstall")
 
 
 @Configuration.add('update-bloks')
-def add_update_bloks(parser, configuration):
+def add_update_bloks(parser):
     parser.add_argument('--update-bloks', default='',
                         help="bloks to update")
     parser.add_argument('--update-all-bloks',
@@ -570,20 +667,20 @@ def add_update_bloks(parser, configuration):
 
 
 @Configuration.add('interpreter')
-def add_interpreter(parser, configuration):
+def add_interpreter(parser):
     parser.add_argument('--script', dest='python_script',
                         help="Python script to execute")
 
 
 @Configuration.add('schema', label="Schema options")
-def add_schema(group, configuration):
+def add_schema(group):
     from graphviz.files import FORMATS
     group.add_argument('--schema-format',
                        default='png', choices=tuple(FORMATS))
 
 
 @Configuration.add('doc', label="Doc options")
-def add_doc(group, configuration):
+def add_doc(group):
     group.add_argument('--doc-format',
                        default='RST', choices=('RST', 'UML', 'SQL'))
     group.add_argument('--doc-output',
@@ -595,7 +692,7 @@ def add_doc(group, configuration):
 
 
 @Configuration.add('unittest', label="Unittest")
-def add_unittest(group, configuration):
+def add_unittest(group):
     group.add_argument('--selected-bloks', default='',
                        help="Name of the bloks to test")
     group.add_argument('--unwanted-bloks', default='',
@@ -603,7 +700,7 @@ def add_unittest(group, configuration):
 
 
 @Configuration.add('logging', label="Logging")
-def add_logging(group, configuration):
+def add_logging(group):
     group.add_argument('--logging-level', dest='logging_level',
                        choices=['NOTSET', 'DEBUG', 'INFO', 'WARNING',
                                 'ERROR', 'CRITICAL'], default='')
