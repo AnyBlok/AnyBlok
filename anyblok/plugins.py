@@ -2,7 +2,6 @@ from nose.plugins import Plugin
 from anyblok.config import Configuration
 from anyblok.blok import BlokManager
 from anyblok.registry import RegistryManager
-from anyblok.common import format_bloks
 from os.path import join, exists
 
 
@@ -79,13 +78,11 @@ class AnyBlokPlugin(Plugin):
             if registry:
                 installed_bloks = registry.System.Blok.list_by_state(
                     "installed")
-                selected_bloks = format_bloks(
-                    Configuration.get('selected_bloks'))
+                selected_bloks = Configuration.get('selected_bloks')
                 if not selected_bloks:
                     selected_bloks = installed_bloks
 
-                unwanted_bloks = format_bloks(
-                    Configuration.get('unwanted_bloks'))
+                unwanted_bloks = Configuration.get('unwanted_bloks')
                 if unwanted_bloks is None:
                     unwanted_bloks = []
 

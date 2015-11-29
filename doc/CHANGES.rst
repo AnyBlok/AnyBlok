@@ -16,6 +16,7 @@ Future
 * [REF] the argument of ArgumentParser can be add in the configuration 
     - Improve the help of the application
     - Improve the type of the configuration, Work also with config file.
+    - Adapt current configuration
 * [REF] start to use sqlalchemy-utils, replace the database management
 
 0.5.2 (2015-09-28)

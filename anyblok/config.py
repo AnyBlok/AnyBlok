@@ -7,7 +7,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .logging import log
-from argparse import ArgumentParser, _ArgumentGroup
+from argparse import ArgumentParser, _ArgumentGroup, REMAINDER
 from configparser import ConfigParser
 import sys
 import os
@@ -25,10 +25,73 @@ class ConfigurationException(LookupError):
     """ Simple Exception for Configuration"""
 
 
+def is_none(type, value):
+    """Check if the value is a *NoneValue* in function of the type
+
+    :param type: type of value
+    :param value: value to check
+    :rtype: *bool*, True if it is a *NoneValue*
+    """
+    if value is None:
+        return True
+    if isinstance(value, str) and value.upper() == 'NONE':
+        return True
+    if value == '' and type is not str:
+        return True
+
+    return False
+
+
+def cast_value(cast, value):
+    """Cast the value
+
+    :param cast: final type of data wanted
+    :param value: initial value to cast
+    :rtype: casted value or *NoneValue*
+    """
+    if is_none(cast, value):
+        return None
+    elif not cast or type(cast) is type:
+        # no type or custom Class
+        return value
+    elif cast is bool and isinstance(value, str):
+        if value.upper() == 'TRUE':
+            return True
+        else:
+            return False
+    else:
+        return cast(value)
+
+
+def nargs_type(key, nargs, cast):
+
+    def wrap(val):
+        if isinstance(val, str):
+            sep = ' '
+            if '\n' in val:
+                sep = '\n'
+            elif ',' in val:
+                sep = ','
+            val = [x.strip() for x in val.split(sep)]
+
+        if not isinstance(val, list):
+            raise ConfigurationException("Waiting list not %r for %r "
+                                         "get : %r" % (type(val), key, val))
+
+        limit = len(val)
+        if nargs not in ('?', '+', '*', REMAINDER):
+            limit = int(nargs)
+
+        return [cast_value(cast, x) for x in val[:limit]]
+
+    return wrap
+
+
 class AnyBlokActionsContainer:
 
     def add_argument(self, *args, **kwargs):
         default = kwargs.pop('default', None)
+        nargs = kwargs.get('nargs', None)
         type = kwargs.get('type')
         arg = super(AnyBlokActionsContainer, self).add_argument(
             *args, **kwargs)
@@ -41,6 +104,9 @@ class AnyBlokActionsContainer:
                 type = str
 
         dest = arg.dest
+        if nargs:
+            type = nargs_type(dest, nargs, type)
+
         Configuration.add_argument(dest, default, type=type)
         return arg
 
@@ -82,18 +148,7 @@ class ConfigOption:
         return False
 
     def set(self, value):
-        if self.is_none(value):
-            self.value = None
-        elif not self.type or type(self.type) is type:
-            # no type or custom Class
-            self.value = value
-        elif self.type is bool and isinstance(value, str):
-            if value.upper() == 'TRUE':
-                self.value = True
-            else:
-                self.value = False
-        else:
-            self.value = self.type(value)
+        self.value = cast_value(self.type, value)
 
 
 def getParser(**kwargs):
@@ -261,7 +316,6 @@ class Configuration:
 
     @classmethod
     def add_argument(cls, key, value, type=str):
-        print(key, value, type)
         cls.configuration[key] = ConfigOption(value, type)
 
     @classmethod
@@ -596,7 +650,7 @@ class Configuration:
 
 @Configuration.add('config')
 def add_configuration_file(parser):
-    parser.add_argument('-c', dest='configfile', default=None,
+    parser.add_argument('-c', dest='configfile',
                         help="Relative path of the config file")
     parser.add_argument('--without-auto-migration', dest='withoutautomigration',
                         action='store_true')
@@ -643,27 +697,22 @@ def add_create_database(group):
 
 @Configuration.add('install-bloks')
 def add_install_bloks(parser):
-    parser.add_argument('--install-bloks', default='',
-                        help="blok to install")
-    parser.add_argument('--install-all-bloks',
-                        action='store_true')
-    parser.add_argument('--test-blok-at-install',
-                        action='store_true')
+    parser.add_argument('--install-bloks', nargs="+", help="blok to install")
+    parser.add_argument('--install-all-bloks', action='store_true')
+    parser.add_argument('--test-blok-at-install', action='store_true')
     parser.set_defaults(test_blok=False)
 
 
 @Configuration.add('uninstall-bloks')
 def add_uninstall_bloks(parser):
-    parser.add_argument('--uninstall-bloks',
-                        default='', help="bloks to uninstall")
+    parser.add_argument('--uninstall-bloks', nargs="+",
+                        help="bloks to uninstall")
 
 
 @Configuration.add('update-bloks')
 def add_update_bloks(parser):
-    parser.add_argument('--update-bloks', default='',
-                        help="bloks to update")
-    parser.add_argument('--update-all-bloks',
-                        action='store_true')
+    parser.add_argument('--update-bloks', nargs="+", help="bloks to update")
+    parser.add_argument('--update-all-bloks', action='store_true')
 
 
 @Configuration.add('interpreter')
@@ -685,17 +734,17 @@ def add_doc(group):
                        default='RST', choices=('RST', 'UML', 'SQL'))
     group.add_argument('--doc-output',
                        default='anyblok-documentation')
-    group.add_argument('--doc-wanted-models',
-                       help='Detail only these models separated by ","')
-    group.add_argument('--doc-unwanted-models',
-                       help='No detail these models separated by ","')
+    group.add_argument('--doc-wanted-models', nargs='+',
+                       help='Detail only these models')
+    group.add_argument('--doc-unwanted-models', nargs='+',
+                       help='No detail these models')
 
 
 @Configuration.add('unittest', label="Unittest")
 def add_unittest(group):
-    group.add_argument('--selected-bloks', default='',
+    group.add_argument('--selected-bloks', nargs='+',
                        help="Name of the bloks to test")
-    group.add_argument('--unwanted-bloks', default='',
+    group.add_argument('--unwanted-bloks', nargs='+',
                        help="Name of the bloks to no test")
 
 
@@ -703,19 +752,17 @@ def add_unittest(group):
 def add_logging(group):
     group.add_argument('--logging-level', dest='logging_level',
                        choices=['NOTSET', 'DEBUG', 'INFO', 'WARNING',
-                                'ERROR', 'CRITICAL'], default='')
+                                'ERROR', 'CRITICAL'])
     group.add_argument('--logging-level-qualnames', nargs='+',
-                       dest='logging_level_qualnames',
                        help="Limit the log level on a qualnames list")
     group.add_argument('--logging-config-file', dest='logging_configfile',
-                       default='',
                        help="Relative path of the logging config file")
     group.add_argument('--logging-json-config-file',
-                       dest='json_logging_configfile', default='',
+                       dest='json_logging_configfile',
                        help="Relative path of the logging config file (json). "
                             "Only if the logging config file doesn't filled")
     group.add_argument('--logging-yaml-config-file',
-                       dest='yaml_logging_configfile', default='',
+                       dest='yaml_logging_configfile',
                        help="Relative path of the logging config file (yaml). "
                             "Only if the logging and json config file doesn't "
                             "filled")

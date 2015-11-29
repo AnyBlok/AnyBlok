@@ -11,7 +11,6 @@ from anyblok.blok import BlokManager
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok._graphviz import ModelSchema, SQLSchema
-from anyblok.common import format_bloks
 from nose import main
 import sys
 from os.path import join, exists
@@ -88,7 +87,7 @@ def createdb(application, configuration_groups, **kwargs):
     if Configuration.get('install_all_bloks'):
         bloks = registry.System.Blok.list_by_state('uninstalled')
     else:
-        bloks = format_bloks(Configuration.get('install_bloks'))
+        bloks = Configuration.get('install_bloks')
 
     registry.upgrade(install=bloks)
     registry.commit()
@@ -112,14 +111,14 @@ def updatedb(application, configuration_groups, **kwargs):
     if Configuration.get('install_all_bloks'):
         install_bloks = registry.System.Blok.list_by_state('uninstalled')
     else:
-        install_bloks = format_bloks(Configuration.get('install_bloks'))
+        install_bloks = Configuration.get('install_bloks')
 
     if Configuration.get('update_all_bloks'):
         update_bloks = registry.System.Blok.list_by_state('installed')
     else:
-        update_bloks = format_bloks(Configuration.get('update_bloks'))
+        update_bloks = Configuration.get('update_bloks')
 
-    uninstall_bloks = format_bloks(Configuration.get('uninstall_bloks'))
+    uninstall_bloks = Configuration.get('uninstall_bloks')
     if registry:
         registry.upgrade(install=install_bloks, update=update_bloks,
                          uninstall=uninstall_bloks)
@@ -142,13 +141,11 @@ def run_exit(application, configuration_groups, **kwargs):
     defaultTest = []
     if registry:
         installed_bloks = registry.System.Blok.list_by_state("installed")
-        selected_bloks = format_bloks(Configuration.get('selected_bloks'))
+        selected_bloks = Configuration.get('selected_bloks')
         if not selected_bloks:
             selected_bloks = installed_bloks
 
-        unwanted_bloks = format_bloks(Configuration.get('unwanted_bloks'))
-        if unwanted_bloks is None:
-            unwanted_bloks = []
+        unwanted_bloks = Configuration.get('unwanted_bloks') or []
 
         defaultTest = [path
                        for blok in installed_bloks

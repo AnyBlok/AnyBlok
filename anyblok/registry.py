@@ -22,7 +22,6 @@ from .blok import BlokManager
 from .logging import log
 from .environment import EnvironmentManager
 from .migration import Migration
-from .common import format_bloks
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
 
 logger = getLogger(__name__)
@@ -864,9 +863,9 @@ class Registry:
 
         test_blok = blok2install and Configuration.get(
             'test_blok_at_install')
-        selected_bloks = format_bloks(Configuration.get('selected_bloks'))
+        selected_bloks = Configuration.get('selected_bloks')
         in_selected_bloks = blok2install in (selected_bloks or [blok2install])
-        unwanted_bloks = format_bloks(Configuration.get('unwanted_bloks'))
+        unwanted_bloks = Configuration.get('unwanted_bloks')
         not_in_unwanted_bloks = blok2install not in (unwanted_bloks or [])
 
         if test_blok and in_selected_bloks and not_in_unwanted_bloks:
