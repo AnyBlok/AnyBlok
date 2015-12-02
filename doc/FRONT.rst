@@ -77,7 +77,7 @@ AnyBlok are tested by the `Anybox <http://anybox.fr>`_ `builbot <http://buildbot
 Dependencies
 ------------
 
-AnyBlok works with **Python 3.2** and later. The install process will 
+AnyBlok works with **Python 3.3** and later. The install process will 
 ensure that `SQLAlchemy <http://www.sqlalchemy.org>`_, 
 `Alembic <http://alembic.readthedocs.org/>`_ are installed, in addition to 
 other dependencies.  AnyBlok will work with SQLAlchemy as of version **0.9.8**. 

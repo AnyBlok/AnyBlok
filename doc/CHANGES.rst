@@ -12,6 +12,10 @@ CHANGELOG
 Future
 ------
 
+.. warning::
+
+    Python 3.2 is not supported
+
 * [REF] Add options to give database url, No break compatibility
 * [REF] the argument of ArgumentParser can be add in the configuration 
     - Improve the help of the application

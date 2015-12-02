@@ -12,8 +12,8 @@ from setuptools import setup, find_packages
 version = '0.5.3'
 
 
-if sys.version_info < (3, 2):
-    sys.stderr.write("This package requires Python 3.2 or newer. "
+if sys.version_info < (3, 3):
+    sys.stderr.write("This package requires Python 3.3 or newer. "
                      "Yours is " + sys.version + os.linesep)
     sys.exit(1)
 
