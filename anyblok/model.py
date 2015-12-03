@@ -13,6 +13,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper
+from sqlalchemy import inspection
 from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
@@ -61,6 +62,15 @@ def has_sql_fields(bases):
             if hasattr(getattr(base, p), '__class__'):
                 if Field in getattr(base, p).__class__.__mro__:
                     return True
+
+    return False
+
+
+def has_sqlalchemy_fields(base):
+    for p in base.__dict__.keys():
+        attr = base.__dict__[p]
+        if inspection.inspect(attr, raiseerr=False) is not None:
+            return True
 
     return False
 
@@ -435,6 +445,12 @@ class Model:
                                         transformation_properties, properties)
 
     @classmethod
+    def raise_if_has_sqlalchemy(cls, base):
+        if has_sqlalchemy_fields(base):
+            raise ModelException(
+                "the base %r have an SQLAlchemy attribute" % base)
+
+    @classmethod
     def load_namespace_first_step(cls, registry, namespace):
         """ Return the properties of the declared bases for a namespace.
         This is the first step because some actions need to known all the
@@ -460,6 +476,7 @@ class Model:
                 properties.update(ps)
 
         for b in bases:
+            cls.raise_if_has_sqlalchemy(b)
             fields = get_fields(b)
             for p, f in fields.items():
                 if p not in properties:

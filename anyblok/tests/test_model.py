@@ -9,7 +9,8 @@
 from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
-from anyblok.model import has_sql_fields, get_fields, ModelException
+from anyblok.model import (has_sql_fields, get_fields, ModelException,
+                           has_sqlalchemy_fields)
 from anyblok import Declarations
 from anyblok.column import Integer, String
 
@@ -379,6 +380,18 @@ class TestModel2(DBTestCase):
         with self.assertRaises(ModelException):
             self.init_registry(add_in_registry)
 
+    def test_with_sqlalchemy_fields(self):
+        from sqlalchemy import Column as SaC, String as SaS
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                one_field = SaC(SaS(64))
+
+        with self.assertRaises(ModelException):
+            self.init_registry(add_in_registry)
+
 
 class TestModelAssembling(TestCase):
 
@@ -402,3 +415,18 @@ class TestModelAssembling(TestCase):
             one_field = String()
 
         self.assertEqual(get_fields(MyModel), {'one_field': MyModel.one_field})
+
+    def test_has_sqlalchemy_fields(self):
+        from sqlalchemy import Column as SaC, String as SaS
+
+        class MyModel:
+            one_field = SaC(SaS(64))
+
+        self.assertTrue(has_sqlalchemy_fields(MyModel))
+
+    def test_has_sqlalchemy_fields2(self):
+
+        class MyModel:
+            one_field = String()
+
+        self.assertFalse(has_sqlalchemy_fields(MyModel))

@@ -17,11 +17,13 @@ Future
     Python 3.2 is not supported
 
 * [REF] Add options to give database url, No break compatibility
-* [REF] the argument of ArgumentParser can be add in the configuration 
+* [REF] the argument of ArgumentParser can be add in the configuration
     - Improve the help of the application
     - Improve the type of the configuration, Work also with config file.
     - Adapt current configuration
 * [REF] start to use sqlalchemy-utils, replace the database management
+* [IMP] `#18 <https://bitbucket.org/jssuzanne/anyblok/issues/18/forbidden-the-declaration-of-sqlachemy>`_
+  Forbidden the declaration of SQLAchemy column or relationship
 
 0.5.2 (2015-09-28)
 ------------------
