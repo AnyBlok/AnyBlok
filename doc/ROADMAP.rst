@@ -14,10 +14,9 @@ ROADMAP
 To implement
 ------------
 
-* Add logo and slogan
+* Add slogan
 * Update doc
-* Need improve alembic
-* Refactor type the arguments in the group of options
+* Need improve alembic, sqlalchemy-util
 * Refactor the engine declarations to have master / slave(s) configuration
 * Addons for sqlalchemy : http://sqlalchemy-utils.readthedocs.org/en/latest/installation.html
 
