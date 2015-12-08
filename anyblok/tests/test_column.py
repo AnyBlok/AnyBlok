@@ -223,12 +223,10 @@ class TestColumns(DBTestCase):
             (1, 'Regular user')
         ]
 
-        try:
+        with self.assertRaises(FieldException):
+            self.active_unittest_connection = False
             self.init_registry(
                 simple_column, ColumnType=Selection, selections=SELECTIONS)
-            self.fail('No watchdog to check if the key is not a str')
-        except FieldException:
-            pass
 
     def test_selection_comparator(self):
         SELECTIONS = [

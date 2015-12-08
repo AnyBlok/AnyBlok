@@ -138,10 +138,12 @@ class TestOne2One(DBTestCase):
 
     def test_minimum_one2one_without_backref(self):
         with self.assertRaises(FieldException):
+            self.active_unittest_connection = False
             self.init_registry(_minimum_one2one_without_backref)
 
     def test_minimum_one2one_with_one2many(self):
         with self.assertRaises(FieldException):
+            self.active_unittest_connection = False
             self.init_registry(_minimum_one2one_with_one2many)
 
     def test_complet_with_multi_foreign_key(self):
@@ -324,4 +326,5 @@ class TestOne2One(DBTestCase):
                     'other_test_id', 'other_test_id2'), backref="test2")
 
         with self.assertRaises(FieldException):
+            self.active_unittest_connection = False
             self.init_registry(add_in_registry)

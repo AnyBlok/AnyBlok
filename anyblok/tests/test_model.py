@@ -242,13 +242,6 @@ class TestModel2(DBTestCase):
         except TypeError:
             pass
 
-    def test_simple_model_with_wrong_value(self):
-        registry = self.init_registry(simple_model)
-
-        t = registry.Test.insert(name=1)
-        registry.old_session_commit()
-        self.assertNotEqual(t.name, 1)
-
     def test_model_with_foreign_key(self):
         registry = self.init_registry(model_with_foreign_key)
         registry.TestFk.insert(name='test')
@@ -323,6 +316,7 @@ class TestModel2(DBTestCase):
                 __table_args__ = ()
 
         with self.assertRaises(ModelException):
+            self.active_unittest_connection = False
             self.init_registry(add_in_registry)
 
     def test_mapper_args(self):
@@ -377,6 +371,7 @@ class TestModel2(DBTestCase):
                 __mapper_args__ = {}
 
         with self.assertRaises(ModelException):
+            self.active_unittest_connection = False
             self.init_registry(add_in_registry)
 
 

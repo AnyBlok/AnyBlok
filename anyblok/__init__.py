@@ -14,7 +14,7 @@ PROMPT = "%(processName)s - %(version)s"
 
 def start(processName, version=release.version, prompt=PROMPT,
           configuration_groups=None, entry_points=None,
-          useseparator=False, loadwithoutmigration=False):
+          useseparator=False, loadwithoutmigration=False, **kwargs):
     """ Function which initialize the application
 
     ::
@@ -53,7 +53,7 @@ def start(processName, version=release.version, prompt=PROMPT,
         return None
 
     registry = RegistryManager.get(
-        db_name, loadwithoutmigration=loadwithoutmigration)
+        db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
     registry.commit()
     return registry
 

@@ -36,6 +36,7 @@ class TestRegistry(TestCase):
 
     def setUp(self):
         super(TestRegistry, self).setUp()
+        self.active_unittest_connection = False
         self.registry = self.getRegistry()
 
     @classmethod

@@ -93,11 +93,13 @@ class TestCase(unittest.TestCase):
 
         :rtype: registry instance
         """
-        return RegistryManager.get(Configuration.get('db_name'))
+        return RegistryManager.get(Configuration.get('db_name'),
+                                   unittest=self.active_unittest_connection)
 
     def setUp(self):
         super(TestCase, self).setUp()
         self.addCleanup(self.callCleanUp)
+        self.active_unittest_connection = True
 
     def callCleanUp(self):
         if not self._transaction_case_teared_down:
@@ -168,33 +170,22 @@ class DBTestCase(TestCase):
         super(DBTestCase, self).setUp()
         self.createdb()
         BlokManager.load(entry_points=self.blok_entry_points)
+        self.trans = None
 
     def tearDown(self):
         """ Clear the registry, unload the blok manager and  drop the database
         """
+        if self.trans:
+            trans, registry = self.trans
+            registry.session.rollback()
+            registry.session.close()
+            trans.rollback()
+            registry.bind.close()
+
         RegistryManager.clear()
         BlokManager.unload()
         self.dropdb()
         super(DBTestCase, self).tearDown()
-
-    def upgrade(self, registry, **kwargs):
-        """ Upgrade the registry::
-
-            class MyTest(DBTestCase):
-
-                def test_mytest(self):
-                    registry = self.init_registry(...)
-                    self.upgrade(registry, install=('MyBlok',))
-
-        :param registry: registry to upgrade
-        :param install: list the blok to install
-        :param update: list the blok to update
-        :param uninstall: list the blok to uninstall
-        """
-        session_commit = registry.session_commit
-        registry.session_commit = registry.old_session_commit
-        registry.upgrade(**kwargs)
-        registry.session_commit = session_commit
 
     def init_registry(self, function, **kwargs):
         """ call a function to filled the blok manager with new model
@@ -217,12 +208,9 @@ class DBTestCase(TestCase):
         finally:
             RegistryManager.loaded_bloks = loaded_bloks
 
-        def session_commit(*args, **kwargs):
-            pass
-
-        registry.old_session_commit = registry.session_commit
-        registry.session_commit = session_commit
-
+        trans = registry.bind.begin()
+        registry.session.begin_nested()
+        self.trans = (trans, registry)
         return registry
 
 
@@ -277,21 +265,12 @@ class BlokTestCase(unittest.TestCase):
         """
         super(BlokTestCase, cls).setUpClass()
         if cls.registry is None:
-            cls.registry = RegistryManager.get(Configuration.get('db_name'))
-
-        def session_commit(*args, **kwargs):
-            pass
-
-        cls.old_session_commit = cls.registry.session_commit
-        cls.registry.session_commit = session_commit
-
-    @classmethod
-    def tearDownClass(cls):
-        super(BlokTestCase, cls).tearDownClass()
-        cls.registry.session_commit = cls.old_session_commit
+            cls.registry = RegistryManager.get(Configuration.get('db_name'),
+                                               unittest=True)
 
     def setUp(self):
         super(BlokTestCase, self).setUp()
+        self.trans = self.registry.bind.begin()
         self.addCleanup(self.callCleanUp)
         self.registry.begin_nested()  # add SAVEPOINT
 
@@ -307,9 +286,11 @@ class BlokTestCase(unittest.TestCase):
         super(BlokTestCase, self).tearDown()
         try:
             self.registry.System.Cache.invalidate_all()
+            self.registry.session.rollback()
         except sqlalchemy.exc.InvalidRequestError:
             self.registry.Session.rollback()
         finally:
-            self.registry.rollback()
+            self.registry.session.close()
+            self.trans.rollback()
 
         self._transaction_case_teared_down = True

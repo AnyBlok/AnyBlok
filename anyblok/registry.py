@@ -95,7 +95,7 @@ class RegistryManager:
             unload_callback()
 
     @classmethod
-    def get(cls, db_name, loadwithoutmigration=False):
+    def get(cls, db_name, loadwithoutmigration=False, **kwargs):
         """ Return an existing Registry
 
         If the Registry doesn't exist then the Registry are created and added
@@ -111,7 +111,8 @@ class RegistryManager:
                                "the registry for %r is already load" % db_name)
             return cls.registries[db_name]
 
-        registry = Registry(db_name, loadwithoutmigration=loadwithoutmigration)
+        registry = Registry(db_name, loadwithoutmigration=loadwithoutmigration,
+                            **kwargs)
         cls.registries[db_name] = registry
         return registry
 
@@ -399,12 +400,15 @@ class Registry:
         registry = Registry('My database')
     """
 
-    def __init__(self, db_name, loadwithoutmigration=False):
+    def __init__(self, db_name, loadwithoutmigration=False, unittest=False,
+                 **kwargs):
         self.db_name = db_name
         self.loadwithoutmigration = loadwithoutmigration
+        self.additional_setting = kwargs
         url = Configuration.get_url(db_name=db_name)
         echo = bool(int(Configuration.get('db_echo') or False))
         self.engine = create_engine(url, echo=echo)
+        self.bind = self.engine.connect() if unittest else self.engine
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
@@ -798,9 +802,12 @@ class Registry:
         Session = type('Session', tuple(self.loaded_cores['Session']), {
             'registry_query': Query})
 
-        bind = self.connection() if self.Session else self.engine
+        bind = self.connection() if self.Session else self.bind
+        extension = self.additional_setting.get('sa.session.extension')
+        if extension:
+            extension = extension()
         self.Session = scoped_session(
-            sessionmaker(bind=bind, class_=Session),
+            sessionmaker(bind=bind, class_=Session, extension=extension),
             EnvironmentManager.scoped_function_for_session())
         self.nb_query_bases = len(self.loaded_cores['Query'])
         self.nb_session_bases = len(self.loaded_cores['Session'])
@@ -1020,8 +1027,7 @@ class Registry:
         else:
             _precommit_hook.append(entry)
 
-    def commit(self, *args, **kwargs):
-        """ Overload the commit method of the SqlAlchemy session """
+    def apply_precommit_hook(self):
         hooks = []
         _precommit_hook = EnvironmentManager.get('_precommit_hook')
         if _precommit_hook:
@@ -1035,6 +1041,9 @@ class Registry:
             getattr(Model, method)(*a, **kw)
             _precommit_hook.remove(hook)
 
+    def commit(self, *args, **kwargs):
+        """ Overload the commit method of the SqlAlchemy session """
+        self.apply_precommit_hook()
         self.session_commit(*args, **kwargs)
 
     def session_commit(self, *args, **kwargs):
