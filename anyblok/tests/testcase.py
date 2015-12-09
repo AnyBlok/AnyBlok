@@ -171,10 +171,10 @@ class DBTestCase(TestCase):
 
     def setUp(self):
         """ Create a database and load the blok manager """
+        self.trans = None
         super(DBTestCase, self).setUp()
         self.createdb()
         BlokManager.load(entry_points=self.blok_entry_points)
-        self.trans = None
 
     def tearDown(self):
         """ Clear the registry, unload the blok manager and  drop the database
