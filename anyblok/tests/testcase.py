@@ -83,6 +83,9 @@ class TestCase(unittest.TestCase):
         bdd = anyblok.BDD[Configuration.get('db_driver_name')]
         bdd.dropdb(Configuration.get('db_name'))
 
+    def additional_setting(self):
+        return dict(unittest=self.active_unittest_connection)
+
     def getRegistry(self):
         """Return the registry for the test database.
 
@@ -93,8 +96,9 @@ class TestCase(unittest.TestCase):
 
         :rtype: registry instance
         """
+        additional_setting = self.additional_setting()
         return RegistryManager.get(Configuration.get('db_name'),
-                                   unittest=self.active_unittest_connection)
+                                   **additional_setting)
 
     def setUp(self):
         super(TestCase, self).setUp()
@@ -177,8 +181,6 @@ class DBTestCase(TestCase):
         """
         if self.trans:
             trans, registry = self.trans
-            registry.session.rollback()
-            registry.session.close()
             trans.rollback()
             registry.bind.close()
 
@@ -252,6 +254,7 @@ class BlokTestCase(unittest.TestCase):
     """
 
     _transaction_case_teared_down = False
+    active_unittest_connection = True
     registry = None
     """The instance of :class:`anyblok.registry.Registry`` to use in tests.
 
@@ -260,13 +263,18 @@ class BlokTestCase(unittest.TestCase):
     """
 
     @classmethod
+    def additional_setting(cls):
+        return dict(unittest=cls.active_unittest_connection)
+
+    @classmethod
     def setUpClass(cls):
         """ Initialize the registry.
         """
         super(BlokTestCase, cls).setUpClass()
+        additional_setting = cls.additional_setting()
         if cls.registry is None:
             cls.registry = RegistryManager.get(Configuration.get('db_name'),
-                                               unittest=True)
+                                               **additional_setting)
 
     def setUp(self):
         super(BlokTestCase, self).setUp()

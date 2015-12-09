@@ -404,11 +404,12 @@ class Registry:
                  **kwargs):
         self.db_name = db_name
         self.loadwithoutmigration = loadwithoutmigration
+        self.unittest = unittest
         self.additional_setting = kwargs
         url = Configuration.get_url(db_name=db_name)
         echo = bool(int(Configuration.get('db_echo') or False))
         self.engine = create_engine(url, echo=echo)
-        self.bind = self.engine.connect() if unittest else self.engine
+        self.bind = self.engine.connect() if self.unittest else self.engine
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
