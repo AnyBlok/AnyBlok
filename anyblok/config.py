@@ -474,6 +474,9 @@ def add_database(group, configuration):
     group.add_argument('--db-port', default='',
                        help="The port number")
     group.add_argument('--db-echo', action="store_true")
+    group.add_argument('--db-max-overflow', default='')
+    group.add_argument('--db-echo-pool', action="store_true")
+    group.add_argument('--db-pool-size', default='')
 
     configuration.update({
         'db_name': os.environ.get('ANYBLOK_DATABASE_NAME'),
@@ -483,6 +486,9 @@ def add_database(group, configuration):
         'db_host': os.environ.get('ANYBLOK_DATABASE_HOST'),
         'db_port': os.environ.get('ANYBLOK_DATABASE_PORT'),
         'db_echo': os.environ.get('ANYBLOK_DATABASE_ECHO') or False,
+        'db_max_overflow': 10,
+        'db_echo_pool': False,
+        'db_max_overflow': 5,
     })
 
 

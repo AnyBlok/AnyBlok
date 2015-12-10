@@ -408,7 +408,11 @@ class Registry:
         self.additional_setting = kwargs
         url = Configuration.get_url(db_name=db_name)
         echo = bool(int(Configuration.get('db_echo') or False))
-        self.engine = create_engine(url, echo=echo)
+        max_overflow = int(Configuration.get('db_max_overflow'))
+        echo_pool = bool(int(Configuration.get('db_echo_pool') or False))
+        pool_size = int(Configuration.get('db_pool_size'))
+        self.engine = create_engine(url, echo=echo, max_overflow=max_overflow,
+                                    echo_pool=echo_pool, pool_size=pool_size)
         self.bind = self.engine.connect() if self.unittest else self.engine
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
