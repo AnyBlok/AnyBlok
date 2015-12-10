@@ -685,6 +685,9 @@ def add_database(group):
     group.add_argument('--db-echo', action="store_true",
                        default=(os.environ.get(
                            'ANYBLOK_DATABASE_ECHO') or False))
+    group.add_argument('--db-echo-pool', action="store_true", default=False)
+    group.add_argument('--db-max-overflow', type=int, default=10)
+    group.add_argument('--db-pool-size', type=int, default=5)
 
 
 @Configuration.add('create_db', must_be_loaded_by_unittest=True)

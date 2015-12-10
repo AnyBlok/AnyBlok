@@ -25,6 +25,13 @@ Future
 * [IMP] `#18 <https://bitbucket.org/jssuzanne/anyblok/issues/18/forbidden-the-declaration-of-sqlachemy>`_
   Forbidden the declaration of SQLAchemy column or relationship
 
+0.5.3
+-----
+
+* [REF] unittest isolation
+* [IMP] possibility to apply an extension for sqlalchemy
+* [ADD] pool configuration
+
 0.5.2 (2015-09-28)
 ------------------
 

@@ -24,7 +24,7 @@ class TestAuthorizationDeclaration(DBTestCase):
 
     def test_association(self):
         registry = self.init_registry(None)
-        self.upgrade(registry, install=('test-blok7',))
+        registry.upgrade(install=('test-blok7',))
         record = registry.Test(id=23, label='Hop')
         self.assertIsInstance(registry.lookup_policy(record, 'Read'),
                               TestRuleOne)
@@ -37,7 +37,7 @@ class TestAuthorizationDeclaration(DBTestCase):
     def test_override(self):
         registry = self.init_registry(None)
         # test-blok8 depends on test-blok7
-        self.upgrade(registry, install=('test-blok8',))
+        registry.upgrade(install=('test-blok8',))
         # lookup can be made on model itself
         model = registry.Test
         self.assertIsInstance(registry.lookup_policy(model, 'Read'),
@@ -55,7 +55,7 @@ class TestAuthorizationDeclaration(DBTestCase):
         #TODO move this test to the 'model_authz' blok
         """
         registry = self.init_registry(None)
-        self.upgrade(registry, install=('test-blok9',))
+        registry.upgrade(install=('test-blok9',))
         model = registry.Test2
         Grant = registry.Authorization.ModelPermissionGrant
         Grant.insert(model='Model.Test2',
@@ -115,7 +115,7 @@ class TestAuthorizationDeclaration(DBTestCase):
         main code body.
         """
         registry = self.init_registry(None)
-        self.upgrade(registry, install=('test-blok10',))
+        registry.upgrade(install=('test-blok10',))
         model = registry.Test2
         Grant = registry.Authorization.ModelPermissionGrant
         Grant.insert(model='Model.Test2',

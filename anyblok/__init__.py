@@ -50,7 +50,7 @@ def start(processName, configuration_groups=None, entry_points=None,
         return None
 
     registry = RegistryManager.get(
-        db_name, loadwithoutmigration=loadwithoutmigration)
+        db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
     registry.commit()
     return registry
 

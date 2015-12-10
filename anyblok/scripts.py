@@ -136,7 +136,7 @@ def run_exit(application, configuration_groups, **kwargs):
     format_configuration(configuration_groups, 'unittest')
     registry = anyblok.start(application,
                              configuration_groups=configuration_groups,
-                             useseparator=True, **kwargs)
+                             useseparator=True, unittest=True, **kwargs)
 
     defaultTest = []
     if registry:

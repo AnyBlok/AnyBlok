@@ -36,7 +36,7 @@ class Sequence:
         if hasattr(cls.registry, '_need_sequence_to_create_if_not_exist'):
             if cls.registry._need_sequence_to_create_if_not_exist:
                 for vals in cls.registry._need_sequence_to_create_if_not_exist:
-                    if vals['formater'] is None:
+                    if 'formater' in vals and vals['formater'] is None:
                         del vals['formater']
 
                     if cls.query().filter(cls.code == vals['code']).count():
