@@ -385,6 +385,7 @@ class TestModel2(DBTestCase):
                 one_field = SaC(SaS(64))
 
         with self.assertRaises(ModelException):
+            self.active_unittest_connection = False
             self.init_registry(add_in_registry)
 
 
