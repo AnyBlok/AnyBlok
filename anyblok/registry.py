@@ -407,9 +407,9 @@ class Registry:
         self.additional_setting = kwargs
         url = Configuration.get_url(db_name=db_name)
         echo = Configuration.get('db_echo') or False
-        max_overflow = Configuration.get('db_max_overflow')
+        max_overflow = Configuration.get('db_max_overflow') or 10
         echo_pool = Configuration.get('db_echo_pool') or False
-        pool_size = Configuration.get('db_pool_size')
+        pool_size = Configuration.get('db_pool_size') or 5
         self.engine = create_engine(url, echo=echo, max_overflow=max_overflow,
                                     echo_pool=echo_pool, pool_size=pool_size)
         self.bind = self.engine.connect() if self.unittest else self.engine
