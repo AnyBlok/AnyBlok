@@ -12,7 +12,8 @@ PROMPT = "%(processName)s - %(version)s"
 
 
 def start(processName, configuration_groups=None, entry_points=None,
-          useseparator=False, loadwithoutmigration=False, **kwargs):
+          useseparator=False, loadwithoutmigration=False, config=None,
+          **kwargs):
     """ Function which initialize the application
 
     ::
@@ -36,9 +37,12 @@ def start(processName, configuration_groups=None, entry_points=None,
     from .registry import RegistryManager
 
     if configuration_groups is not None:
+        if config is None:
+            config = {}
+
         Configuration.load(processName,
                            configuration_groups=configuration_groups,
-                           useseparator=useseparator, **kwargs)
+                           useseparator=useseparator, **config)
 
     if entry_points:
         BlokManager.load(entry_points=entry_points)
