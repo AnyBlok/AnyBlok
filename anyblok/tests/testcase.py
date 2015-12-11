@@ -322,6 +322,7 @@ class BlokTestCase(unittest.TestCase):
             self.registry.Session.rollback()
         finally:
             self.registry.session.close()
-            self.trans.rollback()
+            if self.registry.unittest:
+                self.trans.rollback()
 
         self._transaction_case_teared_down = True
