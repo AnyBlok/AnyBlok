@@ -94,11 +94,11 @@ class AnyBlokPlugin(Plugin):
                     if blok in selected_bloks and blok not in unwanted_bloks
                     for path in [join(BlokManager.getPath(blok), 'tests')]
                     if exists(path)]
+                registry.close()  # free the registry to force create it again
 
         return True
 
     def wantFile(self, file):
-        print("want file")
         if self.enabled:
             if len([x for x in self.testFiles if x in file]):
                 return True

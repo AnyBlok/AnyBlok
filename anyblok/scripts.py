@@ -115,6 +115,7 @@ def run_exit(description, version, configuration_groups):
                        if blok in selected_bloks and blok not in unwanted_bloks
                        for path in [join(BlokManager.getPath(blok), 'tests')]
                        if exists(path)]
+        registry.close()  # free the registry to force create it again
 
     sys.exit(main(defaultTest=defaultTest))
 
