@@ -22,10 +22,9 @@ class Sequence:
 
     id = Integer(primary_key=True)
     code = String(nullable=False)
-    suffix = String()
     number = Integer(nullable=False)
-    prefix = String()
     seq_name = String(nullable=False)
+    formater = String(nullable=False, default="{seq}")
 
     @classmethod
     def initialize_model(cls):
@@ -33,6 +32,17 @@ class Sequence:
         super(Sequence, cls).initialize_model()
         seq = SQLASequence(cls._cls_seq_name)
         seq.create(cls.registry.bind)
+
+        if hasattr(cls.registry, '_need_sequence_to_create_if_not_exist'):
+            if cls.registry._need_sequence_to_create_if_not_exist:
+                for vals in cls.registry._need_sequence_to_create_if_not_exist:
+                    if 'formater' in vals and vals['formater'] is None:
+                        del vals['formater']
+
+                    if cls.query().filter(cls.code == vals['code']).count():
+                        continue
+
+                    cls.insert(**vals)
 
     @classmethod
     def create_sequence(cls, values):
@@ -67,8 +77,7 @@ class Sequence:
         """ return the next value of the sequence """
         nextval = self.registry.execute(SQLASequence(self.seq_name))
         self.update(dict(number=nextval))
-        return '%s%d%s' % (self.prefix + '_' if self.prefix else '', nextval,
-                           '_' + self.suffix if self.suffix else '')
+        return self.formater.format(code=self.code, seq=nextval, id=self.id)
 
     @classmethod
     def nextvalBy(cls, **kwargs):

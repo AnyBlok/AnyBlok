@@ -81,7 +81,7 @@ Record attribute:
     - raise
     - ignore (default)
 * if_exist:
-    - update (default)
+    - overwrite (default)
     - create
     - pass: continue to the next record
     - continue: continue on the sub record without take this record
@@ -103,7 +103,7 @@ Case of the relation ship, they have some more attribute:
     - raise
     - ignore (default)
 * if_exist:
-    - update (default)
+    - overwrite (default)
     - create
     - pass: continue to the next record
     - continue: continue on the sub record without take this record

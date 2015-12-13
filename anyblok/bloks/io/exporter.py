@@ -28,7 +28,7 @@ class Exporter(Declarations.Mixin.IOMixin):
         if query.count():
             sequence = query.first()
         else:
-            sequence = Sequence.insert(code=seq_code, prefix=seq_code)
+            sequence = Sequence.insert(formater="{code}_{seq}", code=seq_code)
 
         return sequence.nextval()
 

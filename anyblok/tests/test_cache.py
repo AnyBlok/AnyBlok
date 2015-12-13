@@ -1,13 +1,14 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from random import random
 from anyblok.tests.testcase import DBTestCase
-from anyblok import Declarations
+from anyblok.declarations import Declarations, cache, classmethod_cache
 from anyblok.bloks.anyblok_core.exceptions import CacheException
 register = Declarations.register
 Model = Declarations.Model
@@ -15,18 +16,34 @@ Mixin = Declarations.Mixin
 Core = Declarations.Core
 
 
+def wrap_cache(condition):
+
+    def wrapper(function):
+        return function
+
+    if condition:
+        return cache()
+
+    return wrapper
+
+
+def wrap_cls_cache(condition):
+    if condition:
+        return classmethod_cache()
+
+    return classmethod
+
+
 class TestCache(DBTestCase):
 
     def add_model_with_method_cached(self):
-
-        from anyblok import Declarations
 
         @register(Model)
         class Test:
 
             x = 0
 
-            @Declarations.cache()
+            @cache()
             def method_cached(self):
                 self.x += 1
                 return self.x
@@ -84,7 +101,7 @@ class TestSimpleCache(DBTestCase):
 
             x = 0
 
-            @Declarations.cache()
+            @cache()
             def method_cached(self):
                 self.x += 1
                 return self.x
@@ -96,7 +113,7 @@ class TestSimpleCache(DBTestCase):
 
             x = 0
 
-            @Declarations.cache()
+            @cache()
             def method_cached(self):
                 self.x += 1
                 return self.x
@@ -112,7 +129,7 @@ class TestSimpleCache(DBTestCase):
 
             x = 0
 
-            @Declarations.cache()
+            @cache()
             def method_cached(self):
                 self.x += 1
                 return self.x
@@ -128,7 +145,7 @@ class TestSimpleCache(DBTestCase):
 
             x = 0
 
-            @Declarations.cache()
+            @cache()
             def method_cached(self):
                 self.x += 1
                 return self.x
@@ -151,47 +168,30 @@ class TestSimpleCache(DBTestCase):
 
             x = 0
 
-            if withcore:
-                @Declarations.cache()
-                def method_cached(self):
-                    self.x += 1
-                    return self.x
-
-            else:
-                def method_cached(self):
-                    self.x += 1
-                    return self.x
+            @wrap_cache(withcore)
+            def method_cached(self):
+                self.x += 1
+                return self.x
 
         @register(Mixin)
         class MTest:
 
             y = 0
 
-            if withmixin:
-                @Declarations.cache()
-                def method_cached(self):
-                    self.y += 2
-                    return self.y + super(MTest, self).method_cached()
-
-            else:
-                def method_cached(self):
-                    self.y += 2
-                    return self.y + super(MTest, self).method_cached()
+            @wrap_cache(withmixin)
+            def method_cached(self):
+                self.y += 2
+                return self.y + super(MTest, self).method_cached()
 
         @register(Model)
         class Test(Mixin.MTest):
 
             z = 0
 
-            if withmodel:
-                @Declarations.cache()
-                def method_cached(self):
-                    self.z += 3
-                    return self.z + super(Test, self).method_cached()
-            else:
-                def method_cached(self):
-                    self.z += 3
-                    return self.z + super(Test, self).method_cached()
+            @wrap_cache(withmodel)
+            def method_cached(self):
+                self.z += 3
+                return self.z + super(Test, self).method_cached()
 
     def test_model(self):
         self.reload_registry_with(self.add_model_with_method_cached)
@@ -308,7 +308,7 @@ class TestClassMethodCache(DBTestCase):
 
             x = 0
 
-            @Declarations.classmethod_cache()
+            @classmethod_cache()
             def method_cached(cls):
                 cls.x += 1
                 return cls.x
@@ -320,7 +320,7 @@ class TestClassMethodCache(DBTestCase):
 
             x = 0
 
-            @Declarations.classmethod_cache()
+            @classmethod_cache()
             def method_cached(cls):
                 cls.x += 1
                 return cls.x
@@ -336,7 +336,7 @@ class TestClassMethodCache(DBTestCase):
 
             x = 0
 
-            @Declarations.classmethod_cache()
+            @classmethod_cache()
             def method_cached(cls):
                 cls.x += 1
                 return cls.x
@@ -352,7 +352,7 @@ class TestClassMethodCache(DBTestCase):
 
             x = 0
 
-            @Declarations.classmethod_cache()
+            @classmethod_cache()
             def method_cached(cls):
                 cls.x += 1
                 return cls.x
@@ -375,50 +375,30 @@ class TestClassMethodCache(DBTestCase):
 
             x = 0
 
-            if withcore:
-                @Declarations.classmethod_cache()
-                def method_cached(cls):
-                    cls.x += 1
-                    return cls.x
-
-            else:
-                @classmethod
-                def method_cached(cls):
-                    cls.x += 1
-                    return cls.x
+            @wrap_cls_cache(withcore)
+            def method_cached(cls):
+                cls.x += 1
+                return cls.x
 
         @register(Mixin)
         class MTest:
 
             y = 0
 
-            if withmixin:
-                @Declarations.classmethod_cache()
-                def method_cached(cls):
-                    cls.y += 2
-                    return cls.y + super(MTest, cls).method_cached()
-
-            else:
-                @classmethod
-                def method_cached(cls):
-                    cls.y += 2
-                    return cls.y + super(MTest, cls).method_cached()
+            @wrap_cls_cache(withmixin)
+            def method_cached(cls):
+                cls.y += 2
+                return cls.y + super(MTest, cls).method_cached()
 
         @register(Model)
         class Test(Mixin.MTest):
 
             z = 0
 
-            if withmodel:
-                @Declarations.classmethod_cache()
-                def method_cached(cls):
-                    cls.z += 3
-                    return cls.z + super(Test, cls).method_cached()
-            else:
-                @classmethod
-                def method_cached(cls):
-                    cls.z += 3
-                    return cls.z + super(Test, cls).method_cached()
+            @wrap_cls_cache(withmodel)
+            def method_cached(cls):
+                cls.z += 3
+                return cls.z + super(Test, cls).method_cached()
 
     def test_model(self):
         self.reload_registry_with(self.add_model_with_method_cached)
@@ -530,7 +510,7 @@ class TestInheritedCache(DBTestCase):
 
             x = 0
 
-            @Declarations.cache()
+            @cache()
             def method_cached(self):
                 self.x += 1
                 return self.x
@@ -541,7 +521,7 @@ class TestInheritedCache(DBTestCase):
             y = 0
 
             if inheritcache:
-                @Declarations.cache()
+                @cache()
                 def method_cached(self):
                     self.y += 2
                     return self.y + super(Test, self).method_cached()
@@ -557,7 +537,7 @@ class TestInheritedCache(DBTestCase):
 
             x = 0
 
-            @Declarations.cache()
+            @cache()
             def method_cached(self):
                 self.x += 1
                 return self.x
@@ -568,7 +548,7 @@ class TestInheritedCache(DBTestCase):
             y = 0
 
             if inheritcache:
-                @Declarations.cache()
+                @cache()
                 def method_cached(self):
                     self.y += 2
                     return self.y + super(Base, self).method_cached()
@@ -588,7 +568,7 @@ class TestInheritedCache(DBTestCase):
 
             x = 0
 
-            @Declarations.cache()
+            @cache()
             def method_cached(self):
                 self.x += 1
                 return self.x
@@ -599,7 +579,7 @@ class TestInheritedCache(DBTestCase):
             y = 0
 
             if inheritcache:
-                @Declarations.cache()
+                @cache()
                 def method_cached(self):
                     self.y += 2
                     return self.y + super(MTest, self).method_cached()
@@ -661,7 +641,7 @@ class TestInheritedClassMethodCache(DBTestCase):
 
             x = 0
 
-            @Declarations.classmethod_cache()
+            @classmethod_cache()
             def method_cached(cls):
                 cls.x += 1
                 return cls.x
@@ -672,7 +652,7 @@ class TestInheritedClassMethodCache(DBTestCase):
             y = 0
 
             if inheritcache:
-                @Declarations.classmethod_cache()
+                @classmethod_cache()
                 def method_cached(cls):
                     cls.y += 2
                     return cls.y + super(Test, cls).method_cached()
@@ -689,7 +669,7 @@ class TestInheritedClassMethodCache(DBTestCase):
 
             x = 0
 
-            @Declarations.classmethod_cache()
+            @classmethod_cache()
             def method_cached(cls):
                 cls.x += 1
                 return cls.x
@@ -700,7 +680,7 @@ class TestInheritedClassMethodCache(DBTestCase):
             y = 0
 
             if inheritcache:
-                @Declarations.classmethod_cache()
+                @classmethod_cache()
                 def method_cached(cls):
                     cls.y += 2
                     return cls.y + super(Base, cls).method_cached()
@@ -721,7 +701,7 @@ class TestInheritedClassMethodCache(DBTestCase):
 
             x = 0
 
-            @Declarations.classmethod_cache()
+            @classmethod_cache()
             def method_cached(cls):
                 cls.x += 1
                 return cls.x
@@ -732,7 +712,7 @@ class TestInheritedClassMethodCache(DBTestCase):
             y = 0
 
             if inheritcache:
-                @Declarations.classmethod_cache()
+                @classmethod_cache()
                 def method_cached(cls):
                     cls.y += 2
                     return cls.y + super(MTest, cls).method_cached()
@@ -790,14 +770,14 @@ class TestComparatorInterModel(DBTestCase):
             @register(Model)
             class Test:
 
-                @Declarations.classmethod_cache()
+                @classmethod_cache()
                 def method_cached(cls):
                     return random()
 
             @register(Model)
             class Test2:
 
-                @Declarations.classmethod_cache()
+                @classmethod_cache()
                 def method_cached(cls):
                     return random()
 
@@ -811,7 +791,7 @@ class TestComparatorInterModel(DBTestCase):
             @register(Mixin)
             class MTest:
 
-                @Declarations.classmethod_cache()
+                @classmethod_cache()
                 def method_cached(cls):
                     return random()
 
@@ -834,7 +814,7 @@ class TestComparatorInterModel(DBTestCase):
             @register(Core)
             class Base:
 
-                @Declarations.classmethod_cache()
+                @classmethod_cache()
                 def method_cached(cls):
                     return random()
 

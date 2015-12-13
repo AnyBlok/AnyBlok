@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
+from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
 from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty
@@ -45,7 +45,7 @@ class SqlMixin:
             query = self.registry.session.query(MyModel)
 
         :param elements: pass at the SqlAlchemy query, if the element is a
-        string then thet are see as field of the model
+                         string then thet are see as field of the model
         :rtype: SqlAlchemy Query
         """
         res = []
@@ -154,7 +154,7 @@ class SqlMixin:
         query = query.filter(Column.primary_key == true())
         return query.all().name
 
-    @Declarations.classmethod_cache()
+    @classmethod_cache()
     def _fields_description(cls):
         """ Return the information of the Field, Column, RelationShip """
         Field = cls.registry.System.Field
@@ -197,9 +197,11 @@ class SqlMixin:
 
         :param fields: list of fields to put in dict; if not selected, fields
             then take them all. A field is either one of these:
+
                 * a string (which is the name of the field)
                 * a 2-tuple if the field is a relationship (name of the field,
-                    tuple of foreign model fields)
+                  tuple of foreign model fields)
+
         :rtype: dict
 
         Here are some examples::
@@ -321,7 +323,8 @@ class SqlBase(SqlMixin):
         pks = self.get_primary_keys()
         where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
                         for pk in pks]
-        self.__class__.query().filter(*where_clause).update(*args, **kwargs)
+        return self.__class__.query().filter(*where_clause).update(
+            *args, **kwargs)
 
     def delete(self):
         """ Call the SqlAlchemy Query.delete method on the instance of the
@@ -369,7 +372,7 @@ class SqlBase(SqlMixin):
 
         :exception: SqlBaseException
         """
-        instances = []
+        instances = cls.registry.InstrumentedList()
         for kwargs in args:
             if not isinstance(kwargs, dict):
                 raise SqlBaseException("multi_insert method wait list of dict")
@@ -384,13 +387,13 @@ class SqlBase(SqlMixin):
         return instances
 
     @classmethod
-    def precommit_hook(cls, method, put_at_the_end_if_exist=False):
+    def precommit_hook(cls, method, *args, **kwargs):
         """ Same in the registry a hook to call just before the commit
 
         .. warning:: Only one instance of the hook is called before the commit
 
         :param method: the method to call on this model
-        put_at_the_end_if_exist: If ``True`` the hook is move at the end
+        :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
         """
-        cls.registry.precommit_hook(cls.__registry_name__, method,
-                                    put_at_the_end_if_exist)
+        cls.registry.precommit_hook(
+            cls.__registry_name__, method, *args, **kwargs)

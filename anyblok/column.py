@@ -1,13 +1,14 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .field import Field, FieldException
-from sqlalchemy.schema import Column as SA_Column
-from sqlalchemy.schema import ForeignKey, Sequence
+from .mapper import ModelAttributeAdapter
+from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types
 from sqlalchemy.sql import sqltypes
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -28,6 +29,51 @@ from sqlalchemy.types import UnicodeText
 from sqlalchemy.types import LargeBinary as SA_LargeBinary
 import json
 from copy import deepcopy
+from inspect import ismethod
+from logging import getLogger
+logger = getLogger(__name__)
+
+
+def wrap_default(registry, namespace, default_val):
+
+    def wrapper():
+        Model = registry.get(namespace)
+        if hasattr(Model, default_val):
+            func = getattr(Model, default_val)
+            if ismethod(func):
+                if default_val not in Model.loaded_columns:
+                    if default_val not in Model.loaded_fields:
+                        return func()
+                    else:
+                        logger.warn("On a Model %r the attribute %r is "
+                                    "declared as a default value, a field "
+                                    "with the same name exist" % (namespace,
+                                                                  default_val))
+                else:
+                    logger.warn("On a Model %r the attribute %r is declared "
+                                "as a default value, a column with the same "
+                                "name exist" % (namespace, default_val))
+            else:
+                logger.warn("On a Model %r the attribute %r is declared as a "
+                            "default value, a instance method with the same "
+                            "name exist" % (namespace, default_val))
+
+        return default_val
+
+    return wrapper
+
+
+class ColumnDefaultValue:
+
+    def __init__(self, callable):
+        self.callable = callable
+
+    def get_default_callable(self, registry, namespace, fieldname, properties):
+        return self.callable(registry, namespace, fieldname, properties)
+
+
+class NoDefaultValue:
+    pass
 
 
 class Column(Field):
@@ -53,14 +99,18 @@ class Column(Field):
             del kwargs['type_']
 
         if 'foreign_key' in kwargs:
-            self.foreign_key = kwargs.pop('foreign_key')
+            self.foreign_key = ModelAttributeAdapter(kwargs.pop('foreign_key'))
 
         if 'sequence' in kwargs:
-            self.sequence = Sequence(kwargs.pop('sequence'))
+            self.sequence = SA_Sequence(kwargs.pop('sequence'))
 
         self.db_column_name = None
         if 'db_column_name' in kwargs:
             self.db_column_name = kwargs.pop('db_column_name')
+
+        self.default_val = NoDefaultValue
+        if 'default' in kwargs:
+            self.default_val = kwargs.pop('default')
 
         super(Column, self).__init__(*args, **kwargs)
 
@@ -68,35 +118,13 @@ class Column(Field):
         """ Return the native SqlAlchemy type """
         return cls.sqlalchemy_type
 
-    def get_tablename(self, registry, model):
-        """ Return the table name of the remote model
-
-        :rtype: str of the table name
-        """
-        if isinstance(model, str):
-            model = registry.loaded_namespaces_first_step[model]
-            return model['__tablename__']
-        else:
-            return model.__tablename__
-
-    def get_registry_name(self, model):
-        """ Return the registry name of the remote model
-
-        :rtype: str of the registry name
-        """
-        if isinstance(model, str):
-            return model
-        else:
-            return model.__registry_name__
-
     def format_foreign_key(self, registry, args, kwargs):
         if self.foreign_key:
-            model, col = self.foreign_key
-            tablename = self.get_tablename(registry, model)
-            foreign_key = tablename + '.' + col
-            args = args + (ForeignKey(foreign_key),)
-            kwargs['info']['foreign_key'] = foreign_key
-            kwargs['info']['remote_model'] = self.get_registry_name(model)
+            args = args + (self.foreign_key.get_fk(registry),)
+            kwargs['info'].update({
+                'foreign_key': self.foreign_key.get_fk_name(registry),
+                'remote_model': self.foreign_key.model_name,
+            })
 
         return args
 
@@ -125,6 +153,16 @@ class Column(Field):
             kwargs['info']['use_db_column_name'] = db_column_name
         else:
             db_column_name = fieldname
+
+        if self.default_val is not NoDefaultValue:
+            if isinstance(self.default_val, str):
+                kwargs['default'] = wrap_default(registry, namespace,
+                                                 self.default_val)
+            elif isinstance(self.default_val, ColumnDefaultValue):
+                kwargs['default'] = self.default_val.get_default_callable(
+                    registry, namespace, fieldname, properties)
+            else:
+                kwargs['default'] = self.default_val
 
         return SA_Column(db_column_name, self.sqlalchemy_type, *args, **kwargs)
 
@@ -627,3 +665,48 @@ class LargeBinary(Column):
 
     """
     sqlalchemy_type = SA_LargeBinary
+
+
+class Sequence(String):
+    """ Sequence column
+
+    ::
+
+        from anyblok.column import Sequence
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = Sequence()
+
+    """
+    def __init__(self, *args, **kwargs):
+        if 'foreign_key' in kwargs:
+            raise FieldException("Sequence column can not define a foreign key"
+                                 " %r" % kwargs['foreign_key'])
+        if 'default' in kwargs:
+            raise FieldException("Sequence column can not define a default "
+                                 "value")
+        kwargs['default'] = ColumnDefaultValue(self.wrap_default)
+
+        self.code = kwargs.pop('code') if 'code' in kwargs else None
+        self.formater = kwargs.pop(
+            'formater') if 'formater' in kwargs else None
+
+        super(Sequence, self).__init__(*args, **kwargs)
+
+    def wrap_default(self, registry, namespace, fieldname, properties):
+        if not hasattr(registry, '_need_sequence_to_create_if_not_exist'):
+            registry._need_sequence_to_create_if_not_exist = []
+        elif registry._need_sequence_to_create_if_not_exist is None:
+            registry._need_sequence_to_create_if_not_exist = []
+
+        code = self.code if self.code else "%s=>%s" % (namespace, fieldname)
+        registry._need_sequence_to_create_if_not_exist.append(
+            {'code': code, 'formater': self.formater})
+
+        def default_value():
+            return registry.System.Sequence.nextvalBy(code=code)
+
+        return default_value

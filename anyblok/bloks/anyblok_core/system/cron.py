@@ -86,7 +86,7 @@ class Job:
     id = Integer(primary_key=True)
     available_at = DateTime()
     done_at = DateTime()
-    model = String(nullable=False, foreign_key=(System.Model, 'name'))
+    model = String(nullable=False, foreign_key=System.Model.use('name'))
     method = String(nullable=False)
     is_a_class_method = Boolean(default=True)
     params = Json()

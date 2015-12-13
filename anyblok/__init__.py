@@ -6,15 +6,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from . import release
 
 
 PROMPT = "%(processName)s - %(version)s"
 
 
-def start(processName, version=release.version, prompt=PROMPT,
-          configuration_groups=None, entry_points=None,
-          useseparator=False, loadwithoutmigration=False):
+def start(processName, configuration_groups=None, entry_points=None,
+          useseparator=False, loadwithoutmigration=False, config=None,
+          **kwargs):
     """ Function which initialize the application
 
     ::
@@ -37,11 +36,13 @@ def start(processName, version=release.version, prompt=PROMPT,
     from .config import Configuration
     from .registry import RegistryManager
 
-    description = prompt % {'processName': processName, 'version': version}
     if configuration_groups is not None:
-        Configuration.load(description=description,
+        if config is None:
+            config = {}
+
+        Configuration.load(processName,
                            configuration_groups=configuration_groups,
-                           useseparator=useseparator)
+                           useseparator=useseparator, **config)
 
     if entry_points:
         BlokManager.load(entry_points=entry_points)
@@ -53,17 +54,12 @@ def start(processName, version=release.version, prompt=PROMPT,
         return None
 
     registry = RegistryManager.get(
-        db_name, loadwithoutmigration=loadwithoutmigration)
+        db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
     registry.commit()
     return registry
 
 
-BDD = {
-}
-
-
 from .declarations import Declarations  # noqa
-from . import databases  # noqa
 from . import core  # noqa
 from . import model  # noqa
 from . import mixin  # noqa

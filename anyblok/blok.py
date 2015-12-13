@@ -118,6 +118,8 @@ class BlokManager:
         cls.ordered_bloks = []
         cls.entry_points = None
         cls.auto_install = []
+        from .registry import RegistryManager
+        RegistryManager.unload()
 
     @classmethod
     def get_need_blok(cls, blok):

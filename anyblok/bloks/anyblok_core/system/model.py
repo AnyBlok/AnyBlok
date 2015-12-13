@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
+from anyblok.declarations import Declarations, listen
 from anyblok.field import Function
 from anyblok.column import String, Boolean
 from logging import getLogger
@@ -40,7 +40,7 @@ class Model:
 
         return ''
 
-    @Declarations.addListener('Model.System.Model', 'Update Model')
+    @listen('Model.System.Model', 'Update Model')
     def listener_update_model(cls, model):
         cls.registry.System.Cache.invalidate(model, '_fields_description')
 

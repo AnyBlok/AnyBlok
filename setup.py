@@ -9,16 +9,17 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.4.1'
+version = '0.5.3'
 
 
-if sys.version_info < (3, 2):
-    sys.stderr.write("This package requires Python 3.2 or newer. "
+if sys.version_info < (3, 3):
+    sys.stderr.write("This package requires Python 3.3 or newer. "
                      "Yours is " + sys.version + os.linesep)
     sys.exit(1)
 
 requires = [
     'sqlalchemy',
+    'sqlalchemy-utils',
     'argparse',
     'alembic',
     'graphviz',
@@ -26,6 +27,8 @@ requires = [
     'lxml',
     'six',
     'PyYAML',
+    'appdirs',
+    'sqlalchemy-utils',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

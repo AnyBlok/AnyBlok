@@ -6,7 +6,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations, reload_module_if_blok_is_reloading
-from anyblok.common import format_bloks
 from anyblok.config import Configuration
 
 
@@ -29,11 +28,10 @@ class Model(Declarations.Mixin.DocElement):
     @classmethod
     def filterModel(cls, query):
         Model = cls.registry.System.Model
-        wanted_models = format_bloks(Configuration.get('doc_wanted_models'))
+        wanted_models = Configuration.get('doc_wanted_models')
         if wanted_models:
             query = query.filter(Model.name.in_(wanted_models))
-        unwanted_models = format_bloks(
-            Configuration.get('doc_unwanted_models'))
+        unwanted_models = Configuration.get('doc_unwanted_models')
         if unwanted_models:
             query = query.filter(Model.name.notin_(unwanted_models))
 

@@ -45,7 +45,7 @@ class Query(query.Query):
         :param principals: list, set or tuple of strings
         :param str permission: the permission to filter for
         :returns: a query-like object, with only the returning methods, such
-        as ``all()``, ``count()`` etc. available.
+                  as ``all()``, ``count()`` etc. available.
         """
         return self.registry.wrap_query_permission(
             self, principals, permission)

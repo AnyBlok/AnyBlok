@@ -12,7 +12,7 @@ from .exceptions import XMLImporterException
 
 register = Declarations.register
 IO = Declarations.Model.IO
-if_exist = 'update'
+if_exist = 'overwrite'
 if_does_not_exist = 'create'
 on_error = 'ignore'
 
@@ -141,7 +141,7 @@ class XML:
             elif if_exist == 'create':
                 return_entry = self.create_entry(
                     Model, values, two_way, **kwargs)
-            elif if_exist == 'update':
+            elif if_exist == 'overwrite':
                 try:
                     insert_values = {x: y for x, y in values.items()
                                      if not isinstance(y, list)}

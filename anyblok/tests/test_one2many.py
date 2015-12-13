@@ -2,6 +2,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -32,7 +33,7 @@ def _complete_one2many(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address_id = Integer(foreign_key=(Model.Address, 'id'))
+        address_id = Integer(foreign_key=Model.Address.use('id'))
 
     @register(Model)  # noqa
     class Address:
@@ -57,7 +58,7 @@ def _minimum_one2many(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address_id = Integer(foreign_key=(Model.Address, 'id'))
+        address_id = Integer(foreign_key=Model.Address.use('id'))
 
     @register(Model)  # noqa
     class Address:
@@ -77,7 +78,7 @@ def _minimum_one2many_remote_field_in_mixin(**kwargs):
 
     @register(Mixin)
     class MPerson:
-        address_id = Integer(foreign_key=(Model.Address, 'id'))
+        address_id = Integer(foreign_key=Model.Address.use('id'))
 
     @register(Model)
     class Person(Mixin.MPerson):
@@ -104,7 +105,7 @@ def _one2many_with_str_model(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address_id = Integer(foreign_key=(Model.Address, 'id'))
+        address_id = Integer(foreign_key=Model.Address.use('id'))
 
     @register(Model)  # noqa
     class Address:
@@ -126,8 +127,8 @@ def _autodetect_two_foreign_key(**kwargs):
     class Person:
 
         name = String(primary_key=True)
-        address_id = Integer(foreign_key=(Model.Address, 'id'))
-        address2_id = Integer(foreign_key=(Model.Address, 'id'))
+        address_id = Integer(foreign_key=Model.Address.use('id'))
+        address2_id = Integer(foreign_key=Model.Address.use('id'))
 
     @register(Model)  # noqa
     class Address:
@@ -183,7 +184,7 @@ class TestOne2Many(DBTestCase):
             class Test:
 
                 id = Integer(primary_key=True)
-                parent_id = Integer(foreign_key=('Model.Test', 'id'))
+                parent_id = Integer(foreign_key='Model.Test=>id')
                 children = One2Many(model='Model.Test', many2one='parent')
 
         self.reload_registry_with(add_in_registry)
@@ -208,8 +209,8 @@ class TestOne2Many(DBTestCase):
             class Test2:
 
                 id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=(Model.Test, 'id'))
-                test_id2 = String(foreign_key=(Model.Test, 'id2'))
+                test_id = Integer(foreign_key=Model.Test.use('id'))
+                test_id2 = String(foreign_key=Model.Test.use('id2'))
 
             @register(Model)  # noqa
             class Test:
@@ -239,8 +240,8 @@ class TestOne2Many(DBTestCase):
             class Test2:
 
                 id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=(Model.Test, 'id'))
-                test_id2 = String(foreign_key=(Model.Test, 'id2'))
+                test_id = Integer(foreign_key=Model.Test.use('id'))
+                test_id2 = String(foreign_key=Model.Test.use('id2'))
 
             @register(Model)  # noqa
             class Test:

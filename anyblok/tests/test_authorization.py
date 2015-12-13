@@ -16,9 +16,10 @@ from anyblok.test_bloks.authorization import TestRuleTwo
 class TestAuthorizationDeclaration(DBTestCase):
 
     def test_association(self):
-        self.registry.upgrade(install=('test-blok7',))
-        record = self.registry.Test(id=23, label='Hop')
-        self.assertIsInstance(self.registry.lookup_policy(record, 'Read'),
+        registry = self.init_registry(None)
+        registry.upgrade(install=('test-blok7',))
+        record = registry.Test(id=23, label='Hop')
+        self.assertIsInstance(registry.lookup_policy(record, 'Read'),
                               TestRuleOne)
         self.assertIsInstance(self.registry.lookup_policy(record, 'Other'),
                               TestRuleTwo)
@@ -28,7 +29,7 @@ class TestAuthorizationDeclaration(DBTestCase):
 
     def test_override(self):
         # test-blok8 depends on test-blok7
-        self.registry.upgrade(install=('test-blok8',))
+        registry.upgrade(install=('test-blok8',))
         # lookup can be made on model itself
         model = self.registry.Test
         self.assertIsInstance(self.registry.lookup_policy(model, 'Read'),
@@ -45,9 +46,10 @@ class TestAuthorizationDeclaration(DBTestCase):
         The supporting default model is installed by the same blok.
         #TODO move this test to the 'model_authz' blok
         """
-        self.registry.upgrade(install=('test-blok9',))
-        model = self.registry.Test2
-        Grant = self.registry.Authorization.ModelPermissionGrant
+        registry = self.init_registry(None)
+        registry.upgrade(install=('test-blok9',))
+        model = registry.Test2
+        Grant = registry.Authorization.ModelPermissionGrant
         Grant.insert(model='Model.Test2',
                      principal="Franck",
                      permission="Read")
@@ -106,9 +108,10 @@ class TestAuthorizationDeclaration(DBTestCase):
         TODO move this test to the 'attr_authz' blok, or put the policy in the
         main code body.
         """
-        self.registry.upgrade(install=('test-blok10',))
-        model = self.registry.Test2
-        Grant = self.registry.Authorization.ModelPermissionGrant
+        registry = self.init_registry(None)
+        registry.upgrade(install=('test-blok10',))
+        model = registry.Test2
+        Grant = registry.Authorization.ModelPermissionGrant
         Grant.insert(model='Model.Test2',
                      principal="Franck",
                      permission="Read")

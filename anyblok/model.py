@@ -13,10 +13,12 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper
+from sqlalchemy import inspection
 from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
+from .mapper import ModelAttribute
 
 
 class ModelException(Exception):
@@ -60,6 +62,15 @@ def has_sql_fields(bases):
             if hasattr(getattr(base, p), '__class__'):
                 if Field in getattr(base, p).__class__.__mro__:
                     return True
+
+    return False
+
+
+def has_sqlalchemy_fields(base):
+    for p in base.__dict__.keys():
+        attr = base.__dict__[p]
+        if inspection.inspect(attr, raiseerr=False) is not None:
+            return True
 
     return False
 
@@ -151,10 +162,10 @@ class Model:
                 tablename += '_' + name.lower()
 
         if not hasattr(parent, name):
-
             p = {
                 '__tablename__': tablename,
                 '__registry_name__': _registryname,
+                'use': lambda x: ModelAttribute(_registryname, x),
             }
             ns = type(name, tuple(), p)
             setattr(parent, name, ns)
@@ -242,6 +253,26 @@ class Model:
                 ev.append(val)
 
     @classmethod
+    def apply_sqlalchemy_event_listner(cls, attr, method, registry, namespace,
+                                       base, properties):
+        """declare in the registry the sqlalchemy event
+
+        :param attr: name of the attibute
+        :param method: method pointer
+        :param registry: the current  registry
+        :param namespace: the namespace of the model
+        :param base: One of the base of the model
+        :param properties: the properties of the model
+        """
+        if not hasattr(method, 'is_an_sqlalchemy_event_listener'):
+            return
+        elif method.is_an_sqlalchemy_event_listener is True:
+            registry._sqlalchemy_known_events.append(
+                (method.sqlalchemy_listener,
+                 namespace,
+                 ModelAttribute(namespace, attr)))
+
+    @classmethod
     def detect_hybrid_method(cls, attr, method, registry, namespace, base,
                              properties):
         """ Find the sqlalchemy hybrid methods in the base to save the
@@ -310,6 +341,8 @@ class Model:
             new_type_properties.update(apply_cache(
                 attr, method, registry, namespace, base, properties))
             cls.apply_event_listner(
+                attr, method, registry, namespace, base, properties)
+            cls.apply_sqlalchemy_event_listner(
                 attr, method, registry, namespace, base, properties)
             cls.detect_hybrid_method(
                 attr, method, registry, namespace, base, properties)
@@ -412,6 +445,12 @@ class Model:
                                         transformation_properties, properties)
 
     @classmethod
+    def raise_if_has_sqlalchemy(cls, base):
+        if has_sqlalchemy_fields(base):
+            raise ModelException(
+                "the base %r have an SQLAlchemy attribute" % base)
+
+    @classmethod
     def load_namespace_first_step(cls, registry, namespace):
         """ Return the properties of the declared bases for a namespace.
         This is the first step because some actions need to known all the
@@ -427,9 +466,6 @@ class Model:
         bases = []
         properties = {}
         ns = registry.loaded_registries[namespace]
-        if '__tablename__' in ns['properties']:
-            properties['__tablename__'] = ns['properties']['__tablename__']
-
         for b in ns['bases']:
             bases.append(b)
 
@@ -440,10 +476,14 @@ class Model:
                 properties.update(ps)
 
         for b in bases:
+            cls.raise_if_has_sqlalchemy(b)
             fields = get_fields(b)
             for p, f in fields.items():
                 if p not in properties:
                     properties[p] = f
+
+        if '__tablename__' in ns['properties']:
+            properties['__tablename__'] = ns['properties']['__tablename__']
 
         registry.loaded_namespaces_first_step[namespace] = properties
         return properties

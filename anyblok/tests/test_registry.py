@@ -6,10 +6,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase
+from anyblok.tests.testcase import TestCase
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager, Blok
 from anyblok.column import Integer
+from threading import Thread
 
 
 class Test:
@@ -24,7 +25,25 @@ class TestTestTest:
     pass
 
 
-class TestRegistry(DBTestCase):
+class TestRegistry(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestRegistry, cls).setUpClass()
+        cls.init_configuration_manager()
+        cls.createdb()
+        BlokManager.load()
+
+    def setUp(self):
+        super(TestRegistry, self).setUp()
+        self.active_unittest_connection = False
+        self.registry = self.getRegistry()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestRegistry, cls).tearDownClass()
+        BlokManager.unload()
+        cls.dropdb()
 
     def tearDown(self):
         super(TestRegistry, self).tearDown()
@@ -62,20 +81,20 @@ class TestRegistry(DBTestCase):
             'entry': {
                 'registry_names': ['key'],
                 'key': {'properties': {'property': True},
-                        'bases': [DBTestCase]},
+                        'bases': [TestCase]},
             },
         }
         self.registry.load_entry('blok', 'entry')
         self.assertEqual(self.registry.loaded_registries['key'],
                          {'properties': {'property': True},
-                          'bases': [DBTestCase]})
+                          'bases': [TestCase]})
 
     def test_load_core(self):
         RegistryManager.loaded_bloks['blok'] = {
-            'Core': {'Session': [DBTestCase]},
+            'Core': {'Session': [TestCase]},
         }
         self.registry.load_core('blok', 'Session')
-        self.assertIn(DBTestCase, self.registry.loaded_cores['Session'])
+        self.assertIn(TestCase, self.registry.loaded_cores['Session'])
 
     def test_load_blok(self):
 
@@ -84,7 +103,7 @@ class TestRegistry(DBTestCase):
 
         BlokManager.bloks['blok'] = BlokTest
         RegistryManager.loaded_bloks['blok'] = {
-            'Core': {'Session': [DBTestCase],
+            'Core': {'Session': [TestCase],
                      'Base': [],
                      'SqlBase': [],
                      'SqlViewBase': [],
@@ -98,7 +117,7 @@ class TestRegistry(DBTestCase):
                 'registry_names': []}
 
         self.registry.load_blok('blok', False, [])
-        self.assertIn(DBTestCase, self.registry.loaded_cores['Session'])
+        self.assertIn(TestCase, self.registry.loaded_cores['Session'])
 
     def check_added_in_regisry(self):
         self.assertEqual(self.registry.Test, Test)
@@ -148,7 +167,7 @@ class TestRegistry(DBTestCase):
         self.check_added_in_regisry()
 
 
-class TestRegistry2(DBTestCase):
+class TestRegistry2(TestCase):
 
     def add_model(self):
 
@@ -213,6 +232,28 @@ class TestRegistry2(DBTestCase):
         self.registry.commit()
         self.assertEqual(t1.val, 3 * t1.id)
         self.assertEqual(t2.val, 3 * t2.id)
+
+    def test_precommit_hook_in_thread(self):
+        registry = self.init_registry(self.add_model)
+        t1 = registry.Test.insert()
+        t1.add_precommit_hook()
+        t2 = registry.Test.insert()
+        t2.add_precommit_hook()
+        self.assertEqual(t1.val, 0)
+        self.assertEqual(t2.val, 0)
+
+        def target():
+            registry.commit()
+
+        t = Thread(target=target)
+        t.start()
+        t.join()
+
+        self.assertEqual(t1.val, 0)
+        self.assertEqual(t2.val, 0)
+        registry.commit()
+        self.assertEqual(t1.val, t1.id)
+        self.assertEqual(t2.val, t2.id)
 
     def define_cls(self, typename='Model', name='Test', val=1, usesuper=False,
                    inherit=None):

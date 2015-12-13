@@ -2,6 +2,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -137,11 +138,13 @@ class TestOne2One(DBTestCase):
 
     def test_minimum_one2one_without_backref(self):
         with self.assertRaises(FieldException):
-            self.reload_registry_with(_minimum_one2one_without_backref)
+            self.active_unittest_connection = False
+            self.init_registry(_minimum_one2one_without_backref)
 
     def test_minimum_one2one_with_one2many(self):
         with self.assertRaises(FieldException):
-            self.reload_registry_with(_minimum_one2one_with_one2many)
+            self.active_unittest_connection = False
+            self.init_registry(_minimum_one2one_with_one2many)
 
     def test_complet_with_multi_foreign_key(self):
 
@@ -164,9 +167,9 @@ class TestOne2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = One2One(model=Model.Test,
                                remote_columns=('id', 'id2'),
                                column_names=('test_id', 'test_id2'),
@@ -193,9 +196,9 @@ class TestOne2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = One2One(model=Model.Test,
                                remote_columns=('id', 'id2'),
                                column_names=('test_id', 'test_id2'),
@@ -222,9 +225,9 @@ class TestOne2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = One2One(model=Model.Test, backref="test2")
 
         self.reload_registry_with(add_in_registry)
@@ -248,9 +251,9 @@ class TestOne2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 other_test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 other_test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = One2One(model=Model.Test, backref="test2")
 
         self.reload_registry_with(add_in_registry)
@@ -323,4 +326,5 @@ class TestOne2One(DBTestCase):
                     'other_test_id', 'other_test_id2'), backref="test2")
 
         with self.assertRaises(FieldException):
-            self.reload_registry_with(add_in_registry)
+            self.active_unittest_connection = False
+            self.init_registry(add_in_registry)

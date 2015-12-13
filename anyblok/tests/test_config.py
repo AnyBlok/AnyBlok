@@ -17,8 +17,10 @@ from anyblok.config import (Configuration,
                             add_schema,
                             add_doc,
                             add_unittest,
-                            ConfigurationException)
+                            ConfigurationException,
+                            ConfigOption)
 from anyblok.tests.testcase import TestCase
+from sqlalchemy.engine.url import make_url
 
 
 old_getParser = config.getParser
@@ -162,40 +164,139 @@ class TestConfiguration(TestCase):
 
     def test_get(self):
         option = 'My option'
-        Configuration.configuration['option'] = option
+        Configuration.configuration['option'] = ConfigOption(option, str)
         res = Configuration.get('option')
         self.assertEqual(option, res)
+
+    def test_update(self):
+        Configuration.update(one_option=1)
+        self.assertEqual(Configuration.get('one_option'), 1)
+
+    def test_update2(self):
+        Configuration.update(dict(one_option=1))
+        self.assertEqual(Configuration.get('one_option'), 1)
+
+    def test_set_str(self):
+        Configuration.set('value', '1')
+        self.assertEqual(Configuration.configuration['value'].type, str)
+        self.assertEqual(Configuration.get('value'), '1')
+
+    def test_set_int(self):
+        Configuration.set('value', 1)
+        self.assertEqual(Configuration.configuration['value'].type, int)
+        self.assertEqual(Configuration.get('value'), 1)
+
+    def test_set_float(self):
+        Configuration.set('value', 1.)
+        self.assertEqual(Configuration.configuration['value'].type, float)
+        self.assertEqual(Configuration.get('value'), 1.)
+
+    def test_set_list(self):
+        Configuration.set('value', [1])
+        self.assertEqual(Configuration.configuration['value'].type, list)
+        self.assertEqual(Configuration.get('value'), [1])
+
+    def test_set_tuple(self):
+        Configuration.set('value', (1,))
+        self.assertEqual(Configuration.configuration['value'].type, tuple)
+        self.assertEqual(Configuration.get('value'), (1,))
+
+    def test_set_dict(self):
+        Configuration.set('value', {'a': 1})
+        self.assertEqual(Configuration.configuration['value'].type, dict)
+        self.assertEqual(Configuration.get('value'), {'a': 1})
+
+    def test_set_object(self):
+        class A:
+            pass
+
+        a = A()
+        Configuration.set('value', a)
+        self.assertEqual(Configuration.configuration['value'].type, A)
+        self.assertIs(Configuration.get('value'), a)
 
     def test_get_use_default_value(self):
         option = 'My option by default'
         res = Configuration.get('option', option)
         self.assertEqual(option, res)
 
+    def check_url(self, url, wanted_url):
+        wanted_url = make_url(wanted_url)
+        for x in ('drivername', 'host', 'port', 'username', 'password',
+                  'database'):
+            self.assertEqual(
+                getattr(url, x), getattr(wanted_url, x),
+                "check url(%s) == url(%s) on attribute %r" % (url, wanted_url,
+                                                              x))
+
     def test_get_url(self):
-        Configuration.configuration.update(dict(
+        Configuration.update(
             db_name='anyblok',
             db_driver_name='postgres',
             db_host='localhost',
             db_user_name=None,
             db_password=None,
-            db_port=None,
-        ))
-        Configuration.get_url()
+            db_port=None)
+        url = Configuration.get_url()
+        self.check_url(url, 'postgres://localhost/anyblok')
 
-    def test_get_url_without_drivername(self):
-        Configuration.configuration.update(dict(
+    def test_get_url2(self):
+        Configuration.update(
+            db_name='anyblok',
+            db_driver_name='postgres',
+            db_host='localhost',
+            db_user_name=None,
+            db_password=None,
+            db_port=None,)
+        url = Configuration.get_url(db_name='anyblok2')
+        self.check_url(url, 'postgres://localhost/anyblok2')
+
+    def test_get_url3(self):
+        Configuration.update(
+            db_url='postgres:///anyblok',
             db_name=None,
             db_driver_name=None,
             db_host=None,
             db_user_name=None,
             db_password=None,
-            db_port=None,
-        ))
-        try:
+            db_port=None)
+        url = Configuration.get_url()
+        self.check_url(url, 'postgres:///anyblok')
+
+    def test_get_url4(self):
+        Configuration.update(
+            db_url='postgres:///anyblok',
+            db_name='anyblok2',
+            db_driver_name=None,
+            db_host=None,
+            db_user_name='jssuzanne',
+            db_password='secret',
+            db_port=None)
+        url = Configuration.get_url()
+        self.check_url(url, 'postgres://jssuzanne:secret@/anyblok2')
+
+    def test_get_url5(self):
+        Configuration.update(
+            db_url='postgres:///anyblok',
+            db_name='anyblok2',
+            db_driver_name=None,
+            db_host=None,
+            db_user_name='jssuzanne',
+            db_password='secret',
+            db_port=None)
+        url = Configuration.get_url(db_name='anyblok3')
+        self.check_url(url, 'postgres://jssuzanne:secret@/anyblok3')
+
+    def test_get_url_without_drivername(self):
+        Configuration.update(
+            db_name=None,
+            db_driver_name=None,
+            db_host=None,
+            db_user_name=None,
+            db_password=None,
+            db_port=None)
+        with self.assertRaises(ConfigurationException):
             Configuration.get_url()
-            self.fail("No watchdog found for no drivername")
-        except ConfigurationException:
-            pass
 
     def test_merge_for_one_part(self):
         Configuration.add('new-group', function_=fnct_configuration)
@@ -220,11 +321,8 @@ class TestConfiguration(TestCase):
             'old-group': [fnct_configuration, fnct_other_configuration]})
 
     def test_merge_no_parts(self):
-        try:
+        with self.assertRaises(ConfigurationException):
             Configuration._merge_groups()
-            self.fail('No watchdog to merge no part')
-        except ConfigurationException:
-            pass
 
     def test_merge_inexisting_part(self):
         Configuration._merge_groups('other')
@@ -247,11 +345,8 @@ class TestConfiguration(TestCase):
                                   'old-group': "Label 2"})
 
     def test_merge_labels_with_no_parts(self):
-        try:
+        with self.assertRaises(ConfigurationException):
             Configuration._merge_labels()
-            self.fail('No watchdog to merge no part')
-        except ConfigurationException:
-            pass
 
     def test_merge_labels_inexisting_part(self):
         Configuration._merge_labels('other')
@@ -279,29 +374,27 @@ class TestConfiguration(TestCase):
         Configuration.add(
             'new-group', label="One label", function_=fnct_configuration)
         Configuration.remove_label('new-group')
-        try:
+        with self.assertRaises(KeyError):
             Configuration.labels['AnyBlok']['new-group']
-            self.fail("Label doesn't remove")
-        except:
-            pass
 
     def test_remove_label_other_part(self):
         Configuration.add('new-group', part='other', label="One label",
                           function_=fnct_configuration)
         Configuration.remove_label('new-group', part='other')
-        try:
+        with self.assertRaises(KeyError):
             Configuration.labels['other']['new-group']
-            self.fail("Label doesn't remove")
-        except:
-            pass
 
     def test_load_without_configuration_groupes(self):
-        self.assertEqual(Configuration.load(), None)
+        self.assertEqual(Configuration.load('default'), None)
 
     def test_empty_parse_option(self):
         args = MockArgParseArguments()
         Configuration.parse_options(args, ['AnyBlok'])
         self.assertEqual(Configuration.configuration, {})
+
+    def assertConfig(self, kwargs):
+        config = {x: y.get() for x, y in Configuration.configuration.items()}
+        self.assertEqual(config, kwargs)
 
     def test_parse_option(self):
         kwargs = {'test': 'value'}
@@ -316,12 +409,12 @@ class TestConfiguration(TestCase):
             'db_host': 'localhost',
             'db_port': '',
         })
-        self.assertEqual(Configuration.configuration, kwargs)
+        self.assertConfig(kwargs)
 
     def test_parse_option_configuration(self):
         args = MockArgParseArguments(configfile="mock_configuration_file.cfg")
         Configuration.parse_options(args, ())
-        self.assertEqual(Configuration.configuration, {
+        self.assertConfig({
             'db_name': 'anyblok',
             'db_driver_name': 'postgres',
             'db_user_name': '',
@@ -335,7 +428,7 @@ class TestConfiguration(TestCase):
         args = MockArgParseArguments(
             configfile="mockblok/mock_configuration_file.cfg")
         Configuration.parse_options(args, ())
-        self.assertEqual(Configuration.configuration, {
+        self.assertConfig({
             'db_name': 'anyblok',
             'db_driver_name': 'postgres',
             'db_user_name': '',
@@ -349,24 +442,21 @@ class TestConfiguration(TestCase):
         kwargs = {'test': 'value'}
         args = MockArgParseArguments(kwargs=kwargs)
         Configuration.parse_options(args, ['AnyBlok'])
-        self.assertEqual(Configuration.configuration, kwargs)
+        self.assertConfig(kwargs)
 
     def test_parse_option_args(self):
         args = ('test',)
         args = MockArgParseArguments(args=args)
-        try:
+        with self.assertRaises(ConfigurationException):
             Configuration.parse_options(args, ['AnyBlok'])
-            self.fail("No watchdog for positionnal arguments")
-        except ConfigurationException:
-            pass
 
     def test_load_with_configuration_groupes(self):
-        Configuration.load(configuration_groups=['install-bloks'])
-        self.assertEqual(Configuration.configuration, MockArguments.vals)
+        Configuration.load('default', configuration_groups=['install-bloks'])
+        self.assertConfig(MockArguments.vals)
 
     def test_load_with_bad_configuration_groupes(self):
-        Configuration.load(configuration_groups=['bad-groups'])
-        self.assertEqual(Configuration.configuration, MockArguments.vals)
+        Configuration.load('default', configuration_groups=['bad-groups'])
+        self.assertConfig(MockArguments.vals)
 
 
 class TestConfigurationOption(TestCase):
@@ -376,7 +466,6 @@ class TestConfigurationOption(TestCase):
         super(TestConfigurationOption, cls).setUpClass()
         cls.parser = MockArgumentParser()
         cls.group = cls.parser.add_argument_group('label')
-        cls.configuration = {}
         cls.function = {
             'add_configuration_file': add_configuration_file,
             'add_database': add_database,
@@ -390,29 +479,28 @@ class TestConfigurationOption(TestCase):
         }
 
     def test_add_configuration_file(self):
-        self.function['add_configuration_file'](self.parser,
-                                                self.configuration)
+        self.function['add_configuration_file'](self.parser)
 
     def test_add_database(self):
-        self.function['add_database'](self.group, self.configuration)
+        self.function['add_database'](self.group)
 
     def test_add_install_bloks(self):
-        self.function['add_install_bloks'](self.parser, self.configuration)
+        self.function['add_install_bloks'](self.parser)
 
     def test_add_uninstall_bloks(self):
-        self.function['add_uninstall_bloks'](self.parser, self.configuration)
+        self.function['add_uninstall_bloks'](self.parser)
 
     def test_add_update_bloks(self):
-        self.function['add_update_bloks'](self.parser, self.configuration)
+        self.function['add_update_bloks'](self.parser)
 
     def test_add_interpreter(self):
-        self.function['add_interpreter'](self.parser, self.configuration)
+        self.function['add_interpreter'](self.parser)
 
     def test_add_schema(self):
-        self.function['add_schema'](self.group, self.configuration)
+        self.function['add_schema'](self.group)
 
     def test_add_doc(self):
-        self.function['add_doc'](self.group, self.configuration)
+        self.function['add_doc'](self.group)
 
     def test_add_unittest(self):
-        self.function['add_unittest'](self.group, self.configuration)
+        self.function['add_unittest'](self.group)

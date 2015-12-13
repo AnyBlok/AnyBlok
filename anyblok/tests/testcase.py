@@ -13,14 +13,37 @@ itself, in so-called "framework tests".
 """
 
 import unittest
-from logging import getLogger
+import os
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
-import anyblok
+import sqlalchemy
+from sqlalchemy_utils.functions import database_exists, create_database, orm
+from copy import copy
+from logging import getLogger
 
 logger = getLogger(__name__)
+
+
+def drop_database(url):
+    url = copy(sqlalchemy.engine.url.make_url(url))
+    database = url.database
+    if url.drivername.startswith('postgresql'):
+        url.database = 'postgres'
+    elif not url.drivername.startswith('sqlite'):
+        url.database = None
+
+    engine = sqlalchemy.create_engine(url)
+    if engine.dialect.name == 'sqlite' and url.database != ':memory:':
+        os.remove(url.database)
+    else:
+        text = 'DROP DATABASE {0}'.format(orm.quote(engine, database))
+        cnx = engine.connect()
+        cnx.execute("ROLLBACK")
+        cnx.execute(text)
+        cnx.execute("commit")
+        cnx.close()
 
 
 class TestCase(unittest.TestCase):
@@ -40,13 +63,13 @@ class TestCase(unittest.TestCase):
         :param prefix: prefix the database name
         :param env: add another dict to merge with environ variable
         """
-        db_name = Configuration.get('db_name', 'test_anyblok')
-        db_driver_name = Configuration.get('db_driver_name', 'postgres')
+        db_name = Configuration.get('db_name') or 'test_anyblok'
+        db_driver_name = Configuration.get('db_driver_name') or 'postgresql'
         env.update({
             'db_name': db_name,
             'db_driver_name': db_driver_name,
         })
-        Configuration.configuration.update(env)
+        Configuration.update(**env)
 
     @classmethod
     def createdb(cls, keep_existing=False):
@@ -59,15 +82,15 @@ class TestCase(unittest.TestCase):
 
         :param keep_existing: If false drop the previous db before create it
         """
-        bdd = anyblok.BDD[Configuration.get('db_driver_name')]
-        db_name = Configuration.get('db_name')
-        if db_name in bdd.listdb():
+        url = Configuration.get_url()
+        db_template_name = Configuration.get('db_template_name', None)
+        if database_exists(url):
             if keep_existing:
                 return True
 
-            bdd.dropdb(db_name)
+            drop_database(url)
 
-        bdd.createdb(db_name)
+        create_database(url, template=db_template_name)
 
     @classmethod
     def dropdb(cls):
@@ -79,8 +102,12 @@ class TestCase(unittest.TestCase):
             cls.dropdb()
 
         """
-        bdd = anyblok.BDD[Configuration.get('db_driver_name')]
-        bdd.dropdb(Configuration.get('db_name'))
+        url = Configuration.get_url()
+        if database_exists(url):
+            drop_database(url)
+
+    def additional_setting(self):
+        return dict(unittest=self.active_unittest_connection)
 
     def getRegistry(self):
         """Return the registry for the test database.
@@ -92,11 +119,14 @@ class TestCase(unittest.TestCase):
 
         :rtype: registry instance
         """
-        return RegistryManager.get(Configuration.get('db_name'))
+        additional_setting = self.additional_setting()
+        return RegistryManager.get(Configuration.get('db_name'),
+                                   **additional_setting)
 
     def setUp(self):
         super(TestCase, self).setUp()
         self.addCleanup(self.callCleanUp)
+        self.active_unittest_connection = True
 
     def callCleanUp(self):
         if not self._transaction_case_teared_down:
@@ -160,29 +190,28 @@ class DBTestCase(TestCase):
         if cls.registry.Session is None:
             cls.registry.reload()
 
-        cls.registry.commit()
-
-        def session_commit(*args, **kwargs):
-            pass
-
-        cls.registry.old_session_commit = cls.registry.session_commit
-        cls.registry.session_commit = session_commit
-
-    @classmethod
-    def tearDownClass(cls):
-        """ Clear the registry, unload the blok manager and  drop the database
-        """
-        BlokManager.unload()
-        cls.registry.Session = None
-        super(DBTestCase, cls).tearDownClass()
+    def setUp(self):
+        """ Create a database and load the blok manager """
+        self.trans = None
+        super(DBTestCase, self).setUp()
+        self.createdb()
+        BlokManager.load(entry_points=self.blok_entry_points)
 
     def tearDown(self):
         """ Clear the registry, unload the blok manager and  drop the database
         """
-        self.registry.rollback()
+        if self.trans:
+            trans, registry = self.trans
+            trans.rollback()
+            registry.bind.close()
+            registry.close()
+
+        RegistryManager.clear()
+        BlokManager.unload()
+        self.dropdb()
         super(DBTestCase, self).tearDown()
 
-    def reload_registry_with(self, function, **kwargs):
+    def init_registry(self, function, **kwargs):
         """ call a function to filled the blok manager with new model
 
         :param function: function to call
@@ -199,10 +228,14 @@ class DBTestCase(TestCase):
                 EnvironmentManager.set('current_blok', None)
 
         try:
-            self.registry.Session = None
-            self.registry.reload()
+            registry = self.getRegistry()
         finally:
             RegistryManager.loaded_bloks = loaded_bloks
+
+        trans = registry.bind.begin()
+        registry.session.begin_nested()
+        self.trans = (trans, registry)
+        return registry
 
 
 class BlokTestCase(unittest.TestCase):
@@ -243,6 +276,7 @@ class BlokTestCase(unittest.TestCase):
     """
 
     _transaction_case_teared_down = False
+    active_unittest_connection = True
     registry = None
     """The instance of :class:`anyblok.registry.Registry`` to use in tests.
 
@@ -251,26 +285,22 @@ class BlokTestCase(unittest.TestCase):
     """
 
     @classmethod
+    def additional_setting(cls):
+        return dict(unittest=cls.active_unittest_connection)
+
+    @classmethod
     def setUpClass(cls):
         """ Initialize the registry.
         """
         super(BlokTestCase, cls).setUpClass()
+        additional_setting = cls.additional_setting()
         if cls.registry is None:
-            cls.registry = RegistryManager.get(Configuration.get('db_name'))
-
-        def session_commit(*args, **kwargs):
-            pass
-
-        cls.old_session_commit = cls.registry.session_commit
-        cls.registry.session_commit = session_commit
-
-    @classmethod
-    def tearDownClass(cls):
-        super(BlokTestCase, cls).tearDownClass()
-        cls.registry.session_commit = cls.old_session_commit
+            cls.registry = RegistryManager.get(Configuration.get('db_name'),
+                                               **additional_setting)
 
     def setUp(self):
         super(BlokTestCase, self).setUp()
+        self.trans = self.registry.bind.begin()
         self.addCleanup(self.callCleanUp)
         self.registry.begin_nested()  # add SAVEPOINT
 
@@ -284,6 +314,14 @@ class BlokTestCase(unittest.TestCase):
     def tearDown(self):
         """ Roll back the session """
         super(BlokTestCase, self).tearDown()
-        self.registry.System.Cache.invalidate_all()
-        self.registry.rollback()
+        try:
+            self.registry.System.Cache.invalidate_all()
+            self.registry.session.rollback()
+        except sqlalchemy.exc.InvalidRequestError:
+            self.registry.Session.rollback()
+        finally:
+            self.registry.session.close()
+            if self.registry.unittest:
+                self.trans.rollback()
+
         self._transaction_case_teared_down = True

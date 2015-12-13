@@ -2,6 +2,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -157,8 +158,8 @@ class TestMany2One(DBTestCase):
 
     def test_2_many2one(self):
         with self.assertRaises(FieldException):
-            self.reload_registry_with(
-                _many2one_with_same_name_for_column_names)
+            self.active_unittest_connection = False
+            self.init_registry(_many2one_with_same_name_for_column_names)
 
     def test_minimum_many2one(self):
         self.reload_registry_with(_minimum_many2one)
@@ -324,9 +325,9 @@ class TestMany2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = Many2One(model=Model.Test,
                                 remote_columns=('id', 'id2'),
                                 column_names=('test_id', 'test_id2'))
@@ -352,9 +353,9 @@ class TestMany2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = Many2One(model=Model.Test,
                                 remote_columns=('id', 'id2'),
                                 column_names=('test_id', 'test_id2'))
@@ -380,9 +381,9 @@ class TestMany2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = Many2One(model=Model.Test)
 
         self.reload_registry_with(add_in_registry)
@@ -406,9 +407,9 @@ class TestMany2One(DBTestCase):
 
                 id = Integer(primary_key=True)
                 other_test_id = Integer(
-                    foreign_key=(Model.Test, 'id'), nullable=False)
+                    foreign_key=Model.Test.use('id'), nullable=False)
                 other_test_id2 = String(
-                    foreign_key=(Model.Test, 'id2'), nullable=False)
+                    foreign_key=Model.Test.use('id2'), nullable=False)
                 test = Many2One(model=Model.Test)
 
         self.reload_registry_with(add_in_registry)
@@ -480,4 +481,35 @@ class TestMany2One(DBTestCase):
                     'other_test_id', 'other_test_id2'))
 
         with self.assertRaises(FieldException):
-            self.reload_registry_with(add_in_registry)
+            self.active_unittest_connection = False
+            self.init_registry(add_in_registry)
+
+    def test_m2o_in_mixin(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+            @register(Mixin)
+            class MTest:
+
+                test = Many2One(model=Model.Test)
+
+            @register(Model)
+            class Test1(Mixin.MTest):
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Test2(Mixin.MTest):
+
+                id = Integer(primary_key=True)
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert()
+        test1 = registry.Test1.insert(test=test)
+        test2 = registry.Test2.insert(test=test)
+        self.assertEqual(test1.test_id, test2.test_id)

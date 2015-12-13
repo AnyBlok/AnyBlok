@@ -10,17 +10,17 @@ from os.path import join, exists
 from logging import getLogger
 import nose
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import ProgrammingError, OperationalError
+from sqlalchemy.exc import (ProgrammingError, OperationalError,
+                            InvalidRequestError)
 
 from .config import Configuration
 from .blok import BlokManager
 from .logging import log
 from .environment import EnvironmentManager
 from .migration import Migration
-from .common import format_bloks
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
 
 logger = getLogger(__name__)
@@ -64,6 +64,7 @@ class RegistryManager:
     declared_cores = []
     callback_assemble_entries = {}
     callback_initialize_entries = {}
+    callback_unload_entries = {}
     registries = {}
     needed_bloks = []
 
@@ -85,7 +86,14 @@ class RegistryManager:
             registry.close()
 
     @classmethod
-    def get(cls, db_name, loadwithoutmigration=False):
+    def unload(cls):
+        """Call all the unload callbacks"""
+        for entry, unload_callback in cls.callback_unload_entries.items():
+            logger.info('Unload: %r' % entry)
+            unload_callback()
+
+    @classmethod
+    def get(cls, db_name, loadwithoutmigration=False, **kwargs):
         """ Return an existing Registry
 
         If the Registry doesn't exist then the Registry are created and added
@@ -101,7 +109,8 @@ class RegistryManager:
                                "the registry for %r is already load" % db_name)
             return cls.registries[db_name]
 
-        registry = Registry(db_name, loadwithoutmigration=loadwithoutmigration)
+        registry = Registry(db_name, loadwithoutmigration=loadwithoutmigration,
+                            **kwargs)
         cls.registries[db_name] = registry
         return registry
 
@@ -188,6 +197,15 @@ class RegistryManager:
 
             if initialize_callback:
                 cls.callback_initialize_entries[entry] = initialize_callback
+
+    @classmethod
+    def declare_unload_callback(cls, entry, unload_callback):
+        """Save a unload callback in registry Manager
+
+        :param entry: declaration type name
+        :param unload_callback: classmethod pointer
+        """
+        cls.callback_unload_entries[entry] = unload_callback
 
     @classmethod
     def undeclare_entry(cls, entry):
@@ -374,12 +392,20 @@ class Registry:
         registry = Registry('My database')
     """
 
-    def __init__(self, db_name, loadwithoutmigration=False):
+    def __init__(self, db_name, loadwithoutmigration=False, unittest=False,
+                 **kwargs):
         self.db_name = db_name
         self.loadwithoutmigration = loadwithoutmigration
+        self.unittest = unittest
+        self.additional_setting = kwargs
         url = Configuration.get_url(db_name=db_name)
-        echo = bool(int(Configuration.get('db_echo') or False))
-        self.engine = create_engine(url, echo=echo)
+        echo = Configuration.get('db_echo') or False
+        max_overflow = Configuration.get('db_max_overflow') or 10
+        echo_pool = Configuration.get('db_echo_pool') or False
+        pool_size = Configuration.get('db_pool_size') or 5
+        self.engine = create_engine(url, echo=echo, max_overflow=max_overflow,
+                                    echo_pool=echo_pool, pool_size=pool_size)
+        self.bind = self.engine.connect() if self.unittest else self.engine
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
@@ -403,7 +429,22 @@ class Registry:
         self.children_namespaces = {}
         self.properties = {}
         self.removed = []
-        self._precommit_hook = []
+        EnvironmentManager.set('_precommit_hook', [])
+        self._sqlalchemy_known_events = []
+
+    def listen_sqlalchemy_known_event(self):
+        for e, namespace, method in self._sqlalchemy_known_events:
+            event.listen(e.mapper(self, namespace), e.event,
+                         method.get_attribute(self), *e.args, **e.kwargs)
+
+    def remove_sqlalchemy_known_event(self):
+        for e, namespace, method in self._sqlalchemy_known_events:
+            try:
+                event.remove(e.mapper(self, namespace), e.event,
+                             method.get_attribute(self),
+                             *e.args, **e.kwargs)
+            except InvalidRequestError:
+                pass
 
     def get(self, namespace):
         """ Return the namespace Class
@@ -468,8 +509,8 @@ class Registry:
                 toinstall.append(blok)
 
         if toinstall and self.withoutautomigration:
-            raise RegistryManager("Install module is forbidden with "
-                                  "no auto migration mode")
+            raise RegistryManagerException("Install module is forbidden with "
+                                           "no auto migration mode")
 
         return toinstall
 
@@ -584,9 +625,12 @@ class Registry:
         :param blok: name of the blok
         :param core: the core name to load
         """
-        bases = RegistryManager.loaded_bloks[blok]['Core'][core]
-        for base in bases:
-            self.loaded_cores[core].insert(0, base)
+        if core in RegistryManager.loaded_bloks[blok]['Core']:
+            bases = RegistryManager.loaded_bloks[blok]['Core'][core]
+            for base in bases:
+                self.loaded_cores[core].insert(0, base)
+        else:
+            logger.warning('No Core %r found' % core)
 
     def load_properties(self, blok):
         properties = RegistryManager.loaded_bloks[blok]['properties']
@@ -755,10 +799,13 @@ class Registry:
         Session = type('Session', tuple(self.loaded_cores['Session']), {
             'registry_query': Query})
 
-        bind = self.connection() if self.Session else self.engine
+        bind = self.connection() if self.Session else self.bind
+        extension = self.additional_setting.get('sa.session.extension')
+        if extension:
+            extension = extension()
         self.Session = scoped_session(
-            sessionmaker(bind=bind, class_=Session),
-            EnvironmentManager.scoped_function_for_session)
+            sessionmaker(bind=bind, class_=Session, extension=extension),
+            EnvironmentManager.scoped_function_for_session())
         self.nb_query_bases = len(self.loaded_cores['Query'])
         self.nb_session_bases = len(self.loaded_cores['Session'])
 
@@ -821,9 +868,9 @@ class Registry:
 
         test_blok = blok2install and Configuration.get(
             'test_blok_at_install')
-        selected_bloks = format_bloks(Configuration.get('selected_bloks'))
+        selected_bloks = Configuration.get('selected_bloks')
         in_selected_bloks = blok2install in (selected_bloks or [blok2install])
-        unwanted_bloks = format_bloks(Configuration.get('unwanted_bloks'))
+        unwanted_bloks = Configuration.get('unwanted_bloks')
         not_in_unwanted_bloks = blok2install not in (unwanted_bloks or [])
 
         if test_blok and in_selected_bloks and not_in_unwanted_bloks:
@@ -907,6 +954,7 @@ class Registry:
         else:
             self.migration.auto_upgrade_database()
 
+        self.listen_sqlalchemy_known_event()
         mustreload = False
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_initialize_entries:
@@ -916,6 +964,10 @@ class Registry:
                 mustreload = mustreload or r
 
         return mustreload
+
+    def rollback(self, *args, **kwargs):
+        self.session.rollback(*args, **kwargs)
+        EnvironmentManager.set('_precommit_hook', [])
 
     def close_session(self):
         """ Close only the session, not the registry
@@ -947,7 +999,7 @@ class Registry:
         else:
             return super(Registry, self).__getattr__(attribute)
 
-    def precommit_hook(self, registryname, method, put_at_the_if_exist):
+    def precommit_hook(self, registryname, method, *args, **kwargs):
         """ Add a method in the precommit_hook list
 
         a precommit hook is a method called just after the commit, it is used
@@ -955,30 +1007,40 @@ class Registry:
 
         :param registryname: namespace of the model
         :param method: method to call on the registryname
-        :param put_at_the_if_exist: if true and hook allready exist then the
+        :param put_at_the_end_if_exist: if true and hook allready exist then the
             hook are moved at the end
         """
-        entry = (registryname, method)
-        if entry in self._precommit_hook:
-            if put_at_the_if_exist:
-                self._precommit_hook.remove(entry)
-                self._precommit_hook.append(entry)
+        put_at_the_end_if_exist = False
+        if 'put_at_the_end_if_exist' in kwargs:
+            put_at_the_end_if_exist = kwargs.pop('put_at_the_end_if_exist')
+
+        entry = (registryname, method, args, kwargs)
+        _precommit_hook = EnvironmentManager.get('_precommit_hook')
+        if entry in _precommit_hook:
+            if put_at_the_end_if_exist:
+                _precommit_hook.remove(entry)
+                _precommit_hook.append(entry)
 
         else:
-            self._precommit_hook.append(entry)
+            _precommit_hook.append(entry)
 
-    def commit(self, *args, **kwargs):
-        """ Overload the commit method of the SqlAlchemy session """
+    def apply_precommit_hook(self):
         hooks = []
-        if self._precommit_hook:
-            hooks.extend(self._precommit_hook)
+        _precommit_hook = EnvironmentManager.get('_precommit_hook')
+        if _precommit_hook:
+            hooks.extend(_precommit_hook)
 
         for hook in hooks:
             Model = self.loaded_namespaces[hook[0]]
             method = hook[1]
-            getattr(Model, method)()
-            self._precommit_hook.remove(hook)
+            a = hook[2]
+            kw = hook[3]
+            getattr(Model, method)(*a, **kw)
+            _precommit_hook.remove(hook)
 
+    def commit(self, *args, **kwargs):
+        """ Overload the commit method of the SqlAlchemy session """
+        self.apply_precommit_hook()
         self.session_commit(*args, **kwargs)
 
     def session_commit(self, *args, **kwargs):
@@ -1001,7 +1063,9 @@ class Registry:
 
     @log(logger)
     def reload(self):
-        """ Reload the registry, clean registry, reinit var """
+        """ Reload the registry, close session, clean registry, reinit var """
+        # self.close_session()
+        self.remove_sqlalchemy_known_event()
         self.clean_model()
         self.ini_var()
         self.load()

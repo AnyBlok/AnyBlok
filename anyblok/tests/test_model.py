@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -8,7 +9,8 @@
 from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
-from anyblok.model import has_sql_fields, get_fields, ModelException
+from anyblok.model import (has_sql_fields, get_fields, ModelException,
+                           has_sqlalchemy_fields)
 from anyblok import Declarations
 from anyblok.column import Integer, String
 
@@ -190,7 +192,7 @@ def model_with_foreign_key():
     class Test:
 
         id = Integer(primary_key=True)
-        name = String(foreign_key=(Model.TestFk, 'name'))
+        name = String(foreign_key=Model.TestFk.use('name'))
 
 
 class TestModel2(DBTestCase):
@@ -242,9 +244,28 @@ class TestModel2(DBTestCase):
             pass
 
     def test_model_with_foreign_key(self):
-        self.reload_registry_with(model_with_foreign_key)
-        self.registry.TestFk.insert(name='test')
-        self.check_registry(self.registry.Test)
+        registry = self.init_registry(model_with_foreign_key)
+        registry.TestFk.insert(name='test')
+        self.check_registry(registry.Test)
+
+    def test_model_with_foreign_key_with_db_column_name(self):
+
+        def model_with_foreign_key():
+
+            @register(Model)
+            class TestFk:
+
+                name = String(primary_key=True, db_column_name='other')
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                name = String(foreign_key=Model.TestFk.use('name'))
+
+        registry = self.init_registry(model_with_foreign_key)
+        registry.TestFk.insert(name='test')
+        self.check_registry(registry.Test)
 
     def test_table_args(self):
         val = 'one arg'
@@ -296,7 +317,8 @@ class TestModel2(DBTestCase):
                 __table_args__ = ()
 
         with self.assertRaises(ModelException):
-            self.reload_registry_with(add_in_registry)
+            self.active_unittest_connection = False
+            self.init_registry(add_in_registry)
 
     def test_mapper_args(self):
         val = 'one arg'
@@ -350,7 +372,21 @@ class TestModel2(DBTestCase):
                 __mapper_args__ = {}
 
         with self.assertRaises(ModelException):
-            self.reload_registry_with(add_in_registry)
+            self.active_unittest_connection = False
+            self.init_registry(add_in_registry)
+
+    def test_with_sqlalchemy_fields(self):
+        from sqlalchemy import Column as SaC, String as SaS
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                one_field = SaC(SaS(64))
+
+        with self.assertRaises(ModelException):
+            self.active_unittest_connection = False
+            self.init_registry(add_in_registry)
 
 
 class TestModelAssembling(TestCase):
@@ -375,3 +411,18 @@ class TestModelAssembling(TestCase):
             one_field = String()
 
         self.assertEqual(get_fields(MyModel), {'one_field': MyModel.one_field})
+
+    def test_has_sqlalchemy_fields(self):
+        from sqlalchemy import Column as SaC, String as SaS
+
+        class MyModel:
+            one_field = SaC(SaS(64))
+
+        self.assertTrue(has_sqlalchemy_fields(MyModel))
+
+    def test_has_sqlalchemy_fields2(self):
+
+        class MyModel:
+            one_field = String()
+
+        self.assertFalse(has_sqlalchemy_fields(MyModel))

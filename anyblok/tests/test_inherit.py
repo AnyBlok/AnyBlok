@@ -174,7 +174,7 @@ def mixin_with_foreign_key_one_model():
     @register(Mixin)
     class MixinName:
 
-        name = String(foreign_key=(Model.TestFk, 'name'))
+        name = String(foreign_key=Model.TestFk.use('name'))
 
     @register(Model)
     class Test(Mixin.MixinName):
@@ -192,7 +192,7 @@ def mixin_with_foreign_key_two_model():
     @register(Mixin)
     class MixinName:
 
-        name = String(foreign_key=(Model.TestFk, 'name'))
+        name = String(foreign_key=Model.TestFk.use('name'))
 
     @register(Model)
     class Test(Mixin.MixinName):
@@ -261,7 +261,7 @@ def inherit_by_another_model():
     class Test(Model.MainModel):
 
         id = Integer(primary_key=True)
-        mainmodel = Integer(foreign_key=(Model.MainModel, 'id'))
+        mainmodel = Integer(foreign_key=Model.MainModel.use('id'))
         other = String()
 
 
@@ -277,14 +277,14 @@ def inherit_by_two_another_model():
     class Test(Model.MainModel):
 
         id = Integer(primary_key=True)
-        mainmodel = Integer(foreign_key=(Model.MainModel, 'id'))
+        mainmodel = Integer(foreign_key=Model.MainModel.use('id'))
         other = String()
 
     @register(Model)
     class Test2(Model.MainModel):
 
         id = Integer(primary_key=True)
-        mainmodel = Integer(foreign_key=(Model.MainModel, 'id'))
+        mainmodel = Integer(foreign_key=Model.MainModel.use('id'))
         other = String()
 
 
@@ -300,7 +300,7 @@ def inherit_by_another_model_and_subclass_mainmodel():
     class Test(Model.MainModel):
 
         id = Integer(primary_key=True)
-        mainmodel = Integer(foreign_key=(Model.MainModel, 'id'))
+        mainmodel = Integer(foreign_key=Model.MainModel.use('id'))
 
     @register(Model)  # noqa
     class MainModel:
@@ -604,7 +604,7 @@ class TestInherit(DBTestCase):
             @register(Model)
             class Test3(Model.Test2):
                 id = Integer(primary_key=True)
-                test2 = Integer(foreign_key=(Model.Test2, 'id'))
+                test2 = Integer(foreign_key=Model.Test2.use('id'))
 
         self.reload_registry_with(add_in_registry)
         t = self.registry.Test.insert()
@@ -624,13 +624,13 @@ class TestInherit(DBTestCase):
             @register(Model)
             class Test2:
                 id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=(Model.Test, 'id'))
+                test_id = Integer(foreign_key=Model.Test.use('id'))
                 test = Many2One(model=Model.Test, one2many='test2')
 
             @register(Model)
             class Test3(Model.Test2):
                 id = Integer(primary_key=True)
-                test2 = Integer(foreign_key=(Model.Test2, 'id'))
+                test2 = Integer(foreign_key=Model.Test2.use('id'))
 
         self.reload_registry_with(add_in_registry)
         t = self.registry.Test.insert()

@@ -8,10 +8,11 @@
 
 .. contents::
 
-Helper for unittest
-===================
+Helpers for unittest
+====================
 
-For unittest, classes are available to offer some fonctionnalities
+AnyBlok provides base test classes to help creating fixtures.
+Blok developers will be mostly interested in :py:class:`BlokTestCase`.
 
 .. automodule:: anyblok.tests.testcase
 

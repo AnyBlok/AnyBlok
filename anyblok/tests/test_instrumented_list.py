@@ -65,7 +65,7 @@ class TestInstrumentedList(DBTestCase):
             @Declarations.register(Model)
             class Test:
                 id = Integer(primary_key=True)
-                test2 = Integer(foreign_key=(Model.Test2, 'id'))
+                test2 = Integer(foreign_key=Model.Test2.use('id'))
 
             @Declarations.register(Model)  # noqa
             class Test2:

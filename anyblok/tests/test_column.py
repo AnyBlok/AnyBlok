@@ -9,24 +9,10 @@ from anyblok.tests.testcase import TestCase, DBTestCase
 from sqlalchemy import Integer as SA_Integer
 from anyblok import Declarations
 from anyblok.field import FieldException
-from anyblok.column import (Column,
-                            Boolean,
-                            Json,
-                            String,
-                            BigInteger,
-                            SmallInteger,
-                            uString,
-                            Text,
-                            uText,
-                            Selection,
-                            Date,
-                            DateTime,
-                            Time,
-                            Interval,
-                            Decimal,
-                            Float,
-                            LargeBinary,
-                            Integer)
+from anyblok.column import (Column, Boolean, Json, String, BigInteger,
+                            SmallInteger, uString, Text, uText, Selection,
+                            Date, DateTime, Time, Interval, Decimal, Float,
+                            LargeBinary, Integer, Sequence)
 
 
 Model = Declarations.Model
@@ -72,7 +58,7 @@ def column_with_foreign_key():
     class Test2:
 
         id = Integer(primary_key=True)
-        test = String(foreign_key=(Model.Test, 'name'))
+        test = String(foreign_key=Model.Test.use('name'))
 
 
 class TestColumns(DBTestCase):
@@ -100,11 +86,10 @@ class TestColumns(DBTestCase):
         self.assertEqual(test.col, 1)
 
     def test_integer_str_foreign_key(self):
-        self.reload_registry_with(
-            simple_column, ColumnType=Integer,
-            foreign_key=('Model.Test', 'id'))
-        test = self.registry.Test.insert()
-        test2 = self.registry.Test.insert(col=test.id)
+        registry = self.init_registry(
+            simple_column, ColumnType=Integer, foreign_key='Model.Test=>id')
+        test = registry.Test.insert()
+        test2 = registry.Test.insert(col=test.id)
         self.assertEqual(test2.col, test.id)
 
     def test_big_integer(self):
@@ -237,12 +222,10 @@ class TestColumns(DBTestCase):
             (1, 'Regular user')
         ]
 
-        try:
-            self.reload_registry_with(
+        with self.assertRaises(FieldException):
+            self.active_unittest_connection = False
+            self.init_registry(
                 simple_column, ColumnType=Selection, selections=SELECTIONS)
-            self.fail('No watchdog to check if the key is not a str')
-        except FieldException:
-            pass
 
     def test_selection_comparator(self):
         SELECTIONS = [
@@ -300,44 +283,6 @@ class TestColumns(DBTestCase):
         self.assertEqual(
             Test.query().filter(Test.col == {'a': 'test'}).count(), 2)
 
-    # WORKS with json postgres column but not with the generic AnyBlok column
-    # def test_json_filter(self):
-    #     Json = Declarations.Column.Json
-    #     self.reload_registry_with(simple_column, ColumnType=Json)
-    #     Test = self.registry.Test
-    #     t1 = Test.insert(col={'a': 'Test1'})
-    #     Test.insert(col={'a': 'Test2'})
-    #     self.assertEqual(Test.query().filter(
-    #         Test.col['a'] == 'Test1').first(), t1)
-
-    # def test_json_filter_numeric(self):
-    #     Json = Declarations.Column.Json
-    #     self.reload_registry_with(simple_column, ColumnType=Json)
-    #     Test = self.registry.Test
-    #     t1 = Test.insert(col={'a': 1})
-    #     Test.insert(col={'a': 2})
-    #     self.assertEqual(Test.query().filter(
-    #         Test.col['a'] == 1).first(), t1)
-
-    # def test_json_filter_astext(self):
-    #     Json = Declarations.Column.Json
-    #     self.reload_registry_with(simple_column, ColumnType=Json)
-    #     Test = self.registry.Test
-    #     t1 = Test.insert(col={'a': 'Test1'})
-    #     Test.insert(col={'a': 'Test2'})
-    #     self.assertEqual(Test.query().filter(
-    #         Test.col['a'].astext == 'Test1').first(), t1)
-
-    # def test_json_filter_cast(self):
-    #     Json = Declarations.Column.Json
-    #     Integer = Declarations.Column.Integer
-    #     self.reload_registry_with(simple_column, ColumnType=Json)
-    #     Test = self.registry.Test
-    #     t1 = Test.insert(col={'a': '1'})
-    #     Test.insert(col={'a': '2'})
-    #     self.assertEqual(Test.query().filter(
-    #         Test.col['a'].cast(Integer) == 1).first(), t1)
-
     def test_json_null(self):
         self.reload_registry_with(simple_column, ColumnType=Json)
         Test = self.registry.Test
@@ -346,3 +291,113 @@ class TestColumns(DBTestCase):
         Test.insert(col={'a': 'test'})
         self.assertEqual(Test.query().filter(Test.col == Json.Null).count(), 2)
         self.assertEqual(Test.query().filter(Test.col != Json.Null).count(), 1)
+
+    def test_add_default_classmethod(self):
+        val = 'test'
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String(default="get_val")
+
+                @classmethod
+                def get_val(cls):
+                    return val
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, val)
+
+    def test_add_default_without_classmethod(self):
+        value = 'test'
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String(default="get_val")
+
+                def get_val(cls):
+                    return value
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, "get_val")
+
+    def test_add_default_by_var(self):
+        value = 'test'
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String(default=value)
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, value)
+
+    def test_add_default(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String(default='value')
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, 'value')
+
+    def test_add_field_as_default(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                val = String(default='val')
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        self.assertEqual(t.val, 'val')
+
+    def test_sequence(self):
+        registry = self.init_registry(simple_column, ColumnType=Sequence)
+        self.assertEqual(registry.Test.insert().col, "1")
+        self.assertEqual(registry.Test.insert().col, "2")
+        self.assertEqual(registry.Test.insert().col, "3")
+        self.assertEqual(registry.Test.insert().col, "4")
+        Seq = registry.System.Sequence
+        self.assertEqual(
+            Seq.query().filter(Seq.code == 'Model.Test=>col').count(), 1)
+
+    def test_sequence_with_code_and_formater(self):
+        registry = self.init_registry(simple_column, ColumnType=Sequence,
+                                      code="SO", formater="{code}-{seq:06d}")
+        self.assertEqual(registry.Test.insert().col, "SO-000001")
+        self.assertEqual(registry.Test.insert().col, "SO-000002")
+        self.assertEqual(registry.Test.insert().col, "SO-000003")
+        self.assertEqual(registry.Test.insert().col, "SO-000004")
+        Seq = registry.System.Sequence
+        self.assertEqual(Seq.query().filter(Seq.code == 'SO').count(), 1)
+
+    def test_sequence_with_foreign_key(self):
+        with self.assertRaises(FieldException):
+            self.init_registry(simple_column, ColumnType=Sequence,
+                               foreign_key=Model.System.Model.use('name'))
+
+    def test_sequence_with_default(self):
+        with self.assertRaises(FieldException):
+            self.init_registry(simple_column, ColumnType=Sequence,
+                               default='default value')

@@ -26,10 +26,10 @@ class Importer(Mixin.IOCSVMixin):
                     ('ignore', 'Ignore and continue')],
         default='raise_at_the_end')
     csv_if_exist = Selection(selections=[('pass', 'Pass to the next record'),
-                                         ('update', 'Update the record'),
+                                         ('overwrite', 'Update the record'),
                                          ('create', 'Create another record'),
                                          ('raise', 'Raise an exception')],
-                             default='update')
+                             default='overwrite')
     csv_if_does_not_exist = Selection(selections=[
         ('pass', 'Pass to the next record'),
         ('create', 'Create the record'),
@@ -116,7 +116,7 @@ class CSV:
                     self.header_fields.append(name)
 
     def _parse_row_if_entry(self, row, entry, values, Model):
-        if self.importer.csv_if_exist == 'update':
+        if self.importer.csv_if_exist == 'overwrite':
             entry.update(values)
             self.updated_entries.append(entry)
         elif self.importer.csv_if_exist == 'create':

@@ -87,7 +87,7 @@ List of the options for the import:
     - ignore: Ignore and continue
 * csv_if_exist:
     - pass: Pass to the next record
-    - update (default): Update the record
+    - overwrite (default): Update the record
     - create: Create another record
     - raise: Raise an exception
 * csv_if_does_not_exist:

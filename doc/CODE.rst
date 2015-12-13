@@ -34,6 +34,77 @@ anyblok.declarations module
     :members:
     :noindex:
 
+anyblok.model module
+--------------------
+
+.. automodule:: anyblok.model
+
+.. autoexception:: ModelException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoexception:: ViewException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+anyblok.mapper module
+---------------------
+
+.. automodule:: anyblok.mapper
+
+.. autoexception:: ModelAttributeException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoexception:: ModelReprException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoexception:: ModelAttributeAdapterException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoexception:: MapperException
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoclass:: ModelRepr
+    :members:
+    :noindex:
+
+.. autoclass:: ModelAttribute
+    :members:
+    :noindex:
+
+.. autoclass:: ModelMapper
+    :members:
+    :noindex:
+
+.. autoclass:: ModelAttributeMapper
+    :members:
+    :noindex:
+
+.. autofunction:: ModelAttributeAdapter
+    :noindex:
+
+.. autofunction:: ModelAdapter
+    :noindex:
+
+.. autofunction:: MapperAdapter
+    :noindex:
+
 anyblok.config module
 ---------------------
 
@@ -397,26 +468,6 @@ anyblok._graphviz module
     :noindex:
 
 .. autoclass:: ClassSchema
-    :members:
-    :noindex:
-
-anyblok.databases module
-------------------------
-
-Management of the database
-
-::
-
-    bdd = anyblok.BDD[db_driver_name]
-    bdd.createdb(db_name)
-    logger.info(bdd.listdb())
-    bdd.dropdb()
-
-anyblok.databases.postgres module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: anyblok.databases.postgres
-.. autoclass:: SqlAlchemyPostgres
     :members:
     :noindex:
 

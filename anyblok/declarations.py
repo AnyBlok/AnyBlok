@@ -5,6 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from .mapper import MapperAdapter
 
 
 class DeclarationsException(AttributeError):
@@ -73,64 +74,20 @@ class Declarations:
         return cls_
 
     @classmethod
-    def cache(cls, size=128):
-        def wrapper(method):
-            method.is_cache_method = True
-            method.is_cache_classmethod = False
-            method.size = size
-            return method
-
-        return wrapper
-
-    @classmethod
-    def classmethod_cache(cls, size=128):
-        def wrapper(method):
-            method.is_cache_method = True
-            method.is_cache_classmethod = True
-            method.size = size
-            return method
-
-        return wrapper
-
-    @classmethod
-    def addListener(cls, model, event):
-        if not isinstance(model, str):
-            model = model.__registry_name__
-
-        def wrapper(method):
-            method.is_an_event_listener = True
-            method.model = model
-            method.event = event
-            return classmethod(method)
-
-        return wrapper
-
-    @classmethod
-    def hybrid_method(cls, method=None):
-        if method:
-            method.is_an_hybrid_method = True
-            return method
-        else:
-
-            def wrapper(method):
-                method.is_an_hybrid_method = True
-                return method
-
-            return wrapper
-
-    @classmethod
     def add_declaration_type(cls, cls_=None, isAnEntry=False,
-                             assemble=None, initialize=None):
+                             assemble=None, initialize=None, unload=None):
         """ Add a declaration type
 
         :param cls_: The ``class`` object to add as a world of the MetaData
         :param isAnEntry: if true the type will be assembled by the registry
         :param assemble: name of the method callback to call (classmethod)
         :param initialize: name of the method callback to call (classmethod)
+        :param unload: name of the method callback to call (classmethod)
         :exception: DeclarationsException
         """
 
         def wrapper(self):
+            from anyblok.registry import RegistryManager
             name = self.__name__
             if name in cls.declaration_types:
                 raise DeclarationsException(
@@ -143,8 +100,6 @@ class Declarations:
             setattr(cls, name, self)
 
             if isAnEntry:
-                from anyblok.registry import RegistryManager
-
                 assemble_callback = initialize_callback = None
                 if assemble and hasattr(self, assemble):
                     assemble_callback = getattr(self, assemble)
@@ -156,9 +111,57 @@ class Declarations:
                     name, assemble_callback=assemble_callback,
                     initialize_callback=initialize_callback)
 
+            # All declaration type can need to be unload declarated values
+            if unload and hasattr(self, unload):
+                RegistryManager.declare_unload_callback(
+                    name, getattr(self, unload))
+
             return self
 
         if cls_:
             return wrapper(cls_)
         else:
             return wrapper
+
+
+def cache(size=128):
+    def wrapper(method):
+        method.is_cache_method = True
+        method.is_cache_classmethod = False
+        method.size = size
+        return method
+
+    return wrapper
+
+
+def classmethod_cache(size=128):
+    def wrapper(method):
+        method.is_cache_method = True
+        method.is_cache_classmethod = True
+        method.size = size
+        return method
+
+    return wrapper
+
+
+def hybrid_method(method=None):
+    if method:
+        method.is_an_hybrid_method = True
+        return method
+    else:
+
+        def wrapper(method):
+            method.is_an_hybrid_method = True
+            return method
+
+        return wrapper
+
+
+def listen(*args, **kwargs):
+    mapper = MapperAdapter(*args, **kwargs)
+
+    def wrapper(method):
+        mapper.listen(method)
+        return classmethod(method)
+
+    return wrapper

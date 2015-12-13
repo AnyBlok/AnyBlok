@@ -6,6 +6,7 @@ from alembic.operations import Operations
 from sqlalchemy import schema
 from contextlib import contextmanager
 from logging import getLogger
+from sqlalchemy import func, select, update, join, alias, and_
 
 logger = getLogger(__name__)
 
@@ -322,19 +323,37 @@ class MigrationColumn:
                 raise MigrationException(
                     "No column %r found on %r" % (name, self.table.name))
 
-    def set_formated_value(self, column, val):
-        if column.default.is_scalar:
-            # TODO chech callable, sequence and other
-            if isinstance(val, bool):
-                return " SET %(column)s = '%(value)s'"
-            elif isinstance(val, int):
-                return " SET %(column)s = %(value)d"
-            elif isinstance(val, float):
-                return " SET %(column)s = %(value)f"
+    def apply_default_value(self, column):
+        if column.default:
+            execute = self.table.migration.conn.execute
+            val = column.default.arg
+            table = self.table.migration.metadata.tables[self.table.name]
+            table.append_column(column)
+            cname = getattr(table.c, column.name)
+            if column.default.is_callable:
+                table2 = alias(select([table]).limit(1).where(cname.is_(None)))
+                Table = self.table.migration.metadata.tables['system_model']
+                Column = self.table.migration.metadata.tables['system_column']
+                j1 = join(Table, Column, Table.c.name == Column.c.model)
+                query = select([func.count()]).select_from(table)
+                nb_row = self.table.migration.conn.execute(query).fetchone()[0]
+                query = select([Column.c.name]).select_from(j1)
+                query = query.where(Column.c.primary_key.is_(True))
+                query = query.where(Table.c.table == self.table.name)
+                columns = [x[0] for x in execute(query).fetchall()]
+                where = and_(*[getattr(table.c, x) == getattr(table2.c, x)
+                               for x in columns])
+                for offset in range(nb_row):
+                    # call for each row because the default value
+                    # could be a sequence or depend of other field
+                    query = update(table).where(where).values(
+                        {cname: val(None)})
+                    execute(query)
+
             else:
-                return " SET %(column)s = '%(value)s'"
-        else:
-            return " SET %(column)s = '%(value)s'"
+                query = update(table).where(cname.is_(None)).values(
+                    {cname: val})
+                execute(query)
 
     def add(self, column):
         """ Add a new column
@@ -350,18 +369,7 @@ class MigrationColumn:
             column.nullable = True
 
         self.table.migration.operation.impl.add_column(self.table.name, column)
-
-        if column.default:
-            self.table.migration.conn.execute
-            query = "UPDATE %(table)s"
-            val = column.default.arg
-            vals = {'table': self.table.name,
-                    'column': column.name,
-                    'value': val}
-            query += self.set_formated_value(column, val)
-            query += " WHERE %(column)s is null"
-            query = query % vals
-            self.table.migration.conn.execute(query)
+        self.apply_default_value(column)
 
         if not nullable:
             c = MigrationColumn(self.table, column.name)
@@ -376,6 +384,8 @@ class MigrationColumn:
                 if not isinstance(constraint, schema.ForeignKeyConstraint):
                     self.table.migration.operation.impl.add_constraint(
                         constraint)
+
+        # TODO get the default value of the column and apply it on null value
 
         return MigrationColumn(self.table, column.name)
 

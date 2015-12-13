@@ -442,6 +442,7 @@ List of the column type:
  * ``uText``
  * ``Selection``
  * ``Json``
+ * ``Sequence``
 
 All the columns have the following optional parameters:
 
@@ -453,7 +454,14 @@ All the columns have the following optional parameters:
 +----------------+------------------------------------------------------------+
 | default        | define a default value for this column.                    |
 |                |                                                            |
-|                | ..warning:: the default value depends of the column type   |
+|                | ..warning::                                                | 
+|                |                                                            |
+|                |     The default value depends of the column type           |
+|                |                                                            |
+|                | ..note::                                                   |
+|                |                                                            |
+|                |     Put the name of a classmethod to call it               |
+|                |                                                            |
 +----------------+------------------------------------------------------------+
 | index          | boolean flag to define whether the column is indexed       |
 +----------------+------------------------------------------------------------+
@@ -475,12 +483,12 @@ All the columns have the following optional parameters:
 |                |    @register(Model)                                        |
 |                |    class Bar:                                              |
 |                |        id : Integer(primary_key=True)                      |
-|                |        foo: Integer(foreign_key=(Model.Foo, 'id'))         |
+|                |        foo: Integer(foreign_key=Model.Foo.use('id'))       |
 |                |                                                            |
 |                | If the ``Model`` Declarations doesn't exist yet, you can   |
 |                | use the regisrty name::                                    |
 |                |                                                            |
-|                |     foo: Integer(foreign_key=('Model.Foo', 'id'))          |
+|                |     foo: Integer(foreign_key='Model.Foo=>id'))             |
 |                |                                                            |
 +----------------+------------------------------------------------------------+
 | db_column_name | String to define the real column name in the table,        |
@@ -505,6 +513,18 @@ Other attribute for ``Selection``:
 | ``selections`` | ``dict`` or ``dict.items`` to give the available key with  |
 |                | the associate label                                        |
 +----------------+------------------------------------------------------------+
+
+Other attribute for ``Sequence``:
+
++--------------+--------------------------------------------------------------+
+| Param        | Description                                                  |
++==============+==============================================================+
+| ``size``     | column size in the table                                     |
++--------------+--------------------------------------------------------------+
+| ``code``     | code of the sequence                                         |
++--------------+--------------------------------------------------------------+
+| ``formater`` | formater of the sequence                                     |
++--------------+--------------------------------------------------------------+
 
 RelationShip
 ------------
@@ -958,13 +978,14 @@ model. The cache of anyblok can be put on a Model, a Core or a Mixin method. If
 the cache is on a Core or a Mixin then the usecase depends on the registry name
 of the assembled model.
 
-Use ``Declarations.cache`` or ``Declarations.classmethod_cache`` to apply a
-cache on a method
+Use ``cache`` or ``classmethod_cache`` to apply a cache on a method::
+
+    from anyblok.declarations import cache, classmethod_cache
 
 .. warning::
 
-    ``Declarations.cache`` depend of the instance, if you want add a cache for
-    any instance you must use ``Declarations.classmethod_cache``
+    ``cache`` depend of the instance, if you want add a cache for
+    any instance you must use ``classmethod_cache``
 
 Cache the method of a Model::
 
@@ -1036,7 +1057,7 @@ Cache the method coming from a Mixin::
 Event
 ~~~~~
 
-Simple implementation of a synchronous ``event``::
+Simple implementation of a synchronous ``event`` for AnyBlok or SQLAlchemy::
 
 
     @register(Model)
@@ -1048,7 +1069,7 @@ Simple implementation of a synchronous ``event``::
 
             x = 0
 
-            @Declarations.addListener(Model.Event, 'fireevent')
+            @listen(Model.Event, 'fireevent')
             def my_event(cls, a=1, b=1):
                 cls.x = a * b
 
@@ -1063,8 +1084,8 @@ Simple implementation of a synchronous ``event``::
 
 This API gives:
 
-* a decorator ``addListener`` which binds the decorated method to the event.
-* ``fire`` method with the following parameters:
+* a decorator ``listen`` which binds the decorated method to the event.
+* ``fire`` method with the following parameters (Only for AnyBlok event):
     - ``event``: string name of the event
     - ``*args``: positionnal arguments to pass att the decorated method
     - ``**kwargs``: named argument to pass at the decorated method
@@ -1087,9 +1108,12 @@ decorated method::
 
 .. warning::
 
-    The overload does not take the ``addListener`` decorator but the
+    The overload does not take the ``listen`` decorator but the
     classmethod decorator, because the method name is already seen as an
     event listener
+
+Some of the Attribute events of the Mapper events are implemented. See the 
+SQLAlchemy ORM Events http://docs.sqlalchemy.org/en/latest/orm/events.html#orm-events
 
 Hybrid method
 ~~~~~~~~~~~~~
@@ -1101,10 +1125,12 @@ AnyBlok allows to define a hybrid_method which can be overloaded, because the
 real sqlalchemy decorator is applied after assembling in the last overload
 of the decorated method::
 
+    from anyblok.declarations import hybrid_method
+
     @register(Model)
     class Test:
 
-        @Declarations.hybrid_method
+        @hybrid_method
         def my_hybrid_method(self):
             return ...
 

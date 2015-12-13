@@ -12,6 +12,7 @@ from sqlalchemy.orm import backref
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.ext.declarative import declared_attr
 from .field import Field, FieldException
+from .mapper import ModelAdapter, ModelAttribute, ModelRepr
 
 
 class RelationShip(Field):
@@ -32,7 +33,7 @@ class RelationShip(Field):
     def __init__(self, *args, **kwargs):
         self.forbid_instance(RelationShip)
         if 'model' in kwargs:
-            self.model = kwargs.pop('model')
+            self.model = ModelAdapter(kwargs.pop('model'))
         else:
             raise FieldException("model is required attribut")
 
@@ -41,32 +42,8 @@ class RelationShip(Field):
         if 'info' not in self.kwargs:
             self.kwargs['info'] = {}
 
-        self.kwargs['info']['remote_model'] = self.get_registry_name()
+        self.kwargs['info']['remote_model'] = self.model.model_name
         self.backref_properties = {}
-
-    def get_registry_name(self):
-        """ Return the registry name of the remote model
-
-        :rtype: str of the registry name
-        """
-        if isinstance(self.model, str):
-            return self.model
-        else:
-            return self.model.__registry_name__
-
-    def get_tablename(self, registry, model=None):
-        """ Return the table name of the remote model
-
-        :rtype: str of the table name
-        """
-        if model is None:
-            model = self.model
-
-        if isinstance(model, str):
-            model = registry.loaded_namespaces_first_step[model]
-            return model['__tablename__']
-        else:
-            return model.__tablename__
 
     def apply_instrumentedlist(self, registry):
         """ Add the InstrumentedList class to replace List class as result
@@ -108,35 +85,6 @@ class RelationShip(Field):
             self.kwargs['backref'] = backref(_backref,
                                              **self.backref_properties)
 
-    def find_primary_key(self, properties):
-        """ Return the primary key come from the first step property
-
-        :param properties: first step properties for the model
-        :rtype: column name of the primary key
-        :exception: FieldException
-        """
-        pks = []
-        for f, p in properties.items():
-            if f == '__tablename__':
-                continue
-            if 'primary_key' in p.kwargs:
-                pks.append(f)
-
-        return pks
-
-    def check_existing_remote_model(self, registry):
-        """ Check if the remote model exists
-
-        The information of the existance come from the first step of
-        assembling
-
-        :exception: FieldException if the model doesn't exist
-        """
-        remote_model = self.get_registry_name()
-        if remote_model not in registry.loaded_namespaces_first_step:
-            raise FieldException(
-                "Remote model %r doesn't exist" % remote_model)
-
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Return the instance of the real field
@@ -147,13 +95,13 @@ class RelationShip(Field):
         :param properties: properties known of the model
         :rtype: sqlalchemy relation ship instance
         """
-        self.check_existing_remote_model(registry)
+        self.model.check_model(registry)
         self.format_label(fieldname)
         self.kwargs['info']['label'] = self.label
         self.kwargs['info']['rtype'] = self.__class__.__name__
         self.apply_instrumentedlist(registry)
         self.format_backref(registry, namespace, properties)
-        return relationship(self.get_tablename(registry), **self.kwargs)
+        return relationship(self.model.tablename(registry), **self.kwargs)
 
     def must_be_declared_as_attr(self):
         """ Return True, because it is a relationship """
@@ -172,7 +120,7 @@ class Many2One(RelationShip):
                                     model=Model.RemoteModel,
                                     remote_columns="The remote column",
                                     column_names="The column which have the "
-                                                "foreigh key",
+                                                 "foreigh key",
                                     nullable=True,
                                     unique=False,
                                     one2many="themodels")
@@ -195,11 +143,11 @@ class Many2One(RelationShip):
     def __init__(self, **kwargs):
         super(Many2One, self).__init__(**kwargs)
 
-        self.remote_columns = None
+        self._remote_columns = None
         if 'remote_columns' in kwargs:
-            self.remote_columns = self.kwargs.pop('remote_columns')
-            if not isinstance(self.remote_columns, (list, tuple)):
-                self.remote_columns = [self.remote_columns]
+            self._remote_columns = self.kwargs.pop('remote_columns')
+            if not isinstance(self._remote_columns, (list, tuple)):
+                self._remote_columns = [self._remote_columns]
 
         self.nullable = True
         if 'nullable' in kwargs:
@@ -215,52 +163,38 @@ class Many2One(RelationShip):
             self.kwargs['backref'] = self.kwargs.pop('one2many')
             self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
-        self.column_names = None
+        self._column_names = None
         if 'column_names' in kwargs:
-            self.column_names = self.kwargs.pop('column_names')
-            if not isinstance(self.column_names, (list, tuple)):
-                self.column_names = [self.column_names]
+            self._column_names = self.kwargs.pop('column_names')
+            if not isinstance(self._column_names, (list, tuple)):
+                self._column_names = [self._column_names]
 
-    def find_foreign_key(self, registry, namespace, fieldname, properties):
-        """Find and return the field name with a foreign key to the remote
-        model, if no exist, the generate the fieldname with remote primary keys
+        self.foreign_key_options = {}
+        if 'foreign_key_options' in kwargs:
+            self.foreign_key_options = self.kwargs.pop('foreign_key_options')
 
-        :param registry: the registry which load the relationship
-        :param namespace: the name space of the model
-        :param fieldname: fieldname of the relationship
-        :param propertie: the properties known
-        """
-        remote_model = self.get_registry_name()
-        remote_table = self.get_tablename(registry)
-        cnames = []
-        for cname in properties['loaded_columns']:
-            col = properties[cname]
-            if hasattr(col, 'anyblok_field'):
-                if hasattr(col.anyblok_field, 'foreign_key'):
-                    rn = col.anyblok_field.foreign_key[0]
-                    if not isinstance(rn, str):
-                        rn = rn.__registry_name__
+    def update_local_and_remote_columns_names(self, registry, namespace):
+        if self._remote_columns is None:
+            self.remote_columns = self.model.primary_keys(registry)
+        else:
+            self.remote_columns = [ModelAttribute(self.model.model_name, x)
+                                   for x in self._remote_columns]
 
-                    if rn != remote_model:
-                        continue
+        self.kwargs['info']['remote_columns'] = [str(x)
+                                                 for x in self.remote_columns]
 
-                    cnames.append(cname)
-
-        if not cnames:
-            cnames = ["%s_%s" % (remote_table, x) for x in self.remote_columns]
-
-        self.column_names = cnames
-
-    def update_local_and_remote_columns_names(self, registry, namespace,
-                                              fieldname, properties,
-                                              remote_properties):
-        if self.remote_columns is None:
-            self.remote_columns = self.find_primary_key(remote_properties)
-
-        self.kwargs['info']['remote_columns'] = self.remote_columns
-
-        if self.column_names is None:
-            self.find_foreign_key(registry, namespace, fieldname, properties)
+        if self._column_names is None:
+            model = ModelRepr(namespace)
+            self.column_names = model.foreign_keys_for(
+                registry, self.model.model_name)
+            if not self.column_names:
+                self.column_names = []
+                for x in self.remote_columns:
+                    cname = x.get_fk_name(registry).replace('.', '_')
+                    self.column_names.append(ModelAttribute(namespace, cname))
+        else:
+            self.column_names = [ModelAttribute(namespace, x)
+                                 for x in self._column_names]
 
     def update_properties(self, registry, namespace, fieldname, properties):
         """ Create the column which has the foreign key if the column doesn't
@@ -272,66 +206,66 @@ class Many2One(RelationShip):
         :param propertie: the properties known
         """
         add_fksc = False
-        self.check_existing_remote_model(registry)
-        remote_table = self.get_tablename(registry)
-        remote_properties = registry.loaded_namespaces_first_step.get(
-            self.get_registry_name())
-        self.update_local_and_remote_columns_names(
-            registry, namespace, fieldname, properties, remote_properties)
-
-        if fieldname in self.column_names:
+        self.model.check_model(registry)
+        self.update_local_and_remote_columns_names(registry, namespace)
+        if fieldname in [x.attribute_name for x in self.column_names]:
             raise FieldException("The column_names and the fieldname %r are "
                                  "the same, please choose another "
                                  "column_names" % fieldname)
 
-        self.kwargs['info']['local_columns'] = ', '.join(self.column_names)
-        remote_types = {x: remote_properties[x].native_type()
+        self.kwargs['info']['local_columns'] = ', '.join(
+            str(x) for x in self.column_names)
+        remote_types = {x.attribute_name: x.native_type(registry)
                         for x in self.remote_columns}
-
-        self_properties = registry.loaded_namespaces_first_step.get(namespace)
+        remote_columns = {x.attribute_name: x
+                          for x in self.remote_columns}
         for cname in self.column_names:
-            if cname in self_properties:
-                del remote_types[self_properties[cname].foreign_key[1]]
+            if cname.is_declared(registry):
+                del remote_types[cname.attribute_name]
 
         col_names = []
-        ref_cols = []
+        fk_names = []
         for cname in self.column_names:
-            if cname not in self_properties:
-                remote_type, foreign_key = self.get_column_information(
-                    cname, remote_types, remote_table)
-                add_fksc = True
+            if not cname.is_declared(registry):
+                rc, remote_type = self.get_column_information(
+                    registry, cname, remote_types)
+                cname.add_fake_column(registry)
+                foreign_key = remote_columns[rc].get_fk_name(registry)
                 self.create_column(cname, remote_type, foreign_key, properties)
+                add_fksc = True
                 col_names.append(cname)
-                ref_cols.append(foreign_key)
+                fk_names.append(remote_columns[rc])
             else:
                 col_names.append(cname)
-                foreign_key = properties[cname].anyblok_field.foreign_key
-                foreign_key = '%s.%s' % (foreign_key[0].__tablename__,
-                                         foreign_key[1])
-                ref_cols.append(foreign_key)
+                fk_names.append(cname.foreign_key)
 
-        if namespace == self.get_registry_name():
-            self.kwargs['remote_side'] = [properties[x]
+        if namespace == self.model.model_name:
+            self.kwargs['remote_side'] = [properties[x.attribute_name]
                                           for x in self.remote_columns]
 
-        if (len(self.column_names) > 1 or add_fksc) and col_names and ref_cols:
+        if (len(self.column_names) > 1 or add_fksc) and col_names and fk_names:
             properties['add_in_table_args'].append(
-                ForeignKeyConstraint(col_names, ref_cols))
+                ForeignKeyConstraint(
+                    [x.attribute_name for x in col_names],
+                    [x.get_fk_name(registry) for x in fk_names],
+                    **self.foreign_key_options))
 
-    def get_column_information(self, cname, remote_types, remote_table):
+    def get_column_information(self, registry, cname, remote_types):
         if len(remote_types) == 1:
-            rc, remote_type = list(remote_types.items())[0]
-            foreign_key = '%s.%s' % (remote_table, rc)
+            rc = [x for x in remote_types][0]
+            return rc, remote_types[rc]
         else:
-            rc = cname[len(remote_table) + 1:]
-            if rc in remote_types:
-                remote_type = remote_types[rc]
-                foreign_key = '%s.%s' % (remote_table, rc)
-            else:
-                raise FieldException("Can not create the local "
-                                     "column %r" % cname)
+            rc = cname.get_fk_column(registry)
+            if rc is None:
+                rc = cname.attribute_name[len(
+                    self.model.tablename(registry)) + 1:]
 
-        return remote_type, foreign_key
+            if rc in remote_types:
+                return rc, remote_types[rc]
+            else:
+                cname.get_fk_column(registry)
+                raise FieldException("Can not create the local "
+                                     "column %r" % cname.attribute_name)
 
     def create_column(self, cname, remote_type, foreign_key, properties):
 
@@ -342,7 +276,7 @@ class Many2One(RelationShip):
                 unique=self.unique,
                 info=dict(label=self.label, foreign_key=foreign_key))
 
-        properties[cname] = declared_attr(wrapper)
+        properties[cname.attribute_name] = declared_attr(wrapper)
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -354,11 +288,8 @@ class Many2One(RelationShip):
         :param propertie: the properties known
         :rtype: Many2One relationship
         """
-        fks = ["%s.%s" % (properties['__tablename__'], x)
-               for x in self.column_names]
-        fks = '[%s]' % ', '.join(fks)
-        self.kwargs['foreign_keys'] = fks
-
+        self.kwargs['foreign_keys'] = '[%s]' % ', '.join(
+            [x.get_fk_name(registry) for x in self.column_names])
         return super(Many2One, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
 
@@ -462,7 +393,7 @@ class Many2Many(RelationShip):
         if self.remote_columns and not isinstance(self.remote_columns,
                                                   (list, tuple)):
             self.remote_columns = [self.remote_columns]
-        self.kwargs['info']['remote_columns'] = self.remote_columns
+
         self.m2m_remote_columns = self.kwargs.pop('m2m_remote_columns', None)
         if self.m2m_remote_columns and not isinstance(self.m2m_remote_columns,
                                                       (list, tuple)):
@@ -473,7 +404,6 @@ class Many2Many(RelationShip):
                                                  (list, tuple)):
             self.local_columns = [self.local_columns]
 
-        self.kwargs['info']['local_columns'] = self.local_columns
         self.m2m_local_columns = self.kwargs.pop('m2m_local_columns', None)
         if self.m2m_local_columns and not isinstance(self.m2m_local_columns,
                                                      (list, tuple)):
@@ -482,29 +412,42 @@ class Many2Many(RelationShip):
         self.kwargs['backref'] = self.kwargs.pop('many2many', None)
         self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
-    def get_m2m_columns(self, tablename, properties, columns, m2m_columns):
-        if not columns:
-            columns = self.find_primary_key(properties)
-        else:
-            for column in columns:
-                if column not in properties:
-                    raise FieldException(
-                        "%r does not exist in %r" % (column, tablename))
-
+    def get_m2m_columns(self, registry, columns, m2m_columns):
         if m2m_columns is None:
-            m2m_columns = ['%s_%s' % (tablename, column) for column in columns]
+            m2m_columns = [x.get_fk_name(registry).replace('.', '_')
+                           for x in columns]
 
         cols = []
         col_names = []
         ref_cols = []
         for i, column in enumerate(m2m_columns):
-            sqltype = properties[columns[i]].native_type()
-            foreignkey = "%s.%s" % (tablename, columns[i])
+            sqltype = columns[i].native_type(registry)
+            foreignkey = columns[i].get_fk_name(registry)
             cols.append(Column(column, sqltype, primary_key=True))
             col_names.append(column)
             ref_cols.append(foreignkey)
 
         return cols, ForeignKeyConstraint(col_names, ref_cols)
+
+    def get_local_and_remote_columns(self, registry):
+        if not self.local_columns:
+            local_columns = self.local_model.primary_keys(registry)
+        else:
+            local_columns = [ModelAttribute(self.local_model.model_name, x)
+                             for x in self.local_columns]
+
+        if not self.remote_columns:
+            remote_columns = self.model.primary_keys(registry)
+        else:
+            remote_columns = [ModelAttribute(self.model.model_name, x)
+                              for x in self.remote_columns]
+
+        self.kwargs['info']['local_columns'] = [x.attribute_name
+                                                for x in local_columns]
+        self.kwargs['info']['remote_columns'] = [x.attribute_name
+                                                 for x in remote_columns]
+
+        return local_columns, remote_columns
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -516,24 +459,21 @@ class Many2Many(RelationShip):
         :param properties: the properties known
         :rtype: Many2One relationship
         """
-        self.check_existing_remote_model(registry)
-        remote_properties = registry.loaded_namespaces_first_step.get(
-            self.get_registry_name())
-        local_properties = registry.loaded_namespaces_first_step.get(namespace)
-
-        local_tablename = properties['__tablename__']
-        remote_tablename = self.get_tablename(registry)
+        self.model.check_model(registry)
+        self.local_model = ModelRepr(namespace)
+        local_columns, remote_columns = self.get_local_and_remote_columns(
+            registry)
         join_table = self.join_table
         if self.join_table is None:
-            join_table = 'join_%s_and_%s' % (local_tablename, remote_tablename)
+            join_table = 'join_%s_and_%s' % (
+                self.local_model.tablename(registry),
+                self.model.tablename(registry))
 
         if join_table not in registry.declarativebase.metadata.tables:
             remote_columns, remote_fk = self.get_m2m_columns(
-                remote_tablename, remote_properties, self.remote_columns,
-                self.m2m_remote_columns)
+                registry, remote_columns, self.m2m_remote_columns)
             local_columns, local_fk = self.get_m2m_columns(
-                local_tablename, local_properties, self.local_columns,
-                self.m2m_local_columns)
+                registry, local_columns, self.m2m_local_columns)
 
             Table(join_table, registry.declarativebase.metadata, *(
                 local_columns + remote_columns + [local_fk, remote_fk]))
@@ -596,7 +536,7 @@ class One2Many(RelationShip):
                 continue
 
             if p.foreign_key:
-                model, _ = p.foreign_key
+                model = p.foreign_key.model_name
                 if self.get_tablename(registry, model=model) == tablename:
                     fks.append(f)
 
@@ -612,25 +552,23 @@ class One2Many(RelationShip):
         :param propertie: the properties known
         :rtype: Many2One relationship
         """
-        self.check_existing_remote_model(registry)
-        remote_properties = registry.loaded_namespaces_first_step.get(
-            self.get_registry_name())
-
-        tablename = properties['__tablename__']
+        self.model.check_model(registry)
         if self.remote_columns is None:
-            self.remote_columns = self.find_foreign_key(registry,
-                                                        remote_properties,
-                                                        tablename)
+            self.remote_columns = self.model.foreign_keys_for(
+                registry, namespace)
+        else:
+            self.remote_columns = [ModelAttribute(self.model.model_name, x)
+                                   for x in self.remote_columns]
 
-        self.kwargs['info']['remote_columns'] = self.remote_columns
+        self.kwargs['info']['remote_columns'] = [x.attribute_name
+                                                 for x in self.remote_columns]
 
         if 'primaryjoin' not in self.kwargs:
-            remote_table = self.get_tablename(registry)
             pjs = []
             for cname in self.remote_columns:
-                col = remote_properties[cname]
-                pjs.append("%s.%s == %s.%s" % (
-                    tablename, col.foreign_key[1], remote_table, cname))
+                pjs.append("%s == %s" % (
+                    cname.get_fk_remote(registry),
+                    cname.get_fk_name(registry)))
 
             # This must be a python and not a SQL AND cause of eval do
             # on the primaryjoin
@@ -647,9 +585,7 @@ class One2Many(RelationShip):
         :param namespace: the name space of the model
         :param propertie: the properties known
         """
-        if namespace == self.get_registry_name():
-            self_properties = registry.loaded_namespaces_first_step.get(
-                namespace)
-            pks = self.find_primary_key(self_properties)
+        if namespace == self.model.model_name:
+            pks = ModelRepr(namespace).primary_keys(registry)
             self.backref_properties.update({'remote_side': [
-                properties[pk] for pk in pks]})
+                properties[pk.attribute_name] for pk in pks]})

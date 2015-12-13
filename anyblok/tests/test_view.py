@@ -267,8 +267,10 @@ class TestView(DBTestCase):
 
     def test_simple_view_without_primary_key(self):
         with self.assertRaises(ViewException):
-            self.reload_registry_with(simple_view_without_primary_key)
+            self.active_unittest_connection = False
+            self.init_registry(simple_view_without_primary_key)
 
     def test_simple_view_without_view_declaration(self):
         with self.assertRaises(ViewException):
-            self.reload_registry_with(simple_view_without_view_declaration)
+            self.active_unittest_connection = False
+            self.init_registry(simple_view_without_view_declaration)

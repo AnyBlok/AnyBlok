@@ -2,7 +2,6 @@ from nose.plugins import Plugin
 from anyblok.config import Configuration
 from anyblok.blok import BlokManager
 from anyblok.registry import RegistryManager
-from anyblok.common import format_bloks
 from os.path import join, exists
 
 
@@ -46,7 +45,7 @@ class AnyBlokPlugin(Plugin):
                           help="the name of the database backend. This name "
                                "will correspond to a module in "
                                "sqlalchemy/databases or a third party plug-in")
-        parser.add_option('--anyblo-db-user-name', dest='db_user_name',
+        parser.add_option('--anyblok-db-user-name', dest='db_user_name',
                           default=env.get('ANYBLOK_DATABASE_USER'),
                           help="The user name")
         parser.add_option('--anyblok-db-password', dest='db_password',
@@ -79,13 +78,11 @@ class AnyBlokPlugin(Plugin):
             if registry:
                 installed_bloks = registry.System.Blok.list_by_state(
                     "installed")
-                selected_bloks = format_bloks(
-                    Configuration.get('selected_bloks'))
+                selected_bloks = Configuration.get('selected_bloks')
                 if not selected_bloks:
                     selected_bloks = installed_bloks
 
-                unwanted_bloks = format_bloks(
-                    Configuration.get('unwanted_bloks'))
+                unwanted_bloks = Configuration.get('unwanted_bloks')
                 if unwanted_bloks is None:
                     unwanted_bloks = []
 
@@ -94,11 +91,11 @@ class AnyBlokPlugin(Plugin):
                     if blok in selected_bloks and blok not in unwanted_bloks
                     for path in [join(BlokManager.getPath(blok), 'tests')]
                     if exists(path)]
+                registry.close()  # free the registry to force create it again
 
         return True
 
     def wantFile(self, file):
-        print("want file")
         if self.enabled:
             if len([x for x in self.testFiles if x in file]):
                 return True

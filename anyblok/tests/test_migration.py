@@ -55,7 +55,7 @@ class TestMigration(TestCase):
         @register(Model)
         class TestFK:
             integer = Int(primary_key=True)
-            other = Int(foreign_key=(Model.TestFKTarget, 'integer'))
+            other = Int(foreign_key=Model.TestFKTarget.use('integer'))
 
         @register(Model)
         class TestM2M1:
@@ -146,6 +146,19 @@ class TestMigration(TestCase):
         t = self.registry.migration.table('test')
         t.column().add(Column('new_column', Integer, default='100'))
         t.column('new_column')
+
+    def test_add_column_with_default_callable_value(self):
+
+        def get_val():
+            return 100
+
+        self.fill_test_table()
+        t = self.registry.migration.table('test')
+        t.column().add(Column('new_column', Integer, default=get_val))
+        t.column('new_column')
+        res = [x for x in self.registry.execute(
+            "select count(*) from test where new_column is null")][0][0]
+        self.assertEqual(res, 0)
 
     def test_add_column_in_filled_table_with_default_value(self):
         self.fill_test_table()
@@ -310,7 +323,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
 
-    @skipIf(alembic.__version__ < "0.7.8", "Alembic doesn't implement yet")
+    @skipIf(alembic.__version__ < "0.8.4", "Alembic doesn't implement yet")
     def test_detect_m2m_primary_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE reltable")
@@ -366,7 +379,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
 
-    @skipIf(alembic.__version__ < "0.7.8", "Alembic doesn't implement yet")
+    @skipIf(alembic.__version__ < "0.8.4", "Alembic doesn't implement yet")
     def test_detect_primary_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")

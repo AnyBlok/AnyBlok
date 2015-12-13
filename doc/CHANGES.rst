@@ -12,23 +12,120 @@ CHANGELOG
 Future
 ------
 
+.. warning::
+
+    Python 3.2 is not supported
+
+* [REF] Add options to give database url, No break compatibility
+* [REF] the argument of ArgumentParser can be add in the configuration
+    - Improve the help of the application
+    - Improve the type of the configuration, Work also with config file.
+    - Adapt current configuration
+* [REF] start to use sqlalchemy-utils, replace the database management
+* [IMP] `#18 <https://bitbucket.org/jssuzanne/anyblok/issues/18/forbidden-the-declaration-of-sqlachemy>`_
+  Forbidden the declaration of SQLAchemy column or relationship
+
+0.5.3
+-----
+
+* [REF] unittest isolation
+* [IMP] possibility to apply an extension for sqlalchemy
+* [ADD] pool configuration
+
+0.5.2 (2015-09-28)
+------------------
+
+* [IMP] extension for Sphinx and autodoc
+* [ADD] API doc in doc
+* [ADD] add foreign key option in relation ship
+* [CRITICAL FIX] the EnvironnementManager didn't return the good scoped method
+  for SQLAlchemy
+* [CRITICAL FIX] the precommit_hook was not isolated by session
+* [REF] add a named argument ``must_be_loaded_by_unittest``, by dafault False,
+  in ``Configuration.add`` to indicate if the function must be call during the
+  initialisation of the unittest, generally for the configuration initialized
+  by Environ variable
+
+0.5.1 (2015-08-29)
+------------------
+
+* [IMP] unload declaration type callback
+
+0.5.0 (2015-08-28)
+------------------
+
+.. warning::
+
+    Break the compatibility with the previous version of anyblok
+
+    * cache, classmethod_cache, hybrid_method and listen
+      replace::
+
+        from anyblok import Declarations
+        cache = Declarations.cache
+        classmethod_cache = Declarations.classmethod_cache
+        hybrid_method = Declarations.hybrid_method
+        addListener = Declarations.addListener
+
+      by::
+
+        from anyblok.declarations import (cache, classmethod_cache,
+                                          hybrid_method, listen)
+
+      .. note::
+
+        The listener can declare SQLAlchemy event
+
+    * declaration of the foreign key
+      replace::
+
+        @register(Model):
+        class MyClass:
+
+            myfield = Integer(foreign_key=(Model.System.Blok, 'name'))
+            myotherfield = Integer(foreign_key=('Model.System.Blok', 'name'))
+
+      by::
+
+        @register(Model):
+        class MyClass:
+
+            myfield = Integer(foreign_key=Model.System.Blok.use('name'))
+            myotherfield = Integer(foreign_key="Model.System.Blok=>name")
+
 * [IMP] add ``pop`` behaviour on **Model.System.Parameter**
 * [REF] Load configuration befoare load bloks, to use Configuration during
   the declaration
 * [FIX] all must return InstrumentedList, also when the result is empty
 * [FIX] to_dict must not cast column
+* [REF] add third entry in foreign key declaration to add options
+* [IMP] ModelAttribute used to declarate the need of specific attribute and
+  get the attribute or the foreign key from this attribute
+* [IMP] ModelAttributeAdapter, get a ModelAttribute from ModelAttribute or str
+* [IMP] ModelRepr, Speudo representation of a Model
+* [IMP] ModelAdapter, get a ModelRepr from ModelRepr or str
+* [IMP] ModelMapper and ModelAttributeMapper
+* [REF] Event, the declaration of an event can be an anyblok or a sqlalchemy event
+* [REF] the foreign key must be declared with ModelAttribute
+* [REF] Use Adapter for Model and attribute in relation ship
+* [REF] hybrid_method, cache and classmethod_cache are now only impotable decorator function
+* [IMP] in column the default can be a classmethod name
+* [REF] replace all the field (prefix, suffic, ...) by a formater field.
+  It is a python formater string
+* [IMP] Sequence column
+* [IMP] add the default system or user configuration file
 
-0.4.1
------
+0.4.1 (2015-07-22)
+------------------
 
 .. warning::
 
     Field Function change, fexp is required if you need filter
 
-* [FIX] Field.Function, fexp is now a class method 
+* [FIX] Field.Function, fexp is now a class method
 * [REF] reduce flake8 complexity
 * [REF] refactor field function
-* [FIX] inherit relation ship from another model, thank Simon ANDRÉ for the 
+* [FIX] inherit relation ship from another model, thank Simon ANDRÉ for the
   bug report
 * [REF] table/mapper args definition
 * [REF] Refactor Field, Column, RelationShip use now polymophic inherit
@@ -38,11 +135,11 @@ Future
 * [ADD] pre / post migration
 * [REF] UML Diagram is now with autodoc script
 * [REF] SQL Diagram is now with autodoc script
-* [REF] Add **extend** key word in configuration file to extend an existing 
+* [REF] Add **extend** key word in configuration file to extend an existing
   configuration
 
-0.4.0
------
+0.4.0 (2015-06-21)
+------------------
 
 .. warning::
 
@@ -64,7 +161,7 @@ Future
 * [REF] Remove the Declarations typs Field, Column, RelationShip, they are
   replaced by python import
 * [REF] rename **ArgsParseManager** by **Configuration**
-* [REF] rename **reload_module_if_blok_is_reloaded** by 
+* [REF] rename **reload_module_if_blok_is_reloaded** by
   **reload_module_if_blok_is_reloading** method on blok
 * [REF] rename **import_cfg_file** by **import_file** method on blok
 * [REF] Consistency the argsparse configuration
@@ -73,39 +170,39 @@ Future
 * [FIX] add importer for import configuration file
 * [FIX] x2M importer without field just, external id
 
-0.3.5
------
+0.3.5 (2015-05-10)
+------------------
 
-* [IMP] When a new column is add, if the column have a default value, then 
+* [IMP] When a new column is add, if the column have a default value, then
   this value will be added in all the entries where the value is null for this
   column
 * [REF] import_cfg_file remove the importer when import has done
 
-0.3.4
------
+0.3.4 (2015-05-10)
+------------------
 
 * [ADD] logger.info on migration script to indicate what is changed
 * [IMP] Add sequence facility in the declaration of Column
 * [ADD] ADD XML Importer
 
-0.3.3
------
+0.3.3 (2015-05-04)
+------------------
 
 * [FIX] createdb script
 
-0.3.2
------
+0.3.2 (2015-05-04)
+------------------
 
 * [IMP] doc
 * [REF] Use logging.config.configFile
 
-0.3.1
------
+0.3.1 (2015-05-04)
+------------------
 
 * [IMP] Update setup to add documentation files and blok's README
 
-0.3.0
------
+0.3.0 (2015-05-03)
+------------------
 
 * [IMP] Update Doc
 * [FIX] Remove nullable column, the nullable constraint is removed not the column
@@ -113,56 +210,56 @@ Future
 * [ADD] CSV Importer
 * [REF] CSV Exporter to use Formater
 
-0.2.12
-------
+0.2.12 (2015-04-29)
+-------------------
 
 * [IMP] CSV Exporter
 * [IMP] Exporter Model give external ID behaviour
 * [ADD] Sequence model (Model.System.Sequence)
 * [ADD] fields_description cached_classmethod with invalidation
-* [ADD] Parameter Model (Model.System.Parameter) 
+* [ADD] Parameter Model (Model.System.Parameter)
 * [FIX] environnement variable for test unitaire
 
-0.2.11
-------
+0.2.11 (2015-04-26)
+-------------------
 
 * [FIX] UNIT test createdb with prefix
 
-0.2.10
-------
+0.2.10 (2015-04-26)
+-------------------
 
 * [IMP] add enviroment variable for database information
 * [ADD] argsparse option install all bloks
 * [FIX] Python 3.2 need that bloks directory are python modules, add empty __init__ file
 
-0.2.9
------
+0.2.9 (2015-04-18)
+------------------
 
 * [FIX] Add all rst at the main path of all the bloks
 
-0.2.8
------
+0.2.8 (2015-04-16)
+------------------
 
 * [IMP] unittest on SQLBase
 * [IMP] add delete method on SQLBase to delete une entry from an instance of the model
 * [REF] rename get_primary_keys to get_mapping_primary_keys, cause of get_primary_keys
   already exist in SQLBase
 
-0.2.7
------
+0.2.7 (2015-04-15)
+------------------
 
 * [IMP] Add IPython support for interpreter
 * [REF] Update and Standardize the method to field the models (Field, Column, RelationShip)
   now all the type of the column go on the ftype and comme from the name of the class
 
-0.2.6
------
+0.2.6 (2015-04-11)
+------------------
 
 * [FIX] use the backref name to get the label of the remote relation ship
 * [FIX] add type information of the simple field
 
-0.2.5
------
+0.2.5 (2015-03-23)
+------------------
 
 * [FIX] In the parent / children relationship, where the pk is on a mixin or
   from inherit
@@ -171,8 +268,8 @@ Future
 * [IMP] Many2One can now declared than the local column must be unique (
   only if the local column is not declared in the model)
 
-0.2.3
------
+0.2.3 (2015-03-23)
+------------------
 
 .. warning::
 
@@ -186,8 +283,8 @@ Future
 * [REF] standardize foreign_key and relation ship, if the str which replace
   the Model Declarations is now the registry name
 
-0.2.2
------
+0.2.2 (2015-03-15)
+------------------
 
 * [REF] Unittest
     * TestCase and DBTestCase are only used for framework
@@ -195,8 +292,8 @@ Future
         - by ``run_exit`` function to test all the installed bloks
         - at the installation of a blok if wanted
 
-0.2.0
------
+0.2.0 (2015-02-13)
+------------------
 
 .. warning::
 
@@ -210,13 +307,13 @@ Future
   it at each time
 * [IMP] doc add how to on the environment
 
-0.1.3
------
+0.1.3 (2015-02-03)
+------------------
 
 * [FIX] setup long description, good for pypi but not for easy_install
 
-0.1.2
------
+0.1.2 (2015-02-02)
+------------------
 
 * [REFACTOR] Allow to declare Core components
 * [ADD] Howto declare Core / Type
@@ -224,13 +321,13 @@ Future
 * [FIX] Mixin inherit chained
 * [FIX] Flake8
 
-0.1.1
------
+0.1.1 (2015-01-23)
+------------------
 
 * [FIX] version, documentation, setup
 
-0.1.0
------
+0.1.0 (2015-01-23)
+------------------
 
 Main version of AnyBlok. You can with this version
 

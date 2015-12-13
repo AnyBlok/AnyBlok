@@ -38,6 +38,7 @@
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'anyblok.sphinx.ext.load.blok',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -128,7 +129,7 @@ html_theme = 'classic'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-# html_logo = None
+html_logo = '_static/anyblok-logo_alpha_256.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
