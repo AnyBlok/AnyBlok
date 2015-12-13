@@ -15,28 +15,31 @@ from anyblok.test_bloks.authorization import TestRuleTwo
 
 class TestAuthorizationDeclaration(DBTestCase):
 
+    blok_entry_points = ('bloks', 'test_bloks')
+
     def test_association(self):
         registry = self.init_registry(None)
         registry.upgrade(install=('test-blok7',))
         record = registry.Test(id=23, label='Hop')
         self.assertIsInstance(registry.lookup_policy(record, 'Read'),
                               TestRuleOne)
-        self.assertIsInstance(self.registry.lookup_policy(record, 'Other'),
+        self.assertIsInstance(registry.lookup_policy(record, 'Other'),
                               TestRuleTwo)
 
-        record = self.registry.Test2(id=2, label='Hop')
-        self.assertIs(self.registry.lookup_policy(record, 'Read'), deny_all)
+        record = registry.Test2(id=2, label='Hop')
+        self.assertIs(registry.lookup_policy(record, 'Read'), deny_all)
 
     def test_override(self):
         # test-blok8 depends on test-blok7
+        registry = self.init_registry(None)
         registry.upgrade(install=('test-blok8',))
         # lookup can be made on model itself
-        model = self.registry.Test
-        self.assertIsInstance(self.registry.lookup_policy(model, 'Read'),
+        model = registry.Test
+        self.assertIsInstance(registry.lookup_policy(model, 'Read'),
                               TestRuleOne)
-        self.assertIsInstance(self.registry.lookup_policy(model, 'Other'),
+        self.assertIsInstance(registry.lookup_policy(model, 'Other'),
                               TestRuleOne)
-        self.assertIsInstance(self.registry.lookup_policy(model, 'Write'),
+        self.assertIsInstance(registry.lookup_policy(model, 'Write'),
                               TestRuleTwo)
 
     def test_model_based_policy(self):
@@ -56,15 +59,15 @@ class TestAuthorizationDeclaration(DBTestCase):
 
         record = model.insert(id=2)
         self.assertTrue(
-            self.registry.check_permission(record, ('Franck',), 'Read'))
+            registry.check_permission(record, ('Franck',), 'Read'))
         self.assertFalse(
-            self.registry.check_permission(record, ('Franck',), 'Write'))
+            registry.check_permission(record, ('Franck',), 'Write'))
 
         # With this policy, permission can be checked on the model
         self.assertTrue(
-            self.registry.check_permission(model, ('Franck',), 'Read'))
+            registry.check_permission(model, ('Franck',), 'Read'))
         self.assertFalse(
-            self.registry.check_permission(model, ('Franck',), 'Write'))
+            registry.check_permission(model, ('Franck',), 'Write'))
 
         # This can be also called directly from the model class
         self.assertTrue(model.has_model_perm(('Franck',), 'Read'))
@@ -75,14 +78,14 @@ class TestAuthorizationDeclaration(DBTestCase):
         query = model.query().filter(model.id != 1)
         self.assertEqual(query.count(), 1)
 
-        filtered = self.registry.wrap_query_permission(
+        filtered = registry.wrap_query_permission(
             query, ('Franck',), 'Read')
         self.assertEqual(filtered.count(), 1)
         self.assertEqual(filtered.first().id, 2)
         all_results = filtered.all()
         self.assertEqual(all_results[0].id, 2)
 
-        filtered = self.registry.wrap_query_permission(
+        filtered = registry.wrap_query_permission(
             query, ('Franck',), 'Write')
         self.assertEqual(filtered.count(), 0)
         self.assertIsNone(filtered.first())
@@ -127,11 +130,11 @@ class TestAuthorizationDeclaration(DBTestCase):
 
         record = model.insert(id=1, owner='Georges')
         self.assertTrue(
-            self.registry.check_permission(record, ('Franck',), 'Read'))
+            registry.check_permission(record, ('Franck',), 'Read'))
         self.assertTrue(
-            self.registry.check_permission(record, ('Georges',), 'Write'))
+            registry.check_permission(record, ('Georges',), 'Write'))
         self.assertFalse(
-            self.registry.check_permission(record, ('Franck',), 'Write'))
+            registry.check_permission(record, ('Franck',), 'Write'))
 
         # The same checks can be done from the record
         self.assertTrue(record.has_perm(('Franck',), 'Read'))
@@ -140,19 +143,19 @@ class TestAuthorizationDeclaration(DBTestCase):
 
         # With this policy, permission cannot be checked on the model
         with self.assertRaises(RuleNotForModelClasses) as arc:
-            self.registry.check_permission(model, ('Franck',), 'Write')
+            registry.check_permission(model, ('Franck',), 'Write')
         self.assertIsInstance(arc.exception.policy,
                               AttributeAccessRule)
 
         # ... unless one defines a model_rule to handle the case
-        self.assertFalse(self.registry.check_permission(
+        self.assertFalse(registry.check_permission(
             model, ('Franck',), 'PermWithModelRule'))
 
-        Grant = self.registry.Authorization.ModelPermissionGrant
+        Grant = registry.Authorization.ModelPermissionGrant
         Grant.insert(model=model.__registry_name__,
                      principal="Franck",
                      permission="PermWithModelRule")
-        self.assertTrue(self.registry.check_permission(
+        self.assertTrue(registry.check_permission(
             model, ('Franck',), 'PermWithModelRule'))
         self.assertFalse(record.has_perm(('Franck',), 'PermWithModelRule'))
 
@@ -164,7 +167,7 @@ class TestAuthorizationDeclaration(DBTestCase):
         query = model.query()
         self.assertEqual(query.count(), 3)
 
-        filtered = self.registry.wrap_query_permission(
+        filtered = registry.wrap_query_permission(
             query, ('Franck',), 'Write')
 
         self.assertEqual(filtered.count(), 1)
@@ -179,11 +182,11 @@ class TestAuthorizationDeclaration(DBTestCase):
         all_results = filtered.all()
         self.assertEqual(all_results[0].id, 2)
 
-        filtered = self.registry.wrap_query_permission(
+        filtered = registry.wrap_query_permission(
             query, ('Franck',), 'Read')
         self.assertEqual(filtered.count(), 3)
 
-        filtered = self.registry.wrap_query_permission(
+        filtered = registry.wrap_query_permission(
             query, ('Franck', 'Georges',), 'Write')
         self.assertEqual(filtered.count(), 2)
         self.assertEqual([r.id for r in filtered.all()], [1, 2])

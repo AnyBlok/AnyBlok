@@ -47,7 +47,7 @@ def field_without_name():
 class TestField2(DBTestCase):
 
     def test_field_without_name(self):
-        self.reload_registry_with(field_without_name)
+        self.init_registry(field_without_name)
 
     def define_field_function(self):
 
@@ -74,11 +74,11 @@ class TestField2(DBTestCase):
                 return func.concat(cls.first_name, ' ', cls.last_name)
 
     def test_field_function_fget(self):
-        self.reload_registry_with(self.define_field_function)
-        t = self.registry.Test.insert(first_name='Jean-Sebastien',
-                                      last_name='SUZANNE')
+        registry = self.init_registry(self.define_field_function)
+        t = registry.Test.insert(first_name='Jean-Sebastien',
+                                 last_name='SUZANNE')
         self.assertEqual(t.name, 'Jean-Sebastien SUZANNE')
-        t = self.registry.Test.query().first()
+        t = registry.Test.query().first()
         self.assertEqual(t.name, 'Jean-Sebastien SUZANNE')
 
     def test_field_function_fset(self):
@@ -106,29 +106,29 @@ class TestField2(DBTestCase):
                 def fexpr(cls):
                     return cls._name
 
-        self.reload_registry_with(add_in_registry)
-        t = self.registry.Test.insert(name='Jean-Sebastien SUZANNE')
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert(name='Jean-Sebastien SUZANNE')
         self.assertEqual(t._name, 'Jean-Sebastien SUZANNE')
-        t = self.registry.Test.query().first()
+        t = registry.Test.query().first()
         t.name = 'Mister ANYBLOK'
         self.assertEqual(t._name, 'Mister ANYBLOK')
-        t.update({self.registry.Test.name: 'Jean-Sebastien SUZANNE'})
+        t.update({registry.Test.name: 'Jean-Sebastien SUZANNE'})
         self.assertEqual(t._name, 'Jean-Sebastien SUZANNE')
 
     def test_field_function_fdel(self):
-        self.reload_registry_with(self.define_field_function)
-        t = self.registry.Test.insert(first_name='jean-sebastien',
-                                      last_name='suzanne')
+        registry = self.init_registry(self.define_field_function)
+        t = registry.Test.insert(first_name='jean-sebastien',
+                                 last_name='suzanne')
         del t.name
         self.assertEqual(t.first_name, None)
         self.assertEqual(t.last_name, None)
 
     def test_field_function_fexpr(self):
-        self.reload_registry_with(self.define_field_function)
-        self.registry.Test.insert(first_name='Jean-Sebastien',
-                                  last_name='SUZANNE')
-        t = self.registry.Test.query().filter(
-            self.registry.Test.name == 'Jean-Sebastien SUZANNE').first()
+        registry = self.init_registry(self.define_field_function)
+        registry.Test.insert(first_name='Jean-Sebastien',
+                             last_name='SUZANNE')
+        t = registry.Test.query().filter(
+            registry.Test.name == 'Jean-Sebastien SUZANNE').first()
         self.assertEqual(t.name, 'Jean-Sebastien SUZANNE')
 
     def test_field_function_without_fexpr(self):
@@ -148,8 +148,8 @@ class TestField2(DBTestCase):
                 def fset(self, val):
                     self.val1 = val / 2
 
-        self.reload_registry_with(add_in_registry)
-        self.registry.Test.insert(val1=1)
+        registry = self.init_registry(add_in_registry)
+        registry.Test.insert(val1=1)
         with self.assertRaises(FieldException):
-            self.registry.Test.query().filter(
-                self.registry.Test.val2 == 2).first()
+            registry.Test.query().filter(
+                registry.Test.val2 == 2).first()

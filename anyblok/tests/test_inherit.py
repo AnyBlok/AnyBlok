@@ -415,8 +415,8 @@ class TestInherit(DBTestCase):
         self.assertEqual(t2, t)
 
     def test_simple_subclass_model(self):
-        self.reload_registry_with(simple_subclass_model)
-        self.check_registry(self.registry.Test)
+        registry = self.init_registry(simple_subclass_model)
+        self.check_registry(registry.Test)
 
     def test_inherit_multi_mixins(self):
         def add_in_registry():
@@ -438,8 +438,8 @@ class TestInherit(DBTestCase):
 
                 id = Integer(primary_key=True)
 
-        self.reload_registry_with(simple_subclass_model)
-        self.check_registry(self.registry.Test)
+        registry = self.init_registry(simple_subclass_model)
+        self.check_registry(registry.Test)
 
     def test_inherit_cascade_mixins(self):
         def add_in_registry():
@@ -465,102 +465,102 @@ class TestInherit(DBTestCase):
 
                 id = Integer(primary_key=True)
 
-        self.reload_registry_with(simple_subclass_model)
-        self.check_registry(self.registry.Test)
+        registry = self.init_registry(simple_subclass_model)
+        self.check_registry(registry.Test)
 
     def test_simple_subclass_Core_Base(self):
-        self.reload_registry_with(simple_subclass_Core_Base)
-        m = self.registry.Test()
+        registry = self.init_registry(simple_subclass_Core_Base)
+        m = registry.Test()
         self.assertEqual(m.mymethod(), 10)
 
     def test_simple_subclass_Core_SqlBase(self):
-        self.reload_registry_with(simple_subclass_Core_SqlBase)
-        m = self.registry.Test()
+        registry = self.init_registry(simple_subclass_Core_SqlBase)
+        m = registry.Test()
         self.assertEqual(m.mymethod(), 10)
 
     def test_simple_subclass_model_change_type(self):
-        self.reload_registry_with(simple_subclass_model_change_type)
+        registry = self.init_registry(simple_subclass_model_change_type)
 
-        t = self.registry.Test.insert(name=1)
-        t2 = self.registry.Test.query().first()
+        t = registry.Test.insert(name=1)
+        t2 = registry.Test.query().first()
         self.assertEqual(t2, t)
         self.assertEqual(t.name, 1)
 
     def test_simple_subclass_model_change_type_and_subclass_add_field(self):
-        self.reload_registry_with(
+        registry = self.init_registry(
             simple_subclass_model_change_type_and_subclass_add_field)
 
-        t = self.registry.Test.insert(name=1, other='other')
-        t2 = self.registry.Test.query().first()
+        t = registry.Test.insert(name=1, other='other')
+        t2 = registry.Test.query().first()
         self.assertEqual(t2, t)
         self.assertEqual(t.name, 1)
 
     def test_mixin_one_model(self):
-        self.reload_registry_with(mixin_one_model)
-        self.check_registry(self.registry.Test)
+        registry = self.init_registry(mixin_one_model)
+        self.check_registry(registry.Test)
 
     def test_mixin_two_model(self):
-        self.reload_registry_with(mixin_two_model)
-        self.check_registry(self.registry.Test)
-        self.check_registry(self.registry.Test2)
+        registry = self.init_registry(mixin_two_model)
+        self.check_registry(registry.Test)
+        self.check_registry(registry.Test2)
 
     def test_mixin_one_model_with_subclass(self):
-        self.reload_registry_with(mixin_one_model_with_subclass)
-        self.check_registry(self.registry.Test)
+        registry = self.init_registry(mixin_one_model_with_subclass)
+        self.check_registry(registry.Test)
 
     def test_mixin_one_model_by_subclass(self):
-        self.reload_registry_with(mixin_one_model_by_subclass)
-        self.check_registry(self.registry.Test)
+        registry = self.init_registry(mixin_one_model_by_subclass)
+        self.check_registry(registry.Test)
 
     def test_mixin_with_foreign_key_one_model(self):
-        self.reload_registry_with(mixin_with_foreign_key_one_model)
+        registry = self.init_registry(mixin_with_foreign_key_one_model)
 
         val = 'test'
-        self.registry.TestFk.insert(name=val)
-        t = self.registry.Test.insert(name=val)
-        t2 = self.registry.Test.query().first()
+        registry.TestFk.insert(name=val)
+        t = registry.Test.insert(name=val)
+        t2 = registry.Test.query().first()
         self.assertEqual(t2, t)
 
     def test_mixin_with_foreign_key_two_model(self):
-        self.reload_registry_with(mixin_with_foreign_key_two_model)
+        registry = self.init_registry(mixin_with_foreign_key_two_model)
 
         for val in ('test', 'test2'):
-            self.registry.TestFk.insert(name=val)
+            registry.TestFk.insert(name=val)
 
-        t = self.registry.Test.insert(name='test')
-        t2 = self.registry.Test.query().first()
+        t = registry.Test.insert(name='test')
+        t2 = registry.Test.query().first()
         self.assertEqual(t2, t)
 
-        t3 = self.registry.Test2.insert(name='test2')
-        t4 = self.registry.Test2.query().first()
+        t3 = registry.Test2.insert(name='test2')
+        t4 = registry.Test2.query().first()
         self.assertEqual(t3, t4)
 
     def test_mixin_one_model_by_subclass_and_with(self):
-        self.reload_registry_with(mixin_one_model_by_subclass_and_with)
-        self.check_registry(self.registry.Test)
+        registry = self.init_registry(mixin_one_model_by_subclass_and_with)
+        self.check_registry(registry.Test)
 
     def test_mixin_one_model_with_subclass_and_subclass_mixin(self):
-        self.reload_registry_with(
+        registry = self.init_registry(
             mixin_one_model_with_subclass_and_subclass_mixin)
-        self.check_registry(self.registry.Test)
+        self.check_registry(registry.Test)
 
     def test_inherit_by_another_model(self):
-        self.reload_registry_with(inherit_by_another_model)
-        self.check_registry(self.registry.Test)
+        registry = self.init_registry(inherit_by_another_model)
+        self.check_registry(registry.Test)
 
     def test_inherit_by_two_another_model(self):
-        self.reload_registry_with(inherit_by_two_another_model)
-        self.check_registry(self.registry.Test)
-        self.check_registry(self.registry.Test2)
+        registry = self.init_registry(inherit_by_two_another_model)
+        self.check_registry(registry.Test)
+        self.check_registry(registry.Test2)
 
     def test_inherit_by_another_model_and_subclass_mainmodel(self):
-        self.reload_registry_with(
+        registry = self.init_registry(
             inherit_by_another_model_and_subclass_mainmodel)
-        self.check_registry(self.registry.Test)
+        self.check_registry(registry.Test)
 
     def check_inherit_base(self, function, value):
-        self.reload_registry_with(function)
-        test = self.registry.Test()
+        registry = self.init_registry(function)
+        test = registry.Test()
         self.assertEqual(test.method_from_base(2), value)
 
     def test_inherit_base_and_add_method(self):
@@ -578,8 +578,8 @@ class TestInherit(DBTestCase):
             inherit_base_and_add_method_sub_classes_by_mixin, 7)
 
     def check_inherit_sql_base(self, function, value):
-        self.reload_registry_with(function)
-        test = self.registry.Test()
+        registry = self.init_registry(function)
+        test = registry.Test()
         self.assertEqual(test.is_sql_base(), value)
 
     def test_inherit_sql_base_on_simple_model(self):
@@ -606,10 +606,10 @@ class TestInherit(DBTestCase):
                 id = Integer(primary_key=True)
                 test2 = Integer(foreign_key=Model.Test2.use('id'))
 
-        self.reload_registry_with(add_in_registry)
-        t = self.registry.Test.insert()
-        t3 = self.registry.Test3.insert(test=t)
-        t2 = self.registry.Test2.query().one()
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        t3 = registry.Test3.insert(test=t)
+        t2 = registry.Test2.query().one()
         self.assertEqual(t3.test2, t2.id)
         self.assertEqual(t2.test, t)
 
@@ -632,9 +632,9 @@ class TestInherit(DBTestCase):
                 id = Integer(primary_key=True)
                 test2 = Integer(foreign_key=Model.Test2.use('id'))
 
-        self.reload_registry_with(add_in_registry)
-        t = self.registry.Test.insert()
-        t3 = self.registry.Test3.insert(test=t)
-        t2 = self.registry.Test2.query().one()
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        t3 = registry.Test3.insert(test=t)
+        t2 = registry.Test2.query().one()
         self.assertEqual(t3.test2, t2.id)
         self.assertEqual(t2.test, t)

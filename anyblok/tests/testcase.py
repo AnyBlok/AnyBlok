@@ -86,11 +86,12 @@ class TestCase(unittest.TestCase):
         db_template_name = Configuration.get('db_template_name', None)
         if database_exists(url):
             if keep_existing:
-                return True
+                return False
 
             drop_database(url)
 
         create_database(url, template=db_template_name)
+        return True
 
     @classmethod
     def dropdb(cls):
@@ -106,10 +107,12 @@ class TestCase(unittest.TestCase):
         if database_exists(url):
             drop_database(url)
 
-    def additional_setting(self):
-        return dict(unittest=self.active_unittest_connection)
+    @classmethod
+    def additional_setting(cls):
+        return dict(unittest=True)
 
-    def getRegistry(self):
+    @classmethod
+    def getRegistry(cls):
         """Return the registry for the test database.
 
         This assumes the database is created, and the registry has already
@@ -119,7 +122,7 @@ class TestCase(unittest.TestCase):
 
         :rtype: registry instance
         """
-        additional_setting = self.additional_setting()
+        additional_setting = cls.additional_setting()
         return RegistryManager.get(Configuration.get('db_name'),
                                    **additional_setting)
 
@@ -179,22 +182,26 @@ class DBTestCase(TestCase):
                 self.assertEqual(test.col, 1)
 
     """
+
+    blok_entry_points = ('bloks',)
+    """setuptools entry points to load blok """
+
     @classmethod
     def setUpClass(cls):
         """ Intialialise the configuration manager """
         super(DBTestCase, cls).setUpClass()
         cls.init_configuration_manager()
-        cls.createdb(keep_existing=True)
-        BlokManager.load(entry_points=('bloks', 'test_bloks'))
-        cls.registry = RegistryManager.get(Configuration.get('db_name'))
-        if cls.registry.Session is None:
-            cls.registry.reload()
+        if cls.createdb(keep_existing=True):
+            BlokManager.load(entry_points=('bloks', 'test_bloks'))
+            registry = cls.getRegistry()
+            registry.commit()
+            registry.close()
+            BlokManager.unload()
 
     def setUp(self):
         """ Create a database and load the blok manager """
         self.trans = None
         super(DBTestCase, self).setUp()
-        self.createdb()
         BlokManager.load(entry_points=self.blok_entry_points)
 
     def tearDown(self):
@@ -208,7 +215,6 @@ class DBTestCase(TestCase):
 
         RegistryManager.clear()
         BlokManager.unload()
-        self.dropdb()
         super(DBTestCase, self).tearDown()
 
     def init_registry(self, function, **kwargs):
@@ -228,7 +234,7 @@ class DBTestCase(TestCase):
                 EnvironmentManager.set('current_blok', None)
 
         try:
-            registry = self.getRegistry()
+            registry = self.__class__.getRegistry()
         finally:
             RegistryManager.loaded_bloks = loaded_bloks
 

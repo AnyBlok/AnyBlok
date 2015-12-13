@@ -18,14 +18,14 @@ Core = Declarations.Core
 
 class TestEvent(DBTestCase):
 
-    def check_event(self):
-        self.assertEqual(self.registry.Test.x, 0)
-        self.registry.Event.fire('fireevent')
-        self.assertEqual(self.registry.Test.x, 1)
-        self.registry.Event.fire('fireevent', a=2, b=2)
-        self.assertEqual(self.registry.Test.x, 4)
-        self.registry.Event.fire('fireevent')
-        self.assertEqual(self.registry.Test.x, 1)
+    def check_event(self, registry):
+        self.assertEqual(registry.Test.x, 0)
+        registry.Event.fire('fireevent')
+        self.assertEqual(registry.Test.x, 1)
+        registry.Event.fire('fireevent', a=2, b=2)
+        self.assertEqual(registry.Test.x, 4)
+        registry.Event.fire('fireevent')
+        self.assertEqual(registry.Test.x, 1)
 
     def test_simple_event_from_model(self):
 
@@ -44,8 +44,8 @@ class TestEvent(DBTestCase):
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
-        self.reload_registry_with(add_in_registry)
-        self.check_event()
+        registry = self.init_registry(add_in_registry)
+        self.check_event(registry)
 
     def test_simple_event_from_model_by_name(self):
 
@@ -64,10 +64,10 @@ class TestEvent(DBTestCase):
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
-        self.reload_registry_with(add_in_registry)
-        self.assertEqual(len(self.registry.events['Model.Event']['fireevent']),
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(len(registry.events['Model.Event']['fireevent']),
                          1)
-        self.check_event()
+        self.check_event(registry)
 
     def test_simple_event_from_mixin(self):
 
@@ -90,10 +90,10 @@ class TestEvent(DBTestCase):
             class Test(Mixin.MTest):
                 pass
 
-        self.reload_registry_with(add_in_registry)
-        self.assertEqual(len(self.registry.events['Model.Event']['fireevent']),
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(len(registry.events['Model.Event']['fireevent']),
                          1)
-        self.check_event()
+        self.check_event(registry)
 
     def test_simple_event_from_core(self):
 
@@ -116,8 +116,8 @@ class TestEvent(DBTestCase):
             class Test:
                 pass
 
-        self.reload_registry_with(add_in_registry)
-        self.check_event()
+        registry = self.init_registry(add_in_registry)
+        self.check_event(registry)
 
     def add_in_registry_inherited(self, withcore=False, withmixin=False,
                                   withmodel=False):
@@ -157,31 +157,31 @@ class TestEvent(DBTestCase):
                     cls.x = a * b
 
     def test_inherited_without_event(self):
-        self.reload_registry_with(self.add_in_registry_inherited)
-        self.assertEqual(self.registry.Test.x, 0)
-        self.registry.Event.fire('fireevent')
-        self.assertEqual(self.registry.Test.x, 0)
-        self.registry.Event.fire('fireevent', a=2, b=2)
-        self.assertEqual(self.registry.Test.x, 0)
-        self.registry.Event.fire('fireevent')
-        self.assertEqual(self.registry.Test.x, 0)
+        registry = self.init_registry(self.add_in_registry_inherited)
+        self.assertEqual(registry.Test.x, 0)
+        registry.Event.fire('fireevent')
+        self.assertEqual(registry.Test.x, 0)
+        registry.Event.fire('fireevent', a=2, b=2)
+        self.assertEqual(registry.Test.x, 0)
+        registry.Event.fire('fireevent')
+        self.assertEqual(registry.Test.x, 0)
 
     def test_inherited_with_event_on_core(self):
-        self.reload_registry_with(self.add_in_registry_inherited,
-                                  withcore=True)
-        self.check_event()
+        registry = self.init_registry(self.add_in_registry_inherited,
+                                      withcore=True)
+        self.check_event(registry)
 
     def test_inherited_with_event_on_mixin(self):
-        self.reload_registry_with(self.add_in_registry_inherited,
-                                  withmixin=True)
+        registry = self.init_registry(self.add_in_registry_inherited,
+                                      withmixin=True)
         self.assertEqual(
-            len(self.registry.events['Model.Event']['fireevent']), 1)
-        self.check_event()
+            len(registry.events['Model.Event']['fireevent']), 1)
+        self.check_event(registry)
 
     def test_inherited_with_event_on_core_and_mixin(self):
-        self.reload_registry_with(self.add_in_registry_inherited,
-                                  withcore=True, withmixin=True)
-        self.check_event()
+        registry = self.init_registry(self.add_in_registry_inherited,
+                                      withcore=True, withmixin=True)
+        self.check_event(registry)
 
     def test_inherited_with_event_on_mixin_and_model(self):
         registry = self.init_registry(self.add_in_registry_inherited,

@@ -81,19 +81,13 @@ class TestBlokManager(TestCase):
             pass
 
 
-class DB2TestCase(DBTestCase):
-    pass
+class TestBlok(DBTestCase):
 
-   # @classmethod
-   # def tearDownClass(cls):
-   #     super(DB2TestCase, cls).tearDownClass()
-   #     cls.regisrty.Session = None
-
-
-class TestBlok(DB2TestCase):
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_blok_exist(self):
-        Blok = self.registry.System.Blok
+        registry = self.init_registry(None)
+        Blok = registry.System.Blok
         query = Blok.query().filter(Blok.name == 'test-blok1')
         if not query.count():
             self.fail('No blok found')
@@ -162,10 +156,13 @@ class TestBlok(DB2TestCase):
             pass
 
 
-class TestBlokRequired(DB2TestCase):
+class TestBlokRequired(DBTestCase):
+
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_blok_exist(self):
-        Blok = self.registry.System.Blok
+        registry = self.init_registry(None)
+        Blok = registry.System.Blok
         query = Blok.query().filter(Blok.name == 'test-blok2')
         if not query.count():
             self.fail('No blok found')
@@ -274,10 +271,13 @@ class TestBlokRequired(DB2TestCase):
         self.assertEqual(testblok2.installed_version, '2.0.0')
 
 
-class TestBlokRequired2(DB2TestCase):
+class TestBlokRequired2(DBTestCase):
+
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_blok_exist(self):
-        Blok = self.registry.System.Blok
+        registry = self.init_registry(None)
+        Blok = registry.System.Blok
         query = Blok.query().filter(Blok.name == 'test-blok3')
         if not query.count():
             self.fail('No blok found')
@@ -477,7 +477,9 @@ class TestBlokRequired2(DB2TestCase):
         self.assertEqual(testblok3.installed_version, '2.0.0')
 
 
-class TestBlokConditionnal(DB2TestCase):
+class TestBlokConditionnal(DBTestCase):
+
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_install_1by1(self):
         registry = self.init_registry(None)
@@ -598,7 +600,9 @@ class TestBlokConditionnal(DB2TestCase):
         self.assertEqual(testblok5.installed_version, '2.0.0')
 
 
-class TestBlokOptional(DB2TestCase):
+class TestBlokOptional(DBTestCase):
+
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_install_1by1(self):
         registry = self.init_registry(None)
@@ -700,10 +704,13 @@ class TestBlokOptional(DB2TestCase):
         self.assertEqual(testblok6.installed_version, '2.0.0')
 
 
-class TestBlokOrder(DB2TestCase):
+class TestBlokOrder(DBTestCase):
+
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def check_order(self, mode, wanted):
-        Test = self.registry.Test
+        registry = self.init_registry(None)
+        Test = registry.Test
         self.assertEqual(Test.query().filter(Test.mode == mode).all().blok,
                          wanted)
 
@@ -748,16 +755,19 @@ class TestBlokOrder(DB2TestCase):
             'anyblok-core', 'test-blok1', 'test-blok2', 'test-blok3'])
 
 
-class TestBlokModel(DB2TestCase):
+class TestBlokModel(DBTestCase):
+
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_remove_foreign_key_after_uninstallation_1(self):
-        self.registry.upgrade(install=('test-blok7', 'test-blok8'))
-        t2 = self.registry.Test2.insert(label="test2")
-        self.registry.Test.insert(label="Test1", test2=t2.id)
-        self.registry.old_session_commit()
+        registry = self.init_registry(None)
+        registry.upgrade(install=('test-blok7', 'test-blok8'))
+        t2 = registry.Test2.insert(label="test2")
+        registry.Test.insert(label="Test1", test2=t2.id)
+        registry.old_session_commit()
         from sqlalchemy.exc import IntegrityError
         with self.assertRaises(IntegrityError):
-            self.registry.Test2.query().delete()
+            registry.Test2.query().delete()
 
     def test_remove_foreign_key_after_uninstallation(self):
         registry = self.init_registry(None)
@@ -774,7 +784,9 @@ class TestBlokModel(DB2TestCase):
         registry.Test2.query().delete()
 
 
-class TestBlokSession(DB2TestCase):
+class TestBlokSession(DBTestCase):
+
+    blok_entry_points = ('bloks', 'test_bloks')
 
     def test_session_with_no_change(self):
         registry = self.init_registry(None)

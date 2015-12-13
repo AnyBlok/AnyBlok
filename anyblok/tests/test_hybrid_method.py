@@ -44,8 +44,8 @@ class TestHybridMethod(DBTestCase):
                 def val_is(self, val):
                     return self.val == val
 
-        self.reload_registry_with(add_in_registry)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(add_in_registry)
+        self.check_hybrid_method(registry.Test)
 
     def test_hybrid_method_model2(self):
 
@@ -61,8 +61,8 @@ class TestHybridMethod(DBTestCase):
                 def val_is(self, val):
                     return self.val == val
 
-        self.reload_registry_with(add_in_registry)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(add_in_registry)
+        self.check_hybrid_method(registry.Test)
 
     def test_hybrid_method_core(self):
 
@@ -80,8 +80,8 @@ class TestHybridMethod(DBTestCase):
                 id = Integer(primary_key=True)
                 val = Integer(nullable=False)
 
-        self.reload_registry_with(add_in_registry)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(add_in_registry)
+        self.check_hybrid_method(registry.Test)
 
     def test_hybrid_method_mixin(self):
 
@@ -100,8 +100,8 @@ class TestHybridMethod(DBTestCase):
             class Test(Mixin.MTest):
                 pass
 
-        self.reload_registry_with(add_in_registry)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(add_in_registry)
+        self.check_hybrid_method(registry.Test)
 
     def add_inherited_hybrid_method(self, withcore=False, withmixin=False,
                                     withmodel=False):
@@ -139,37 +139,37 @@ class TestHybridMethod(DBTestCase):
                 return self.val == val
 
     def test_inherit_core(self):
-        self.reload_registry_with(self.add_inherited_hybrid_method,
-                                  withcore=True)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(self.add_inherited_hybrid_method,
+                                      withcore=True)
+        self.check_hybrid_method(registry.Test)
 
     def test_inherit_mixin(self):
-        self.reload_registry_with(self.add_inherited_hybrid_method,
-                                  withmixin=True)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(self.add_inherited_hybrid_method,
+                                      withmixin=True)
+        self.check_hybrid_method(registry.Test)
 
     def test_inherit_model(self):
-        self.reload_registry_with(self.add_inherited_hybrid_method,
-                                  withmodel=True)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(self.add_inherited_hybrid_method,
+                                      withmodel=True)
+        self.check_hybrid_method(registry.Test)
 
     def test_inherit_core_and_mixin(self):
-        self.reload_registry_with(self.add_inherited_hybrid_method,
-                                  withcore=True, withmixin=True)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(self.add_inherited_hybrid_method,
+                                      withcore=True, withmixin=True)
+        self.check_hybrid_method(registry.Test)
 
     def test_inherit_core_and_model(self):
-        self.reload_registry_with(self.add_inherited_hybrid_method,
-                                  withcore=True, withmodel=True)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(self.add_inherited_hybrid_method,
+                                      withcore=True, withmodel=True)
+        self.check_hybrid_method(registry.Test)
 
     def test_inherit_mixin_and_model(self):
-        self.reload_registry_with(self.add_inherited_hybrid_method,
-                                  withmixin=True, withmodel=True)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(self.add_inherited_hybrid_method,
+                                      withmixin=True, withmodel=True)
+        self.check_hybrid_method(registry.Test)
 
     def test_inherit_core_and_mixin_and_model(self):
-        self.reload_registry_with(self.add_inherited_hybrid_method,
-                                  withcore=True, withmixin=True,
-                                  withmodel=True)
-        self.check_hybrid_method(self.registry.Test)
+        registry = self.init_registry(self.add_inherited_hybrid_method,
+                                      withcore=True, withmixin=True,
+                                      withmodel=True)
+        self.check_hybrid_method(registry.Test)

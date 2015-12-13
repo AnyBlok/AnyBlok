@@ -13,14 +13,16 @@ from anyblok.relationship import Many2Many, One2Many, Many2One
 class TestInstrumentedList(DBTestCase):
 
     def test_all_method_on_query_return_InstrumentedList(self):
-        check = isinstance(self.registry.System.Blok.query().all(),
-                           self.registry.InstrumentedList)
+        registry = self.init_registry(None)
+        check = isinstance(registry.System.Blok.query().all(),
+                           registry.InstrumentedList)
         self.assertTrue(check)
 
     def test_empty_result_on_query_return_InstrumentedList(self):
-        Blok = self.registry.System.Blok
+        registry = self.init_registry(None)
+        Blok = registry.System.Blok
         bloks = Blok.query().filter(Blok.name == 'Unexisting blok').all()
-        check = isinstance(bloks, self.registry.InstrumentedList)
+        check = isinstance(bloks, registry.InstrumentedList)
         self.assertTrue(check)
         self.assertEqual(bloks.name, [])
 
@@ -40,15 +42,15 @@ class TestInstrumentedList(DBTestCase):
                 id = Integer(primary_key=True)
                 tests = Many2Many(model=Model.Test, many2many="tests2")
 
-        self.reload_registry_with(m2m_with_instrumentedlist)
+        registry = self.init_registry(m2m_with_instrumentedlist)
 
-        t = self.registry.Test.insert()
-        t2 = self.registry.Test2.insert()
+        t = registry.Test.insert()
+        t2 = registry.Test2.insert()
         t.tests2.append(t2)
         self.assertEqual(t2.tests, [t])
-        check = isinstance(t.tests2, self.registry.InstrumentedList)
+        check = isinstance(t.tests2, registry.InstrumentedList)
         self.assertTrue(check)
-        check = isinstance(t2.tests, self.registry.InstrumentedList)
+        check = isinstance(t2.tests, registry.InstrumentedList)
         self.assertTrue(check)
 
     def test_O2M_is_InstrumentedList(self):
@@ -71,12 +73,12 @@ class TestInstrumentedList(DBTestCase):
             class Test2:
                 tests = One2Many(model=Model.Test)
 
-        self.reload_registry_with(o2m_with_instrumentedlist)
+        registry = self.init_registry(o2m_with_instrumentedlist)
 
-        t = self.registry.Test.insert()
-        t2 = self.registry.Test2.insert()
+        t = registry.Test.insert()
+        t2 = registry.Test2.insert()
         t2.tests.append(t)
-        check = isinstance(t2.tests, self.registry.InstrumentedList)
+        check = isinstance(t2.tests, registry.InstrumentedList)
         self.assertTrue(check)
 
     def test_O2M_linked_is_InstrumentedList(self):
@@ -95,12 +97,12 @@ class TestInstrumentedList(DBTestCase):
                 id = Integer(primary_key=True)
                 test = Many2One(model=Model.Test, one2many="tests2")
 
-        self.reload_registry_with(o2m_with_instrumentedlist)
+        registry = self.init_registry(o2m_with_instrumentedlist)
 
-        t = self.registry.Test.insert()
-        t2 = self.registry.Test2.insert()
+        t = registry.Test.insert()
+        t2 = registry.Test2.insert()
         t.tests2.append(t2)
-        check = isinstance(t.tests2, self.registry.InstrumentedList)
+        check = isinstance(t.tests2, registry.InstrumentedList)
         self.assertTrue(check)
 
     def test_call_column(self):
@@ -114,10 +116,10 @@ class TestInstrumentedList(DBTestCase):
             class Test:
                 id = Integer(primary_key=True)
 
-        self.reload_registry_with(call_column)
+        registry = self.init_registry(call_column)
 
-        t = self.registry.Test.insert()
-        self.assertEqual(self.registry.Test.query().all().id, [t.id])
+        t = registry.Test.insert()
+        self.assertEqual(registry.Test.query().all().id, [t.id])
 
     def test_call_method(self):
 
@@ -133,10 +135,10 @@ class TestInstrumentedList(DBTestCase):
                 def foo(self):
                     return self.id
 
-        self.reload_registry_with(call_method)
+        registry = self.init_registry(call_method)
 
-        t = self.registry.Test.insert()
-        self.assertEqual(self.registry.Test.query().all().foo(), [t.id])
+        t = registry.Test.insert()
+        self.assertEqual(registry.Test.query().all().foo(), [t.id])
 
     def test_inherit(self):
 
@@ -151,5 +153,5 @@ class TestInstrumentedList(DBTestCase):
                 def foo(self):
                     return True
 
-        self.reload_registry_with(inherit)
-        self.assertTrue(self.registry.System.Blok.query().all().foo())
+        registry = self.init_registry(inherit)
+        self.assertTrue(registry.System.Blok.query().all().foo())
