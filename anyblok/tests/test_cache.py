@@ -212,11 +212,13 @@ class TestSimpleCache(DBTestCase):
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin(self):
-        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
         self.check_method_cached(registry.Test, 'Model.Test')
 
     def test_mixin2(self):
-        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
         from anyblok import Declarations
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
@@ -287,7 +289,8 @@ class TestSimpleCache(DBTestCase):
         self.check_method_cached_invalidate_all(registry.Test)
 
     def test_invalidate_all_check_mixin(self):
-        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
         self.check_method_cached_invalidate_all(registry.Test)
 
 
@@ -415,16 +418,19 @@ class TestClassMethodCache(DBTestCase):
         self.check_method_cached(registry.Test, 'Model.Test')
 
     def test_core2(self):
-        registry = self.init_registry(self.add_model_with_method_cached_by_core)
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_core)
         from anyblok import Declarations
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin(self):
-        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
         self.check_method_cached(registry.Test, 'Model.Test')
 
     def test_mixin2(self):
-        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
         from anyblok import Declarations
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
@@ -611,7 +617,8 @@ class TestInheritedCache(DBTestCase):
         self.check_inherited_method_cached(registry.Test)
 
     def test_mixin(self):
-        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
         self.check_method_cached(registry.Test)
 
     def test_mixin2(self):
@@ -745,7 +752,8 @@ class TestInheritedClassMethodCache(DBTestCase):
         self.check_inherited_method_cached(registry.Test)
 
     def test_mixin(self):
-        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
+        registry = self.init_registry(
+            self.add_model_with_method_cached_by_mixin)
         self.check_method_cached(registry.Test)
 
     def test_mixin2(self):

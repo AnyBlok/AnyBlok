@@ -131,7 +131,8 @@ class TestColumns(DBTestCase):
         self.assertEqual(test.col, 'col')
 
     def test_string_with_size(self):
-        registry = self.init_registry(simple_column, ColumnType=String, size=100)
+        registry = self.init_registry(
+            simple_column, ColumnType=String, size=100)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
@@ -146,7 +147,8 @@ class TestColumns(DBTestCase):
         self.assertEqual(test.col, 'col')
 
     def test_ustring_with_size(self):
-        registry = self.init_registry(simple_column, ColumnType=uString, size=100)
+        registry = self.init_registry(
+            simple_column, ColumnType=uString, size=100)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
