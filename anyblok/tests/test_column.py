@@ -223,7 +223,6 @@ class TestColumns(DBTestCase):
         ]
 
         with self.assertRaises(FieldException):
-            self.active_unittest_connection = False
             self.init_registry(
                 simple_column, ColumnType=Selection, selections=SELECTIONS)
 

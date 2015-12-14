@@ -129,7 +129,6 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         super(TestCase, self).setUp()
         self.addCleanup(self.callCleanUp)
-        self.active_unittest_connection = True
 
     def callCleanUp(self):
         if not self._transaction_case_teared_down:
@@ -189,6 +188,7 @@ class DBTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         """ Intialialise the configuration manager """
+
         super(DBTestCase, cls).setUpClass()
         cls.init_configuration_manager()
         if cls.createdb(keep_existing=True):
@@ -200,18 +200,15 @@ class DBTestCase(TestCase):
 
     def setUp(self):
         """ Create a database and load the blok manager """
-        self.trans = None
+        self.registry = None
         super(DBTestCase, self).setUp()
         BlokManager.load(entry_points=self.blok_entry_points)
 
     def tearDown(self):
         """ Clear the registry, unload the blok manager and  drop the database
         """
-        if self.trans:
-            trans, registry = self.trans
-            trans.rollback()
-            registry.bind.close()
-            registry.close()
+        if self.registry:
+            self.registry.close()
 
         RegistryManager.clear()
         BlokManager.unload()
@@ -234,13 +231,10 @@ class DBTestCase(TestCase):
                 EnvironmentManager.set('current_blok', None)
 
         try:
-            registry = self.__class__.getRegistry()
+            self.registry = registry = self.__class__.getRegistry()
         finally:
             RegistryManager.loaded_bloks = loaded_bloks
 
-        trans = registry.bind.begin()
-        registry.session.begin_nested()
-        self.trans = (trans, registry)
         return registry
 
 
@@ -282,7 +276,6 @@ class BlokTestCase(unittest.TestCase):
     """
 
     _transaction_case_teared_down = False
-    active_unittest_connection = True
     registry = None
     """The instance of :class:`anyblok.registry.Registry`` to use in tests.
 
@@ -292,7 +285,7 @@ class BlokTestCase(unittest.TestCase):
 
     @classmethod
     def additional_setting(cls):
-        return dict(unittest=cls.active_unittest_connection)
+        return dict(unittest=True)
 
     @classmethod
     def setUpClass(cls):

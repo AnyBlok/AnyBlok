@@ -405,7 +405,12 @@ class Registry:
         pool_size = Configuration.get('db_pool_size') or 5
         self.engine = create_engine(url, echo=echo, max_overflow=max_overflow,
                                     echo_pool=echo_pool, pool_size=pool_size)
-        self.bind = self.engine.connect() if self.unittest else self.engine
+        if self.unittest:
+            self.bind = self.engine.connect()
+            self.unittest_transaction = self.bind.begin()
+        else:
+            self.bind = self.engine
+
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
@@ -974,11 +979,19 @@ class Registry:
         After the call of this method the registry won't be usable
         you should use close method which call this method
         """
+
+        if self.unittest_transaction:
+            self.unittest_transaction.rollback()
+
         if self.Session:
             session = self.Session()
             session.rollback()
             session.expunge_all()
             session.close_all()
+
+        if self.unittest_transaction:
+            self.unittest_transaction.close()
+            self.bind.close()
 
     def close(self):
         """Release the session, connection and engine"""

@@ -158,7 +158,6 @@ class TestMany2One(DBTestCase):
 
     def test_2_many2one(self):
         with self.assertRaises(FieldException):
-            self.active_unittest_connection = False
             self.init_registry(_many2one_with_same_name_for_column_names)
 
     def test_minimum_many2one(self):
@@ -478,7 +477,6 @@ class TestMany2One(DBTestCase):
                     'other_test_id', 'other_test_id2'))
 
         with self.assertRaises(FieldException):
-            self.active_unittest_connection = False
             self.init_registry(add_in_registry)
 
     def test_m2o_in_mixin(self):

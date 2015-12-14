@@ -222,7 +222,6 @@ class TestMany2Many(DBTestCase):
 
     def test_unexisting_remote_columns(self):
         with self.assertRaises(ModelAttributeException):
-            self.active_unittest_connection = False
             self.init_registry(unexisting_remote_columns)
 
     def test_reuse_many2many_table(self):
