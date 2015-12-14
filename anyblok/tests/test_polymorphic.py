@@ -225,52 +225,52 @@ class TestPolymorphic(DBTestCase):
         self.assertEqual(t2, t)
 
     def test_single_table_poly(self):
-        self.reload_registry_with(single_table_poly)
-        self.check_registry(self.registry.Employee)
-        self.check_registry(self.registry.Engineer,
+        registry = self.init_registry(single_table_poly)
+        self.check_registry(registry.Employee)
+        self.check_registry(registry.Engineer,
                             engineer_name='An engineer')
-        self.check_registry(self.registry.Manager, manager_name='An manager')
+        self.check_registry(registry.Manager, manager_name='An manager')
 
     def test_multi_table_poly(self):
-        self.reload_registry_with(multi_table_poly)
-        self.check_registry(self.registry.Employee)
-        self.check_registry(self.registry.Engineer,
+        registry = self.init_registry(multi_table_poly)
+        self.check_registry(registry.Employee)
+        self.check_registry(registry.Engineer,
                             engineer_name='An engineer')
-        self.check_registry(self.registry.Manager, manager_name='An manager')
+        self.check_registry(registry.Manager, manager_name='An manager')
 
     def test_multi_table_poly_mixins(self):
-        self.reload_registry_with(multi_table_poly_mixins)
-        self.check_registry(self.registry.Employee)
-        self.check_registry(self.registry.Engineer,
+        registry = self.init_registry(multi_table_poly_mixins)
+        self.check_registry(registry.Employee)
+        self.check_registry(registry.Engineer,
                             engineer_name='An engineer')
-        self.check_registry(self.registry.Manager, manager_name='An manager',
+        self.check_registry(registry.Manager, manager_name='An manager',
                             birthday=date.today())
 
     def test_multi_table_foreign_key(self):
-        self.reload_registry_with(multi_table_foreign_key)
-        room = self.registry.Room.insert()
-        self.check_registry(self.registry.Employee, room=room)
-        self.check_registry(self.registry.Engineer,
+        registry = self.init_registry(multi_table_foreign_key)
+        room = registry.Room.insert()
+        self.check_registry(registry.Employee, room=room)
+        self.check_registry(registry.Engineer,
                             engineer_name='An engineer', room=room)
 
     def test_multi_table_foreign_key2_with_one_define_mapper_args(self):
-        self.reload_registry_with(
+        registry = self.init_registry(
             multi_table_foreign_key_with_one_define_mapper_args)
-        room = self.registry.Room.insert()
-        self.check_registry(self.registry.Employee, room=room)
-        self.check_registry(self.registry.Engineer,
+        room = registry.Room.insert()
+        self.check_registry(registry.Employee, room=room)
+        self.check_registry(registry.Engineer,
                             engineer_name='An engineer', room=room)
 
     def test_query_with_polymorphic(self):
-        self.reload_registry_with(multi_table_poly)
-        self.registry.Employee.insert(name='employee')
-        self.registry.Engineer.insert(name='engineer', engineer_name='john')
-        self.registry.Manager.insert(name='manager', manager_name='doe')
-        self.assertEqual(self.registry.Employee.query().count(), 3)
-        for mapper in (self.registry.Engineer,
-                       [self.registry.Engineer, self.registry.Manager], '*'):
-            query = self.registry.Employee.query().with_polymorphic(mapper)
+        registry = self.init_registry(multi_table_poly)
+        registry.Employee.insert(name='employee')
+        registry.Engineer.insert(name='engineer', engineer_name='john')
+        registry.Manager.insert(name='manager', manager_name='doe')
+        self.assertEqual(registry.Employee.query().count(), 3)
+        for mapper in (registry.Engineer,
+                       [registry.Engineer, registry.Manager], '*'):
+            query = registry.Employee.query().with_polymorphic(mapper)
             query = query.filter(
-                self.registry.Engineer.engineer_name == 'john')
+                registry.Engineer.engineer_name == 'john')
             employee = query.one()
-            self.assertTrue(isinstance(employee, self.registry.Engineer))
+            self.assertTrue(isinstance(employee, registry.Engineer))
