@@ -1069,6 +1069,7 @@ class Registry:
         self.clean_model()
         self.ini_var()
         self.load()
+        self.session.expire_all()
 
     def get_bloks(self, blok, filter_states, filter_modes=None):
         Blok = self.System.Blok
