@@ -19,6 +19,7 @@ from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
 import sqlalchemy
+from sqlalchemy import event
 from sqlalchemy_utils.functions import database_exists, create_database, orm
 from copy import copy
 from logging import getLogger
@@ -297,11 +298,18 @@ class BlokTestCase(unittest.TestCase):
             cls.registry = RegistryManager.get(Configuration.get('db_name'),
                                                **additional_setting)
 
+        cls.registry.commit()
+
     def setUp(self):
         super(BlokTestCase, self).setUp()
-        self.trans = self.registry.bind.begin()
         self.addCleanup(self.callCleanUp)
         self.registry.begin_nested()  # add SAVEPOINT
+
+        @event.listens_for(self.registry.session, "after_transaction_end")
+        def restart_savepoint(session, transaction):
+            if transaction.nested and not transaction._parent.nested:
+                session.expire_all()
+                session.begin_nested()
 
     def callCleanUp(self):
         if not self._transaction_case_teared_down:
@@ -315,12 +323,10 @@ class BlokTestCase(unittest.TestCase):
         super(BlokTestCase, self).tearDown()
         try:
             self.registry.System.Cache.invalidate_all()
-            self.registry.session.rollback()
         except sqlalchemy.exc.InvalidRequestError:
-            self.registry.Session.rollback()
+            pass
         finally:
+            self.registry.rollback()
             self.registry.session.close()
-            if self.registry.unittest:
-                self.trans.rollback()
 
         self._transaction_case_teared_down = True
