@@ -24,6 +24,8 @@ Future
 * [REF] start to use sqlalchemy-utils, replace the database management
 * [IMP] `#18 <https://bitbucket.org/jssuzanne/anyblok/issues/18/forbidden-the-declaration-of-sqlachemy>`_
   Forbidden the declaration of SQLAchemy column or relationship
+* [REF] `#15 <https://bitbucket.org/jssuzanne/anyblok/issues/15/speed-up-the-unittest>`_
+  Refactor unittest case to not create/drop database for each test
 
 0.5.3
 -----
