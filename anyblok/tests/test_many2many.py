@@ -150,10 +150,10 @@ class TestMany2Many(DBTestCase):
         registry = self.init_registry(_complete_many2many)
 
         address_exist = hasattr(registry.Person, 'addresses')
-        self.assertEqual(address_exist, True)
+        self.assertTrue(address_exist)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertEqual(m2m_tables_exist, True)
+        self.assertTrue(m2m_tables_exist)
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_addresses_by_persons' in jt
@@ -180,10 +180,10 @@ class TestMany2Many(DBTestCase):
         registry = self.init_registry(_minimum_many2many)
 
         address_exist = hasattr(registry.Person, 'addresses')
-        self.assertEqual(address_exist, True)
+        self.assertTrue(address_exist)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertEqual(m2m_tables_exist, True)
+        self.assertTrue(m2m_tables_exist)
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_person_and_address' in jt
@@ -202,10 +202,10 @@ class TestMany2Many(DBTestCase):
         registry = self.init_registry(_many2many_with_str_model)
 
         address_exist = hasattr(registry.Person, 'addresses')
-        self.assertEqual(address_exist, True)
+        self.assertTrue(address_exist)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertEqual(m2m_tables_exist, True)
+        self.assertTrue(m2m_tables_exist)
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_person_and_address' in jt
@@ -222,7 +222,6 @@ class TestMany2Many(DBTestCase):
 
     def test_unexisting_remote_columns(self):
         with self.assertRaises(ModelAttributeException):
-            self.active_unittest_connection = False
             self.init_registry(unexisting_remote_columns)
 
     def test_reuse_many2many_table(self):
@@ -239,10 +238,10 @@ class TestMany2Many(DBTestCase):
         registry = self.init_registry(_minimum_many2many_by_mixin)
 
         address_exist = hasattr(registry.Person, 'addresses')
-        self.assertEqual(address_exist, True)
+        self.assertTrue(address_exist)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertEqual(m2m_tables_exist, True)
+        self.assertTrue(m2m_tables_exist)
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_person_and_address' in jt
@@ -269,12 +268,12 @@ class TestMany2Many(DBTestCase):
         registry = self.init_registry(add_in_registry)
 
         address_exist = hasattr(registry.Person, 'addresses')
-        self.assertEqual(address_exist, True)
+        self.assertTrue(address_exist)
         address_exist = hasattr(registry.Person2, 'addresses')
-        self.assertEqual(address_exist, True)
+        self.assertTrue(address_exist)
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertEqual(m2m_tables_exist, True)
+        self.assertTrue(m2m_tables_exist)
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_person_and_address' in jt

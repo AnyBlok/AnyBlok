@@ -208,12 +208,10 @@ class TestView(DBTestCase):
 
     def test_simple_view(self):
         registry = self.init_registry(simple_view)
-
         registry.T1.insert(code='test1', val=1)
         registry.T2.insert(code='test1', val=2)
         registry.T1.insert(code='test2', val=3)
         registry.T2.insert(code='test2', val=4)
-
         TestView = registry.TestView
         v1 = TestView.query().filter(TestView.code == 'test1').first()
         v2 = TestView.query().filter(TestView.code == 'test2').first()
@@ -227,14 +225,12 @@ class TestView(DBTestCase):
         registry.T2.insert(code='test1', val=2)
         registry.T1.insert(code='test2', val=3)
         registry.T2.insert(code='test2', val=4)
-
         TestView = registry.TestView
         TestView2 = registry.TestView2
-        self.assertEqual(
-            registry.TestView.__view__, registry.TestView2.__view__)
+        self.assertEqual(registry.TestView.__view__,
+                         registry.TestView2.__view__)
         v1 = TestView.query().filter(TestView.code == 'test1').first()
         v2 = TestView.query().filter(TestView2.code == 'test1').first()
-
         self.assertEqual(v1.val1, v2.val1)
         self.assertEqual(v1.val2, v2.val2)
 
@@ -253,32 +249,26 @@ class TestView(DBTestCase):
 
     def test_view_update_method(self):
         registry = self.init_registry(simple_view)
-
         registry.T1.insert(code='test1', val=1)
         registry.T2.insert(code='test1', val=2)
         registry.T1.insert(code='test2', val=3)
         registry.T2.insert(code='test2', val=4)
-
         with self.assertRaises(ViewException):
             registry.TestView.query().update({'val2': 3})
 
     def test_view_delete_method(self):
         registry = self.init_registry(simple_view)
-
         registry.T1.insert(code='test1', val=1)
         registry.T2.insert(code='test1', val=2)
         registry.T1.insert(code='test2', val=3)
         registry.T2.insert(code='test2', val=4)
-
         with self.assertRaises(ViewException):
             registry.TestView.query().delete()
 
     def test_simple_view_without_primary_key(self):
         with self.assertRaises(ViewException):
-            self.active_unittest_connection = False
             self.init_registry(simple_view_without_primary_key)
 
     def test_simple_view_without_view_declaration(self):
         with self.assertRaises(ViewException):
-            self.active_unittest_connection = False
             self.init_registry(simple_view_without_view_declaration)

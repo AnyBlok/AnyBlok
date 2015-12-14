@@ -227,19 +227,22 @@ class TestPolymorphic(DBTestCase):
     def test_single_table_poly(self):
         registry = self.init_registry(single_table_poly)
         self.check_registry(registry.Employee)
-        self.check_registry(registry.Engineer, engineer_name='An engineer')
+        self.check_registry(registry.Engineer,
+                            engineer_name='An engineer')
         self.check_registry(registry.Manager, manager_name='An manager')
 
     def test_multi_table_poly(self):
         registry = self.init_registry(multi_table_poly)
         self.check_registry(registry.Employee)
-        self.check_registry(registry.Engineer, engineer_name='An engineer')
+        self.check_registry(registry.Engineer,
+                            engineer_name='An engineer')
         self.check_registry(registry.Manager, manager_name='An manager')
 
     def test_multi_table_poly_mixins(self):
         registry = self.init_registry(multi_table_poly_mixins)
         self.check_registry(registry.Employee)
-        self.check_registry(registry.Engineer, engineer_name='An engineer')
+        self.check_registry(registry.Engineer,
+                            engineer_name='An engineer')
         self.check_registry(registry.Manager, manager_name='An manager',
                             birthday=date.today())
 
@@ -247,16 +250,16 @@ class TestPolymorphic(DBTestCase):
         registry = self.init_registry(multi_table_foreign_key)
         room = registry.Room.insert()
         self.check_registry(registry.Employee, room=room)
-        self.check_registry(registry.Engineer, engineer_name='An engineer',
-                            room=room)
+        self.check_registry(registry.Engineer,
+                            engineer_name='An engineer', room=room)
 
     def test_multi_table_foreign_key2_with_one_define_mapper_args(self):
         registry = self.init_registry(
             multi_table_foreign_key_with_one_define_mapper_args)
         room = registry.Room.insert()
         self.check_registry(registry.Employee, room=room)
-        self.check_registry(registry.Engineer, engineer_name='An engineer',
-                            room=room)
+        self.check_registry(registry.Engineer,
+                            engineer_name='An engineer', room=room)
 
     def test_query_with_polymorphic(self):
         registry = self.init_registry(multi_table_poly)
@@ -267,6 +270,7 @@ class TestPolymorphic(DBTestCase):
         for mapper in (registry.Engineer,
                        [registry.Engineer, registry.Manager], '*'):
             query = registry.Employee.query().with_polymorphic(mapper)
-            query = query.filter(registry.Engineer.engineer_name == 'john')
+            query = query.filter(
+                registry.Engineer.engineer_name == 'john')
             employee = query.one()
             self.assertTrue(isinstance(employee, registry.Engineer))

@@ -25,7 +25,7 @@ class Test:
 class Blok:
 
     def install(self):
-        super(Blok, self).upgrade()
+        super(Blok, self).install()
         self.registry.Test.insert(blok=self.name, mode='install')
 
     def upgrade(self):

@@ -6,7 +6,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .testcase import DBTestCase
-from ..blok import BlokManager
 from ..authorization.rule.base import deny_all
 from ..authorization.rule.base import RuleNotForModelClasses
 from ..authorization.rule.attraccess import AttributeAccessRule
@@ -17,10 +16,6 @@ from anyblok.test_bloks.authorization import TestRuleTwo
 class TestAuthorizationDeclaration(DBTestCase):
 
     blok_entry_points = ('bloks', 'test_bloks')
-
-    def tearDown(self):
-        super(TestAuthorizationDeclaration, self).tearDown()
-        BlokManager.unload()
 
     def test_association(self):
         registry = self.init_registry(None)
@@ -35,8 +30,8 @@ class TestAuthorizationDeclaration(DBTestCase):
         self.assertIs(registry.lookup_policy(record, 'Read'), deny_all)
 
     def test_override(self):
-        registry = self.init_registry(None)
         # test-blok8 depends on test-blok7
+        registry = self.init_registry(None)
         registry.upgrade(install=('test-blok8',))
         # lookup can be made on model itself
         model = registry.Test
@@ -83,13 +78,15 @@ class TestAuthorizationDeclaration(DBTestCase):
         query = model.query().filter(model.id != 1)
         self.assertEqual(query.count(), 1)
 
-        filtered = registry.wrap_query_permission(query, ('Franck',), 'Read')
+        filtered = registry.wrap_query_permission(
+            query, ('Franck',), 'Read')
         self.assertEqual(filtered.count(), 1)
         self.assertEqual(filtered.first().id, 2)
         all_results = filtered.all()
         self.assertEqual(all_results[0].id, 2)
 
-        filtered = registry.wrap_query_permission(query, ('Franck',), 'Write')
+        filtered = registry.wrap_query_permission(
+            query, ('Franck',), 'Write')
         self.assertEqual(filtered.count(), 0)
         self.assertIsNone(filtered.first())
         self.assertEqual(len(filtered.all()), 0)
@@ -170,7 +167,8 @@ class TestAuthorizationDeclaration(DBTestCase):
         query = model.query()
         self.assertEqual(query.count(), 3)
 
-        filtered = registry.wrap_query_permission(query, ('Franck',), 'Write')
+        filtered = registry.wrap_query_permission(
+            query, ('Franck',), 'Write')
 
         self.assertEqual(filtered.count(), 1)
         self.assertEqual(filtered.first().id, 2)
@@ -184,11 +182,11 @@ class TestAuthorizationDeclaration(DBTestCase):
         all_results = filtered.all()
         self.assertEqual(all_results[0].id, 2)
 
-        filtered = registry.wrap_query_permission(query, ('Franck',), 'Read')
+        filtered = registry.wrap_query_permission(
+            query, ('Franck',), 'Read')
         self.assertEqual(filtered.count(), 3)
 
-        filtered = registry.wrap_query_permission(query,
-                                                  ('Franck', 'Georges',),
-                                                  'Write')
+        filtered = registry.wrap_query_permission(
+            query, ('Franck', 'Georges',), 'Write')
         self.assertEqual(filtered.count(), 2)
         self.assertEqual([r.id for r in filtered.all()], [1, 2])

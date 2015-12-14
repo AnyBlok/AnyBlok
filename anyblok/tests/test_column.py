@@ -64,7 +64,8 @@ def column_with_foreign_key():
 class TestColumns(DBTestCase):
 
     def test_column_with_type_in_kwargs(self):
-        self.init_registry(simple_column, ColumnType=Integer, type_=Integer)
+        self.init_registry(
+            simple_column, ColumnType=Integer, type_=Integer)
 
     def test_column_with_db_column_name_in_kwargs(self):
         registry = self.init_registry(simple_column, ColumnType=Integer,
@@ -130,8 +131,7 @@ class TestColumns(DBTestCase):
         self.assertEqual(test.col, 'col')
 
     def test_string_with_size(self):
-        registry = self.init_registry(simple_column, ColumnType=String,
-                                      size=100)
+        registry = self.init_registry(simple_column, ColumnType=String, size=100)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
@@ -146,8 +146,7 @@ class TestColumns(DBTestCase):
         self.assertEqual(test.col, 'col')
 
     def test_ustring_with_size(self):
-        registry = self.init_registry(simple_column, ColumnType=uString,
-                                      size=100)
+        registry = self.init_registry(simple_column, ColumnType=uString, size=100)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
@@ -224,7 +223,6 @@ class TestColumns(DBTestCase):
         ]
 
         with self.assertRaises(FieldException):
-            self.active_unittest_connection = False
             self.init_registry(
                 simple_column, ColumnType=Selection, selections=SELECTIONS)
 

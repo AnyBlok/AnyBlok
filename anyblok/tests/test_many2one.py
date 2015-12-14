@@ -143,12 +143,10 @@ class TestMany2One(DBTestCase):
 
     def test_complete_many2one(self):
         registry = self.init_registry(_complete_many2one)
-
         address_exist = hasattr(registry.Person, 'address')
-        self.assertEqual(address_exist, True)
-
+        self.assertTrue(address_exist)
         id_of_address_exist = hasattr(registry.Person, 'id_of_address')
-        self.assertEqual(id_of_address_exist, True)
+        self.assertTrue(id_of_address_exist)
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
@@ -160,47 +158,33 @@ class TestMany2One(DBTestCase):
 
     def test_2_many2one(self):
         with self.assertRaises(FieldException):
-            self.active_unittest_connection = False
             self.init_registry(_many2one_with_same_name_for_column_names)
 
     def test_minimum_many2one(self):
         registry = self.init_registry(_minimum_many2one)
-
         address_exist = hasattr(registry.Person, 'address')
-        self.assertEqual(address_exist, True)
-
+        self.assertTrue(address_exist)
         address_id_exist = hasattr(registry.Person, 'address_id')
-        self.assertEqual(address_id_exist, True)
-
+        self.assertTrue(address_id_exist)
         address = registry.Address.insert()
-
         person = registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
-
         self.assertEqual(person.address, address)
 
     def test_many2one_with_str_model(self):
         registry = self.init_registry(_many2one_with_str_model)
-
         address_exist = hasattr(registry.Person, 'address')
-        self.assertEqual(address_exist, True)
-
+        self.assertTrue(address_exist)
         address_id_exist = hasattr(registry.Person, 'address_id')
-        self.assertEqual(address_id_exist, True)
-
+        self.assertTrue(address_id_exist)
         address = registry.Address.insert()
-
         person = registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
-
-        self.assertEqual(person.address, address)
+        self.assertIs(person.address, address)
 
     def test_minimum_many2one_without_model(self):
-        try:
+        with self.assertRaises(FieldException):
             self.init_registry(_minimum_many2one_without_model)
-            self.fail("No watch dog when more no model")
-        except FieldException:
-            pass
 
     def check_autodetect_type(self, ColumnType):
         registry = self.init_registry(_auto_detect_type, ColumnType=ColumnType)
@@ -310,7 +294,8 @@ class TestMany2One(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         address = registry.Address.insert()
-        registry.Person.insert(name="Jean-sébastien SUZANNE", address=address)
+        registry.Person.insert(
+            name="Jean-sébastien SUZANNE", address=address)
 
         with self.assertRaises(IntegrityError):
             registry.Person.insert(name="Other", address=address)
@@ -492,7 +477,6 @@ class TestMany2One(DBTestCase):
                     'other_test_id', 'other_test_id2'))
 
         with self.assertRaises(FieldException):
-            self.active_unittest_connection = False
             self.init_registry(add_in_registry)
 
     def test_m2o_in_mixin(self):

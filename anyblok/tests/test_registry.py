@@ -25,68 +25,50 @@ class TestTestTest:
     pass
 
 
-class TestRegistry(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestRegistry, cls).setUpClass()
-        cls.init_configuration_manager()
-        cls.createdb()
-        BlokManager.load()
-
-    def setUp(self):
-        super(TestRegistry, self).setUp()
-        self.active_unittest_connection = False
-        self.registry = self.getRegistry()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(TestRegistry, cls).tearDownClass()
-        BlokManager.unload()
-        cls.dropdb()
+class TestRegistry(DBTestCase):
 
     def tearDown(self):
         super(TestRegistry, self).tearDown()
-        RegistryManager.clear()
         for cls in (Test, TestTest):
             if hasattr(cls, 'Test'):
                 delattr(cls, 'Test')
 
-    def test_get(self):
-        self.registry.close()
-        self.registry = self.getRegistry()
-
     def test_get_model(self):
-        System = self.registry.get('Model.System')
-        self.assertEqual(self.registry.System, System)
+        registry = self.init_registry(None)
+        System = registry.get('Model.System')
+        self.assertEqual(registry.System, System)
 
     def test_get_the_same_registry(self):
-        registry = self.getRegistry()
-        self.assertEqual(self.registry, registry)
+        registry = self.init_registry(None)
+        registry2 = self.getRegistry()
+        self.assertEqual(registry, registry2)
 
     def test_reload(self):
-        bloks_before_reload = self.registry.System.Blok.query('name').filter(
-            self.registry.System.Blok.state == 'installed').all()
-        self.registry.reload()
-        bloks_after_reload = self.registry.System.Blok.query('name').filter(
-            self.registry.System.Blok.state == 'installed').all()
+        registry = self.init_registry(None)
+        bloks_before_reload = registry.System.Blok.query('name').filter(
+            registry.System.Blok.state == 'installed').all()
+        registry.reload()
+        bloks_after_reload = registry.System.Blok.query('name').filter(
+            registry.System.Blok.state == 'installed').all()
         self.assertEqual(bloks_before_reload, bloks_after_reload)
 
     def test_get_bloks_to_load(self):
-        bloks = self.registry.get_bloks_to_load()
-        have_anyblokcore = 'anyblok-core' in bloks
-        self.assertEqual(have_anyblokcore, True)
+        registry = self.init_registry(None)
+        bloks = registry.get_bloks_to_load()
+        self.assertIn('anyblok-core', bloks)
 
     def test_load_entry(self):
-        self.registry.loaded_registries['entry_names'] = []
+        registry = self.init_registry(None)
+        registry.loaded_registries['entry_names'] = []
         RegistryManager.loaded_bloks['blok'] = {
             'entry': {
                 'registry_names': ['key'],
-                'key': {'properties': {'property': True}, 'bases': [TestCase]},
+                'key': {'properties': {'property': True},
+                        'bases': [TestCase]},
             },
         }
-        self.registry.load_entry('blok', 'entry')
-        self.assertEqual(self.registry.loaded_registries['key'],
+        registry.load_entry('blok', 'entry')
+        self.assertEqual(registry.loaded_registries['key'],
                          {'properties': {'property': True},
                           'bases': [TestCase]})
 
@@ -94,15 +76,16 @@ class TestRegistry(TestCase):
         RegistryManager.loaded_bloks['blok'] = {
             'Core': {'Session': [TestCase]},
         }
-        self.registry.load_core('blok', 'Session')
-        have_session = TestCase in self.registry.loaded_cores['Session']
-        self.assertEqual(have_session, True)
+        registry = self.init_registry(None)
+        registry.load_core('blok', 'Session')
+        self.assertIn(TestCase, registry.loaded_cores['Session'])
 
     def test_load_blok(self):
 
         class BlokTest(Blok):
             pass
 
+        registry = self.init_registry(None)
         BlokManager.bloks['blok'] = BlokTest
         RegistryManager.loaded_bloks['blok'] = {
             'Core': {'Session': [TestCase],
@@ -118,56 +101,55 @@ class TestRegistry(TestCase):
             RegistryManager.loaded_bloks['blok'][entry] = {
                 'registry_names': []}
 
-        self.registry.load_blok('blok', False, [])
-        have_session = TestCase in self.registry.loaded_cores['Session']
-        self.assertEqual(have_session, True)
+        registry.load_blok('blok', False, [])
+        self.assertIn(TestCase, registry.loaded_cores['Session'])
 
-    def check_added_in_regisry(self):
-        self.assertEqual(self.registry.Test, Test)
-        self.assertEqual(self.registry.Test.Test, TestTest)
-        self.assertEqual(self.registry.Test.Test.Test, TestTestTest)
+    def check_added_in_regisry(self, registry):
+        self.assertEqual(registry.Test, Test)
+        self.assertEqual(registry.Test.Test, TestTest)
+        self.assertEqual(registry.Test.Test.Test, TestTestTest)
 
     def test_add_in_registry_1(self):
-        self.registry.add_in_registry('Declarations.Test', Test)
-        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
-        self.registry.add_in_registry('Declarations.Test.Test.Test',
-                                      TestTestTest)
-        self.check_added_in_regisry()
+        registry = self.init_registry(None)
+        registry.add_in_registry('Declarations.Test', Test)
+        registry.add_in_registry('Declarations.Test.Test', TestTest)
+        registry.add_in_registry('Declarations.Test.Test.Test', TestTestTest)
+        self.check_added_in_regisry(registry)
 
     def test_add_in_registry_2(self):
-        self.registry.add_in_registry('Declarations.Test', Test)
-        self.registry.add_in_registry('Declarations.Test.Test.Test',
-                                      TestTestTest)
-        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
-        self.check_added_in_regisry()
+        registry = self.init_registry(None)
+        registry.add_in_registry('Declarations.Test', Test)
+        registry.add_in_registry('Declarations.Test.Test.Test', TestTestTest)
+        registry.add_in_registry('Declarations.Test.Test', TestTest)
+        self.check_added_in_regisry(registry)
 
     def test_add_in_registry_3(self):
-        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
-        self.registry.add_in_registry('Declarations.Test', Test)
-        self.registry.add_in_registry('Declarations.Test.Test.Test',
-                                      TestTestTest)
-        self.check_added_in_regisry()
+        registry = self.init_registry(None)
+        registry.add_in_registry('Declarations.Test.Test', TestTest)
+        registry.add_in_registry('Declarations.Test', Test)
+        registry.add_in_registry('Declarations.Test.Test.Test', TestTestTest)
+        self.check_added_in_regisry(registry)
 
     def test_add_in_registry_4(self):
-        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
-        self.registry.add_in_registry('Declarations.Test.Test.Test',
-                                      TestTestTest)
-        self.registry.add_in_registry('Declarations.Test', Test)
-        self.check_added_in_regisry()
+        registry = self.init_registry(None)
+        registry.add_in_registry('Declarations.Test.Test', TestTest)
+        registry.add_in_registry('Declarations.Test.Test.Test', TestTestTest)
+        registry.add_in_registry('Declarations.Test', Test)
+        self.check_added_in_regisry(registry)
 
     def test_add_in_registry_5(self):
-        self.registry.add_in_registry('Declarations.Test.Test.Test',
-                                      TestTestTest)
-        self.registry.add_in_registry('Declarations.Test', Test)
-        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
-        self.check_added_in_regisry()
+        registry = self.init_registry(None)
+        registry.add_in_registry('Declarations.Test.Test.Test', TestTestTest)
+        registry.add_in_registry('Declarations.Test', Test)
+        registry.add_in_registry('Declarations.Test.Test', TestTest)
+        self.check_added_in_regisry(registry)
 
     def test_add_in_registry_6(self):
-        self.registry.add_in_registry('Declarations.Test.Test.Test',
-                                      TestTestTest)
-        self.registry.add_in_registry('Declarations.Test.Test', TestTest)
-        self.registry.add_in_registry('Declarations.Test', Test)
-        self.check_added_in_regisry()
+        registry = self.init_registry(None)
+        registry.add_in_registry('Declarations.Test.Test.Test', TestTestTest)
+        registry.add_in_registry('Declarations.Test.Test', TestTest)
+        registry.add_in_registry('Declarations.Test', Test)
+        self.check_added_in_regisry(registry)
 
 
 class TestRegistry2(DBTestCase):
@@ -196,15 +178,6 @@ class TestRegistry2(DBTestCase):
             @classmethod
             def add_cl_precommit_hook(cls):
                 cls.precommit_hook('_precommit_hook')
-
-    def test_check_dbtestcase_desable_ci(self):
-        registry = self.init_registry(self.add_model)
-        registry.begin_nested()  # add SAVEPOINT
-        registry.Test.insert()
-        registry.commit()
-        self.assertEqual(registry.Test.query().count(), 1)
-        registry.rollback()  # rollback() to SAVEPOINT
-        self.assertEqual(registry.Test.query().count(), 0)
 
     def test_precommit_hook(self):
         registry = self.init_registry(self.add_model)

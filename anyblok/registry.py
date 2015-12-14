@@ -17,7 +17,6 @@ from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
 
 from .config import Configuration
-from .imp import ImportManager
 from .blok import BlokManager
 from .logging import log
 from .environment import EnvironmentManager
@@ -116,22 +115,16 @@ class RegistryManager:
         return registry
 
     @classmethod
-    def reload(cls, blok):
+    def reload(cls):
         """ Reload the blok
 
         The purpose is to reload the python module to get changes in python
         file
 
-        :param blok: the name of the blok to reload
         """
-        try:
-            mod = ImportManager.get(blok)
-            EnvironmentManager.set('current_blok', blok)
-            mod.reload()
-        finally:
-            EnvironmentManager.set('current_blok', None)
-
         for registry in cls.registries.values():
+            registry.close_session()
+            registry.Session = None
             registry.reload()
 
     @classmethod
@@ -412,7 +405,12 @@ class Registry:
         pool_size = Configuration.get('db_pool_size') or 5
         self.engine = create_engine(url, echo=echo, max_overflow=max_overflow,
                                     echo_pool=echo_pool, pool_size=pool_size)
-        self.bind = self.engine.connect() if self.unittest else self.engine
+        if self.unittest:
+            self.bind = self.engine.connect()
+            self.unittest_transaction = self.bind.begin()
+        else:
+            self.bind = self.engine
+
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
@@ -981,11 +979,19 @@ class Registry:
         After the call of this method the registry won't be usable
         you should use close method which call this method
         """
+
+        if self.unittest_transaction:
+            self.unittest_transaction.rollback()
+
         if self.Session:
             session = self.Session()
             session.rollback()
             session.expunge_all()
             session.close_all()
+
+        if self.unittest_transaction:
+            self.unittest_transaction.close()
+            self.bind.close()
 
     def close(self):
         """Release the session, connection and engine"""
@@ -1004,7 +1010,7 @@ class Registry:
                 return getattr(session, attribute)
 
         else:
-            super(Registry, self).__getattr__(attribute)
+            return super(Registry, self).__getattr__(attribute)
 
     def precommit_hook(self, registryname, method, *args, **kwargs):
         """ Add a method in the precommit_hook list
@@ -1061,6 +1067,12 @@ class Registry:
             name = model.split('.')[1]
             if hasattr(self, name) and getattr(self, name):
                 setattr(self, name, None)
+
+    @log(logger)
+    def complete_reload(self):
+        """ Reload the code and registry"""
+        BlokManager.reload()
+        RegistryManager.reload()
 
     @log(logger)
     def reload(self):
@@ -1148,6 +1160,5 @@ class Registry:
         upgrade_state_bloks('toinstall')(install or [])
         upgrade_state_bloks('toupdate')(update or [])
         upgrade_state_bloks('touninstall')(uninstall or [])
-
-        self.commit()
         self.reload()
+        self.session.expire_all()

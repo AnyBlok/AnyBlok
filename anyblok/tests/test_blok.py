@@ -142,8 +142,6 @@ class TestBlok(DBTestCase):
         testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
         testblok1.version = '2.0.0'
         registry.upgrade(update=('test-blok1',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '2.0.0')
 
@@ -245,9 +243,6 @@ class TestBlokRequired(DBTestCase):
         testblok1.version = '2.0.0'
         testblok2.version = '2.0.0'
         registry.upgrade(update=('test-blok2',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok2 = Blok.query().filter(Blok.name == 'test-blok2').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok2.state, 'installed')
@@ -262,9 +257,6 @@ class TestBlokRequired(DBTestCase):
         testblok1.version = '2.0.0'
         testblok2.version = '2.0.0'
         registry.upgrade(update=('test-blok1',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok2 = Blok.query().filter(Blok.name == 'test-blok2').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '2.0.0')
         self.assertEqual(testblok2.state, 'installed')
@@ -421,9 +413,6 @@ class TestBlokRequired2(DBTestCase):
         testblok2.version = '2.0.0'
         testblok3.version = '2.0.0'
         registry.upgrade(update=('test-blok3',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok2 = Blok.query().filter(Blok.name == 'test-blok2').first()
         testblok3 = Blok.query().filter(Blok.name == 'test-blok3').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '1.0.0')
@@ -443,10 +432,6 @@ class TestBlokRequired2(DBTestCase):
         testblok2.version = '2.0.0'
         testblok3.version = '2.0.0'
         registry.upgrade(update=('test-blok2',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok2 = Blok.query().filter(Blok.name == 'test-blok2').first()
-        testblok3 = Blok.query().filter(Blok.name == 'test-blok3').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok2.state, 'installed')
@@ -465,10 +450,6 @@ class TestBlokRequired2(DBTestCase):
         testblok2.version = '2.0.0'
         testblok3.version = '2.0.0'
         registry.upgrade(update=('test-blok1',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok2 = Blok.query().filter(Blok.name == 'test-blok2').first()
-        testblok3 = Blok.query().filter(Blok.name == 'test-blok3').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '2.0.0')
         self.assertEqual(testblok2.state, 'installed')
@@ -566,10 +547,6 @@ class TestBlokConditionnal(DBTestCase):
         testblok4.version = '2.0.0'
         testblok5.version = '2.0.0'
         registry.upgrade(update=('test-blok5',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok4 = Blok.query().filter(Blok.name == 'test-blok4').first()
-        testblok5 = Blok.query().filter(Blok.name == 'test-blok5').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok4.state, 'installed')
@@ -588,10 +565,6 @@ class TestBlokConditionnal(DBTestCase):
         testblok4.version = '2.0.0'
         testblok5.version = '2.0.0'
         registry.upgrade(update=('test-blok1',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok4 = Blok.query().filter(Blok.name == 'test-blok4').first()
-        testblok5 = Blok.query().filter(Blok.name == 'test-blok5').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '2.0.0')
         self.assertEqual(testblok4.state, 'installed')
@@ -617,8 +590,6 @@ class TestBlokOptional(DBTestCase):
         self.assertEqual(testblok6.version, '1.0.0')
         self.assertEqual(testblok6.installed_version, None)
         registry.upgrade(install=('test-blok6',))
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok6 = Blok.query().filter(Blok.name == 'test-blok6').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.version, '1.0.0')
         self.assertEqual(testblok1.installed_version, '1.0.0')
@@ -678,9 +649,6 @@ class TestBlokOptional(DBTestCase):
         testblok1.version = '2.0.0'
         testblok6.version = '2.0.0'
         registry.upgrade(update=('test-blok6',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok6 = Blok.query().filter(Blok.name == 'test-blok6').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok6.state, 'installed')
@@ -695,9 +663,6 @@ class TestBlokOptional(DBTestCase):
         testblok1.version = '2.0.0'
         testblok6.version = '2.0.0'
         registry.upgrade(update=('test-blok1',))
-        # here the registry are restart the all the instance must be refresh
-        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
-        testblok6 = Blok.query().filter(Blok.name == 'test-blok6').first()
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.installed_version, '2.0.0')
         self.assertEqual(testblok6.state, 'installed')
@@ -757,6 +722,15 @@ class TestBlokOrder(DBTestCase):
 class TestBlokModel(DBTestCase):
 
     blok_entry_points = ('bloks', 'test_bloks')
+
+    def test_remove_foreign_key_after_uninstallation_1(self):
+        registry = self.init_registry(None)
+        registry.upgrade(install=('test-blok7', 'test-blok8'))
+        t2 = registry.Test2.insert(label="test2")
+        registry.Test.insert(label="Test1", test2=t2.id)
+        from sqlalchemy.exc import IntegrityError
+        with self.assertRaises(IntegrityError):
+            registry.Test2.query().delete()
 
     def test_remove_foreign_key_after_uninstallation(self):
         registry = self.init_registry(None)

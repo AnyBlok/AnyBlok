@@ -39,7 +39,8 @@ class TestCoreSQLBase(DBTestCase):
         self.assertEqual(registry.Test.query().count(), nb_value)
         for x in range(nb_value):
             self.assertEqual(
-                registry.Test.query().filter(registry.Test.id2 == x).count(),
+                registry.Test.query().filter(
+                    registry.Test.id2 == x).count(),
                 1)
 
     def test_delete(self):
@@ -52,7 +53,8 @@ class TestCoreSQLBase(DBTestCase):
         t.delete()
         self.assertEqual(registry.Test.query().count(), nb_value - 1)
         self.assertEqual(
-            registry.Test.query().filter(registry.Test.id2 != id2).count(),
+            registry.Test.query().filter(
+                registry.Test.id2 != id2).count(),
             nb_value - 1)
 
     def test_update(self):
@@ -62,7 +64,9 @@ class TestCoreSQLBase(DBTestCase):
         t = registry.Test.query().first()
         t.update({registry.Test.id2: 100})
         self.assertEqual(
-            registry.Test.query().filter(registry.Test.id2 == 100).first(), t)
+            registry.Test.query().filter(
+                registry.Test.id2 == 100).first(),
+            t)
 
     def test_get_primary_keys(self):
         registry = self.init_registry(self.declare_model)
