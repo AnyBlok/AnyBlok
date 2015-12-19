@@ -320,13 +320,31 @@ class SqlBase(SqlMixin):
             query.update({...})
 
         """
+        self.registry.flush()
         pks = self.get_primary_keys()
         where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
                         for pk in pks]
         res = self.__class__.query().filter(*where_clause).update(
             *args, **kwargs)
-        self.registry.session.refresh(self)
+        self.expire()
         return res
+
+    def refresh(self, *args, **kwargs):
+        """ Expire and reload all the attribute of the instance
+
+        See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
+        #sqlalchemy.orm.session.Session.refresh
+        """
+        self.registry.session.refresh(self, *args, **kwargs)
+
+    def expire(self, *args, **kwargs):
+        """ Expire the attribute of the instance, theses attributes will be
+        load at the next  call of the instance
+
+        see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
+        #sqlalchemy.orm.session.Session.expire
+        """
+        self.registry.session.expire(self, *args, **kwargs)
 
     def delete(self):
         """ Call the SqlAlchemy Query.delete method on the instance of the

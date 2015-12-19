@@ -28,10 +28,11 @@ Future
   Refactor unittest case to not create/drop database for each test
 * [FIX] `#19 <https://bitbucket.org/jssuzanne/anyblok/issues/19/migration-contrainte>`_
   During migration if an unique constraint must be apply without unique
-  value, then the constraint will be ignore and log a warning. No break the 
+  value, then the constraint will be ignore and log a warning. No break the
   instalation of the blok
-* [FIX] `#20 <https://bitbucket.org/jssuzanne/anyblok/issues/20/update-meth-must-refresh-the-instance-when`_
-  Update meth: refresh the instance cause of relationship
+* [FIX] `#20 <https://bitbucket.org/jssuzanne/anyblok/issues/20/update-meth-must-refresh-the-instance-when>`_
+  Update meth: expire the instance cause of relationship
+* [IMP] refresh and expire meth on model
 
 0.5.3
 -----
