@@ -550,8 +550,21 @@ class MigrationConstraintUnique:
 
         unique_name = self.format_name(*columns)
         columns_name = [x.name for x in columns]
-        self.table.migration.operation.create_unique_constraint(
-            unique_name, self.table.name, columns_name)
+        savepoint = 'add_unique_constraint_%s' % unique_name
+        try:
+            self.table.migration.savepoint(savepoint)
+            self.table.migration.operation.create_unique_constraint(
+                unique_name, self.table.name, columns_name)
+        except IntegrityError as e:
+            self.table.migration.rollback_savepoint(savepoint)
+            logger.warn("Error during the add of new unique constraint %r on "
+                        "table %r and columns %r : %r " % (unique_name,
+                                                           self.table.name,
+                                                           columns_name,
+                                                           str(e)))
+            # return a empty constrainte on the table, because this function
+            # must return a unique constraint.
+            return MigrationConstraintUnique(self.table)
 
         return MigrationConstraintUnique(self.table, *columns)
 

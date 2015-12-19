@@ -17,7 +17,7 @@ from anyblok.relationship import Many2Many
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT
 from anyblok import Declarations
-from sqlalchemy.exc import InternalError
+from sqlalchemy.exc import InternalError, IntegrityError
 from unittest import skipIf
 import alembic
 from copy import deepcopy
@@ -175,6 +175,23 @@ class TestMigration(TestCase):
         t.column().add(Column('new_column', Integer, nullable=False,
                        server_default="1"))
         t.column('new_column')
+
+    def test_add_unique_constraint_on_good_table(self):
+        self.fill_test_table()
+        t = self.registry.migration.table('test')
+        t.unique().add(t.column('other'))
+        self.registry.Test.insert(other='One entry')
+        with self.assertRaises(IntegrityError):
+            self.registry.Test.insert(other='One entry')
+
+    def test_add_unique_constraint_on_not_unique_column(self):
+        Test = self.registry.Test
+        vals = [{'other': 'test'} for x in range(10)]
+        Test.multi_insert(*vals)
+        t = self.registry.migration.table('test')
+        t.unique().add(t.column('other'))
+        self.registry.Test.insert(other='One entry')
+        self.registry.Test.insert(other='One entry')
 
     def test_drop_table(self):
         self.registry.migration.table('test').drop()

@@ -26,6 +26,10 @@ Future
   Forbidden the declaration of SQLAchemy column or relationship
 * [REF] `#15 <https://bitbucket.org/jssuzanne/anyblok/issues/15/speed-up-the-unittest>`_
   Refactor unittest case to not create/drop database for each test
+* [FIX] `#19 <https://bitbucket.org/jssuzanne/anyblok/issues/19/migration-contrainte>`_
+  During migration if an unique constraint must be apply without unique
+  value, then the constraint will be ignore and log a warning. No break the 
+  instalation of the blok
 
 0.5.3
 -----
