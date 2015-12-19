@@ -57,6 +57,14 @@ class TestCoreSQLBase(DBTestCase):
                 registry.Test.id2 != id2).count(),
             nb_value - 1)
 
+    def test_delete_entry_added_in_relationship(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.assertEqual(len(t1.test2), 1)
+        t2.delete()
+        self.assertEqual(len(t1.test2), 0)
+
     def test_update(self):
         registry = self.init_registry(self.declare_model)
         nb_value = 3

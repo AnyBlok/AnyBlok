@@ -354,15 +354,14 @@ class SqlBase(SqlMixin):
 
         is equal at::
 
-            query = self.registry.session.query(MyModel)
-            query = query.filter(MyModel.``pk`` == self.``pk``)
-            query.delete()
+            flush the session
+            remove the instance of the session
+            and expire all the session, to reload the relation ship
 
         """
-        pks = self.get_primary_keys()
-        where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
-                        for pk in pks]
-        self.__class__.query().filter(*where_clause).delete()
+        self.registry.session.flush()
+        self.registry.session.delete(self)
+        self.registry.session.expire_all()
 
     @classmethod
     def insert(cls, **kwargs):

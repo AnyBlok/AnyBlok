@@ -33,6 +33,9 @@ Future
 * [FIX] `#20 <https://bitbucket.org/jssuzanne/anyblok/issues/20/update-meth-must-refresh-the-instance-when>`_
   Update meth: expire the instance cause of relationship
 * [IMP] refresh and expire meth on model
+* [REF] delete obj, flush the session and delete the instance of obj of the
+  session, before expire all the session, the goal is to reload the 
+  relation ship.
 
 0.5.3
 -----
