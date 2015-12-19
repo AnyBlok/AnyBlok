@@ -359,7 +359,7 @@ class SqlBase(SqlMixin):
             and expire all the session, to reload the relation ship
 
         """
-        self.registry.session.flush()
+        self.registry.flush()
         self.registry.session.delete(self)
         self.registry.session.expire_all()
 
@@ -373,7 +373,7 @@ class SqlBase(SqlMixin):
 
             mymodel = MyModel(...)
             MyModel.registry.session.add(mymodel)
-            MyModel.registry.session.flush()
+            MyModel.registry.flush()
 
         """
         instance = cls(**kwargs)

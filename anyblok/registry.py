@@ -1056,6 +1056,10 @@ class Registry:
         self.apply_precommit_hook()
         self.session_commit(*args, **kwargs)
 
+    def flush(self):
+        if not self.session._flushing:
+            self.session.flush()
+
     def session_commit(self, *args, **kwargs):
         if self.Session:
             session = self.Session()
