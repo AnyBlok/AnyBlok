@@ -292,3 +292,11 @@ class TestCoreSQLBase(DBTestCase):
         t2 = registry.Test2.insert(name='t2', test=t1)
         with self.assertRaises(SqlBaseException):
             t2.to_dict('name', ())
+
+    def test__refresh_update(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test.insert(name='t3')
+        t2.update(dict(test_id=t3.id))
+        self.assertIs(t2.test, t3)

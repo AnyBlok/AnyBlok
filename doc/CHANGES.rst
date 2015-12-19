@@ -30,6 +30,8 @@ Future
   During migration if an unique constraint must be apply without unique
   value, then the constraint will be ignore and log a warning. No break the 
   instalation of the blok
+* [FIX] `#20 <https://bitbucket.org/jssuzanne/anyblok/issues/20/update-meth-must-refresh-the-instance-when`_
+  Update meth: refresh the instance cause of relationship
 
 0.5.3
 -----
