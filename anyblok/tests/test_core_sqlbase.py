@@ -57,6 +57,22 @@ class TestCoreSQLBase(DBTestCase):
                 registry.Test.id2 != id2).count(),
             nb_value - 1)
 
+    def test_expire(self):
+        registry = self.init_registry(self.declare_model)
+        t = registry.Test.insert(id2=2)
+        self.assertEqual(t.__dict__.get('id2'), 2)
+        t.expire()
+        self.assertIsNone(t.__dict__.get('id2'))
+
+    def test_refresh(self):
+        registry = self.init_registry(self.declare_model)
+        t = registry.Test.insert(id2=2)
+        self.assertEqual(t.__dict__.get('id2'), 2)
+        t.id2 = 3
+        self.assertEqual(t.__dict__.get('id2'), 3)
+        t.refresh()
+        self.assertEqual(t.__dict__.get('id2'), 2)
+
     def test_delete_entry_added_in_relationship(self):
         registry = self.init_registry(self.add_in_registry_m2o)
         t1 = registry.Test.insert(name='t1')
