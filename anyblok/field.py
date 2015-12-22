@@ -91,6 +91,9 @@ class Field:
         """ Return False, it is the default value """
         return False
 
+    def get_field_mapper_name(self, fieldname):
+        return fieldname
+
 
 class Function(Field):
     """ Function Field

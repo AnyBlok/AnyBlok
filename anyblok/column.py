@@ -601,6 +601,9 @@ class Selection(Column):
         else:
             return False
 
+    def get_field_mapper_name(self, fieldname):
+        return '_' + fieldname
+
 
 json_null = object()
 

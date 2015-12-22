@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
-from anyblok.column import Integer, String
+from anyblok.column import Integer, String, Selection
 from anyblok.relationship import Many2One, One2One, Many2Many
 from anyblok.declarations import Declarations
 from anyblok.bloks.anyblok_core.exceptions import SqlBaseException
@@ -317,10 +317,40 @@ class TestCoreSQLBase(DBTestCase):
         with self.assertRaises(SqlBaseException):
             t2.to_dict('name', ())
 
-    def test__refresh_update(self):
+    def test_refresh_update(self):
         registry = self.init_registry(self.add_in_registry_m2o)
         t1 = registry.Test.insert(name='t1')
         t2 = registry.Test2.insert(name='t2', test=t1)
         t3 = registry.Test.insert(name='t3')
         t2.update(dict(test_id=t3.id))
         self.assertIs(t2.test, t3)
+
+    def test_find_relationship_by_relationship(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        fields = registry.Test2.find_relationship('test')
+        self.assertIn('test', fields)
+        self.assertIn('test_id', fields)
+
+    def test_find_relationship_by_column(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        fields = registry.Test2.find_relationship('test_id')
+        self.assertIn('test', fields)
+        self.assertIn('test_id', fields)
+
+    def declare_model_with_column_selection(self):
+        from anyblok import Declarations
+        Model = Declarations.Model
+
+        @Declarations.register(Model)
+        class Test:
+            id = Integer(primary_key=True)
+            select = Selection(
+                selections=[('key', 'value'), ('key2', 'value2')],
+                default='key')
+
+    def test_expire_with_column_selection(self):
+        registry = self.init_registry(self.declare_model_with_column_selection)
+        t = registry.Test.insert()
+        t.select = 'key2'
+        t.expire('select')
+        self.assertEqual(t.select, 'key')

@@ -27,6 +27,9 @@ class MapperException(AttributeError):
 class FakeColumn:
     db_column_name = None
 
+    def get_field_mapper_name(self, fieldname):
+        return fieldname
+
 
 class ModelAttribute:
     """The Model attribute represente the using of a declared attribute, in the
@@ -145,8 +148,9 @@ class ModelAttribute:
         """
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
-        if Model[self.attribute_name].db_column_name:
-            column_name = Model[self.attribute_name].db_column_name
+        if hasattr(Model[self.attribute_name], 'db_column_name'):
+            if Model[self.attribute_name].db_column_name:
+                column_name = Model[self.attribute_name].db_column_name
 
         return column_name
 

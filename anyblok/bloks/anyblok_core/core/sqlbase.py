@@ -7,6 +7,9 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
+from anyblok.column import Column
+from anyblok.mapper import FakeColumn
+from anyblok.relationship import RelationShip
 from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty
 from sqlalchemy.sql.expression import true
@@ -147,11 +150,11 @@ class SqlMixin:
 
         :type: list of the primary keys name
         """
-        Column = cls.registry.System.Column
+        C = cls.registry.System.Column
         model = cls.__registry_name__
-        query = Column.query()
-        query = query.filter(Column.model == model)
-        query = query.filter(Column.primary_key == true())
+        query = C.query()
+        query = query.filter(C.model == model)
+        query = query.filter(C.primary_key == true())
         return query.all().name
 
     @classmethod_cache()
@@ -307,7 +310,7 @@ class SqlBase(SqlMixin):
     sqlalchemy_query_delete = query_method('delete')
     sqlalchemy_query_update = query_method('update')
 
-    def update(self, *args, **kwargs):
+    def update(self, values, **kwargs):
         """ Call the SqlAlchemy Query.update method on the instance of the
         model::
 
@@ -325,26 +328,63 @@ class SqlBase(SqlMixin):
         where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
                         for pk in pks]
         res = self.__class__.query().filter(*where_clause).update(
-            *args, **kwargs)
-        self.expire()
+            values, **kwargs)
+        self.expire(*values.keys())
         return res
 
-    def refresh(self, *args, **kwargs):
+    @classmethod
+    def find_relationship(cls, *fields):
+        """ Find column and relation ship link with the column or relationship
+        passed in fields.
+
+        :param \*fields: lists of the attribute name
+        :rtype: list of the attribute name of the attribute and relation ship
+        """
+        res = []
+        _fields = []
+        _fields.extend(fields)
+        model = cls.registry.loaded_namespaces_first_step[
+            cls.__registry_name__]
+        while _fields:
+            field = _fields.pop()
+            if not isinstance(field, str):
+                field = field.name
+
+            if field in res:
+                continue
+
+            _field = model[field]
+            res.append(_field.get_field_mapper_name(field))
+            if isinstance(_field, (Column, FakeColumn)):
+                _fields.extend(x
+                               for x, y in model.items()
+                               if isinstance(y, RelationShip)
+                               for mapper in y.column_names
+                               if mapper.attribute_name == field)
+            elif isinstance(_field, RelationShip):
+                for mapper in _field.column_names:
+                    _fields.append(mapper.attribute_name)
+
+        return res
+
+    def refresh(self, *fields):
         """ Expire and reload all the attribute of the instance
 
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
         """
-        self.registry.session.refresh(self, *args, **kwargs)
+        self.registry.session.refresh(
+            self, self.__class__.find_relationship(*fields))
 
-    def expire(self, *args, **kwargs):
+    def expire(self, *fields):
         """ Expire the attribute of the instance, theses attributes will be
         load at the next  call of the instance
 
         see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.expire
         """
-        self.registry.session.expire(self, *args, **kwargs)
+        self.registry.session.expire(
+            self, self.__class__.find_relationship(*fields))
 
     def delete(self):
         """ Call the SqlAlchemy Query.delete method on the instance of the
