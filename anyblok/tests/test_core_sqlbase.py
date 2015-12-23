@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok.column import Integer, String, Selection
-from anyblok.relationship import Many2One, One2One, Many2Many
+from anyblok.relationship import Many2One, One2One, Many2Many, One2Many
 from anyblok.declarations import Declarations
 from anyblok.bloks.anyblok_core.exceptions import SqlBaseException
 
@@ -116,6 +116,23 @@ class TestCoreSQLBase(DBTestCase):
             id = Integer(primary_key=True)
             name = String()
             test = Many2One(model=Model.Test, one2many="test2")
+
+    def add_in_registry_o2m(self):
+
+        @register(Model)
+        class Test:
+            id = Integer(primary_key=True)
+            name = String()
+
+        @register(Model)
+        class Test2:
+            id = Integer(primary_key=True)
+            name = String()
+            test_id = Integer(foreign_key=Model.Test.use('id'))
+
+        @register(Model)  # noqa
+        class Test:
+            test2 = One2Many(model=Model.Test2, many2one="test")
 
     def add_in_registry_o2o(self):
 
@@ -354,3 +371,51 @@ class TestCoreSQLBase(DBTestCase):
         t.select = 'key2'
         t.expire('select')
         self.assertEqual(t.select, 'key')
+
+    def test_find_remote_attribute_to_expire_by_relationship_m2o(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        self.assertEqual(
+            registry.Test2.find_remote_attribute_to_expire('test'),
+            {'Model.Test': ['test2']})
+
+    def test_find_remote_attribute_to_expire_by_column_m2o(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        self.assertEqual(
+            registry.Test2.find_remote_attribute_to_expire('test_id'),
+            {'Model.Test': ['test2']})
+
+    def test_find_remote_attribute_to_expire_by_relationship_o2m(self):
+        registry = self.init_registry(self.add_in_registry_o2m)
+        self.assertEqual(
+            registry.Test2.find_remote_attribute_to_expire('test'),
+            {'Model.Test': ['test2']})
+
+    def test_find_remote_attribute_to_expire_by_column_o2m(self):
+        registry = self.init_registry(self.add_in_registry_o2m)
+        self.assertEqual(
+            registry.Test2.find_remote_attribute_to_expire('test_id'),
+            {'Model.Test': ['test2']})
+
+    def test_find_remote_attribute_to_expire_by_relationship_o2o(self):
+        registry = self.init_registry(self.add_in_registry_o2o)
+        self.assertEqual(
+            registry.Test2.find_remote_attribute_to_expire('test'),
+            {'Model.Test': ['test2']})
+
+    def test_find_remote_attribute_to_expire_by_column_o2o(self):
+        registry = self.init_registry(self.add_in_registry_o2o)
+        self.assertEqual(
+            registry.Test2.find_remote_attribute_to_expire('test_id'),
+            {'Model.Test': ['test2']})
+
+    def test_find_remote_attribute_to_expire_by_relationship_m2m(self):
+        registry = self.init_registry(self.add_in_registry_m2m)
+        self.assertEqual(
+            registry.Test2.find_remote_attribute_to_expire('test'),
+            {'Model.Test': ['test2']})
+
+    def test_find_remote_attribute_to_expire_by_relationship_m2m_2(self):
+        registry = self.init_registry(self.add_in_registry_m2m)
+        self.assertEqual(
+            registry.Test.find_remote_attribute_to_expire('test2'),
+            {'Model.Test2': ['test']})

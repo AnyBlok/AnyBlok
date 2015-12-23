@@ -31,6 +31,12 @@ class FakeColumn:
         return fieldname
 
 
+class FakeRelationShip:
+
+    def __init__(self, mapper):
+        self.mapper = mapper
+
+
 class ModelAttribute:
     """The Model attribute represente the using of a declared attribute, in the
     goal of get the real attribute after of the foreign_key::
@@ -135,6 +141,14 @@ class ModelAttribute:
             return
 
         Model[self.attribute_name] = FakeColumn()
+
+    def add_fake_relationship(self, registry, namespace, fieldname):
+        Model = self.check_model_in_first_step(registry)
+        if self.attribute_name in registry.loaded_namespaces_first_step:
+            return
+
+        Model[self.attribute_name] = FakeRelationShip(ModelAttribute(
+            namespace, fieldname))
 
     def get_column_name(self, registry):
         """Return the name of the column

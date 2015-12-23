@@ -8,12 +8,23 @@
 from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
 from anyblok.column import Column
-from anyblok.mapper import FakeColumn
+from anyblok.mapper import FakeColumn, FakeRelationShip
 from anyblok.relationship import RelationShip
 from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty
 from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_
+
+
+class uniquedict(dict):
+
+    def add_in_res(self, key, attrs):
+        if key not in self:
+            self[key] = []
+
+        for attr in attrs:
+            if attr not in self[key]:
+                self[key].append(attr)
 
 
 def query_method(name):
@@ -323,13 +334,51 @@ class SqlBase(SqlMixin):
             query.update({...})
 
         """
+        fields = values.keys()
         self.registry.flush()
         pks = self.get_primary_keys()
         where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
                         for pk in pks]
         res = self.__class__.query().filter(*where_clause).update(
             values, **kwargs)
-        self.expire(*values.keys())
+        self.expire(*fields)
+        return res
+
+    @classmethod
+    def find_remote_attribute_to_expire(cls, *fields):
+        res = uniquedict()
+        _fields = []
+        _fields.extend(fields)
+        model = cls.registry.loaded_namespaces_first_step[
+            cls.__registry_name__]
+        while _fields:
+            field = _fields.pop()
+            field = field if isinstance(field, str) else field.name
+
+            _field = model[field]
+            if isinstance(_field, (Column, FakeColumn)):
+                _fields.extend(x
+                               for x, y in model.items()
+                               if isinstance(y, RelationShip)
+                               for mapper in y.column_names
+                               if mapper.attribute_name == field)
+                if isinstance(_field, Column) and _field.foreign_key:
+                    rmodel = cls.registry.loaded_namespaces_first_step[
+                        _field.foreign_key.model_name]
+                    rcs = [x
+                           for x, y in rmodel.items()
+                           if isinstance(y, RelationShip)
+                           for mapper in y.remote_columns
+                           if mapper.attribute_name == field]
+                    res.add_in_res(_field.foreign_key.model_name, rcs)
+            elif (isinstance(_field, RelationShip) and
+                  'backref' in _field.kwargs):
+                res.add_in_res(_field.model.model_name,
+                               [_field.kwargs['backref'][0]])
+            elif isinstance(_field, FakeRelationShip):
+                res.add_in_res(_field.mapper.model_name,
+                               [_field.mapper.attribute_name])
+
         return res
 
     @classmethod

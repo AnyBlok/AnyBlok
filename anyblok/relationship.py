@@ -63,12 +63,13 @@ class RelationShip(Field):
         """
         pass
 
-    def format_backref(self, registry, namespace, properties):
+    def format_backref(self, registry, namespace, fieldname, properties):
         """ Create the real backref, with the backref string and the
         backref properties
 
         :param registry: current registry
         :param namespace: name of the model
+        :param fieldname: name of the field
         :param properties: properties known of the model
         """
         _backref = self.kwargs.get('backref')
@@ -84,6 +85,9 @@ class RelationShip(Field):
         if self.backref_properties:
             self.kwargs['backref'] = backref(_backref,
                                              **self.backref_properties)
+            mapper = ModelAttribute(self.model.model_name, _backref)
+            if not mapper.is_declared(registry):
+                mapper.add_fake_relationship(registry, namespace, fieldname)
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -100,7 +104,7 @@ class RelationShip(Field):
         self.kwargs['info']['label'] = self.label
         self.kwargs['info']['rtype'] = self.__class__.__name__
         self.apply_instrumentedlist(registry)
-        self.format_backref(registry, namespace, properties)
+        self.format_backref(registry, namespace, fieldname, properties)
         return relationship(self.model.tablename(registry), **self.kwargs)
 
     def must_be_declared_as_attr(self):
