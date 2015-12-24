@@ -376,46 +376,83 @@ class TestCoreSQLBase(DBTestCase):
         registry = self.init_registry(self.add_in_registry_m2o)
         self.assertEqual(
             registry.Test2.find_remote_attribute_to_expire('test'),
-            {'Model.Test': ['test2']})
+            {'test': ['test2']})
 
     def test_find_remote_attribute_to_expire_by_column_m2o(self):
         registry = self.init_registry(self.add_in_registry_m2o)
         self.assertEqual(
             registry.Test2.find_remote_attribute_to_expire('test_id'),
-            {'Model.Test': ['test2']})
+            {'test': ['test2']})
 
     def test_find_remote_attribute_to_expire_by_relationship_o2m(self):
         registry = self.init_registry(self.add_in_registry_o2m)
         self.assertEqual(
             registry.Test2.find_remote_attribute_to_expire('test'),
-            {'Model.Test': ['test2']})
+            {'test': ['test2']})
 
     def test_find_remote_attribute_to_expire_by_column_o2m(self):
         registry = self.init_registry(self.add_in_registry_o2m)
         self.assertEqual(
             registry.Test2.find_remote_attribute_to_expire('test_id'),
-            {'Model.Test': ['test2']})
+            {'test': ['test2']})
 
     def test_find_remote_attribute_to_expire_by_relationship_o2o(self):
         registry = self.init_registry(self.add_in_registry_o2o)
         self.assertEqual(
             registry.Test2.find_remote_attribute_to_expire('test'),
-            {'Model.Test': ['test2']})
+            {'test': ['test2']})
 
     def test_find_remote_attribute_to_expire_by_column_o2o(self):
         registry = self.init_registry(self.add_in_registry_o2o)
         self.assertEqual(
             registry.Test2.find_remote_attribute_to_expire('test_id'),
-            {'Model.Test': ['test2']})
+            {'test': ['test2']})
 
     def test_find_remote_attribute_to_expire_by_relationship_m2m(self):
         registry = self.init_registry(self.add_in_registry_m2m)
         self.assertEqual(
             registry.Test2.find_remote_attribute_to_expire('test'),
-            {'Model.Test': ['test2']})
+            {'test': ['test2']})
 
     def test_find_remote_attribute_to_expire_by_relationship_m2m_2(self):
         registry = self.init_registry(self.add_in_registry_m2m)
         self.assertEqual(
             registry.Test.find_remote_attribute_to_expire('test2'),
-            {'Model.Test2': ['test']})
+            {'test2': ['test']})
+
+    def test_expire_relationship_mapped_m2o(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t1.test2  # load test2 mmaper, need for the test
+        self.assertEqual(t1.__dict__.get('test2'), [t2])
+        t2.expire_relationship_mapped({'test': ['test2']})
+        self.assertIsNone(t1.__dict__.get('test2'))
+
+    def test_expire_relationship_mapped_o2m(self):
+        registry = self.init_registry(self.add_in_registry_o2m)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t1.test2  # load test2 mmaper, need for the test
+        self.assertEqual(t1.__dict__.get('test2'), [t2])
+        t2.expire_relationship_mapped({'test': ['test2']})
+        self.assertIsNone(t1.__dict__.get('test2'))
+
+    def test_expire_relationship_mapped_o2o(self):
+        registry = self.init_registry(self.add_in_registry_o2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t1.test2  # load test2 mmaper, need for the test
+        self.assertIs(t1.__dict__.get('test2'), t2)
+        t2.expire_relationship_mapped({'test': ['test2']})
+        self.assertIsNone(t1.__dict__.get('test2'))
+
+    def test_expire_relationship_mapped_m2m(self):
+        registry = self.init_registry(self.add_in_registry_m2m)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2')
+        t2.test.append(t1)
+        t1.test2  # load test2 mmaper, need for the test
+        self.assertEqual(t1.__dict__.get('test2'), [t2])
+        t2.expire_relationship_mapped({'test': ['test2']})
+        self.assertIsNone(t1.__dict__.get('test2'))

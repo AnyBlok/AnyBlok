@@ -334,14 +334,17 @@ class SqlBase(SqlMixin):
             query.update({...})
 
         """
-        fields = values.keys()
         self.registry.flush()
+        fields = values.keys()
+        mappers = self.__class__.find_remote_attribute_to_expire(*fields)
+        self.expire_relationship_mapped(mappers)
         pks = self.get_primary_keys()
         where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
                         for pk in pks]
         res = self.__class__.query().filter(*where_clause).update(
             values, **kwargs)
         self.expire(*fields)
+        self.expire_relationship_mapped(mappers)
         return res
 
     @classmethod
@@ -365,19 +368,23 @@ class SqlBase(SqlMixin):
                 if isinstance(_field, Column) and _field.foreign_key:
                     rmodel = cls.registry.loaded_namespaces_first_step[
                         _field.foreign_key.model_name]
-                    rcs = [x
-                           for x, y in rmodel.items()
-                           if isinstance(y, RelationShip)
-                           for mapper in y.remote_columns
-                           if mapper.attribute_name == field]
-                    res.add_in_res(_field.foreign_key.model_name, rcs)
+                    for rc in [x for x, y in rmodel.items()
+                               if isinstance(y, RelationShip)
+                               for mapper in y.remote_columns
+                               if mapper.attribute_name == field]:
+                        rfield = rmodel[rc]
+                        if isinstance(rfield, FakeRelationShip):
+                            res.add_in_res(rfield.mapper.attribute_name, [rc])
+                        elif (isinstance(rfield, RelationShip)
+                              and 'backref' in rfield.kwargs):
+                            res.add_in_res(
+                                rfield.kwargs['backref'][0], [rc])
+
             elif (isinstance(_field, RelationShip) and
                   'backref' in _field.kwargs):
-                res.add_in_res(_field.model.model_name,
-                               [_field.kwargs['backref'][0]])
+                res.add_in_res(field, [_field.kwargs['backref'][0]])
             elif isinstance(_field, FakeRelationShip):
-                res.add_in_res(_field.mapper.model_name,
-                               [_field.mapper.attribute_name])
+                res.add_in_res(field, [_field.mapper.attribute_name])
 
         return res
 
@@ -410,11 +417,21 @@ class SqlBase(SqlMixin):
                                if isinstance(y, RelationShip)
                                for mapper in y.column_names
                                if mapper.attribute_name == field)
-            elif isinstance(_field, RelationShip):
+            elif (isinstance(_field, RelationShip) and
+                  hasattr(_field, 'column_names')):
                 for mapper in _field.column_names:
                     _fields.append(mapper.attribute_name)
 
         return res
+
+    def expire_relationship_mapped(self, mappers):
+        for field_name, rfields in mappers.items():
+            fields = getattr(self, field_name)
+            if not isinstance(fields, list):
+                fields = [fields]
+
+            for field in fields:
+                field.expire(*rfields)
 
     def refresh(self, *fields):
         """ Expire and reload all the attribute of the instance
@@ -449,8 +466,12 @@ class SqlBase(SqlMixin):
 
         """
         self.registry.flush()
+        model = self.registry.loaded_namespaces_first_step[
+            self.__registry_name__]
+        fields = model.keys()
+        mappers = self.__class__.find_remote_attribute_to_expire(*fields)
+        self.expire_relationship_mapped(mappers)
         self.registry.session.delete(self)
-        self.registry.session.expire_all()
 
     @classmethod
     def insert(cls, **kwargs):
