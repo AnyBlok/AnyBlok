@@ -357,11 +357,9 @@ class SqlBase(SqlMixin):
         while _fields:
             field = _fields.pop()
             field = field if isinstance(field, str) else field.name
-
             _field = model[field]
             if isinstance(_field, (Column, FakeColumn)):
-                _fields.extend(x
-                               for x, y in model.items()
+                _fields.extend(x for x, y in model.items()
                                if isinstance(y, RelationShip)
                                for mapper in y.column_names
                                if mapper.attribute_name == field)
@@ -425,6 +423,9 @@ class SqlBase(SqlMixin):
         return res
 
     def expire_relationship_mapped(self, mappers):
+        """ Expire the objects linked with this object, in function of
+        the mappers definition
+        """
         for field_name, rfields in mappers.items():
             fields = getattr(self, field_name)
             if not isinstance(fields, list):
