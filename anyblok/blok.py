@@ -134,8 +134,14 @@ class BlokManager:
                 raise BlokManagerException(
                     "Not %s required bloks found" % required)
 
+            cls.bloks[required].required_by.append(blok)
+
         for optional in cls.bloks[blok].optional:
-            cls.get_need_blok(optional)
+            if cls.get_need_blok(optional):
+                cls.bloks[optional].optional_by.append(blok)
+
+        for conditional in cls.bloks[blok].conditional:
+            cls.bloks[conditional].conditional_by.append(blok)
 
         cls.ordered_bloks.append(blok)
         EnvironmentManager.set('current_blok', blok)
@@ -178,6 +184,9 @@ class BlokManager:
             for i in iter_entry_points(entry_point):
                 count += 1
                 blok = i.load()
+                blok.required_by = []
+                blok.optional_by = []
+                blok.conditional_by = []
                 cls.set(i.name, blok)
                 blok.name = i.name
                 bloks.append((blok.priority, i.name))
@@ -245,7 +254,7 @@ class Blok:
     * priority: order to load the blok
     * required: list of the bloks needed to install this blok
     * optional: list of the bloks to be installed if present in the blok list
-    * conditionnal: if all the bloks of this list are installed then install
+    * conditional: if all the bloks of this list are installed then install
       this blok
     """
 

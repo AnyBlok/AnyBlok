@@ -1087,19 +1087,19 @@ class Registry:
         self.ini_var()
         self.load()
 
-    def get_bloks(self, blok, filter_states, filter_modes=None):
+    def get_bloks(self, blok, filter_states, filter_modes):
         Blok = self.System.Blok
-        Association = Blok.Association
-        Blok2 = Blok.aliased()
-        if filter_modes is None:
-            filter_modes = Association.MODES.keys()
+        definition_blok = BlokManager.bloks[blok]
+        bloks_name = []
+        for filter_mode in filter_modes:
+            bloks_name.extend(getattr(definition_blok, filter_mode))
+
+        if not bloks_name:
+            return []
 
         query = Blok.query()
-        query = query.join(Association, Association.blok == Blok.name)
-        query = query.join(Blok2, Association.linked_blok == Blok2.name)
-        query = query.filter(Blok2.name == blok)
+        query = query.filter(Blok.name.in_(bloks_name))
         query = query.filter(Blok.state.in_(filter_states))
-        query = query.filter(Association.mode.in_(filter_modes))
         return query.all().name
 
     def apply_state(self, blok_name, state, in_states):
@@ -1140,10 +1140,15 @@ class Registry:
                 for blok in bloks:
                     if state == 'toinstall':
                         self.apply_state(blok, state, ['uninstalled', state])
+                        upgrade_state_bloks(state)(
+                            self.get_bloks(blok, ['uninstalled'], [
+                                'required', 'optional', 'conditional']))
                     elif state == 'toupdate':
                         self.apply_state(blok, state, ['installed', state])
                         upgrade_state_bloks(state)(
-                            self.get_bloks(blok, ['installed']))
+                            self.get_bloks(blok, ['installed'], [
+                                'required_by', 'optional_by',
+                                'conditional_by']))
                     elif state == 'touninstall':
                         if Blok.check_if_the_conditional_are_installed(blok):
                             raise RegistryException(
@@ -1153,11 +1158,11 @@ class Registry:
                                 "You must uninstall one of them" % blok)
                         self.apply_state(blok, state, ['installed', state])
                         upgrade_state_bloks(state)(self.get_bloks(blok, [
-                            'installed', 'toinstall', 'touninstall'],
-                            filter_modes=['required', 'conditional']))
+                            'installed', 'toinstall', 'touninstall'], [
+                            'required_by', 'conditional_by']))
                         upgrade_state_bloks('toupdate')(self.get_bloks(blok, [
-                            'installed', 'toinstall', 'touninstall'],
-                            filter_modes=['optional']))
+                            'installed', 'toinstall', 'touninstall'], [
+                            'optional_by']))
 
             return wrap
 

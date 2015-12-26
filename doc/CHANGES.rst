@@ -36,6 +36,8 @@ Future
 * [REF] delete obj, flush the session and delete the instance of obj of the
   session, before expire all the session, the goal is to reload the 
   relation ship.
+* [REF] `#13 <https://bitbucket.org/jssuzanne/anyblok/issues/13/refactor-inheritance-tree>`_
+  Remove association model, replace it by call at the Blok definition
 
 0.5.3
 -----
