@@ -122,13 +122,7 @@ class BlokManager:
         RegistryManager.unload()
 
     @classmethod
-    def get_need_blok(cls, blok):
-        if cls.has(blok):
-            return True
-
-        if blok not in cls.bloks:
-            return False
-
+    def get_need_blok_linked_bloks(cls, blok):
         for required in cls.bloks[blok].required:
             if not cls.get_need_blok(required):
                 raise BlokManagerException(
@@ -146,6 +140,15 @@ class BlokManager:
         for conflicting in cls.bloks[blok].conflicting:
             cls.bloks[conflicting].conflicting_by.append(blok)
 
+    @classmethod
+    def get_need_blok(cls, blok):
+        if cls.has(blok):
+            return True
+
+        if blok not in cls.bloks:
+            return False
+
+        cls.get_need_blok_linked_bloks(blok)
         cls.ordered_bloks.append(blok)
         EnvironmentManager.set('current_blok', blok)
 
