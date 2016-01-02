@@ -99,12 +99,6 @@ API doc
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Association                                                     
-    :members:                                                                   
-    :undoc-members:                                                             
-    :show-inheritance:
-    :noindex:
-
 .. automodule:: anyblok.bloks.anyblok_core.system.cache
 
 .. autoclass:: Cache                                                     
