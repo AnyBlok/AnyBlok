@@ -1,6 +1,6 @@
 .. This file is a part of the AnyBlok project
 ..
-..    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -58,6 +58,17 @@ Here are the available attributes for the blok:
 +-----------------------+-----------------------------------------------------+
 | ``readme``            | Path of the 'readme' file of the blok, by default   |
 |                       | ``README.rst``                                      |
++-----------------------+-----------------------------------------------------+
+| ``required``          | List of the required dependancies for install       |
++-----------------------+-----------------------------------------------------+
+| ``optional``          | List of the optional dependencies, their are        |
+|                       | installed if they are found                         |
++-----------------------+-----------------------------------------------------+
+| ``conflicting``       | List the blok which are not be installed to install |
+|                       | this blok                                           |
++-----------------------+-----------------------------------------------------+
+| ``conditionnal``      | If the bloks of this list ares installed the this   |
+|                       | blok will be automaticly installed                  |
 +-----------------------+-----------------------------------------------------+
 
 And the methods that define blok behaviours:

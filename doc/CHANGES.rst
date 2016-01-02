@@ -38,6 +38,9 @@ Future
   relation ship.
 * [REF] `#13 <https://bitbucket.org/jssuzanne/anyblok/issues/13/refactor-inheritance-tree>`_
   Remove association model, replace it by call at the Blok definition
+* [IMP] `#14 <https://bitbucket.org/jssuzanne/anyblok/issues/14/add-conflicting-link-between-bloks>`_
+  Add conflicting link between blok, two blok who are in conflict can be installed
+  if the other is installed
 
 0.5.3
 -----

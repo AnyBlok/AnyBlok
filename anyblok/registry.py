@@ -34,6 +34,10 @@ class RegistryException(Exception):
     """ Simple Exception for Registry """
 
 
+class RegistryConflictingException(Exception):
+    """ Simple Exception for Registry """
+
+
 class RegistryManager:
     """ Manage the global registry
 
@@ -1102,6 +1106,23 @@ class Registry:
         query = query.filter(Blok.state.in_(filter_states))
         return query.all().name
 
+    def check_conflict_with(self, blok):
+        Blok = self.System.Blok
+        definition_blok = BlokManager.bloks[blok]
+        conflicting_bloks = []
+        conflicting_bloks.extend(definition_blok.conflicting)
+        conflicting_bloks.extend(definition_blok.conflicting_by)
+
+        query = Blok.query()
+        query = query.filter(Blok.name.in_(conflicting_bloks))
+        query = query.filter(
+            Blok.state.in_(['installed', 'toinstall', 'toupdate']))
+        if query.count():
+            raise RegistryConflictingException(
+                "Installation of the blok %r is forbidden, because the blok "
+                "%r conflict with the blok(s) : %r" % (
+                    blok, blok, [str(x) for x in query.all()]))
+
     def apply_state(self, blok_name, state, in_states):
         """Apply the state of the blok name
 
@@ -1139,6 +1160,7 @@ class Registry:
             def wrap(bloks):
                 for blok in bloks:
                     if state == 'toinstall':
+                        self.check_conflict_with(blok)
                         self.apply_state(blok, state, ['uninstalled', state])
                         upgrade_state_bloks(state)(
                             self.get_bloks(blok, ['uninstalled'], [
@@ -1166,8 +1188,8 @@ class Registry:
 
             return wrap
 
+        upgrade_state_bloks('touninstall')(uninstall or [])
         upgrade_state_bloks('toinstall')(install or [])
         upgrade_state_bloks('toupdate')(update or [])
-        upgrade_state_bloks('touninstall')(uninstall or [])
         self.reload()
         self.session.expire_all()

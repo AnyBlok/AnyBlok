@@ -143,6 +143,9 @@ class BlokManager:
         for conditional in cls.bloks[blok].conditional:
             cls.bloks[conditional].conditional_by.append(blok)
 
+        for conflicting in cls.bloks[blok].conflicting:
+            cls.bloks[conflicting].conflicting_by.append(blok)
+
         cls.ordered_bloks.append(blok)
         EnvironmentManager.set('current_blok', blok)
 
@@ -187,6 +190,7 @@ class BlokManager:
                 blok.required_by = []
                 blok.optional_by = []
                 blok.conditional_by = []
+                blok.conflicting_by = []
                 cls.set(i.name, blok)
                 blok.name = i.name
                 bloks.append((blok.priority, i.name))
@@ -263,6 +267,7 @@ class Blok:
     required = []
     optional = []
     conditional = []
+    conflicting = []
     name = None  # filled by the BlokManager
 
     def __init__(self, registry):

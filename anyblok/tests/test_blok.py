@@ -8,7 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import BlokManager, Blok, BlokManagerException
 from anyblok.tests.testcase import TestCase, DBTestCase
-from anyblok.registry import RegistryException
+from anyblok.registry import RegistryException, RegistryConflictingException
 
 
 class TestBlokManager(TestCase):
@@ -667,6 +667,55 @@ class TestBlokOptional(DBTestCase):
         self.assertEqual(testblok1.installed_version, '2.0.0')
         self.assertEqual(testblok6.state, 'installed')
         self.assertEqual(testblok6.installed_version, '2.0.0')
+
+
+class TestBlokConflicting(DBTestCase):
+
+    blok_entry_points = ('bloks', 'test_bloks')
+
+    def test_marked_as_conflicting(self):
+        blok1 = BlokManager.get('test-blok1')
+        blok13 = BlokManager.get('test-blok13')
+        self.assertEqual(blok13.conflicting, ['test-blok1'])
+        self.assertEqual(blok1.conflicting_by, ['test-blok13'])
+
+    def test_install_1by1(self):
+        registry = self.init_registry(None)
+        registry.upgrade(install=('test-blok1',))
+        with self.assertRaises(RegistryConflictingException):
+            registry.upgrade(install=('test-blok13',))
+
+    def test_install_both(self):
+        registry = self.init_registry(None)
+        with self.assertRaises(RegistryConflictingException):
+            registry.upgrade(install=('test-blok1', 'test-blok13'))
+
+    def test_uninstall_first_and_intall_another_in_two_step(self):
+        registry = self.init_registry(None)
+        Blok = registry.System.Blok
+        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
+        testblok13 = Blok.query().filter(Blok.name == 'test-blok13').first()
+        registry.upgrade(install=('test-blok1',))
+        self.assertEqual(testblok1.state, 'installed')
+        self.assertEqual(testblok13.state, 'uninstalled')
+        registry.upgrade(uninstall=('test-blok1',))
+        self.assertEqual(testblok1.state, 'uninstalled')
+        self.assertEqual(testblok13.state, 'uninstalled')
+        registry.upgrade(install=('test-blok13',))
+        self.assertEqual(testblok1.state, 'uninstalled')
+        self.assertEqual(testblok13.state, 'installed')
+
+    def test_replace_blok_by_another_in_one_step(self):
+        registry = self.init_registry(None)
+        Blok = registry.System.Blok
+        testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
+        testblok13 = Blok.query().filter(Blok.name == 'test-blok13').first()
+        registry.upgrade(install=('test-blok1',))
+        self.assertEqual(testblok1.state, 'installed')
+        self.assertEqual(testblok13.state, 'uninstalled')
+        registry.upgrade(uninstall=('test-blok1',), install=('test-blok13',))
+        self.assertEqual(testblok1.state, 'uninstalled')
+        self.assertEqual(testblok13.state, 'installed')
 
 
 class TestBlokOrder(DBTestCase):
