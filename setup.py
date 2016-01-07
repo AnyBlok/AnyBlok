@@ -9,7 +9,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.6.0'
+version = '0.7.0'
 
 
 if sys.version_info < (3, 3):
@@ -58,7 +58,6 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
