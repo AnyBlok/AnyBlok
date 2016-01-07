@@ -12,8 +12,8 @@ CHANGELOG
 Future
 ------
 
-0.5.3
------
+0.6.0 (2016-01-07)
+------------------
 
 * [REF] unittest isolation
 * [IMP] possibility to apply an extension for sqlalchemy
