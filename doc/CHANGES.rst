@@ -12,6 +12,9 @@ CHANGELOG
 Future
 ------
 
+0.7.0 (2016-01-07)
+------------------
+
 .. warning::
 
     Python 3.2 is not supported
