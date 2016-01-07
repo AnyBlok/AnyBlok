@@ -42,8 +42,8 @@ Future
   Add conflicting link between blok, two blok who are in conflict can be installed
   if the other is installed
 
-0.5.3
------
+0.6.0 (2016-01-07)
+------------------
 
 * [REF] unittest isolation
 * [IMP] possibility to apply an extension for sqlalchemy
