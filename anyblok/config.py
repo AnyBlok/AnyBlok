@@ -275,7 +275,7 @@ class Configuration:
         :param opt: name of the option
         :param default: default value if the option doesn't exist
         """
-        if opt in cls.configuration:
+        if opt in cls.configuration and cls.configuration[opt]:
             return cls.configuration[opt].get()
         else:
             return default
