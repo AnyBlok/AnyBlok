@@ -206,15 +206,6 @@ class TestConfiguration(TestCase):
         self.assertEqual(Configuration.configuration['value'].type, dict)
         self.assertEqual(Configuration.get('value'), {'a': 1})
 
-    def test_set_object(self):
-        class A:
-            pass
-
-        a = A()
-        Configuration.set('value', a)
-        self.assertEqual(Configuration.configuration['value'].type, A)
-        self.assertIs(Configuration.get('value'), a)
-
     def test_get_use_default_value(self):
         option = 'My option by default'
         res = Configuration.get('option', option)
