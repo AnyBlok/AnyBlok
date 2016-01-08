@@ -6,9 +6,38 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from logging import getLogger
+logger = getLogger(__name__)
 
 
-PROMPT = "%(processName)s - %(version)s"
+def load_init_function_from_entry_points():
+    """Call all the entry point ``anyblok_pyramid.init`` to update
+    the argument setting
+
+    the callable need to have one parametter, it is a dict::
+
+        def init_function():
+            ...
+
+    We add the entry point by the setup file::
+
+        setup(
+            ...,
+            entry_points={
+                'anyblok.init': [
+                    init_function=path:init_function,
+                    ...
+                ],
+            },
+            ...,
+        )
+
+
+    """
+    from pkg_resources import iter_entry_points
+    for i in iter_entry_points('anyblok.init'):
+        print('AnyBlok Load init: %r' % i)
+        i.load()()
 
 
 def start(processName, configuration_groups=None, entry_points=None,
@@ -36,6 +65,7 @@ def start(processName, configuration_groups=None, entry_points=None,
     from .config import Configuration
     from .registry import RegistryManager
 
+    load_init_function_from_entry_points()
     if configuration_groups is not None:
         if config is None:
             config = {}

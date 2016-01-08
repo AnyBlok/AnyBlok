@@ -17,6 +17,7 @@ from os.path import join, exists
 from argparse import RawDescriptionHelpFormatter
 from textwrap import dedent
 from sqlalchemy_utils.functions import create_database
+from anyblok import load_init_function_from_entry_points
 
 Configuration.applications.update({
     'createdb': {
@@ -73,6 +74,7 @@ def createdb(application, configuration_groups, **kwargs):
     :param \**kwargs: ArgumentParser named arguments
     """
     format_configuration(configuration_groups, 'create_db', 'install-bloks')
+    load_init_function_from_entry_points()
     Configuration.load(application, configuration_groups=configuration_groups,
                        **kwargs)
     BlokManager.load()

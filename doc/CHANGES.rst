@@ -9,10 +9,11 @@
 CHANGELOG
 =========
 
-Future
-------
+0.7.1 (2016-01-08)
+------------------
 
 * [FIX] didn't cast the config data from the config file
+* [IMP] copy init entry point from anyblok_pyramid
 
 0.7.0 (2016-01-07)
 ------------------

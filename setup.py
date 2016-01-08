@@ -101,6 +101,7 @@ setup(
         'nose.plugins.0.10': [
             'anyblok-bloks=anyblok.plugins:AnyBlokPlugin',
         ],
+        'anyblok.init': [],
     },
     extras_require={},
 )
