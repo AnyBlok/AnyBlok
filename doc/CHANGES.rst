@@ -12,6 +12,8 @@ CHANGELOG
 Future
 ------
 
+[FIX] delete flush after remove of the session
+
 0.7.1 (2016-01-08)
 ------------------
 

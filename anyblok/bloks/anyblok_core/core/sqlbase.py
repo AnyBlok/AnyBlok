@@ -334,7 +334,6 @@ class SqlBase(SqlMixin):
             query.update({...})
 
         """
-        self.registry.flush()
         fields = values.keys()
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
         self.expire_relationship_mapped(mappers)
@@ -345,6 +344,7 @@ class SqlBase(SqlMixin):
             values, **kwargs)
         self.expire(*fields)
         self.expire_relationship_mapped(mappers)
+        self.registry.flush()
         return res
 
     @classmethod
@@ -466,13 +466,13 @@ class SqlBase(SqlMixin):
             and expire all the session, to reload the relation ship
 
         """
-        self.registry.flush()
         model = self.registry.loaded_namespaces_first_step[
             self.__registry_name__]
         fields = model.keys()
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
         self.expire_relationship_mapped(mappers)
         self.registry.session.delete(self)
+        self.registry.flush()
 
     @classmethod
     def insert(cls, **kwargs):
