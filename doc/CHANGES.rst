@@ -12,6 +12,8 @@ CHANGELOG
 Future
 ------
 
+* [FIX] didn't cast the config data from the config file
+
 0.7.0 (2016-01-07)
 ------------------
 

@@ -51,8 +51,7 @@ def cast_value(cast, value):
     """
     if is_none(cast, value):
         return None
-    elif not cast or type(cast) is type:
-        # no type or custom Class
+    elif not cast:
         return value
     elif cast is bool and isinstance(value, str):
         if value.upper() == 'TRUE':
