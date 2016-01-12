@@ -373,8 +373,8 @@ class SqlBase(SqlMixin):
                         rfield = rmodel[rc]
                         if isinstance(rfield, FakeRelationShip):
                             res.add_in_res(rfield.mapper.attribute_name, [rc])
-                        elif (isinstance(rfield, RelationShip)
-                              and 'backref' in rfield.kwargs):
+                        elif (isinstance(rfield, RelationShip) and
+                              'backref' in rfield.kwargs):
                             res.add_in_res(
                                 rfield.kwargs['backref'][0], [rc])
 
