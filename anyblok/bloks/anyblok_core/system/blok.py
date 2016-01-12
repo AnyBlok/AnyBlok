@@ -167,13 +167,14 @@ class Blok:
         :param blok: blok name
         :rtype: boolean
         """
-        conditional = BlokManager.bloks[blok].conditional
-        if conditional:
-            query = cls.query().filter(cls.name.in_(conditional))
-            query = query.filter(
-                cls.state.in_(['installed', 'toinstall', 'toupdate']))
-            if len(conditional) == query.count():
-                return True
+        if blok in BlokManager.bloks:
+            conditional = BlokManager.bloks[blok].conditional
+            if conditional:
+                query = cls.query().filter(cls.name.in_(conditional))
+                query = query.filter(
+                    cls.state.in_(['installed', 'toinstall', 'toupdate']))
+                if len(conditional) == query.count():
+                    return True
 
         return False
 
