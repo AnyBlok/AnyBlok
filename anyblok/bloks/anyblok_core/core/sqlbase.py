@@ -453,7 +453,7 @@ class SqlBase(SqlMixin):
         self.registry.session.expire(
             self, self.__class__.find_relationship(*fields))
 
-    def delete(self):
+    def delete(self, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
         model::
 
@@ -465,6 +465,7 @@ class SqlBase(SqlMixin):
             remove the instance of the session
             and expire all the session, to reload the relation ship
 
+        :param flush: flush the session if True
         """
         model = self.registry.loaded_namespaces_first_step[
             self.__registry_name__]
@@ -472,7 +473,8 @@ class SqlBase(SqlMixin):
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
         self.expire_relationship_mapped(mappers)
         self.registry.session.delete(self)
-        self.registry.flush()
+        if flush:
+            self.registry.flush()
 
     @classmethod
     def insert(cls, **kwargs):
