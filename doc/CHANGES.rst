@@ -13,6 +13,7 @@ Future
 ------
 
 [FIX] delete flush after remove of the session
+[FIX] nose pluggins
 
 0.7.1 (2016-01-08)
 ------------------
