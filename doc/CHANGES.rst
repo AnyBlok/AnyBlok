@@ -12,8 +12,10 @@ CHANGELOG
 Future
 ------
 
-[FIX] delete flush after remove of the session
-[FIX] nose pluggins
+* [FIX] delete flush after remove of the session
+* [FIX] nose pluggins
+* [FIX] does'nt destroy automaticly constraints, indexes, columns, tables by
+  automigration, add options to force the delete of its
 
 0.7.1 (2016-01-08)
 ------------------

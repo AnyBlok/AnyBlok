@@ -7,8 +7,16 @@ from sqlalchemy import schema
 from contextlib import contextmanager
 from logging import getLogger
 from sqlalchemy import func, select, update, join, alias, and_
+from anyblok.config import Configuration
 
 logger = getLogger(__name__)
+
+# --reinit-all
+
+# --reinit-constraints
+# --reinit-indexes  TESTU OK
+# --reinit-columns  TESTU OK
+# --reinit-tables
 
 
 @contextmanager
@@ -46,17 +54,42 @@ class MigrationReport:
         _, _, table, column = diff
         self.log_names.append('Add %s.%s' % (table, column.name))
 
+    def can_remove_constraints(self):
+        if self.migration.reinit_constraints:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
+
     def init_remove_constraint(self, diff):
-        self.raise_if_withoutautomigration()
         _, constraint = diff
         self.log_names.append('Drop constraint %s on %s' % (
             constraint.name, constraint.table))
 
+        if self.can_remove_constraints():
+            self.raise_if_withoutautomigration()
+        else:
+            return True
+
+    def can_remove_index(self):
+        if self.migration.reinit_indexes:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
+
     def init_remove_index(self, diff):
-        self.raise_if_withoutautomigration()
         _, index = diff
         self.log_names.append('Drop index %s on %s' % (index.name,
                                                        index.table))
+        if self.can_remove_index():
+            self.raise_if_withoutautomigration()
+        else:
+            return True
 
     def init_add_fk(self, diff):
         self.raise_if_withoutautomigration()
@@ -86,11 +119,25 @@ class MigrationReport:
         self.log_names.append('Add unique constraint on %s (%s)' % (
             constraint.table.name, ', '.join(columns)))
 
+    def can_remove_column(self):
+        if self.migration.reinit_columns:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
+
     def init_remove_column(self, diff):
         column = diff[3]
         msg = "Drop Column %s.%s" % (column.table.name,
                                      column.name)
-        if column.nullable is False:
+
+        if self.can_remove_column():
+            self.log_names.append(msg)
+            self.raise_if_withoutautomigration()
+            return False
+        elif column.nullable is False:
             self.raise_if_withoutautomigration()
             msg += " (not null)"
             self.log_names.append(msg)
@@ -100,11 +147,23 @@ class MigrationReport:
             return True
 
         self.log_names.append(msg)
+        return True
+
+    def can_remove_table(self):
+        if self.migration.reinit_tables:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
 
     def init_remove_table(self, diff):
-        # No save remove table or column
-        # Remove table or column is
-        return True
+        self.log_names.append("Drop Table %s" % diff[1].name)
+        if self.can_remove_table():
+            self.raise_if_withoutautomigration()
+        else:
+            return True
 
     def __init__(self, migration, diffs):
         """ Initializer
@@ -213,6 +272,12 @@ class MigrationReport:
         table = self.migration.table(constraint.table.name)
         table.unique(name=constraint.name).add(*constraint.columns)
 
+    def apply_remove_table(self, action):
+        self.migration.table(action[1].name).drop()
+
+    def apply_remove_column(self, action):
+        self.migration.table(action[2]).column(action[3].name).drop()
+
     def apply_change(self):
         """ Apply the migration
 
@@ -232,6 +297,8 @@ class MigrationReport:
             'remove_constraint': self.apply_change_remove_constraint,
             'remove_index': self.apply_change_remove_index,
             'remove_fk': self.apply_change_remove_fk,
+            'remove_table': self.apply_remove_table,
+            'remove_column': self.apply_remove_column,
         }
 
         for action in self.actions:
@@ -812,6 +879,12 @@ class Migration:
         }
         self.context = MigrationContext.configure(self.conn, opts=opts)
         self.operation = Operations(self.context)
+        self.reinit_all = Configuration.get('reinit_all', False)
+        self.reinit_tables = Configuration.get('reinit_tables', False)
+        self.reinit_columns = Configuration.get('reinit_columns', False)
+        self.reinit_indexes = Configuration.get('reinit_indexes', False)
+        self.reinit_constraints = Configuration.get(
+            'reinit_constraints', False)
 
     def table(self, name=None):
         """ Get a table

@@ -715,6 +715,11 @@ def add_uninstall_bloks(parser):
 def add_update_bloks(parser):
     parser.add_argument('--update-bloks', nargs="+", help="bloks to update")
     parser.add_argument('--update-all-bloks', action='store_true')
+    parser.add_argument('--reinit-all', action='store_true')
+    parser.add_argument('--reinit-tables', action='store_true')
+    parser.add_argument('--reinit-columns', action='store_true')
+    parser.add_argument('--reinit-indexes', action='store_true')
+    parser.add_argument('--reinit-constraints', action='store_true')
 
 
 @Configuration.add('interpreter')
