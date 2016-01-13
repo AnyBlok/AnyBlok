@@ -553,6 +553,58 @@ class TestMigration(TestCase):
             "Drop Foreign keys on test.other => system_blok.name"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+
+    def test_detect_drop_anyblok_foreign_key(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64)
+                        CONSTRAINT anyblok_fk_test__other_on_system_blok__name
+                        references system_blok(name)
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+
+    def test_detect_drop_foreign_key_with_reinit_constraint(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) references system_blok(name)
+                );""")
+        self.registry.migration.reinit_constraints = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+
+    def test_detect_drop_foreign_key_with_reinit_all(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) references system_blok(name)
+                );""")
+        self.registry.migration.reinit_all = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
@@ -563,7 +615,9 @@ class TestMigration(TestCase):
                 """CREATE TABLE test(
                     integer INT PRIMARY KEY NOT NULL,
                     other CHAR(64),
-                    other2 CHAR(64) references system_blok(name)
+                    other2 CHAR(64)
+                    CONSTRAINT anyblok_fk_test__other2_on_system_blok__name
+                    references system_blok(name)
                 );""")
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has(

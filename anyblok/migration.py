@@ -60,8 +60,6 @@ class MigrationReport:
     def can_remove_constraints(self, name):
         unique = "anyblok_uq_(?P<table>\w+)__(?P<columns>\w+)"
         check = "anyblok_ck_(?P<table>\w+)_(?P<constraint>\w+)"
-        fk = ("anyblok_fk_(?P<table>\w+)__(?P<columns>\w+)_on_"
-              "(?P<referred_table>\w+)_(?P<referred_columns>\w+)")
 
         m = re.search(unique, name)
         if m and self.check_if_table_and_columns_exist(m.group('table'),
@@ -72,6 +70,17 @@ class MigrationReport:
         if m and self.check_if_table_and_columns_exist(m.group('table')):
             return True
 
+        if self.migration.reinit_constraints:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
+
+    def can_remove_fk_constraints(self, name):
+        fk = ("anyblok_fk_(?P<table>\w+)__(?P<columns>\w+)_on_"
+              "(?P<referred_table>\w+)__(?P<referred_columns>\w+)")
         m = re.search(fk, name)
         if m is not None:
             local = self.check_if_table_and_columns_exist(
@@ -137,12 +146,16 @@ class MigrationReport:
             ', '.join(from_), ', '.join(to_)))
 
     def init_remove_fk(self, diff):
-        self.raise_if_withoutautomigration()
         _, fk = diff
         for column in fk.columns:
             for fk_ in column.foreign_keys:
                 self.log_names.append('Drop Foreign keys on %s.%s => %s' % (
                     fk.table.name, column.name, fk_.target_fullname))
+
+        if not self.can_remove_fk_constraints(fk.name):
+            return True
+
+        self.raise_if_withoutautomigration()
 
     def init_add_constraint(self, diff):
         self.raise_if_withoutautomigration()
@@ -169,7 +182,13 @@ class MigrationReport:
             self.log_names.append(msg)
             self.raise_if_withoutautomigration()
             return False
-        elif column.nullable is False:
+
+        for fk in column.foreign_keys:
+            if not self.can_remove_fk_constraints(fk.name):
+                # only if fk is not removable
+                self.actions.append((None, fk))
+
+        if column.nullable is False:
             self.raise_if_withoutautomigration()
             msg += " (not null)"
             self.log_names.append(msg)
