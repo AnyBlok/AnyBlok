@@ -11,13 +11,6 @@ from anyblok.config import Configuration
 
 logger = getLogger(__name__)
 
-# --reinit-all
-
-# --reinit-constraints
-# --reinit-indexes  TESTU OK
-# --reinit-columns  TESTU OK
-# --reinit-tables
-
 
 @contextmanager
 def cnx(migration):
@@ -54,7 +47,16 @@ class MigrationReport:
         _, _, table, column = diff
         self.log_names.append('Add %s.%s' % (table, column.name))
 
-    def can_remove_constraints(self):
+    def can_remove_constraints(self, name):
+        if name.startswith('anyblok_uq_'):
+            return True  # convention of noming for anyblok
+
+        if name.startswith('anyblok_ck_'):
+            return True  # convention of noming for anyblok
+
+        if name.startswith('anyblok_fk_'):
+            return True  # convention of noming for anyblok
+
         if self.migration.reinit_constraints:
             return True
 
@@ -68,12 +70,15 @@ class MigrationReport:
         self.log_names.append('Drop constraint %s on %s' % (
             constraint.name, constraint.table))
 
-        if self.can_remove_constraints():
+        if self.can_remove_constraints(constraint.name):
             self.raise_if_withoutautomigration()
         else:
             return True
 
-    def can_remove_index(self):
+    def can_remove_index(self, name):
+        if name.startswith('anyblok_ix_'):
+            return True  # convention of noming for anyblok
+
         if self.migration.reinit_indexes:
             return True
 
@@ -86,7 +91,7 @@ class MigrationReport:
         _, index = diff
         self.log_names.append('Drop index %s on %s' % (index.name,
                                                        index.table))
-        if self.can_remove_index():
+        if self.can_remove_index(index.name):
             self.raise_if_withoutautomigration()
         else:
             return True
@@ -238,6 +243,7 @@ class MigrationReport:
             **kwargs)
 
     def apply_change_remove_constraint(self, action):
+        # FIXME, test for check, foreignkey
         _, constraint = action
         if constraint.__class__ is schema.UniqueConstraint:
             table = self.migration.table(constraint.table)
@@ -270,6 +276,7 @@ class MigrationReport:
     def apply_change_add_constraint(self, action):
         _, constraint = action
         table = self.migration.table(constraint.table.name)
+        # FIXME, test for check, foreignkey
         table.unique(name=constraint.name).add(*constraint.columns)
 
     def apply_remove_table(self, action):
@@ -542,17 +549,16 @@ class MigrationConstraintCheck:
         self.name = name
         # TODO dialect not have method to check if constraint exist
 
-    def add(self, name, condition):
+    def add(self, condition):
         """ Add the constraint
 
-        :param name: name of the constraint
         :param condition: constraint to apply
         :rtype: MigrationConstraintCheck instance
         """
         self.table.migration.operation.create_check_constraint(
-            name, self.table.name, condition)
+            self.name, self.table.name, condition)
 
-        return MigrationConstraintCheck(self.table, self.name)
+        return self
 
     def drop(self):
         """ Drop the constraint """
@@ -565,44 +571,21 @@ class MigrationConstraintUnique:
 
     Add a new constraint::
 
-        table('My table name').unique().add('col1', 'col2')
+        table('My table name').unique('constraint name').add('col1', 'col2')
 
     Get and drop the constraint::
 
-        table('My table name').unique('col1', 'col2').drop()
+        table('My table name').unique('constraint name').drop()
+
+    Let AnyBlok to define the name of the constraint::
+
+        table('My table name').unique(None).add('col1', 'col2')
+
 
     """
-    def __init__(self, table, *columns, **kwargs):
+    def __init__(self, table, name):
         self.table = table
-        if 'name' in kwargs:
-            self.name = kwargs['name']
-        else:
-            self.name = self.format_name(*columns)
-        self.exist = False
-
-        if self.name is not None:
-            op = self.table.migration.operation
-            with cnx(self.table.migration) as conn:
-                uniques = op.impl.dialect.get_unique_constraints(
-                    conn, self.table.name)
-
-            for u in uniques:
-                if u['name'] == self.name:
-                    self.exist = True
-
-            if not self.exist:
-                raise MigrationException(
-                    "No unique constraints %r found on %r" % (
-                        self.name, self.table.name))
-
-    def format_name(self, *columns):
-        if columns:
-            cols = [x.name for x in columns]
-            cols.sort()
-            cols = '_'.join(cols)
-            return 'unique_%s_on_%s' % (cols, self.table.name)
-
-        return None
+        self.name = name
 
     def add(self, *columns):
         """ Add the constraint
@@ -615,25 +598,21 @@ class MigrationConstraintUnique:
             raise MigrationException("""To add an unique constraint you """
                                      """must define one or more columns""")
 
-        unique_name = self.format_name(*columns)
         columns_name = [x.name for x in columns]
-        savepoint = 'add_unique_constraint_%s' % unique_name
+        savepoint = 'add_unique_constraint_%s' % (self.name or '')
         try:
             self.table.migration.savepoint(savepoint)
             self.table.migration.operation.create_unique_constraint(
-                unique_name, self.table.name, columns_name)
+                self.name, self.table.name, columns_name)
         except IntegrityError as e:
             self.table.migration.rollback_savepoint(savepoint)
             logger.warn("Error during the add of new unique constraint %r on "
-                        "table %r and columns %r : %r " % (unique_name,
+                        "table %r and columns %r : %r " % (self.name,
                                                            self.table.name,
                                                            columns_name,
                                                            str(e)))
-            # return a empty constrainte on the table, because this function
-            # must return a unique constraint.
-            return MigrationConstraintUnique(self.table)
 
-        return MigrationConstraintUnique(self.table, *columns)
+        return self
 
     def drop(self):
         """ Drop the constraint """
@@ -658,7 +637,7 @@ class MigrationConstraintPrimaryKey:
         self.name = self.format_name()
 
     def format_name(self, *columns):
-        return '%s_pkey' % self.table.name
+        return 'anyblok_pk_%s' % self.table.name
 
     def add(self, *columns):
         """ Add the constraint
@@ -810,13 +789,13 @@ class MigrationTable:
         """
         return MigrationIndex(self, *columns, **kwargs)
 
-    def unique(self, *columns, **kwargs):
+    def unique(self, name):
         """ Get unique
 
         :param \*columns: List of the column's name
         :rtype: MigrationConstraintUnique instance
         """
-        return MigrationConstraintUnique(self, *columns, **kwargs)
+        return MigrationConstraintUnique(self, name)
 
     def check(self, name=None):
         """ Get check

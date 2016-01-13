@@ -1,6 +1,6 @@
 .. This file is a part of the AnyBlok project
 ..
-..    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -14,8 +14,10 @@ Future
 
 * [FIX] delete flush after remove of the session
 * [FIX] nose pluggins
-* [FIX] does'nt destroy automaticly constraints, indexes, columns, tables by
-  automigration, add options to force the delete of its
+* [FIX] does'nt destroy automaticly constraints (not created by anyblok), 
+  indexes (not created by anyblok), columns, tables by automigration, add 
+  options to force the delete of its.
+* [REF] standardize the constraint and index names
 
 0.7.1 (2016-01-08)
 ------------------

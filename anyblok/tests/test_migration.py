@@ -179,7 +179,7 @@ class TestMigration(TestCase):
     def test_add_unique_constraint_on_good_table(self):
         self.fill_test_table()
         t = self.registry.migration.table('test')
-        t.unique().add(t.column('other'))
+        t.unique('unique_constraint').add(t.column('other'))
         self.registry.Test.insert(other='One entry')
         with self.assertRaises(IntegrityError):
             self.registry.Test.insert(other='One entry')
@@ -189,7 +189,7 @@ class TestMigration(TestCase):
         vals = [{'other': 'test'} for x in range(10)]
         Test.multi_insert(*vals)
         t = self.registry.migration.table('test')
-        t.unique().add(t.column('other'))
+        t.unique(None).add(t.column('other'))
         self.registry.Test.insert(other='One entry')
         self.registry.Test.insert(other='One entry')
 
@@ -258,15 +258,15 @@ class TestMigration(TestCase):
 
     def test_constraint_unique(self):
         t = self.registry.migration.table('test')
-        t.unique().add(t.column('other'))
-        t.unique(t.column('other')).drop()
+        t.unique(name='test_unique_constraint').add(t.column('other'))
+        t.unique(name='test_unique_constraint').drop()
 
     def test_constraint_check(self):
         t = self.registry.migration.table('test')
         Test = self.registry.Test
-        name = 'chk_name_on_test'
-        t.check().add(name, Test.other != 'test')
-        t.check(name).drop()
+        t.check('test').add(Test.other != 'test')
+        # particuliar case of check constraint
+        t.check('anyblok_ck_test_test').drop()
 
     def test_detect_under_noautocommit_flag(self):
         with self.cnx() as conn:
@@ -461,6 +461,15 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has("Drop index other_idx on test"))
 
+    def test_detect_drop_anyblok_index(self):
+        with self.cnx() as conn:
+            conn.execute("""CREATE INDEX anyblok_ix_other ON test (other);""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop index anyblok_ix_other on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Drop index anyblok_ix_other on test"))
+
     def test_detect_drop_index_with_reinit_indexes(self):
         with self.cnx() as conn:
             conn.execute("""CREATE INDEX other_idx ON test (other);""")
@@ -590,6 +599,22 @@ class TestMigration(TestCase):
         report.apply_change()
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has("Drop constraint unique_other on test"))
+
+    def test_detect_drop_anyBlok_constraint(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) CONSTRAINT anyblok_uq_other UNIQUE
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(
+            report.log_has("Drop constraint anyblok_uq_other on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(
+            report.log_has("Drop constraint anyblok_uq_other on test"))
 
     def test_detect_drop_constraint_with_reinit_constraints(self):
         with self.cnx() as conn:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
-#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -10,7 +10,7 @@ from os.path import join, exists
 from logging import getLogger
 import nose
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
@@ -843,8 +843,17 @@ class Registry:
         mustreload = False
         blok2install = None
         try:
-            self.declarativebase = declarative_base(class_registry=dict(
-                registry=self))
+            convention = {
+                "ix": "anyblok_ix_%(column_0_label)s",
+                "uq": "anyblok_uq_%(table_name)s_%(column_0_name)s",
+                "ck": "anyblok_ck_%(table_name)s_%(constraint_name)s",
+                "fk": ("anyblok_fk_%(table_name)s_%(column_0_name)s_%"
+                       "(referred_table_name)s"),
+                "pk": "anyblok_pk_%(table_name)s"
+            }
+            self.declarativebase = declarative_base(
+                metadata=MetaData(naming_convention=convention),
+                class_registry=dict(registry=self))
             toload = self.get_bloks_to_load()
             toinstall = self.get_bloks_to_install(toload)
             if self.update_to_install_blok_dependencies_state(toinstall):
