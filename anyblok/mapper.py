@@ -121,8 +121,6 @@ class ModelAttribute:
         :rtype: str of the foreign key (tablename.columnname)
         :exceptions: ModelAttributeException
         """
-        import pdb
-        pdb.set_trace()
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
         tablename = Model['__tablename__']
