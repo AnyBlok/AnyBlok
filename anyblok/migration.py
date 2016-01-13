@@ -5,9 +5,10 @@ from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from sqlalchemy import schema
 from contextlib import contextmanager
-from logging import getLogger
 from sqlalchemy import func, select, update, join, alias, and_
 from anyblok.config import Configuration
+import re
+from logging import getLogger
 
 logger = getLogger(__name__)
 
@@ -47,15 +48,38 @@ class MigrationReport:
         _, _, table, column = diff
         self.log_names.append('Add %s.%s' % (table, column.name))
 
+    def check_if_table_and_columns_exist(self, table, *columns):
+        try:  # check if the table and the column exist
+            table = self.migration.table(table)
+            for column in columns:
+                table.column(column)
+            return True
+        except:
+            return False
+
     def can_remove_constraints(self, name):
-        if name.startswith('anyblok_uq_'):
-            return True  # convention of noming for anyblok
+        unique = "anyblok_uq_(?P<table>\w+)__(?P<columns>\w+)"
+        check = "anyblok_ck_(?P<table>\w+)_(?P<constraint>\w+)"
+        fk = ("anyblok_fk_(?P<table>\w+)__(?P<columns>\w+)_on_"
+              "(?P<referred_table>\w+)_(?P<referred_columns>\w+)")
 
-        if name.startswith('anyblok_ck_'):
-            return True  # convention of noming for anyblok
+        m = re.search(unique, name)
+        if m and self.check_if_table_and_columns_exist(m.group('table'),
+                                                       m.group('columns')):
+            return True
 
-        if name.startswith('anyblok_fk_'):
-            return True  # convention of noming for anyblok
+        m = re.search(check, name)
+        if m and self.check_if_table_and_columns_exist(m.group('table')):
+            return True
+
+        m = re.search(fk, name)
+        if m is not None:
+            local = self.check_if_table_and_columns_exist(
+                m.group('table'), m.group('columns'))
+            referred = self.check_if_table_and_columns_exist(
+                m.group('referred_table'), m.group('referred_columns'))
+            if local and referred:
+                return True
 
         if self.migration.reinit_constraints:
             return True
@@ -76,8 +100,11 @@ class MigrationReport:
             return True
 
     def can_remove_index(self, name):
-        if name.startswith('anyblok_ix_'):
-            return True  # convention of noming for anyblok
+        key = "anyblok_ix_(?P<table>\w+)__(?P<columns>\w+)"
+        m = re.search(key, name)
+        if m and self.check_if_table_and_columns_exist(m.group('table'),
+                                                       m.group('columns')):
+            return True
 
         if self.migration.reinit_indexes:
             return True

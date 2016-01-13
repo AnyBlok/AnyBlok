@@ -865,7 +865,7 @@ class Registry:
             convention = {
                 "all_column_name": self.all_column_name,
                 "all_referred_column_name": self.all_referred_column_name,
-                "ix": "anyblok_ix_%(all_column_name)s",
+                "ix": "anyblok_ix_%(table_name)s__%(all_column_name)s",
                 "uq": "anyblok_uq_%(table_name)s__%(all_column_name)s",
                 "ck": "anyblok_ck_%(table_name)s_%(constraint_name)s",
                 "fk": ("anyblok_fk_%(table_name)s_%(all_column_name)s_on_"
