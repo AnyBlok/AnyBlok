@@ -15,7 +15,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
-
+from sqlalchemy.schema import ForeignKeyConstraint
 from .config import Configuration
 from .blok import BlokManager
 from .logging import log
@@ -833,6 +833,25 @@ class Registry:
 
         return False
 
+    def all_column_name(self, constraint, table):
+        if isinstance(constraint, ForeignKeyConstraint):
+            return '_'.join(constraint.column_keys)
+        else:
+            return '_'.join(constraint.columns.keys())
+
+    def all_referred_column_name(self, constraint, table):
+        referred_columns = []
+        for el in constraint.elements:
+            refs = el.target_fullname.split(".")
+            if len(refs) == 3:
+                refschema, reftable, refcol = refs
+            else:
+                reftable, refcol = refs
+
+            referred_columns.append(refcol)
+
+        return '_'.join(referred_columns)
+
     @log(logger)
     def load(self):
         """ Load all the namespaces of the registry
@@ -844,11 +863,14 @@ class Registry:
         blok2install = None
         try:
             convention = {
-                "ix": "anyblok_ix_%(column_0_label)s",
-                "uq": "anyblok_uq_%(table_name)s_%(column_0_name)s",
+                "all_column_name": self.all_column_name,
+                "all_referred_column_name": self.all_referred_column_name,
+                "ix": "anyblok_ix_%(all_column_name)s",
+                "uq": "anyblok_uq_%(table_name)s__%(all_column_name)s",
                 "ck": "anyblok_ck_%(table_name)s_%(constraint_name)s",
-                "fk": ("anyblok_fk_%(table_name)s_%(column_0_name)s_%"
-                       "(referred_table_name)s"),
+                "fk": ("anyblok_fk_%(table_name)s_%(all_column_name)s_on_"
+                       "%(referred_table_name)s__"
+                       "%(all_referred_column_name)s"),
                 "pk": "anyblok_pk_%(table_name)s"
             }
             self.declarativebase = declarative_base(
