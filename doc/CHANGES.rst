@@ -18,6 +18,7 @@ Future
   indexes (not created by anyblok), columns, tables by automigration, add 
   options to force the delete of its.
 * [REF] standardize the constraint and index names
+* [FIX] Multi declaration of the same foreign key in the case of M2O and O2O
 
 0.7.1 (2016-01-08)
 ------------------
