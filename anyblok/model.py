@@ -480,7 +480,9 @@ class Model:
             bases.append(b)
 
             for b_ns in b.__anyblok_bases__:
-                properties['__depends__'].add(b_ns.__registry_name__)
+                if b_ns.__registry_name__.startswith('Model.'):
+                    properties['__depends__'].add(b_ns.__registry_name__)
+
                 ps = cls.load_namespace_first_step(registry,
                                                    b_ns.__registry_name__)
                 ps.update(properties)
