@@ -9,8 +9,8 @@
 CHANGELOG
 =========
 
-Future
-------
+0.7.2 (2016-01-14)
+------------------
 
 * [FIX] delete flush after remove of the session
 * [FIX] nose pluggins
