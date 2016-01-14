@@ -711,7 +711,7 @@ def add_uninstall_bloks(parser):
                         help="bloks to uninstall")
 
 
-@Configuration.add('update-bloks')
+@Configuration.add('update-bloks', label='Update database')
 def add_update_bloks(parser):
     parser.add_argument('--update-bloks', nargs="+", help="bloks to update")
     parser.add_argument('--update-all-bloks', action='store_true')
