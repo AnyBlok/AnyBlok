@@ -19,6 +19,7 @@ Future
   options to force the delete of its.
 * [REF] standardize the constraint and index names
 * [FIX] Multi declaration of the same foreign key in the case of M2O and O2O
+* [REF] SqlBase.update, become hight level meth
 
 0.7.1 (2016-01-08)
 ------------------

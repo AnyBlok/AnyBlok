@@ -321,7 +321,7 @@ class SqlBase(SqlMixin):
     sqlalchemy_query_delete = query_method('delete')
     sqlalchemy_query_update = query_method('update')
 
-    def update(self, values, **kwargs):
+    def update(self, values):
         """ Call the SqlAlchemy Query.update method on the instance of the
         model::
 
@@ -334,18 +334,19 @@ class SqlBase(SqlMixin):
             query.update({...})
 
         """
-        fields = values.keys()
+        fields = [x if isinstance(x, str) else x.property._orig_columns[0].name
+                  for x in values.keys()]
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
         self.expire_relationship_mapped(mappers)
-        pks = self.get_primary_keys()
-        where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
-                        for pk in pks]
-        res = self.__class__.query().filter(*where_clause).update(
-            values, **kwargs)
+        for x, v in values.items():
+            if not isinstance(x, str):
+                x = x.property.key
+
+            setattr(self, x, v)
+
+        self.registry.flush()
         self.expire(*fields)
         self.expire_relationship_mapped(mappers)
-        self.registry.flush()
-        return res
 
     @classmethod
     def find_remote_attribute_to_expire(cls, *fields):
@@ -453,7 +454,7 @@ class SqlBase(SqlMixin):
         self.registry.session.expire(
             self, self.__class__.find_relationship(*fields))
 
-    def delete(self, flush=True):
+    def delete(self):
         """ Call the SqlAlchemy Query.delete method on the instance of the
         model::
 
@@ -465,7 +466,6 @@ class SqlBase(SqlMixin):
             remove the instance of the session
             and expire all the session, to reload the relation ship
 
-        :param flush: flush the session if True
         """
         model = self.registry.loaded_namespaces_first_step[
             self.__registry_name__]
@@ -473,8 +473,7 @@ class SqlBase(SqlMixin):
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
         self.expire_relationship_mapped(mappers)
         self.registry.session.delete(self)
-        if flush:
-            self.registry.flush()
+        self.registry.flush()
 
     @classmethod
     def insert(cls, **kwargs):
