@@ -313,6 +313,18 @@ class SqlMixin:
         return result
 
 
+def get_model_information(registry, registry_name):
+    model = registry.loaded_namespaces_first_step[registry_name]
+    for depend in model['__depends__']:
+        if depend != registry_name:
+            for x, y in get_model_information(registry, depend).items():
+                if x not in model:
+                    model[x] = y
+
+    print(model)
+    return model
+
+
 @Declarations.register(Declarations.Core)
 class SqlBase(SqlMixin):
     """ this class is inherited by all the SQL model
@@ -358,12 +370,12 @@ class SqlBase(SqlMixin):
         res = uniquedict()
         _fields = []
         _fields.extend(fields)
-        model = cls.registry.loaded_namespaces_first_step[
-            cls.__registry_name__]
+        model = get_model_information(cls.registry, cls.__registry_name__)
         while _fields:
             field = _fields.pop()
             field = field if isinstance(field, str) else field.name
             _field = model[field]
+
             if isinstance(_field, (Column, FakeColumn)):
                 _fields.extend(x for x, y in model.items()
                                if isinstance(y, RelationShip)
@@ -403,8 +415,7 @@ class SqlBase(SqlMixin):
         res = []
         _fields = []
         _fields.extend(fields)
-        model = cls.registry.loaded_namespaces_first_step[
-            cls.__registry_name__]
+        model = get_model_information(cls.registry, cls.__registry_name__)
         while _fields:
             field = _fields.pop()
             if not isinstance(field, str):

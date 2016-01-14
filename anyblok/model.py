@@ -473,12 +473,14 @@ class Model:
             return registry.loaded_namespaces_first_step[namespace]
 
         bases = []
-        properties = {}
+        properties = {'__depends__': set()}
         ns = registry.loaded_registries[namespace]
+
         for b in ns['bases']:
             bases.append(b)
 
             for b_ns in b.__anyblok_bases__:
+                properties['__depends__'].add(b_ns.__registry_name__)
                 ps = cls.load_namespace_first_step(registry,
                                                    b_ns.__registry_name__)
                 ps.update(properties)
