@@ -321,7 +321,6 @@ def get_model_information(registry, registry_name):
                 if x not in model:
                     model[x] = y
 
-    print(model)
     return model
 
 
