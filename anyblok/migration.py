@@ -183,10 +183,15 @@ class MigrationReport:
             self.raise_if_withoutautomigration()
             return False
 
+        fk_removed = []
         for fk in column.foreign_keys:
             if not self.can_remove_fk_constraints(fk.name):
-                # only if fk is not removable
-                self.actions.append((None, fk))
+                # only if fk is not removable. FK can come from
+                # * DBA manager, it is the only raison to destroy it
+                # * alembic, some constrainte change name during the remove
+                if fk.name not in fk_removed:
+                    self.actions.append(('remove_fk', fk.constraint))
+                    fk_removed.append(fk.name)
 
         if column.nullable is False:
             self.raise_if_withoutautomigration()

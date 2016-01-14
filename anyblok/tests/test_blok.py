@@ -772,21 +772,11 @@ class TestBlokModel(DBTestCase):
 
     blok_entry_points = ('bloks', 'test_bloks')
 
-    def test_remove_foreign_key_after_uninstallation_1(self):
-        registry = self.init_registry(None)
-        registry.upgrade(install=('test-blok7', 'test-blok8'))
-        t2 = registry.Test2.insert(label="test2")
-        registry.Test.insert(label="Test1", test2=t2.id)
-        from sqlalchemy.exc import IntegrityError
-        with self.assertRaises(IntegrityError):
-            registry.Test2.query().delete()
-
     def test_remove_foreign_key_after_uninstallation(self):
         registry = self.init_registry(None)
         registry.upgrade(install=('test-blok7', 'test-blok8'))
         t2 = registry.Test2.insert(label="test2")
         registry.Test.insert(label="Test1", test2=t2.id)
-        registry.begin_nested()
         from sqlalchemy.exc import IntegrityError
         with self.assertRaises(IntegrityError):
             with registry.begin_nested():
