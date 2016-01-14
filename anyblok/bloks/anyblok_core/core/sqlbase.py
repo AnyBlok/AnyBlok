@@ -334,6 +334,10 @@ class SqlBase(SqlMixin):
             query.update({...})
 
         """
+        if not values:
+            self.registry.flush()
+            return 0
+
         fields = [x if isinstance(x, str) else x.property._orig_columns[0].name
                   for x in values.keys()]
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
@@ -347,6 +351,7 @@ class SqlBase(SqlMixin):
         self.registry.flush()
         self.expire(*fields)
         self.expire_relationship_mapped(mappers)
+        return 1
 
     @classmethod
     def find_remote_attribute_to_expire(cls, *fields):
@@ -433,7 +438,8 @@ class SqlBase(SqlMixin):
                 fields = [fields]
 
             for field in fields:
-                field.expire(*rfields)
+                if field is not None:
+                    field.expire(*rfields)
 
     def refresh(self, *fields):
         """ Expire and reload all the attribute of the instance
