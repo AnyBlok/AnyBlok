@@ -100,8 +100,7 @@ class Blok:
             b = cls.query().filter(cls.name == blok)
             version = BlokManager.bloks[blok].version
             if b.count():
-                b.order = order
-                b.version = version
+                b.update(dict(order=order, version=version))
             else:
                 cls.insert(name=blok, order=order, version=version)
 

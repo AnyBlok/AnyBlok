@@ -12,6 +12,8 @@ CHANGELOG
 Future
 ------
 
+* [FIX] update version if the version change
+
 0.7.2 (2016-01-14)
 ------------------
 
