@@ -129,6 +129,7 @@ class RegistryManager:
         for registry in cls.registries.values():
             registry.close_session()
             registry.Session = None
+            registry.blok_list_is_loaded = False
             registry.reload()
 
     @classmethod
