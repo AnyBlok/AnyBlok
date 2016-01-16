@@ -293,6 +293,48 @@ class TestSimpleCache(DBTestCase):
             self.add_model_with_method_cached_by_mixin)
         self.check_method_cached_invalidate_all(registry.Test)
 
+    def add_model_with_method_core_cached_with_two_model(self):
+
+        @register(Core)
+        class Base:
+
+            def __init__(self):
+                super(Base, self).__init__()
+                self.x = 0
+                self.z = 0
+
+            @cache()
+            def method_cached(self):
+                self.x += 1
+                return self.x
+
+        @register(Model)
+        class Test:
+
+            def method_cached(self):
+                self.z += 3
+                return self.z + super(Test, self).method_cached()
+
+        @register(Model)
+        class Test2:
+
+            def method_cached(self):
+                self.z += 3
+                return self.z + super(Test2, self).method_cached()
+
+    def test_2_model_with_core_catched(self):
+        registry = self.init_registry(
+            self.add_model_with_method_core_cached_with_two_model)
+        t = registry.Test()
+        t2 = registry.Test2()
+        self.assertEqual(t.method_cached(), 4)
+        self.assertEqual(t2.method_cached(), 4)
+        self.assertEqual(t.method_cached(), 7)
+        self.assertEqual(t2.method_cached(), 7)
+        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        self.assertEqual(t.method_cached(), 11)
+        self.assertEqual(t2.method_cached(), 10)
+
 
 class TestClassMethodCache(DBTestCase):
 
@@ -491,6 +533,49 @@ class TestClassMethodCache(DBTestCase):
         self.assertEqual(m.method_cached(), 9)
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
         self.assertEqual(m.method_cached(), 15)
+
+    def add_model_with_method_core_cached_with_two_model(self):
+
+        @register(Core)
+        class Base:
+
+            x = 0
+
+            @classmethod_cache()
+            def method_cached(cls):
+                cls.x += 1
+                return cls.x
+
+        @register(Model)
+        class Test:
+
+            z = 0
+
+            @classmethod
+            def method_cached(cls):
+                cls.z += 3
+                return cls.z + super(Test, cls).method_cached()
+
+        @register(Model)
+        class Test2:
+
+            z = 0
+
+            @classmethod
+            def method_cached(cls):
+                cls.z += 3
+                return cls.z + super(Test2, cls).method_cached()
+
+    def test_2_model_with_core_catched(self):
+        registry = self.init_registry(
+            self.add_model_with_method_core_cached_with_two_model)
+        self.assertEqual(registry.Test.method_cached(), 4)
+        self.assertEqual(registry.Test2.method_cached(), 4)
+        self.assertEqual(registry.Test.method_cached(), 7)
+        self.assertEqual(registry.Test2.method_cached(), 7)
+        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        self.assertEqual(registry.Test.method_cached(), 11)
+        self.assertEqual(registry.Test2.method_cached(), 10)
 
 
 class TestInheritedCache(DBTestCase):
