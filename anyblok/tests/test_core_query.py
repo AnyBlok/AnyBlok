@@ -32,17 +32,11 @@ class TestCoreQuery(DBTestCase):
                     raise TestException('test')
 
         registry = self.init_registry(inherit_update)
-        try:
+        with self.assertRaises(TestException):
             registry.Test.query().update({'id2': 1})
-            self.fail('Update must fail')
-        except TestException:
-            pass
 
-        try:
-            t = registry.System.Blok.query().first()
-            t.update({registry.System.Blok.state: 'undefined'})
-        except TestException:
-            pass
+        t = registry.System.Blok.query().first()
+        t.update({registry.System.Blok.state: 'undefined'})
 
     def test_inherit(self):
 

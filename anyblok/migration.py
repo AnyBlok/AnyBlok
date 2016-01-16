@@ -5,8 +5,10 @@ from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from sqlalchemy import schema
 from contextlib import contextmanager
-from logging import getLogger
 from sqlalchemy import func, select, update, join, alias, and_
+from anyblok.config import Configuration
+import re
+from logging import getLogger
 
 logger = getLogger(__name__)
 
@@ -46,17 +48,89 @@ class MigrationReport:
         _, _, table, column = diff
         self.log_names.append('Add %s.%s' % (table, column.name))
 
+    def check_if_table_and_columns_exist(self, table, *columns):
+        try:  # check if the table and the column exist
+            table = self.migration.table(table)
+            for column in columns:
+                table.column(column)
+            return True
+        except:
+            return False
+
+    def can_remove_constraints(self, name):
+        unique = "anyblok_uq_(?P<table>\w+)__(?P<columns>\w+)"
+        check = "anyblok_ck_(?P<table>\w+)_(?P<constraint>\w+)"
+
+        m = re.search(unique, name)
+        if m and self.check_if_table_and_columns_exist(m.group('table'),
+                                                       m.group('columns')):
+            return True
+
+        m = re.search(check, name)
+        if m and self.check_if_table_and_columns_exist(m.group('table')):
+            return True
+
+        if self.migration.reinit_constraints:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
+
+    def can_remove_fk_constraints(self, name):
+        fk = ("anyblok_fk_(?P<table>\w+)__(?P<columns>\w+)_on_"
+              "(?P<referred_table>\w+)__(?P<referred_columns>\w+)")
+        m = re.search(fk, name)
+        if m is not None:
+            local = self.check_if_table_and_columns_exist(
+                m.group('table'), m.group('columns'))
+            referred = self.check_if_table_and_columns_exist(
+                m.group('referred_table'), m.group('referred_columns'))
+            if local and referred:
+                return True
+
+        if self.migration.reinit_constraints:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
+
     def init_remove_constraint(self, diff):
-        self.raise_if_withoutautomigration()
         _, constraint = diff
         self.log_names.append('Drop constraint %s on %s' % (
             constraint.name, constraint.table))
 
+        if self.can_remove_constraints(constraint.name):
+            self.raise_if_withoutautomigration()
+        else:
+            return True
+
+    def can_remove_index(self, name):
+        key = "anyblok_ix_(?P<table>\w+)__(?P<columns>\w+)"
+        m = re.search(key, name)
+        if m and self.check_if_table_and_columns_exist(m.group('table'),
+                                                       m.group('columns')):
+            return True
+
+        if self.migration.reinit_indexes:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
+
     def init_remove_index(self, diff):
-        self.raise_if_withoutautomigration()
         _, index = diff
         self.log_names.append('Drop index %s on %s' % (index.name,
                                                        index.table))
+        if self.can_remove_index(index.name):
+            self.raise_if_withoutautomigration()
+        else:
+            return True
 
     def init_add_fk(self, diff):
         self.raise_if_withoutautomigration()
@@ -72,12 +146,16 @@ class MigrationReport:
             ', '.join(from_), ', '.join(to_)))
 
     def init_remove_fk(self, diff):
-        self.raise_if_withoutautomigration()
         _, fk = diff
         for column in fk.columns:
             for fk_ in column.foreign_keys:
                 self.log_names.append('Drop Foreign keys on %s.%s => %s' % (
                     fk.table.name, column.name, fk_.target_fullname))
+
+        if not self.can_remove_fk_constraints(fk.name):
+            return True
+
+        self.raise_if_withoutautomigration()
 
     def init_add_constraint(self, diff):
         self.raise_if_withoutautomigration()
@@ -86,10 +164,35 @@ class MigrationReport:
         self.log_names.append('Add unique constraint on %s (%s)' % (
             constraint.table.name, ', '.join(columns)))
 
+    def can_remove_column(self):
+        if self.migration.reinit_columns:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
+
     def init_remove_column(self, diff):
         column = diff[3]
         msg = "Drop Column %s.%s" % (column.table.name,
                                      column.name)
+
+        if self.can_remove_column():
+            self.log_names.append(msg)
+            self.raise_if_withoutautomigration()
+            return False
+
+        fk_removed = []
+        for fk in column.foreign_keys:
+            if not self.can_remove_fk_constraints(fk.name):
+                # only if fk is not removable. FK can come from
+                # * DBA manager, it is the only raison to destroy it
+                # * alembic, some constrainte change name during the remove
+                if fk.name not in fk_removed:
+                    self.actions.append(('remove_fk', fk.constraint))
+                    fk_removed.append(fk.name)
+
         if column.nullable is False:
             self.raise_if_withoutautomigration()
             msg += " (not null)"
@@ -100,11 +203,23 @@ class MigrationReport:
             return True
 
         self.log_names.append(msg)
+        return True
+
+    def can_remove_table(self):
+        if self.migration.reinit_tables:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
 
     def init_remove_table(self, diff):
-        # No save remove table or column
-        # Remove table or column is
-        return True
+        self.log_names.append("Drop Table %s" % diff[1].name)
+        if self.can_remove_table():
+            self.raise_if_withoutautomigration()
+        else:
+            return True
 
     def __init__(self, migration, diffs):
         """ Initializer
@@ -179,6 +294,7 @@ class MigrationReport:
             **kwargs)
 
     def apply_change_remove_constraint(self, action):
+        # FIXME, test for check, foreignkey
         _, constraint = action
         if constraint.__class__ is schema.UniqueConstraint:
             table = self.migration.table(constraint.table)
@@ -211,7 +327,14 @@ class MigrationReport:
     def apply_change_add_constraint(self, action):
         _, constraint = action
         table = self.migration.table(constraint.table.name)
+        # FIXME, test for check, foreignkey
         table.unique(name=constraint.name).add(*constraint.columns)
+
+    def apply_remove_table(self, action):
+        self.migration.table(action[1].name).drop()
+
+    def apply_remove_column(self, action):
+        self.migration.table(action[2]).column(action[3].name).drop()
 
     def apply_change(self):
         """ Apply the migration
@@ -232,6 +355,8 @@ class MigrationReport:
             'remove_constraint': self.apply_change_remove_constraint,
             'remove_index': self.apply_change_remove_index,
             'remove_fk': self.apply_change_remove_fk,
+            'remove_table': self.apply_remove_table,
+            'remove_column': self.apply_remove_column,
         }
 
         for action in self.actions:
@@ -475,17 +600,16 @@ class MigrationConstraintCheck:
         self.name = name
         # TODO dialect not have method to check if constraint exist
 
-    def add(self, name, condition):
+    def add(self, condition):
         """ Add the constraint
 
-        :param name: name of the constraint
         :param condition: constraint to apply
         :rtype: MigrationConstraintCheck instance
         """
         self.table.migration.operation.create_check_constraint(
-            name, self.table.name, condition)
+            self.name, self.table.name, condition)
 
-        return MigrationConstraintCheck(self.table, self.name)
+        return self
 
     def drop(self):
         """ Drop the constraint """
@@ -498,44 +622,21 @@ class MigrationConstraintUnique:
 
     Add a new constraint::
 
-        table('My table name').unique().add('col1', 'col2')
+        table('My table name').unique('constraint name').add('col1', 'col2')
 
     Get and drop the constraint::
 
-        table('My table name').unique('col1', 'col2').drop()
+        table('My table name').unique('constraint name').drop()
+
+    Let AnyBlok to define the name of the constraint::
+
+        table('My table name').unique(None).add('col1', 'col2')
+
 
     """
-    def __init__(self, table, *columns, **kwargs):
+    def __init__(self, table, name):
         self.table = table
-        if 'name' in kwargs:
-            self.name = kwargs['name']
-        else:
-            self.name = self.format_name(*columns)
-        self.exist = False
-
-        if self.name is not None:
-            op = self.table.migration.operation
-            with cnx(self.table.migration) as conn:
-                uniques = op.impl.dialect.get_unique_constraints(
-                    conn, self.table.name)
-
-            for u in uniques:
-                if u['name'] == self.name:
-                    self.exist = True
-
-            if not self.exist:
-                raise MigrationException(
-                    "No unique constraints %r found on %r" % (
-                        self.name, self.table.name))
-
-    def format_name(self, *columns):
-        if columns:
-            cols = [x.name for x in columns]
-            cols.sort()
-            cols = '_'.join(cols)
-            return 'unique_%s_on_%s' % (cols, self.table.name)
-
-        return None
+        self.name = name
 
     def add(self, *columns):
         """ Add the constraint
@@ -548,25 +649,21 @@ class MigrationConstraintUnique:
             raise MigrationException("""To add an unique constraint you """
                                      """must define one or more columns""")
 
-        unique_name = self.format_name(*columns)
         columns_name = [x.name for x in columns]
-        savepoint = 'add_unique_constraint_%s' % unique_name
+        savepoint = 'add_unique_constraint_%s' % (self.name or '')
         try:
             self.table.migration.savepoint(savepoint)
             self.table.migration.operation.create_unique_constraint(
-                unique_name, self.table.name, columns_name)
+                self.name, self.table.name, columns_name)
         except IntegrityError as e:
             self.table.migration.rollback_savepoint(savepoint)
             logger.warn("Error during the add of new unique constraint %r on "
-                        "table %r and columns %r : %r " % (unique_name,
+                        "table %r and columns %r : %r " % (self.name,
                                                            self.table.name,
                                                            columns_name,
                                                            str(e)))
-            # return a empty constrainte on the table, because this function
-            # must return a unique constraint.
-            return MigrationConstraintUnique(self.table)
 
-        return MigrationConstraintUnique(self.table, *columns)
+        return self
 
     def drop(self):
         """ Drop the constraint """
@@ -591,7 +688,7 @@ class MigrationConstraintPrimaryKey:
         self.name = self.format_name()
 
     def format_name(self, *columns):
-        return '%s_pkey' % self.table.name
+        return 'anyblok_pk_%s' % self.table.name
 
     def add(self, *columns):
         """ Add the constraint
@@ -743,13 +840,13 @@ class MigrationTable:
         """
         return MigrationIndex(self, *columns, **kwargs)
 
-    def unique(self, *columns, **kwargs):
+    def unique(self, name):
         """ Get unique
 
         :param \*columns: List of the column's name
         :rtype: MigrationConstraintUnique instance
         """
-        return MigrationConstraintUnique(self, *columns, **kwargs)
+        return MigrationConstraintUnique(self, name)
 
     def check(self, name=None):
         """ Get check
@@ -812,6 +909,12 @@ class Migration:
         }
         self.context = MigrationContext.configure(self.conn, opts=opts)
         self.operation = Operations(self.context)
+        self.reinit_all = Configuration.get('reinit_all', False)
+        self.reinit_tables = Configuration.get('reinit_tables', False)
+        self.reinit_columns = Configuration.get('reinit_columns', False)
+        self.reinit_indexes = Configuration.get('reinit_indexes', False)
+        self.reinit_constraints = Configuration.get(
+            'reinit_constraints', False)
 
     def table(self, name=None):
         """ Get a table

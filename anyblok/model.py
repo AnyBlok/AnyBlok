@@ -19,6 +19,7 @@ from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
 from .mapper import ModelAttribute
+from sqlalchemy import ForeignKeyConstraint
 
 
 class ModelException(Exception):
@@ -405,7 +406,15 @@ class Model:
         if table_args:
             def define_table_args(cls_):
                 if cls_.__registry_name__ == namespace:
-                    return super(base, cls_).define_table_args() + table_args
+                    res = super(base, cls_).define_table_args()
+                    fks = [x.name for x in res
+                           if isinstance(x, ForeignKeyConstraint)]
+
+                    t_args = [x for x in table_args
+                              if (not isinstance(x, ForeignKeyConstraint) or
+                                  x.name not in fks)]
+
+                    return res + tuple(t_args)
 
                 return ()
 
@@ -464,12 +473,16 @@ class Model:
             return registry.loaded_namespaces_first_step[namespace]
 
         bases = []
-        properties = {}
+        properties = {'__depends__': set()}
         ns = registry.loaded_registries[namespace]
+
         for b in ns['bases']:
             bases.append(b)
 
             for b_ns in b.__anyblok_bases__:
+                if b_ns.__registry_name__.startswith('Model.'):
+                    properties['__depends__'].add(b_ns.__registry_name__)
+
                 ps = cls.load_namespace_first_step(registry,
                                                    b_ns.__registry_name__)
                 ps.update(properties)
@@ -723,7 +736,7 @@ class Model:
         if not registry.withoutautomigration:
             Model = registry.System.Model
             Model.update_list()
-            Blok.update_list()
+            registry.update_blok_list()
 
         bloks = Blok.list_by_state('touninstall')
         Blok.uninstall_all(*bloks)

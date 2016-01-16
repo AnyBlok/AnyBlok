@@ -313,6 +313,17 @@ class SqlMixin:
         return result
 
 
+def get_model_information(registry, registry_name):
+    model = registry.loaded_namespaces_first_step[registry_name]
+    for depend in model['__depends__']:
+        if depend != registry_name:
+            for x, y in get_model_information(registry, depend).items():
+                if x not in model:
+                    model[x] = y
+
+    return model
+
+
 @Declarations.register(Declarations.Core)
 class SqlBase(SqlMixin):
     """ this class is inherited by all the SQL model
@@ -321,7 +332,7 @@ class SqlBase(SqlMixin):
     sqlalchemy_query_delete = query_method('delete')
     sqlalchemy_query_update = query_method('update')
 
-    def update(self, values, **kwargs):
+    def update(self, values):
         """ Call the SqlAlchemy Query.update method on the instance of the
         model::
 
@@ -334,30 +345,36 @@ class SqlBase(SqlMixin):
             query.update({...})
 
         """
-        self.registry.flush()
-        fields = values.keys()
+        if not values:
+            self.registry.flush()
+            return 0
+
+        fields = [x if isinstance(x, str) else x.property._orig_columns[0].name
+                  for x in values.keys()]
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
         self.expire_relationship_mapped(mappers)
-        pks = self.get_primary_keys()
-        where_clause = [getattr(self.__class__, pk) == getattr(self, pk)
-                        for pk in pks]
-        res = self.__class__.query().filter(*where_clause).update(
-            values, **kwargs)
+        for x, v in values.items():
+            if not isinstance(x, str):
+                x = x.property.key
+
+            setattr(self, x, v)
+
+        self.registry.flush()
         self.expire(*fields)
         self.expire_relationship_mapped(mappers)
-        return res
+        return 1
 
     @classmethod_cache()
     def find_remote_attribute_to_expire(cls, *fields):
         res = uniquedict()
         _fields = []
         _fields.extend(fields)
-        model = cls.registry.loaded_namespaces_first_step[
-            cls.__registry_name__]
+        model = get_model_information(cls.registry, cls.__registry_name__)
         while _fields:
             field = _fields.pop()
             field = field if isinstance(field, str) else field.name
             _field = model[field]
+
             if isinstance(_field, (Column, FakeColumn)):
                 _fields.extend(x for x, y in model.items()
                                if isinstance(y, RelationShip)
@@ -373,8 +390,8 @@ class SqlBase(SqlMixin):
                         rfield = rmodel[rc]
                         if isinstance(rfield, FakeRelationShip):
                             res.add_in_res(rfield.mapper.attribute_name, [rc])
-                        elif (isinstance(rfield, RelationShip)
-                              and 'backref' in rfield.kwargs):
+                        elif (isinstance(rfield, RelationShip) and
+                              'backref' in rfield.kwargs):
                             res.add_in_res(
                                 rfield.kwargs['backref'][0], [rc])
 
@@ -397,8 +414,7 @@ class SqlBase(SqlMixin):
         res = []
         _fields = []
         _fields.extend(fields)
-        model = cls.registry.loaded_namespaces_first_step[
-            cls.__registry_name__]
+        model = get_model_information(cls.registry, cls.__registry_name__)
         while _fields:
             field = _fields.pop()
             if not isinstance(field, str):
@@ -432,7 +448,8 @@ class SqlBase(SqlMixin):
                 fields = [fields]
 
             for field in fields:
-                field.expire(*rfields)
+                if field is not None:
+                    field.expire(*rfields)
 
     def refresh(self, *fields):
         """ Expire and reload all the attribute of the instance
@@ -466,13 +483,13 @@ class SqlBase(SqlMixin):
             and expire all the session, to reload the relation ship
 
         """
-        self.registry.flush()
         model = self.registry.loaded_namespaces_first_step[
             self.__registry_name__]
         fields = model.keys()
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
         self.expire_relationship_mapped(mappers)
         self.registry.session.delete(self)
+        self.registry.flush()
 
     @classmethod
     def insert(cls, **kwargs):

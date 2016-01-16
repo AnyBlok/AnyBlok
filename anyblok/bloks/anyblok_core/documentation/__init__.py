@@ -81,7 +81,7 @@ class Documentation(Declarations.Mixin.DocElement):
         self._toRST(doc, self.registry.Documentation.Model, self.models)
 
 
-from . import blok
+from . import blok  # noqa
 reload_module_if_blok_is_reloading(blok)
-from . import model
+from . import model  # noqa
 reload_module_if_blok_is_reloading(model)

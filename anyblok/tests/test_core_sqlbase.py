@@ -57,6 +57,16 @@ class TestCoreSQLBase(DBTestCase):
                 registry.Test.id2 != id2).count(),
             nb_value - 1)
 
+    def test_delete_with_get(self):
+        registry = self.init_registry(self.declare_model)
+        nb_value = 3
+        registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        self.assertEqual(registry.Test.query().count(), nb_value)
+        t = registry.Test.query().first()
+        self.assertIs(registry.Test.query().get(t.id), t)
+        t.delete()
+        self.assertIsNone(registry.Test.query().get(t.id))
+
     def test_expire(self):
         registry = self.init_registry(self.declare_model)
         t = registry.Test.insert(id2=2)

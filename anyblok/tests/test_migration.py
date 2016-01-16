@@ -1,6 +1,6 @@
 # This file is a part of the AnyBlok project
 #
-#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2015 Pierre Verkest <pverkest@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
@@ -179,7 +179,7 @@ class TestMigration(TestCase):
     def test_add_unique_constraint_on_good_table(self):
         self.fill_test_table()
         t = self.registry.migration.table('test')
-        t.unique().add(t.column('other'))
+        t.unique('unique_constraint').add(t.column('other'))
         self.registry.Test.insert(other='One entry')
         with self.assertRaises(IntegrityError):
             self.registry.Test.insert(other='One entry')
@@ -189,7 +189,7 @@ class TestMigration(TestCase):
         vals = [{'other': 'test'} for x in range(10)]
         Test.multi_insert(*vals)
         t = self.registry.migration.table('test')
-        t.unique().add(t.column('other'))
+        t.unique(None).add(t.column('other'))
         self.registry.Test.insert(other='One entry')
         self.registry.Test.insert(other='One entry')
 
@@ -258,15 +258,15 @@ class TestMigration(TestCase):
 
     def test_constraint_unique(self):
         t = self.registry.migration.table('test')
-        t.unique().add(t.column('other'))
-        t.unique(t.column('other')).drop()
+        t.unique(name='test_unique_constraint').add(t.column('other'))
+        t.unique(name='test_unique_constraint').drop()
 
     def test_constraint_check(self):
         t = self.registry.migration.table('test')
         Test = self.registry.Test
-        name = 'chk_name_on_test'
-        t.check().add(name, Test.other != 'test')
-        t.check(name).drop()
+        t.check('test').add(Test.other != 'test')
+        # particuliar case of check constraint
+        t.check('anyblok_ck_test_test').drop()
 
     def test_detect_under_noautocommit_flag(self):
         with self.cnx() as conn:
@@ -294,6 +294,53 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Add test.other"))
 
+    def test_detect_table_removed(self):
+        with self.cnx() as conn:
+            conn.execute(
+                """CREATE TABLE test2(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64),
+                    other2 CHAR(64)
+                );""")
+
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop Table test2"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop Table test2"))
+
+    def test_detect_table_removed_with_reinit_column(self):
+        with self.cnx() as conn:
+            conn.execute(
+                """CREATE TABLE test2(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64),
+                    other2 CHAR(64)
+                );""")
+
+        self.registry.migration.reinit_tables = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop Table test2"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Drop Table test2"))
+
+    def test_detect_table_removed_with_reinit_all(self):
+        with self.cnx() as conn:
+            conn.execute(
+                """CREATE TABLE test2(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64),
+                    other2 CHAR(64)
+                );""")
+
+        self.registry.migration.reinit_all = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop Table test2"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Drop Table test2"))
+
     def test_detect_column_removed(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -308,6 +355,38 @@ class TestMigration(TestCase):
         report.apply_change()
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has("Drop Column test.other2"))
+
+    def test_detect_column_removed_with_reinit_column(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64),
+                    other2 CHAR(64)
+                );""")
+        self.registry.migration.reinit_columns = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop Column test.other2"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Drop Column test.other2"))
+
+    def test_detect_column_removed_with_reinit_all(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64),
+                    other2 CHAR(64)
+                );""")
+        self.registry.migration.reinit_all = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop Column test.other2"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Drop Column test.other2"))
 
     def test_detect_not_nullable_column_removed(self):
         with self.cnx() as conn:
@@ -380,6 +459,38 @@ class TestMigration(TestCase):
         self.assertTrue(report.log_has("Drop index other_idx on test"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop index other_idx on test"))
+
+    def test_detect_drop_anyblok_index(self):
+        with self.cnx() as conn:
+            conn.execute(
+                """CREATE INDEX anyblok_ix_test__other ON test (other);""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(
+            report.log_has("Drop index anyblok_ix_test__other on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(
+            report.log_has("Drop index anyblok_ix_test__other on test"))
+
+    def test_detect_drop_index_with_reinit_indexes(self):
+        with self.cnx() as conn:
+            conn.execute("""CREATE INDEX other_idx ON test (other);""")
+        self.registry.migration.reinit_indexes = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop index other_idx on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Drop index other_idx on test"))
+
+    def test_detect_drop_index_with_reinit_all(self):
+        with self.cnx() as conn:
+            conn.execute("""CREATE INDEX other_idx ON test (other);""")
+        self.registry.migration.reinit_all = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop index other_idx on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Drop index other_idx on test"))
 
     def test_detect_type(self):
@@ -442,6 +553,58 @@ class TestMigration(TestCase):
             "Drop Foreign keys on test.other => system_blok.name"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+
+    def test_detect_drop_anyblok_foreign_key(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64)
+                        CONSTRAINT anyblok_fk_test__other_on_system_blok__name
+                        references system_blok(name)
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+
+    def test_detect_drop_foreign_key_with_reinit_constraint(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) references system_blok(name)
+                );""")
+        self.registry.migration.reinit_constraints = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+
+    def test_detect_drop_foreign_key_with_reinit_all(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) references system_blok(name)
+                );""")
+        self.registry.migration.reinit_all = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
@@ -452,7 +615,9 @@ class TestMigration(TestCase):
                 """CREATE TABLE test(
                     integer INT PRIMARY KEY NOT NULL,
                     other CHAR(64),
-                    other2 CHAR(64) references system_blok(name)
+                    other2 CHAR(64)
+                    CONSTRAINT anyblok_fk_test__other2_on_system_blok__name
+                    references system_blok(name)
                 );""")
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has(
@@ -478,7 +643,7 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Add unique constraint on testunique (other)"))
 
-    def test_detect_drop_constraint(self):
+    def test_detect_drop_unique_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
             conn.execute(
@@ -490,8 +655,122 @@ class TestMigration(TestCase):
         self.assertTrue(report.log_has("Drop constraint unique_other on test"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop constraint unique_other on test"))
+
+    def test_detect_drop_unique_anyblok_constraint(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) CONSTRAINT anyblok_uq_test__other UNIQUE
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(
+            report.log_has("Drop constraint anyblok_uq_test__other on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(
+            report.log_has("Drop constraint anyblok_uq_test__other on test"))
+
+    def test_detect_drop_unique_constraint_with_reinit_constraints(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) CONSTRAINT unique_other UNIQUE
+                );""")
+
+        self.registry.migration.reinit_constraints = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop constraint unique_other on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
         self.assertFalse(
             report.log_has("Drop constraint unique_other on test"))
+
+    def test_detect_drop_unique_constraint_with_reinit_all(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) CONSTRAINT unique_other UNIQUE
+                );""")
+
+        self.registry.migration.reinit_all = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop constraint unique_other on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(
+            report.log_has("Drop constraint unique_other on test"))
+
+    @skipIf(alembic.__version__ < "0.8.5", "Alembic doesn't implement yet")
+    def test_detect_drop_check_constraint(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop constraint ck_other on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop constraint ck_other on test"))
+
+    @skipIf(alembic.__version__ < "0.8.5", "Alembic doesn't implement yet")
+    def test_detect_drop_check_anyblok_constraint(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) CONSTRAINT anyblok_ck_test_check
+                        CHECK (other != 'test')
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop constraint anyblok_ck_test_check on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has(
+            "Drop constraint anyblok_ck_test_check on test"))
+
+    @skipIf(alembic.__version__ < "0.8.5", "Alembic doesn't implement yet")
+    def test_detect_drop_check_constraint_with_reinit_constraint(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
+                );""")
+        self.registry.migration.reinit_constraints = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop constraint ck_other on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Drop constraint ck_other on test"))
+
+    @skipIf(alembic.__version__ < "0.8.5", "Alembic doesn't implement yet")
+    def test_detect_drop_check_constraint_with_reinit_all(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE test")
+            conn.execute(
+                """CREATE TABLE test(
+                    integer INT PRIMARY KEY NOT NULL,
+                    other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
+                );""")
+        self.registry.migration.reinit_all = True
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Drop constraint ck_other on test"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Drop constraint ck_other on test"))
 
     def test_savepoint(self):
         Test = self.registry.Test

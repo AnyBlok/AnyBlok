@@ -30,13 +30,14 @@ class AnyBlokPlugin(Plugin):
 
     def __init__(self):
         super(AnyBlokPlugin, self).__init__()
-        self.testFiles = []
+        self.authoried_bloks_test_files = []
+        self.bloks_path = []
         self.registryLoaded = False
         self.AnyBlokOptions = None
 
     def options(self, parser, env):
         super(AnyBlokPlugin, self).options(parser, env)
-        parser.add_option("--anyblok-config", dest="configfile")
+        parser.add_option("--anyblok-configfile", dest="configfile")
         parser.add_option('--anyblok-db-name', dest='db_name',
                           default=env.get('ANYBLOK_DATABASE_NAME'),
                           help="Name of the database")
@@ -63,7 +64,7 @@ class AnyBlokPlugin(Plugin):
         if self.enabled:
             self.AnyBlokOptions = Arg2OptOptions(options)
 
-    def wantModule(self, module):
+    def load_registry(self):
         if self.enabled and self.registryLoaded is False:
             # Load the registry here not in configuration,
             # because the configuration are not load in order of score
@@ -86,18 +87,39 @@ class AnyBlokPlugin(Plugin):
                 if unwanted_bloks is None:
                     unwanted_bloks = []
 
-                self.testFiles = [
+                self.bloks_path = [BlokManager.getPath(x)
+                                   for x in installed_bloks]
+
+                self.authoried_bloks_test_files = [
                     path for blok in installed_bloks
                     if blok in selected_bloks and blok not in unwanted_bloks
                     for path in [join(BlokManager.getPath(blok), 'tests')]
                     if exists(path)]
                 registry.close()  # free the registry to force create it again
 
-        return True
-
-    def wantFile(self, file):
-        if self.enabled:
-            if len([x for x in self.testFiles if x in file]):
+    def file_from_blok(self, file):
+        for blok_path in self.bloks_path:
+            if file.startswith(blok_path):
                 return True
 
         return False
+
+    def file_from_authorized_bloks(self, file):
+        for testFile in self.authoried_bloks_test_files:
+            if file.startswith(testFile):
+                return True
+
+        return False
+
+    def wantModule(self, module):
+        self.load_registry()
+        return True
+
+    def wantFile(self, file, package=None):
+        self.load_registry()
+        if self.enabled:
+            if file.endswith(".py"):
+                if self.file_from_blok(file):
+                    return self.file_from_authorized_bloks(file)
+
+        return None

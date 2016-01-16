@@ -100,8 +100,7 @@ class Blok:
             b = cls.query().filter(cls.name == blok)
             version = BlokManager.bloks[blok].version
             if b.count():
-                b.order = order
-                b.version = version
+                b.update(dict(order=order, version=version))
             else:
                 cls.insert(name=blok, order=order, version=version)
 
@@ -167,13 +166,14 @@ class Blok:
         :param blok: blok name
         :rtype: boolean
         """
-        conditional = BlokManager.bloks[blok].conditional
-        if conditional:
-            query = cls.query().filter(cls.name.in_(conditional))
-            query = query.filter(
-                cls.state.in_(['installed', 'toinstall', 'toupdate']))
-            if len(conditional) == query.count():
-                return True
+        if blok in BlokManager.bloks:
+            conditional = BlokManager.bloks[blok].conditional
+            if conditional:
+                query = cls.query().filter(cls.name.in_(conditional))
+                query = query.filter(
+                    cls.state.in_(['installed', 'toinstall', 'toupdate']))
+                if len(conditional) == query.count():
+                    return True
 
         return False
 

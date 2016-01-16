@@ -109,7 +109,7 @@ class Model(Declarations.Mixin.DocElement):
                 f.toSQL(dot)
 
 
-from . import field
+from . import field  # noqa
 reload_module_if_blok_is_reloading(field)
-from . import attribute
+from . import attribute  # noqa
 reload_module_if_blok_is_reloading(attribute)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
-#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -10,12 +10,12 @@ from os.path import join, exists
 from logging import getLogger
 import nose
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
-
+from sqlalchemy.schema import ForeignKeyConstraint
 from .config import Configuration
 from .blok import BlokManager
 from .logging import log
@@ -129,6 +129,7 @@ class RegistryManager:
         for registry in cls.registries.values():
             registry.close_session()
             registry.Session = None
+            registry.blok_list_is_loaded = False
             registry.reload()
 
     @classmethod
@@ -422,6 +423,7 @@ class Registry:
         self.ini_var()
         self.Session = None
         self.nb_query_bases = self.nb_session_bases = 0
+        self.blok_list_is_loaded = False
         self.load()
 
     def ini_var(self):
@@ -802,21 +804,24 @@ class Registry:
 
         in function of the Core Session class ans the Core Qery class
         """
-        query_bases = [] + self.loaded_cores['Query']
-        query_bases += [self.registry_base]
-        Query = type('Query', tuple(query_bases), {})
-        Session = type('Session', tuple(self.loaded_cores['Session']), {
-            'registry_query': Query})
+        if self.Session is None or self.must_recreate_session_factory():
+            query_bases = [] + self.loaded_cores['Query']
+            query_bases += [self.registry_base]
+            Query = type('Query', tuple(query_bases), {})
+            Session = type('Session', tuple(self.loaded_cores['Session']), {
+                'registry_query': Query})
 
-        bind = self.connection() if self.Session else self.bind
-        extension = self.additional_setting.get('sa.session.extension')
-        if extension:
-            extension = extension()
-        self.Session = scoped_session(
-            sessionmaker(bind=bind, class_=Session, extension=extension),
-            EnvironmentManager.scoped_function_for_session())
-        self.nb_query_bases = len(self.loaded_cores['Query'])
-        self.nb_session_bases = len(self.loaded_cores['Session'])
+            bind = self.connection() if self.Session else self.bind
+            extension = self.additional_setting.get('sa.session.extension')
+            if extension:
+                extension = extension()
+            self.Session = scoped_session(
+                sessionmaker(bind=bind, class_=Session, extension=extension),
+                EnvironmentManager.scoped_function_for_session())
+            self.nb_query_bases = len(self.loaded_cores['Query'])
+            self.nb_session_bases = len(self.loaded_cores['Session'])
+        else:
+            self.flush()
 
     def must_recreate_session_factory(self):
         """Check if the SQLA Session Factory must be destroy and recreate
@@ -833,6 +838,25 @@ class Registry:
 
         return False
 
+    def all_column_name(self, constraint, table):
+        if isinstance(constraint, ForeignKeyConstraint):
+            return '_'.join(constraint.column_keys)
+        else:
+            return '_'.join(constraint.columns.keys())
+
+    def all_referred_column_name(self, constraint, table):
+        referred_columns = []
+        for el in constraint.elements:
+            refs = el.target_fullname.split(".")
+            if len(refs) == 3:
+                refschema, reftable, refcol = refs
+            else:
+                reftable, refcol = refs
+
+            referred_columns.append(refcol)
+
+        return '_'.join(referred_columns)
+
     @log(logger)
     def load(self):
         """ Load all the namespaces of the registry
@@ -843,8 +867,20 @@ class Registry:
         mustreload = False
         blok2install = None
         try:
-            self.declarativebase = declarative_base(class_registry=dict(
-                registry=self))
+            convention = {
+                "all_column_name": self.all_column_name,
+                "all_referred_column_name": self.all_referred_column_name,
+                "ix": "anyblok_ix_%(table_name)s__%(all_column_name)s",
+                "uq": "anyblok_uq_%(table_name)s__%(all_column_name)s",
+                "ck": "anyblok_ck_%(table_name)s_%(constraint_name)s",
+                "fk": ("anyblok_fk_%(table_name)s_%(all_column_name)s_on_"
+                       "%(referred_table_name)s__"
+                       "%(all_referred_column_name)s"),
+                "pk": "anyblok_pk_%(table_name)s"
+            }
+            self.declarativebase = declarative_base(
+                metadata=MetaData(naming_convention=convention),
+                class_registry=dict(registry=self))
             toload = self.get_bloks_to_load()
             toinstall = self.get_bloks_to_install(toload)
             if self.update_to_install_blok_dependencies_state(toinstall):
@@ -863,10 +899,7 @@ class Registry:
             self.InstrumentedList = type(
                 'InstrumentedList', tuple(instrumentedlist_base), {})
             self.assemble_entries()
-            if self.Session is None or self.must_recreate_session_factory():
-                self.create_session_factory()
-            else:
-                self.flush()
+            self.create_session_factory()
 
             mustreload = self.apply_model_schema_on_table(
                 blok2install) or mustreload
@@ -1193,3 +1226,9 @@ class Registry:
         upgrade_state_bloks('toupdate')(update or [])
         self.reload()
         self.session.expire_all()
+
+    @log(logger)
+    def update_blok_list(self):
+        if not self.blok_list_is_loaded:
+            self.System.Blok.update_list()
+            self.blok_list_is_loaded = True
