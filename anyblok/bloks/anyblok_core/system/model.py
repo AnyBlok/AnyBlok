@@ -43,6 +43,9 @@ class Model:
     @listen('Model.System.Model', 'Update Model')
     def listener_update_model(cls, model):
         cls.registry.System.Cache.invalidate(model, '_fields_description')
+        cls.registry.System.Cache.invalidate(
+            model, 'find_remote_attribute_to_expire')
+        cls.registry.System.Cache.invalidate(model, 'find_relationship')
 
     @classmethod
     def get_field_model(cls, field):

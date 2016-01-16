@@ -347,7 +347,7 @@ class SqlBase(SqlMixin):
         self.expire_relationship_mapped(mappers)
         return res
 
-    @classmethod
+    @classmethod_cache()
     def find_remote_attribute_to_expire(cls, *fields):
         res = uniquedict()
         _fields = []
@@ -386,7 +386,7 @@ class SqlBase(SqlMixin):
 
         return res
 
-    @classmethod
+    @classmethod_cache()
     def find_relationship(cls, *fields):
         """ Find column and relation ship link with the column or relationship
         passed in fields.
