@@ -332,11 +332,17 @@ class SqlBase(SqlMixin):
     sqlalchemy_query_delete = query_method('delete')
     sqlalchemy_query_update = query_method('update')
 
-    def update(self, values):
+    def update(self, *args, **kwargs):
         """ Call the SqlAlchemy Query.update method on the instance of the
         model::
 
             self.update({...})
+            # or
+            self.update(val1=.., val2= ...)
+            # or
+            self.update({...}, {...}, val1=..., ...)
+
+        the dicts are merged in the order and the kwags are merged at the end
 
         is equal at::
 
@@ -344,23 +350,38 @@ class SqlBase(SqlMixin):
             query = query.filter(MyModel.``pk`` == self.``pk``)
             query.update({...})
 
+
+        This method is a hight level method, it start by expire all the
+        field which are being impacted by the update, relation ship on this
+        model and other model. Change the value in the session and without
+        flush
+
         """
+        values = {}
+        for arg in args:
+            if not isinstance(arg, dict):
+                raise SqlBaseException(
+                    "Update meth definition waiting dict in args %r.update"
+                    "(%r)" % (self, args))
+
+            values.update(arg)
+
+        values.update(kwargs)
+
         if not values:
-            self.registry.flush()
             return 0
 
         fields = [x if isinstance(x, str) else x.property._orig_columns[0].name
                   for x in values.keys()]
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
         self.expire_relationship_mapped(mappers)
+        self.expire(*fields)
         for x, v in values.items():
             if not isinstance(x, str):
                 x = x.property.key
 
             setattr(self, x, v)
 
-        self.registry.flush()
-        self.expire(*fields)
         self.expire_relationship_mapped(mappers)
         return 1
 
