@@ -385,6 +385,24 @@ class TestModel2(DBTestCase):
         with self.assertRaises(ModelException):
             self.init_registry(add_in_registry)
 
+    def test_update_0(self):
+        registry = self.init_registry(None)
+        t = registry.System.Blok.query().first()
+        t.update({'state': 'undefined'})
+        self.assertEqual(t.state, 'undefined')
+
+    def test_update_1(self):
+        registry = self.init_registry(None)
+        t = registry.System.Blok.query().first()
+        t.update({registry.System.Blok.state: 'undefined'})
+        self.assertEqual(t.state, 'undefined')
+
+    def test_update_2(self):
+        registry = self.init_registry(None)
+        t = registry.System.Blok.query().first()
+        t.update(state='undefined')
+        self.assertEqual(t.state, 'undefined')
+
 
 class TestModelAssembling(TestCase):
 

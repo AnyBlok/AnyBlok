@@ -50,11 +50,12 @@ class Mapping:
         """
         query = cls.query()
         query = query.filter(cls.filter_by_model_and_keys(model, *keys))
-        if query.count():
-            query.delete(synchronize_session='fetch')
-            return True
+        count = query.count()
+        if count:
+            query.delete(lowlevel=True, synchronize_session='fetch')
+            return count
 
-        return False
+        return 0
 
     @classmethod
     def delete(cls, model, key):
@@ -66,11 +67,12 @@ class Mapping:
         """
         query = cls.query()
         query = query.filter(cls.filter_by_model_and_key(model, key))
-        if query.count():
-            query.delete()
-            return True
+        count = query.count()
+        if count:
+            query.delete(lowlevel=True)
+            return count
 
-        return False
+        return 0
 
     @classmethod
     def get_mapping_primary_keys(cls, model, key):

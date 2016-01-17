@@ -6,9 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-from ..exceptions import QueryException
 from sqlalchemy.orm import query
-from inspect import ismethod
 
 
 @Declarations.register(Declarations.Core)
@@ -26,15 +24,6 @@ class Query(query.Query):
         """
         return getattr(query.Query, method)(self, *args, **kwargs)
 
-    @classmethod
-    def get_on_model_methods(cls):
-        """ Return  the list of the method which can be wrapped by
-        ``sqlalchemy_query_method`` method
-
-        :rtype: list of the method name
-        """
-        return ['update', 'delete']
-
     def with_perm(self, principals, permission):
         """Add authorization pre- and post-filtering to query.
 
@@ -49,34 +38,6 @@ class Query(query.Query):
         """
         return self.registry.wrap_query_permission(
             self, principals, permission)
-
-    def __getattribute__(self, name):
-        validate = False
-        model_function = "sqlalchemy_query_" + name
-
-        if name in Query.get_on_model_methods():
-            try:
-                entity = self._primary_entity.mapper.entity
-            except:
-                pass
-            else:
-                if name in entity.get_on_model_methods():
-                    if hasattr(entity, model_function):
-                        validate = True
-
-        if validate:
-
-            def wrapper(*args, **kwargs):
-                if ismethod(getattr(entity, model_function)):
-                    return getattr(entity, model_function)(
-                        self, *args, **kwargs)
-                else:
-                    raise QueryException("%s.%s must be a classmethod" % (
-                        entity, name))
-
-            return wrapper
-        else:
-            return super(Query, self).__getattribute__(name)
 
     def dictone(self):
         val = self.one()
@@ -107,3 +68,25 @@ class Query(query.Query):
             return [{x: getattr(y, x) for x in field2get} for y in vals]
         else:
             return vals.to_dict()
+
+    def update(self, values, lowlevel=False, **kwargs):
+        if lowlevel:
+            return super(Query, self).update(values, **kwargs)
+        else:
+            all = self.all()
+            if all:
+                all.update(values, flush=False)
+
+            self.registry.flush()
+            return len(all)
+
+    def delete(self, lowlevel=False, **kwargs):
+        if lowlevel:
+            return super(Query, self).delete(**kwargs)
+        else:
+            all = self.all()
+            if all:
+                all.delete()
+
+            self.registry.flush()
+            return len(all)

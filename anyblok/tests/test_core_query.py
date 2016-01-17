@@ -28,15 +28,44 @@ class TestCoreQuery(DBTestCase):
                 id2 = Integer()
 
                 @classmethod
-                def sqlalchemy_query_update(cls, query, *args, **kwargs):
+                def update(cls, *args, **kwargs):
                     raise TestException('test')
 
         registry = self.init_registry(inherit_update)
+        t = registry.Test.insert()
         with self.assertRaises(TestException):
             registry.Test.query().update({'id2': 1})
 
-        t = registry.System.Blok.query().first()
-        t.update({registry.System.Blok.state: 'undefined'})
+        with self.assertRaises(TestException):
+            t.update({'id2': 1})
+
+        registry.Test.query().update({'id2': 1}, lowlevel=True)
+
+    def test_delete(self):
+        def inherit_delete():
+
+            from anyblok import Declarations
+            Model = Declarations.Model
+
+            @Declarations.register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                id2 = Integer()
+
+                @classmethod
+                def delete(cls, *args, **kwargs):
+                    raise TestException('test')
+
+        registry = self.init_registry(inherit_delete)
+        t = registry.Test.insert()
+        with self.assertRaises(TestException):
+            registry.Test.query().delete()
+
+        with self.assertRaises(TestException):
+            t.delete()
+
+        registry.Test.query().delete(lowlevel=True)
 
     def test_inherit(self):
 

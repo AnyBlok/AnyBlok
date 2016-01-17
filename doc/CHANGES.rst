@@ -13,6 +13,7 @@ Future
 ------
 
 * [FIX] update version if the version change
+* [REF] query.update and query.delete call the method on the Model
 
 0.7.2 (2016-01-14)
 ------------------

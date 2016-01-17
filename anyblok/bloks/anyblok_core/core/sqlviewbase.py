@@ -12,7 +12,7 @@ from .sqlbase import SqlMixin
 
 def query_method(name):
 
-    def wrapper(cls, query, *args, **kwargs):
+    def wrapper(cls, *args, **kwargs):
         raise ViewException("%r.%r method are not availlable on view model" % (
             cls, name))
 
@@ -24,5 +24,5 @@ class SqlViewBase(SqlMixin):
     """ this class is inherited by all the SQL view
     """
 
-    sqlalchemy_query_delete = query_method('delete')
-    sqlalchemy_query_update = query_method('update')
+    delete = query_method('delete')
+    update = query_method('update')

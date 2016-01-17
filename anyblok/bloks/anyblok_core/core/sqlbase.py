@@ -27,17 +27,6 @@ class uniquedict(dict):
                 self[key].append(attr)
 
 
-def query_method(name):
-    """ Apply a wrapper on a method name and return the classmethod of
-    wrapper for this name
-    """
-
-    def wrapper(cls, query, *args, **kwargs):
-        return query.sqlalchemy_query_method(name, *args, **kwargs)
-
-    return classmethod(wrapper)
-
-
 class SqlMixin:
 
     @classmethod
@@ -75,10 +64,6 @@ class SqlMixin:
         return cls.registry.query(cls)
 
     is_sql = True
-
-    @classmethod
-    def get_on_model_methods(cls):
-        return ['update', 'delete']
 
     @classmethod
     def aliased(cls, *args, **kwargs):
@@ -329,9 +314,6 @@ class SqlBase(SqlMixin):
     """ this class is inherited by all the SQL model
     """
 
-    sqlalchemy_query_delete = query_method('delete')
-    sqlalchemy_query_update = query_method('update')
-
     def update(self, *args, **kwargs):
         """ Call the SqlAlchemy Query.update method on the instance of the
         model::
@@ -357,6 +339,7 @@ class SqlBase(SqlMixin):
         flush
 
         """
+        flush = kwargs.pop('flush', True)
         values = {}
         for arg in args:
             if not isinstance(arg, dict):
@@ -369,6 +352,9 @@ class SqlBase(SqlMixin):
         values.update(kwargs)
 
         if not values:
+            if flush:
+                self.registry.flush()
+
             return 0
 
         fields = [x if isinstance(x, str) else x.property._orig_columns[0].name
@@ -383,6 +369,9 @@ class SqlBase(SqlMixin):
             setattr(self, x, v)
 
         self.expire_relationship_mapped(mappers)
+        if flush:
+            self.registry.flush()
+
         return 1
 
     @classmethod_cache()
@@ -491,7 +480,7 @@ class SqlBase(SqlMixin):
         self.registry.session.expire(
             self, self.__class__.find_relationship(*fields))
 
-    def delete(self):
+    def delete(self, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
         model::
 
@@ -510,7 +499,8 @@ class SqlBase(SqlMixin):
         mappers = self.__class__.find_remote_attribute_to_expire(*fields)
         self.expire_relationship_mapped(mappers)
         self.registry.session.delete(self)
-        self.registry.flush()
+        if flush:
+            self.registry.flush()
 
     @classmethod
     def insert(cls, **kwargs):
