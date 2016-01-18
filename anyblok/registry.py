@@ -1156,7 +1156,7 @@ class Registry:
                 "%r conflict with the blok(s) : %r" % (
                     blok, blok, [str(x) for x in query.all()]))
 
-    def apply_state(self, blok_name, state, in_states):
+    def apply_state(self, blok_name, state, in_states, ignore_states):
         """Apply the state of the blok name
 
         :param blok_name: the name of the blok
@@ -1171,11 +1171,24 @@ class Registry:
             raise RegistryException(
                 "Blok %r not found in entry point declarations" %
                 blok_name)
+
+        if blok.state == state:
+            # do nothing
+            return
+
+        if blok.state in ignore_states:
+            logger.info("Does not change state %s => %s for blok %s" % (
+                blok.state, state, blok_name))
+            return
+
         if blok.state not in in_states:
             raise RegistryException(
                 "Apply state %r is forbidden because the state %r of "
                 "blok %r is not one of %r" % (
                     state, blok.state, blok_name, in_states))
+
+        logger.info("Change state %s => %s for blok %s" % (
+            blok.state, state, blok_name))
         query.update({Blok.state: state}, synchronize_session='fetch')
 
     @log(logger, withargs=True)
@@ -1194,12 +1207,14 @@ class Registry:
                 for blok in bloks:
                     if state == 'toinstall':
                         self.check_conflict_with(blok)
-                        self.apply_state(blok, state, ['uninstalled', state])
+                        self.apply_state(blok, state, ['uninstalled'],
+                                         ['installed'])
                         upgrade_state_bloks(state)(
                             self.get_bloks(blok, ['uninstalled'], [
                                 'required', 'optional', 'conditional']))
                     elif state == 'toupdate':
-                        self.apply_state(blok, state, ['installed', state])
+                        self.apply_state(blok, state, ['installed'],
+                                         ['toinstall'])
                         upgrade_state_bloks(state)(
                             self.get_bloks(blok, ['installed'], [
                                 'required_by', 'optional_by',
@@ -1211,7 +1226,8 @@ class Registry:
                                 "this blok is a conditional blok and all the "
                                 "bloks in his conditional list are installed "
                                 "You must uninstall one of them" % blok)
-                        self.apply_state(blok, state, ['installed', state])
+                        self.apply_state(blok, state, ['installed'],
+                                         ['uninstalled'])
                         upgrade_state_bloks(state)(self.get_bloks(blok, [
                             'installed', 'toinstall', 'touninstall'], [
                             'required_by', 'conditional_by']))
