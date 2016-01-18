@@ -1156,7 +1156,7 @@ class Registry:
                 "%r conflict with the blok(s) : %r" % (
                     blok, blok, [str(x) for x in query.all()]))
 
-    def apply_state(self, blok_name, state, in_states, ignore_states):
+    def apply_state(self, blok_name, state, in_states):
         """Apply the state of the blok name
 
         :param blok_name: the name of the blok
@@ -1173,12 +1173,8 @@ class Registry:
                 blok_name)
 
         if blok.state == state:
-            # do nothing
-            return
-
-        if blok.state in ignore_states:
-            logger.info("Does not change state %s => %s for blok %s" % (
-                blok.state, state, blok_name))
+            logger.debug("Does not change state for blok %s because is the "
+                         "same %s" % (blok_name, state))
             return
 
         if blok.state not in in_states:
@@ -1207,14 +1203,12 @@ class Registry:
                 for blok in bloks:
                     if state == 'toinstall':
                         self.check_conflict_with(blok)
-                        self.apply_state(blok, state, ['uninstalled'],
-                                         ['installed'])
+                        self.apply_state(blok, state, ['uninstalled'])
                         upgrade_state_bloks(state)(
                             self.get_bloks(blok, ['uninstalled'], [
                                 'required', 'optional', 'conditional']))
                     elif state == 'toupdate':
-                        self.apply_state(blok, state, ['installed'],
-                                         ['toinstall'])
+                        self.apply_state(blok, state, ['installed'])
                         upgrade_state_bloks(state)(
                             self.get_bloks(blok, ['installed'], [
                                 'required_by', 'optional_by',
@@ -1226,8 +1220,7 @@ class Registry:
                                 "this blok is a conditional blok and all the "
                                 "bloks in his conditional list are installed "
                                 "You must uninstall one of them" % blok)
-                        self.apply_state(blok, state, ['installed'],
-                                         ['uninstalled'])
+                        self.apply_state(blok, state, ['installed'])
                         upgrade_state_bloks(state)(self.get_bloks(blok, [
                             'installed', 'toinstall', 'touninstall'], [
                             'required_by', 'conditional_by']))

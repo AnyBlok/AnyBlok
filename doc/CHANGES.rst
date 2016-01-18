@@ -14,7 +14,8 @@ Future
 
 * [FIX] update version if the version change
 * [REF] query.update and query.delete call the method on the Model
-* [REF] update apply state to do not raise on error in some case
+* [REF] add required blok, this bloks is installed and updated by the scripts
+  anyblok_updatedb and anyblok_createdb
 
 0.7.2 (2016-01-14)
 ------------------

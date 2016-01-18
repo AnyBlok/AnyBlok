@@ -73,7 +73,8 @@ def createdb(application, configuration_groups, **kwargs):
     :param configuration_groups: list configuration groupe to load
     :param \**kwargs: ArgumentParser named arguments
     """
-    format_configuration(configuration_groups, 'create_db', 'install-bloks')
+    format_configuration(configuration_groups,
+                         'create_db', 'install-bloks', 'required-bloks')
     load_init_function_from_entry_points()
     Configuration.load(application, configuration_groups=configuration_groups,
                        **kwargs)
@@ -89,7 +90,9 @@ def createdb(application, configuration_groups, **kwargs):
     if Configuration.get('install_all_bloks'):
         bloks = registry.System.Blok.list_by_state('uninstalled')
     else:
-        bloks = Configuration.get('install_bloks')
+        install_bloks = Configuration.get('install_bloks') or []
+        required_bloks = Configuration.get('required_bloks') or []
+        bloks = list(set(install_bloks + required_bloks))
 
     registry.upgrade(install=bloks)
     registry.commit()
@@ -104,23 +107,35 @@ def updatedb(application, configuration_groups, **kwargs):
     :param \**kwargs: ArgumentParser named arguments
     """
     format_configuration(configuration_groups, 'install-bloks',
-                         'uninstall-bloks', 'update-bloks')
+                         'uninstall-bloks', 'update-bloks', 'required-bloks')
 
     registry = anyblok.start(application,
                              configuration_groups=configuration_groups,
                              loadwithoutmigration=True, **kwargs)
 
+    installed_bloks = registry.System.Blok.list_by_state('installed')
+    required_install_bloks = []
+    required_update_bloks = []
+    for required_blok in (Configuration.get('required_bloks') or []):
+        if required_blok in installed_bloks:
+                required_update_bloks.append(required_blok)
+        else:
+            required_install_bloks.append(required_blok)
+
     if Configuration.get('install_all_bloks'):
         install_bloks = registry.System.Blok.list_by_state('uninstalled')
     else:
-        install_bloks = Configuration.get('install_bloks')
+        install_bloks = Configuration.get('install_bloks') or []
+        install_bloks = list(set(install_bloks + required_install_bloks))
 
     if Configuration.get('update_all_bloks'):
         update_bloks = registry.System.Blok.list_by_state('installed')
     else:
-        update_bloks = Configuration.get('update_bloks')
+        update_bloks = Configuration.get('update_bloks') or []
+        update_bloks = list(set(update_bloks + required_update_bloks))
 
     uninstall_bloks = Configuration.get('uninstall_bloks')
+
     if registry:
         registry.upgrade(install=install_bloks, update=update_bloks,
                          uninstall=uninstall_bloks)

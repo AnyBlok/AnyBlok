@@ -136,16 +136,6 @@ class ConfigOption:
     def get(self):
         return self.value
 
-    def is_none(self, value):
-        if value is None:
-            return True
-        if isinstance(value, str) and value.upper() == 'NONE':
-            return True
-        if value == '' and self.type is not str:
-            return True
-
-        return False
-
     def set(self, value):
         self.value = cast_value(self.type, value)
 
@@ -708,6 +698,12 @@ def add_install_bloks(parser):
 @Configuration.add('uninstall-bloks')
 def add_uninstall_bloks(parser):
     parser.add_argument('--uninstall-bloks', nargs="+",
+                        help="bloks to uninstall")
+
+
+@Configuration.add('required-bloks')
+def add_required_bloks(parser):
+    parser.add_argument('--required-bloks', nargs="+",
                         help="bloks to uninstall")
 
 
