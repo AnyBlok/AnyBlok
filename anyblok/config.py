@@ -701,10 +701,10 @@ def add_uninstall_bloks(parser):
                         help="bloks to uninstall")
 
 
-@Configuration.add('required-bloks')
-def add_required_bloks(parser):
-    parser.add_argument('--required-bloks', nargs="+",
-                        help="bloks to uninstall")
+@Configuration.add('install-or-update-bloks')
+def add_install_or_update_bloks(parser):
+    parser.add_argument('--install-or-update-bloks', nargs="+",
+                        help="bloks to install or update")
 
 
 @Configuration.add('update-bloks', label='Update database')
