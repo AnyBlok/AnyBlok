@@ -27,10 +27,12 @@ from sqlalchemy.types import Unicode
 from sqlalchemy.types import Text as SA_Text
 from sqlalchemy.types import UnicodeText
 from sqlalchemy.types import LargeBinary as SA_LargeBinary
-from sqlalchemy_utils.types.color import ColorType as SAU_ColorType
+from sqlalchemy_utils.types.color import ColorType
+from sqlalchemy_utils.types.encrypted import EncryptedType
 import json
 from copy import deepcopy
 from inspect import ismethod
+from anyblok.config import Configuration
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -113,6 +115,7 @@ class Column(Field):
         if 'default' in kwargs:
             self.default_val = kwargs.pop('default')
 
+        self.encrypt_key = kwargs.pop('encrypt_key', None)
         super(Column, self).__init__(*args, **kwargs)
 
     def native_type(cls):
@@ -165,7 +168,34 @@ class Column(Field):
             else:
                 kwargs['default'] = self.default_val
 
-        return SA_Column(db_column_name, self.sqlalchemy_type, *args, **kwargs)
+        sqlalchemy_type = self.sqlalchemy_type
+        if self.encrypt_key:
+            encrypt_key = self.format_encrypt_key(registry, namespace)
+            sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
+
+        return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
+
+    def format_encrypt_key(self, registry, namespace):
+        encrypt_key = self.encrypt_key
+        if encrypt_key is True:
+            encrypt_key = Configuration.get('default_encrypt_key')
+
+        if not encrypt_key:
+            raise FieldException("No encrypt_key define in the "
+                                 "configuration")
+
+        def wrapper():
+            Model = registry.get(namespace)
+            if hasattr(Model, encrypt_key):
+                func = getattr(Model, encrypt_key)
+                if ismethod(func):
+                    if encrypt_key not in Model.loaded_columns:
+                        if encrypt_key not in Model.loaded_fields:
+                            return func()
+
+            return encrypt_key
+
+        return wrapper
 
     def must_be_declared_as_attr(self):
         """ Return True if the column have a foreign key to a remote column """
@@ -742,5 +772,5 @@ class Color(Column):
         if 'foreign_key' in kwargs:
             self.foreign_key = kwargs.pop('foreign_key')
 
-        self.sqlalchemy_type = SAU_ColorType(max_length)
+        self.sqlalchemy_type = ColorType(max_length)
         super(Color, self).__init__(*args, **kwargs)

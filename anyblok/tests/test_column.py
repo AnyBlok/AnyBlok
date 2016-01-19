@@ -13,6 +13,13 @@ from anyblok.column import (Column, Boolean, Json, String, BigInteger,
                             SmallInteger, uString, Text, uText, Selection,
                             Date, DateTime, Time, Interval, Decimal, Float,
                             LargeBinary, Integer, Sequence, Color)
+from unittest import skipIf
+
+try:
+    import cryptography  # noqa
+    has_cryptography = True
+except:
+    has_cryptography = False
 
 
 Model = Declarations.Model
@@ -129,6 +136,16 @@ class TestColumns(DBTestCase):
         registry = self.init_registry(simple_column, ColumnType=String)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
+
+    @skipIf(not has_cryptography, "cryptography is not installed")
+    def test_string_with_encrypt_key(self):
+        registry = self.init_registry(simple_column, ColumnType=String,
+                                      encrypt_key='secretkey')
+        test = registry.Test.insert(col='col')
+        self.assertEqual(test.col, 'col')
+        res = registry.execute('select col from test where id = %s' % test.id)
+        res = res.fetchall()[0][0]
+        self.assertNotEqual(res, 'col')
 
     def test_string_with_size(self):
         registry = self.init_registry(

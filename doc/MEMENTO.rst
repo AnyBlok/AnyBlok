@@ -506,6 +506,19 @@ All the columns have the following optional parameters:
 | db_column_name | String to define the real column name in the table,        |
 |                | different from the model attribute name                    |
 +----------------+------------------------------------------------------------+
+| encrypt_key    | Crypt the column in the database. can take the values:     |
+|                |                                                            |
+|                | * a String ex: foo = String(encrypt_key='SecretKey')       |
+|                | * a classmethod name on the model                          |
+|                | * True value, search in the Configuration                  |
+|                |   ``default_encrypt_key`` the value, they are no default.  |
+|                |   if no value exist, an exception is raised                |
+|                |                                                            |
+|                | ..warning::                                                |
+|                |                                                            |
+|                |     The python package cryptography must be installed      |
+|                |                                                            |
++----------------+------------------------------------------------------------+
 
 Other attribute for ``String`` and ``uString``:
 
@@ -988,6 +1001,35 @@ Specific behaviour
 ------------------
 
 AnyBlok implements some facilities to help developers
+
+Column encryption
+~~~~~~~~~~~~~~~~~
+
+You can encrypt some columns to protect them. The python package cryptography
+must be installed::
+
+    pip install cryptography
+
+Use the encrypt_key attribute on the column to define the key of cryptography::
+
+    @register(Model)
+    class MyModel:
+
+        # define the specific encrypt_key
+        encrypt_column_1 = String(encrypt_key='SecretKey')
+
+        # Use the default encrypt_key
+        encrypt_column_2 = String(encrypt_key=Configuration.get('default_encrypt_key')
+        encrypt_column_3 = String(encrypt_key=True)
+
+        # Use the class method to get encrypt_key
+        encrypt_column_1 = String(encrypt_key='get_encrypt_key')
+
+        @classmethod
+        def get_encrypt_key(cls):
+            return 'SecretKey'
+
+The encryption works for any Columns.
 
 Cache
 ~~~~~

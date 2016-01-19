@@ -17,6 +17,7 @@ Future
 * [REF] add required blok, this bloks is installed and updated by the scripts
   anyblok_updatedb and anyblok_createdb
 * [ADD] Add Color Column
+* [REF] column can be encrypted
 
 0.7.2 (2016-01-14)
 ------------------
