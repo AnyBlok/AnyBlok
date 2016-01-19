@@ -16,14 +16,15 @@ Future
 * [REF] query.update and query.delete call the method on the Model
 * [REF] add required blok, this bloks is installed and updated by the scripts
   anyblok_updatedb and anyblok_createdb
+* [ADD] Add Color Column
 
 0.7.2 (2016-01-14)
 ------------------
 
 * [FIX] delete flush after remove of the session
 * [FIX] nose pluggins
-* [FIX] does'nt destroy automaticly constraints (not created by anyblok), 
-  indexes (not created by anyblok), columns, tables by automigration, add 
+* [FIX] does'nt destroy automaticly constraints (not created by anyblok),
+  indexes (not created by anyblok), columns, tables by automigration, add
   options to force the delete of its.
 * [REF] standardize the constraint and index names
 * [FIX] Multi declaration of the same foreign key in the case of M2O and O2O
@@ -60,7 +61,7 @@ Future
   Update meth: expire the instance cause of relationship
 * [IMP] refresh and expire meth on model
 * [REF] delete obj, flush the session and delete the instance of obj of the
-  session, before expire all the session, the goal is to reload the 
+  session, before expire all the session, the goal is to reload the
   relation ship.
 * [REF] `#13 <https://bitbucket.org/jssuzanne/anyblok/issues/13/refactor-inheritance-tree>`_
   Remove association model, replace it by call at the Blok definition

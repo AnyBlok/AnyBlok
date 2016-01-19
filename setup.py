@@ -29,6 +29,7 @@ requires = [
     'PyYAML',
     'appdirs',
     'sqlalchemy-utils',
+    'colour',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

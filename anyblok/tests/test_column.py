@@ -12,7 +12,7 @@ from anyblok.field import FieldException
 from anyblok.column import (Column, Boolean, Json, String, BigInteger,
                             SmallInteger, uString, Text, uText, Selection,
                             Date, DateTime, Time, Interval, Decimal, Float,
-                            LargeBinary, Integer, Sequence)
+                            LargeBinary, Integer, Sequence, Color)
 
 
 Model = Declarations.Model
@@ -402,3 +402,12 @@ class TestColumns(DBTestCase):
         with self.assertRaises(FieldException):
             self.init_registry(simple_column, ColumnType=Sequence,
                                default='default value')
+
+    def test_color(self):
+        from colour import Color as Colour
+
+        colour = Colour('#F5F5F5')
+        registry = self.init_registry(simple_column, ColumnType=Color)
+        test = registry.Test.insert(col=colour)
+        self.assertEqual(test.col.hex, colour.hex)
+        self.assertIs(test.col, colour)

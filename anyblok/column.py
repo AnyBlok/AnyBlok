@@ -27,6 +27,7 @@ from sqlalchemy.types import Unicode
 from sqlalchemy.types import Text as SA_Text
 from sqlalchemy.types import UnicodeText
 from sqlalchemy.types import LargeBinary as SA_LargeBinary
+from sqlalchemy_utils.types.color import ColorType as SAU_ColorType
 import json
 from copy import deepcopy
 from inspect import ismethod
@@ -713,3 +714,33 @@ class Sequence(String):
             return registry.System.Sequence.nextvalBy(code=code)
 
         return default_value
+
+
+class Color(Column):
+    """Color column.
+    `See coulour pakage<https://pypi.python.org/pypi/colour/>`_
+
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import Color
+        from colour import Color as Colour
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = Color(default=Colour('green'))
+
+    """
+    def __init__(self, *args, **kwargs):
+        max_length = kwargs.pop('max_length', 20)
+
+        if 'type_' in kwargs:
+            del kwargs['type_']
+
+        if 'foreign_key' in kwargs:
+            self.foreign_key = kwargs.pop('foreign_key')
+
+        self.sqlalchemy_type = SAU_ColorType(max_length)
+        super(Color, self).__init__(*args, **kwargs)

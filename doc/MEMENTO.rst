@@ -444,7 +444,7 @@ List of the column type:
  * ``Boolean``
  * ``Date``: use datetime.date
  * ``Integer``
- * ``Interval``: use the datetime.timedelta
+ * ``Interval``: use datetime.timedelta
  * ``LargeBinary``
  * ``SmallInteger``
  * ``String``
@@ -454,6 +454,7 @@ List of the column type:
  * ``Selection``
  * ``Json``
  * ``Sequence``
+ * ``Color``: use colour.Color
 
 All the columns have the following optional parameters:
 
@@ -465,7 +466,7 @@ All the columns have the following optional parameters:
 +----------------+------------------------------------------------------------+
 | default        | define a default value for this column.                    |
 |                |                                                            |
-|                | ..warning::                                                | 
+|                | ..warning::                                                |
 |                |                                                            |
 |                |     The default value depends of the column type           |
 |                |                                                            |
@@ -536,6 +537,14 @@ Other attribute for ``Sequence``:
 +--------------+--------------------------------------------------------------+
 | ``formater`` | formater of the sequence                                     |
 +--------------+--------------------------------------------------------------+
+
+Other attribute for ``Color``:
+
++----------------+------------------------------------------------------------+
+| Param          | Description                                                |
++================+============================================================+
+| ``max_length`` | column max size in the table                               |
++----------------+------------------------------------------------------------+
 
 RelationShip
 ------------
@@ -1123,7 +1132,7 @@ decorated method::
     classmethod decorator, because the method name is already seen as an
     event listener
 
-Some of the Attribute events of the Mapper events are implemented. See the 
+Some of the Attribute events of the Mapper events are implemented. See the
 SQLAlchemy ORM Events http://docs.sqlalchemy.org/en/latest/orm/events.html#orm-events
 
 Hybrid method
