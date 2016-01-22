@@ -176,6 +176,15 @@ class TestMany2Many(DBTestCase):
 
         self.assertEqual(address.persons, [person])
 
+    def test_complete_many2many_expire_field(self):
+        registry = self.init_registry(_complete_many2many)
+        self.assertIn(
+            ('x2m', 'addresses', 'persons'),
+            registry.expire_attributes['Model.Person']['addresses'])
+        self.assertIn(
+            ('x2m', 'persons', 'addresses'),
+            registry.expire_attributes['Model.Address']['persons'])
+
     def test_minimum_many2many(self):
         registry = self.init_registry(_minimum_many2many)
 
