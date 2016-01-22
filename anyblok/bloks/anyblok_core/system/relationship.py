@@ -28,10 +28,7 @@ class RelationShip(System.Field):
 
     def _description(self):
         res = super(RelationShip, self)._description()
-        res.update({
-            'nullable': self.nullable,
-            'model': self.remote_model,
-        })
+        res.update(nullable=self.nullable, model=self.remote_model)
         return res
 
     @classmethod
