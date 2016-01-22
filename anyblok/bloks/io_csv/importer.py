@@ -117,7 +117,7 @@ class CSV:
 
     def _parse_row_if_entry(self, row, entry, values, Model):
         if self.importer.csv_if_exist == 'overwrite':
-            entry.update(values)
+            entry.update(**values)
             self.updated_entries.append(entry)
         elif self.importer.csv_if_exist == 'create':
             entry = Model.insert(**values)
@@ -131,7 +131,7 @@ class CSV:
         Mapping = self.registry.IO.Mapping
         if self.importer.csv_if_does_not_exist == 'create':
             if pks:
-                values.update(pks)
+                values.update(**pks)
 
             entry = Model.insert(**values)
             self.created_entries.append(entry)
