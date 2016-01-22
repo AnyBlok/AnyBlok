@@ -28,11 +28,8 @@ class Column(System.Field):
 
     def _description(self):
         res = super(Column, self)._description()
-        res.update({
-            'nullable': self.nullable,
-            'primary_key': self.primary_key,
-            'model': self.remote_model,
-        })
+        res.update(nullable=self.nullable, primary_key=self.primary_key,
+                   model=self.remote_model)
         return res
 
     @classmethod
@@ -43,10 +40,7 @@ class Column(System.Field):
         :param cname: Not use here
         :rtype: string of the real column name
         """
-        if field.property.columns[0].info.get('use_db_column_name'):
-            return cname
-
-        return field.property.columns[0].name
+        return cname
 
     @classmethod
     def add_field(cls, cname, column, model, table, ftype):
