@@ -18,11 +18,11 @@ from sqlalchemy.exc import (ProgrammingError, OperationalError,
 from sqlalchemy.schema import ForeignKeyConstraint
 from .config import Configuration
 from .blok import BlokManager
-from .logging import log
 from .environment import EnvironmentManager
 from .migration import Migration
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
-
+from anyblok.common import anyblok_column_prefix
+from .logging import log
 logger = getLogger(__name__)
 
 
@@ -415,6 +415,7 @@ class Registry:
             self.unittest_transaction = self.bind.begin()
         else:
             self.bind = self.engine
+            self.unittest_transaction = None
 
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
@@ -442,6 +443,7 @@ class Registry:
         self.removed = []
         EnvironmentManager.set('_precommit_hook', [])
         self._sqlalchemy_known_events = []
+        self.expire_attributes = {}
 
     def listen_sqlalchemy_known_event(self):
         for e, namespace, method in self._sqlalchemy_known_events:
@@ -1006,6 +1008,40 @@ class Registry:
                 mustreload = mustreload or r
 
         return mustreload
+
+    def expire(self, obj, attribute_names=None):
+        """Expire object in session, you can define some attribute which are
+        expired::
+
+            registry.expire(instance, ['attr1', 'attr2', ...])
+
+        :param obj: instance of ``Model``
+        :param attribute_names: list of string, names of the attr to expire
+        """
+        if attribute_names:
+            attribute_names = [
+                (anyblok_column_prefix + x
+                 if x in obj.hybrid_property_columns else x)
+                for x in attribute_names]
+
+        self.session.expire(obj, attribute_names=attribute_names)
+
+    def refresh(self, obj, attribute_names=None):
+        """Expire  and reload object in session, you can define some attribute
+        which are refreshed::
+
+            registry.refresh(instance, ['attr1', 'attr2', ...])
+
+        :param obj: instance of ``Model``
+        :param attribute_names: list of string, names of the attr to refresh
+        """
+        if attribute_names:
+            attribute_names = [
+                (anyblok_column_prefix + x
+                 if x in obj.hybrid_property_columns else x)
+                for x in attribute_names]
+
+        self.session.refresh(obj, attribute_names=attribute_names)
 
     def rollback(self, *args, **kwargs):
         self.session.rollback(*args, **kwargs)
