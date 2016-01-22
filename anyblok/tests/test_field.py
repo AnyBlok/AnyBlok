@@ -112,7 +112,7 @@ class TestField2(DBTestCase):
         t = registry.Test.query().first()
         t.name = 'Mister ANYBLOK'
         self.assertEqual(t._name, 'Mister ANYBLOK')
-        t.update({registry.Test.name: 'Jean-Sebastien SUZANNE'})
+        t.update(name='Jean-Sebastien SUZANNE')
         self.assertEqual(t._name, 'Jean-Sebastien SUZANNE')
 
     def test_field_function_fdel(self):
