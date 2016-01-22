@@ -94,6 +94,23 @@ def _minimum_one2one_with_one2many(**kwargs):
                           backref="person", one2many="persons")
 
 
+def _multi_fk_one2one():
+
+    @register(Model)
+    class Test:
+
+        id = Integer(primary_key=True, unique=True)
+        id2 = String(primary_key=True, unique=True)
+
+    @register(Model)
+    class Test2:
+
+        id = Integer(primary_key=True)
+        test = One2One(model=Model.Test,
+                       column_names=('test_id', 'test_id2'),
+                       backref="test2")
+
+
 class TestOne2One(DBTestCase):
 
     def test_complete_one2one(self):
@@ -126,6 +143,15 @@ class TestOne2One(DBTestCase):
         p2 = registry.Person.insert(name="Franck BRET", address=address)
         self.assertIs(p2.address, address)
         self.assertIsNone(p1.address_id)
+
+    def test_minimum_one2one_expire_field(self):
+        registry = self.init_registry(_minimum_one2one)
+        self.assertIn(
+            ('address',),
+            registry.expire_attributes['Model.Person']['address_id'])
+        self.assertIn(
+            ('address', 'person'),
+            registry.expire_attributes['Model.Person']['address_id'])
 
     def test_one2one_with_str_model(self):
         registry = self.init_registry(_one2one_with_str_method)
@@ -161,7 +187,7 @@ class TestOne2One(DBTestCase):
                 def define_table_args(cls):
                     table_args = super(Test2, cls).define_table_args()
                     return table_args + (ForeignKeyConstraint(
-                        ['test_id', 'test_id2'], ['test.id', 'test.id2']),)
+                        [cls.test_id, cls.test_id2], ['test.id', 'test.id2']),)
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
@@ -283,28 +309,26 @@ class TestOne2One(DBTestCase):
         self.assertEqual(test.id2, test2.test_id2)
 
     def test_with_multi_foreign_key_on_unexisting_named_column(self):
-
-        def add_in_registry():
-
-            @register(Model)
-            class Test:
-
-                id = Integer(primary_key=True, unique=True)
-                id2 = String(primary_key=True, unique=True)
-
-            @register(Model)
-            class Test2:
-
-                id = Integer(primary_key=True)
-                test = One2One(model=Model.Test,
-                               column_names=('test_id', 'test_id2'),
-                               backref="test2")
-
-        registry = self.init_registry(add_in_registry)
+        registry = self.init_registry(_multi_fk_one2one)
         test = registry.Test.insert(id2="10")
         test2 = registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
+
+    def test_multi_o2o_one2one_expire_field(self):
+        registry = self.init_registry(_multi_fk_one2one)
+        self.assertIn(
+            ('test',),
+            registry.expire_attributes['Model.Test2']['test_id'])
+        self.assertIn(
+            ('test', 'test2'),
+            registry.expire_attributes['Model.Test2']['test_id'])
+        self.assertIn(
+            ('test',),
+            registry.expire_attributes['Model.Test2']['test_id2'])
+        self.assertIn(
+            ('test', 'test2'),
+            registry.expire_attributes['Model.Test2']['test_id2'])
 
     def test_with_multi_foreign_key_on_unexisting_named_column2(self):
 
