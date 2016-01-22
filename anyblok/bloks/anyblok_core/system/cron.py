@@ -34,11 +34,11 @@ class Cron:
 
     @classmethod
     def close_worker_with_success(cls, worker):
-        worker.job.update({'done_at': datetime.now()})
+        worker.job.update(done_at=datetime.now())
 
     @classmethod
     def close_worker_on_error(cls, worker, error):
-        worker.job.update({'error': error})
+        worker.job.update(error=error)
 
     @classmethod
     def lock_one_job(cls):
