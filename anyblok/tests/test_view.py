@@ -9,6 +9,7 @@ from anyblok.tests.testcase import DBTestCase
 from anyblok.model import ViewException
 from anyblok import Declarations
 from sqlalchemy.sql import select
+from sqlalchemy.exc import OperationalError
 from anyblok.column import Integer, String
 
 register = Declarations.register
@@ -253,7 +254,7 @@ class TestView(DBTestCase):
         registry.T2.insert(code='test1', val=2)
         registry.T1.insert(code='test2', val=3)
         registry.T2.insert(code='test2', val=4)
-        with self.assertRaises(ViewException):
+        with self.assertRaises(OperationalError):
             registry.TestView.query().update({'val2': 3})
 
     def test_view_delete_method(self):
@@ -262,7 +263,7 @@ class TestView(DBTestCase):
         registry.T2.insert(code='test1', val=2)
         registry.T1.insert(code='test2', val=3)
         registry.T2.insert(code='test2', val=4)
-        with self.assertRaises(ViewException):
+        with self.assertRaises(OperationalError):
             registry.TestView.query().delete()
 
     def test_simple_view_without_primary_key(self):
