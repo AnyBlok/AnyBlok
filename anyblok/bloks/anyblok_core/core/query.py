@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from anyblok.common import anyblok_column_prefix
 from sqlalchemy.orm import query
 
 
@@ -18,11 +19,6 @@ class Query(query.Query):
         """ Return an instrumented list of the result of the query
         """
         return self.registry.InstrumentedList(super(Query, self).all())
-
-    def sqlalchemy_query_method(self, method, *args, **kwargs):
-        """ Wrapper to call a specific method by getattr
-        """
-        return getattr(query.Query, method)(self, *args, **kwargs)
 
     def with_perm(self, principals, permission):
         """Add authorization pre- and post-filtering to query.
@@ -39,21 +35,28 @@ class Query(query.Query):
         return self.registry.wrap_query_permission(
             self, principals, permission)
 
-    def dictone(self):
-        val = self.one()
+    def get_field_nams_in_column_description(self):
         field2get = [x['name'] for x in self.column_descriptions
                      if not hasattr(x['type'], '__table__')]
+        field2get = [(x[len(anyblok_column_prefix):]
+                      if x.startswith(anyblok_column_prefix)
+                      else x, x)
+                     for x in field2get]
+        return field2get
+
+    def dictone(self):
+        val = self.one()
+        field2get = self.get_field_nams_in_column_description()
         if field2get:
-            return {x: getattr(val, x) for x in field2get}
+            return {x: getattr(val, y) for x, y in field2get}
         else:
             return val.to_dict()
 
     def dictfirst(self):
         val = self.first()
-        field2get = [x['name'] for x in self.column_descriptions
-                     if not hasattr(x['type'], '__table__')]
+        field2get = self.get_field_nams_in_column_description()
         if field2get:
-            return {x: getattr(val, x) for x in field2get}
+            return {x: getattr(val, y) for x, y in field2get}
         else:
             return val.to_dict()
 
@@ -62,31 +65,8 @@ class Query(query.Query):
         if not vals:
             return []
 
-        field2get = [x['name'] for x in self.column_descriptions
-                     if not hasattr(x['type'], '__table__')]
+        field2get = self.get_field_nams_in_column_description()
         if field2get:
-            return [{x: getattr(y, x) for x in field2get} for y in vals]
+            return [{x: getattr(y, z) for x, z in field2get} for y in vals]
         else:
             return vals.to_dict()
-
-    def update(self, values, lowlevel=False, **kwargs):
-        if lowlevel:
-            return super(Query, self).update(values, **kwargs)
-        else:
-            all = self.all()
-            if all:
-                all.update(values, flush=False)
-
-            self.registry.flush()
-            return len(all)
-
-    def delete(self, lowlevel=False, **kwargs):
-        if lowlevel:
-            return super(Query, self).delete(**kwargs)
-        else:
-            all = self.all()
-            if all:
-                all.delete()
-
-            self.registry.flush()
-            return len(all)
