@@ -85,4 +85,4 @@ class Field:
         :param label: label of the field
         :param ftype: type of the AnyBlok Field
         """
-        field.update({'label': label, 'ftype': ftype})
+        field.update(label=label, ftype=ftype)
