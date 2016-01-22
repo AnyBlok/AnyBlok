@@ -10,19 +10,15 @@ from anyblok.model import ViewException
 from .sqlbase import SqlMixin
 
 
-def query_method(name):
-
-    def wrapper(cls, *args, **kwargs):
-        raise ViewException("%r.%r method are not availlable on view model" % (
-            cls, name))
-
-    return classmethod(wrapper)
-
-
 @Declarations.register(Declarations.Core)
 class SqlViewBase(SqlMixin):
     """ this class is inherited by all the SQL view
     """
 
-    delete = query_method('delete')
-    update = query_method('update')
+    def update(self, *args, **kwargs):
+        raise ViewException("%r.update method are not availlable on view "
+                            "model" % self.__registry_name__)
+
+    def delete(self, *args, **kwargs):
+        raise ViewException("%r.delete method are not availlable on view "
+                            "model" % self.__registry_name__)
