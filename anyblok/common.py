@@ -9,6 +9,10 @@ import sys
 from functools import lru_cache
 
 
+"""Define the prefixe for the mapper attribute for the column"""
+anyblok_column_prefix = '__anyblok_field_'
+
+
 def function_name(function):
     if sys.version_info < (3, 3):
         return function.__name__
