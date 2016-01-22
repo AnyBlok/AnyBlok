@@ -113,27 +113,25 @@ def _one2many_with_str_model(**kwargs):
         persons = One2Many(model='Model.Person')
 
 
-def _autodetect_two_foreign_key(**kwargs):
+def _multi_fk_one2many():
 
     @register(Model)
-    class Address:
+    class Test:
+
+        id = Integer(primary_key=True, unique=True)
+        id2 = String(primary_key=True, unique=True)
+
+    @register(Model)
+    class Test2:
 
         id = Integer(primary_key=True)
-        street = String()
-        zip = String()
-        city = String()
-
-    @register(Model)
-    class Person:
-
-        name = String(primary_key=True)
-        address_id = Integer(foreign_key=Model.Address.use('id'))
-        address2_id = Integer(foreign_key=Model.Address.use('id'))
+        test_id = Integer(foreign_key=Model.Test.use('id'))
+        test_id2 = String(foreign_key=Model.Test.use('id2'))
 
     @register(Model)  # noqa
-    class Address:
+    class Test:
 
-        persons = One2Many(model=Model.Person)
+        test2 = One2Many(model=Model.Test2, many2one="test")
 
 
 class TestOne2Many(DBTestCase):
@@ -148,6 +146,15 @@ class TestOne2Many(DBTestCase):
         address.persons.append(person)
 
         self.assertEqual(person.address, address)
+
+    def test_complete_one2many_expire_field(self):
+        registry = self.init_registry(_complete_one2many)
+        self.assertIn(
+            ('address',),
+            registry.expire_attributes['Model.Person']['address_id'])
+        self.assertIn(
+            ('address', 'persons'),
+            registry.expire_attributes['Model.Person']['address_id'])
 
     def test_minimum_one2many(self):
         registry = self.init_registry(_minimum_one2many)
@@ -227,29 +234,23 @@ class TestOne2Many(DBTestCase):
         self.assertIs(t1.test2[0], t2)
 
     def test_with_multi_foreign_key(self):
-
-        def add_in_registry():
-
-            @register(Model)
-            class Test:
-
-                id = Integer(primary_key=True, unique=True)
-                id2 = String(primary_key=True, unique=True)
-
-            @register(Model)
-            class Test2:
-
-                id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=Model.Test.use('id'))
-                test_id2 = String(foreign_key=Model.Test.use('id2'))
-
-            @register(Model)  # noqa
-            class Test:
-
-                test2 = One2Many(model=Model.Test2, many2one="test")
-
-        registry = self.init_registry(add_in_registry)
+        registry = self.init_registry(_multi_fk_one2many)
         t1 = registry.Test.insert(id2="test")
         t2 = registry.Test2.insert(test=t1)
         self.assertEqual(len(t1.test2), 1)
         self.assertIs(t1.test2[0], t2)
+
+    def test_with_multi_foreign_key_expire_field(self):
+        registry = self.init_registry(_multi_fk_one2many)
+        self.assertIn(
+            ('test',),
+            registry.expire_attributes['Model.Test2']['test_id'])
+        self.assertIn(
+            ('test', 'test2'),
+            registry.expire_attributes['Model.Test2']['test_id'])
+        self.assertIn(
+            ('test',),
+            registry.expire_attributes['Model.Test2']['test_id2'])
+        self.assertIn(
+            ('test', 'test2'),
+            registry.expire_attributes['Model.Test2']['test_id2'])
