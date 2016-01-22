@@ -45,7 +45,6 @@ class Model:
         cls.registry.System.Cache.invalidate(model, '_fields_description')
         cls.registry.System.Cache.invalidate(
             model, 'find_remote_attribute_to_expire')
-        cls.registry.System.Cache.invalidate(model, 'find_relationship')
 
     @classmethod
     def get_field_model(cls, field):
@@ -122,4 +121,4 @@ class Model:
                     cls.fire('Update Model', model)
 
             except Exception as e:
-                logger.error(str(e))
+                logger.exception(str(e))
