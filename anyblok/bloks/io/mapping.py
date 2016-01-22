@@ -52,7 +52,7 @@ class Mapping:
         query = query.filter(cls.filter_by_model_and_keys(model, *keys))
         count = query.count()
         if count:
-            query.delete(lowlevel=True, synchronize_session='fetch')
+            query.delete(synchronize_session='fetch')
             return count
 
         return 0
@@ -69,7 +69,7 @@ class Mapping:
         query = query.filter(cls.filter_by_model_and_key(model, key))
         count = query.count()
         if count:
-            query.delete(lowlevel=True)
+            query.delete()
             return count
 
         return 0
