@@ -37,7 +37,7 @@ class Parameter:
 
         if cls.is_exist(key):
             param = cls.from_primary_keys(key=key)
-            param.update(dict(value=value, multi=multi))
+            param.update(value=value, multi=multi)
         else:
             cls.insert(key=key, value=value, multi=multi)
 
