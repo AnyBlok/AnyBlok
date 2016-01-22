@@ -127,16 +127,16 @@ def _auto_detect_type(ColumnType=None, **kwargs):
 def _two_remote_primary_keys(**kwargs):
 
     @register(Model)
-    class Address:
+    class Test:
 
-        id = Integer(primary_key=True)
-        id2 = Integer(primary_key=True)
+        id = Integer(primary_key=True, unique=True)
+        id2 = String(primary_key=True, unique=True)
 
     @register(Model)
-    class Person:
+    class Test2:
 
-        name = String(primary_key=True)
-        address = Many2One(model=Model.Address)
+        id = Integer(primary_key=True)
+        test = Many2One(model=Model.Test)
 
 
 class TestMany2One(DBTestCase):
@@ -156,6 +156,12 @@ class TestMany2One(DBTestCase):
 
         self.assertEqual(address.persons, [person])
 
+    def test_complete_many2one_expire_field(self):
+        registry = self.init_registry(_complete_many2one)
+        self.assertIn(
+            ('address',),
+            registry.expire_attributes['Model.Person']['id_of_address'])
+
     def test_2_many2one(self):
         with self.assertRaises(FieldException):
             self.init_registry(_many2one_with_same_name_for_column_names)
@@ -170,6 +176,12 @@ class TestMany2One(DBTestCase):
         person = registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
         self.assertEqual(person.address, address)
+
+    def test_minimum_many2one_expire_field(self):
+        registry = self.init_registry(_minimum_many2one)
+        self.assertEqual(
+            registry.expire_attributes['Model.Person']['address_id'],
+            {('address',)})
 
     def test_many2one_with_str_model(self):
         registry = self.init_registry(_many2one_with_str_model)
@@ -317,7 +329,7 @@ class TestMany2One(DBTestCase):
                 def define_table_args(cls):
                     table_args = super(Test2, cls).define_table_args()
                     return table_args + (ForeignKeyConstraint(
-                        ['test_id', 'test_id2'], ['test.id', 'test.id2']),)
+                        [cls.test_id, cls.test_id2], ['test.id', 'test.id2']),)
 
                 id = Integer(primary_key=True)
                 test_id = Integer(
@@ -415,26 +427,20 @@ class TestMany2One(DBTestCase):
         self.assertEqual(test.id2, test2.other_test_id2)
 
     def test_with_multi_foreign_key_on_unexisting_column(self):
-
-        def add_in_registry():
-
-            @register(Model)
-            class Test:
-
-                id = Integer(primary_key=True, unique=True)
-                id2 = String(primary_key=True, unique=True)
-
-            @register(Model)
-            class Test2:
-
-                id = Integer(primary_key=True)
-                test = Many2One(model=Model.Test)
-
-        registry = self.init_registry(add_in_registry)
+        registry = self.init_registry(_two_remote_primary_keys)
         test = registry.Test.insert(id2="10")
         test2 = registry.Test2.insert(test=test)
         self.assertEqual(test.id, test2.test_id)
         self.assertEqual(test.id2, test2.test_id2)
+
+    def test_many2one_with_multi_fk_expire_field(self):
+        registry = self.init_registry(_two_remote_primary_keys)
+        self.assertIn(
+            ('test',),
+            registry.expire_attributes['Model.Test2']['test_id'])
+        self.assertIn(
+            ('test',),
+            registry.expire_attributes['Model.Test2']['test_id2'])
 
     def test_with_multi_foreign_key_on_unexisting_named_column(self):
 
