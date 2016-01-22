@@ -76,7 +76,7 @@ class Sequence:
     def nextval(self):
         """ return the next value of the sequence """
         nextval = self.registry.execute(SQLASequence(self.seq_name))
-        self.update(dict(number=nextval))
+        self.update(number=nextval)
         return self.formater.format(code=self.code, seq=nextval, id=self.id)
 
     @classmethod
