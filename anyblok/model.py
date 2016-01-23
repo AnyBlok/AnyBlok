@@ -12,7 +12,7 @@ from anyblok.relationship import RelationShip
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
-from sqlalchemy.orm import Query, mapper
+from sqlalchemy.orm import Query, mapper, synonym
 from sqlalchemy import inspection
 from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
@@ -20,6 +20,7 @@ from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
 from .mapper import ModelAttribute
 from sqlalchemy import ForeignKeyConstraint
+from anyblok.common import anyblok_column_prefix
 
 
 class ModelException(Exception):
@@ -201,11 +202,15 @@ class Model:
         :param namespace: the namespace of the model
         :param properties: the properties of the model
         """
-        if name in properties:
+        if name in properties['loaded_columns']:
             return
 
         if field.must_be_duplicate_before_added():
             field = deepcopy(field)
+
+        attr_name = name
+        if field.use_hybrid_property:
+            attr_name = anyblok_column_prefix + name
 
         if field.must_be_declared_as_attr():
             # All the declaration are seen as mixin for sqlalchemy
@@ -215,11 +220,16 @@ class Model:
                 return field.get_sqlalchemy_mapping(
                     registry, namespace, name, properties)
 
-            properties[name] = declared_attr(wrapper)
-            properties[name].anyblok_field = field
+            properties[attr_name] = declared_attr(wrapper)
+            properties[attr_name].anyblok_field = field
         else:
-            properties[name] = field.get_sqlalchemy_mapping(
+            properties[attr_name] = field.get_sqlalchemy_mapping(
                 registry, namespace, name, properties)
+
+        if field.use_hybrid_property:
+            properties[name] = field.get_property(
+                registry, namespace, name, properties)
+            properties['hybrid_property_columns'].append(name)
 
         properties['loaded_columns'].append(name)
         field.update_properties(registry, namespace, name, properties)
@@ -543,6 +553,7 @@ class Model:
     @classmethod
     def init_core_properties_and_bases(cls, registry, bases, properties):
         properties['loaded_columns'] = []
+        properties['hybrid_property_columns'] = []
         properties['loaded_fields'] = {}
         if properties['is_sql_view']:
             bases.extend([x for x in registry.loaded_cores['SqlViewBase']])
@@ -634,17 +645,25 @@ class Model:
             bases.append(registry.registry_base)
             cls.insert_in_bases(registry, namespace, bases,
                                 transformation_properties, properties)
-            bases = [type(tablename, tuple(bases), properties)]
-
             if properties['is_sql_view']:
-                cls.apply_view(namespace, tablename, bases[0], registry,
-                               properties)
+                cls.replace_properties_by_synonym(properties)
+                bases = [type(tablename, tuple(bases), properties)]
+                if properties['is_sql_view']:
+                    cls.apply_view(namespace, tablename, bases[0], registry,
+                                   properties)
+            else:
+                bases = [type(tablename, tuple(bases), properties)]
 
             properties = {}
             registry.add_in_registry(namespace, bases[0])
             registry.loaded_namespaces[namespace] = bases[0]
 
         return bases, properties
+
+    @classmethod
+    def replace_properties_by_synonym(cls, properties):
+        for field in properties['loaded_columns']:
+            properties[field] = synonym(anyblok_column_prefix + field)
 
     @classmethod
     def apply_view(cls, namespace, tablename, base, registry, properties):
@@ -686,7 +705,7 @@ class Model:
                 'before-drop', registry.declarativebase.metadata)
 
         pks = [col for col in properties['loaded_columns']
-               if getattr(base, col).primary_key]
+               if getattr(base, anyblok_column_prefix + col).primary_key]
 
         if not pks:
             raise ViewException(

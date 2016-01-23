@@ -70,18 +70,20 @@ class TestCoreSQLBase(DBTestCase):
     def test_expire(self):
         registry = self.init_registry(self.declare_model)
         t = registry.Test.insert(id2=2)
-        self.assertEqual(t.__dict__.get('id2'), 2)
+        self.assertEqual(t.id2, 2)
+        t.id2 = 3
+        self.assertEqual(t.id2, 3)
         t.expire()
-        self.assertIsNone(t.__dict__.get('id2'))
+        self.assertEqual(t.id2, 2)
 
     def test_refresh(self):
         registry = self.init_registry(self.declare_model)
         t = registry.Test.insert(id2=2)
-        self.assertEqual(t.__dict__.get('id2'), 2)
+        self.assertEqual(t.id2, 2)
         t.id2 = 3
-        self.assertEqual(t.__dict__.get('id2'), 3)
+        self.assertEqual(t.id2, 3)
         t.refresh()
-        self.assertEqual(t.__dict__.get('id2'), 2)
+        self.assertEqual(t.id2, 2)
 
     def test_delete_entry_added_in_relationship(self):
         registry = self.init_registry(self.add_in_registry_m2o)
@@ -96,7 +98,7 @@ class TestCoreSQLBase(DBTestCase):
         nb_value = 3
         registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
         t = registry.Test.query().first()
-        t.update({registry.Test.id2: 100})
+        t.update(id2=100)
         self.assertEqual(
             registry.Test.query().filter(
                 registry.Test.id2 == 100).first(),
@@ -344,13 +346,192 @@ class TestCoreSQLBase(DBTestCase):
         with self.assertRaises(SqlBaseException):
             t2.to_dict('name', ())
 
-    def test_refresh_update(self):
+    def test_refresh_update_m2o(self):
         registry = self.init_registry(self.add_in_registry_m2o)
         t1 = registry.Test.insert(name='t1')
         t2 = registry.Test2.insert(name='t2', test=t1)
         t3 = registry.Test.insert(name='t3')
-        t2.update(dict(test_id=t3.id))
+        self.assertEqual(t1.test2, [t2])
+        self.assertIs(t2.test, t1)
+        self.assertEqual(t3.test2, [])
+        t2.test = t3
+        self.assertEqual(t1.test2, [])
         self.assertIs(t2.test, t3)
+        self.assertEqual(t3.test2, [t2])
+
+    def test_refresh_update_m2o_2(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test.insert(name='t3')
+        self.assertEqual(t1.test2, [t2])
+        self.assertIs(t2.test, t1)
+        self.assertEqual(t2.test_id, t1.id)
+        self.assertEqual(t3.test2, [])
+        t2.test_id = t3.id
+        self.assertEqual(t1.test2, [])
+        self.assertIs(t2.test, t3)
+        self.assertEqual(t2.test_id, t3.id)
+        self.assertEqual(t3.test2, [t2])
+
+    def test_refresh_update_m2o_3(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test.insert(name='t3')
+        self.assertEqual(t1.test2, [t2])
+        self.assertIs(t2.test, t1)
+        self.assertEqual(t2.test_id, t1.id)
+        self.assertEqual(t3.test2, [])
+        t3.test2.append(t2)
+        self.assertEqual(t1.test2, [])
+        self.assertIs(t2.test, t3)
+        self.assertEqual(t3.test2, [t2])
+
+    def test_refresh_update_o2o(self):
+        registry = self.init_registry(self.add_in_registry_o2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test.insert(name='t3')
+        self.assertIs(t1.test2, t2)
+        self.assertIs(t2.test, t1)
+        self.assertIsNone(t3.test2)
+        t2.test = t3
+        self.assertIsNone(t1.test2)
+        self.assertIs(t2.test, t3)
+        self.assertIs(t3.test2, t2)
+
+    def test_refresh_update_o2o_2(self):
+        registry = self.init_registry(self.add_in_registry_o2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test.insert(name='t3')
+        self.assertIs(t1.test2, t2)
+        self.assertIs(t2.test, t1)
+        self.assertIsNone(t3.test2)
+        t3.test2 = t2
+        self.assertIsNone(t1.test2)
+        self.assertIs(t2.test, t3)
+        self.assertIs(t3.test2, t2)
+
+    def test_refresh_update_o2o_3(self):
+        registry = self.init_registry(self.add_in_registry_o2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test.insert(name='t3')
+        self.assertIs(t1.test2, t2)
+        self.assertIs(t2.test, t1)
+        self.assertEqual(t2.test_id, t1.id)
+        self.assertIsNone(t3.test2)
+        t2.test_id = t3.id
+        self.assertIsNone(t1.test2)
+        self.assertIs(t2.test, t3)
+        self.assertEqual(t2.test_id, t3.id)
+        self.assertIs(t3.test2, t2)
+
+    def test_refresh_update_o2o_4(self):
+        registry = self.init_registry(self.add_in_registry_o2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test.insert(name='t3')
+        self.assertIs(t1.test2, t2)
+        self.assertIs(t2.test, t1)
+        self.assertEqual(t2.test_id, t1.id)
+        self.assertIsNone(t3.test2)
+        t2.test = t3
+        self.assertIsNone(t1.test2)
+        self.assertIs(t2.test, t3)
+        self.assertIs(t3.test2, t2)
+
+    def test_refresh_update_o2m(self):
+        registry = self.init_registry(self.add_in_registry_o2m)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test2.insert(name='t3')
+        self.assertEqual(t1.test2, [t2])
+        self.assertIs(t2.test, t1)
+        self.assertIsNone(t3.test)
+        t1.test2.append(t3)
+        self.assertIn(t2, t1.test2)
+        self.assertIn(t3, t1.test2)
+        self.assertIs(t2.test, t1)
+        self.assertIs(t3.test, t1)
+        t1.test2.remove(t2)
+        self.assertEqual(t1.test2, [t3])
+        self.assertIsNone(t2.test)
+        self.assertIs(t3.test, t1)
+
+    def test_refresh_update_o2m_2(self):
+        registry = self.init_registry(self.add_in_registry_o2m)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test2.insert(name='t3')
+        self.assertEqual(t1.test2, [t2])
+        self.assertIs(t2.test, t1)
+        self.assertIsNone(t3.test)
+        t3.test = t1
+        self.assertIn(t2, t1.test2)
+        self.assertIn(t3, t1.test2)
+        self.assertIs(t2.test, t1)
+        self.assertIs(t3.test, t1)
+
+    def test_refresh_update_o2m_3(self):
+        registry = self.init_registry(self.add_in_registry_o2m)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        t3 = registry.Test2.insert(name='t3')
+        self.assertEqual(t1.test2, [t2])
+        self.assertIs(t2.test, t1)
+        self.assertIsNone(t3.test)
+        t3.test_id = t1.id
+        self.assertIn(t2, t1.test2)
+        self.assertIn(t3, t1.test2)
+        self.assertIs(t2.test, t1)
+        self.assertIs(t3.test, t1)
+
+    def test_refresh_update_m2m(self):
+        registry = self.init_registry(self.add_in_registry_m2m)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2')
+        t3 = registry.Test2.insert(name='t3')
+        self.assertEqual(t1.test2, [])
+        self.assertEqual(t2.test, [])
+        self.assertEqual(t3.test, [])
+        t1.test2.append(t2)
+        self.assertEqual(t1.test2, [t2])
+        self.assertEqual(t2.test, [t1])
+        self.assertEqual(t3.test, [])
+        t1.test2.append(t3)
+        self.assertIn(t2, t1.test2)
+        self.assertIn(t3, t1.test2)
+        self.assertEqual(t2.test, [t1])
+        self.assertEqual(t3.test, [t1])
+        t1.test2.remove(t2)
+        self.assertEqual(t1.test2, [t3])
+        self.assertEqual(t2.test, [])
+        self.assertEqual(t3.test, [t1])
+
+    def test_refresh_update_m2m_3(self):
+        registry = self.init_registry(self.add_in_registry_m2m)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2')
+        t3 = registry.Test2.insert(name='t3')
+        self.assertEqual(t1.test2, [])
+        self.assertEqual(t2.test, [])
+        self.assertEqual(t3.test, [])
+        t2.test.append(t1)
+        self.assertEqual(t1.test2, [t2])
+        self.assertEqual(t2.test, [t1])
+        self.assertEqual(t3.test, [])
+        t3.test.append(t1)
+        self.assertIn(t2, t1.test2)
+        self.assertIn(t3, t1.test2)
+        self.assertEqual(t2.test, [t1])
+        self.assertEqual(t3.test, [t1])
+        t2.test.remove(t1)
+        self.assertEqual(t1.test2, [t3])
+        self.assertEqual(t2.test, [])
+        self.assertEqual(t3.test, [t1])
 
     def test_find_relationship_by_relationship(self):
         registry = self.init_registry(self.add_in_registry_m2o)
@@ -381,88 +562,3 @@ class TestCoreSQLBase(DBTestCase):
         t.select = 'key2'
         t.expire('select')
         self.assertEqual(t.select, 'key')
-
-    def test_find_remote_attribute_to_expire_by_relationship_m2o(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        self.assertEqual(
-            registry.Test2.find_remote_attribute_to_expire('test'),
-            {'test': ['test2']})
-
-    def test_find_remote_attribute_to_expire_by_column_m2o(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        self.assertEqual(
-            registry.Test2.find_remote_attribute_to_expire('test_id'),
-            {'test': ['test2']})
-
-    def test_find_remote_attribute_to_expire_by_relationship_o2m(self):
-        registry = self.init_registry(self.add_in_registry_o2m)
-        self.assertEqual(
-            registry.Test2.find_remote_attribute_to_expire('test'),
-            {'test': ['test2']})
-
-    def test_find_remote_attribute_to_expire_by_column_o2m(self):
-        registry = self.init_registry(self.add_in_registry_o2m)
-        self.assertEqual(
-            registry.Test2.find_remote_attribute_to_expire('test_id'),
-            {'test': ['test2']})
-
-    def test_find_remote_attribute_to_expire_by_relationship_o2o(self):
-        registry = self.init_registry(self.add_in_registry_o2o)
-        self.assertEqual(
-            registry.Test2.find_remote_attribute_to_expire('test'),
-            {'test': ['test2']})
-
-    def test_find_remote_attribute_to_expire_by_column_o2o(self):
-        registry = self.init_registry(self.add_in_registry_o2o)
-        self.assertEqual(
-            registry.Test2.find_remote_attribute_to_expire('test_id'),
-            {'test': ['test2']})
-
-    def test_find_remote_attribute_to_expire_by_relationship_m2m(self):
-        registry = self.init_registry(self.add_in_registry_m2m)
-        self.assertEqual(
-            registry.Test2.find_remote_attribute_to_expire('test'),
-            {'test': ['test2']})
-
-    def test_find_remote_attribute_to_expire_by_relationship_m2m_2(self):
-        registry = self.init_registry(self.add_in_registry_m2m)
-        self.assertEqual(
-            registry.Test.find_remote_attribute_to_expire('test2'),
-            {'test2': ['test']})
-
-    def test_expire_relationship_mapped_m2o(self):
-        registry = self.init_registry(self.add_in_registry_m2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
-        t1.test2  # load test2 mmaper, need for the test
-        self.assertEqual(t1.__dict__.get('test2'), [t2])
-        t2.expire_relationship_mapped({'test': ['test2']})
-        self.assertIsNone(t1.__dict__.get('test2'))
-
-    def test_expire_relationship_mapped_o2m(self):
-        registry = self.init_registry(self.add_in_registry_o2m)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
-        t1.test2  # load test2 mmaper, need for the test
-        self.assertEqual(t1.__dict__.get('test2'), [t2])
-        t2.expire_relationship_mapped({'test': ['test2']})
-        self.assertIsNone(t1.__dict__.get('test2'))
-
-    def test_expire_relationship_mapped_o2o(self):
-        registry = self.init_registry(self.add_in_registry_o2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
-        t1.test2  # load test2 mmaper, need for the test
-        self.assertIs(t1.__dict__.get('test2'), t2)
-        t2.expire_relationship_mapped({'test': ['test2']})
-        self.assertIsNone(t1.__dict__.get('test2'))
-
-    def test_expire_relationship_mapped_m2m(self):
-        registry = self.init_registry(self.add_in_registry_m2m)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2')
-        t2.test.append(t1)
-        t1.test2  # load test2 mmaper, need for the test
-        self.assertEqual(t1.__dict__.get('test2'), [t2])
-        t2.expire_relationship_mapped({'test': ['test2']})
-        self.assertIsNone(t1.__dict__.get('test2'))

@@ -54,7 +54,7 @@ class SqlMixin:
         res = []
         for f in elements:
             if isinstance(f, str):
-                res.append(getattr(cls, f))
+                res.append(getattr(cls, f).label(f))
             else:
                 res.append(f)
 
@@ -314,65 +314,16 @@ class SqlBase(SqlMixin):
     """ this class is inherited by all the SQL model
     """
 
-    def update(self, *args, **kwargs):
-        """ Call the SqlAlchemy Query.update method on the instance of the
-        model::
+    def update(self, **values):
+        """ ::
 
-            self.update({...})
-            # or
             self.update(val1=.., val2= ...)
-            # or
-            self.update({...}, {...}, val1=..., ...)
-
-        the dicts are merged in the order and the kwags are merged at the end
-
-        is equal at::
-
-            query = self.registry.session.query(MyModel)
-            query = query.filter(MyModel.``pk`` == self.``pk``)
-            query.update({...})
-
-
-        This method is a hight level method, it start by expire all the
-        field which are being impacted by the update, relation ship on this
-        model and other model. Change the value in the session and without
-        flush
 
         """
-        flush = kwargs.pop('flush', True)
-        values = {}
-        for arg in args:
-            if not isinstance(arg, dict):
-                raise SqlBaseException(
-                    "Update meth definition waiting dict in args %r.update"
-                    "(%r)" % (self, args))
-
-            values.update(arg)
-
-        values.update(kwargs)
-
-        if not values:
-            if flush:
-                self.registry.flush()
-
-            return 0
-
-        fields = [x if isinstance(x, str) else x.property._orig_columns[0].name
-                  for x in values.keys()]
-        mappers = self.__class__.find_remote_attribute_to_expire(*fields)
-        self.expire_relationship_mapped(mappers)
-        self.expire(*fields)
         for x, v in values.items():
-            if not isinstance(x, str):
-                x = x.property.key
-
             setattr(self, x, v)
 
-        self.expire_relationship_mapped(mappers)
-        if flush:
-            self.registry.flush()
-
-        return 1
+        return 1 if values else 0
 
     @classmethod_cache()
     def find_remote_attribute_to_expire(cls, *fields):
@@ -434,7 +385,7 @@ class SqlBase(SqlMixin):
                 continue
 
             _field = model[field]
-            res.append(_field.get_field_mapper_name(field))
+            res.append(field)
             if isinstance(_field, (Column, FakeColumn)):
                 _fields.extend(x
                                for x, y in model.items()
@@ -467,8 +418,7 @@ class SqlBase(SqlMixin):
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
         """
-        self.registry.session.refresh(
-            self, self.__class__.find_relationship(*fields))
+        self.registry.refresh(self, fields)
 
     def expire(self, *fields):
         """ Expire the attribute of the instance, theses attributes will be
@@ -477,8 +427,7 @@ class SqlBase(SqlMixin):
         see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.expire
         """
-        self.registry.session.expire(
-            self, self.__class__.find_relationship(*fields))
+        self.registry.expire(self, fields)
 
     def delete(self, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
