@@ -12,8 +12,22 @@ CHANGELOG
 Future
 ------
 
-* [FIX] update version if the version change
-* [REF] query.update and query.delete call the method on the Model
+.. warning::
+
+    Break the compatibility with the previous version of anyblok
+
+    * update method on the model
+      replace ::
+
+          obj.update({field1: val1, ...})
+
+      by::
+
+          obj.update(field1=val1, ...)
+
+* [REF] session expire is now on the attribute, the update method is refactored
+  too.
+* [FIX] blok: update version if the version change
 * [REF] add required blok, this bloks is installed and updated by the scripts
   anyblok_updatedb and anyblok_createdb
 * [ADD] Add Color Column
