@@ -1,7 +1,6 @@
 # This file is a part of the AnyBlok project
 #
-#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
-#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -33,6 +32,7 @@ import json
 from copy import deepcopy
 from inspect import ismethod
 from anyblok.config import Configuration
+from anyblok.common import anyblok_column_prefix
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -154,7 +154,6 @@ class Column(Field):
 
         if self.db_column_name:
             db_column_name = self.db_column_name
-            kwargs['info']['use_db_column_name'] = db_column_name
         else:
             db_column_name = fieldname
 
@@ -591,16 +590,17 @@ class Selection(Column):
 
         super(Selection, self).__init__(*args, **kwargs)
 
-    def update_properties(self, registry, namespace, fieldname, properties):
-        field = properties[fieldname]
-        if '_' + fieldname in properties.keys():
-            raise Exception('Exception')
+    def get_property(self, registry, namespace, fieldname, properties):
+        """Return the property of the field
 
-        properties['_' + fieldname] = field
-
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
         def selection_get(model_self):
             return self.sqlalchemy_type.python_type(
-                getattr(model_self, '_' + fieldname))
+                getattr(model_self, anyblok_column_prefix + fieldname))
 
         def selection_set(model_self, value):
             val = self.sqlalchemy_type.python_type(value)
@@ -608,12 +608,12 @@ class Selection(Column):
                 raise FieldException('%r is not in the selections (%s)' % (
                     value, ', '.join(val.get_selections())))
 
-            setattr(model_self, '_' + fieldname, value)
+            setattr(model_self, anyblok_column_prefix + fieldname, value)
 
         def selection_expression(model_self):
-            return getattr(model_self, '_' + fieldname)
+            return getattr(model_self, anyblok_column_prefix + fieldname)
 
-        properties[fieldname] = hybrid_property(
+        return hybrid_property(
             selection_get, selection_set, expr=selection_expression)
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
@@ -631,9 +631,6 @@ class Selection(Column):
             return True
         else:
             return False
-
-    def get_field_mapper_name(self, fieldname):
-        return '_' + fieldname
 
 
 json_null = object()
