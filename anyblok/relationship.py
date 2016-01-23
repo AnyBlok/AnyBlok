@@ -7,12 +7,14 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy import Table, Column, ForeignKeyConstraint
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm import backref
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.ext.declarative import declared_attr
-from .field import Field, FieldException
+from sqlalchemy.ext.hybrid import hybrid_property
+from .field import (Field, FieldException, wrap_getter_column,
+                    wrap_setter_column)
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr
+from anyblok.common import anyblok_column_prefix
 
 
 class RelationShip(Field):
@@ -30,6 +32,8 @@ class RelationShip(Field):
     the model
     """
 
+    use_hybrid_property = False
+
     def __init__(self, *args, **kwargs):
         self.forbid_instance(RelationShip)
         if 'model' in kwargs:
@@ -45,7 +49,7 @@ class RelationShip(Field):
         self.kwargs['info']['remote_model'] = self.model.model_name
         self.backref_properties = {}
 
-    def apply_instrumentedlist(self, registry):
+    def apply_instrumentedlist(self, registry, namespace, fieldname):
         """ Add the InstrumentedList class to replace List class as result
         of the query
 
@@ -103,13 +107,26 @@ class RelationShip(Field):
         self.format_label(fieldname)
         self.kwargs['info']['label'] = self.label
         self.kwargs['info']['rtype'] = self.__class__.__name__
-        self.apply_instrumentedlist(registry)
+        self.apply_instrumentedlist(registry, namespace, fieldname)
         self.format_backref(registry, namespace, fieldname, properties)
         return relationship(self.model.tablename(registry), **self.kwargs)
 
     def must_be_declared_as_attr(self):
         """ Return True, because it is a relationship """
         return True
+
+    def init_expire_attributes(self, registry, namespace, fieldname):
+        """Init dict of expiration properties
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        """
+        if namespace not in registry.expire_attributes:
+            registry.expire_attributes[namespace] = {}
+
+        if fieldname not in registry.expire_attributes[namespace]:
+            registry.expire_attributes[namespace][fieldname] = set()
 
 
 class Many2One(RelationShip):
@@ -173,9 +190,7 @@ class Many2One(RelationShip):
             if not isinstance(self._column_names, (list, tuple)):
                 self._column_names = [self._column_names]
 
-        self.foreign_key_options = {}
-        if 'foreign_key_options' in kwargs:
-            self.foreign_key_options = self.kwargs.pop('foreign_key_options')
+        self.foreign_key_options = self.kwargs.pop('foreign_key_options', {})
 
     def update_local_and_remote_columns_names(self, registry, namespace):
         if self._remote_columns is None:
@@ -199,6 +214,17 @@ class Many2One(RelationShip):
         else:
             self.column_names = [ModelAttribute(namespace, x)
                                  for x in self._column_names]
+
+    def add_expire_attributes(self, registry, namespace, fieldname, cname):
+        self.init_expire_attributes(registry, namespace, cname)
+        registry.expire_attributes[namespace][cname].add((fieldname,))
+        if self.kwargs.get('backref'):
+            backref = self.kwargs['backref']
+            if isinstance(backref, (list, tuple)):
+                backref = backref[0]
+
+            registry.expire_attributes[namespace][cname].add(
+                (fieldname, backref))
 
     def update_properties(self, registry, namespace, fieldname, properties):
         """ Create the column which has the foreign key if the column doesn't
@@ -230,6 +256,8 @@ class Many2One(RelationShip):
         col_names = []
         fk_names = []
         for cname in self.column_names:
+            self.add_expire_attributes(registry, namespace, fieldname,
+                                       cname.attribute_name)
             if not cname.is_declared(registry):
                 rc, remote_type = self.get_column_information(
                     registry, cname, remote_types)
@@ -244,13 +272,14 @@ class Many2One(RelationShip):
                 fk_names.append(cname.foreign_key)
 
         if namespace == self.model.model_name:
-            self.kwargs['remote_side'] = [properties[x.attribute_name]
-                                          for x in self.remote_columns]
+            self.kwargs['remote_side'] = [
+                properties[anyblok_column_prefix + x.attribute_name]
+                for x in self.remote_columns]
 
         if (len(self.column_names) > 1 or add_fksc) and col_names and fk_names:
             properties['add_in_table_args'].append(
                 ForeignKeyConstraint(
-                    [x.attribute_name for x in col_names],
+                    [anyblok_column_prefix + x.attribute_name for x in col_names],
                     [x.get_fk_name(registry) for x in fk_names],
                     **self.foreign_key_options))
 
@@ -280,7 +309,12 @@ class Many2One(RelationShip):
                 unique=self.unique,
                 info=dict(label=self.label, foreign_key=foreign_key))
 
-        properties[cname.attribute_name] = declared_attr(wrapper)
+        properties[anyblok_column_prefix + cname.attribute_name] = declared_attr(
+            wrapper)
+        properties['loaded_columns'].append(cname.attribute_name)
+        properties[cname.attribute_name] = hybrid_property(
+            wrap_getter_column(cname.attribute_name),
+            wrap_setter_column(cname.attribute_name))
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -483,6 +517,19 @@ class Many2Many(RelationShip):
                 local_columns + remote_columns + [local_fk, remote_fk]))
 
         self.kwargs['secondary'] = join_table
+        # definition of expiration
+        if self.kwargs.get('backref'):
+            self.init_expire_attributes(registry, namespace, fieldname)
+            backref = self.kwargs['backref']
+            if isinstance(backref, (tuple, list)):
+                backref = backref[0]
+
+            registry.expire_attributes[namespace][fieldname].add(
+                ('x2m', fieldname, backref))
+            model_name = self.model.model_name
+            self.init_expire_attributes(registry, model_name, backref)
+            registry.expire_attributes[model_name][backref].add(
+                ('x2m', backref, fieldname))
 
         return super(Many2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
@@ -546,6 +593,20 @@ class One2Many(RelationShip):
 
         return fks
 
+    def add_expire_attributes(self, registry, namespace, fieldname):
+        if self.kwargs.get('backref'):
+            backref = self.kwargs['backref']
+            if isinstance(backref, (list, tuple)):
+                backref = backref[0]
+
+            model_name = self.model.model_name
+            for rname in self.remote_columns:
+                self.init_expire_attributes(registry, model_name, rname.attribute_name)
+                registry.expire_attributes[model_name][rname.attribute_name].add(
+                    (backref,))
+                registry.expire_attributes[model_name][rname.attribute_name].add(
+                    (backref, fieldname))
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Create the relationship
@@ -578,6 +639,7 @@ class One2Many(RelationShip):
             # on the primaryjoin
             self.kwargs['primaryjoin'] = ' and '.join(pjs)
 
+        self.add_expire_attributes(registry, namespace, fieldname)
         return super(One2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
 
@@ -592,4 +654,4 @@ class One2Many(RelationShip):
         if namespace == self.model.model_name:
             pks = ModelRepr(namespace).primary_keys(registry)
             self.backref_properties.update({'remote_side': [
-                properties[pk.attribute_name] for pk in pks]})
+                properties[anyblok_column_prefix + pk.attribute_name] for pk in pks]})
