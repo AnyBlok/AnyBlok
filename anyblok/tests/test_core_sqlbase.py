@@ -10,6 +10,8 @@ from anyblok.column import Integer, String, Selection
 from anyblok.relationship import Many2One, One2One, Many2Many, One2Many
 from anyblok.declarations import Declarations
 from anyblok.bloks.anyblok_core.exceptions import SqlBaseException
+from unittest import skipIf
+import sqlalchemy
 
 
 Model = Declarations.Model
@@ -404,6 +406,7 @@ class TestCoreSQLBase(DBTestCase):
         self.assertIs(t2.test, t3)
         self.assertIs(t3.test2, t2)
 
+    @skipIf(sqlalchemy.__version__ < "1.0.12", "sqlalchemy error")
     def test_refresh_update_o2o_2(self):
         registry = self.init_registry(self.add_in_registry_o2o)
         t1 = registry.Test.insert(name='t1')
