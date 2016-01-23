@@ -315,14 +315,17 @@ class TestCoreSQLBase(DBTestCase):
         self.assertEqual(t1.to_dict('name', ('test2',)),
                          {'name': 't1', 'test2': [{'name': 't2',
                                                    'id': t2.id,
+                                                   'test_id': t1.id,
                                                    'test': {'id': t1.id}}]})
         self.assertEqual(t1.to_dict('name', ('test2', None)),
                          {'name': 't1', 'test2': [{'name': 't2',
                                                    'id': t2.id,
+                                                   'test_id': t1.id,
                                                    'test': {'id': t1.id}}]})
         self.assertEqual(t1.to_dict('name', ('test2', ())),
                          {'name': 't1', 'test2': [{'name': 't2',
                                                    'id': t2.id,
+                                                   'test_id': t1.id,
                                                    'test': {'id': t1.id}}]})
 
     def test_bad_definition_of_relation(self):
