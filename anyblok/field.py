@@ -6,10 +6,53 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.ext.hybrid import hybrid_property
+from anyblok.common import anyblok_column_prefix
 
 
 class FieldException(Exception):
     """ Simple Exception for Field """
+
+
+def expire_related_attribute(self, action_todos):
+    for action_todo in action_todos:
+        if len(action_todo) == 1:
+            obj = self
+            attrs = [action_todo[0]]
+        else:
+            obj = getattr(self, action_todo[0])
+            attrs = [action_todo[1]]
+            if obj is None:
+                continue
+
+        if obj in self.registry.session:
+            if obj._sa_instance_state.persistent:
+                self.registry.expire(obj, attrs)
+
+
+def wrap_getter_column(fieldname):
+    attr_name = anyblok_column_prefix + fieldname
+
+    def getter_collumn(self):
+        return getattr(self, attr_name)
+
+    return getter_collumn
+
+
+def wrap_setter_column(fieldname):
+    attr_name = anyblok_column_prefix + fieldname
+
+    def setter_collumn(self, value):
+        action_todos = set()
+        if fieldname in self.loaded_columns:
+            action_todos = self.registry.expire_attributes.get(
+                self.__registry_name__, {}).get(fieldname, set())
+
+        expire_related_attribute(self, action_todos)
+        res = setattr(self, attr_name, value)
+        expire_related_attribute(self, action_todos)
+        return res
+
+    return setter_collumn
 
 
 class Field:
@@ -17,6 +60,8 @@ class Field:
 
     This class must not be instanciated
     """
+
+    use_hybrid_property = True
 
     def __init__(self, *args, **kwargs):
         """ Initialize the field
@@ -51,6 +96,18 @@ class Field:
         :param fieldname: name of the field
         :param properties: properties known to the model
         """
+
+    def get_property(self, registry, namespace, fieldname, properties):
+        """Return the property of the field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
+        return hybrid_property(
+            wrap_getter_column(fieldname),
+            wrap_setter_column(fieldname))
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -91,9 +148,6 @@ class Field:
         """ Return False, it is the default value """
         return False
 
-    def get_field_mapper_name(self, fieldname):
-        return fieldname
-
 
 class Function(Field):
     """ Function Field
@@ -114,7 +168,14 @@ class Function(Field):
 
     """
 
-    def update_properties(self, registry, namespace, fieldname, properties):
+    def get_property(self, registry, namespace, fieldname, properties):
+        """Return the property of the field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
 
         def wrap(method):
             m = self.kwargs.get(method)
@@ -141,5 +202,4 @@ class Function(Field):
 
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
-        properties[fieldname] = hybrid_property(
-            fget, fset, fdel=fdel, expr=fexpr)
+        return hybrid_property(fget, fset, fdel=fdel, expr=fexpr)
