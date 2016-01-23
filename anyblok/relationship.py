@@ -308,8 +308,8 @@ class Many2One(RelationShip):
                 unique=self.unique,
                 info=dict(label=self.label, foreign_key=foreign_key))
 
-        properties[anyblok_column_prefix + cname.attribute_name] = declared_attr(
-            wrapper)
+        properties[(anyblok_column_prefix +
+                    cname.attribute_name)] = declared_attr(wrapper)
         properties['loaded_columns'].append(cname.attribute_name)
         properties['hybrid_property_columns'].append(cname.attribute_name)
         properties[cname.attribute_name] = hybrid_property(
@@ -601,10 +601,11 @@ class One2Many(RelationShip):
 
             model_name = self.model.model_name
             for rname in self.remote_columns:
-                self.init_expire_attributes(registry, model_name, rname.attribute_name)
-                registry.expire_attributes[model_name][rname.attribute_name].add(
-                    (backref,))
-                registry.expire_attributes[model_name][rname.attribute_name].add(
+                self.init_expire_attributes(
+                    registry, model_name, rname.attribute_name)
+                _rname = rname.attribute_name
+                registry.expire_attributes[model_name][_rname].add((backref,))
+                registry.expire_attributes[model_name][_rname].add(
                     (backref, fieldname))
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
@@ -654,4 +655,5 @@ class One2Many(RelationShip):
         if namespace == self.model.model_name:
             pks = ModelRepr(namespace).primary_keys(registry)
             self.backref_properties.update({'remote_side': [
-                properties[anyblok_column_prefix + pk.attribute_name] for pk in pks]})
+                properties[anyblok_column_prefix + pk.attribute_name]
+                for pk in pks]})
