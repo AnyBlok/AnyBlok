@@ -77,11 +77,24 @@ class ModelAttribute:
         :param registry: instance of the sqlalchemy ForeignKey
         :rtype: instance of the attribute
         """
+        mapper = self.get_fk_mapper(registry)
+        if mapper:
+            return mapper.attribute_name
+
+        return None
+
+    def get_fk_mapper(self, registry):
+        """Return the foreign key which represent the attribute in the data
+        base
+
+        :param registry: instance of the sqlalchemy ForeignKey
+        :rtype: instance of the attribute
+        """
         Model = self.check_model_in_first_step(registry)
         try:
             column_name = self.check_column_in_first_step(registry, Model)
             if Model[column_name].foreign_key:
-                return Model[column_name].foreign_key.attribute_name
+                return Model[column_name].foreign_key
         except ModelAttributeException:
             pass
 
@@ -189,6 +202,8 @@ class ModelAttribute:
         Model = self.check_model_in_first_step(registry)
         if self.attribute_name not in Model:
             return False
+
+        return True
 
     def native_type(self, registry):
         Model = self.check_model_in_first_step(registry)

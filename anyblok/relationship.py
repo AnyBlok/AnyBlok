@@ -251,7 +251,7 @@ class Many2One(RelationShip):
                           for x in self.remote_columns}
         for cname in self.column_names:
             if cname.is_declared(registry):
-                del remote_types[cname.attribute_name]
+                del remote_types[cname.get_fk_column(registry)]
 
         col_names = []
         fk_names = []
@@ -265,11 +265,11 @@ class Many2One(RelationShip):
                 foreign_key = remote_columns[rc].get_fk_name(registry)
                 self.create_column(cname, remote_type, foreign_key, properties)
                 add_fksc = True
-                col_names.append(cname)
+                col_names.append(anyblok_column_prefix + cname.attribute_name)
                 fk_names.append(remote_columns[rc])
             else:
-                col_names.append(cname)
-                fk_names.append(cname.foreign_key)
+                col_names.append(cname.attribute_name)
+                fk_names.append(cname.get_fk_mapper(registry))
 
         if namespace == self.model.model_name:
             self.kwargs['remote_side'] = [
@@ -279,8 +279,7 @@ class Many2One(RelationShip):
         if (len(self.column_names) > 1 or add_fksc) and col_names and fk_names:
             properties['add_in_table_args'].append(
                 ForeignKeyConstraint(
-                    [anyblok_column_prefix + x.attribute_name for x in col_names],
-                    [x.get_fk_name(registry) for x in fk_names],
+                    col_names, [x.get_fk_name(registry) for x in fk_names],
                     **self.foreign_key_options))
 
     def get_column_information(self, registry, cname, remote_types):
@@ -312,6 +311,7 @@ class Many2One(RelationShip):
         properties[anyblok_column_prefix + cname.attribute_name] = declared_attr(
             wrapper)
         properties['loaded_columns'].append(cname.attribute_name)
+        properties['hybrid_property_columns'].append(cname.attribute_name)
         properties[cname.attribute_name] = hybrid_property(
             wrap_getter_column(cname.attribute_name),
             wrap_setter_column(cname.attribute_name))
