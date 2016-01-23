@@ -27,17 +27,11 @@ class MapperException(AttributeError):
 class FakeColumn:
     db_column_name = None
 
-    def get_field_mapper_name(self, fieldname):
-        return fieldname
-
 
 class FakeRelationShip:
 
     def __init__(self, mapper):
         self.mapper = mapper
-
-    def get_field_mapper_name(self, fieldname):
-        return fieldname
 
 
 class ModelAttribute:
