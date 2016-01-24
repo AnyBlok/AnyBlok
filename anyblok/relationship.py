@@ -265,11 +265,11 @@ class Many2One(RelationShip):
                 foreign_key = remote_columns[rc].get_fk_name(registry)
                 self.create_column(cname, remote_type, foreign_key, properties)
                 add_fksc = True
-                col_names.append(anyblok_column_prefix + cname.attribute_name)
                 fk_names.append(remote_columns[rc])
             else:
-                col_names.append(cname.attribute_name)
                 fk_names.append(cname.get_fk_mapper(registry))
+
+            col_names.append(cname.attribute_name)
 
         if namespace == self.model.model_name:
             self.kwargs['remote_side'] = [
@@ -303,6 +303,7 @@ class Many2One(RelationShip):
 
         def wrapper(cls):
             return SA_Column(
+                cname.attribute_name,
                 remote_type,
                 nullable=self.nullable,
                 unique=self.unique,
