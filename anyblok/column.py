@@ -337,6 +337,8 @@ class Date(Column):
 def convert_string_to_datetime(value):
     if value is None:
         return None
+    elif isinstance(value, datetime):
+        return value
     elif isinstance(value, date):
         return datetime.combine(value, datetime.min.time())
     elif isinstance(value, str):
