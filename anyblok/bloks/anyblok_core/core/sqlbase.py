@@ -315,9 +315,15 @@ class SqlBase(SqlMixin):
     """
 
     def update(self, **values):
-        """ ::
+        """ Hight livel method to update the session for the instance
+        ::
 
             self.update(val1=.., val2= ...)
+
+        ..warning::
+
+            the columns and values is passed as named arguments to show
+            a difference with Query.update meth
 
         """
         for x, v in values.items():
