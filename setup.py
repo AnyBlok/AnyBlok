@@ -30,6 +30,7 @@ requires = [
     'appdirs',
     'sqlalchemy-utils',
     'colour',
+    'pytz',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))
