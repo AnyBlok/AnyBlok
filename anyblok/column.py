@@ -360,6 +360,10 @@ class DateTimeType(types.TypeDecorator):
 
             return value
 
+    @property
+    def python_type(self):
+        return datetime
+
 
 class DateTime(Column):
     """ DateTime column
