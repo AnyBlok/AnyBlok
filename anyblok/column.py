@@ -5,11 +5,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from .field import Field, FieldException
+from .field import Field, FieldException, wrap_getter_column
 from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types
-from sqlalchemy.sql import sqltypes
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.types import Integer as SA_Integer
 from sqlalchemy.types import SmallInteger as SA_SmallInteger
@@ -18,7 +17,6 @@ from sqlalchemy.types import Boolean as SA_Boolean
 from sqlalchemy.types import Float as SA_Float
 from sqlalchemy.types import DECIMAL as SA_Decimal
 from sqlalchemy.types import Date as SA_Date
-from sqlalchemy.types import DateTime as SA_DateTime
 from sqlalchemy.types import Time as SA_Time
 from sqlalchemy.types import Interval as SA_Interval
 from sqlalchemy.types import String as SA_String
@@ -28,11 +26,14 @@ from sqlalchemy.types import UnicodeText
 from sqlalchemy.types import LargeBinary as SA_LargeBinary
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.encrypted import EncryptedType
+from datetime import datetime
 import json
 from copy import deepcopy
 from inspect import ismethod
 from anyblok.config import Configuration
 from anyblok.common import anyblok_column_prefix
+import time
+import pytz
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -332,6 +333,38 @@ class Date(Column):
     sqlalchemy_type = SA_Date
 
 
+def convert_string_to_datetime(value):
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+
+    try:
+        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f%z")
+    except ValueError:
+        try:
+            return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f%Z")
+        except ValueError:
+            try:
+                return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+
+
+class DateTimeType(types.TypeDecorator):
+
+    impl = types.DateTime(timezone=True)
+
+    def process_bind_param(self, value, engine):
+        value = convert_string_to_datetime(value)
+        if value is not None:
+            if value.tzinfo is None:
+                timezone = pytz.timezone(time.tzname[0])
+                value = value.replace(tzinfo=timezone)
+
+            return value
+
+
 class DateTime(Column):
     """ DateTime column
 
@@ -348,7 +381,26 @@ class DateTime(Column):
             x = DateTime(default=datetime.now())
 
     """
-    sqlalchemy_type = SA_DateTime
+    sqlalchemy_type = DateTimeType
+
+    def get_property(self, registry, namespace, fieldname, properties):
+        """Return the property of the field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
+        def selection_set(model_self, value):
+            value = convert_string_to_datetime(value)
+            if value is not None:
+                if value.tzinfo is None:
+                    timezone = pytz.timezone(time.tzname[0])
+                    value = value.replace(tzinfo=timezone)
+
+            setattr(model_self, anyblok_column_prefix + fieldname, value)
+
+        return hybrid_property(wrap_getter_column(fieldname), selection_set)
 
 
 class Time(Column):
@@ -512,11 +564,13 @@ class StrSelection(str):
         return self.get_selections()[a]
 
 
-class SelectionType(types.UserDefinedType):
+class SelectionType(types.TypeDecorator):
     """ Generic type for Column Selection """
 
+    impl = types.String
+
     def __init__(self, selections, size, registry=None, namespace=None):
-        super(SelectionType, self).__init__()
+        super(SelectionType, self).__init__(length=size)
         self.size = size
         if isinstance(selections, (dict, str)):
             self.selections = selections
@@ -540,22 +594,18 @@ class SelectionType(types.UserDefinedType):
                                    'registry': registry,
                                    'namespace': namespace})
 
-    def compare_type(self, other):
-        """ return True if the types are different,
-            False if not, or None to allow the default implementation
-            to compare these types
-        """
-        if isinstance(other, sqltypes.VARCHAR):
-            return False
-
-        return None
-
-    def get_col_spec(self):
-        return "VARCHAR(%r)" % self.size
-
     @property
     def python_type(self):
         return self._StrSelection
+
+    def process_bind_param(self, value, engine):
+        if value is not None:
+            value = self.python_type(value)
+            if not value.validate():
+                raise FieldException('%r is not in the selections (%s)' % (
+                    value, ', '.join(value.get_selections())))
+
+        return value
 
 
 class Selection(Column):
@@ -603,10 +653,11 @@ class Selection(Column):
                 getattr(model_self, anyblok_column_prefix + fieldname))
 
         def selection_set(model_self, value):
-            val = self.sqlalchemy_type.python_type(value)
-            if not val.validate():
-                raise FieldException('%r is not in the selections (%s)' % (
-                    value, ', '.join(val.get_selections())))
+            if value is not None:
+                val = self.sqlalchemy_type.python_type(value)
+                if not val.validate():
+                    raise FieldException('%r is not in the selections (%s)' % (
+                        value, ', '.join(val.get_selections())))
 
             setattr(model_self, anyblok_column_prefix + fieldname, value)
 

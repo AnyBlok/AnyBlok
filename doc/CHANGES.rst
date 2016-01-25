@@ -32,6 +32,7 @@ Future
   anyblok_updatedb and anyblok_createdb
 * [ADD] Add Color Column
 * [REF] column can be encrypted
+* [REF] DataTime column is not a naive datatime value
 
 0.7.2 (2016-01-14)
 ------------------

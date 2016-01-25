@@ -7,6 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase, DBTestCase
 from sqlalchemy import Integer as SA_Integer
+from sqlalchemy.exc import StatementError
 from anyblok import Declarations
 from anyblok.field import FieldException
 from anyblok.column import (Column, Boolean, Json, String, BigInteger,
@@ -184,11 +185,259 @@ class TestColumns(DBTestCase):
 
     def test_datetime(self):
         import datetime
+        import time
+        import pytz
 
-        now = datetime.datetime.now()
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert(col=now)
         self.assertEqual(test.col, now)
+
+    def test_datetime_none_value(self):
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=None)
+        self.assertIsNone(test.col)
+
+    def test_datetime_str_conversion_1(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%z'))
+        self.assertEqual(test.col, now)
+
+    def test_datetime_str_conversion_2(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%Z'))
+        self.assertEqual(test.col, now)
+
+    def test_datetime_str_conversion_3(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S.%f'))
+        self.assertEqual(test.col, now)
+
+    def test_datetime_str_conversion_4(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S'))
+        self.assertEqual(test.col, now.replace(microsecond=0))
+
+    def test_datetime_by_property(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        test.col = now
+        self.assertEqual(test.col, now)
+
+    def test_datetime_by_property_none_value(self):
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        test.col = None
+        self.assertIsNone(test.col)
+
+    def test_datetime_str_conversion_1_by_property(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        test.col = now.strftime('%Y-%m-%d %H:%M:%S.%f%z')
+        self.assertEqual(test.col, now)
+
+    def test_datetime_str_conversion_2_by_property(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        test.col = now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')
+        self.assertEqual(test.col, now)
+
+    def test_datetime_str_conversion_3_by_property(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        test.col = now.strftime('%Y-%m-%d %H:%M:%S.%f')
+        self.assertEqual(test.col, now)
+
+    def test_datetime_str_conversion_4_by_property(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        test.col = now.strftime('%Y-%m-%d %H:%M:%S')
+        self.assertEqual(test.col, now.replace(microsecond=0))
+
+    def test_datetime_by_query(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        registry.Test.query().update(dict(col=now))
+        self.assertEqual(test.col, now)
+
+    def test_datetime_by_query_none_value(self):
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        registry.Test.query().update(dict(col=None))
+        self.assertIsNone(test.col)
+
+    def test_datetime_str_conversion_1_by_query(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        registry.Test.query().update(
+            dict(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%z')))
+        registry.expire(test, ['col'])
+        self.assertEqual(test.col, now)
+
+    def test_datetime_str_conversion_2_by_query(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        registry.Test.query().update(
+            dict(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')))
+        registry.expire(test, ['col'])
+        self.assertEqual(test.col, now)
+
+    def test_datetime_str_conversion_3_by_query(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        registry.Test.query().update(
+            dict(col=now.strftime('%Y-%m-%d %H:%M:%S.%f')))
+        registry.expire(test, ['col'])
+        self.assertEqual(test.col, now)
+
+    def test_datetime_str_conversion_4_by_query(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert()
+        registry.Test.query().update(
+            dict(col=now.strftime('%Y-%m-%d %H:%M:%S')))
+        registry.expire(test, ['col'])
+        self.assertEqual(test.col, now.replace(microsecond=0))
+
+    def test_datetime_by_query_filter(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=now)
+        Test = registry.Test
+        self.assertIs(Test.query().filter(Test.col == now).one(), test)
+
+    def test_datetime_str_conversion_1_by_query_filter(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=now)
+        Test = registry.Test
+        self.assertIs(
+            Test.query().filter(
+                Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%z')).one(),
+            test)
+
+    def test_datetime_str_conversion_2_by_query_filter(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=now)
+        Test = registry.Test
+        self.assertIs(
+            Test.query().filter(
+                Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')).one(),
+            test)
+
+    def test_datetime_str_conversion_3_by_query_filter(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        test = registry.Test.insert(col=now)
+        Test = registry.Test
+        self.assertIs(
+            Test.query().filter(
+                Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f')).one(), test)
 
     def test_interval(self):
         from datetime import timedelta
@@ -229,11 +478,20 @@ class TestColumns(DBTestCase):
         test = registry.Test.query().first()
         self.assertEqual(test.col, SELECTIONS[0][0])
         self.assertEqual(test.col.label, SELECTIONS[0][1])
-        try:
+        with self.assertRaises(FieldException):
             test.col = 'bad value'
-            self.fail('No watchdog to check if the value is on the selection')
-        except FieldException:
-            pass
+
+    def test_selection_change_by_query(self):
+        SELECTIONS = [
+            ('admin', 'Admin'),
+            ('regular-user', 'Regular user')
+        ]
+
+        registry = self.init_registry(
+            simple_column, ColumnType=Selection, selections=SELECTIONS)
+        registry.Test.insert(col=SELECTIONS[0][0])
+        with self.assertRaises(StatementError):
+            registry.Test.query().update({'col': 'bad value'})
 
     def test_selection_key_other_than_str(self):
         SELECTIONS = [
