@@ -342,6 +342,8 @@ def convert_string_to_datetime(value):
     elif isinstance(value, str):
         return parse(value)
 
+    return value
+
 
 class DateTimeType(types.TypeDecorator):
 
