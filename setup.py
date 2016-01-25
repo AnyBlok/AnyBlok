@@ -31,6 +31,7 @@ requires = [
     'sqlalchemy-utils',
     'colour',
     'pytz',
+    'python-dateutil',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

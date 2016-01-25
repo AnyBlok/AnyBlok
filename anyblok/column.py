@@ -26,7 +26,8 @@ from sqlalchemy.types import UnicodeText
 from sqlalchemy.types import LargeBinary as SA_LargeBinary
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.encrypted import EncryptedType
-from datetime import datetime
+from datetime import datetime, date
+from dateutil.parser import parse
 import json
 from copy import deepcopy
 from inspect import ismethod
@@ -336,19 +337,10 @@ class Date(Column):
 def convert_string_to_datetime(value):
     if value is None:
         return None
-    if isinstance(value, datetime):
-        return value
-
-    try:
-        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f%z")
-    except ValueError:
-        try:
-            return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f%Z")
-        except ValueError:
-            try:
-                return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
-            except ValueError:
-                return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+    elif isinstance(value, date):
+        return datetime.combine(value, datetime.min.time())
+    elif isinstance(value, str):
+        return parse(value)
 
 
 class DateTimeType(types.TypeDecorator):
