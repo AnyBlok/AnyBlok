@@ -436,7 +436,7 @@ To declare a ``Column`` in a model, add a column on the table of the model.::
 
 List of the column type:
 
- * ``DateTime``: use datetime.datetime
+ * ``DateTime``: use datetime.datetime, with pytz for the timezone
  * ``Decimal``: use decimal.Decimal
  * ``Float``
  * ``Time``: use datetime.time
@@ -455,6 +455,7 @@ List of the column type:
  * ``Json``
  * ``Sequence``
  * ``Color``: use colour.Color
+ * ``Password``
 
 All the columns have the following optional parameters:
 
@@ -558,6 +559,22 @@ Other attribute for ``Color``:
 +================+============================================================+
 | ``max_length`` | column max size in the table                               |
 +----------------+------------------------------------------------------------+
+
+Other attribute for ``Password``:
+
++-------------------+---------------------------------------------------------+
+| Param             | Description                                             |
++===================+=========================================================+
+| ``size``          | password max size in the table                          |
++-------------------+---------------------------------------------------------+
+| ``crypt_context`` | see the option for the python lib `passlib              |
+|                   | <https://pythonhosted.org/passlib/lib/passlib.context.ht|
+|                   | ml>`_                                                   |
++-------------------+---------------------------------------------------------+
+
+..warning::
+
+    The Password column can be found with the query meth:
 
 RelationShip
 ------------

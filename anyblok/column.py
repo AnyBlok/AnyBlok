@@ -26,6 +26,7 @@ from sqlalchemy.types import UnicodeText
 from sqlalchemy.types import LargeBinary as SA_LargeBinary
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.encrypted import EncryptedType
+from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
 from datetime import datetime, date
 from dateutil.parser import parse
 import json
@@ -471,6 +472,51 @@ class String(Column):
         self.sqlalchemy_type = SA_String(size)
 
         super(String, self).__init__(*args, **kwargs)
+
+
+class Password(Column):
+    """ String column
+
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import String
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = String(default='test')
+
+    """
+    def __init__(self, *args, **kwargs):
+        size = kwargs.pop('size', 64)
+        crypt_context = kwargs.pop('crypt_context', {})
+
+        if 'type_' in kwargs:
+            del kwargs['type_']
+
+        if 'foreign_key' in kwargs:
+            raise FieldException("Column Password can not have a foreign key")
+
+        self.sqlalchemy_type = PasswordType(max_length=size, **crypt_context)
+        super(Password, self).__init__(*args, **kwargs)
+
+    def get_property(self, registry, namespace, fieldname, properties):
+        """Return the property of the field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
+        def setter_column(model_self, value):
+            value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
+            value = SAU_PWD(value, context=self.sqlalchemy_type.context)
+            setattr(model_self, anyblok_column_prefix + fieldname, value)
+
+        return hybrid_property(
+            wrap_getter_column(fieldname), setter_column)
 
 
 class uString(Column):

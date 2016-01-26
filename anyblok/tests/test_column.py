@@ -13,7 +13,7 @@ from anyblok.field import FieldException
 from anyblok.column import (Column, Boolean, Json, String, BigInteger,
                             SmallInteger, uString, Text, uText, Selection,
                             Date, DateTime, Time, Interval, Decimal, Float,
-                            LargeBinary, Integer, Sequence, Color)
+                            LargeBinary, Integer, Sequence, Color, Password)
 from unittest import skipIf
 
 try:
@@ -21,6 +21,12 @@ try:
     has_cryptography = True
 except:
     has_cryptography = False
+
+try:
+    import passlib  # noqa
+    has_passlib = True
+except:
+    has_passlib = False
 
 
 Model = Declarations.Model
@@ -153,6 +159,15 @@ class TestColumns(DBTestCase):
             simple_column, ColumnType=String, size=100)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
+
+    @skipIf(not has_passlib, "passlib is not installed")
+    def test_password(self):
+        registry = self.init_registry(simple_column, ColumnType=Password,
+                                      crypt_context={'schemes': ['md5_crypt']})
+        test = registry.Test.insert(col='col')
+        self.assertEqual(test.col, 'col')
+        self.assertNotEqual(
+            registry.execute('Select col from test').fetchone()[0], 'col')
 
     def test_text(self):
         registry = self.init_registry(simple_column, ColumnType=Text)
