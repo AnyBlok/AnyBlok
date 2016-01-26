@@ -862,7 +862,7 @@ class Color(Column):
 
     """
     def __init__(self, *args, **kwargs):
-        max_length = kwargs.pop('max_length', 20)
+        max_length = kwargs.pop('size', 20)
 
         if 'type_' in kwargs:
             del kwargs['type_']
@@ -872,3 +872,18 @@ class Color(Column):
 
         self.sqlalchemy_type = ColorType(max_length)
         super(Color, self).__init__(*args, **kwargs)
+
+    def get_property(self, registry, namespace, fieldname, properties):
+        """Return the property of the field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
+        def setter_column(model_self, value):
+            value = self.sqlalchemy_type.python_type(value)
+            setattr(model_self, anyblok_column_prefix + fieldname, value)
+
+        return hybrid_property(
+            wrap_getter_column(fieldname), setter_column)

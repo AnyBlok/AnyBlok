@@ -701,3 +701,12 @@ class TestColumns(DBTestCase):
         test = registry.Test.insert(col=colour)
         self.assertEqual(test.col.hex, colour.hex)
         self.assertIs(test.col, colour)
+
+    def test_color_2(self):
+        from colour import Color as Colour
+
+        colour = Colour('#F5F5F5')
+        registry = self.init_registry(simple_column, ColumnType=Color)
+        test = registry.Test.insert(col=colour.hex)
+        self.assertEqual(test.col.hex, colour.hex)
+        self.assertEqual(test.col, colour)

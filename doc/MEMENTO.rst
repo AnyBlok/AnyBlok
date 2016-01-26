@@ -557,7 +557,7 @@ Other attribute for ``Color``:
 +----------------+------------------------------------------------------------+
 | Param          | Description                                                |
 +================+============================================================+
-| ``max_length`` | column max size in the table                               |
+| ``size``       | column max size in the table                               |
 +----------------+------------------------------------------------------------+
 
 Other attribute for ``Password``:
