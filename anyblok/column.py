@@ -707,6 +707,10 @@ class JsonType(types.TypeDecorator):
     def compare_values(self, x, y):
         return x == y
 
+    @property
+    def python_type(self):
+        return object
+
 
 class Json(Column):
     """ JSON column
