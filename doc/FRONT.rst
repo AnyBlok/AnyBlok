@@ -79,9 +79,11 @@ Dependencies
 
 AnyBlok works with **Python 3.3** and later. The install process will 
 ensure that `SQLAlchemy <http://www.sqlalchemy.org>`_, 
-`Alembic <http://alembic.readthedocs.org/>`_ are installed, in addition to 
-other dependencies.  AnyBlok will work with SQLAlchemy as of version **0.9.8**. 
-AnyBlok will work with Alembic as of version **0.7.3**.
+`Alembic <http://alembic.readthedocs.org/>`_,
+`SQLAlchemy-Utils <http://sqlalchemy-utils.readthedocs.org/>`_ are installed, 
+in addition to other dependencies.  AnyBlok will work with SQLAlchemy as of 
+version **1.0.11**. AnyBlok will work with Alembic as of version **0.8.4**.
+AnyBlok will work with SQLAlchemy-Utils as of version **0.31.4**.
 The latest version of them is strongly recommended.
 
 
@@ -109,6 +111,7 @@ Contributors
 * Clovis Nzouendjou
 * Pierre Verkest
 * Franck Bret
+* Sébastien Morele
 
 other:
 
