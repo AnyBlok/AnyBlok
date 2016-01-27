@@ -480,7 +480,7 @@ class Password(Column):
     ::
 
         from anyblok.declarations import Declarations
-        from anyblok.column import String
+        from anyblok.column import Password
 
 
         @Declarations.register(Declarations.Model)
@@ -863,7 +863,7 @@ class Sequence(String):
 
 class Color(Column):
     """Color column.
-    `See coulour pakage<https://pypi.python.org/pypi/colour/>`_
+    `See coulour pakage <https://pypi.python.org/pypi/colour/>`_
 
     ::
 
