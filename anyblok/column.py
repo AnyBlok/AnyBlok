@@ -852,13 +852,12 @@ class Color(Column):
 
         from anyblok.declarations import Declarations
         from anyblok.column import Color
-        from colour import Color as Colour
 
 
         @Declarations.register(Declarations.Model)
         class Test:
 
-            x = Color(default=Colour('green'))
+            x = Color(default='green')
 
     """
     def __init__(self, *args, **kwargs):
@@ -882,7 +881,9 @@ class Color(Column):
         :param properties: properties known to the model
         """
         def setter_column(model_self, value):
-            value = self.sqlalchemy_type.python_type(value)
+            if isinstance(value, str):
+                value = self.sqlalchemy_type.python_type(value)
+
             setattr(model_self, anyblok_column_prefix + fieldname, value)
 
         return hybrid_property(
