@@ -486,8 +486,25 @@ class Password(Column):
         @Declarations.register(Declarations.Model)
         class Test:
 
-            x = String(default='test')
+            x = Password(crypt_context={'schemes': ['md5_crypt']})
 
+        =========================================
+
+        test = Test.insert()
+        test.x = 'mypassword'
+
+        test.x
+        ==> Password object with encrypt value, the value can not be read
+
+        test.x == 'mypassword'
+        ==> True
+
+    ..warning::
+
+        the column type Password can not be querying::
+
+            Test.query().filter(Test.x == 'mypassword').count()
+            ==> 0
     """
     def __init__(self, *args, **kwargs):
         size = kwargs.pop('size', 64)

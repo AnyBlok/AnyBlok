@@ -455,7 +455,7 @@ List of the column type:
  * ``Json``
  * ``Sequence``
  * ``Color``: use colour.Color
- * ``Password``
+ * ``Password``: use sqlalchemy_utils.types.password.Password
 
 All the columns have the following optional parameters:
 

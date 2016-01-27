@@ -410,6 +410,18 @@ anyblok.column module
     :members:
     :noindex:
 
+.. autoclass:: Color
+    :show-inheritance:
+    :inherited-members:
+    :members:
+    :noindex:
+
+.. autoclass:: Password
+    :show-inheritance:
+    :inherited-members:
+    :members:
+    :noindex:
+
 anyblok.relationship module
 ---------------------------
 
