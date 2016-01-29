@@ -28,6 +28,12 @@ try:
 except:
     has_passlib = False
 
+try:
+    import colour  # noqa
+    has_colour = True
+except:
+    has_colour = False
+
 
 Model = Declarations.Model
 register = Declarations.register
@@ -693,20 +699,9 @@ class TestColumns(DBTestCase):
             self.init_registry(simple_column, ColumnType=Sequence,
                                default='default value')
 
+    @skipIf(not has_colour, "colour is not installed")
     def test_color(self):
-        from colour import Color as Colour
-
-        colour = Colour('#F5F5F5')
+        color = '#F5F5F5'
         registry = self.init_registry(simple_column, ColumnType=Color)
-        test = registry.Test.insert(col=colour)
-        self.assertEqual(test.col.hex, colour.hex)
-        self.assertIs(test.col, colour)
-
-    def test_color_2(self):
-        from colour import Color as Colour
-
-        colour = Colour('#F5F5F5')
-        registry = self.init_registry(simple_column, ColumnType=Color)
-        test = registry.Test.insert(col=colour.hex)
-        self.assertEqual(test.col.hex, colour.hex)
-        self.assertEqual(test.col, colour)
+        test = registry.Test.insert(col=color)
+        self.assertEqual(test.col.hex, colour.Color(color).hex)

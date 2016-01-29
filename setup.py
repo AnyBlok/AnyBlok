@@ -29,7 +29,6 @@ requires = [
     'PyYAML',
     'appdirs',
     'sqlalchemy-utils',
-    'colour',
     'pytz',
     'python-dateutil',
 ]
