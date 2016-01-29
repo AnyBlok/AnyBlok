@@ -677,6 +677,10 @@ def add_database(group):
     group.add_argument('--db-echo-pool', action="store_true", default=False)
     group.add_argument('--db-max-overflow', type=int, default=10)
     group.add_argument('--db-pool-size', type=int, default=5)
+    group.add_argument('--default-encrypt-key',
+                       default=os.environ.get('ANYBLOK_ENCRYPT_KEY'),
+                       help=("Default ey definition to encrypt column with "
+                             "encryp_key=True"))
 
 
 @Configuration.add('create_db', must_be_loaded_by_unittest=True)
