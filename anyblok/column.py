@@ -27,6 +27,7 @@ from sqlalchemy.types import LargeBinary as SA_LargeBinary
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.encrypted import EncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
+from sqlalchemy_utils.types.uuid import UUIDType
 from datetime import datetime, date
 from dateutil.parser import parse
 import json
@@ -905,3 +906,30 @@ class Color(Column):
 
         return hybrid_property(
             wrap_getter_column(fieldname), setter_column)
+
+
+class UUID(String):
+    """ Sequence column
+
+    ::
+
+        from anyblok.column import UUID
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = UUID()
+
+    """
+    def __init__(self, *args, **kwargs):
+        uuid_kwargs = {}
+        for kwarg in ('binary', 'native'):
+            if kwarg in kwargs:
+                uuid_kwargs[kwarg] = kwargs.pop(kwarg)
+
+        if 'foreign_key' in kwargs:
+            self.foreign_key = kwargs.pop('foreign_key')
+
+        self.sqlalchemy_type = UUIDType(**uuid_kwargs)
+        super(String, self).__init__(*args, **kwargs)

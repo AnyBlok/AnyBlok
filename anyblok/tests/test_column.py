@@ -13,7 +13,8 @@ from anyblok.field import FieldException
 from anyblok.column import (Column, Boolean, Json, String, BigInteger,
                             SmallInteger, uString, Text, uText, Selection,
                             Date, DateTime, Time, Interval, Decimal, Float,
-                            LargeBinary, Integer, Sequence, Color, Password)
+                            LargeBinary, Integer, Sequence, Color, Password,
+                            UUID)
 from unittest import skipIf
 
 try:
@@ -705,3 +706,38 @@ class TestColumns(DBTestCase):
         registry = self.init_registry(simple_column, ColumnType=Color)
         test = registry.Test.insert(col=color)
         self.assertEqual(test.col.hex, colour.Color(color).hex)
+
+    def test_uuid_binary_1(self):
+        from uuid import uuid1
+        uuid = uuid1()
+        registry = self.init_registry(simple_column, ColumnType=UUID)
+        test = registry.Test.insert(col=uuid)
+        self.assertIs(test.col, uuid)
+
+    def test_uuid_binary_3(self):
+        from uuid import uuid3, NAMESPACE_DNS
+        uuid = uuid3(NAMESPACE_DNS, 'python.org')
+        registry = self.init_registry(simple_column, ColumnType=UUID)
+        test = registry.Test.insert(col=uuid)
+        self.assertIs(test.col, uuid)
+
+    def test_uuid_binary_4(self):
+        from uuid import uuid4
+        uuid = uuid4()
+        registry = self.init_registry(simple_column, ColumnType=UUID)
+        test = registry.Test.insert(col=uuid)
+        self.assertIs(test.col, uuid)
+
+    def test_uuid_binary_5(self):
+        from uuid import uuid5, NAMESPACE_DNS
+        uuid = uuid5(NAMESPACE_DNS, 'python.org')
+        registry = self.init_registry(simple_column, ColumnType=UUID)
+        test = registry.Test.insert(col=uuid)
+        self.assertIs(test.col, uuid)
+
+    def test_uuid_char32(self):
+        from uuid import uuid1
+        uuid = uuid1()
+        registry = self.init_registry(simple_column, ColumnType=UUID, binary=False)
+        test = registry.Test.insert(col=uuid)
+        self.assertIs(test.col, uuid)

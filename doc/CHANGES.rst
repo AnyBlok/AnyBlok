@@ -34,6 +34,7 @@ Future
 * [REF] column can be encrypted
 * [REF] DataTime column is not a naive datatime value
 * [ADD] Add Password Column
+* [ADD] Add UUID Column
 
 0.7.2 (2016-01-14)
 ------------------

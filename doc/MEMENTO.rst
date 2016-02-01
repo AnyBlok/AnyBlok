@@ -456,6 +456,7 @@ List of the column type:
  * ``Sequence``
  * ``Color``: use colour.Color
  * ``Password``: use sqlalchemy_utils.types.password.Password
+ * ``UUID``: uuid
 
 All the columns have the following optional parameters:
 
@@ -575,6 +576,15 @@ Other attribute for ``Password``:
 ..warning::
 
     The Password column can be found with the query meth:
+
+Other attribute for ``UUID``:
+
++----------------+------------------------------------------------------------+
+| Param          | Description                                                |
++================+============================================================+
+| ``binary``     | Stores a UUID in the database natively when it can and     |
+|                | falls back to a BINARY(16) or a CHAR(32)                   |
++----------------+------------------------------------------------------------+
 
 RelationShip
 ------------
