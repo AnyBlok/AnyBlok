@@ -738,6 +738,7 @@ class TestColumns(DBTestCase):
     def test_uuid_char32(self):
         from uuid import uuid1
         uuid = uuid1()
-        registry = self.init_registry(simple_column, ColumnType=UUID, binary=False)
+        registry = self.init_registry(simple_column, ColumnType=UUID,
+                                      binary=False)
         test = registry.Test.insert(col=uuid)
         self.assertIs(test.col, uuid)
