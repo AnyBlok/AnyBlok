@@ -456,7 +456,8 @@ List of the column type:
  * ``Sequence``
  * ``Color``: use colour.Color
  * ``Password``: use sqlalchemy_utils.types.password.Password
- * ``UUID``: uuid
+ * ``UUID``: use uuid
+ * ``URL``: use furl.furl
 
 All the columns have the following optional parameters:
 

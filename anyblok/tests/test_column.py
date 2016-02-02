@@ -14,7 +14,7 @@ from anyblok.column import (Column, Boolean, Json, String, BigInteger,
                             SmallInteger, uString, Text, uText, Selection,
                             Date, DateTime, Time, Interval, Decimal, Float,
                             LargeBinary, Integer, Sequence, Color, Password,
-                            UUID)
+                            UUID, URL)
 from unittest import skipIf
 
 try:
@@ -34,6 +34,12 @@ try:
     has_colour = True
 except:
     has_colour = False
+
+try:
+    import furl  # noqa
+    has_furl = True
+except:
+    has_furl = False
 
 
 Model = Declarations.Model
@@ -742,3 +748,35 @@ class TestColumns(DBTestCase):
                                       binary=False)
         test = registry.Test.insert(col=uuid)
         self.assertIs(test.col, uuid)
+
+    @skipIf(not has_furl, "furl is not installed")
+    def test_URL(self):
+        f = furl.furl('http://doc.anyblok.org')
+        registry = self.init_registry(simple_column, ColumnType=URL)
+        test = registry.Test.insert(col=f)
+        self.assertEqual(test.col, f)
+
+    @skipIf(not has_furl, "furl is not installed")
+    def test_URL_2(self):
+        f = 'http://doc.anyblok.org'
+        registry = self.init_registry(simple_column, ColumnType=URL)
+        test = registry.Test.insert(col=f)
+        self.assertEqual(test.col.url, f)
+
+    @skipIf(not has_furl, "furl is not installed")
+    def test_URL_3(self):
+        f = 'http://doc.anyblok.org'
+        registry = self.init_registry(simple_column, ColumnType=URL)
+        registry.Test.insert(col=f)
+        Test = registry.Test
+        test = Test.query().filter(Test.col == f).one()
+        self.assertEqual(test.col.url, f)
+
+    @skipIf(not has_furl, "furl is not installed")
+    def test_URL_4(self):
+        f = furl.furl('http://doc.anyblok.org')
+        registry = self.init_registry(simple_column, ColumnType=URL)
+        registry.Test.insert(col=f)
+        Test = registry.Test
+        test = Test.query().filter(Test.col == f).one()
+        self.assertEqual(test.col.url, f.url)

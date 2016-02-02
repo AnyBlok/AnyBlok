@@ -28,6 +28,7 @@ from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.encrypted import EncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
 from sqlalchemy_utils.types.uuid import UUIDType
+from sqlalchemy_utils.types.url import URLType
 from datetime import datetime, date
 from dateutil.parser import parse
 import json
@@ -933,3 +934,40 @@ class UUID(String):
 
         self.sqlalchemy_type = UUIDType(**uuid_kwargs)
         super(String, self).__init__(*args, **kwargs)
+
+
+class URL(Column):
+    """ Integer column
+
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import URL
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = URL(default='doc.anyblok.org')
+
+    """
+    sqlalchemy_type = URLType
+
+    def get_property(self, registry, namespace, fieldname, properties):
+        """Return the property of the field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
+        from furl import furl
+
+        def selection_set(model_self, value):
+            if value is not None:
+                if isinstance(value, str):
+                    value = furl(value)
+
+            setattr(model_self, anyblok_column_prefix + fieldname, value)
+
+        return hybrid_property(wrap_getter_column(fieldname), selection_set)
