@@ -29,15 +29,6 @@ def expire_related_attribute(self, action_todos):
                 self.registry.expire(obj, attrs)
 
 
-def wrap_getter_column(fieldname):
-    attr_name = anyblok_column_prefix + fieldname
-
-    def getter_collumn(self):
-        return getattr(self, attr_name)
-
-    return getter_collumn
-
-
 def wrap_setter_column(fieldname):
     attr_name = anyblok_column_prefix + fieldname
 
@@ -61,7 +52,7 @@ class Field:
     This class must not be instanciated
     """
 
-    use_hybrid_property = True
+    use_hybrid_property = False
 
     def __init__(self, *args, **kwargs):
         """ Initialize the field
@@ -106,8 +97,32 @@ class Field:
         :param properties: properties known to the model
         """
         return hybrid_property(
-            wrap_getter_column(fieldname),
-            wrap_setter_column(fieldname))
+            self.wrap_getter_column(fieldname),
+            self.wrap_setter_column(fieldname))
+
+    def wrap_getter_column(self, fieldname):
+        """Return a default getter for the field
+
+        :param fieldname: name of the field
+        """
+        attr_name = anyblok_column_prefix + fieldname
+
+        def getter_collumn(self):
+            return getattr(self, attr_name)
+
+        return getter_collumn
+
+    def wrap_setter_column(self, fieldname):
+        """Return a default setter for the field
+
+        :param fieldname: name of the field
+        """
+        attr_name = anyblok_column_prefix + fieldname
+
+        def setter_collumn(self, value):
+            return setattr(self, attr_name, value)
+
+        return setter_collumn
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -168,7 +183,8 @@ class Function(Field):
 
     """
 
-    def get_property(self, registry, namespace, fieldname, properties):
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
+                               properties):
         """Return the property of the field
 
         :param registry: current registry

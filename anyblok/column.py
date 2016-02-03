@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from .field import Field, FieldException, wrap_getter_column
+from .field import Field, FieldException
 from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types
@@ -89,6 +89,8 @@ class Column(Field):
 
     This class can't be instanciated
     """
+
+    use_hybrid_property = True
 
     foreign_key = None
     sqlalchemy_type = None
@@ -403,7 +405,8 @@ class DateTime(Column):
 
             setattr(model_self, anyblok_column_prefix + fieldname, value)
 
-        return hybrid_property(wrap_getter_column(fieldname), selection_set)
+        return hybrid_property(self.wrap_getter_column(fieldname),
+                               selection_set)
 
 
 class Time(Column):
@@ -535,7 +538,7 @@ class Password(Column):
             setattr(model_self, anyblok_column_prefix + fieldname, value)
 
         return hybrid_property(
-            wrap_getter_column(fieldname), setter_column)
+            self.wrap_getter_column(fieldname), setter_column)
 
 
 class uString(Column):
@@ -906,7 +909,7 @@ class Color(Column):
             setattr(model_self, anyblok_column_prefix + fieldname, value)
 
         return hybrid_property(
-            wrap_getter_column(fieldname), setter_column)
+            self.wrap_getter_column(fieldname), setter_column)
 
 
 class UUID(String):
@@ -970,4 +973,5 @@ class URL(Column):
 
             setattr(model_self, anyblok_column_prefix + fieldname, value)
 
-        return hybrid_property(wrap_getter_column(fieldname), selection_set)
+        return hybrid_property(self.wrap_getter_column(fieldname),
+                               selection_set)
