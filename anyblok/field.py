@@ -13,39 +13,6 @@ class FieldException(Exception):
     """ Simple Exception for Field """
 
 
-def expire_related_attribute(self, action_todos):
-    for action_todo in action_todos:
-        if len(action_todo) == 1:
-            obj = self
-            attrs = [action_todo[0]]
-        else:
-            obj = getattr(self, action_todo[0])
-            attrs = [action_todo[1]]
-            if obj is None:
-                continue
-
-        if obj in self.registry.session:
-            if obj._sa_instance_state.persistent:
-                self.registry.expire(obj, attrs)
-
-
-def wrap_setter_column(fieldname):
-    attr_name = anyblok_column_prefix + fieldname
-
-    def setter_collumn(self, value):
-        action_todos = set()
-        if fieldname in self.loaded_columns:
-            action_todos = self.registry.expire_attributes.get(
-                self.__registry_name__, {}).get(fieldname, set())
-
-        expire_related_attribute(self, action_todos)
-        res = setattr(self, attr_name, value)
-        expire_related_attribute(self, action_todos)
-        return res
-
-    return setter_collumn
-
-
 class Field:
     """ Field class
 
@@ -98,7 +65,11 @@ class Field:
         """
         return hybrid_property(
             self.wrap_getter_column(fieldname),
-            self.wrap_setter_column(fieldname))
+            self.wrap_setter_column(fieldname),
+            expr=self.wrap_expr_column(fieldname))
+
+    def getter_format_value(self, value):
+        return value
 
     def wrap_getter_column(self, fieldname):
         """Return a default getter for the field
@@ -107,22 +78,57 @@ class Field:
         """
         attr_name = anyblok_column_prefix + fieldname
 
-        def getter_collumn(self):
-            return getattr(self, attr_name)
+        def getter_column(model_self):
+            return self.getter_format_value(getattr(model_self, attr_name))
 
-        return getter_collumn
+        return getter_column
 
-    def wrap_setter_column(self, fieldname):
-        """Return a default setter for the field
+    def wrap_expr_column(self, fieldname):
+        """Return a default expr for the field
 
         :param fieldname: name of the field
         """
         attr_name = anyblok_column_prefix + fieldname
 
-        def setter_collumn(self, value):
-            return setattr(self, attr_name, value)
+        def expr_column(model_self):
+            return getattr(model_self, attr_name)
 
-        return setter_collumn
+        return expr_column
+
+    def expire_related_attribute(self, model_self, action_todos):
+        for action_todo in action_todos:
+            if len(action_todo) == 1:
+                obj = model_self
+                attrs = [action_todo[0]]
+            else:
+                obj = getattr(model_self, action_todo[0])
+                attrs = [action_todo[1]]
+                if obj is None:
+                    continue
+
+            if obj in model_self.registry.session:
+                if obj._sa_instance_state.persistent:
+                    model_self.registry.expire(obj, attrs)
+
+    def setter_format_value(self, value):
+        return value
+
+    def wrap_setter_column(self, fieldname):
+        attr_name = anyblok_column_prefix + fieldname
+
+        def setter_column(model_self, value):
+            action_todos = set()
+            if fieldname in model_self.loaded_columns:
+                action_todos = model_self.registry.expire_attributes.get(
+                    model_self.__registry_name__, {}).get(fieldname, set())
+
+            self.expire_related_attribute(model_self, action_todos)
+            value = self.setter_format_value(value)
+            res = setattr(model_self, attr_name, value)
+            self.expire_related_attribute(model_self, action_todos)
+            return res
+
+        return setter_column
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):

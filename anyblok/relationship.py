@@ -11,8 +11,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
-from .field import (Field, FieldException,
-                    wrap_setter_column)
+from .field import Field, FieldException
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr
 from anyblok.common import anyblok_column_prefix
 
@@ -319,7 +318,7 @@ class Many2One(RelationShip):
         properties['hybrid_property_columns'].append(cname.attribute_name)
         properties[cname.attribute_name] = hybrid_property(
             self.wrap_getter_column(cname.attribute_name),
-            wrap_setter_column(cname.attribute_name))
+            self.wrap_setter_column(cname.attribute_name))
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):

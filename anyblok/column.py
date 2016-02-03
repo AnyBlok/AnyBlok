@@ -9,7 +9,6 @@ from .field import Field, FieldException
 from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.types import Integer as SA_Integer
 from sqlalchemy.types import SmallInteger as SA_SmallInteger
 from sqlalchemy.types import BigInteger as SA_BigInteger
@@ -35,7 +34,6 @@ import json
 from copy import deepcopy
 from inspect import ismethod
 from anyblok.config import Configuration
-from anyblok.common import anyblok_column_prefix
 import time
 import pytz
 from logging import getLogger
@@ -91,7 +89,6 @@ class Column(Field):
     """
 
     use_hybrid_property = True
-
     foreign_key = None
     sqlalchemy_type = None
 
@@ -388,25 +385,14 @@ class DateTime(Column):
     """
     sqlalchemy_type = DateTimeType
 
-    def get_property(self, registry, namespace, fieldname, properties):
-        """Return the property of the field
+    def setter_format_value(self, value):
+        value = convert_string_to_datetime(value)
+        if value is not None:
+            if value.tzinfo is None:
+                timezone = pytz.timezone(time.tzname[0])
+                value = value.replace(tzinfo=timezone)
 
-        :param registry: current registry
-        :param namespace: name of the model
-        :param fieldname: name of the field
-        :param properties: properties known to the model
-        """
-        def selection_set(model_self, value):
-            value = convert_string_to_datetime(value)
-            if value is not None:
-                if value.tzinfo is None:
-                    timezone = pytz.timezone(time.tzname[0])
-                    value = value.replace(tzinfo=timezone)
-
-            setattr(model_self, anyblok_column_prefix + fieldname, value)
-
-        return hybrid_property(self.wrap_getter_column(fieldname),
-                               selection_set)
+        return value
 
 
 class Time(Column):
@@ -524,21 +510,10 @@ class Password(Column):
         self.sqlalchemy_type = PasswordType(max_length=size, **crypt_context)
         super(Password, self).__init__(*args, **kwargs)
 
-    def get_property(self, registry, namespace, fieldname, properties):
-        """Return the property of the field
-
-        :param registry: current registry
-        :param namespace: name of the model
-        :param fieldname: name of the field
-        :param properties: properties known to the model
-        """
-        def setter_column(model_self, value):
-            value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
-            value = SAU_PWD(value, context=self.sqlalchemy_type.context)
-            setattr(model_self, anyblok_column_prefix + fieldname, value)
-
-        return hybrid_property(
-            self.wrap_getter_column(fieldname), setter_column)
+    def setter_format_value(self, value):
+        value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
+        value = SAU_PWD(value, context=self.sqlalchemy_type.context)
+        return value
 
 
 class uString(Column):
@@ -708,32 +683,17 @@ class Selection(Column):
 
         super(Selection, self).__init__(*args, **kwargs)
 
-    def get_property(self, registry, namespace, fieldname, properties):
-        """Return the property of the field
+    def getter_format_value(self, value):
+        return self.sqlalchemy_type.python_type(value)
 
-        :param registry: current registry
-        :param namespace: name of the model
-        :param fieldname: name of the field
-        :param properties: properties known to the model
-        """
-        def selection_get(model_self):
-            return self.sqlalchemy_type.python_type(
-                getattr(model_self, anyblok_column_prefix + fieldname))
+    def setter_format_value(self, value):
+        if value is not None:
+            val = self.sqlalchemy_type.python_type(value)
+            if not val.validate():
+                raise FieldException('%r is not in the selections (%s)' % (
+                    value, ', '.join(val.get_selections())))
 
-        def selection_set(model_self, value):
-            if value is not None:
-                val = self.sqlalchemy_type.python_type(value)
-                if not val.validate():
-                    raise FieldException('%r is not in the selections (%s)' % (
-                        value, ', '.join(val.get_selections())))
-
-            setattr(model_self, anyblok_column_prefix + fieldname, value)
-
-        def selection_expression(model_self):
-            return getattr(model_self, anyblok_column_prefix + fieldname)
-
-        return hybrid_property(
-            selection_get, selection_set, expr=selection_expression)
+        return value
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -894,22 +854,11 @@ class Color(Column):
         self.sqlalchemy_type = ColorType(max_length)
         super(Color, self).__init__(*args, **kwargs)
 
-    def get_property(self, registry, namespace, fieldname, properties):
-        """Return the property of the field
+    def setter_format_value(self, value):
+        if isinstance(value, str):
+            value = self.sqlalchemy_type.python_type(value)
 
-        :param registry: current registry
-        :param namespace: name of the model
-        :param fieldname: name of the field
-        :param properties: properties known to the model
-        """
-        def setter_column(model_self, value):
-            if isinstance(value, str):
-                value = self.sqlalchemy_type.python_type(value)
-
-            setattr(model_self, anyblok_column_prefix + fieldname, value)
-
-        return hybrid_property(
-            self.wrap_getter_column(fieldname), setter_column)
+        return value
 
 
 class UUID(String):
@@ -956,22 +905,11 @@ class URL(Column):
     """
     sqlalchemy_type = URLType
 
-    def get_property(self, registry, namespace, fieldname, properties):
-        """Return the property of the field
-
-        :param registry: current registry
-        :param namespace: name of the model
-        :param fieldname: name of the field
-        :param properties: properties known to the model
-        """
+    def setter_format_value(self, value):
         from furl import furl
 
-        def selection_set(model_self, value):
-            if value is not None:
-                if isinstance(value, str):
-                    value = furl(value)
+        if value is not None:
+            if isinstance(value, str):
+                value = furl(value)
 
-            setattr(model_self, anyblok_column_prefix + fieldname, value)
-
-        return hybrid_property(self.wrap_getter_column(fieldname),
-                               selection_set)
+        return value
