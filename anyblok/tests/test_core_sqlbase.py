@@ -400,6 +400,11 @@ class TestCoreSQLBase(DBTestCase):
         self.assertIs(t2.test, t3)
         self.assertEqual(t2.test_id, t3.id)
         self.assertEqual(t3.test2, [t2])
+        t3.test2.remove(t2)
+        self.assertEqual(t1.test2, [])
+        self.assertIsNone(t2.test)
+        self.assertIsNone(t2.test_id)
+        self.assertEqual(t3.test2, [])
 
     def test_refresh_update_o2o(self):
         registry = self.init_registry(self.add_in_registry_o2o)
