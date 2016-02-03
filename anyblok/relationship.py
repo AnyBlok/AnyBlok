@@ -354,7 +354,6 @@ class Many2One(RelationShip):
         :param registry: current registry
         """
         properties = {
-            'registry': registry, 'namespace': namespace,
             'fieldname': fieldname, 'relationship_fied': self}
         InstrumentedList = type(
             'InstrumentedList', (RelationShipListMany2One, RelationShipList,
@@ -467,6 +466,13 @@ class One2One(Many2One):
         :param propertie: the properties known
         """
         self.backref_properties.update({'uselist': False})
+
+    def apply_instrumentedlist(self, registry, namespace, fieldname):
+        """ Add the InstrumentedList class to replace List class as result
+        of the query
+
+        :param registry: current registry
+        """
 
 
 class Many2Many(RelationShip):
