@@ -365,6 +365,11 @@ class TestCoreSQLBase(DBTestCase):
         self.assertIs(t2.test, t3)
         self.assertIs(t2.test_id, t3.id)
         self.assertEqual(t3.test2, [t2])
+        t2.test = None
+        self.assertEqual(t1.test2, [])
+        self.assertIsNone(t2.test)
+        self.assertIsNone(t2.test_id)
+        self.assertEqual(t3.test2, [])
 
     def test_refresh_update_m2o_2(self):
         registry = self.init_registry(self.add_in_registry_m2o)
@@ -436,20 +441,6 @@ class TestCoreSQLBase(DBTestCase):
         self.assertIsNone(t1.test2)
         self.assertIs(t2.test, t3)
         self.assertEqual(t2.test_id, t3.id)
-        self.assertIs(t3.test2, t2)
-
-    def test_refresh_update_o2o_4(self):
-        registry = self.init_registry(self.add_in_registry_o2o)
-        t1 = registry.Test.insert(name='t1')
-        t2 = registry.Test2.insert(name='t2', test=t1)
-        t3 = registry.Test.insert(name='t3')
-        self.assertIs(t1.test2, t2)
-        self.assertIs(t2.test, t1)
-        self.assertEqual(t2.test_id, t1.id)
-        self.assertIsNone(t3.test2)
-        t2.test = t3
-        self.assertIsNone(t1.test2)
-        self.assertIs(t2.test, t3)
         self.assertIs(t3.test2, t2)
 
     def test_refresh_update_o2m(self):

@@ -340,14 +340,18 @@ class Many2One(RelationShip):
         attr_name = anyblok_column_prefix + fieldname
 
         def apply_value_to(model_self, model_field, remote_self, remote_field):
-            value = getattr(remote_self, anyblok_column_prefix + remote_field)
+            if remote_self:
+                value = getattr(remote_self,
+                                anyblok_column_prefix + remote_field)
+            else:
+                value = None
+
             setattr(model_self, anyblok_column_prefix + model_field, value)
 
         def setter_collumn(model_self, value):
             res = setattr(model_self, attr_name, value)
-            if value is not None:
-                for model_field, rfield in self.link_between_columns:
-                    apply_value_to(model_self, model_field, value, rfield)
+            for model_field, rfield in self.link_between_columns:
+                apply_value_to(model_self, model_field, value, rfield)
 
             return res
 
