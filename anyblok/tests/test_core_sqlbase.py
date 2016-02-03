@@ -358,10 +358,12 @@ class TestCoreSQLBase(DBTestCase):
         t3 = registry.Test.insert(name='t3')
         self.assertEqual(t1.test2, [t2])
         self.assertIs(t2.test, t1)
+        self.assertEqual(t2.test_id, t1.id)
         self.assertEqual(t3.test2, [])
         t2.test = t3
         self.assertEqual(t1.test2, [])
         self.assertIs(t2.test, t3)
+        self.assertIs(t2.test_id, t3.id)
         self.assertEqual(t3.test2, [t2])
 
     def test_refresh_update_m2o_2(self):
@@ -404,6 +406,7 @@ class TestCoreSQLBase(DBTestCase):
         t2.test = t3
         self.assertIsNone(t1.test2)
         self.assertIs(t2.test, t3)
+        self.assertEqual(t2.test_id, t3.id)
         self.assertIs(t3.test2, t2)
 
     @skipIf(sqlalchemy.__version__ < "1.0.12", "sqlalchemy error")

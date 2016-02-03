@@ -160,6 +160,7 @@ class Many2One(RelationShip):
     :param unique: If True, add the unique constraint on the column
     :param one2many: create the one2many link with this many2one
     """
+    use_hybrid_property = True
 
     def __init__(self, **kwargs):
         super(Many2One, self).__init__(**kwargs)
@@ -236,6 +237,7 @@ class Many2One(RelationShip):
         :param propertie: the properties known
         """
         add_fksc = False
+        self.link_between_columns = []
         self.model.check_model(registry)
         self.update_local_and_remote_columns_names(registry, namespace)
         if fieldname in [x.attribute_name for x in self.column_names]:
@@ -265,11 +267,14 @@ class Many2One(RelationShip):
                 foreign_key = remote_columns[rc].get_fk_name(registry)
                 self.create_column(cname, remote_type, foreign_key, properties)
                 add_fksc = True
-                fk_names.append(remote_columns[rc])
+                fk_name = remote_columns[rc]
             else:
-                fk_names.append(cname.get_fk_mapper(registry))
+                fk_name = cname.get_fk_mapper(registry)
 
             col_names.append(cname.attribute_name)
+            fk_names.append(fk_name.get_fk_name(registry))
+            self.link_between_columns.append((cname.attribute_name,
+                                              fk_name.attribute_name))
 
         if namespace == self.model.model_name:
             self.kwargs['remote_side'] = [
@@ -278,9 +283,8 @@ class Many2One(RelationShip):
 
         if (len(self.column_names) > 1 or add_fksc) and col_names and fk_names:
             properties['add_in_table_args'].append(
-                ForeignKeyConstraint(
-                    col_names, [x.get_fk_name(registry) for x in fk_names],
-                    **self.foreign_key_options))
+                ForeignKeyConstraint(col_names, fk_names,
+                                     **self.foreign_key_options))
 
     def get_column_information(self, registry, cname, remote_types):
         if len(remote_types) == 1:
@@ -331,6 +335,35 @@ class Many2One(RelationShip):
             [x.get_fk_name(registry) for x in self.column_names])
         return super(Many2One, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
+
+    def wrap_setter_x2o_relationship(self, fieldname):
+        attr_name = anyblok_column_prefix + fieldname
+
+        def apply_value_to(model_self, model_field, remote_self, remote_field):
+            value = getattr(remote_self, anyblok_column_prefix + remote_field)
+            setattr(model_self, anyblok_column_prefix + model_field, value)
+
+        def setter_collumn(model_self, value):
+            res = setattr(model_self, attr_name, value)
+            if value is not None:
+                for model_field, rfield in self.link_between_columns:
+                    apply_value_to(model_self, model_field, value, rfield)
+
+            return res
+
+        return setter_collumn
+
+    def get_property(self, registry, namespace, fieldname, properties):
+        """Return the property of the field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
+        return hybrid_property(
+            wrap_getter_column(fieldname),
+            self.wrap_setter_x2o_relationship(fieldname))
 
 
 class One2One(Many2One):
