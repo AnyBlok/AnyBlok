@@ -31,8 +31,6 @@ class RelationShip(Field):
     the model
     """
 
-    use_hybrid_property = False
-
     def __init__(self, *args, **kwargs):
         self.forbid_instance(RelationShip)
         if 'model' in kwargs:
@@ -318,7 +316,8 @@ class Many2One(RelationShip):
         properties['hybrid_property_columns'].append(cname.attribute_name)
         properties[cname.attribute_name] = hybrid_property(
             self.wrap_getter_column(cname.attribute_name),
-            self.wrap_setter_column(cname.attribute_name))
+            super(Many2One, self).wrap_setter_column(cname.attribute_name),
+            expr=self.wrap_expr_column(cname.attribute_name))
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -335,7 +334,7 @@ class Many2One(RelationShip):
         return super(Many2One, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
 
-    def wrap_setter_x2o_relationship(self, fieldname):
+    def wrap_setter_column(self, fieldname):
         attr_name = anyblok_column_prefix + fieldname
 
         def apply_value_to(model_self, model_field, remote_self, remote_field):
@@ -347,26 +346,14 @@ class Many2One(RelationShip):
 
             setattr(model_self, anyblok_column_prefix + model_field, value)
 
-        def setter_collumn(model_self, value):
+        def setter_column(model_self, value):
             res = setattr(model_self, attr_name, value)
             for model_field, rfield in self.link_between_columns:
                 apply_value_to(model_self, model_field, value, rfield)
 
             return res
 
-        return setter_collumn
-
-    def get_property(self, registry, namespace, fieldname, properties):
-        """Return the property of the field
-
-        :param registry: current registry
-        :param namespace: name of the model
-        :param fieldname: name of the field
-        :param properties: properties known to the model
-        """
-        return hybrid_property(
-            self.wrap_getter_column(fieldname),
-            self.wrap_setter_x2o_relationship(fieldname))
+        return setter_column
 
 
 class One2One(Many2One):
