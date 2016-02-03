@@ -398,6 +398,7 @@ class TestCoreSQLBase(DBTestCase):
         t3.test2.append(t2)
         self.assertEqual(t1.test2, [])
         self.assertIs(t2.test, t3)
+        self.assertEqual(t2.test_id, t3.id)
         self.assertEqual(t3.test2, [t2])
 
     def test_refresh_update_o2o(self):

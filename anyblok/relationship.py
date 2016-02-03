@@ -16,6 +16,41 @@ from .mapper import ModelAdapter, ModelAttribute, ModelRepr
 from anyblok.common import anyblok_column_prefix
 
 
+class RelationShipList:  # don't inherit list
+
+    def append(self, x):
+        res = super(RelationShipList, self).append(x)
+        self.relationship_field_append_value(x)
+        return res
+
+    def extend(self, L):
+        res = super(RelationShipList, self).extend(L)
+        for el in L:
+            self.relationship_field_append_value(el)
+
+        return res
+
+    def insert(self, i, x):
+        res = super(RelationShipList, self).insert(i, x)
+        self.relationship_field_append_value(x)
+        return res
+
+    def remove(self, x):
+        self.relationship_field_remove_value(x)
+        return super(RelationShipList, self).remove(x)
+
+    def pop(self, *args, **kwargs):
+        res = super(RelationShipList, self).pop(*args, **kwargs)
+        self.relationship_field_remove_value(res)
+        return res
+
+    def clear(self):
+        for x in self:
+            self.relationship_field_remove_value(x)
+
+        return super(RelationShipList, self).clear()
+
+
 class RelationShip(Field):
     """ RelationShip class
 
@@ -124,6 +159,18 @@ class RelationShip(Field):
 
         if fieldname not in registry.expire_attributes[namespace]:
             registry.expire_attributes[namespace][fieldname] = set()
+
+
+class RelationShipListMany2One:
+
+    def relationship_field_append_value(self, value):
+        for model_field, rfield in self.relationship_fied.link_between_columns:
+            self.relationship_fied.apply_value_to(
+                value, model_field, getattr(value, self.fieldname), rfield)
+
+    def relationship_field_remove_value(self, value):
+        for model_field, rfield in self.relationship_fied.link_between_columns:
+            setattr(value, anyblok_column_prefix + model_field, None)
 
 
 class Many2One(RelationShip):
@@ -300,6 +347,20 @@ class Many2One(RelationShip):
                 raise FieldException("Can not create the local "
                                      "column %r" % cname.attribute_name)
 
+    def apply_instrumentedlist(self, registry, namespace, fieldname):
+        """ Add the InstrumentedList class to replace List class as result
+        of the query
+
+        :param registry: current registry
+        """
+        properties = {
+            'registry': registry, 'namespace': namespace,
+            'fieldname': fieldname, 'relationship_fied': self}
+        InstrumentedList = type(
+            'InstrumentedList', (RelationShipListMany2One, RelationShipList,
+                                 registry.InstrumentedList), properties)
+        self.backref_properties['collection_class'] = InstrumentedList
+
     def create_column(self, cname, remote_type, foreign_key, properties):
 
         def wrapper(cls):
@@ -334,22 +395,23 @@ class Many2One(RelationShip):
         return super(Many2One, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
 
+    def apply_value_to(self, model_self, model_field, remote_self,
+                       remote_field):
+        if remote_self:
+            value = getattr(remote_self,
+                            anyblok_column_prefix + remote_field)
+        else:
+            value = None
+
+        setattr(model_self, anyblok_column_prefix + model_field, value)
+
     def wrap_setter_column(self, fieldname):
         attr_name = anyblok_column_prefix + fieldname
-
-        def apply_value_to(model_self, model_field, remote_self, remote_field):
-            if remote_self:
-                value = getattr(remote_self,
-                                anyblok_column_prefix + remote_field)
-            else:
-                value = None
-
-            setattr(model_self, anyblok_column_prefix + model_field, value)
 
         def setter_column(model_self, value):
             res = setattr(model_self, attr_name, value)
             for model_field, rfield in self.link_between_columns:
-                apply_value_to(model_self, model_field, value, rfield)
+                self.apply_value_to(model_self, model_field, value, rfield)
 
             return res
 
