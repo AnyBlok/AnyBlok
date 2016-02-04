@@ -479,6 +479,7 @@ class TestCoreSQLBase(DBTestCase):
         self.assertIn(t3, t1.test2)
         self.assertIs(t2.test, t1)
         self.assertIs(t3.test, t1)
+        self.assertIs(t3.test_id, t1.id)
 
     def test_refresh_update_o2m_3(self):
         registry = self.init_registry(self.add_in_registry_o2m)
@@ -516,7 +517,7 @@ class TestCoreSQLBase(DBTestCase):
         self.assertEqual(t2.test, [])
         self.assertEqual(t3.test, [t1])
 
-    def test_refresh_update_m2m_3(self):
+    def test_refresh_update_m2m_2(self):
         registry = self.init_registry(self.add_in_registry_m2m)
         t1 = registry.Test.insert(name='t1')
         t2 = registry.Test2.insert(name='t2')

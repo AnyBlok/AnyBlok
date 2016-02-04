@@ -93,23 +93,12 @@ class RelationshipProperty(relationships.RelationshipProperty):
             self._add_reverse_property(self.back_populates)
 
 
-class InstrumentedAttribute(attributes.InstrumentedAttribute):
-
-    def __init__(self, *args, **kwargs):
-        self.relationship_field = kwargs.pop('relationship_field')
-        super(InstrumentedAttribute, self).__init__(*args, **kwargs)
-
-    def __set__(self, instance, value):
-        for cname, fname in self.relationship_field.link_between_columns:
-            setattr(value, cname, getattr(instance, fname))
-
-
 def register_descriptor(class_, key, comparator=None,
                         parententity=None, doc=None, relationship_field=None):
     manager = base.manager_of_class(class_)
-    descriptor = InstrumentedAttribute(class_, key, comparator=comparator,
-                                       parententity=parententity,
-                                       relationship_field=relationship_field)
+    descriptor = relationship_field.InstrumentedAttribute(
+        class_, key, comparator=comparator, parententity=parententity,
+        relationship_field=relationship_field)
     descriptor.__doc__ = doc
     manager.instrument_attribute(key, descriptor)
     return descriptor
@@ -537,6 +526,17 @@ class Many2One(RelationShip):
         return setter_column
 
 
+class InstrumentedAttribute_O2O(attributes.InstrumentedAttribute):
+
+    def __init__(self, *args, **kwargs):
+        self.relationship_field = kwargs.pop('relationship_field')
+        super(InstrumentedAttribute_O2O, self).__init__(*args, **kwargs)
+
+    def __set__(self, instance, value):
+        for cname, fname in self.relationship_field.link_between_columns:
+            setattr(value, cname, getattr(instance, fname))
+
+
 class One2One(Many2One):
     """ Define a relationship attribute on the model
 
@@ -566,6 +566,8 @@ class One2One(Many2One):
     :param nullable: If the column_names is nullable
     :param backref: create the one2one link with this one2one
     """
+
+    InstrumentedAttribute = InstrumentedAttribute_O2O
 
     def __init__(self, **kwargs):
         super(One2One, self).__init__(**kwargs)
@@ -751,6 +753,18 @@ class Many2Many(RelationShip):
             registry, namespace, fieldname, properties)
 
 
+class InstrumentedAttribute_O2M(attributes.InstrumentedAttribute):
+
+    def __init__(self, *args, **kwargs):
+        self.relationship_field = kwargs.pop('relationship_field')
+        super(InstrumentedAttribute_O2M, self).__init__(*args, **kwargs)
+
+    def __set__(self, instance, value):
+        super(InstrumentedAttribute_O2M, self).__set__(instance, value)
+        for cname, fname in self.relationship_field.link_between_columns:
+            setattr(instance, cname, getattr(value, fname))
+
+
 class One2Many(RelationShip):
     """ Define a relationship attribute on the model
 
@@ -773,6 +787,9 @@ class One2Many(RelationShip):
     :param primaryjoin: the join condition between the remote column
     :param many2one: create the many2one link with this one2many
     """
+
+    InstrumentedAttribute = InstrumentedAttribute_O2M
+
     def __init__(self, **kwargs):
         super(One2Many, self).__init__(**kwargs)
 
@@ -845,6 +862,10 @@ class One2Many(RelationShip):
         self.kwargs['info']['remote_columns'] = [x.attribute_name
                                                  for x in self.remote_columns]
 
+        self.link_between_columns = [
+            (x.attribute_name, x.get_fk_mapper(registry).attribute_name)
+            for x in self.remote_columns]
+
         if 'primaryjoin' not in self.kwargs:
             pjs = []
             for cname in self.remote_columns:
@@ -873,3 +894,7 @@ class One2Many(RelationShip):
             self.backref_properties.update({'remote_side': [
                 properties[anyblok_column_prefix + pk.attribute_name]
                 for pk in pks]})
+
+    def get_relationship_cls(self):
+        self.kwargs['relationship_field'] = self
+        return RelationshipProperty
