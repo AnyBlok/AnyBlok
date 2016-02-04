@@ -10,8 +10,6 @@ from anyblok.column import Integer, String, Selection
 from anyblok.relationship import Many2One, One2One, Many2Many, One2Many
 from anyblok.declarations import Declarations
 from anyblok.bloks.anyblok_core.exceptions import SqlBaseException
-from unittest import skipIf
-import sqlalchemy
 
 
 Model = Declarations.Model
