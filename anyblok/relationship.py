@@ -533,11 +533,18 @@ class InstrumentedAttribute_O2O(attributes.InstrumentedAttribute):
         super(InstrumentedAttribute_O2O, self).__init__(*args, **kwargs)
 
     def __set__(self, instance, value):
+        call_super = False
         for cname, fname in self.relationship_field.link_between_columns:
             if instance:
-                setattr(value, cname, getattr(instance, fname))
+                if getattr(instance, fname):
+                    setattr(value, cname, getattr(instance, fname))
+                else:
+                    call_super = True
             else:
                 setattr(value, cname, instance)
+
+        if call_super:
+            super(InstrumentedAttribute_O2O, self).__set__(instance, value)
 
 
 class One2One(Many2One):
