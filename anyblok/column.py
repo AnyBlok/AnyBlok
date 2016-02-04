@@ -644,9 +644,6 @@ class SelectionType(types.TypeDecorator):
     def process_bind_param(self, value, engine):
         if value is not None:
             value = self.python_type(value)
-            if not value.validate():
-                raise FieldException('%r is not in the selections (%s)' % (
-                    value, ', '.join(value.get_selections())))
 
         return value
 
