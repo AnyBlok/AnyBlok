@@ -534,7 +534,10 @@ class InstrumentedAttribute_O2O(attributes.InstrumentedAttribute):
 
     def __set__(self, instance, value):
         for cname, fname in self.relationship_field.link_between_columns:
-            setattr(value, cname, getattr(instance, fname))
+            if instance:
+                setattr(value, cname, getattr(instance, fname))
+            else:
+                setattr(value, cname, instance)
 
 
 class One2One(Many2One):
@@ -762,7 +765,10 @@ class InstrumentedAttribute_O2M(attributes.InstrumentedAttribute):
     def __set__(self, instance, value):
         super(InstrumentedAttribute_O2M, self).__set__(instance, value)
         for cname, fname in self.relationship_field.link_between_columns:
-            setattr(instance, cname, getattr(value, fname))
+            if value:
+                setattr(instance, cname, getattr(value, fname))
+            else:
+                setattr(instance, cname, value)
 
 
 class One2Many(RelationShip):
