@@ -413,6 +413,7 @@ class TestCoreSQLBase(DBTestCase):
         t3 = registry.Test.insert(name='t3')
         self.assertIs(t1.test2, t2)
         self.assertIs(t2.test, t1)
+        self.assertIs(t2.test_id, t1.id)
         self.assertIsNone(t3.test2)
         t2.test = t3
         self.assertIsNone(t1.test2)
@@ -420,7 +421,6 @@ class TestCoreSQLBase(DBTestCase):
         self.assertEqual(t2.test_id, t3.id)
         self.assertIs(t3.test2, t2)
 
-    @skipIf(sqlalchemy.__version__ < "1.0.12", "sqlalchemy error")
     def test_refresh_update_o2o_2(self):
         registry = self.init_registry(self.add_in_registry_o2o)
         t1 = registry.Test.insert(name='t1')
@@ -432,6 +432,7 @@ class TestCoreSQLBase(DBTestCase):
         t3.test2 = t2
         self.assertIsNone(t1.test2)
         self.assertIs(t2.test, t3)
+        self.assertIs(t2.test_id, t3.id)
         self.assertIs(t3.test2, t2)
 
     def test_refresh_update_o2o_3(self):

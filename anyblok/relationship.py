@@ -7,13 +7,129 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy import Table, Column, ForeignKeyConstraint
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import (relationships, backref, relationship, base,
+                            attributes)
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import exc as sa_exc, util
 from .field import Field, FieldException
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr
 from anyblok.common import anyblok_column_prefix
+
+
+class RelationshipProperty(relationships.RelationshipProperty):
+
+    def __init__(self, *args, **kwargs):
+        self.relationship_field = kwargs.pop('relationship_field')
+        super(RelationshipProperty, self).__init__(*args, **kwargs)
+
+    def _generate_backref(self):  # noqa
+        """Interpret the 'backref' instruction to create a
+        :func:`.relationship` complementary to this one."""
+
+        if self.parent.non_primary:
+            return
+        if self.backref is not None and not self.back_populates:
+            if isinstance(self.backref, util.string_types):
+                backref_key, kwargs = self.backref, {}
+            else:
+                backref_key, kwargs = self.backref
+            mapper = self.mapper.primary_mapper()
+
+            check = set(mapper.iterate_to_root()).\
+                union(mapper.self_and_descendants)
+            for m in check:
+                if m.has_property(backref_key):
+                    raise sa_exc.ArgumentError(
+                        "Error creating backref "
+                        "'%s' on relationship '%s': property of that "
+                        "name exists on mapper '%s'" %
+                        (backref_key, self, m))
+
+            # determine primaryjoin/secondaryjoin for the
+            # backref.  Use the one we had, so that
+            # a custom join doesn't have to be specified in
+            # both directions.
+            if self.secondary is not None:
+                # for many to many, just switch primaryjoin/
+                # secondaryjoin.   use the annotated
+                # pj/sj on the _join_condition.
+                pj = kwargs.pop(
+                    'primaryjoin',
+                    self._join_condition.secondaryjoin_minus_local)
+                sj = kwargs.pop(
+                    'secondaryjoin',
+                    self._join_condition.primaryjoin_minus_local)
+            else:
+                pj = kwargs.pop(
+                    'primaryjoin',
+                    self._join_condition.primaryjoin_reverse_remote)
+                sj = kwargs.pop('secondaryjoin', None)
+                if sj:
+                    raise sa_exc.InvalidRequestError(
+                        "Can't assign 'secondaryjoin' on a backref "
+                        "against a non-secondary relationship."
+                    )
+
+            foreign_keys = kwargs.pop('foreign_keys',
+                                      self._user_defined_foreign_keys)
+            parent = self.parent.primary_mapper()
+            kwargs.setdefault('viewonly', self.viewonly)
+            kwargs.setdefault('post_update', self.post_update)
+            kwargs.setdefault('passive_updates', self.passive_updates)
+            self.back_populates = backref_key
+            _relationship = RelationshipProperty2(
+                parent, self.secondary,
+                pj, sj,
+                foreign_keys=foreign_keys,
+                back_populates=self.key,
+                relationship_field=self.relationship_field,
+                **kwargs)
+
+            mapper._configure_property(backref_key, _relationship)
+
+        if self.back_populates:
+            self._add_reverse_property(self.back_populates)
+
+
+class InstrumentedAttribute(attributes.InstrumentedAttribute):
+
+    def __init__(self, *args, **kwargs):
+        self.relationship_field = kwargs.pop('relationship_field')
+        super(InstrumentedAttribute, self).__init__(*args, **kwargs)
+
+    def __set__(self, instance, value):
+        for cname, fname in self.relationship_field.link_between_columns:
+            setattr(value, cname, getattr(instance, fname))
+
+
+def register_descriptor(class_, key, comparator=None,
+                        parententity=None, doc=None, relationship_field=None):
+    manager = base.manager_of_class(class_)
+    descriptor = InstrumentedAttribute(class_, key, comparator=comparator,
+                                       parententity=parententity,
+                                       relationship_field=relationship_field)
+    descriptor.__doc__ = doc
+    manager.instrument_attribute(key, descriptor)
+    return descriptor
+
+
+class RelationshipProperty2(relationships.RelationshipProperty):
+
+    def __init__(self, *args, **kwargs):
+        self.relationship_field = kwargs.pop('relationship_field')
+        super(RelationshipProperty2, self).__init__(*args, **kwargs)
+
+    def instrument_class(self, mapper):
+        register_descriptor(
+            mapper.class_,
+            self.key,
+            comparator=self.comparator_factory(self, mapper),
+            parententity=mapper,
+            doc=self.doc,
+            relationship_field=self.relationship_field,
+        )
 
 
 class RelationShipList:  # don't inherit list
@@ -125,6 +241,9 @@ class RelationShip(Field):
             if not mapper.is_declared(registry):
                 mapper.add_fake_relationship(registry, namespace, fieldname)
 
+    def get_relationship_cls(self):
+        return relationship
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Return the instance of the real field
@@ -141,7 +260,8 @@ class RelationShip(Field):
         self.kwargs['info']['rtype'] = self.__class__.__name__
         self.apply_instrumentedlist(registry, namespace, fieldname)
         self.format_backref(registry, namespace, fieldname, properties)
-        return relationship(self.model.tablename(registry), **self.kwargs)
+        return self.get_relationship_cls()(
+            self.model.tablename(registry), **self.kwargs)
 
     def must_be_declared_as_attr(self):
         """ Return True, because it is a relationship """
@@ -473,6 +593,10 @@ class One2One(Many2One):
 
         :param registry: current registry
         """
+
+    def get_relationship_cls(self):
+        self.kwargs['relationship_field'] = self
+        return RelationshipProperty
 
 
 class Many2Many(RelationShip):
