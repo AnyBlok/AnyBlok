@@ -9,20 +9,6 @@ from .field import Field, FieldException
 from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types
-from sqlalchemy.types import Integer as SA_Integer
-from sqlalchemy.types import SmallInteger as SA_SmallInteger
-from sqlalchemy.types import BigInteger as SA_BigInteger
-from sqlalchemy.types import Boolean as SA_Boolean
-from sqlalchemy.types import Float as SA_Float
-from sqlalchemy.types import DECIMAL as SA_Decimal
-from sqlalchemy.types import Date as SA_Date
-from sqlalchemy.types import Time as SA_Time
-from sqlalchemy.types import Interval as SA_Interval
-from sqlalchemy.types import String as SA_String
-from sqlalchemy.types import Unicode
-from sqlalchemy.types import Text as SA_Text
-from sqlalchemy.types import UnicodeText
-from sqlalchemy.types import LargeBinary as SA_LargeBinary
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.encrypted import EncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
@@ -224,7 +210,7 @@ class Integer(Column):
             x = Integer(default=1)
 
     """
-    sqlalchemy_type = SA_Integer
+    sqlalchemy_type = types.Integer
 
 
 class SmallInteger(Column):
@@ -242,7 +228,7 @@ class SmallInteger(Column):
             x = SmallInteger(default=1)
 
     """
-    sqlalchemy_type = SA_SmallInteger
+    sqlalchemy_type = types.SmallInteger
 
 
 class BigInteger(Column):
@@ -260,7 +246,7 @@ class BigInteger(Column):
             x = BigInteger(default=1)
 
     """
-    sqlalchemy_type = SA_BigInteger
+    sqlalchemy_type = types.BigInteger
 
 
 class Boolean(Column):
@@ -278,7 +264,7 @@ class Boolean(Column):
             x = Boolean(default=True)
 
     """
-    sqlalchemy_type = SA_Boolean
+    sqlalchemy_type = types.Boolean
 
 
 class Float(Column):
@@ -296,7 +282,7 @@ class Float(Column):
             x = Float(default=1.0)
 
     """
-    sqlalchemy_type = SA_Float
+    sqlalchemy_type = types.Float
 
 
 class Decimal(Column):
@@ -315,7 +301,7 @@ class Decimal(Column):
             x = Decimal(default=D('1.1'))
 
     """
-    sqlalchemy_type = SA_Decimal
+    sqlalchemy_type = types.DECIMAL
 
     def setter_format_value(self, value):
         if value is not None:
@@ -341,7 +327,7 @@ class Date(Column):
             x = Date(default=date.today())
 
     """
-    sqlalchemy_type = SA_Date
+    sqlalchemy_type = types.Date
 
 
 def convert_string_to_datetime(value):
@@ -368,7 +354,7 @@ class DateTimeType(types.TypeDecorator):
                 timezone = pytz.timezone(time.tzname[0])
                 value = value.replace(tzinfo=timezone)
 
-            return value
+        return value
 
     @property
     def python_type(self):
@@ -419,7 +405,7 @@ class Time(Column):
             x = Time(default=time())
 
     """
-    sqlalchemy_type = SA_Time
+    sqlalchemy_type = types.Time
 
 
 class Interval(Column):
@@ -438,7 +424,18 @@ class Interval(Column):
             x = Interval(default=timedelta(days=5))
 
     """
-    sqlalchemy_type = SA_Interval
+    sqlalchemy_type = types.Interval
+
+
+class StringType(types.TypeDecorator):
+
+    impl = types.String
+
+    def process_bind_param(self, value, engine):
+        if value is False:
+            value = ''
+
+        return value
 
 
 class String(Column):
@@ -468,7 +465,7 @@ class String(Column):
         if 'foreign_key' in kwargs:
             self.foreign_key = kwargs.pop('foreign_key')
 
-        self.sqlalchemy_type = SA_String(size)
+        self.sqlalchemy_type = StringType(size)
 
         super(String, self).__init__(*args, **kwargs)
 
@@ -524,6 +521,17 @@ class Password(Column):
         return value
 
 
+class uStringType(types.TypeDecorator):
+
+    impl = types.Unicode
+
+    def process_bind_param(self, value, engine):
+        if value is False:
+            value = ''
+
+        return value
+
+
 class uString(Column):
     """ Unicode column
 
@@ -551,9 +559,20 @@ class uString(Column):
         if 'foreign_key' in kwargs:
             self.foreign_key = kwargs.pop('foreign_key')
 
-        self.sqlalchemy_type = Unicode(size)
+        self.sqlalchemy_type = uStringType(size)
 
         super(uString, self).__init__(*args, **kwargs)
+
+
+class TextType(types.TypeDecorator):
+
+    impl = types.Text
+
+    def process_bind_param(self, value, engine):
+        if value is False:
+            value = ''
+
+        return value
 
 
 class Text(Column):
@@ -571,7 +590,18 @@ class Text(Column):
             x = Text(default='test')
 
     """
-    sqlalchemy_type = SA_Text
+    sqlalchemy_type = TextType
+
+
+class UnicodeTextType(types.TypeDecorator):
+
+    impl = types.UnicodeText
+
+    def process_bind_param(self, value, engine):
+        if value is False:
+            value = ''
+
+        return value
 
 
 class uText(Column):
@@ -589,7 +619,7 @@ class uText(Column):
             x = uText(default=u'test')
 
     """
-    sqlalchemy_type = UnicodeText
+    sqlalchemy_type = UnicodeTextType
 
 
 class StrSelection(str):
@@ -783,7 +813,7 @@ class LargeBinary(Column):
             x = LargeBinary(default=blob)
 
     """
-    sqlalchemy_type = SA_LargeBinary
+    sqlalchemy_type = types.LargeBinary
 
 
 class Sequence(String):

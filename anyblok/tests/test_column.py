@@ -165,6 +165,31 @@ class TestColumns(DBTestCase):
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
+    def test_string_with_False(self):
+        registry = self.init_registry(simple_column, ColumnType=String)
+        test = registry.Test.insert(col=False)
+        self.assertEqual(test.col, False)
+        self.registry.flush()
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
+    def test_string_set_False(self):
+        registry = self.init_registry(simple_column, ColumnType=String)
+        test = registry.Test.insert()
+        test.col = False
+        self.assertEqual(test.col, False)
+        self.registry.flush()
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
+    def test_string_query_False(self):
+        registry = self.init_registry(simple_column, ColumnType=String)
+        test = registry.Test.insert()
+        self.registry.Test.query().filter_by(id=test.id).update({'col': False})
+        self.assertEqual(test.col, False)
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
     @skipIf(not has_cryptography, "cryptography is not installed")
     def test_string_with_encrypt_key(self):
         registry = self.init_registry(simple_column, ColumnType=String,
@@ -195,6 +220,31 @@ class TestColumns(DBTestCase):
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
+    def test_text_with_False(self):
+        registry = self.init_registry(simple_column, ColumnType=Text)
+        test = registry.Test.insert(col=False)
+        self.assertEqual(test.col, False)
+        self.registry.flush()
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
+    def test_text_set_False(self):
+        registry = self.init_registry(simple_column, ColumnType=Text)
+        test = registry.Test.insert()
+        test.col = False
+        self.assertEqual(test.col, False)
+        self.registry.flush()
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
+    def test_text_query_False(self):
+        registry = self.init_registry(simple_column, ColumnType=Text)
+        test = registry.Test.insert()
+        self.registry.Test.query().filter_by(id=test.id).update({'col': False})
+        self.assertEqual(test.col, False)
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
     def test_ustring(self):
         registry = self.init_registry(simple_column, ColumnType=uString)
         test = registry.Test.insert(col='col')
@@ -206,10 +256,60 @@ class TestColumns(DBTestCase):
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
 
+    def test_ustring_with_False(self):
+        registry = self.init_registry(simple_column, ColumnType=uString)
+        test = registry.Test.insert(col=False)
+        self.assertEqual(test.col, False)
+        self.registry.flush()
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
+    def test_ustring_set_False(self):
+        registry = self.init_registry(simple_column, ColumnType=uString)
+        test = registry.Test.insert()
+        test.col = False
+        self.assertEqual(test.col, False)
+        self.registry.flush()
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
+    def test_ustring_query_False(self):
+        registry = self.init_registry(simple_column, ColumnType=uString)
+        test = registry.Test.insert()
+        self.registry.Test.query().filter_by(id=test.id).update({'col': False})
+        self.assertEqual(test.col, False)
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
     def test_utext(self):
         registry = self.init_registry(simple_column, ColumnType=uText)
         test = registry.Test.insert(col='col')
         self.assertEqual(test.col, 'col')
+
+    def test_utext_with_False(self):
+        registry = self.init_registry(simple_column, ColumnType=uText)
+        test = registry.Test.insert(col=False)
+        self.assertEqual(test.col, False)
+        self.registry.flush()
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
+    def test_utext_set_False(self):
+        registry = self.init_registry(simple_column, ColumnType=uText)
+        test = registry.Test.insert()
+        test.col = False
+        self.assertEqual(test.col, False)
+        self.registry.flush()
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
+
+    def test_utext_query_False(self):
+        registry = self.init_registry(simple_column, ColumnType=uText)
+        test = registry.Test.insert()
+        self.registry.Test.query().filter_by(id=test.id).update({'col': False})
+        self.assertEqual(test.col, False)
+        self.registry.expire(test, ['col'])
+        self.assertEqual(test.col, '')
 
     def test_date(self):
         from datetime import date

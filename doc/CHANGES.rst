@@ -12,8 +12,10 @@ CHANGELOG
 Future
 ------
 
-* [IMP] `#21 <https://bitbucket.org/jssuzanne/anyblok/issues/21/update-setter-for-decimal>`_
+* [FIX] `#21 <https://bitbucket.org/jssuzanne/anyblok/issues/21/update-setter-for-decimal>`_
   Improve Decimal column setter
+# [FIX] `#22 <https://bitbucket.org/jssuzanne/anyblok/issues/22/string-ustring-text-utext-columns-save>`_
+  String, uString, Text and uText write '' in database for False value
 
 0.8.0 (2016-01-05)
 ------------------
