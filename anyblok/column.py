@@ -318,8 +318,9 @@ class Decimal(Column):
     sqlalchemy_type = SA_Decimal
 
     def setter_format_value(self, value):
-        if not isinstance(value, decimal.Decimal):
-            value = decimal.Decimal(value)
+        if value is not None:
+            if not isinstance(value, decimal.Decimal):
+                value = decimal.Decimal(value)
 
         return value
 
