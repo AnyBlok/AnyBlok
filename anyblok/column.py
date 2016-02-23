@@ -36,6 +36,7 @@ from inspect import ismethod
 from anyblok.config import Configuration
 import time
 import pytz
+import decimal
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -315,6 +316,12 @@ class Decimal(Column):
 
     """
     sqlalchemy_type = SA_Decimal
+
+    def setter_format_value(self, value):
+        if not isinstance(value, decimal.Decimal):
+            value = decimal.Decimal(value)
+
+        return value
 
 
 class Date(Column):

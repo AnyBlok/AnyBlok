@@ -141,6 +141,14 @@ class TestColumns(DBTestCase):
         test = registry.Test.insert(col=D('1.0'))
         self.assertEqual(test.col, D('1.0'))
 
+    def test_setter_decimal(self):
+        from decimal import Decimal as D
+
+        registry = self.init_registry(simple_column, ColumnType=Decimal)
+        test = registry.Test.insert()
+        test.col = '1.0'
+        self.assertEqual(test.col, D('1.0'))
+
     def test_boolean(self):
         registry = self.init_registry(simple_column, ColumnType=Boolean)
         test = registry.Test.insert(col=True)
@@ -728,6 +736,14 @@ class TestColumns(DBTestCase):
         test = registry.Test.insert(col=color)
         self.assertEqual(test.col.hex, colour.Color(color).hex)
 
+    @skipIf(not has_colour, "colour is not installed")
+    def test_setter_color(self):
+        color = '#F5F5F5'
+        registry = self.init_registry(simple_column, ColumnType=Color)
+        test = registry.Test.insert()
+        test.col = color
+        self.assertEqual(test.col.hex, colour.Color(color).hex)
+
     def test_uuid_binary_1(self):
         from uuid import uuid1
         uuid = uuid1()
@@ -770,6 +786,14 @@ class TestColumns(DBTestCase):
         registry = self.init_registry(simple_column, ColumnType=URL)
         test = registry.Test.insert(col=f)
         self.assertEqual(test.col, f)
+
+    @skipIf(not has_furl, "furl is not installed")
+    def test_setter_URL(self):
+        f = 'http://doc.anyblok.org'
+        registry = self.init_registry(simple_column, ColumnType=URL)
+        test = registry.Test.insert()
+        test.col = f
+        self.assertEqual(test.col.url, f)
 
     @skipIf(not has_furl, "furl is not installed")
     def test_URL_2(self):
