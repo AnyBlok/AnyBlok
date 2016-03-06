@@ -112,7 +112,7 @@ class XML:
             self._raise(e, **kwargs)
 
     def map_imported_entry(self, model, param, external_id, two_way, entry,
-                           **kwargs):
+                           if_exist=if_exist, **kwargs):
         if entry:
             if model and param:
                 if (model, param) not in self.params:
@@ -127,7 +127,9 @@ class XML:
                     self.two_way_external_id[(
                         model, external_id)] = entry
                 else:
-                    self.registry.IO.Mapping.set(external_id, entry)
+                    raiseifexist = if_exist != 'overwrite'
+                    self.registry.IO.Mapping.set(external_id, entry,
+                                                 raiseifexist=raiseifexist)
 
     def import_entry(self, entry, values, model=None, external_id=None,
                      param=None, if_exist=if_exist,
@@ -157,7 +159,8 @@ class XML:
                     Model, values, two_way, **kwargs)
 
         self.map_imported_entry(
-            model, param, external_id, two_way, return_entry, **kwargs)
+            model, param, external_id, two_way, return_entry,
+            if_exist=if_exist, **kwargs)
 
         return return_entry
 
