@@ -272,7 +272,17 @@ class XML:
             val = self._import_record(field, field_model, field_type, **_kw)
             values[field_name] = val
 
-        return self.import_entry(entry, values, two_way=two_way, **kwargs)
+        entry = self.import_entry(entry, values, two_way=two_way, **kwargs)
+        if not two_way and self.two_way_external_id:
+            self.two_ways_to_external_id()
+
+        return entry
+
+    def two_ways_to_external_id(self):
+        for k, entry in self.two_way_external_id.items():
+            model, external_id = k
+            # FIXME no controle of if_exist
+            self.map_imported_entry(model, None, external_id, False, entry)
 
     def validate_field(self, field, Model, fields_description, **_kw):
         if field.tag is etree.Comment:
