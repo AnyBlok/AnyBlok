@@ -194,6 +194,9 @@ class Column(Field):
 
         return False
 
+    def update_description(self, registry, model, res):
+        pass
+
 
 class Integer(Column):
     """ Integer column
@@ -736,6 +739,12 @@ class Selection(Column):
             self.selections, self.size, registry=registry, namespace=namespace)
         return super(Selection, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
+
+    def update_description(self, registry, model, res):
+        sqlalchemy_type = SelectionType(
+            self.selections, self.size, registry=registry, namespace=model)
+        values = sqlalchemy_type._StrSelection().get_selections()
+        res['selections'] = [(k, v) for k, v in values.items()]
 
     def must_be_duplicate_before_added(self):
         """ Return True because the field selection in a mixin must be copied

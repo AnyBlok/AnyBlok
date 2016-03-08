@@ -27,6 +27,9 @@ class MapperException(AttributeError):
 class FakeColumn:
     db_column_name = None
 
+    def update_description(self, registry, model, res):
+        pass
+
 
 class FakeRelationShip:
 
