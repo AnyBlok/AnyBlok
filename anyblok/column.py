@@ -194,9 +194,6 @@ class Column(Field):
 
         return False
 
-    def update_description(self, registry, model, res):
-        pass
-
 
 class Integer(Column):
     """ Integer column
@@ -741,6 +738,7 @@ class Selection(Column):
             registry, namespace, fieldname, properties)
 
     def update_description(self, registry, model, res):
+        super(Selection, self).update_description(registry, model, res)
         sqlalchemy_type = SelectionType(
             self.selections, self.size, registry=registry, namespace=model)
         values = sqlalchemy_type._StrSelection().get_selections()

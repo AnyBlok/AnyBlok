@@ -36,6 +36,9 @@ class FakeRelationShip:
     def __init__(self, mapper):
         self.mapper = mapper
 
+    def update_description(self, registry, model, res):
+        pass
+
 
 class ModelAttribute:
     """The Model attribute represente the using of a declared attribute, in the

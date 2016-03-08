@@ -55,7 +55,7 @@ class Field:
         return cname
 
     def _description(self):
-        return {
+        res = {
             'id': self.name,
             'label': self.label,
             'type': self.ftype,
@@ -63,6 +63,9 @@ class Field:
             'primary_key': False,
             'model': None,
         }
+        c = self.registry.loaded_namespaces_first_step[self.model][self.name]
+        c.update_description(self.registry, self.model, res)
+        return res
 
     @classmethod
     def add_field(cls, rname, label, model, table, ftype):

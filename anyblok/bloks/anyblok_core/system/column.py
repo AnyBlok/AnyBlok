@@ -30,10 +30,6 @@ class Column(System.Field):
         res = super(Column, self)._description()
         res.update(nullable=self.nullable, primary_key=self.primary_key,
                    model=self.remote_model)
-
-        c = self.registry.loaded_namespaces_first_step[self.model][self.name]
-        c.update_description(self.registry, self.model, res)
-
         return res
 
     @classmethod

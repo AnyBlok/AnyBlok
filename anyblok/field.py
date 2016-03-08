@@ -33,6 +33,7 @@ class Field:
         if 'label' in kwargs:
             self.label = kwargs.pop('label')
 
+        self.context = kwargs.pop('context', {})
         self.args = args
         self.kwargs = kwargs
 
@@ -45,6 +46,9 @@ class Field:
         if self.__class__ is cls:
             raise FieldException(
                 "%r class must not be instanciated use a sub class" % cls)
+
+    def update_description(self, registry, model, res):
+        res.update(self.context)
 
     def update_properties(self, registry, namespace, fieldname, properties):
         """ Update the propertie use to add new column
