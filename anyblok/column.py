@@ -719,6 +719,9 @@ class Selection(Column):
         super(Selection, self).__init__(*args, **kwargs)
 
     def getter_format_value(self, value):
+        if value is None:
+            return None
+
         return self.sqlalchemy_type.python_type(value)
 
     def setter_format_value(self, value):

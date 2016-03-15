@@ -14,10 +14,13 @@ Future
 
 * [FIX] `#21 <https://bitbucket.org/jssuzanne/anyblok/issues/21/update-setter-for-decimal>`_
   Improve Decimal column setter
-# [FIX] `#22 <https://bitbucket.org/jssuzanne/anyblok/issues/22/string-ustring-text-utext-columns-save>`_
+* [FIX] `#22 <https://bitbucket.org/jssuzanne/anyblok/issues/22/string-ustring-text-utext-columns-save>`_
   String, uString, Text and uText write '' in database for False value
+* [FIX] Change the external_id save in a two way
+* [FIX] `#23 <https://bitbucket.org/jssuzanne/anyblok/issues/23/selection-field-when-nullable-true-doesnt>`_
+  Column.Selection with None value, don't return 'None' value by the getter
 
-0.8.0 (2016-01-05)
+0.8.0 (2016-02-05)
 ------------------
 
 .. warning::

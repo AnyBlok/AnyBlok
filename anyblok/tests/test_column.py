@@ -617,6 +617,17 @@ class TestColumns(DBTestCase):
         with self.assertRaises(FieldException):
             test.col = 'bad value'
 
+    def test_selection_with_none_value(self):
+        SELECTIONS = [
+            ('admin', 'Admin'),
+            ('regular-user', 'Regular user')
+        ]
+
+        registry = self.init_registry(
+            simple_column, ColumnType=Selection, selections=SELECTIONS)
+        t = registry.Test.insert()
+        self.assertIsNone(t.col)
+
     @skipIf(True, "Find a better way to check a column selection by query "
                   "update")
     def test_selection_change_by_query(self):
