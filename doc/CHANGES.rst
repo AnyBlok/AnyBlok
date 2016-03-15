@@ -9,8 +9,8 @@
 CHANGELOG
 =========
 
-Future
-------
+0.8.1 (2016-03-15)
+------------------
 
 * [FIX] `#21 <https://bitbucket.org/jssuzanne/anyblok/issues/21/update-setter-for-decimal>`_
   Improve Decimal column setter
