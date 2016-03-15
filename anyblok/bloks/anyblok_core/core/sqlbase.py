@@ -9,7 +9,7 @@ from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
 from anyblok.column import Column
 from anyblok.mapper import FakeColumn, FakeRelationShip
-from anyblok.relationship import RelationShip
+from anyblok.relationship import RelationShip, Many2Many
 from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty
 from sqlalchemy.sql.expression import true
@@ -344,7 +344,8 @@ class SqlBase(SqlMixin):
 
             if isinstance(_field, (Column, FakeColumn)):
                 _fields.extend(x for x, y in model.items()
-                               if isinstance(y, RelationShip)
+                               if (isinstance(y, RelationShip) and
+                                   not isinstance(y, Many2Many))
                                for mapper in y.column_names
                                if mapper.attribute_name == field)
                 if isinstance(_field, Column) and _field.foreign_key:
@@ -363,6 +364,7 @@ class SqlBase(SqlMixin):
                                 rfield.kwargs['backref'][0], [rc])
 
             elif (isinstance(_field, RelationShip) and
+                  not isinstance(_field, Many2Many) and
                   'backref' in _field.kwargs):
                 res.add_in_res(field, [_field.kwargs['backref'][0]])
             elif isinstance(_field, FakeRelationShip):
@@ -395,11 +397,12 @@ class SqlBase(SqlMixin):
             if isinstance(_field, (Column, FakeColumn)):
                 _fields.extend(x
                                for x, y in model.items()
-                               if isinstance(y, RelationShip)
+                               if (isinstance(y, RelationShip) and
+                                   not isinstance(y, Many2Many))
                                for mapper in y.column_names
                                if mapper.attribute_name == field)
             elif (isinstance(_field, RelationShip) and
-                  hasattr(_field, 'column_names')):
+                  not isinstance(_field, Many2Many)):
                 for mapper in _field.column_names:
                     _fields.append(mapper.attribute_name)
 

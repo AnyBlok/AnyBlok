@@ -8,6 +8,8 @@
 from anyblok.declarations import Declarations, hybrid_method
 from anyblok.column import String, Json
 from .exceptions import IOMappingCheckException, IOMappingSetException
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 register = Declarations.register
@@ -40,25 +42,36 @@ class Mapping:
         """
         return (self.model == model) & self.key.in_(keys)
 
+    def remove_element(self):
+        val = self.registry.get(self.model).from_primary_keys(
+            **self.primary_key)
+        logger.info("Remove entity for %r.%r: %r" % (
+            self.model, self.key, val))
+        val.delete()
+
     @classmethod
-    def multi_delete(cls, model, *keys):
+    def multi_delete(cls, model, *keys, **kwargs):
         """ Delete all the keys for this model
 
         :param model: model of the mapping
         :param \*keys: list of the key
         :rtype: Boolean True if the mappings are removed
         """
+        mapping_only = kwargs.get('mapping_only', True)
         query = cls.query()
         query = query.filter(cls.filter_by_model_and_keys(model, *keys))
         count = query.count()
         if count:
+            if not mapping_only:
+                query.all().remove_element()
+
             query.delete(synchronize_session='fetch')
             return count
 
         return 0
 
     @classmethod
-    def delete(cls, model, key):
+    def delete(cls, model, key, mapping_only=True):
         """ Delete the key for this model
 
         :param model: model of the mapping
@@ -69,6 +82,9 @@ class Mapping:
         query = query.filter(cls.filter_by_model_and_key(model, key))
         count = query.count()
         if count:
+            if not mapping_only:
+                query.one().remove_element()
+
             query.delete()
             return count
 
