@@ -12,6 +12,8 @@ CHANGELOG
 Futur
 -----
 
+* [REF] IO.Mapping methods delete and multi_delete can remove entry
+
 0.8.1 (2016-03-15)
 ------------------
 
