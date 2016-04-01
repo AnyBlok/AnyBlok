@@ -25,11 +25,11 @@ API doc
     :show-inheritance:
     :noindex:
 
-**Core`**
+**Core**
 
 .. automodule:: anyblok.bloks.anyblok_core.core.base
 
-.. autoclass:: Base                                                     
+.. autoanyblok-declaration:: Base                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -43,7 +43,7 @@ API doc
     :show-inheritance:
     :noindex:
 
-.. autoclass:: SqlBase                                                     
+.. autoanyblok-declaration:: SqlBase                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -51,7 +51,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.core.sqlviewbase
 
-.. autoclass:: SqlViewBase                                                     
+.. autoanyblok-declaration:: SqlViewBase                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -59,7 +59,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.core.instrumentedlist
 
-.. autoclass:: InstrumentedList                                                     
+.. autoanyblok-declaration:: InstrumentedList                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -67,7 +67,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.core.query
 
-.. autoclass:: Query                                                     
+.. autoanyblok-declaration:: Query                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -75,7 +75,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.core.session
 
-.. autoclass:: Session                                                     
+.. autoanyblok-declaration:: Session                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -85,7 +85,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system
 
-.. autoclass:: System                                                     
+.. autoanyblok-declaration:: System                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -93,7 +93,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system.blok
 
-.. autoclass:: Blok                                                     
+.. autoanyblok-declaration:: Blok                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -101,7 +101,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system.cache
 
-.. autoclass:: Cache                                                     
+.. autoanyblok-declaration:: Cache                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -109,7 +109,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system.field
 
-.. autoclass:: Field                                                     
+.. autoanyblok-declaration:: Field                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -117,7 +117,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system.column
 
-.. autoclass:: Column                                                     
+.. autoanyblok-declaration:: Column                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -125,7 +125,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system.relationship
 
-.. autoclass:: RelationShip                                                     
+.. autoanyblok-declaration:: RelationShip                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -133,19 +133,19 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system.cron
 
-.. autoclass:: Cron                                                     
+.. autoanyblok-declaration:: Cron                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Job                                                     
+.. autoanyblok-declaration:: Job                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Worker                                                     
+.. autoanyblok-declaration:: Worker                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -153,7 +153,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system.model
 
-.. autoclass:: Model                                                     
+.. autoanyblok-declaration:: Model                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -161,7 +161,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system.parameter
 
-.. autoclass:: Parameter                                                     
+.. autoanyblok-declaration:: Parameter                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -169,7 +169,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system.sequence
 
-.. autoclass:: Sequence                                                     
+.. autoanyblok-declaration:: Sequence                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -179,13 +179,13 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation
 
-.. autoclass:: DocElement                                                     
+.. autoanyblok-declaration:: DocElement                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Documentation                                                     
+.. autoanyblok-declaration:: Documentation                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -193,7 +193,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.blok
 
-.. autoclass:: Blok                                                     
+.. autoanyblok-declaration:: Blok                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -201,7 +201,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.model
 
-.. autoclass:: Model                                                     
+.. autoanyblok-declaration:: Model                                                     
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -209,7 +209,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.model.attribute
 
-.. autoclass:: Attribute 
+.. autoanyblok-declaration:: Attribute 
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:
@@ -217,7 +217,7 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.model.field
 
-.. autoclass:: Field
+.. autoanyblok-declaration:: Field
     :members:                                                                   
     :undoc-members:                                                             
     :show-inheritance:

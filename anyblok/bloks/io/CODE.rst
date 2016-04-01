@@ -53,7 +53,7 @@ API doc
 
 .. automodule:: anyblok.bloks.io.mapping
 
-.. autoclass:: Mapping
+.. autoanyblok-declaration:: Mapping
     :members:
     :undoc-members:
     :show-inheritance:
@@ -63,7 +63,7 @@ API doc
 
 .. automodule:: anyblok.bloks.io.mixin
 
-.. autoclass:: IOMixin
+.. autoanyblok-declaration:: IOMixin
     :members:
     :undoc-members:
     :show-inheritance:
@@ -73,7 +73,7 @@ API doc
 
 .. automodule:: anyblok.bloks.io.importer
 
-.. autoclass:: Importer
+.. autoanyblok-declaration:: Importer
     :members:
     :undoc-members:
     :show-inheritance:
@@ -83,7 +83,7 @@ API doc
 
 .. automodule:: anyblok.bloks.io.exporter
 
-.. autoclass:: Exporter
+.. autoanyblok-declaration:: Exporter
     :members:
     :undoc-members:
     :show-inheritance:
@@ -93,97 +93,97 @@ API doc
 
 .. automodule:: anyblok.bloks.io.formater
 
-.. autoclass:: Formater
+.. autoanyblok-declaration:: Formater
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Float
+.. autoanyblok-declaration:: Float
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Decimal
+.. autoanyblok-declaration:: Decimal
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Json
+.. autoanyblok-declaration:: Json
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Interval
+.. autoanyblok-declaration:: Interval
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Integer
+.. autoanyblok-declaration:: Integer
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: SmallInteger
+.. autoanyblok-declaration:: SmallInteger
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: BigInteger
+.. autoanyblok-declaration:: BigInteger
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Boolean
+.. autoanyblok-declaration:: Boolean
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Time
+.. autoanyblok-declaration:: Time
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Date
+.. autoanyblok-declaration:: Date
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: DateTime
+.. autoanyblok-declaration:: DateTime
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Many2One
+.. autoanyblok-declaration:: Many2One
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: One2One
+.. autoanyblok-declaration:: One2One
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Many2Many
+.. autoanyblok-declaration:: Many2Many
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: One2Many
+.. autoanyblok-declaration:: One2Many
     :members:
     :undoc-members:
     :show-inheritance:

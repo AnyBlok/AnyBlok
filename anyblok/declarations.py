@@ -51,6 +51,10 @@ class Declarations:
             setattr(node, '__registry_name__',
                     parent.__registry_name__ + '.' + name)
 
+            # Only for auto doc with autoanyblok-declaration directive
+            setattr(self, '__declaration__', declaration)
+            setattr(self, '__registry_name__',
+                    parent.__registry_name__ + '.' + name)
             return self
 
         if cls_:

@@ -29,13 +29,13 @@ API doc
 
 .. automodule:: anyblok.bloks.io_csv.mixin
 
-.. autoclass:: IOCSVFieldMixin
+.. autoanyblok-declaration:: IOCSVFieldMixin
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: IOCSVMixin
+.. autoanyblok-declaration:: IOCSVMixin
     :members:
     :undoc-members:
     :show-inheritance:
@@ -45,13 +45,13 @@ API doc
 
 .. automodule:: anyblok.bloks.io_csv.importer
 
-.. autoclass:: Importer
+.. autoanyblok-declaration:: Importer
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: CSV
+.. autoanyblok-declaration:: CSV
     :members:
     :undoc-members:
     :show-inheritance:
@@ -61,19 +61,19 @@ API doc
 
 .. automodule:: anyblok.bloks.io_csv.exporter
 
-.. autoclass:: Exporter
+.. autoanyblok-declaration:: Exporter
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: Field
+.. autoanyblok-declaration:: Field
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: CSV
+.. autoanyblok-declaration:: CSV
     :members:
     :undoc-members:
     :show-inheritance:

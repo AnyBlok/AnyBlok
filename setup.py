@@ -31,6 +31,7 @@ requires = [
     'sqlalchemy-utils',
     'pytz',
     'python-dateutil',
+    'texttable',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

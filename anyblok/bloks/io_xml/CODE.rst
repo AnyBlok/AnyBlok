@@ -29,13 +29,13 @@ API doc
 
 .. automodule:: anyblok.bloks.io_xml.importer
 
-.. autoclass:: Importer
+.. autoanyblok-declaration:: Importer
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: XML
+.. autoanyblok-declaration:: XML
     :members:
     :undoc-members:
     :show-inheritance:
@@ -45,13 +45,13 @@ API doc
 
 .. automodule:: anyblok.bloks.io_xml.exporter
 
-.. autoclass:: Exporter
+.. autoanyblok-declaration:: Exporter
     :members:
     :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: XML
+.. autoanyblok-declaration:: XML
     :members:
     :undoc-members:
     :show-inheritance:

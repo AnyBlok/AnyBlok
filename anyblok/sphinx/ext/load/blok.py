@@ -7,8 +7,80 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.release import version
 from anyblok.blok import BlokManager
+from sphinx.ext.autodoc import ClassDocumenter, MethodDocumenter
+from sphinx.application import ExtensionError
+from sphinx.util.docstrings import prepare_docstring
+
+
+def default_autodoc_class(declaration):
+
+    def wrapper(cls):
+        return '\n\n'.join([
+            ":Declaration type: %s" % declaration.__declaration_type__,
+            ":Registry's name: %s" % cls.__registry_name__])
+
+    return wrapper
+
+
+def default_autodoc_method(declaration):
+
+    def wrapper(cls, meth_name, meth):
+        return None
+
+    return wrapper
+
+
+class AnyBlokDeclarationDocumenter(ClassDocumenter):
+    objtype = 'anyblok-declaration'
+    directivetype = 'class'
+
+    def get_doc(self, encoding=None, ignore=1):
+        lines = getattr(self, '_new_docstrings', None)
+        if lines is not None:
+            return lines
+
+        doc = super(AnyBlokDeclarationDocumenter, self).get_doc(
+            encoding=encoding, ignore=ignore)
+
+        registry_name = self.get_attr(self.object, '__registry_name__', None)
+        declaration = self.get_attr(self.object, '__declaration__', None)
+        if registry_name is None or declaration is None:
+            raise ExtensionError("%r (%r) is not an anyblok Declaration" %
+                                 (self.object_name, self.object))
+
+        autodoc = self.get_attr(declaration, 'autodoc_class',
+                                default_autodoc_class(declaration))
+        docstrings = autodoc(self.object)
+        if docstrings:
+            doc.append(prepare_docstring(docstrings, ignore))
+
+        return doc
+
+
+class AnyBlokMethodDocumenter(MethodDocumenter):
+
+    def get_doc(self, encoding=None, ignore=1):
+        lines = getattr(self, '_new_docstrings', None)
+        if lines is not None:
+            return lines
+
+        doc = super(AnyBlokMethodDocumenter, self).get_doc(encoding=encoding,
+                                                           ignore=ignore)
+        registry_name = self.get_attr(
+            self.parent, '__registry_name__', None)
+        declaration = self.get_attr(self.parent, '__declaration__', None)
+        if registry_name and declaration:
+            autodoc = self.get_attr(declaration, 'autodoc_method',
+                                    default_autodoc_method(declaration))
+            docstrings = autodoc(self.parent, self.object_name, self.object)
+            if docstrings:
+                doc.append(prepare_docstring(docstrings, ignore))
+
+        return doc
 
 
 def setup(app):
     BlokManager.load()
+    app.add_autodocumenter(AnyBlokDeclarationDocumenter)
+    app.add_autodocumenter(AnyBlokMethodDocumenter)
     return {'version': version, 'parallel_read_safe': True}
