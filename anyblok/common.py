@@ -13,6 +13,13 @@ from functools import lru_cache
 anyblok_column_prefix = '__anyblok_field_'
 
 
+def add_autodocs(meth, autodoc):
+    if not hasattr(meth, 'autodocs'):
+        meth.autodocs = []
+
+    meth.autodocs.append(autodoc)
+
+
 def function_name(function):
     if sys.version_info < (3, 3):
         return function.__name__

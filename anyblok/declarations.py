@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .mapper import MapperAdapter
+from .common import add_autodocs
 
 
 class DeclarationsException(AttributeError):
@@ -129,7 +130,12 @@ class Declarations:
 
 
 def cache(size=128):
+    autodoc = """
+    **Cached method** with size=%(size)s
+    """ % dict(size=size)
+
     def wrapper(method):
+        add_autodocs(method, autodoc)
         method.is_cache_method = True
         method.is_cache_classmethod = False
         method.size = size
@@ -139,7 +145,12 @@ def cache(size=128):
 
 
 def classmethod_cache(size=128):
+    autodoc = """
+    **Cached classmethod** with size=%(size)s
+    """ % dict(size=size)
+
     def wrapper(method):
+        add_autodocs(method, autodoc)
         method.is_cache_method = True
         method.is_cache_classmethod = True
         method.size = size
@@ -149,12 +160,18 @@ def classmethod_cache(size=128):
 
 
 def hybrid_method(method=None):
+    autodoc = """
+    **Hybrid method**
+    """
+
     if method:
+        add_autodocs(method, autodoc)
         method.is_an_hybrid_method = True
         return method
     else:
 
         def wrapper(method):
+            add_autodocs(method, autodoc)
             method.is_an_hybrid_method = True
             return method
 
@@ -162,9 +179,15 @@ def hybrid_method(method=None):
 
 
 def listen(*args, **kwargs):
+    autodoc = """
+    **listen** event call with the arguments %(args)r and the positionnal argument
+    %(kwargs)r
+    """ % dict(args=args, kwargs=kwargs)
+
     mapper = MapperAdapter(*args, **kwargs)
 
     def wrapper(method):
+        add_autodocs(method, autodoc)
         mapper.listen(method)
         return classmethod(method)
 

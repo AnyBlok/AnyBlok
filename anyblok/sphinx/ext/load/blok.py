@@ -62,15 +62,9 @@ class AnyBlokMethodDocumenter(MethodDocumenter):
 
         doc = super(AnyBlokMethodDocumenter, self).get_doc(encoding=encoding,
                                                            ignore=ignore)
-        registry_name = self.get_attr(
-            self.parent, '__registry_name__', None)
-        declaration = self.get_attr(self.parent, '__declaration__', None)
-        if registry_name and declaration:
-            autodoc = self.get_attr(declaration, 'autodoc_method',
-                                    default_autodoc_method(declaration))
-            docstrings = autodoc(self.parent, self.object_name, self.object)
-            if docstrings:
-                doc.append(prepare_docstring(docstrings, ignore))
+        autodocs = self.get_attr(self.object, 'autodocs', [])
+        for autodoc in autodocs:
+            doc.append(prepare_docstring(autodoc, ignore))
 
         return doc
 
