@@ -180,8 +180,8 @@ def hybrid_method(method=None):
 
 def listen(*args, **kwargs):
     autodoc = """
-    **listen** event call with the arguments %(args)r and the positionnal argument
-    %(kwargs)r
+    **listen** event call with the arguments %(args)r and the positionnal
+    argument %(kwargs)r
     """ % dict(args=args, kwargs=kwargs)
 
     mapper = MapperAdapter(*args, **kwargs)
