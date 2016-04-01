@@ -352,7 +352,7 @@ class DateTimeType(types.TypeDecorator):
         if value is not None:
             if value.tzinfo is None:
                 timezone = pytz.timezone(time.tzname[0])
-                value = value.replace(tzinfo=timezone)
+                value = timezone.localize(value)
 
         return value
 
@@ -374,7 +374,7 @@ class DateTime(Column):
         @Declarations.register(Declarations.Model)
         class Test:
 
-            x = DateTime(default=datetime.now())
+            x = DateTime(default=datetime.now)
 
     """
     sqlalchemy_type = DateTimeType
@@ -384,7 +384,7 @@ class DateTime(Column):
         if value is not None:
             if value.tzinfo is None:
                 timezone = pytz.timezone(time.tzname[0])
-                value = value.replace(tzinfo=timezone)
+                value = timezone.localize(value)
 
         return value
 

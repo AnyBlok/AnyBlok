@@ -352,7 +352,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%Z'))
         self.assertEqual(test.col, now)
@@ -363,7 +363,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S.%f'))
         self.assertEqual(test.col, now)
@@ -374,7 +374,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S'))
         self.assertEqual(test.col, now.replace(microsecond=0))
@@ -415,7 +415,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert()
         test.col = now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')
@@ -427,7 +427,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert()
         test.col = now.strftime('%Y-%m-%d %H:%M:%S.%f')
@@ -439,7 +439,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert()
         test.col = now.strftime('%Y-%m-%d %H:%M:%S')
@@ -483,7 +483,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert()
         registry.Test.query().update(
@@ -497,7 +497,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert()
         registry.Test.query().update(
@@ -511,7 +511,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert()
         registry.Test.query().update(
@@ -552,7 +552,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert(col=now)
         Test = registry.Test
@@ -567,7 +567,7 @@ class TestColumns(DBTestCase):
         import pytz
 
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert(col=now)
         Test = registry.Test
