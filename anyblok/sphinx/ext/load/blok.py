@@ -8,7 +8,6 @@
 from anyblok.release import version
 from anyblok.blok import BlokManager
 from sphinx.ext.autodoc import ClassDocumenter, MethodDocumenter
-from sphinx.application import ExtensionError
 from sphinx.util.docstrings import prepare_docstring
 
 
@@ -44,15 +43,12 @@ class AnyBlokDeclarationDocumenter(ClassDocumenter):
 
         registry_name = self.get_attr(self.object, '__registry_name__', None)
         declaration = self.get_attr(self.object, '__declaration__', None)
-        if registry_name is None or declaration is None:
-            raise ExtensionError("%r (%r) is not an anyblok Declaration" %
-                                 (self.object_name, self.object))
-
-        autodoc = self.get_attr(declaration, 'autodoc_class',
-                                default_autodoc_class(declaration))
-        docstrings = autodoc(self.object)
-        if docstrings:
-            doc.append(prepare_docstring(docstrings, ignore))
+        if registry_name and declaration:
+            autodoc = self.get_attr(declaration, 'autodoc_class',
+                                    default_autodoc_class(declaration))
+            docstrings = autodoc(self.object)
+            if docstrings:
+                doc.append(prepare_docstring(docstrings, ignore))
 
         return doc
 
