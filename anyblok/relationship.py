@@ -186,6 +186,11 @@ class RelationShip(Field):
         self.kwargs['info']['remote_model'] = self.model.model_name
         self.backref_properties = {}
 
+    def autodoc_get_properties(self):
+        res = super(RelationShip, self).autodoc_get_properties()
+        res['model'] = self.model
+        return res
+
     def apply_instrumentedlist(self, registry, namespace, fieldname):
         """ Add the InstrumentedList class to replace List class as result
         of the query
@@ -345,6 +350,13 @@ class Many2One(RelationShip):
                 self._column_names = [self._column_names]
 
         self.foreign_key_options = self.kwargs.pop('foreign_key_options', {})
+
+    def autodoc_get_properties(self):
+        res = super(Many2One, self).autodoc_get_properties()
+        res['_remote_columns'] = self._remote_columns
+        res['_column_names'] = self._column_names
+        res['unique'] = self.unique
+        return res
 
     def update_local_and_remote_columns_names(self, registry, namespace):
         if self._remote_columns is None:
@@ -682,6 +694,15 @@ class Many2Many(RelationShip):
         self.kwargs['backref'] = self.kwargs.pop('many2many', None)
         self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
+    def autodoc_get_properties(self):
+        res = super(Many2Many, self).autodoc_get_properties()
+        res['join table'] = self.join_table
+        res['remote_columns'] = self.remote_columns
+        res['m2m_remote_columns'] = self.m2m_remote_columns
+        res['local_columns'] = self.local_columns
+        res['m2m_local_columns'] = self.m2m_local_columns
+        return res
+
     def get_m2m_columns(self, registry, columns, m2m_columns):
         if m2m_columns is None:
             m2m_columns = [x.get_fk_name(registry).replace('.', '_')
@@ -820,6 +841,11 @@ class One2Many(RelationShip):
         if 'many2one' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('many2one')
             self.kwargs['info']['remote_names'] = self.kwargs['backref']
+
+    def autodoc_get_properties(self):
+        res = super(One2Many, self).autodoc_get_properties()
+        res['remote_columns'] = self.remote_columns
+        return res
 
     def find_foreign_key(self, registry, properties, tablename):
         """ Return the primary key come from the first step property

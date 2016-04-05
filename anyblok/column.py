@@ -109,6 +109,14 @@ class Column(Field):
         self.encrypt_key = kwargs.pop('encrypt_key', None)
         super(Column, self).__init__(*args, **kwargs)
 
+    def autodoc_get_properties(self):
+        res = super(Column, self).autodoc_get_properties()
+        res['foreign_key'] = self.foreign_key
+        res['DB column name'] = self.db_column_name
+        res['default'] = self.default_val
+        res['is crypted'] = True if self.encrypt_key else False
+        return res
+
     def native_type(cls):
         """ Return the native SqlAlchemy type """
         return cls.sqlalchemy_type
@@ -454,20 +462,20 @@ class String(Column):
 
     """
     def __init__(self, *args, **kwargs):
-        size = 64
-        if 'size' in kwargs:
-            size = kwargs.pop('size')
-            self.size = size
-
+        self.size = kwargs.pop('size', 64)
         if 'type_' in kwargs:
             del kwargs['type_']
 
         if 'foreign_key' in kwargs:
             self.foreign_key = kwargs.pop('foreign_key')
 
-        self.sqlalchemy_type = StringType(size)
-
+        self.sqlalchemy_type = StringType(self.size)
         super(String, self).__init__(*args, **kwargs)
+
+    def autodoc_get_properties(self):
+        res = super(String, self).autodoc_get_properties()
+        res['size'] = self.size
+        return res
 
 
 class Password(Column):
@@ -505,6 +513,7 @@ class Password(Column):
     def __init__(self, *args, **kwargs):
         size = kwargs.pop('size', 64)
         crypt_context = kwargs.pop('crypt_context', {})
+        self.crypt_context = crypt_context
 
         if 'type_' in kwargs:
             del kwargs['type_']
@@ -519,6 +528,11 @@ class Password(Column):
         value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
+
+    def autodoc_get_properties(self):
+        res = super(Password, self).autodoc_get_properties()
+        res['Crypt context'] = self.crypt_context
+        return res
 
 
 class uStringType(types.TypeDecorator):
@@ -562,6 +576,11 @@ class uString(Column):
         self.sqlalchemy_type = uStringType(size)
 
         super(uString, self).__init__(*args, **kwargs)
+
+    def autodoc_get_properties(self):
+        res = super(uString, self).autodoc_get_properties()
+        res['size'] = self.size
+        return res
 
 
 class TextType(types.TypeDecorator):
@@ -718,6 +737,12 @@ class Selection(Column):
 
         super(Selection, self).__init__(*args, **kwargs)
 
+    def autodoc_get_properties(self):
+        res = super(Selection, self).autodoc_get_properties()
+        res['selections'] = self.selections
+        res['size'] = self.size
+        return res
+
     def getter_format_value(self, value):
         if value is None:
             return None
@@ -854,6 +879,11 @@ class Sequence(String):
             'formater') if 'formater' in kwargs else None
 
         super(Sequence, self).__init__(*args, **kwargs)
+
+    def autodoc_get_properties(self):
+        res = super(Sequence, self).autodoc_get_properties()
+        res['formater'] = self.formater
+        return res
 
     def wrap_default(self, registry, namespace, fieldname, properties):
         if not hasattr(registry, '_need_sequence_to_create_if_not_exist'):

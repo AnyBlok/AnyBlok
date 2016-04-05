@@ -51,6 +51,9 @@ class ModelAttribute:
     def __repr__(self):
         return "%s => %s" % (self.model_name, self.attribute_name)
 
+    def __str__(self):
+        return "%s => %s" % (self.model_name, self.attribute_name)
+
     def __init__(self, model_name, attribute_name):
         self.model_name = model_name
         self.attribute_name = attribute_name
@@ -225,6 +228,9 @@ class ModelRepr:
     """
     def __init__(self, model_name):
         self.model_name = model_name
+
+    def __str__(self):
+        return self.model_name
 
     def check_model(self, registry):
         """Check if the model exist else raise an exception
