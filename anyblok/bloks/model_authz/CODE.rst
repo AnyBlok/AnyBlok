@@ -13,6 +13,5 @@ API doc
 
 .. autoanyblok-declaration:: ModelPermissionGrant
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:

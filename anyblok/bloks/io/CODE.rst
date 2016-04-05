@@ -15,37 +15,31 @@ API doc
 
 .. autoexception:: IOException
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: IOMappingCheckException
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: IOMappingSetException
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: ImporterException
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: ExporterException
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: FormaterException
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
@@ -55,7 +49,6 @@ API doc
 
 .. autoanyblok-declaration:: Mapping
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
@@ -65,7 +58,6 @@ API doc
 
 .. autoanyblok-declaration:: IOMixin
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
@@ -75,7 +67,6 @@ API doc
 
 .. autoanyblok-declaration:: Importer
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
@@ -85,7 +76,6 @@ API doc
 
 .. autoanyblok-declaration:: Exporter
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
@@ -95,96 +85,80 @@ API doc
 
 .. autoanyblok-declaration:: Formater
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Float
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Decimal
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Json
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Interval
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Integer
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: SmallInteger
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: BigInteger
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Boolean
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Time
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Date
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: DateTime
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Many2One
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: One2One
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Many2Many
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: One2Many
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:

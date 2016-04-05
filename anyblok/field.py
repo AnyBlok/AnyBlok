@@ -173,6 +173,35 @@ class Field:
         """ Return False, it is the default value """
         return False
 
+    def autodoc_get_properties(self):
+        res = {'Field type': str(self.__class__),
+               'Context': self.context,
+               'Label': self.label}
+        res.update(self.kwargs)
+        return res
+
+    def autodoc_format_dict(self, key, value, padding=0):
+        key = key.strip()
+        if isinstance(value, dict):
+            res = ' * ``%s``:\n' % key
+            res += '\n'.join(
+                [self.autodoc_format_dict(x, y, padding=padding + 1)
+                 for x, y in value.items()])
+            res += '\n'
+            return res
+        elif isinstance(value, (list, tuple)):
+            res = ' * ``%s``:\n' % key
+            res += '\n'.join([' ' * padding + ' * %s' % str(x)
+                              for x in value])
+            res += '\n'
+            return res
+        else:
+            return ' ' * padding + ' * ``%s`` - %s' % (key, str(value))
+
+    def autodoc(self):
+        return '\n'.join([self.autodoc_format_dict(x, y)
+                          for x, y in self.autodoc_get_properties().items()])
+
 
 class Function(Field):
     """ Function Field

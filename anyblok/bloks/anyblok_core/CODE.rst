@@ -31,7 +31,6 @@ API doc
 
 .. autoanyblok-declaration:: Base                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -39,13 +38,11 @@ API doc
 
 .. autoclass:: SqlMixin                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: SqlBase                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -53,7 +50,6 @@ API doc
 
 .. autoanyblok-declaration:: SqlViewBase                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -61,7 +57,6 @@ API doc
 
 .. autoanyblok-declaration:: InstrumentedList                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -69,7 +64,6 @@ API doc
 
 .. autoanyblok-declaration:: Query                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -77,7 +71,6 @@ API doc
 
 .. autoanyblok-declaration:: Session                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -87,7 +80,6 @@ API doc
 
 .. autoanyblok-declaration:: System                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -95,7 +87,6 @@ API doc
 
 .. autoanyblok-declaration:: Blok                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -103,7 +94,6 @@ API doc
 
 .. autoanyblok-declaration:: Cache                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -111,7 +101,6 @@ API doc
 
 .. autoanyblok-declaration:: Field                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -119,7 +108,6 @@ API doc
 
 .. autoanyblok-declaration:: Column                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -127,7 +115,6 @@ API doc
 
 .. autoanyblok-declaration:: RelationShip                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -135,19 +122,16 @@ API doc
 
 .. autoanyblok-declaration:: Cron                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Job                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Worker                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -155,7 +139,6 @@ API doc
 
 .. autoanyblok-declaration:: Model                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -163,7 +146,6 @@ API doc
 
 .. autoanyblok-declaration:: Parameter                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -171,7 +153,6 @@ API doc
 
 .. autoanyblok-declaration:: Sequence                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -181,13 +162,11 @@ API doc
 
 .. autoanyblok-declaration:: DocElement                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: Documentation                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -195,7 +174,6 @@ API doc
 
 .. autoanyblok-declaration:: Blok                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -203,7 +181,6 @@ API doc
 
 .. autoanyblok-declaration:: Model                                                     
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -211,7 +188,6 @@ API doc
 
 .. autoanyblok-declaration:: Attribute 
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -219,7 +195,6 @@ API doc
 
 .. autoanyblok-declaration:: Field
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
@@ -229,36 +204,30 @@ API doc
 
 .. autoexception:: CoreBaseException
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
 .. autoexception:: SqlBaseException
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
 .. autoexception:: QueryException
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
 .. autoexception:: CacheException
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
 .. autoexception:: ParameterException
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:
 
 .. autoexception:: CronWorkerException
     :members:                                                                   
-    :undoc-members:                                                             
     :show-inheritance:
     :noindex:

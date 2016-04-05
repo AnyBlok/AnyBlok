@@ -15,13 +15,11 @@ API doc
 
 .. autoexception:: XMLImporterException
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: XMLExporterException
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
@@ -31,13 +29,11 @@ API doc
 
 .. autoanyblok-declaration:: Importer
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: XML
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
@@ -47,12 +43,10 @@ API doc
 
 .. autoanyblok-declaration:: Exporter
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: XML
     :members:
-    :undoc-members:
     :show-inheritance:
     :noindex:

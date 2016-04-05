@@ -21,6 +21,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from .mapper import ModelAttribute
 from sqlalchemy import ForeignKeyConstraint
 from anyblok.common import anyblok_column_prefix
+from texttable import Texttable
 
 
 class ModelException(Exception):
@@ -154,10 +155,10 @@ class Model:
             if not isinstance(tablename, str):
                 tablename = tablename.__tablename__
 
+        elif hasattr(parent, name):
+            tablename = getattr(parent, name).__tablename__
         else:
-            if parent is Declarations:
-                tablename = name.lower()
-            elif parent is Declarations.Model:
+            if parent is Declarations or parent is Declarations.Model:
                 tablename = name.lower()
             elif hasattr(parent, '__tablename__'):
                 tablename = parent.__tablename__
@@ -180,6 +181,7 @@ class Model:
 
         RegistryManager.add_entry_in_register(
             'Model', _registryname, cls_, **kwargs)
+        setattr(cls_, '__anyblok_kwargs__', kwargs)
 
     @classmethod
     def unregister(self, entry, cls_):
@@ -760,3 +762,22 @@ class Model:
         bloks = Blok.list_by_state('touninstall')
         Blok.uninstall_all(*bloks)
         return Blok.apply_state(*registry.ordered_loaded_bloks)
+
+    @classmethod
+    def autodoc_class(cls, model_cls):
+        res = [":Declaration type: Model"]
+        res.extend([':%s: %s' % (x.replace('_', ' ').strip(), str(y))
+                    for x, y in model_cls.__anyblok_kwargs__.items()])
+        res.extend([':Inherit model or mixin:', ''])
+        res.extend([' * ' + str(x) for x in model_cls.__anyblok_bases__])
+        res.extend(['', ''])
+        if has_sql_fields([model_cls]):
+            rows = [['field name', 'Description']]
+            rows.extend([x, y.autodoc()]
+                        for x, y in get_fields(model_cls).items())
+            table = Texttable()
+            table.set_cols_valign(["m", "t"])
+            table.add_rows(rows)
+            res.extend(['', table.draw(), '', ''])
+
+        return '\n'.join(res)

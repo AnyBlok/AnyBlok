@@ -16,7 +16,7 @@ def default_autodoc_class(declaration):
     def wrapper(cls):
         return '\n\n'.join([
             ":Declaration type: %s" % declaration.__declaration_type__,
-            ":Registry's name: %s" % cls.__registry_name__])
+            ":Registry name: %s" % cls.__registry_name__])
 
     return wrapper
 
