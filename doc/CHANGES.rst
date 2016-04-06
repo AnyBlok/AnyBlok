@@ -9,8 +9,8 @@
 CHANGELOG
 =========
 
-Futur
------
+0.8.2 (2016-04-06)
+------------------
 
 * [REF] IO.Mapping methods delete and multi_delete can remove entry
 * [FIX] datetime with timezone use timezone.localize, better than 
