@@ -364,9 +364,9 @@ class Model:
             registry, namespace, base, properties)
 
         if new_type_properties:
-            return type(namespace, (base,), new_type_properties)
+            return [type(namespace, (), new_type_properties), base]
 
-        return base
+        return [base]
 
     @classmethod
     def apply_hybrid_method(cls, base, registry, namespace, bases,

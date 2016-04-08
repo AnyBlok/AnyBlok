@@ -54,15 +54,17 @@ class TypeList(list):
         return newbase
 
     def append(self, base, **kwargs):
-        newbase = self.transform_base(base, **kwargs)
-        if newbase:
+        bases = self.transform_base(base, **kwargs) or []
+        for newbase in bases:
             super(TypeList, self).append(newbase)
 
     def extend(self, bases, **kwargs):
-        newbases = [x
-                    for y in bases
-                    for x in [self.transform_base(y, **kwargs)]
-                    if x is not None]
+        newbases = []
+        for base in bases:
+            _bases = self.transform_base(base, **kwargs)
+            if _bases:
+                newbases.extend(_bases)
+
         if newbases:
             super(TypeList, self).extend(newbases)
 

@@ -10,6 +10,7 @@ from random import random
 from anyblok.tests.testcase import DBTestCase
 from anyblok.declarations import Declarations, cache, classmethod_cache
 from anyblok.bloks.anyblok_core.exceptions import CacheException
+from anyblok.column import Integer
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
@@ -922,3 +923,43 @@ class TestComparatorInterModel(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         self.check_comparator(registry)
+
+
+class TestSQLModelCache(DBTestCase):
+
+    def add_in_registry(self):
+
+        @register(Model)
+        class Test:
+
+            id = Integer(primary_key=True)
+            id2 = Integer()
+
+            @cache()
+            def get_id2(self):
+                return self.id2
+
+            @classmethod_cache()
+            def count(cls):
+                return cls.query().count()
+
+    def test_query_and_classmethod_cached(self):
+        registry = self.init_registry(self.add_in_registry)
+        registry.Test.insert()
+        registry.Test.insert()
+        self.assertEqual(registry.Test.count(), 2)
+        registry.Test.insert()
+        self.assertEqual(registry.Test.count(), 2)
+        Cache = registry.System.Cache
+        Cache.invalidate('Model.Test', 'count')
+        self.assertEqual(registry.Test.count(), 3)
+
+    def test_query_and_method_cached(self):
+        registry = self.init_registry(self.add_in_registry)
+        t = registry.Test.insert(id2=1)
+        self.assertEqual(t.get_id2(), 1)
+        t.id2 = 2
+        self.assertEqual(t.get_id2(), 1)
+        Cache = registry.System.Cache
+        Cache.invalidate('Model.Test', 'get_id2')
+        self.assertEqual(t.get_id2(), 2)

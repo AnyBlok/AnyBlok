@@ -12,6 +12,8 @@ CHANGELOG
 Future
 ------
 
+* [FIX] cache and classmethod_cache on SQL model
+
 0.8.2 (2016-04-06)
 ------------------
 
