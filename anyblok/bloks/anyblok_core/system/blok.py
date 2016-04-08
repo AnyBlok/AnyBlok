@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import BlokManager
-from anyblok import Declarations
+from anyblok.declarations import Declarations, listen, classmethod_cache
 from anyblok.column import String, Integer, Selection
 from anyblok.field import Function
 from logging import getLogger
@@ -181,6 +181,7 @@ class Blok:
         """ Method to install the blok
         """
         logger.info("Install the blok %r" % self.name)
+        self.fire('Update installed blok')
         entry = self.registry.loaded_bloks[self.name]
         entry.update(None)
         self.state = 'installed'
@@ -190,6 +191,7 @@ class Blok:
         """ Method to update the blok
         """
         logger.info("Update the blok %r" % self.name)
+        self.fire('Update installed blok')
         entry = self.registry.loaded_bloks[self.name]
         entry.update(self.installed_version)
         self.state = 'installed'
@@ -199,6 +201,7 @@ class Blok:
         """ Method to uninstall the blok
         """
         logger.info("Uninstall the blok %r" % self.name)
+        self.fire('Update installed blok')
         entry = BlokManager.bloks[self.name](self.registry)
         entry.uninstall()
         self.state = 'uninstalled'
@@ -219,3 +222,13 @@ class Blok:
         bloks = query.order_by(cls.order).all()
         if bloks:
             bloks.load()
+
+    @classmethod_cache()
+    def is_installed(cls, blok_name):
+        return cls.query().filter_by(name=blok_name,
+                                     state='installed').count() != 0
+
+    @listen('Model.System.Blok', 'Update installed blok')
+    def listen_update_installed_blok(cls):
+        cls.registry.System.Cache.invalidate(
+            cls.__registry_name__, 'is_installed')

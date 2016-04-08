@@ -13,6 +13,7 @@ Future
 ------
 
 * [FIX] cache and classmethod_cache on SQL model
+* [ADD] is_installed classmethod cache
 
 0.8.2 (2016-04-06)
 ------------------
