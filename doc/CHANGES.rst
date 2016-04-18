@@ -9,8 +9,8 @@
 CHANGELOG
 =========
 
-Future
-------
+0.8.3 (2016-04-18)
+------------------
 
 * [FIX] cache and classmethod_cache on SQL model
 * [ADD] is_installed classmethod cache
