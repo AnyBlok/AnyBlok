@@ -12,6 +12,8 @@ CHANGELOG
 Future
 ------
 
+* [FIX] io/xml/importer one2many field
+
 0.8.3 (2016-04-18)
 ------------------
 

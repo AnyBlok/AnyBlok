@@ -148,7 +148,7 @@ class XML:
                     insert_values = {x: y for x, y in values.items()
                                      if not isinstance(y, list)}
                     if insert_values:
-                        entry.update(**values)
+                        entry.update(**insert_values)
 
                     self.update_x2M(entry, values, insert_values)
                     self.updated_entries.append(entry)
