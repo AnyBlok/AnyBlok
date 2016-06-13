@@ -13,6 +13,7 @@ Future
 ------
 
 * [FIX] io/xml/importer one2many field
+* [FIX] install blok, who are not in the blok list yet. But the blok is loaded
 
 0.8.3 (2016-04-18)
 ------------------

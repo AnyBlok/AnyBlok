@@ -139,6 +139,7 @@ def updatedb(application, configuration_groups, **kwargs):
     uninstall_bloks = Configuration.get('uninstall_bloks')
 
     if registry:
+        registry.update_blok_list()  # case, new blok added
         registry.upgrade(install=install_bloks, update=update_bloks,
                          uninstall=uninstall_bloks)
         registry.commit()
