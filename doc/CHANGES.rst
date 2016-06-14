@@ -9,8 +9,8 @@
 CHANGELOG
 =========
 
-Future
-------
+0.8.4 (2016-06-14)
+------------------
 
 * [FIX] io/xml/importer one2many field
 * [FIX] install blok, who are not in the blok list yet. But the blok is loaded
