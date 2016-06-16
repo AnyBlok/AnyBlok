@@ -1,6 +1,7 @@
 .. This file is a part of the AnyBlok project
 ..
 ..    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -21,10 +22,10 @@ Information about the AnyBlok project.
 Project Homepage
 ----------------
 
-AnyBlok is hosted on `Bitbucket <http://bitbucket.org>`_ - the main project
-page is at https://bitbucket.org/jssuzanne/anyblok or 
+AnyBlok is hosted on `github <http://github.com>`_ - the main project
+page is at http://github.com/AnyBlok/AnyBlok or 
 http://code.anyblok.org. Source code is tracked here
-using `Mercurial <http://mercurial.selenic.com>`_.
+using `GIT <https://git-scm.com>`_.
 
 Releases and project status are available on Pypi at 
 http://pypi.python.org/pypi/anyblok.
@@ -35,12 +36,11 @@ http://doc.anyblok.org.
 Project Status
 --------------
 
-AnyBlok is currently in beta status and is expected to be fairly
+AnyBlok is currently in alpha status and is expected to be fairly
 stable.   Users should take care to report bugs and missing features on an as-needed
 basis.  It should be expected that the development version may be required
 for proper implementation of recently repaired issues in between releases;
-the latest master is always available at http://code.anyblok.org/get/default.tar.gz.
-or http://code.anyblok.org/get/default.zip
+the latest master is always available at https://github.com/AnyBlok/AnyBlok/archive/master.zip.
 
 Installation
 ------------
@@ -104,14 +104,11 @@ Contributors
 
 * Georges Racinet
 * Christophe Combelles
-* Sandrine Chaufournais
 * Jean-Sébastien Suzanne
 * Florent Jouatte
 * Simon André
-* Clovis Nzouendjou
 * Pierre Verkest
 * Franck Bret
-* Sébastien Morele
 
 other:
 
