@@ -14,6 +14,7 @@ before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 
 install:
+  - pip install sqlalchemy
   - python setup.py install
 
 script:
