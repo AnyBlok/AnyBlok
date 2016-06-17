@@ -19,6 +19,7 @@ install:
   - pip install colour
   - pip install passlib
   - pip install furl
+  - pip install coveralls
   - python setup.py develop
 
 env:
@@ -29,6 +30,10 @@ env:
 
 script:
   - psql -c 'create database travis_ci_test;' -U postgres
-  - nosetests anyblok/tests
+  - nosetests anyblok/tests -v -s --with-coverage --cover-package=anyblok
   - psql -c 'drop database travis_ci_test;' -U postgres
-  - anyblok_createdb --install-all-bloks --test-blok-at-install
+  - anyblok_createdb --install-all-bloks
+  - anyblok_nose -- -v -s --with-coverage --cover-package=anyblok
+  
+after_success:
+  coveralls
