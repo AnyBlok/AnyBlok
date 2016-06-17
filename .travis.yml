@@ -2,7 +2,9 @@ language: python
 sudo: false
 
 python:
+  - "3.3"
   - "3.4"
+  - "3.5"
 
 virtualenv:
   system_site_packages: false
@@ -19,6 +21,8 @@ install:
   - pip install colour
   - pip install passlib
   - pip install furl
+  - pip install cryptography
+  - pip install coveralls
   - python setup.py develop
 
 env:
@@ -29,6 +33,10 @@ env:
 
 script:
   - psql -c 'create database travis_ci_test;' -U postgres
-  - nosetests anyblok/tests
+  - nosetests anyblok/tests -v -s --with-coverage --cover-package=anyblok
   - psql -c 'drop database travis_ci_test;' -U postgres
-  - anyblok_createdb --install-all-bloks --test-blok-at-install
+  - anyblok_createdb --install-all-bloks
+  - nosetests anyblok/bloks --with-anyblok-bloks -v -s --with-coverage --cover-package=anyblok
+  
+after_success:
+  coveralls
