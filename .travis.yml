@@ -29,6 +29,6 @@ env:
 
 script:
   - psql -c 'create database travis_ci_test;' -U postgres
-  - nosetests anyblok/tests
+  - nosetests anyblok.tests
   - psql -c 'drop database travis_ci_test;' -U postgres
   - anyblok_createdb --install-all-bloks --test-blok-at-install
