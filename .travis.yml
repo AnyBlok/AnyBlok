@@ -19,7 +19,7 @@ install:
   - pip install colour
   - pip install passlib
   - pip install furl
-  - python setup.py install
+  - python setup.py develop
 
 env:
   global:
