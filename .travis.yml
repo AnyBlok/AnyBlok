@@ -12,6 +12,7 @@ services:
 
 install:
   - pip install psycopg2
+  - pip install sqlachemy
   - pip install flake8
   - pip install coverage
   - pip install nose
@@ -21,9 +22,10 @@ install:
   - python setup.py install
 
 env:
-  - ANYBLOK_DATABASE_NAME=travis_ci_test
-  - ANYBLOK_DATABASE_DRIVER=postgresql
-  - ANYBLOK_DATABASE_USER=postgres
+  global:
+    - ANYBLOK_DATABASE_NAME=travis_ci_test
+    - ANYBLOK_DATABASE_DRIVER=postgresql
+    - ANYBLOK_DATABASE_USER=postgres
 
 script:
   - psql -c 'create database travis_ci_test;' -U postgres
