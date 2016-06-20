@@ -6,6 +6,14 @@
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
 .. obtain one at http://mozilla.org/MPL/2.0/.
 
+.. image:: https://travis-ci.org/AnyBlok/AnyBlok.svg?branch=master
+    :target: https://travis-ci.org/AnyBlok/AnyBlok
+    :alt: Build status
+
+.. image:: https://coveralls.io/repos/github/AnyBlok/AnyBlok/badge.svg?branch=master
+    :target: https://coveralls.io/github/AnyBlok/AnyBlok?branch=master
+    :alt: Coverage
+
 AnyBlok
 =======
 
@@ -14,4 +22,4 @@ applications on top of SQLAlchemy.
 
 AnyBlok is released under the terms of the `Mozilla Public License`.
 
-See the `latest documentation <http://docs.anyblok.org/>`_
+See the `latest documentation <http://doc.anyblok.org/>`_
