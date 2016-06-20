@@ -22,4 +22,4 @@ applications on top of SQLAlchemy.
 
 AnyBlok is released under the terms of the `Mozilla Public License`.
 
-See the `latest documentation <http://docs.anyblok.org/>`_
+See the `latest documentation <http://doc.anyblok.org/>`_
