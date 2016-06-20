@@ -14,6 +14,10 @@
     :target: https://coveralls.io/github/AnyBlok/AnyBlok?branch=master
     :alt: Coverage
 
+.. image:: https://img.shields.io/pypi/v/AnyBlok.svg
+   :target: https://pypi.python.org/pypi/AnyBlok/
+   :alt: Version status
+
 AnyBlok
 =======
 
