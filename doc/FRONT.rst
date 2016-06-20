@@ -72,7 +72,7 @@ Run the blok tests at the installation::
 
     anyblok_updatedb -c config.file.cfg --install_bloks myblok --test-blok-at-install
 
-AnyBlok are tested by the `Anybox <http://anybox.fr>`_ `builbot <http://buildbot.anyblok.org>`_
+AnyBlok is tested using `Travis <https://travis-ci.org/AnyBlok/AnyBlok>`_
 
 Dependencies
 ------------
@@ -81,9 +81,10 @@ AnyBlok works with **Python 3.3** and later. The install process will
 ensure that `SQLAlchemy <http://www.sqlalchemy.org>`_, 
 `Alembic <http://alembic.readthedocs.org/>`_,
 `SQLAlchemy-Utils <http://sqlalchemy-utils.readthedocs.org/>`_ are installed, 
-in addition to other dependencies.  AnyBlok will work with SQLAlchemy as of 
-version **1.0.11**. AnyBlok will work with Alembic as of version **0.8.4**.
-AnyBlok will work with SQLAlchemy-Utils as of version **0.31.4**.
+in addition to other dependencies.
+
+AnyBlok works with SQLAlchemy from version **1.0.11**,
+Alembic from version **0.8.4** and SQLAlchemy-Utils from version **0.31.4**.
 The latest version of them is strongly recommended.
 
 
@@ -108,11 +109,11 @@ Contributors
 * Florent Jouatte
 * Simon André
 * Pierre Verkest
-* Franck Bret
 
 other:
 
 * Sébastien Chazallet
+* Franck Bret
 
 Bugs
 ----
