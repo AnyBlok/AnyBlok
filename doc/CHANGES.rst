@@ -9,6 +9,12 @@
 CHANGELOG
 =========
 
+0.8.5 (2016-06-20)
+------------------
+
+* [FIX] utf-8 encoding
+* [REF] move bitbucket (mergurial) to github (git)
+
 0.8.4 (2016-06-14)
 ------------------
 
