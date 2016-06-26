@@ -24,13 +24,17 @@ requires = [
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, 'README.rst')) as readme:
+with open(os.path.join(here, 'README.rst'), 'r', encoding='utf-8') as readme:
     README = readme.read()
 
-with open(os.path.join(here, 'doc', 'FRONT.rst')) as front:
+with open(
+    os.path.join(here, 'doc', 'FRONT.rst'), 'r', encoding='utf-8'
+) as front:
     FRONT = front.read()
 
-with open(os.path.join(here, 'doc', 'CHANGES.rst')) as changes:
+with open(
+    os.path.join(here, 'doc', 'CHANGES.rst'), 'r', encoding='utf-8'
+) as changes:
     CHANGES = changes.read()
 
 setup(
