@@ -69,7 +69,7 @@ class TestBlokManager(TestCase):
     def test_set(self):
         blok_name = 'ABlok'
         BlokManager.set(blok_name, Blok)
-        self.assertEqual(BlokManager.has(blok_name), True)
+        self.assertTrue(BlokManager.has(blok_name))
 
     def test_set_two_time(self):
         blok_name = 'ABlok'
