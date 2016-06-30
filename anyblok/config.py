@@ -674,6 +674,10 @@ def add_pluggins(group):
                        type=AnyBlokPluggin,
                        default='anyblok.migration:Migration',
                        help="Migration class to use")
+    group.add_argument('--get-url-fnct', dest='get_url',
+                       type=AnyBlokPluggin,
+                       default='anyblok.config:get_url',
+                       help="get_url function to use")
 
 
 @Configuration.add('config')

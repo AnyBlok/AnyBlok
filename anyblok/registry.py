@@ -403,8 +403,7 @@ class Registry:
         self.loadwithoutmigration = loadwithoutmigration
         self.unittest = unittest
         self.additional_setting = kwargs
-        from anyblok.config import get_url
-        url = get_url(db_name=db_name)
+        url = Configuration.get('get_url')(db_name=db_name)
         echo = Configuration.get('db_echo') or False
         max_overflow = Configuration.get('db_max_overflow') or 10
         echo_pool = Configuration.get('db_echo_pool') or False

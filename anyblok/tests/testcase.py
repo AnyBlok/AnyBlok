@@ -83,8 +83,7 @@ class TestCase(unittest.TestCase):
 
         :param keep_existing: If false drop the previous db before create it
         """
-        from anyblok.config import get_url
-        url = get_url()
+        url = Configuration.get('get_url')()
         db_template_name = Configuration.get('db_template_name', None)
         if database_exists(url):
             if keep_existing:
@@ -105,8 +104,7 @@ class TestCase(unittest.TestCase):
             cls.dropdb()
 
         """
-        from anyblok.config import get_url
-        url = get_url()
+        url = Configuration.get('get_url')()
         if database_exists(url):
             drop_database(url)
 
