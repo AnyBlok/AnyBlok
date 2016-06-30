@@ -16,7 +16,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
 from sqlalchemy.schema import ForeignKeyConstraint
-from .config import Configuration
+from .config import Configuration, get_url
+from .migration import Migration
 from .blok import BlokManager
 from .environment import EnvironmentManager
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
@@ -112,7 +113,7 @@ class RegistryManager:
                                "the registry for %r is already load" % db_name)
             return cls.registries[db_name]
 
-        _Registry = Configuration.get('Registry')
+        _Registry = Configuration.get('Registry', Registry)
         registry = _Registry(
             db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
         cls.registries[db_name] = registry
@@ -431,7 +432,7 @@ class Registry:
 
     def init_engine(self, db_name=None):
         kwargs = self.init_engine_options()
-        url = Configuration.get('get_url')(db_name=db_name)
+        url = Configuration.get('get_url', get_url)(db_name=db_name)
         self.rw_engine = create_engine(url, **kwargs)
 
     @property
@@ -988,7 +989,7 @@ class Registry:
         if not self.withoutautomigration:
             self.declarativebase.metadata.create_all(self.connection())
 
-        self.migration = Configuration.get('Migration')(self)
+        self.migration = Configuration.get('Migration', Migration)(self)
         query = """
             SELECT name, installed_version
             FROM system_blok
