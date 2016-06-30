@@ -403,13 +403,7 @@ class Registry:
         self.loadwithoutmigration = loadwithoutmigration
         self.unittest = unittest
         self.additional_setting = kwargs
-        url = Configuration.get('get_url')(db_name=db_name)
-        echo = Configuration.get('db_echo') or False
-        max_overflow = Configuration.get('db_max_overflow') or 10
-        echo_pool = Configuration.get('db_echo_pool') or False
-        pool_size = Configuration.get('db_pool_size') or 5
-        self.engine = create_engine(url, echo=echo, max_overflow=max_overflow,
-                                    echo_pool=echo_pool, pool_size=pool_size)
+        self.init_engine(db_name=db_name)
         if self.unittest:
             self.bind = self.engine.connect()
             self.unittest_transaction = self.bind.begin()
@@ -426,6 +420,23 @@ class Registry:
         self.nb_query_bases = self.nb_session_bases = 0
         self.blok_list_is_loaded = False
         self.load()
+
+    def init_engine_options(self):
+        return dict(
+            echo=Configuration.get('db_echo') or False,
+            max_overflow=Configuration.get('db_max_overflow') or 10,
+            echo_pool=Configuration.get('db_echo_pool') or False,
+            pool_size=Configuration.get('db_pool_size') or 5,
+        )
+
+    def init_engine(self, db_name=None):
+        kwargs = self.init_engine_options()
+        url = Configuration.get('get_url')(db_name=db_name)
+        self.rw_engine = create_engine(url, **kwargs)
+
+    @property
+    def engine(self):
+        return self.rw_engine
 
     def ini_var(self):
         """ Initialize the var to load the registry """
