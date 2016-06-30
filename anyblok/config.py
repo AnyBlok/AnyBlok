@@ -109,6 +109,13 @@ class AnyBlokActionsContainer:
         Configuration.add_argument(dest, default, type=type)
         return arg
 
+    def update_default_value_for(self, dest, default):
+        if not Configuration.has(dest):
+            raise KeyError('Unexisting option %s' % dest)
+
+        self.set_defaults(**{dest: default})
+        Configuration.set(dest, default)
+
     def add_argument_group(self, *args, **kwargs):
         group = AnyBlokArgumentGroup(self, *args, **kwargs)
         self._action_groups.append(group)
@@ -253,6 +260,13 @@ class Configuration:
             return wrapper
 
     @classmethod
+    def has(cls, opt):
+        if opt in cls.configuration and cls.configuration[opt]:
+            return True
+
+        return False
+
+    @classmethod
     def get(cls, opt, default=None):
         """ Get a value from the configuration dict after loading
 
@@ -272,10 +286,10 @@ class Configuration:
         :param opt: name of the option
         :param default: default value if the option doesn't exist
         """
-        if opt in cls.configuration and cls.configuration[opt]:
+        if cls.has(opt):
             return cls.configuration[opt].get()
-        else:
-            return default
+
+        return default
 
     @classmethod
     def set(cls, opt, value):

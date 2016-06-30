@@ -103,6 +103,9 @@ class MockArgumentParser:
     def add_argument(self, *args, **kwargs):
         pass
 
+    def update_default_value_for(self, dest, default):
+        pass
+
     def set_defaults(self, *args, **kwargs):
         pass
 
@@ -170,6 +173,11 @@ class TestConfiguration(TestCase):
             default.update({'other test': True})
 
         self.assertAdded('new-group', function_=fnct)
+
+    def test_has(self):
+        self.assertFalse(Configuration.has('option'))
+        Configuration.configuration['option'] = ConfigOption('option', str)
+        self.assertTrue(Configuration.has('option'))
 
     def test_get(self):
         option = 'My option'
