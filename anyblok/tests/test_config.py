@@ -18,7 +18,8 @@ from anyblok.config import (Configuration,
                             add_doc,
                             add_unittest,
                             ConfigurationException,
-                            ConfigOption)
+                            ConfigOption,
+                            AnyBlokPluggin)
 from anyblok.tests.testcase import TestCase
 from sqlalchemy.engine.url import make_url
 
@@ -32,6 +33,14 @@ def fnct_configuration(parser, default):
 
 def fnct_other_configuration(parser, default):
     default.update({'test': None})
+
+
+def MockPlugginFnct():
+    pass
+
+
+class MockPlugginClass:
+    pass
 
 
 class MockArgParseArguments:
@@ -167,6 +176,26 @@ class TestConfiguration(TestCase):
         Configuration.configuration['option'] = ConfigOption(option, str)
         res = Configuration.get('option')
         self.assertEqual(option, res)
+
+    def test_fnct_pluggins_config(self):
+        option = 'anyblok.tests.test_config:MockPlugginFnct'
+        Configuration.configuration['option'] = ConfigOption(
+            option, AnyBlokPluggin)
+        res = Configuration.get('option')
+        self.assertIs(MockPlugginFnct, res)
+
+    def test_class_pluggins_config(self):
+        option = 'anyblok.tests.test_config:MockPlugginClass'
+        Configuration.configuration['option'] = ConfigOption(
+            option, AnyBlokPluggin)
+        res = Configuration.get('option')
+        self.assertIs(MockPlugginClass, res)
+
+    def test_wrong_pluggins_config(self):
+        option = 'anyblok.tests.test_config:MockPlugginWrong'
+        with self.assertRaises(ImportError):
+            Configuration.configuration['option'] = ConfigOption(
+                option, AnyBlokPluggin)
 
     def test_update(self):
         Configuration.update(one_option=1)

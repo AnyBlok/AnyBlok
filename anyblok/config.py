@@ -127,6 +127,13 @@ class AnyBlokArgumentGroup(AnyBlokActionsContainer, _ArgumentGroup):
     """
 
 
+def AnyBlokPluggin(import_definition):
+    context = {}
+    import_path, import_name = import_definition.split(':')
+    exec('from %s import %s' % (import_path, import_name), {}, context)
+    return context[import_name]
+
+
 class ConfigOption:
 
     def __init__(self, value, type):
