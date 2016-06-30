@@ -82,7 +82,8 @@ def createdb(application, configuration_groups, **kwargs):
     BlokManager.load()
     db_name = Configuration.get('db_name')
     db_template_name = Configuration.get('db_template_name', None)
-    url = Configuration.get_url(db_name=db_name)
+    from anyblok.config import get_url
+    url = get_url(db_name=db_name)
     create_database(url, template=db_template_name)
     registry = RegistryManager.get(db_name)
     if registry is None:

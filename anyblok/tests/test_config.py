@@ -266,7 +266,8 @@ class TestConfiguration(TestCase):
             db_user_name=None,
             db_password=None,
             db_port=None)
-        url = Configuration.get_url()
+        from anyblok.config import get_url
+        url = get_url()
         self.check_url(url, 'postgres://localhost/anyblok')
 
     def test_get_url2(self):
@@ -277,7 +278,8 @@ class TestConfiguration(TestCase):
             db_user_name=None,
             db_password=None,
             db_port=None,)
-        url = Configuration.get_url(db_name='anyblok2')
+        from anyblok.config import get_url
+        url = get_url(db_name='anyblok2')
         self.check_url(url, 'postgres://localhost/anyblok2')
 
     def test_get_url3(self):
@@ -289,7 +291,8 @@ class TestConfiguration(TestCase):
             db_user_name=None,
             db_password=None,
             db_port=None)
-        url = Configuration.get_url()
+        from anyblok.config import get_url
+        url = get_url()
         self.check_url(url, 'postgres:///anyblok')
 
     def test_get_url4(self):
@@ -301,7 +304,8 @@ class TestConfiguration(TestCase):
             db_user_name='jssuzanne',
             db_password='secret',
             db_port=None)
-        url = Configuration.get_url()
+        from anyblok.config import get_url
+        url = get_url()
         self.check_url(url, 'postgres://jssuzanne:secret@/anyblok2')
 
     def test_get_url5(self):
@@ -313,7 +317,8 @@ class TestConfiguration(TestCase):
             db_user_name='jssuzanne',
             db_password='secret',
             db_port=None)
-        url = Configuration.get_url(db_name='anyblok3')
+        from anyblok.config import get_url
+        url = get_url(db_name='anyblok3')
         self.check_url(url, 'postgres://jssuzanne:secret@/anyblok3')
 
     def test_get_url_without_drivername(self):
@@ -324,8 +329,9 @@ class TestConfiguration(TestCase):
             db_user_name=None,
             db_password=None,
             db_port=None)
+        from anyblok.config import get_url
         with self.assertRaises(ConfigurationException):
-            Configuration.get_url()
+            get_url()
 
     def test_merge_for_one_part(self):
         Configuration.add('new-group', function_=fnct_configuration)

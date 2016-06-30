@@ -21,6 +21,66 @@ from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
 logger = getLogger(__name__)
 
 
+def get_url(db_name=None):
+    """ Return an sqlalchemy URL for database
+
+    Get the options of the database, the only option which can be
+    overloaded is the name of the database::
+
+        url = get_url(db_name='Mydb')
+
+    ..note::
+
+        Since 0.5.3, an URL can be define by the configuration file.
+        The *username*, *password* and *database* if overwrite by the
+        options if they are filled::
+
+            # db_url = 'postgresql:///db'
+            get_url()
+            ==> 'postgresql:///db'
+            # db_user_name = 'jssuzanne'
+            # db_password = 'secret'
+            get_url()
+            ==> 'postgresql://jssuzanne:secret@/db'
+            # db_name = 'db1'
+            get_url()
+            ==> 'postgresql://jssuzanne:secret@/db1'
+            get_url(db_name='Mydb')
+            ==> 'postgresql://jssuzanne:secret@/Mydb'
+
+    :param db_name: Name of the database
+    :rtype: SqlAlchemy URL
+    :exception: ConfigurationException
+    """
+    url = Configuration.get('db_url', None)
+    drivername = Configuration.get('db_driver_name', None)
+    username = Configuration.get('db_user_name', None)
+    password = Configuration.get('db_password', None)
+    host = Configuration.get('db_host', None)
+    port = Configuration.get('db_port', None)
+    database = Configuration.get('db_name', None)
+
+    if db_name is not None:
+        database = db_name
+
+    if url:
+        url = make_url(url)
+        if username:
+            url.username = username
+        if password:
+            url.password = password
+        if database:
+            url.database = database
+
+        return url
+
+    if drivername is None:
+        raise ConfigurationException('No Drivername defined')
+
+    return URL(drivername, username=username, password=password, host=host,
+               port=port, database=database)
+
+
 class ConfigurationException(LookupError):
     """ Simple Exception for Configuration"""
 
@@ -416,66 +476,6 @@ class Configuration:
                 labels[k] = v
 
         return labels
-
-    @classmethod
-    def get_url(cls, db_name=None):
-        """ Return an sqlalchemy URL for database
-
-        Get the options of the database, the only option which can be
-        overloaded is the name of the database::
-
-            url = Configuration.get_url(db_name='Mydb')
-
-        ..note::
-
-            Since 0.5.3, an URL can be define by the configuration file.
-            The *username*, *password* and *database* if overwrite by the
-            options if they are filled::
-
-                # db_url = 'postgresql:///db'
-                Configuration.get_url()
-                ==> 'postgresql:///db'
-                # db_user_name = 'jssuzanne'
-                # db_password = 'secret'
-                Configuration.get_url()
-                ==> 'postgresql://jssuzanne:secret@/db'
-                # db_name = 'db1'
-                Configuration.get_url()
-                ==> 'postgresql://jssuzanne:secret@/db1'
-                Configuration.get_url(db_name='Mydb')
-                ==> 'postgresql://jssuzanne:secret@/Mydb'
-
-        :param db_name: Name of the database
-        :rtype: SqlAlchemy URL
-        :exception: ConfigurationException
-        """
-        url = cls.get('db_url', None)
-        drivername = cls.get('db_driver_name', None)
-        username = cls.get('db_user_name', None)
-        password = cls.get('db_password', None)
-        host = cls.get('db_host', None)
-        port = cls.get('db_port', None)
-        database = cls.get('db_name', None)
-
-        if db_name is not None:
-            database = db_name
-
-        if url:
-            url = make_url(url)
-            if username:
-                url.username = username
-            if password:
-                url.password = password
-            if database:
-                url.database = database
-
-            return url
-
-        if drivername is None:
-            raise ConfigurationException('No Drivername defined')
-
-        return URL(drivername, username=username, password=password, host=host,
-                   port=port, database=database)
 
     @classmethod
     @log(logger)
