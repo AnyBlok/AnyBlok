@@ -135,10 +135,12 @@ class AnyBlokArgumentGroup(AnyBlokActionsContainer, _ArgumentGroup):
 
 
 def AnyBlokPluggin(import_definition):
-    context = {}
     import_path, import_name = import_definition.split(':')
-    exec('from %s import %s' % (import_path, import_name), {}, context)
-    return context[import_name]
+    module = __import__(import_path, fromlist=[import_name])
+    if hasattr(module, import_name):
+        return getattr(module, import_name)
+
+    raise ImportError("%s does not exist in %s" % (import_name, import_path))
 
 
 class ConfigOption:
