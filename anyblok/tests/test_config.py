@@ -9,6 +9,7 @@ from os.path import join
 from anyblok import config
 from anyblok.config import (Configuration,
                             add_configuration_file,
+                            add_pluggins,
                             add_database,
                             add_install_bloks,
                             add_uninstall_bloks,
@@ -496,6 +497,7 @@ class TestConfigurationOption(TestCase):
         cls.group = cls.parser.add_argument_group('label')
         cls.function = {
             'add_configuration_file': add_configuration_file,
+            'add_pluggins': add_pluggins,
             'add_database': add_database,
             'add_install_bloks': add_install_bloks,
             'add_uninstall_bloks': add_uninstall_bloks,
@@ -508,6 +510,9 @@ class TestConfigurationOption(TestCase):
 
     def test_add_configuration_file(self):
         self.function['add_configuration_file'](self.parser)
+
+    def test_add_pluggins(self):
+        self.function['add_pluggins'](self.group)
 
     def test_add_database(self):
         self.function['add_database'](self.group)

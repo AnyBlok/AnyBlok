@@ -113,8 +113,9 @@ class RegistryManager:
                                "the registry for %r is already load" % db_name)
             return cls.registries[db_name]
 
-        registry = Registry(db_name, loadwithoutmigration=loadwithoutmigration,
-                            **kwargs)
+        _Registry = Configuration.get('Registry')
+        registry = _Registry(
+            db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
         cls.registries[db_name] = registry
         return registry
 
