@@ -88,7 +88,7 @@ class AnyBlokPlugin(Plugin):
                     unwanted_bloks = []
 
                 self.bloks_path = [BlokManager.getPath(x)
-                                   for x in installed_bloks]
+                                   for x in BlokManager.ordered_bloks]
 
                 self.authoried_bloks_test_files = [
                     path for blok in installed_bloks
