@@ -19,7 +19,6 @@ from sqlalchemy.schema import ForeignKeyConstraint
 from .config import Configuration
 from .blok import BlokManager
 from .environment import EnvironmentManager
-from .migration import Migration
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
 from anyblok.common import anyblok_column_prefix
 from .logging import log
@@ -978,7 +977,7 @@ class Registry:
         if not self.withoutautomigration:
             self.declarativebase.metadata.create_all(self.connection())
 
-        self.migration = Migration(self)
+        self.migration = Configuration.get('Migration')(self)
         query = """
             SELECT name, installed_version
             FROM system_blok

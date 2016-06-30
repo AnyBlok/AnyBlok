@@ -666,11 +666,14 @@ class Configuration:
 
 @Configuration.add('pluggins', label='Pluggins',
                    must_be_loaded_by_unittest=True)
-def add_pluggins(parser):
-    parser.add_argument('--registry-cls', dest='Registry',
-                        type=AnyBlokPluggin,
-                        default='anyblok.registry:Registry',
-                        help="Registry class to use")
+def add_pluggins(group):
+    group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPluggin,
+                       default='anyblok.registry:Registry',
+                       help="Registry class to use")
+    group.add_argument('--migration-cls', dest='Migration',
+                       type=AnyBlokPluggin,
+                       default='anyblok.migration:Migration',
+                       help="Migration class to use")
 
 
 @Configuration.add('config')
