@@ -195,6 +195,9 @@ class AnyBlokArgumentGroup(AnyBlokActionsContainer, _ArgumentGroup):
 
 
 def AnyBlokPluggin(import_definition):
+    if not isinstance(import_definition, str):
+        return import_definition
+
     import_path, import_name = import_definition.split(':')
     module = __import__(import_path, fromlist=[import_name])
     if hasattr(module, import_name):

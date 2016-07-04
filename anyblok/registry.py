@@ -822,7 +822,8 @@ class Registry:
             query_bases = [] + self.loaded_cores['Query']
             query_bases += [self.registry_base]
             Query = type('Query', tuple(query_bases), {})
-            Session = type('Session', tuple(self.loaded_cores['Session']), {
+            session_bases = [self.registry_base] + self.loaded_cores['Session']
+            Session = type('Session', tuple(session_bases), {
                 'registry_query': Query})
 
             bind = self.connection() if self.Session else self.bind
