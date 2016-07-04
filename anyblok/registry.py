@@ -405,13 +405,7 @@ class Registry:
         self.unittest = unittest
         self.additional_setting = kwargs
         self.init_engine(db_name=db_name)
-        if self.unittest:
-            self.bind = self.engine.connect()
-            self.unittest_transaction = self.bind.begin()
-        else:
-            self.bind = self.engine
-            self.unittest_transaction = None
-
+        self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
@@ -421,6 +415,14 @@ class Registry:
         self.nb_query_bases = self.nb_session_bases = 0
         self.blok_list_is_loaded = False
         self.load()
+
+    def init_bind(self):
+        if self.unittest:
+            self.bind = self.engine.connect()
+            self.unittest_transaction = self.bind.begin()
+        else:
+            self.bind = self.engine
+            self.unittest_transaction = None
 
     def init_engine_options(self):
         return dict(
