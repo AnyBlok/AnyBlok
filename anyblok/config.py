@@ -743,7 +743,6 @@ def add_install_bloks(parser):
     parser.add_argument('--install-bloks', nargs="+", help="blok to install")
     parser.add_argument('--install-all-bloks', action='store_true')
     parser.add_argument('--test-blok-at-install', action='store_true')
-    parser.set_defaults(test_blok=False)
 
 
 @Configuration.add('uninstall-bloks')
