@@ -169,12 +169,13 @@ class AnyBlokActionsContainer:
         Configuration.add_argument(dest, default, type=type)
         return arg
 
-    def update_default_value_for(self, dest, default):
-        if not Configuration.has(dest):
-            raise KeyError('Unexisting option %s' % dest)
+    def set_defaults(self, **kwargs):
+        super(AnyBlokActionsContainer, self).set_defaults(**kwargs)
+        for dest, default in kwargs.items():
+            if not Configuration.has(dest):
+                raise KeyError('Unexisting option %s' % dest)
 
-        self.set_defaults(**{dest: default})
-        Configuration.set(dest, default)
+            Configuration.set(dest, default)
 
     def add_argument_group(self, *args, **kwargs):
         group = AnyBlokArgumentGroup(self, *args, **kwargs)

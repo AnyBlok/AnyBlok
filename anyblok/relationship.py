@@ -834,9 +834,12 @@ class One2Many(RelationShip):
 
         self.remote_columns = None
         if 'remote_columns' in kwargs:
-            self.remote_columns = self.kwargs.pop('remote_columns')
-            if not isinstance(self.remote_columns, (list, tuple)):
-                self.remote_columns = [self.remote_columns]
+            remote_columns = self.kwargs.pop('remote_columns')
+            if not isinstance(remote_columns, (list, tuple)):
+                remote_columns = [remote_columns]
+
+            self.remote_columns = [ModelAttribute(self.model.model_name, x)
+                                   for x in remote_columns]
 
         if 'many2one' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('many2one')
@@ -896,12 +899,9 @@ class One2Many(RelationShip):
         :rtype: Many2One relationship
         """
         self.model.check_model(registry)
-        if self.remote_columns is None:
+        if not self.remote_columns:
             self.remote_columns = self.model.foreign_keys_for(
                 registry, namespace)
-        else:
-            self.remote_columns = [ModelAttribute(self.model.model_name, x)
-                                   for x in self.remote_columns]
 
         self.kwargs['info']['remote_columns'] = [x.attribute_name
                                                  for x in self.remote_columns]

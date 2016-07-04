@@ -724,8 +724,9 @@ class TestBlokOrder(DBTestCase):
 
     def check_order(self, registry, mode, wanted):
         Test = registry.Test
-        self.assertEqual(Test.query().filter(Test.mode == mode).all().blok,
-                         wanted)
+        bloks = Test.query().filter(Test.mode == mode).all().blok
+        for _wanted in wanted:
+            self.assertIn(_wanted, bloks)
 
     def test_install(self):
         registry = self.init_registry(None)

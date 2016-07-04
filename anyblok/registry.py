@@ -468,8 +468,7 @@ class Registry:
         for e, namespace, method in self._sqlalchemy_known_events:
             try:
                 event.remove(e.mapper(self, namespace), e.event,
-                             method.get_attribute(self),
-                             *e.args, **e.kwargs)
+                             method.get_attribute(self))
             except InvalidRequestError:
                 pass
 
