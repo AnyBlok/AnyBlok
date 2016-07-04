@@ -351,9 +351,6 @@ class Model:
         new_type_properties = {}
         for attr in dir(base):
             method = getattr(base, attr)
-            if method in ('registry', 'env'):
-                continue
-
             new_type_properties.update(apply_cache(
                 attr, method, registry, namespace, base, properties))
             cls.apply_event_listner(
