@@ -405,7 +405,13 @@ class Registry:
         self.unittest = unittest
         self.additional_setting = kwargs
         self.init_engine(db_name=db_name)
-        self.init_bind()
+        if self.unittest:
+            self.bind = self.engine.connect()
+            self.unittest_transaction = self.bind.begin()
+        else:
+            self.bind = self.engine
+            self.unittest_transaction = None
+
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
@@ -428,14 +434,6 @@ class Registry:
         kwargs = self.init_engine_options()
         url = Configuration.get('get_url', get_url)(db_name=db_name)
         self.rw_engine = create_engine(url, **kwargs)
-
-    def init_bind(self):
-        if self.unittest:
-            self.bind = self.engine.connect()
-            self.unittest_transaction = self.bind.begin()
-        else:
-            self.bind = self.engine
-            self.unittest_transaction = None
 
     @property
     def engine(self):
