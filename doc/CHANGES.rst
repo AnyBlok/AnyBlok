@@ -13,6 +13,7 @@ CHANGELOG
 * [FIX] test migration, force to load registry with unittest=True
 * [FIX] test event
 * [FIX] test blok
+* [FIX] mapper with None parameter
 
 0.8.5 (2016-06-20)
 ------------------

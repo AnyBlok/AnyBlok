@@ -55,6 +55,11 @@ class ModelAttribute:
         return "%s => %s" % (self.model_name, self.attribute_name)
 
     def __init__(self, model_name, attribute_name):
+        if not model_name or not attribute_name:
+            raise ModelAttributeException(
+                "model_name (%s) and attribute_name (%s) are "
+                "required" % (model_name, attribute_name))
+
         self.model_name = model_name
         self.attribute_name = attribute_name
         self._options = {}
@@ -227,6 +232,10 @@ class ModelRepr:
         mr = ModelRepr('registry name')
     """
     def __init__(self, model_name):
+        if not model_name:
+            raise ModelReprException(
+                "model_name (%s) is required" % model_name)
+
         self.model_name = model_name
 
     def __str__(self):

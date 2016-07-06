@@ -29,6 +29,18 @@ class TestModelAttribute(DBTestCase):
         self.assertEqual(ma.get_attribute(registry),
                          registry.get('Model.System.Model').name)
 
+    def test_without_attribute(self):
+        with self.assertRaises(ModelAttributeException):
+            ModelAttribute('Model.System.Model', None)
+
+    def test_without_model(self):
+        with self.assertRaises(ModelAttributeException):
+            ModelAttribute(None, 'name')
+
+    def test_without_model_and_attribute(self):
+        with self.assertRaises(ModelAttributeException):
+            ModelAttribute(None, None)
+
     def test_get_attribute_unexisting_model(self):
         registry = self.init_registry(None)
         ma = ModelAttribute('Model.Unexisting.Model', 'name')
@@ -144,6 +156,10 @@ class TestModelRepr(DBTestCase):
         mas = mr.foreign_keys_for(registry, 'Model.System.Model')
         self.assertEqual(len(mas), 1)
         self.assertEqual([x.attribute_name for x in mas], ['model'])
+
+    def test_without_model(self):
+        with self.assertRaises(ModelReprException):
+            ModelRepr(None)
 
 
 class TestModelAdapter(TestCase):
