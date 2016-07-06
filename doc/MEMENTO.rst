@@ -1286,3 +1286,28 @@ You can get a value from the current Environment::
 .. note::
 
     The environment is as a dict the value can be an instance of any type
+
+Initialize some data by entry point
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+the entry point ``anyblok.init`` allow to define function, ``ìnit_function``
+in this example::
+
+    setup(
+        ...
+        entry_points={
+            'anyblok.init': [
+                'my_function=path:init_function',
+            ],
+        },
+    )
+
+In the path the init_function must be defined::
+
+    def init_function(unittest=False):
+        ...
+
+..warning::
+
+    Use unittest parameter to defined if the function must be call 
+    or not 

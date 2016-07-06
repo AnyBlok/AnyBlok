@@ -9,5 +9,5 @@ from anyblok.config import Configuration
 from anyblok import load_init_function_from_entry_points
 
 
-load_init_function_from_entry_points()
+load_init_function_from_entry_points(unittest=True)
 Configuration.load_config_for_test()
