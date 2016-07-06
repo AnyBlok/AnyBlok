@@ -16,6 +16,7 @@ CHANGELOG
 * [FIX] mapper with None parameter
 * [FIX] add set_defaults in parser to update configuration dict
 * [FIX] one2many remote columns
+* [FIX] load anyblok.init in the unit test
 
 0.8.5 (2016-06-20)
 ------------------

@@ -10,7 +10,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
-def load_init_function_from_entry_points():
+def load_init_function_from_entry_points(unittest=False):
     """Call all the entry point ``anyblok_pyramid.init`` to update
     the argument setting
 
@@ -37,7 +37,7 @@ def load_init_function_from_entry_points():
     from pkg_resources import iter_entry_points
     for i in iter_entry_points('anyblok.init'):
         print('AnyBlok Load init: %r' % i)
-        i.load()()
+        i.load()(unittest=unittest)
 
 
 def start(processName, configuration_groups=None, entry_points=None,
