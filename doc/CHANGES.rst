@@ -9,6 +9,8 @@
 CHANGELOG
 =========
 
+* [REF] add Configuration.has method
+
 0.8.5 (2016-06-20)
 ------------------
 
@@ -31,7 +33,7 @@ CHANGELOG
 ------------------
 
 * [REF] IO.Mapping methods delete and multi_delete can remove entry
-* [FIX] datetime with timezone use timezone.localize, better than 
+* [FIX] datetime with timezone use timezone.localize, better than
   datetime.replace(tzinfo=...)
 * [ADD] update sphinx extension
 

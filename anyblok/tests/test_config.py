@@ -162,6 +162,11 @@ class TestConfiguration(TestCase):
 
         self.assertAdded('new-group', function_=fnct)
 
+    def test_has(self):
+        self.assertFalse(Configuration.has('option'))
+        Configuration.configuration['option'] = ConfigOption('option', str)
+        self.assertTrue(Configuration.has('option'))
+
     def test_get(self):
         option = 'My option'
         Configuration.configuration['option'] = ConfigOption(option, str)

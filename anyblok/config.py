@@ -246,6 +246,22 @@ class Configuration:
             return wrapper
 
     @classmethod
+    def has(cls, option):
+        """ Check if the option exist in the configuration dict
+
+        Return True if the option is in the configuration dict and the
+        value is not None. A None value is diferent that a ConfigOption with
+        None value
+
+        :param opt: option key to check
+        :rtype: boolean True is exist
+        """
+        if option in cls.configuration and cls.configuration[option]:
+            return True
+
+        return False
+
+    @classmethod
     def get(cls, opt, default=None):
         """ Get a value from the configuration dict after loading
 
@@ -265,10 +281,10 @@ class Configuration:
         :param opt: name of the option
         :param default: default value if the option doesn't exist
         """
-        if opt in cls.configuration and cls.configuration[opt]:
+        if cls.has(opt):
             return cls.configuration[opt].get()
-        else:
-            return default
+
+        return default
 
     @classmethod
     def set(cls, opt, value):
