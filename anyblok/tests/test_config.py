@@ -9,7 +9,7 @@ from os.path import join
 from anyblok import config
 from anyblok.config import (Configuration,
                             add_configuration_file,
-                            add_pluggins,
+                            add_plugins,
                             add_database,
                             add_install_bloks,
                             add_uninstall_bloks,
@@ -19,8 +19,8 @@ from anyblok.config import (Configuration,
                             add_doc,
                             add_unittest,
                             ConfigurationException,
-                            ConfigOption,
                             AnyBlokActionsContainer,
+                            ConfigOption,
                             AnyBlokPluggin)
 from anyblok.tests.testcase import TestCase
 from sqlalchemy.engine.url import make_url
@@ -113,9 +113,6 @@ class MockArgumentParser:
     def add_argument(self, *args, **kwargs):
         return MockArgumentValue(**kwargs)
 
-    def update_default_value_for(self, dest, default):
-        pass
-
     def set_defaults(self, *args, **kwargs):
         pass
 
@@ -195,21 +192,21 @@ class TestConfiguration(TestCase):
         res = Configuration.get('option')
         self.assertEqual(option, res)
 
-    def test_fnct_pluggins_config(self):
+    def test_fnct_plugins_config(self):
         option = 'anyblok.tests.test_config:MockPlugginFnct'
         Configuration.configuration['option'] = ConfigOption(
             option, AnyBlokPluggin)
         res = Configuration.get('option')
         self.assertIs(MockPlugginFnct, res)
 
-    def test_class_pluggins_config(self):
+    def test_class_plugins_config(self):
         option = 'anyblok.tests.test_config:MockPlugginClass'
         Configuration.configuration['option'] = ConfigOption(
             option, AnyBlokPluggin)
         res = Configuration.get('option')
         self.assertIs(MockPlugginClass, res)
 
-    def test_wrong_pluggins_config(self):
+    def test_wrong_plugins_config(self):
         option = 'anyblok.tests.test_config:MockPlugginWrong'
         with self.assertRaises(ImportError):
             Configuration.configuration['option'] = ConfigOption(
@@ -548,7 +545,7 @@ class TestConfigurationOption(TestCase):
         cls.group = cls.parser.add_argument_group('label')
         cls.function = {
             'add_configuration_file': add_configuration_file,
-            'add_pluggins': add_pluggins,
+            'add_plugins': add_plugins,
             'add_database': add_database,
             'add_install_bloks': add_install_bloks,
             'add_uninstall_bloks': add_uninstall_bloks,
@@ -562,8 +559,8 @@ class TestConfigurationOption(TestCase):
     def test_add_configuration_file(self):
         self.function['add_configuration_file'](self.parser)
 
-    def test_add_pluggins(self):
-        self.function['add_pluggins'](self.group)
+    def test_add_plugins(self):
+        self.function['add_plugins'](self.group)
 
     def test_add_database(self):
         self.function['add_database'](self.group)

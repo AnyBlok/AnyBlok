@@ -90,7 +90,7 @@ Future
 ------------------
 
 * [FIX] delete flush after remove of the session
-* [FIX] nose pluggins
+* [FIX] nose plugins
 * [FIX] does'nt destroy automaticly constraints (not created by anyblok),
   indexes (not created by anyblok), columns, tables by automigration, add
   options to force the delete of its.

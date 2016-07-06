@@ -502,7 +502,7 @@ class Configuration:
                     for fnct in fncts:
                         if (
                             fnct.must_be_loaded_by_unittest or
-                            part in ('pluggins',)
+                            part in ('plugins',)
                         ):
                             fnct(parser)
 
@@ -532,7 +532,7 @@ class Configuration:
                                                 ['config', 'database'])
         configuration_groups = set(configuration_groups or []).union(
             _configuration_groups)
-        configuration_groups.add('pluggins')
+        configuration_groups.add('plugins')
         if useseparator:
             parser = getParser(**description)
 
@@ -679,9 +679,9 @@ class Configuration:
             cls.initialize_logging()
 
 
-@Configuration.add('pluggins', label='Pluggins',
+@Configuration.add('plugins', label='Pluggins',
                    must_be_loaded_by_unittest=True)
-def add_pluggins(group):
+def add_plugins(group):
     group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPluggin,
                        default='anyblok.registry:Registry',
                        help="Registry class to use")
