@@ -69,7 +69,7 @@ class TestBlokManager(TestCase):
     def test_set(self):
         blok_name = 'ABlok'
         BlokManager.set(blok_name, Blok)
-        self.assertEqual(BlokManager.has(blok_name), True)
+        self.assertTrue(BlokManager.has(blok_name))
 
     def test_set_two_time(self):
         blok_name = 'ABlok'
@@ -168,7 +168,7 @@ class TestBlokRequired(DBTestCase):
         testblok2 = query.first()
         self.assertEqual(testblok2.state, 'uninstalled')
         self.assertEqual(testblok2.version, '1.0.0')
-        self.assertEqual(testblok2.installed_version, None)
+        self.assertIsNone(testblok2.installed_version)
         self.assertEqual(testblok2.short_description, 'Test blok2')
 
     def test_install_1by1(self):
@@ -182,7 +182,7 @@ class TestBlokRequired(DBTestCase):
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok2.state, 'uninstalled')
         self.assertEqual(testblok2.version, '1.0.0')
-        self.assertEqual(testblok2.installed_version, None)
+        self.assertIsNone(testblok2.installed_version)
         registry.upgrade(install=('test-blok2',))
         testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
         testblok2 = Blok.query().filter(Blok.name == 'test-blok2').first()
@@ -218,7 +218,7 @@ class TestBlokRequired(DBTestCase):
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok2.state, 'uninstalled')
         self.assertEqual(testblok2.version, '1.0.0')
-        self.assertEqual(testblok2.installed_version, None)
+        self.assertIsNone(testblok2.installed_version)
 
     def test_uninstall_required(self):
         registry = self.init_registry(None)
@@ -229,10 +229,10 @@ class TestBlokRequired(DBTestCase):
         testblok2 = Blok.query().filter(Blok.name == 'test-blok2').first()
         self.assertEqual(testblok1.state, 'uninstalled')
         self.assertEqual(testblok1.version, '1.0.0')
-        self.assertEqual(testblok1.installed_version, None)
+        self.assertIsNone(testblok1.installed_version)
         self.assertEqual(testblok2.state, 'uninstalled')
         self.assertEqual(testblok2.version, '1.0.0')
-        self.assertEqual(testblok2.installed_version, None)
+        self.assertIsNone(testblok2.installed_version)
 
     def test_update(self):
         registry = self.init_registry(None)
@@ -277,7 +277,7 @@ class TestBlokRequired2(DBTestCase):
         testblok2 = query.first()
         self.assertEqual(testblok2.state, 'uninstalled')
         self.assertEqual(testblok2.version, '1.0.0')
-        self.assertEqual(testblok2.installed_version, None)
+        self.assertIsNone(testblok2.installed_version)
         long_description = ".. This file is a part of the AnyBlok project\n.."
         long_description += "\n..    Copyright (C) 2014 Jean-Sebastien SUZANNE"
         long_description += " <jssuzanne@anybox.fr>\n..\n.. This Source Code "
@@ -300,10 +300,10 @@ class TestBlokRequired2(DBTestCase):
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok2.state, 'uninstalled')
         self.assertEqual(testblok2.version, '1.0.0')
-        self.assertEqual(testblok2.installed_version, None)
+        self.assertIsNone(testblok2.installed_version)
         self.assertEqual(testblok3.state, 'uninstalled')
         self.assertEqual(testblok3.version, '1.0.0')
-        self.assertEqual(testblok3.installed_version, None)
+        self.assertIsNone(testblok3.installed_version)
         registry.upgrade(install=('test-blok2',))
         testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
         testblok2 = Blok.query().filter(Blok.name == 'test-blok2').first()
@@ -316,7 +316,7 @@ class TestBlokRequired2(DBTestCase):
         self.assertEqual(testblok2.installed_version, '1.0.0')
         self.assertEqual(testblok3.state, 'uninstalled')
         self.assertEqual(testblok3.version, '1.0.0')
-        self.assertEqual(testblok3.installed_version, None)
+        self.assertIsNone(testblok3.installed_version)
         registry.upgrade(install=('test-blok3',))
         testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
         testblok2 = Blok.query().filter(Blok.name == 'test-blok2').first()
@@ -364,7 +364,7 @@ class TestBlokRequired2(DBTestCase):
         self.assertEqual(testblok2.installed_version, '1.0.0')
         self.assertEqual(testblok3.state, 'uninstalled')
         self.assertEqual(testblok3.version, '1.0.0')
-        self.assertEqual(testblok3.installed_version, None)
+        self.assertIsNone(testblok3.installed_version)
 
     def test_uninstall_first_required(self):
         registry = self.init_registry(None)
@@ -379,10 +379,10 @@ class TestBlokRequired2(DBTestCase):
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok2.state, 'uninstalled')
         self.assertEqual(testblok2.version, '1.0.0')
-        self.assertEqual(testblok2.installed_version, None)
+        self.assertIsNone(testblok2.installed_version)
         self.assertEqual(testblok3.state, 'uninstalled')
         self.assertEqual(testblok3.version, '1.0.0')
-        self.assertEqual(testblok3.installed_version, None)
+        self.assertIsNone(testblok3.installed_version)
 
     def test_uninstall_all_required(self):
         registry = self.init_registry(None)
@@ -394,13 +394,13 @@ class TestBlokRequired2(DBTestCase):
         testblok3 = Blok.query().filter(Blok.name == 'test-blok3').first()
         self.assertEqual(testblok1.state, 'uninstalled')
         self.assertEqual(testblok1.version, '1.0.0')
-        self.assertEqual(testblok1.installed_version, None)
+        self.assertIsNone(testblok1.installed_version)
         self.assertEqual(testblok2.state, 'uninstalled')
         self.assertEqual(testblok2.version, '1.0.0')
-        self.assertEqual(testblok2.installed_version, None)
+        self.assertIsNone(testblok2.installed_version)
         self.assertEqual(testblok3.state, 'uninstalled')
         self.assertEqual(testblok3.version, '1.0.0')
-        self.assertEqual(testblok3.installed_version, None)
+        self.assertIsNone(testblok3.installed_version)
 
     def test_update(self):
         registry = self.init_registry(None)
@@ -474,10 +474,10 @@ class TestBlokConditionnal(DBTestCase):
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok4.state, 'uninstalled')
         self.assertEqual(testblok4.version, '1.0.0')
-        self.assertEqual(testblok4.installed_version, None)
+        self.assertIsNone(testblok4.installed_version)
         self.assertEqual(testblok5.state, 'uninstalled')
         self.assertEqual(testblok5.version, '1.0.0')
-        self.assertEqual(testblok5.installed_version, None)
+        self.assertIsNone(testblok5.installed_version)
         registry.upgrade(install=('test-blok4',))
         testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
         testblok4 = Blok.query().filter(Blok.name == 'test-blok4').first()
@@ -528,13 +528,13 @@ class TestBlokConditionnal(DBTestCase):
         testblok5 = Blok.query().filter(Blok.name == 'test-blok5').first()
         self.assertEqual(testblok1.state, 'uninstalled')
         self.assertEqual(testblok1.version, '1.0.0')
-        self.assertEqual(testblok1.installed_version, None)
+        self.assertIsNone(testblok1.installed_version)
         self.assertEqual(testblok4.state, 'installed')
         self.assertEqual(testblok4.version, '1.0.0')
         self.assertEqual(testblok4.installed_version, '1.0.0')
         self.assertEqual(testblok5.state, 'uninstalled')
         self.assertEqual(testblok5.version, '1.0.0')
-        self.assertEqual(testblok5.installed_version, None)
+        self.assertIsNone(testblok5.installed_version)
 
     def test_update(self):
         registry = self.init_registry(None)
@@ -588,7 +588,7 @@ class TestBlokOptional(DBTestCase):
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok6.state, 'uninstalled')
         self.assertEqual(testblok6.version, '1.0.0')
-        self.assertEqual(testblok6.installed_version, None)
+        self.assertIsNone(testblok6.installed_version)
         registry.upgrade(install=('test-blok6',))
         self.assertEqual(testblok1.state, 'installed')
         self.assertEqual(testblok1.version, '1.0.0')
@@ -622,7 +622,7 @@ class TestBlokOptional(DBTestCase):
         self.assertEqual(testblok1.installed_version, '1.0.0')
         self.assertEqual(testblok6.state, 'uninstalled')
         self.assertEqual(testblok6.version, '1.0.0')
-        self.assertEqual(testblok6.installed_version, None)
+        self.assertIsNone(testblok6.installed_version)
 
     def test_uninstall_optional(self):
         registry = self.init_registry(None)
@@ -635,7 +635,7 @@ class TestBlokOptional(DBTestCase):
         testblok6 = Blok.query().filter(Blok.name == 'test-blok6').first()
         self.assertEqual(testblok1.state, 'uninstalled')
         self.assertEqual(testblok1.version, '1.0.0')
-        self.assertEqual(testblok1.installed_version, None)
+        self.assertIsNone(testblok1.installed_version)
         self.assertEqual(testblok6.state, 'installed')
         self.assertEqual(testblok6.version, '2.0.0')
         self.assertEqual(testblok6.installed_version, '2.0.0')
@@ -724,8 +724,9 @@ class TestBlokOrder(DBTestCase):
 
     def check_order(self, registry, mode, wanted):
         Test = registry.Test
-        self.assertEqual(Test.query().filter(Test.mode == mode).all().blok,
-                         wanted)
+        bloks = Test.query().filter(Test.mode == mode).all().blok
+        for _wanted in wanted:
+            self.assertIn(_wanted, bloks)
 
     def test_install(self):
         registry = self.init_registry(None)

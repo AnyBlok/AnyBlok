@@ -12,6 +12,7 @@ CHANGELOG
 * [REF] add Configuration.has method
 * [FIX] test migration, force to load registry with unittest=True
 * [FIX] test event
+* [FIX] test blok
 
 0.8.5 (2016-06-20)
 ------------------
