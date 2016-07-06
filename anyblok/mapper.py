@@ -232,6 +232,10 @@ class ModelRepr:
         mr = ModelRepr('registry name')
     """
     def __init__(self, model_name):
+        if not model_name:
+            raise ModelReprException(
+                "model_name (%s) is required" % model_name)
+
         self.model_name = model_name
 
     def __str__(self):

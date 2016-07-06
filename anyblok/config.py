@@ -149,6 +149,7 @@ def nargs_type(key, nargs, cast):
 class AnyBlokActionsContainer:
 
     def add_argument(self, *args, **kwargs):
+        """Overload the method to add the entry in the configuration dict"""
         default = kwargs.pop('default', None)
         nargs = kwargs.get('nargs', None)
         type = kwargs.get('type')
@@ -170,6 +171,7 @@ class AnyBlokActionsContainer:
         return arg
 
     def set_defaults(self, **kwargs):
+        """Overload the method to update the entry in the configuration dict"""
         super(AnyBlokActionsContainer, self).set_defaults(**kwargs)
         for dest, default in kwargs.items():
             if not Configuration.has(dest):
