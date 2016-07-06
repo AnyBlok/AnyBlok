@@ -76,7 +76,7 @@ class TestMigration(TestCase):
 
     def setUp(self):
         super(TestMigration, self).setUp()
-        self.registry = Registry(Configuration.get('db_name'))
+        self.registry = Registry(Configuration.get('db_name'), unittest=True)
 
     @classmethod
     def tearDownClass(cls):
