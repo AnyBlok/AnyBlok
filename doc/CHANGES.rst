@@ -15,6 +15,7 @@ CHANGELOG
 * [FIX] test blok
 * [FIX] mapper with None parameter
 * [FIX] add set_defaults in parser to update configuration dict
+* [FIX] one2many remote columns
 
 0.8.5 (2016-06-20)
 ------------------
