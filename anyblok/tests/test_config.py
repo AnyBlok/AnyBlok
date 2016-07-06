@@ -18,6 +18,7 @@ from anyblok.config import (Configuration,
                             add_doc,
                             add_unittest,
                             ConfigurationException,
+                            AnyBlokActionsContainer,
                             ConfigOption)
 from anyblok.tests.testcase import TestCase
 from sqlalchemy.engine.url import make_url
@@ -80,6 +81,14 @@ class MockArguments:
         return False
 
 
+class MockArgumentValue:
+
+    def __init__(self, **kwargs):
+        self.default = None
+        self.type = str
+        self.__dict__.update(kwargs)
+
+
 class MockArgumentParser:
 
     def __init__(self, *args, **kwargs):
@@ -92,7 +101,7 @@ class MockArgumentParser:
         return self.args
 
     def add_argument(self, *args, **kwargs):
-        pass
+        return MockArgumentValue(**kwargs)
 
     def set_defaults(self, *args, **kwargs):
         pass
@@ -453,6 +462,42 @@ class TestConfiguration(TestCase):
     def test_load_with_bad_configuration_groupes(self):
         Configuration.load('default', configuration_groups=['bad-groups'])
         self.assertConfig(MockArguments.vals)
+
+    def get_parer(self):
+
+        class Parser(AnyBlokActionsContainer, MockArgumentParser):
+            pass
+
+        return Parser()
+
+    def test_add_argument_str(self):
+        parser = self.get_parer()
+        parser.add_argument('--value', dest='value', default='1')
+        self.assertEqual(Configuration.configuration['value'].type, str)
+        self.assertEqual(Configuration.get('value'), '1')
+
+    def test_add_argument_int(self):
+        parser = self.get_parer()
+        parser.add_argument('--value', dest='value', type=int, default=1)
+        self.assertEqual(Configuration.configuration['value'].type, int)
+        self.assertEqual(Configuration.get('value'), 1)
+
+    def test_add_argument_float(self):
+        parser = self.get_parer()
+        parser.add_argument('--value', dest='value', type=float, default=1)
+        self.assertEqual(Configuration.configuration['value'].type, float)
+        self.assertEqual(Configuration.get('value'), 1.)
+
+    def test_add_argument_list(self):
+        parser = self.get_parer()
+        parser.add_argument('--value', dest='value', nargs="+", default='1, 2')
+        self.assertEqual(Configuration.get('value'), ['1', '2'])
+
+    def test_default_str(self):
+        parser = self.get_parer()
+        parser.add_argument('--value', dest='value', default='1')
+        parser.set_defaults(value='2')
+        self.assertEqual(Configuration.get('value'), '2')
 
 
 class TestConfigurationOption(TestCase):
