@@ -9,6 +9,9 @@
 CHANGELOG
 =========
 
+Future
+------
+
 * [REF] add Configuration.has method
 * [FIX] test migration, force to load registry with unittest=True
 * [FIX] test event
