@@ -199,7 +199,7 @@ class TestEvent(DBTestCase):
                 id = Integer(primary_key=True)
                 val = Boolean(default=False)
 
-                @listen(Model.Test, 'before_insert')
+                @listen('Model.Test', 'before_insert')
                 def my_event(cls, mapper, connection, target):
                     target.val = True
 
@@ -217,7 +217,7 @@ class TestEvent(DBTestCase):
                 id = Integer(primary_key=True)
                 val = String()
 
-                @listen(Model.Test.use('val'), 'set', retval=True)
+                @listen('Model.Test=>val', 'set', retval=True)
                 def my_event(cls, target, value, oldvalue, initiator):
                     return 'test_' + value
 

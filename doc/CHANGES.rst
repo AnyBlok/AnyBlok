@@ -10,7 +10,8 @@ CHANGELOG
 =========
 
 * [REF] add Configuration.has method
-* [FIX] fix test migration, force to load registry with unittest=True
+* [FIX] test migration, force to load registry with unittest=True
+* [FIX] test event
 
 0.8.5 (2016-06-20)
 ------------------
