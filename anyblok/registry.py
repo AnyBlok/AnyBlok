@@ -417,6 +417,7 @@ class Registry:
         self.load()
 
     def init_bind(self):
+        """Initialize the bind"""
         if self.unittest:
             self.bind = self.engine.connect()
             self.unittest_transaction = self.bind.begin()
@@ -425,6 +426,7 @@ class Registry:
             self.unittest_transaction = None
 
     def init_engine_options(self):
+        """Define the options to initialize the engine"""
         return dict(
             echo=Configuration.get('db_echo') or False,
             max_overflow=Configuration.get('db_max_overflow') or 10,
@@ -433,12 +435,17 @@ class Registry:
         )
 
     def init_engine(self, db_name=None):
+        """Define the engine
+
+        :param db_name: name of the database to link
+        """
         kwargs = self.init_engine_options()
         url = Configuration.get('get_url', get_url)(db_name=db_name)
         self.rw_engine = create_engine(url, **kwargs)
 
     @property
     def engine(self):
+        """property to get the engine"""
         return self.rw_engine
 
     def ini_var(self):

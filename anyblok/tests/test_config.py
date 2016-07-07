@@ -21,7 +21,7 @@ from anyblok.config import (Configuration,
                             ConfigurationException,
                             AnyBlokActionsContainer,
                             ConfigOption,
-                            AnyBlokPluggin)
+                            AnyBlokPlugin)
 from anyblok.tests.testcase import TestCase
 from sqlalchemy.engine.url import make_url
 
@@ -37,11 +37,11 @@ def fnct_other_configuration(parser, default):
     default.update({'test': None})
 
 
-def MockPlugginFnct():
+def MockPluginFnct():
     pass
 
 
-class MockPlugginClass:
+class MockPluginClass:
     pass
 
 
@@ -193,24 +193,24 @@ class TestConfiguration(TestCase):
         self.assertEqual(option, res)
 
     def test_fnct_plugins_config(self):
-        option = 'anyblok.tests.test_config:MockPlugginFnct'
+        option = 'anyblok.tests.test_config:MockPluginFnct'
         Configuration.configuration['option'] = ConfigOption(
-            option, AnyBlokPluggin)
+            option, AnyBlokPlugin)
         res = Configuration.get('option')
-        self.assertIs(MockPlugginFnct, res)
+        self.assertIs(MockPluginFnct, res)
 
     def test_class_plugins_config(self):
-        option = 'anyblok.tests.test_config:MockPlugginClass'
+        option = 'anyblok.tests.test_config:MockPluginClass'
         Configuration.configuration['option'] = ConfigOption(
-            option, AnyBlokPluggin)
+            option, AnyBlokPlugin)
         res = Configuration.get('option')
-        self.assertIs(MockPlugginClass, res)
+        self.assertIs(MockPluginClass, res)
 
     def test_wrong_plugins_config(self):
-        option = 'anyblok.tests.test_config:MockPlugginWrong'
+        option = 'anyblok.tests.test_config:MockPluginWrong'
         with self.assertRaises(ImportError):
             Configuration.configuration['option'] = ConfigOption(
-                option, AnyBlokPluggin)
+                option, AnyBlokPlugin)
 
     def test_update(self):
         Configuration.update(one_option=1)

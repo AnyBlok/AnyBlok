@@ -197,7 +197,18 @@ class AnyBlokArgumentGroup(AnyBlokActionsContainer, _ArgumentGroup):
     """
 
 
-def AnyBlokPluggin(import_definition):
+def AnyBlokPlugin(import_definition):
+    """Callable to cast import string definition to object
+
+    ::
+
+        path = AnyBlokPlugin('sys:path')
+        //
+        Registry = AnyBlokPlugin('anyblok.registry:Registry')
+
+    :param import_definition: string of the object to import
+    :rtype: imported object
+    """
     if not isinstance(import_definition, str):
         return import_definition
 
@@ -495,10 +506,11 @@ class Configuration:
     @classmethod
     @log(logger)
     def load_config_for_test(cls):
+        """Load the argparse configuration need for the unittest"""
         if not cls.configuration:
             parser = getParser()
-            for part in cls.groups.values():
-                for fncts in part.values():
+            for parts in cls.groups.values():
+                for part, fncts in parts.items():
                     for fnct in fncts:
                         if (
                             fnct.must_be_loaded_by_unittest or
@@ -679,18 +691,18 @@ class Configuration:
             cls.initialize_logging()
 
 
-@Configuration.add('plugins', label='Pluggins',
+@Configuration.add('plugins', label='Plugins',
                    must_be_loaded_by_unittest=True)
 def add_plugins(group):
-    group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPluggin,
+    group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPlugin,
                        default='anyblok.registry:Registry',
                        help="Registry class to use")
     group.add_argument('--migration-cls', dest='Migration',
-                       type=AnyBlokPluggin,
+                       type=AnyBlokPlugin,
                        default='anyblok.migration:Migration',
                        help="Migration class to use")
     group.add_argument('--get-url-fnct', dest='get_url',
-                       type=AnyBlokPluggin,
+                       type=AnyBlokPlugin,
                        default='anyblok.config:get_url',
                        help="get_url function to use")
 

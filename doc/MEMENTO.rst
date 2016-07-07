@@ -1309,5 +1309,31 @@ In the path the init_function must be defined::
 
 ..warning::
 
-    Use unittest parameter to defined if the function must be call 
-    or not 
+    Use unittest parameter to defined if the function must be call
+    or not
+
+Plugin
+------
+
+Plugin is used for the low level, it is not use in the bloks, because the model
+can be overload by the declaration.
+
+Define a new plugin
+~~~~~~~~~~~~~~~~~~~
+
+A plugin can be a class or a function::
+
+    class MyPlugin:
+        pass
+
+Add the plugin definition in the configuration::
+
+    @Configuration.add('plugins')
+    def add_plugins(self, group)
+        group.add_argument('--my-option', dest='plugin_name',
+                           type=AnyBlokPlugin,
+                           default='path:MyPlugin')
+
+Use the plugin::
+
+    plugin = Configuration.get('plugin_name')
