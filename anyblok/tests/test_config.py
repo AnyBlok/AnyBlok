@@ -9,6 +9,7 @@ from os.path import join
 from anyblok import config
 from anyblok.config import (Configuration,
                             add_configuration_file,
+                            add_plugins,
                             add_database,
                             add_install_bloks,
                             add_uninstall_bloks,
@@ -19,7 +20,8 @@ from anyblok.config import (Configuration,
                             add_unittest,
                             ConfigurationException,
                             AnyBlokActionsContainer,
-                            ConfigOption)
+                            ConfigOption,
+                            AnyBlokPlugin)
 from anyblok.tests.testcase import TestCase
 from sqlalchemy.engine.url import make_url
 
@@ -33,6 +35,14 @@ def fnct_configuration(parser, default):
 
 def fnct_other_configuration(parser, default):
     default.update({'test': None})
+
+
+def MockPluginFnct():
+    pass
+
+
+class MockPluginClass:
+    pass
 
 
 class MockArgParseArguments:
@@ -182,6 +192,26 @@ class TestConfiguration(TestCase):
         res = Configuration.get('option')
         self.assertEqual(option, res)
 
+    def test_fnct_plugins_config(self):
+        option = 'anyblok.tests.test_config:MockPluginFnct'
+        Configuration.configuration['option'] = ConfigOption(
+            option, AnyBlokPlugin)
+        res = Configuration.get('option')
+        self.assertIs(MockPluginFnct, res)
+
+    def test_class_plugins_config(self):
+        option = 'anyblok.tests.test_config:MockPluginClass'
+        Configuration.configuration['option'] = ConfigOption(
+            option, AnyBlokPlugin)
+        res = Configuration.get('option')
+        self.assertIs(MockPluginClass, res)
+
+    def test_wrong_plugins_config(self):
+        option = 'anyblok.tests.test_config:MockPluginWrong'
+        with self.assertRaises(ImportError):
+            Configuration.configuration['option'] = ConfigOption(
+                option, AnyBlokPlugin)
+
     def test_update(self):
         Configuration.update(one_option=1)
         self.assertEqual(Configuration.get('one_option'), 1)
@@ -242,7 +272,8 @@ class TestConfiguration(TestCase):
             db_user_name=None,
             db_password=None,
             db_port=None)
-        url = Configuration.get_url()
+        from anyblok.config import get_url
+        url = get_url()
         self.check_url(url, 'postgres://localhost/anyblok')
 
     def test_get_url2(self):
@@ -253,7 +284,8 @@ class TestConfiguration(TestCase):
             db_user_name=None,
             db_password=None,
             db_port=None,)
-        url = Configuration.get_url(db_name='anyblok2')
+        from anyblok.config import get_url
+        url = get_url(db_name='anyblok2')
         self.check_url(url, 'postgres://localhost/anyblok2')
 
     def test_get_url3(self):
@@ -265,7 +297,8 @@ class TestConfiguration(TestCase):
             db_user_name=None,
             db_password=None,
             db_port=None)
-        url = Configuration.get_url()
+        from anyblok.config import get_url
+        url = get_url()
         self.check_url(url, 'postgres:///anyblok')
 
     def test_get_url4(self):
@@ -277,7 +310,8 @@ class TestConfiguration(TestCase):
             db_user_name='jssuzanne',
             db_password='secret',
             db_port=None)
-        url = Configuration.get_url()
+        from anyblok.config import get_url
+        url = get_url()
         self.check_url(url, 'postgres://jssuzanne:secret@/anyblok2')
 
     def test_get_url5(self):
@@ -289,7 +323,8 @@ class TestConfiguration(TestCase):
             db_user_name='jssuzanne',
             db_password='secret',
             db_port=None)
-        url = Configuration.get_url(db_name='anyblok3')
+        from anyblok.config import get_url
+        url = get_url(db_name='anyblok3')
         self.check_url(url, 'postgres://jssuzanne:secret@/anyblok3')
 
     def test_get_url_without_drivername(self):
@@ -300,8 +335,9 @@ class TestConfiguration(TestCase):
             db_user_name=None,
             db_password=None,
             db_port=None)
+        from anyblok.config import get_url
         with self.assertRaises(ConfigurationException):
-            Configuration.get_url()
+            get_url()
 
     def test_merge_for_one_part(self):
         Configuration.add('new-group', function_=fnct_configuration)
@@ -509,6 +545,7 @@ class TestConfigurationOption(TestCase):
         cls.group = cls.parser.add_argument_group('label')
         cls.function = {
             'add_configuration_file': add_configuration_file,
+            'add_plugins': add_plugins,
             'add_database': add_database,
             'add_install_bloks': add_install_bloks,
             'add_uninstall_bloks': add_uninstall_bloks,
@@ -521,6 +558,9 @@ class TestConfigurationOption(TestCase):
 
     def test_add_configuration_file(self):
         self.function['add_configuration_file'](self.parser)
+
+    def test_add_plugins(self):
+        self.function['add_plugins'](self.group)
 
     def test_add_database(self):
         self.function['add_database'](self.group)

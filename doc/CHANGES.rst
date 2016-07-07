@@ -20,6 +20,10 @@ Future
 * [FIX] add set_defaults in parser to update configuration dict
 * [FIX] one2many remote columns
 * [FIX] load anyblok.init in the unit test
+* [IMP] Add plugins by configuration for
+  - Registry
+  - Migration
+  - get_url
 
 0.8.5 (2016-06-20)
 ------------------
@@ -90,7 +94,7 @@ Future
 ------------------
 
 * [FIX] delete flush after remove of the session
-* [FIX] nose pluggins
+* [FIX] nose plugins
 * [FIX] does'nt destroy automaticly constraints (not created by anyblok),
   indexes (not created by anyblok), columns, tables by automigration, add
   options to force the delete of its.

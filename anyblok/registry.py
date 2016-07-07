@@ -16,10 +16,10 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
 from sqlalchemy.schema import ForeignKeyConstraint
-from .config import Configuration
+from .config import Configuration, get_url
+from .migration import Migration
 from .blok import BlokManager
 from .environment import EnvironmentManager
-from .migration import Migration
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
 from anyblok.common import anyblok_column_prefix
 from .logging import log
@@ -113,8 +113,9 @@ class RegistryManager:
                                "the registry for %r is already load" % db_name)
             return cls.registries[db_name]
 
-        registry = Registry(db_name, loadwithoutmigration=loadwithoutmigration,
-                            **kwargs)
+        _Registry = Configuration.get('Registry', Registry)
+        registry = _Registry(
+            db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
         cls.registries[db_name] = registry
         return registry
 
@@ -403,20 +404,8 @@ class Registry:
         self.loadwithoutmigration = loadwithoutmigration
         self.unittest = unittest
         self.additional_setting = kwargs
-        url = Configuration.get_url(db_name=db_name)
-        echo = Configuration.get('db_echo') or False
-        max_overflow = Configuration.get('db_max_overflow') or 10
-        echo_pool = Configuration.get('db_echo_pool') or False
-        pool_size = Configuration.get('db_pool_size') or 5
-        self.engine = create_engine(url, echo=echo, max_overflow=max_overflow,
-                                    echo_pool=echo_pool, pool_size=pool_size)
-        if self.unittest:
-            self.bind = self.engine.connect()
-            self.unittest_transaction = self.bind.begin()
-        else:
-            self.bind = self.engine
-            self.unittest_transaction = None
-
+        self.init_engine(db_name=db_name)
+        self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
             'registry': self,
             'Env': EnvironmentManager})
@@ -426,6 +415,38 @@ class Registry:
         self.nb_query_bases = self.nb_session_bases = 0
         self.blok_list_is_loaded = False
         self.load()
+
+    def init_bind(self):
+        """Initialize the bind"""
+        if self.unittest:
+            self.bind = self.engine.connect()
+            self.unittest_transaction = self.bind.begin()
+        else:
+            self.bind = self.engine
+            self.unittest_transaction = None
+
+    def init_engine_options(self):
+        """Define the options to initialize the engine"""
+        return dict(
+            echo=Configuration.get('db_echo') or False,
+            max_overflow=Configuration.get('db_max_overflow') or 10,
+            echo_pool=Configuration.get('db_echo_pool') or False,
+            pool_size=Configuration.get('db_pool_size') or 5,
+        )
+
+    def init_engine(self, db_name=None):
+        """Define the engine
+
+        :param db_name: name of the database to link
+        """
+        kwargs = self.init_engine_options()
+        url = Configuration.get('get_url', get_url)(db_name=db_name)
+        self.rw_engine = create_engine(url, **kwargs)
+
+    @property
+    def engine(self):
+        """property to get the engine"""
+        return self.rw_engine
 
     def ini_var(self):
         """ Initialize the var to load the registry """
@@ -454,8 +475,7 @@ class Registry:
         for e, namespace, method in self._sqlalchemy_known_events:
             try:
                 event.remove(e.mapper(self, namespace), e.event,
-                             method.get_attribute(self),
-                             *e.args, **e.kwargs)
+                             method.get_attribute(self))
             except InvalidRequestError:
                 pass
 
@@ -810,7 +830,8 @@ class Registry:
             query_bases = [] + self.loaded_cores['Query']
             query_bases += [self.registry_base]
             Query = type('Query', tuple(query_bases), {})
-            Session = type('Session', tuple(self.loaded_cores['Session']), {
+            session_bases = [self.registry_base] + self.loaded_cores['Session']
+            Session = type('Session', tuple(session_bases), {
                 'registry_query': Query})
 
             bind = self.connection() if self.Session else self.bind
@@ -977,7 +998,7 @@ class Registry:
         if not self.withoutautomigration:
             self.declarativebase.metadata.create_all(self.connection())
 
-        self.migration = Migration(self)
+        self.migration = Configuration.get('Migration', Migration)(self)
         query = """
             SELECT name, installed_version
             FROM system_blok

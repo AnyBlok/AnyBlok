@@ -21,6 +21,66 @@ from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
 logger = getLogger(__name__)
 
 
+def get_url(db_name=None):
+    """ Return an sqlalchemy URL for database
+
+    Get the options of the database, the only option which can be
+    overloaded is the name of the database::
+
+        url = get_url(db_name='Mydb')
+
+    ..note::
+
+        Since 0.5.3, an URL can be define by the configuration file.
+        The *username*, *password* and *database* if overwrite by the
+        options if they are filled::
+
+            # db_url = 'postgresql:///db'
+            get_url()
+            ==> 'postgresql:///db'
+            # db_user_name = 'jssuzanne'
+            # db_password = 'secret'
+            get_url()
+            ==> 'postgresql://jssuzanne:secret@/db'
+            # db_name = 'db1'
+            get_url()
+            ==> 'postgresql://jssuzanne:secret@/db1'
+            get_url(db_name='Mydb')
+            ==> 'postgresql://jssuzanne:secret@/Mydb'
+
+    :param db_name: Name of the database
+    :rtype: SqlAlchemy URL
+    :exception: ConfigurationException
+    """
+    url = Configuration.get('db_url', None)
+    drivername = Configuration.get('db_driver_name', None)
+    username = Configuration.get('db_user_name', None)
+    password = Configuration.get('db_password', None)
+    host = Configuration.get('db_host', None)
+    port = Configuration.get('db_port', None)
+    database = Configuration.get('db_name', None)
+
+    if db_name is not None:
+        database = db_name
+
+    if url:
+        url = make_url(url)
+        if username:
+            url.username = username
+        if password:
+            url.password = password
+        if database:
+            url.database = database
+
+        return url
+
+    if drivername is None:
+        raise ConfigurationException('No Drivername defined')
+
+    return URL(drivername, username=username, password=password, host=host,
+               port=port, database=database)
+
+
 class ConfigurationException(LookupError):
     """ Simple Exception for Configuration"""
 
@@ -135,6 +195,29 @@ class AnyBlokArgumentGroup(AnyBlokActionsContainer, _ArgumentGroup):
     """Over load the argparse group in the goal to define type directly by
     Configuration class for argparse and config files
     """
+
+
+def AnyBlokPlugin(import_definition):
+    """Callable to cast import string definition to object
+
+    ::
+
+        path = AnyBlokPlugin('sys:path')
+        //
+        Registry = AnyBlokPlugin('anyblok.registry:Registry')
+
+    :param import_definition: string of the object to import
+    :rtype: imported object
+    """
+    if not isinstance(import_definition, str):
+        return import_definition
+
+    import_path, import_name = import_definition.split(':')
+    module = __import__(import_path, fromlist=[import_name])
+    if hasattr(module, import_name):
+        return getattr(module, import_name)
+
+    raise ImportError("%s does not exist in %s" % (import_name, import_path))
 
 
 class ConfigOption:
@@ -421,74 +504,18 @@ class Configuration:
         return labels
 
     @classmethod
-    def get_url(cls, db_name=None):
-        """ Return an sqlalchemy URL for database
-
-        Get the options of the database, the only option which can be
-        overloaded is the name of the database::
-
-            url = Configuration.get_url(db_name='Mydb')
-
-        ..note::
-
-            Since 0.5.3, an URL can be define by the configuration file.
-            The *username*, *password* and *database* if overwrite by the
-            options if they are filled::
-
-                # db_url = 'postgresql:///db'
-                Configuration.get_url()
-                ==> 'postgresql:///db'
-                # db_user_name = 'jssuzanne'
-                # db_password = 'secret'
-                Configuration.get_url()
-                ==> 'postgresql://jssuzanne:secret@/db'
-                # db_name = 'db1'
-                Configuration.get_url()
-                ==> 'postgresql://jssuzanne:secret@/db1'
-                Configuration.get_url(db_name='Mydb')
-                ==> 'postgresql://jssuzanne:secret@/Mydb'
-
-        :param db_name: Name of the database
-        :rtype: SqlAlchemy URL
-        :exception: ConfigurationException
-        """
-        url = cls.get('db_url', None)
-        drivername = cls.get('db_driver_name', None)
-        username = cls.get('db_user_name', None)
-        password = cls.get('db_password', None)
-        host = cls.get('db_host', None)
-        port = cls.get('db_port', None)
-        database = cls.get('db_name', None)
-
-        if db_name is not None:
-            database = db_name
-
-        if url:
-            url = make_url(url)
-            if username:
-                url.username = username
-            if password:
-                url.password = password
-            if database:
-                url.database = database
-
-            return url
-
-        if drivername is None:
-            raise ConfigurationException('No Drivername defined')
-
-        return URL(drivername, username=username, password=password, host=host,
-                   port=port, database=database)
-
-    @classmethod
     @log(logger)
     def load_config_for_test(cls):
+        """Load the argparse configuration need for the unittest"""
         if not cls.configuration:
             parser = getParser()
-            for part in cls.groups.values():
-                for fncts in part.values():
+            for parts in cls.groups.values():
+                for part, fncts in parts.items():
                     for fnct in fncts:
-                        if fnct.must_be_loaded_by_unittest:
+                        if (
+                            fnct.must_be_loaded_by_unittest or
+                            part in ('plugins',)
+                        ):
                             fnct(parser)
 
     @classmethod
@@ -517,6 +544,7 @@ class Configuration:
                                                 ['config', 'database'])
         configuration_groups = set(configuration_groups or []).union(
             _configuration_groups)
+        configuration_groups.add('plugins')
         if useseparator:
             parser = getParser(**description)
 
@@ -661,6 +689,22 @@ class Configuration:
 
         if 'logging_level' in cls.configuration:
             cls.initialize_logging()
+
+
+@Configuration.add('plugins', label='Plugins',
+                   must_be_loaded_by_unittest=True)
+def add_plugins(group):
+    group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPlugin,
+                       default='anyblok.registry:Registry',
+                       help="Registry class to use")
+    group.add_argument('--migration-cls', dest='Migration',
+                       type=AnyBlokPlugin,
+                       default='anyblok.migration:Migration',
+                       help="Migration class to use")
+    group.add_argument('--get-url-fnct', dest='get_url',
+                       type=AnyBlokPlugin,
+                       default='anyblok.config:get_url',
+                       help="get_url function to use")
 
 
 @Configuration.add('config')
