@@ -28,6 +28,8 @@ Future
 * [IMP] add LogCapture
 * [IMP] TestCase.Configuration, use to update Configuration only in 
   a context manager
+* [IMP] add Registry.db_exists class method, check with the configuration
+  and the db_name if the connection is possible
 
 0.8.5 (2016-06-20)
 ------------------

@@ -8,6 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.registry import RegistryManager
+from anyblok.config import Configuration
 from anyblok.blok import BlokManager, Blok
 from anyblok.column import Integer
 from threading import Thread
@@ -150,6 +151,14 @@ class TestRegistry(DBTestCase):
         registry.add_in_registry('Declarations.Test.Test', TestTest)
         registry.add_in_registry('Declarations.Test', Test)
         self.check_added_in_regisry(registry)
+
+    def test_registry_db_exist(self):
+        self.assertTrue(Configuration.get('Registry').db_exists(
+            db_name=Configuration.get('db_name')))
+
+    def test_registry_db_unexist(self):
+        self.assertFalse(Configuration.get('Registry').db_exists(
+            db_name='wrong_db_name'))
 
 
 class TestRegistry2(DBTestCase):
