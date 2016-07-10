@@ -199,14 +199,16 @@ def model_with_foreign_key():
 class TestModel2(DBTestCase):
 
     def test_model_is_assembled(self):
-        with LogCapture(INFO) as logs:
+        with LogCapture('anyblok.registry', level=INFO) as logs:
+            self.init_registry(None)
             messages = logs.get_info_messages()
             self.assertIn("Assemble 'Model' entry", messages)
 
-    def test_mixin_is_assembled(self):
-        with LogCapture(INFO) as logs:
+    def test_model_is_initialized(self):
+        with LogCapture('anyblok.registry', INFO) as logs:
+            self.init_registry(None)
             messages = logs.get_info_messages()
-            self.assertIn("Assemble 'Mixin' entry", messages)
+            self.assertIn("Initialize 'Model' entry", messages)
 
     def check_registry(self, Model):
         t = Model.insert(name="test")

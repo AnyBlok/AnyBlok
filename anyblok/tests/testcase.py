@@ -334,22 +334,40 @@ class BlokTestCase(unittest.TestCase):
 
 
 class LogCapture(LC):
+    """Overwrite ``testfixtures.LogCapture`` to add some helper methods"""
+
     def get_messages(self, *levels):
+        """Return the captured messages
+        ::
+
+            with LogCapture() as logs:
+                messages = logs.get_messages(INFO, WARNING)
+
+        :param \*levels: list of logging.level
+        :rtype: list of formated message
+        """
         return [
-            self.format(r) for r in self.records if r.levelno in levels
+            self.format(r)
+            for r in self.records
+            if (not levels or r.levelno in levels)
         ]
 
     def get_debug_messages(self):
-        return self.get_messages(INFO)
-
-    def get_info_messages(self):
+        """Return only the logging.DEBUG messages"""
         return self.get_messages(DEBUG)
 
+    def get_info_messages(self):
+        """Return only the logging.INFO messages"""
+        return self.get_messages(INFO)
+
     def get_warning_messages(self):
+        """Return only the logging.WARNING messages"""
         return self.get_messages(WARNING)
 
     def get_error_messages(self):
+        """Return only the logging.ERROR messages"""
         return self.get_messages(ERROR)
 
     def get_critical_messages(self):
+        """Return only the logging.CRITICAL messages"""
         return self.get_messages(CRITICAL)

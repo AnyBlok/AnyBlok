@@ -51,3 +51,13 @@ BlokTestCase
     :undoc-members:
     :show-inheritance:
     :noindex:
+
+LogCapture
+----------
+
+.. autoclass:: LogCapture
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+    :noindex:
