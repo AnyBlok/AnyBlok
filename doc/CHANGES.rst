@@ -26,6 +26,8 @@ Future
   - get_url
 
 * [IMP] add LogCapture
+* [IMP] TestCase.Configuration, use to update Configuration only in 
+  a context manager
 
 0.8.5 (2016-06-20)
 ------------------
