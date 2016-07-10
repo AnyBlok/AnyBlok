@@ -25,6 +25,8 @@ Future
   - Migration
   - get_url
 
+* [IMP] add LogCapture
+
 0.8.5 (2016-06-20)
 ------------------
 
