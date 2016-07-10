@@ -32,6 +32,7 @@ requires = [
     'pytz',
     'python-dateutil',
     'texttable',
+    'testfixtures',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

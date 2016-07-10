@@ -22,7 +22,8 @@ import sqlalchemy
 from sqlalchemy import event
 from sqlalchemy_utils.functions import database_exists, create_database, orm
 from copy import copy
-from logging import getLogger
+from testfixtures import LogCapture as LC
+from logging import getLogger, DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 logger = getLogger(__name__)
 
@@ -330,3 +331,25 @@ class BlokTestCase(unittest.TestCase):
             self.registry.session.close()
 
         self._transaction_case_teared_down = True
+
+
+class LogCapture(LC):
+    def get_messages(self, *levels):
+        return [
+            self.format(r) for r in self.records if r.levelno in levels
+        ]
+
+    def get_debug_messages(self):
+        return self.get_messages(INFO)
+
+    def get_info_messages(self):
+        return self.get_messages(DEBUG)
+
+    def get_warning_messages(self):
+        return self.get_messages(WARNING)
+
+    def get_error_messages(self):
+        return self.get_messages(ERROR)
+
+    def get_critical_messages(self):
+        return self.get_messages(CRITICAL)

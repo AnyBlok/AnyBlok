@@ -6,7 +6,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase, DBTestCase
+from anyblok.tests.testcase import TestCase, DBTestCase, LogCapture
+from logging import INFO
 from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
 from anyblok.model import (has_sql_fields, get_fields, ModelException,
@@ -196,6 +197,16 @@ def model_with_foreign_key():
 
 
 class TestModel2(DBTestCase):
+
+    def test_model_is_assembled(self):
+        with LogCapture(INFO) as logs:
+            messages = logs.get_info_messages()
+            self.assertIn("Assemble 'Model' entry", messages)
+
+    def test_mixin_is_assembled(self):
+        with LogCapture(INFO) as logs:
+            messages = logs.get_info_messages()
+            self.assertIn("Assemble 'Mixin' entry", messages)
 
     def check_registry(self, Model):
         t = Model.insert(name="test")
