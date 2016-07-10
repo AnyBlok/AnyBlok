@@ -23,6 +23,7 @@ from sqlalchemy import event
 from sqlalchemy_utils.functions import database_exists, create_database, orm
 from copy import copy
 from testfixtures import LogCapture as LC
+from contextlib import contextmanager
 from logging import getLogger, DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 logger = getLogger(__name__)
@@ -143,6 +144,23 @@ class TestCase(unittest.TestCase):
         """ Roll back the session """
         super(TestCase, self).tearDown()
         self._transaction_case_teared_down = True
+
+    @contextmanager
+    def Configuration(**values):
+        """Add Configuration value only in the contextmanager
+        ::
+
+            with TestCase.Configuration(db_name='a db name'):
+                self.assertEqual(Configuration.get('db_name'), 'a db name')
+
+        :param \**values: values to update
+        """
+        try:
+            old_configuration = Configuration.configuration.copy()
+            Configuration.update(**values)
+            yield
+        finally:
+            Configuration.configuration = old_configuration
 
 
 class DBTestCase(TestCase):
