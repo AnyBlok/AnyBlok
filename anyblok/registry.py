@@ -16,6 +16,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
 from sqlalchemy.schema import ForeignKeyConstraint
+from sqlalchemy_utils.functions import database_exists
 from .config import Configuration, get_url
 from .migration import Migration
 from .blok import BlokManager
@@ -465,6 +466,14 @@ class Registry:
         EnvironmentManager.set('_precommit_hook', [])
         self._sqlalchemy_known_events = []
         self.expire_attributes = {}
+
+    @classmethod
+    def db_exists(cls, db_name=None):
+        if not db_name:
+            raise RegistryException('db_name is required')
+
+        url = Configuration.get('get_url', get_url)(db_name=db_name)
+        return database_exists(url)
 
     def listen_sqlalchemy_known_event(self):
         for e, namespace, method in self._sqlalchemy_known_events:
