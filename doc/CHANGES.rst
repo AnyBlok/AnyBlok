@@ -9,8 +9,8 @@
 CHANGELOG
 =========
 
-Future
-------
+0.9.0 (2016-07-11)
+------------------
 
 * [REF] add Configuration.has method
 * [FIX] test migration, force to load registry with unittest=True
@@ -20,10 +20,11 @@ Future
 * [FIX] add set_defaults in parser to update configuration dict
 * [FIX] one2many remote columns
 * [FIX] load anyblok.init in the unit test
-* [IMP] Add plugins by configuration for
-  - Registry
-  - Migration
-  - get_url
+* [IMP] Add plugins by configuration for:
+
+  * Registry
+  * Migration
+  * get_url
 
 * [IMP] add LogCapture
 * [IMP] TestCase.Configuration, use to update Configuration only in 
