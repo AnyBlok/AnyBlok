@@ -799,7 +799,11 @@ def add_interpreter(parser):
 
 @Configuration.add('schema', label="Schema options")
 def add_schema(group):
-    from graphviz.files import FORMATS
+    try:
+        from graphviz.files import FORMATS
+    except ImportError:
+        from graphviz.backend import FORMATS
+
     group.add_argument('--schema-format',
                        default='png', choices=tuple(FORMATS))
 

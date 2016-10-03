@@ -56,6 +56,8 @@ Installation via source distribution is via the ``setup.py`` script::
 
 Installation will add the ``anyblok`` commands to the environment.
 
+.. note:: AnyBlok use Python version >= 3.3
+
 Unit Test
 ---------
 
