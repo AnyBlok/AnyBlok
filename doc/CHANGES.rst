@@ -9,6 +9,13 @@
 CHANGELOG
 =========
 
+0.9.1 (2016-10-3)
+-----------------
+
+* [FIX] migration testcase
+* [FIX] graphviz FORMATS
+* [FIX] travis configuration
+
 0.9.0 (2016-07-11)
 ------------------
 
