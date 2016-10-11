@@ -53,7 +53,13 @@ class Column(System.Field):
         :param ftype: type of the AnyBlok Field
         """
         c = column.property.columns[0]
-        vals = dict(autoincrement=c.autoincrement,
+        autoincrement = c.autoincrement
+        if autoincrement == 'auto':
+            autoincrement = (True
+                             if c.primary_key and ftype == 'Integer'
+                             else False)
+
+        vals = dict(autoincrement=autoincrement,
                     code=table + '.' + cname,
                     model=model, name=cname,
                     foreign_key=c.info.get('foreign_key'),
@@ -74,7 +80,16 @@ class Column(System.Field):
         :param ftype: type of the AnyBlok Field
         """
         c = meta_column.property.columns[0]
-        for col in ('autoincrement', 'nullable', 'primary_key', 'unique'):
+        autoincrement = c.autoincrement
+        if autoincrement == 'auto':
+            autoincrement = (True
+                             if c.primary_key and ftype == 'Integer'
+                             else False)
+
+        if column.autoincrement != autoincrement:
+            column.autoincrement = autoincrement
+
+        for col in ('nullable', 'primary_key', 'unique'):
             if getattr(column, col) != getattr(c, col):
                 setattr(column, col, getattr(c, col))
 

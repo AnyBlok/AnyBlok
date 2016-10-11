@@ -9,6 +9,13 @@
 CHANGELOG
 =========
 
+0.9.3
+-----
+
+* [FIX] SQLAlchemy 1.1.* add autoincrement='auto', or AnyBlok wait Boolean.
+  If the field is an Integer and a primary_key with autoincrement='auto'
+  then the value is True else False
+
 0.9.2 (2016-10-12)
 ------------------
 
