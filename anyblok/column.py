@@ -218,6 +218,13 @@ class Integer(Column):
             x = Integer(default=1)
 
     """
+
+    def __init__(self, *args, **kwargs):
+        super(Integer, self).__init__(*args, **kwargs)
+        if self.kwargs.get('primary_key') is True:
+            if not 'autoincrement' in self.kwargs:
+                self.kwargs['autoincrement'] = True
+
     sqlalchemy_type = types.Integer
 
 

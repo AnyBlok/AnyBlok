@@ -15,6 +15,9 @@ CHANGELOG
 * [FIX] SQLAlchemy 1.1.* add autoincrement='auto', or AnyBlok wait Boolean.
   If the field is an Integer and a primary_key with autoincrement='auto'
   then the value is True else False
+* [FIX] SQLAlchemy 1.1.*, primary_key attribute don't define autoincrement.
+  The column Integer with a primary_key=True whithout autoincrement 
+  declaration use autoincrement=True
 
 0.9.2 (2016-10-12)
 ------------------
