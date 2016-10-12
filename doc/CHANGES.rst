@@ -25,6 +25,10 @@ CHANGELOG
 * [FIX] SQLAlchemy 1.1.*, Hybrid property don't propagate the relationship
   info attribute. The propagate is forced for Many2One and One2One. The only
   both relationships to be wrapped by hybrid_property
+* [FIX] SQLAlchemy 1.1.*, Hybrid property wrap the fget result in the case of
+  the fget is called on the class (not the instance). Adapt the unit test,
+  don't check if the result id of column are the same, check if the expression
+  give by this results are the same.
 
 0.9.2 (2016-10-12)
 ------------------

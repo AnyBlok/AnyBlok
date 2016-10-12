@@ -62,6 +62,12 @@ class Field:
     def get_property(self, registry, namespace, fieldname, properties):
         """Return the property of the field
 
+        .. warning::
+
+            In the case of the get is called in classattribute,
+            SQLAlchemy wrap for each call the column, the id of the wrapper
+            is not the same
+
         :param registry: current registry
         :param namespace: name of the model
         :param fieldname: name of the field
