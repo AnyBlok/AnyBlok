@@ -222,7 +222,7 @@ class Integer(Column):
     def __init__(self, *args, **kwargs):
         super(Integer, self).__init__(*args, **kwargs)
         if self.kwargs.get('primary_key') is True:
-            if not 'autoincrement' in self.kwargs:
+            if 'autoincrement' not in self.kwargs:
                 self.kwargs['autoincrement'] = True
 
     sqlalchemy_type = types.Integer
