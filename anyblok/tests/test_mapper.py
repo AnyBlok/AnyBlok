@@ -261,7 +261,13 @@ class TestModelAttributeMapper(DBTestCase):
     def test_get_mapper(self):
         registry = self.init_registry(None)
         mam = ModelAttributeMapper(Model.System.Model.use('name'), 'set')
-        self.assertIs(mam.mapper(registry, None), registry.System.Model.name)
+        # We can't compare that the column are the same, because is the case
+        # of the call are in the class attribute (no instance) SQLAlchemy
+        # Wrap the result for each call, then each call return a différent
+        # object, but it is not an error
+        self.assertEqual(
+            str(mam.mapper(registry, None) == 'test'),
+            str(registry.System.Model.name == 'test'))
 
 
 class TestMapperAdapter(TestCase):

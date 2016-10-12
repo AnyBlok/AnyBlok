@@ -9,6 +9,30 @@
 CHANGELOG
 =========
 
+0.9.3 (2016-10-12)
+------------------
+
+* [FIX] SQLAlchemy 1.1.* add autoincrement='auto', or AnyBlok wait Boolean.
+  If the field is an Integer and a primary_key with autoincrement='auto'
+  then the value is True else False
+* [FIX] SQLAlchemy 1.1.*, primary_key attribute don't define autoincrement.
+  The column Integer with a primary_key=True whithout autoincrement 
+  declaration use autoincrement=True
+* [FIX] SQLAlchemy 1.1.*, backref property check if the collection_class has
+  __emulates__ attributes. InstrumentedList haven't to have this attribute
+* [FIX] SQLAlchemy 1.1.*, Session State changed, update the update method 
+  of the registry to install / update / uninstall bloks
+* [FIX] SQLAlchemy 1.1.*, Hybrid property don't propagate the relationship
+  info attribute. The propagate is forced for Many2One and One2One. The only
+  both relationships to be wrapped by hybrid_property
+* [FIX] SQLAlchemy 1.1.*, Hybrid property wrap the fget result in the case of
+  the fget is called on the class (not the instance). Adapt the unit test,
+  don't check if the result id of column are the same, check if the expression
+  give by this results are the same.
+* [FIX] SQLAlchemy 1.1.*, listen can not be used with a hybrid_property.
+  In the case of a listen, the mapper returned is not the hybrid_property
+  but the real wrapped field
+
 0.9.2 (2016-10-12)
 ------------------
 

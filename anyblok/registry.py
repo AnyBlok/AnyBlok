@@ -477,7 +477,7 @@ class Registry:
 
     def listen_sqlalchemy_known_event(self):
         for e, namespace, method in self._sqlalchemy_known_events:
-            event.listen(e.mapper(self, namespace), e.event,
+            event.listen(e.mapper(self, namespace, usehybrid=False), e.event,
                          method.get_attribute(self), *e.args, **e.kwargs)
 
     def remove_sqlalchemy_known_event(self):
@@ -1251,7 +1251,7 @@ class Registry:
 
         logger.info("Change state %s => %s for blok %s" % (
             blok.state, state, blok_name))
-        query.update({Blok.state: state}, synchronize_session='fetch')
+        query.update({Blok.state: state})
 
     @log(logger, withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):
