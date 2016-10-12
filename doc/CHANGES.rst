@@ -29,6 +29,9 @@ CHANGELOG
   the fget is called on the class (not the instance). Adapt the unit test,
   don't check if the result id of column are the same, check if the expression
   give by this results are the same.
+* [FIX] SQLAlchemy 1.1.*, listen can not be used with a hybrid_property.
+  In the case of a listen, the mapper returned is not the hybrid_property
+  but the real wrapped field
 
 0.9.2 (2016-10-12)
 ------------------
