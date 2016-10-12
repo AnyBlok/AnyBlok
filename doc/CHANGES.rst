@@ -9,8 +9,8 @@
 CHANGELOG
 =========
 
-0.9.3
------
+0.9.3 (2016-10-12)
+------------------
 
 * [FIX] SQLAlchemy 1.1.* add autoincrement='auto', or AnyBlok wait Boolean.
   If the field is an Integer and a primary_key with autoincrement='auto'
