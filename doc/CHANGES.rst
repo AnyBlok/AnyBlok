@@ -18,6 +18,8 @@ CHANGELOG
 * [FIX] SQLAlchemy 1.1.*, primary_key attribute don't define autoincrement.
   The column Integer with a primary_key=True whithout autoincrement 
   declaration use autoincrement=True
+* [FIX] SQLAlchemy 1.1.*, backref property check if the collection_class has
+  __emulates__ attributes. InstrumentedList haven't to have this attribute
 
 0.9.2 (2016-10-12)
 ------------------

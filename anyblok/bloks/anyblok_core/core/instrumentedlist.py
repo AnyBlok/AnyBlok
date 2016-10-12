@@ -14,6 +14,8 @@ class InstrumentedList:
     """
 
     def __getattr__(self, name):
+        if name in ('__emulates__', ):
+            return None
 
         def wrapper(*args, **kwargs):
             return [getattr(x, name)(*args, **kwargs) for x in self]
