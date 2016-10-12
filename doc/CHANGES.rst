@@ -20,6 +20,8 @@ CHANGELOG
   declaration use autoincrement=True
 * [FIX] SQLAlchemy 1.1.*, backref property check if the collection_class has
   __emulates__ attributes. InstrumentedList haven't to have this attribute
+* [FIX] SQLAlchemy 1.1.*, Session State changed, update the update method 
+  of the registry to install / update / uninstall bloks
 
 0.9.2 (2016-10-12)
 ------------------

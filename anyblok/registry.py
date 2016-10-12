@@ -1251,7 +1251,7 @@ class Registry:
 
         logger.info("Change state %s => %s for blok %s" % (
             blok.state, state, blok_name))
-        query.update({Blok.state: state}, synchronize_session='fetch')
+        query.update({Blok.state: state})
 
     @log(logger, withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):
