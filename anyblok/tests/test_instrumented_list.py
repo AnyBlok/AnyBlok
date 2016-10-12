@@ -18,6 +18,10 @@ class TestInstrumentedList(DBTestCase):
                            registry.InstrumentedList)
         self.assertTrue(check)
 
+    def test_emulates(self):
+        registry = self.init_registry(None)
+        self.assertFalse(hasattr(registry.InstrumentedList, '__emulates'))
+
     def test_empty_result_on_query_return_InstrumentedList(self):
         registry = self.init_registry(None)
         Blok = registry.System.Blok
