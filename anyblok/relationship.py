@@ -381,6 +381,21 @@ class Many2One(RelationShip):
             self.column_names = [ModelAttribute(namespace, x)
                                  for x in self._column_names]
 
+    def get_property(self, registry, namespace, fieldname, properties):
+        """Return the property of the field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
+        res = super(Many2One, self).get_property(
+            registry, namespace, fieldname, properties)
+        # force the info value in hybrid_property because since SQLAlchemy
+        # 1.1.* the info is not propagate
+        res.info = self.kwargs['info']
+        return res
+
     def add_expire_attributes(self, registry, namespace, fieldname, cname):
         self.init_expire_attributes(registry, namespace, cname)
         registry.expire_attributes[namespace][cname].add((fieldname,))
