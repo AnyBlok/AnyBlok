@@ -1,5 +1,6 @@
 from nose.plugins import Plugin
 from anyblok.config import Configuration
+from anyblok import load_init_function_from_entry_points
 from anyblok.blok import BlokManager
 from anyblok.registry import RegistryManager
 from os.path import join, exists
@@ -70,6 +71,8 @@ class AnyBlokPlugin(Plugin):
             # because the configuration are not load in order of score
             self.registryLoaded = True
             BlokManager.load()
+            load_init_function_from_entry_points(unittest=True)
+            Configuration.load_config_for_test()
             Configuration.parse_options(self.AnyBlokOptions, ('bloks',))
             db_name = Configuration.get('db_name')
             if not db_name:
