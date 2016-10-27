@@ -297,6 +297,28 @@ class SqlMixin:
 
         return result
 
+    @classmethod
+    def getFieldType(cls, name):
+        """Return the type of the column
+
+        ::
+
+            TheModel.getFieldType(nameOfTheColumn)
+
+        this method take care if it is a polymorphic model or not
+
+        :param name: name of the column
+        :rtype: String, the name of the Type of column used
+        """
+        models = [x.__registry_name__ for x in cls.__anyblok_bases__]
+        models.insert(0, cls.__registry_name__)
+        Field = cls.registry.System.Field
+        query = Field.query()
+        query = query.filter(Field.name == name)
+        query = query.filter(Field.model.in_(models))
+        query = query.limit(1)
+        return query.one().ftype
+
 
 def get_model_information(registry, registry_name):
     model = registry.loaded_namespaces_first_step[registry_name]

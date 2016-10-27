@@ -13,6 +13,7 @@ CHANGELOG
 -----
 
 * [FIX] Nose test pluggins load the configuration need for unit test
+* [ADD] getFieldType on SQLBase, this method return the type of the column
 
 0.9.3 (2016-10-12)
 ------------------

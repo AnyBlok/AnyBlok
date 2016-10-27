@@ -274,3 +274,22 @@ class TestPolymorphic(DBTestCase):
                 registry.Engineer.engineer_name == 'john')
             employee = query.one()
             self.assertTrue(isinstance(employee, registry.Engineer))
+
+    def test_getFieldType(self):
+        registry = self.init_registry(multi_table_poly)
+        self.assertEqual(registry.Employee.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Employee.getFieldType('name'), 'String')
+        self.assertEqual(registry.Employee.getFieldType('type_entity'),
+                         'String')
+        self.assertEqual(registry.Engineer.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Engineer.getFieldType('name'), 'String')
+        self.assertEqual(registry.Engineer.getFieldType('type_entity'),
+                         'String')
+        self.assertEqual(registry.Engineer.getFieldType('engineer_name'),
+                         'String')
+        self.assertEqual(registry.Manager.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Manager.getFieldType('name'), 'String')
+        self.assertEqual(registry.Manager.getFieldType('type_entity'),
+                         'String')
+        self.assertEqual(registry.Manager.getFieldType('manager_name'),
+                         'String')
