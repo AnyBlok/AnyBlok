@@ -568,3 +568,12 @@ class TestCoreSQLBase(DBTestCase):
         t.select = 'key2'
         t.expire('select')
         self.assertEqual(t.select, 'key')
+
+    def test_getFieldType(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        self.assertEqual(registry.Test.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Test.getFieldType('name'), 'String')
+        self.assertEqual(registry.Test2.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Test2.getFieldType('name'), 'String')
+        self.assertEqual(registry.Test2.getFieldType('test'), 'Many2One')
+        self.assertEqual(registry.Test.getFieldType('test2'), 'One2Many')
