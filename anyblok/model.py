@@ -20,7 +20,6 @@ from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
 from .mapper import ModelAttribute
 from sqlalchemy import ForeignKeyConstraint
-from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
 
 
@@ -210,10 +209,6 @@ class Model:
         if field.must_be_duplicate_before_added():
             field = deepcopy(field)
 
-        attr_name = name
-        if field.use_hybrid_property:
-            attr_name = anyblok_column_prefix + name
-
         if field.must_be_declared_as_attr():
             # All the declaration are seen as mixin for sqlalchemy
             # some of them need de be defered for the initialisation
@@ -222,16 +217,11 @@ class Model:
                 return field.get_sqlalchemy_mapping(
                     registry, namespace, name, properties)
 
-            properties[attr_name] = declared_attr(wrapper)
-            properties[attr_name].anyblok_field = field
+            properties[name] = declared_attr(wrapper)
+            properties[name].anyblok_field = field
         else:
-            properties[attr_name] = field.get_sqlalchemy_mapping(
+            properties[name] = field.get_sqlalchemy_mapping(
                 registry, namespace, name, properties)
-
-        if field.use_hybrid_property:
-            properties[name] = field.get_property(
-                registry, namespace, name, properties)
-            properties['hybrid_property_columns'].append(name)
 
         properties['loaded_columns'].append(name)
         field.update_properties(registry, namespace, name, properties)
@@ -555,7 +545,6 @@ class Model:
     @classmethod
     def init_core_properties_and_bases(cls, registry, bases, properties):
         properties['loaded_columns'] = []
-        properties['hybrid_property_columns'] = []
         properties['loaded_fields'] = {}
         if properties['is_sql_view']:
             bases.extend([x for x in registry.loaded_cores['SqlViewBase']])
@@ -648,7 +637,6 @@ class Model:
             cls.insert_in_bases(registry, namespace, bases,
                                 transformation_properties, properties)
             if properties['is_sql_view']:
-                cls.replace_properties_by_synonym(properties)
                 bases = [type(tablename, tuple(bases), properties)]
                 if properties['is_sql_view']:
                     cls.apply_view(namespace, tablename, bases[0], registry,
@@ -661,11 +649,6 @@ class Model:
             registry.loaded_namespaces[namespace] = bases[0]
 
         return bases, properties
-
-    @classmethod
-    def replace_properties_by_synonym(cls, properties):
-        for field in properties['loaded_columns']:
-            properties[field] = synonym(anyblok_column_prefix + field)
 
     @classmethod
     def apply_view(cls, namespace, tablename, base, registry, properties):
@@ -707,7 +690,7 @@ class Model:
                 'before-drop', registry.declarativebase.metadata)
 
         pks = [col for col in properties['loaded_columns']
-               if getattr(base, anyblok_column_prefix + col).primary_key]
+               if getattr(base, col).primary_key]
 
         if not pks:
             raise ViewException(

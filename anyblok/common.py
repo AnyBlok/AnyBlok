@@ -9,10 +9,6 @@ import sys
 from functools import lru_cache
 
 
-"""Define the prefixe for the mapper attribute for the column"""
-anyblok_column_prefix = '__anyblok_field_'
-
-
 def add_autodocs(meth, autodoc):
     if not hasattr(meth, 'autodocs'):
         meth.autodocs = []

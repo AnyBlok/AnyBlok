@@ -7,118 +7,12 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy import Table, Column, ForeignKeyConstraint
-from sqlalchemy.orm import (relationships, backref, relationship, base,
-                            attributes)
+from sqlalchemy.orm import backref, relationship
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import exc as sa_exc, util
 from .field import Field, FieldException
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr
-from anyblok.common import anyblok_column_prefix
-
-
-class RelationshipProperty(relationships.RelationshipProperty):
-
-    def __init__(self, *args, **kwargs):
-        self.relationship_field = kwargs.pop('relationship_field')
-        super(RelationshipProperty, self).__init__(*args, **kwargs)
-
-    def _generate_backref(self):  # noqa
-        """Interpret the 'backref' instruction to create a
-        :func:`.relationship` complementary to this one."""
-
-        if self.parent.non_primary:
-            return
-        if self.backref is not None and not self.back_populates:
-            if isinstance(self.backref, util.string_types):
-                backref_key, kwargs = self.backref, {}
-            else:
-                backref_key, kwargs = self.backref
-            mapper = self.mapper.primary_mapper()
-
-            check = set(mapper.iterate_to_root()).\
-                union(mapper.self_and_descendants)
-            for m in check:
-                if m.has_property(backref_key):
-                    raise sa_exc.ArgumentError(
-                        "Error creating backref "
-                        "'%s' on relationship '%s': property of that "
-                        "name exists on mapper '%s'" %
-                        (backref_key, self, m))
-
-            # determine primaryjoin/secondaryjoin for the
-            # backref.  Use the one we had, so that
-            # a custom join doesn't have to be specified in
-            # both directions.
-            if self.secondary is not None:
-                # for many to many, just switch primaryjoin/
-                # secondaryjoin.   use the annotated
-                # pj/sj on the _join_condition.
-                pj = kwargs.pop(
-                    'primaryjoin',
-                    self._join_condition.secondaryjoin_minus_local)
-                sj = kwargs.pop(
-                    'secondaryjoin',
-                    self._join_condition.primaryjoin_minus_local)
-            else:
-                pj = kwargs.pop(
-                    'primaryjoin',
-                    self._join_condition.primaryjoin_reverse_remote)
-                sj = kwargs.pop('secondaryjoin', None)
-                if sj:
-                    raise sa_exc.InvalidRequestError(
-                        "Can't assign 'secondaryjoin' on a backref "
-                        "against a non-secondary relationship."
-                    )
-
-            foreign_keys = kwargs.pop('foreign_keys',
-                                      self._user_defined_foreign_keys)
-            parent = self.parent.primary_mapper()
-            kwargs.setdefault('viewonly', self.viewonly)
-            kwargs.setdefault('post_update', self.post_update)
-            kwargs.setdefault('passive_updates', self.passive_updates)
-            self.back_populates = backref_key
-            _relationship = RelationshipProperty2(
-                parent, self.secondary,
-                pj, sj,
-                foreign_keys=foreign_keys,
-                back_populates=self.key,
-                relationship_field=self.relationship_field,
-                **kwargs)
-
-            mapper._configure_property(backref_key, _relationship)
-
-        if self.back_populates:
-            self._add_reverse_property(self.back_populates)
-
-
-def register_descriptor(class_, key, comparator=None,
-                        parententity=None, doc=None, relationship_field=None):
-    manager = base.manager_of_class(class_)
-    descriptor = relationship_field.InstrumentedAttribute(
-        class_, key, comparator=comparator, parententity=parententity,
-        relationship_field=relationship_field)
-    descriptor.__doc__ = doc
-    manager.instrument_attribute(key, descriptor)
-    return descriptor
-
-
-class RelationshipProperty2(relationships.RelationshipProperty):
-
-    def __init__(self, *args, **kwargs):
-        self.relationship_field = kwargs.pop('relationship_field')
-        super(RelationshipProperty2, self).__init__(*args, **kwargs)
-
-    def instrument_class(self, mapper):
-        register_descriptor(
-            mapper.class_,
-            self.key,
-            comparator=self.comparator_factory(self, mapper),
-            parententity=mapper,
-            doc=self.doc,
-            relationship_field=self.relationship_field,
-        )
 
 
 class RelationShipList:  # don't inherit list
@@ -275,18 +169,6 @@ class RelationShip(Field):
             registry.expire_attributes[namespace][fieldname] = set()
 
 
-class RelationShipListMany2One:
-
-    def relationship_field_append_value(self, value):
-        for model_field, rfield in self.relationship_fied.link_between_columns:
-            self.relationship_fied.apply_value_to(
-                value, model_field, getattr(value, self.fieldname), rfield)
-
-    def relationship_field_remove_value(self, value):
-        for model_field, rfield in self.relationship_fied.link_between_columns:
-            setattr(value, anyblok_column_prefix + model_field, None)
-
-
 class Many2One(RelationShip):
     """ Define a relationship attribute on the model
 
@@ -318,7 +200,6 @@ class Many2One(RelationShip):
     :param unique: If True, add the unique constraint on the column
     :param one2many: create the one2many link with this many2one
     """
-    use_hybrid_property = True
 
     def __init__(self, **kwargs):
         super(Many2One, self).__init__(**kwargs)
@@ -381,21 +262,6 @@ class Many2One(RelationShip):
             self.column_names = [ModelAttribute(namespace, x)
                                  for x in self._column_names]
 
-    def get_property(self, registry, namespace, fieldname, properties):
-        """Return the property of the field
-
-        :param registry: current registry
-        :param namespace: name of the model
-        :param fieldname: name of the field
-        :param properties: properties known to the model
-        """
-        res = super(Many2One, self).get_property(
-            registry, namespace, fieldname, properties)
-        # force the info value in hybrid_property because since SQLAlchemy
-        # 1.1.* the info is not propagate
-        res.info = self.kwargs['info']
-        return res
-
     def add_expire_attributes(self, registry, namespace, fieldname, cname):
         self.init_expire_attributes(registry, namespace, cname)
         registry.expire_attributes[namespace][cname].add((fieldname,))
@@ -457,9 +323,8 @@ class Many2One(RelationShip):
                                               fk_name.attribute_name))
 
         if namespace == self.model.model_name:
-            self.kwargs['remote_side'] = [
-                properties[anyblok_column_prefix + x.attribute_name]
-                for x in self.remote_columns]
+            self.kwargs['remote_side'] = [properties[x.attribute_name]
+                                          for x in self.remote_columns]
 
         if (len(self.column_names) > 1 or add_fksc) and col_names and fk_names:
             properties['add_in_table_args'].append(
@@ -483,19 +348,6 @@ class Many2One(RelationShip):
                 raise FieldException("Can not create the local "
                                      "column %r" % cname.attribute_name)
 
-    def apply_instrumentedlist(self, registry, namespace, fieldname):
-        """ Add the InstrumentedList class to replace List class as result
-        of the query
-
-        :param registry: current registry
-        """
-        properties = {
-            'fieldname': fieldname, 'relationship_fied': self}
-        InstrumentedList = type(
-            'InstrumentedList', (RelationShipListMany2One, RelationShipList,
-                                 registry.InstrumentedList), properties)
-        self.backref_properties['collection_class'] = InstrumentedList
-
     def create_column(self, cname, remote_type, foreign_key, properties):
 
         def wrapper(cls):
@@ -506,14 +358,8 @@ class Many2One(RelationShip):
                 unique=self.unique,
                 info=dict(label=self.label, foreign_key=foreign_key))
 
-        properties[(anyblok_column_prefix +
-                    cname.attribute_name)] = declared_attr(wrapper)
+        properties[cname.attribute_name] = declared_attr(wrapper)
         properties['loaded_columns'].append(cname.attribute_name)
-        properties['hybrid_property_columns'].append(cname.attribute_name)
-        properties[cname.attribute_name] = hybrid_property(
-            self.wrap_getter_column(cname.attribute_name),
-            super(Many2One, self).wrap_setter_column(cname.attribute_name),
-            expr=self.wrap_expr_column(cname.attribute_name))
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -533,49 +379,11 @@ class Many2One(RelationShip):
     def apply_value_to(self, model_self, model_field, remote_self,
                        remote_field):
         if remote_self:
-            value = getattr(remote_self,
-                            anyblok_column_prefix + remote_field)
+            value = getattr(remote_self, remote_field)
         else:
             value = None
 
-        setattr(model_self, anyblok_column_prefix + model_field, value)
-
-    def wrap_setter_column(self, fieldname):
-        attr_name = anyblok_column_prefix + fieldname
-
-        def setter_column(model_self, value):
-            res = setattr(model_self, attr_name, value)
-            for model_field, rfield in self.link_between_columns:
-                self.apply_value_to(model_self, model_field, value, rfield)
-
-            return res
-
-        return setter_column
-
-
-class InstrumentedAttribute_O2O(attributes.InstrumentedAttribute):
-
-    def __init__(self, *args, **kwargs):
-        self.relationship_field = kwargs.pop('relationship_field')
-        super(InstrumentedAttribute_O2O, self).__init__(*args, **kwargs)
-
-    def __set__(self, instance, value):
-        call_super = False
-        if value:
-            for cname, fname in self.relationship_field.link_between_columns:
-                if instance:
-                    if getattr(instance, fname):
-                        setattr(value, cname, getattr(instance, fname))
-                    else:
-                        call_super = True
-                else:
-                    setattr(value, cname, instance)
-
-        else:
-            call_super = True
-
-        if call_super:
-            super(InstrumentedAttribute_O2O, self).__set__(instance, value)
+        setattr(model_self, model_field, value)
 
 
 class One2One(Many2One):
@@ -608,8 +416,6 @@ class One2One(Many2One):
     :param backref: create the one2one link with this one2one
     """
 
-    InstrumentedAttribute = InstrumentedAttribute_O2O
-
     def __init__(self, **kwargs):
         super(One2One, self).__init__(**kwargs)
 
@@ -636,10 +442,6 @@ class One2One(Many2One):
 
         :param registry: current registry
         """
-
-    def get_relationship_cls(self):
-        self.kwargs['relationship_field'] = self
-        return RelationshipProperty
 
 
 class Many2Many(RelationShip):
@@ -803,22 +605,6 @@ class Many2Many(RelationShip):
             registry, namespace, fieldname, properties)
 
 
-class InstrumentedAttribute_O2M(attributes.InstrumentedAttribute):
-
-    def __init__(self, *args, **kwargs):
-        self.relationship_field = kwargs.pop('relationship_field')
-        super(InstrumentedAttribute_O2M, self).__init__(*args, **kwargs)
-
-    def __set__(self, instance, value):
-        super(InstrumentedAttribute_O2M, self).__set__(instance, value)
-        if instance:
-            for cname, fname in self.relationship_field.link_between_columns:
-                if value:
-                    setattr(instance, cname, getattr(value, fname))
-                else:
-                    setattr(instance, cname, value)
-
-
 class One2Many(RelationShip):
     """ Define a relationship attribute on the model
 
@@ -841,8 +627,6 @@ class One2Many(RelationShip):
     :param primaryjoin: the join condition between the remote column
     :param many2one: create the many2one link with this one2many
     """
-
-    InstrumentedAttribute = InstrumentedAttribute_O2M
 
     def __init__(self, **kwargs):
         super(One2Many, self).__init__(**kwargs)
@@ -951,9 +735,5 @@ class One2Many(RelationShip):
         if namespace == self.model.model_name:
             pks = ModelRepr(namespace).primary_keys(registry)
             self.backref_properties.update({'remote_side': [
-                properties[anyblok_column_prefix + pk.attribute_name]
+                properties[pk.attribute_name]
                 for pk in pks]})
-
-    def get_relationship_cls(self):
-        self.kwargs['relationship_field'] = self
-        return RelationshipProperty

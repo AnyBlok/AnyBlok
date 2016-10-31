@@ -22,7 +22,6 @@ from .migration import Migration
 from .blok import BlokManager
 from .environment import EnvironmentManager
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
-from anyblok.common import anyblok_column_prefix
 from .logging import log
 logger = getLogger(__name__)
 
@@ -477,7 +476,7 @@ class Registry:
 
     def listen_sqlalchemy_known_event(self):
         for e, namespace, method in self._sqlalchemy_known_events:
-            event.listen(e.mapper(self, namespace, usehybrid=False), e.event,
+            event.listen(e.mapper(self, namespace), e.event,
                          method.get_attribute(self), *e.args, **e.kwargs)
 
     def remove_sqlalchemy_known_event(self):
@@ -1048,12 +1047,6 @@ class Registry:
         :param obj: instance of ``Model``
         :param attribute_names: list of string, names of the attr to expire
         """
-        if attribute_names:
-            attribute_names = [
-                (anyblok_column_prefix + x
-                 if x in obj.hybrid_property_columns else x)
-                for x in attribute_names]
-
         self.session.expire(obj, attribute_names=attribute_names)
 
     def refresh(self, obj, attribute_names=None):
@@ -1065,12 +1058,6 @@ class Registry:
         :param obj: instance of ``Model``
         :param attribute_names: list of string, names of the attr to refresh
         """
-        if attribute_names:
-            attribute_names = [
-                (anyblok_column_prefix + x
-                 if x in obj.hybrid_property_columns else x)
-                for x in attribute_names]
-
         self.session.refresh(obj, attribute_names=attribute_names)
 
     def rollback(self, *args, **kwargs):

@@ -11,7 +11,7 @@ from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.encrypted import EncryptedType
-from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
+# from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
 from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy_utils.types.url import URLType
 from datetime import datetime, date
@@ -22,7 +22,7 @@ from inspect import ismethod
 from anyblok.config import Configuration
 import time
 import pytz
-import decimal
+# import decimal
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -75,7 +75,6 @@ class Column(Field):
     This class can't be instanciated
     """
 
-    use_hybrid_property = True
     foreign_key = None
     sqlalchemy_type = None
 
@@ -318,13 +317,6 @@ class Decimal(Column):
     """
     sqlalchemy_type = types.DECIMAL
 
-    def setter_format_value(self, value):
-        if value is not None:
-            if not isinstance(value, decimal.Decimal):
-                value = decimal.Decimal(value)
-
-        return value
-
 
 class Date(Column):
     """ Date column
@@ -393,15 +385,6 @@ class DateTime(Column):
 
     """
     sqlalchemy_type = DateTimeType
-
-    def setter_format_value(self, value):
-        value = convert_string_to_datetime(value)
-        if value is not None:
-            if value.tzinfo is None:
-                timezone = pytz.timezone(time.tzname[0])
-                value = timezone.localize(value)
-
-        return value
 
 
 class Time(Column):
@@ -530,11 +513,6 @@ class Password(Column):
 
         self.sqlalchemy_type = PasswordType(max_length=size, **crypt_context)
         super(Password, self).__init__(*args, **kwargs)
-
-    def setter_format_value(self, value):
-        value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
-        value = SAU_PWD(value, context=self.sqlalchemy_type.context)
-        return value
 
     def autodoc_get_properties(self):
         res = super(Password, self).autodoc_get_properties()
@@ -756,15 +734,6 @@ class Selection(Column):
 
         return self.sqlalchemy_type.python_type(value)
 
-    def setter_format_value(self, value):
-        if value is not None:
-            val = self.sqlalchemy_type.python_type(value)
-            if not val.validate():
-                raise FieldException('%r is not in the selections (%s)' % (
-                    value, ', '.join(val.get_selections())))
-
-        return value
-
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         self.sqlalchemy_type = SelectionType(
@@ -936,12 +905,6 @@ class Color(Column):
         self.sqlalchemy_type = ColorType(max_length)
         super(Color, self).__init__(*args, **kwargs)
 
-    def setter_format_value(self, value):
-        if isinstance(value, str):
-            value = self.sqlalchemy_type.python_type(value)
-
-        return value
-
 
 class UUID(String):
     """ Sequence column
@@ -986,12 +949,3 @@ class URL(Column):
 
     """
     sqlalchemy_type = URLType
-
-    def setter_format_value(self, value):
-        from furl import furl
-
-        if value is not None:
-            if isinstance(value, str):
-                value = furl(value)
-
-        return value
