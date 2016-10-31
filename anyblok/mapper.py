@@ -334,7 +334,7 @@ class ModelMapper:
     sqlalchemy_known_events = [
         'after_delete', 'after_insert', 'after_update', 'append_result',
         'before_delete', 'before_insert', 'before_update', 'create_instance',
-        'expire', 'first_init', 'init', 'load', 'refresh',
+        'expire', 'first_init', 'init', 'load', 'refresh', 'set', 'append',
     ]
 
     def __init__(self, mapper, event, *args, **kwargs):

@@ -464,6 +464,7 @@ class Registry:
         self.removed = []
         EnvironmentManager.set('_precommit_hook', [])
         self._sqlalchemy_known_events = []
+        self._sqlalchemy_field_events = []
         self.expire_attributes = {}
 
     @classmethod

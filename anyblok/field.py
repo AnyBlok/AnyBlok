@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.ext.hybrid import hybrid_property
+from .mapper import ModelAttribute, ModelAttributeMapper
 
 
 class FieldException(Exception):
@@ -125,6 +126,13 @@ class Field:
     def autodoc(self):
         return '\n'.join([self.autodoc_format_dict(x, y)
                           for x, y in self.autodoc_get_properties().items()])
+
+    def add_field_event(self, registry, namespace, fieldname, event, method,
+                        *args, **kwargs):
+        attr = ModelAttribute(namespace, fieldname)
+        mapper = ModelAttributeMapper(attr, event, *args, **kwargs)
+        registry._sqlalchemy_field_events.append(
+            (mapper, namespace, method))
 
 
 class Function(Field):
