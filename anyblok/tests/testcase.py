@@ -19,6 +19,7 @@ from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
 import sqlalchemy
+from sqlalchemy.orm import clear_mappers
 from sqlalchemy import event
 from sqlalchemy_utils.functions import database_exists, create_database, orm
 from copy import copy
@@ -232,6 +233,7 @@ class DBTestCase(TestCase):
 
         RegistryManager.clear()
         BlokManager.unload()
+        clear_mappers()
         super(DBTestCase, self).tearDown()
 
     def init_registry(self, function, **kwargs):

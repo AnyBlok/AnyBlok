@@ -1,10 +1,11 @@
 language: python
-sudo: false
+sudo: true
 
 python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6-dev"
 
 virtualenv:
   system_site_packages: false
