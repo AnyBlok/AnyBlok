@@ -19,8 +19,6 @@ class Field:
     This class must not be instanciated
     """
 
-    use_hybrid_property = False
-
     def __init__(self, *args, **kwargs):
         """ Initialize the field
 
@@ -133,6 +131,9 @@ class Field:
         mapper = ModelAttributeMapper(attr, event, *args, **kwargs)
         registry._sqlalchemy_field_events.append(
             (mapper, namespace, method))
+
+    def add_field_events(self, registry, namespace, fieldname):
+        pass
 
 
 class Function(Field):

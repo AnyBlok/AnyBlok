@@ -12,7 +12,7 @@ from anyblok.relationship import RelationShip
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
-from sqlalchemy.orm import Query, mapper, synonym
+from sqlalchemy.orm import Query, mapper
 from sqlalchemy import inspection
 from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
@@ -224,6 +224,7 @@ class Model:
                 registry, namespace, name, properties)
 
         properties['loaded_columns'].append(name)
+        field.add_field_events(registry, namespace, name)
         field.update_properties(registry, namespace, name, properties)
 
     @classmethod

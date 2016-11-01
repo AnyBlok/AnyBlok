@@ -476,6 +476,10 @@ class Registry:
         return database_exists(url)
 
     def listen_sqlalchemy_known_event(self):
+        for e, namespace, method in self._sqlalchemy_field_events:
+            event.listen(e.mapper(self, namespace), e.event,
+                         method, *e.args, **e.kwargs)
+
         for e, namespace, method in self._sqlalchemy_known_events:
             event.listen(e.mapper(self, namespace), e.event,
                          method.get_attribute(self), *e.args, **e.kwargs)
@@ -485,6 +489,12 @@ class Registry:
             try:
                 event.remove(e.mapper(self, namespace), e.event,
                              method.get_attribute(self))
+            except InvalidRequestError:
+                pass
+
+        for e, namespace, method in self._sqlalchemy_known_events:
+            try:
+                event.remove(e.mapper(self, namespace), e.event, method)
             except InvalidRequestError:
                 pass
 
