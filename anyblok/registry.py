@@ -476,6 +476,10 @@ class Registry:
         return database_exists(url)
 
     def listen_sqlalchemy_known_event(self):
+        # the next line is only use to configure all the mapper,
+        # not line will be wrote on the db or add in the session.
+        # it is ugly but it iw works
+        self.System.Blok(name='init')
         for e, namespace, method in self._sqlalchemy_field_events:
             event.listen(e.mapper(self, namespace), e.event,
                          method, *e.args, **e.kwargs)

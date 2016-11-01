@@ -135,6 +135,32 @@ class Field:
     def add_field_events(self, registry, namespace, fieldname):
         pass
 
+    def expire_related_attribute(self, model_self, action_todos):
+        for action_todo in action_todos:
+            if len(action_todo) == 1:
+                obj = model_self
+                attrs = [action_todo[0]]
+            else:
+                obj = getattr(model_self, action_todo[0])
+                attrs = [action_todo[1]]
+                if obj is None:
+                    continue
+
+            if obj in model_self.registry.session:
+                if obj._sa_instance_state.persistent:
+                    model_self.registry.expire(obj, attrs)
+
+    def add_expire_events(self, registry, namespace, fieldname):
+
+        action_todos = registry.expire_attributes.get(namespace, {}).get(
+            fieldname, set())
+
+        def expire_related_attribute(target, value, oldvalue, initiator):
+            self.expire_related_attribute(target, action_todos)
+
+        self.add_field_event(registry, namespace, fieldname, 'set',
+                             expire_related_attribute)
+
 
 class Function(Field):
     """ Function Field

@@ -201,6 +201,11 @@ class Column(Field):
 
         return False
 
+    def add_field_events(self, registry, namespace, fieldname):
+        super(Column, self).add_field_events(registry, namespace, fieldname)
+        if self.foreign_key:
+            self.add_expire_events(registry, namespace, fieldname)
+
 
 class Integer(Column):
     """ Integer column
@@ -326,6 +331,7 @@ class Decimal(Column):
     sqlalchemy_type = types.DECIMAL
 
     def add_field_events(self, registry, namespace, fieldname):
+        super(Decimal, self).add_field_events(registry, namespace, fieldname)
         self.add_field_event(registry, namespace, fieldname, 'set',
                              format_decimal_value, retval=True)
 
@@ -409,6 +415,7 @@ class DateTime(Column):
     sqlalchemy_type = DateTimeType
 
     def add_field_events(self, registry, namespace, fieldname):
+        super(DateTime, self).add_field_events(registry, namespace, fieldname)
         self.add_field_event(registry, namespace, fieldname, 'set',
                              format_datetime_value, retval=True)
 
@@ -546,6 +553,7 @@ class Password(Column):
         return value
 
     def add_field_events(self, registry, namespace, fieldname):
+        super(Password, self).add_field_events(registry, namespace, fieldname)
 
         def format_password_value(target, value, oldvalue, initiator):
             return self.format_value(value)
@@ -779,6 +787,7 @@ class Selection(Column):
         return value
 
     def add_field_events(self, registry, namespace, fieldname):
+        super(Selection, self).add_field_events(registry, namespace, fieldname)
 
         def format_selection_value(target, value, oldvalue, initiator):
             return self.format_value(value)
@@ -967,6 +976,7 @@ class Color(Column):
         super(Color, self).__init__(*args, **kwargs)
 
     def add_field_events(self, registry, namespace, fieldname):
+        super(Color, self).add_field_events(registry, namespace, fieldname)
         self.add_field_event(registry, namespace, fieldname, 'set',
                              format_color_value, retval=True)
 
@@ -1026,5 +1036,6 @@ class URL(Column):
     sqlalchemy_type = URLType
 
     def add_field_events(self, registry, namespace, fieldname):
+        super(URL, self).add_field_events(registry, namespace, fieldname)
         self.add_field_event(registry, namespace, fieldname, 'set',
                              format_url_value, retval=True)

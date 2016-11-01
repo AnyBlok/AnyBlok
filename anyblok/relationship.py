@@ -10,44 +10,8 @@ from sqlalchemy import Table, Column, ForeignKeyConstraint
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
 from .field import Field, FieldException
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr
-
-
-class RelationShipList:  # don't inherit list
-
-    def append(self, x):
-        res = super(RelationShipList, self).append(x)
-        self.relationship_field_append_value(x)
-        return res
-
-    def extend(self, L):
-        res = super(RelationShipList, self).extend(L)
-        for el in L:
-            self.relationship_field_append_value(el)
-
-        return res
-
-    def insert(self, i, x):
-        res = super(RelationShipList, self).insert(i, x)
-        self.relationship_field_append_value(x)
-        return res
-
-    def remove(self, x):
-        self.relationship_field_remove_value(x)
-        return super(RelationShipList, self).remove(x)
-
-    def pop(self, *args, **kwargs):
-        res = super(RelationShipList, self).pop(*args, **kwargs)
-        self.relationship_field_remove_value(res)
-        return res
-
-    def clear(self):
-        for x in self:
-            self.relationship_field_remove_value(x)
-
-        return super(RelationShipList, self).clear()
 
 
 class RelationShip(Field):
@@ -167,6 +131,10 @@ class RelationShip(Field):
 
         if fieldname not in registry.expire_attributes[namespace]:
             registry.expire_attributes[namespace][fieldname] = set()
+
+    def add_field_events(self, registry, namespace, fieldname):
+        super(RelationShip, self).add_field_events(registry, namespace, fieldname)
+        self.add_expire_events(registry, namespace, fieldname)
 
 
 class Many2One(RelationShip):
@@ -312,6 +280,8 @@ class Many2One(RelationShip):
                 cname.add_fake_column(registry)
                 foreign_key = remote_columns[rc].get_fk_name(registry)
                 self.create_column(cname, remote_type, foreign_key, properties)
+                Field.add_expire_events(self, registry, namespace,
+                                        cname.attribute_name)
                 add_fksc = True
                 fk_name = remote_columns[rc]
             else:
@@ -376,14 +346,20 @@ class Many2One(RelationShip):
         return super(Many2One, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
 
-    def apply_value_to(self, model_self, model_field, remote_self,
-                       remote_field):
-        if remote_self:
-            value = getattr(remote_self, remote_field)
-        else:
-            value = None
+    def add_expire_events(self, registry, namespace, fieldname):
 
-        setattr(model_self, model_field, value)
+        def expire_related_attribute(target, value, oldvalue, initiator):
+            if value:
+                if hasattr(value, '__registry_name__'):
+                    for lfield, rfield in self.link_between_columns:
+                        setattr(target, lfield, getattr(value, rfield))
+            else:
+                if oldvalue and hasattr(oldvalue, '__registry_name__'):
+                    for lfield, rfield in self.link_between_columns:
+                        setattr(target, lfield, None)
+
+        self.add_field_event(registry, namespace, fieldname, 'set',
+                             expire_related_attribute)
 
 
 class One2One(Many2One):
@@ -737,3 +713,23 @@ class One2Many(RelationShip):
             self.backref_properties.update({'remote_side': [
                 properties[pk.attribute_name]
                 for pk in pks]})
+
+    def add_expire_events(self, registry, namespace, fieldname):
+        if not self.kwargs.get('backref'):
+            return
+
+        backref = self.kwargs['backref']
+        backref = backref[0] if isinstance(backref, (list, tuple)) else backref
+
+        def expire_m2o_related_attribute(target, value, oldvalue, initiator):
+            if value:
+                if hasattr(value, '__registry_name__'):
+                    for lfield, rfield in self.link_between_columns:
+                        setattr(target, lfield, getattr(value, rfield))
+            else:
+                if oldvalue and hasattr(oldvalue, '__registry_name__'):
+                    for lfield, rfield in self.link_between_columns:
+                        setattr(target, lfield, None)
+
+        self.add_field_event(registry, self.model.model_name, backref,
+                             'set', expire_m2o_related_attribute)
