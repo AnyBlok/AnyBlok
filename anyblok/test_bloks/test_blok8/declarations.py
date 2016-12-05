@@ -18,6 +18,7 @@ class Test:
 
     test2 = Integer(foreign_key=Model.Test2.use('id'))
 
+
 Declarations.AuthorizationBinding(Declarations.Model.Test,
                                   TestRuleOne(),
                                   permission='Other')

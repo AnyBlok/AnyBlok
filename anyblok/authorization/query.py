@@ -15,7 +15,6 @@ class QueryWithNoResults:
     be any result. This can happen for instance if the policy is about the
     model, instead of individual records.
     """
-
     def count(self):
         return 0
 
@@ -24,6 +23,7 @@ class QueryWithNoResults:
 
     def first(self):
         return None  # TODO exc ?
+
 
 QUERY_WITH_NO_RESULTS = QueryWithNoResults()
 
