@@ -20,4 +20,5 @@ class DefaultModelDeclaration:
 
     __registry_name__ = None
 
+
 Declarations.AuthorizationBinding(DefaultModelDeclaration, deny_all)

@@ -902,7 +902,6 @@ class Migration:
         self.metadata = registry.declarativebase.metadata
 
         opts = {
-            'compare_type': True,
             'compare_server_default': True,
             'render_item': self.render_item,
             'compare_type': self.compare_type,

@@ -27,6 +27,7 @@ class Test2:
     id = Integer(primary_key=True)
     label = String()
 
+
 Declarations.AuthorizationBinding(Declarations.Model.Test,
                                   TestRuleOne(),
                                   permission='Read')

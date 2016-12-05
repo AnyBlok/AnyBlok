@@ -95,4 +95,5 @@ class DenyAll(AuthorizationRule):
     def filter(self, *args):
         return False
 
+
 deny_all = DenyAll

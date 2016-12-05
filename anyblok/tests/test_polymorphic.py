@@ -293,3 +293,39 @@ class TestPolymorphic(DBTestCase):
                          'String')
         self.assertEqual(registry.Manager.getFieldType('manager_name'),
                          'String')
+
+    def test_getFieldType_with_mixin(self):
+        registry = self.init_registry(multi_table_poly_mixins)
+        self.assertEqual(registry.Employee.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Employee.getFieldType('name'), 'String')
+        self.assertEqual(registry.Employee.getFieldType('type_entity'),
+                         'String')
+        self.assertEqual(registry.Engineer.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Engineer.getFieldType('name'), 'String')
+        self.assertEqual(registry.Engineer.getFieldType('type_entity'),
+                         'String')
+        self.assertEqual(registry.Engineer.getFieldType('engineer_name'),
+                         'String')
+        self.assertEqual(registry.Manager.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Manager.getFieldType('name'), 'String')
+        self.assertEqual(registry.Manager.getFieldType('type_entity'),
+                         'String')
+        self.assertEqual(registry.Manager.getFieldType('manager_name'),
+                         'String')
+        self.assertEqual(registry.Manager.getFieldType('birthday'),
+                         'Date')
+
+    def test_getFieldType_with_relationship(self):
+        registry = self.init_registry(multi_table_foreign_key)
+        self.assertEqual(registry.Employee.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Employee.getFieldType('name'), 'String')
+        self.assertEqual(registry.Employee.getFieldType('type_entity'),
+                         'String')
+        self.assertEqual(registry.Employee.getFieldType('room'), 'Many2One')
+        self.assertEqual(registry.Engineer.getFieldType('id'), 'Integer')
+        self.assertEqual(registry.Engineer.getFieldType('name'), 'String')
+        self.assertEqual(registry.Engineer.getFieldType('type_entity'),
+                         'String')
+        self.assertEqual(registry.Engineer.getFieldType('engineer_name'),
+                         'String')
+        self.assertEqual(registry.Engineer.getFieldType('room'), 'Many2One')

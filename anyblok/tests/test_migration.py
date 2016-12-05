@@ -21,6 +21,11 @@ from sqlalchemy.exc import InternalError, IntegrityError
 from unittest import skipIf
 import alembic
 from copy import deepcopy
+from sqlalchemy.orm import clear_mappers
+
+skipAlembicVersion = (
+    tuple(int(x) for x in alembic.__version__.split('.')) < (0, 8, 10)
+)
 
 
 class TestMigration(TestCase):
@@ -95,6 +100,7 @@ class TestMigration(TestCase):
                 pass
 
         self.registry.migration.conn.close()
+        clear_mappers()
         self.registry.close()
 
     @contextmanager
@@ -419,7 +425,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
 
-    @skipIf(alembic.__version__ < "0.8.9", "Alembic doesn't implement yet")
+    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_m2m_primary_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE reltable")
@@ -507,7 +513,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
 
-    @skipIf(alembic.__version__ < "0.8.9", "Alembic doesn't implement yet")
+    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_primary_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -707,7 +713,7 @@ class TestMigration(TestCase):
         self.assertFalse(
             report.log_has("Drop constraint unique_other on test"))
 
-    @skipIf(alembic.__version__ < "0.8.9", "Alembic doesn't implement yet")
+    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_drop_check_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -722,7 +728,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has("Drop constraint ck_other on test"))
 
-    @skipIf(alembic.__version__ < "0.8.9", "Alembic doesn't implement yet")
+    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_drop_check_anyblok_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -740,7 +746,7 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Drop constraint anyblok_ck_test_check on test"))
 
-    @skipIf(alembic.__version__ < "0.8.9", "Alembic doesn't implement yet")
+    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_drop_check_constraint_with_reinit_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -756,7 +762,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Drop constraint ck_other on test"))
 
-    @skipIf(alembic.__version__ < "0.8.9", "Alembic doesn't implement yet")
+    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_drop_check_constraint_with_reinit_all(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")

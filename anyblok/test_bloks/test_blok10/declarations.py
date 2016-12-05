@@ -21,6 +21,7 @@ class Test2:
     """
     owner = String()
 
+
 Declarations.AuthorizationBinding(
     Declarations.Model.Test2,
     ModelAccessRule())

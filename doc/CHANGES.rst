@@ -9,8 +9,14 @@
 CHANGELOG
 =========
 
-0.9.4
------
+0.9.5 (2016-12-05)
+------------------
+
+* [ADD] Python 3.6 support
+* Flake8
+
+0.9.4 (2016-10-27)
+------------------
 
 * [FIX] Nose test pluggins load the configuration need for unit test
 * [ADD] getFieldType on SQLBase, this method return the type of the column
