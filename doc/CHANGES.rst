@@ -9,6 +9,12 @@
 CHANGELOG
 =========
 
+0.9.6 (2017-07-03)
+------------------
+
+* [FIX] in One2Many and Many2Many field, the attribute model can be used on 
+  record node. Used for Polymorphisme
+
 0.9.5 (2016-12-05)
 ------------------
 

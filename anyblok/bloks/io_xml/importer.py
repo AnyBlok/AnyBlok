@@ -167,7 +167,11 @@ class XML:
     def import_multi_values(self, records, model):
         vals = []
         for record in records:
-            val = self.import_record(record, model=model, two_way=True)
+            val = self.import_record(
+                record,
+                model=record.attrib.get('model', model),
+                two_way=True
+            )
             if not val:
                 continue
 
