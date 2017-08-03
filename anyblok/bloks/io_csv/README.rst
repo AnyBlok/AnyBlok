@@ -58,7 +58,7 @@ Define what import::
     with open(..., 'rb') as fp:
         file_to_import = fp.read()
 
-Create the Exporter::
+Create the Importer::
 
     importer = Importer.insert(csv_delimiter=csv_delimiter,
                                csv_quotechar=csv_quotechar,

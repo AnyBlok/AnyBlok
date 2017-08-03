@@ -27,7 +27,7 @@ Define what import::
     with open(..., 'rb') as fp:
         file_to_import = fp.read()
 
-Create the Exporter::
+Create the Importer::
 
     importer = Importer.insert(model=model,
                                file_to_import=file_to_import)
@@ -136,6 +136,30 @@ node::
             <field name="Many2Many or One2Many">
                 ...
                 <record>
+                    ...
+                    <field name="..." />
+                    ...
+                </record>
+                ...
+            </field>
+            ...
+        </record>
+    </records>
+
+
+In the case of polymorphisme you may use the attribute model on record::
+
+    <records
+        <record
+            ...
+            <field name="Many2Many or One2Many">
+                ...
+                <record model="``polymophic model``">
+                    ...
+                    <field name="..." />
+                    ...
+                </record>
+                <record model="``another polymophic model``">
                     ...
                     <field name="..." />
                     ...
