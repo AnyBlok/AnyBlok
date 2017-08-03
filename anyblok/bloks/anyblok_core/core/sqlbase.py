@@ -157,8 +157,14 @@ class SqlMixin:
     def _fields_description(cls):
         """ Return the information of the Field, Column, RelationShip """
         Field = cls.registry.System.Field
+        res = {}
+        for base in cls.__anyblok_bases__:
+            query = Field.query().filter(Field.model == base.__registry_name__)
+            res.update({x.name: x._description() for x in query.all()})
+
         query = Field.query().filter(Field.model == cls.__registry_name__)
-        return {x.name: x._description() for x in query.all()}
+        res.update({x.name: x._description() for x in query.all()})
+        return res
 
     @classmethod
     def fields_description(cls, fields=None):
