@@ -9,6 +9,11 @@
 CHANGELOG
 =========
 
+0.9.7 (2017-07-03)
+------------------
+
+* [FIX] field_description get also the polymorphique fields from inherit model
+
 0.9.6 (2017-07-03)
 ------------------
 

@@ -329,3 +329,17 @@ class TestPolymorphic(DBTestCase):
         self.assertEqual(registry.Engineer.getFieldType('engineer_name'),
                          'String')
         self.assertEqual(registry.Engineer.getFieldType('room'), 'Many2One')
+
+    def test_field_description(self):
+        registry = self.init_registry(multi_table_poly)
+        fd_employee = list(registry.Employee.fields_description().keys())
+        fd_employee.sort()
+        fd_engineer = list(registry.Engineer.fields_description().keys())
+        fd_engineer.sort()
+        fd_manager = list(registry.Manager.fields_description().keys())
+        fd_manager.sort()
+        self.assertEqual(fd_employee, ['id', 'name', 'type_entity'])
+        self.assertEqual(
+            fd_engineer, ['engineer_name', 'id', 'name', 'type_entity'])
+        self.assertEqual(
+            fd_manager, ['id', 'manager_name', 'name', 'type_entity'])
