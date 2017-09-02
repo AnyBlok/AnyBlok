@@ -22,7 +22,6 @@ from .migration import Migration
 from .blok import BlokManager
 from .environment import EnvironmentManager
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
-from anyblok.common import anyblok_column_prefix
 from .logging import log
 logger = getLogger(__name__)
 
@@ -465,6 +464,7 @@ class Registry:
         self.removed = []
         EnvironmentManager.set('_precommit_hook', [])
         self._sqlalchemy_known_events = []
+        self._sqlalchemy_field_events = []
         self.expire_attributes = {}
 
     @classmethod
@@ -476,8 +476,16 @@ class Registry:
         return database_exists(url)
 
     def listen_sqlalchemy_known_event(self):
+        # the next line is only use to configure all the mapper,
+        # not line will be wrote on the db or add in the session.
+        # it is ugly but it iw works
+        self.System.Blok(name='init')
+        for e, namespace, method in self._sqlalchemy_field_events:
+            event.listen(e.mapper(self, namespace), e.event,
+                         method, *e.args, **e.kwargs)
+
         for e, namespace, method in self._sqlalchemy_known_events:
-            event.listen(e.mapper(self, namespace, usehybrid=False), e.event,
+            event.listen(e.mapper(self, namespace), e.event,
                          method.get_attribute(self), *e.args, **e.kwargs)
 
     def remove_sqlalchemy_known_event(self):
@@ -485,6 +493,12 @@ class Registry:
             try:
                 event.remove(e.mapper(self, namespace), e.event,
                              method.get_attribute(self))
+            except InvalidRequestError:
+                pass
+
+        for e, namespace, method in self._sqlalchemy_known_events:
+            try:
+                event.remove(e.mapper(self, namespace), e.event, method)
             except InvalidRequestError:
                 pass
 
@@ -1048,12 +1062,6 @@ class Registry:
         :param obj: instance of ``Model``
         :param attribute_names: list of string, names of the attr to expire
         """
-        if attribute_names:
-            attribute_names = [
-                (anyblok_column_prefix + x
-                 if x in obj.hybrid_property_columns else x)
-                for x in attribute_names]
-
         self.session.expire(obj, attribute_names=attribute_names)
 
     def refresh(self, obj, attribute_names=None):
@@ -1065,12 +1073,6 @@ class Registry:
         :param obj: instance of ``Model``
         :param attribute_names: list of string, names of the attr to refresh
         """
-        if attribute_names:
-            attribute_names = [
-                (anyblok_column_prefix + x
-                 if x in obj.hybrid_property_columns else x)
-                for x in attribute_names]
-
         self.session.refresh(obj, attribute_names=attribute_names)
 
     def rollback(self, *args, **kwargs):

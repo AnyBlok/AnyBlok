@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.ext.hybrid import hybrid_property
-from anyblok.common import anyblok_column_prefix
+from .mapper import ModelAttribute, ModelAttributeMapper
 
 
 class FieldException(Exception):
@@ -18,8 +18,6 @@ class Field:
 
     This class must not be instanciated
     """
-
-    use_hybrid_property = False
 
     def __init__(self, *args, **kwargs):
         """ Initialize the field
@@ -58,87 +56,6 @@ class Field:
         :param fieldname: name of the field
         :param properties: properties known to the model
         """
-
-    def get_property(self, registry, namespace, fieldname, properties):
-        """Return the property of the field
-
-        .. warning::
-
-            In the case of the get is called in classattribute,
-            SQLAlchemy wrap for each call the column, the id of the wrapper
-            is not the same
-
-        :param registry: current registry
-        :param namespace: name of the model
-        :param fieldname: name of the field
-        :param properties: properties known to the model
-        """
-        return hybrid_property(
-            self.wrap_getter_column(fieldname),
-            self.wrap_setter_column(fieldname),
-            expr=self.wrap_expr_column(fieldname))
-
-    def getter_format_value(self, value):
-        return value
-
-    def wrap_getter_column(self, fieldname):
-        """Return a default getter for the field
-
-        :param fieldname: name of the field
-        """
-        attr_name = anyblok_column_prefix + fieldname
-
-        def getter_column(model_self):
-            return self.getter_format_value(getattr(model_self, attr_name))
-
-        return getter_column
-
-    def wrap_expr_column(self, fieldname):
-        """Return a default expr for the field
-
-        :param fieldname: name of the field
-        """
-        attr_name = anyblok_column_prefix + fieldname
-
-        def expr_column(model_self):
-            return getattr(model_self, attr_name)
-
-        return expr_column
-
-    def expire_related_attribute(self, model_self, action_todos):
-        for action_todo in action_todos:
-            if len(action_todo) == 1:
-                obj = model_self
-                attrs = [action_todo[0]]
-            else:
-                obj = getattr(model_self, action_todo[0])
-                attrs = [action_todo[1]]
-                if obj is None:
-                    continue
-
-            if obj in model_self.registry.session:
-                if obj._sa_instance_state.persistent:
-                    model_self.registry.expire(obj, attrs)
-
-    def setter_format_value(self, value):
-        return value
-
-    def wrap_setter_column(self, fieldname):
-        attr_name = anyblok_column_prefix + fieldname
-
-        def setter_column(model_self, value):
-            action_todos = set()
-            if fieldname in model_self.loaded_columns:
-                action_todos = model_self.registry.expire_attributes.get(
-                    model_self.__registry_name__, {}).get(fieldname, set())
-
-            self.expire_related_attribute(model_self, action_todos)
-            value = self.setter_format_value(value)
-            res = setattr(model_self, attr_name, value)
-            self.expire_related_attribute(model_self, action_todos)
-            return res
-
-        return setter_column
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -207,6 +124,42 @@ class Field:
     def autodoc(self):
         return '\n'.join([self.autodoc_format_dict(x, y)
                           for x, y in self.autodoc_get_properties().items()])
+
+    def add_field_event(self, registry, namespace, fieldname, event, method,
+                        *args, **kwargs):
+        attr = ModelAttribute(namespace, fieldname)
+        mapper = ModelAttributeMapper(attr, event, *args, **kwargs)
+        registry._sqlalchemy_field_events.append(
+            (mapper, namespace, method))
+
+    def add_field_events(self, registry, namespace, fieldname):
+        pass
+
+    def expire_related_attribute(self, model_self, action_todos):
+        for action_todo in action_todos:
+            if len(action_todo) == 1:
+                obj = model_self
+                attrs = [action_todo[0]]
+            else:
+                obj = getattr(model_self, action_todo[0])
+                attrs = [action_todo[1]]
+                if obj is None:
+                    continue
+
+            if obj in model_self.registry.session:
+                if obj._sa_instance_state.persistent:
+                    model_self.registry.expire(obj, attrs)
+
+    def add_expire_events(self, registry, namespace, fieldname):
+
+        action_todos = registry.expire_attributes.get(namespace, {}).get(
+            fieldname, set())
+
+        def expire_related_attribute(target, value, oldvalue, initiator):
+            self.expire_related_attribute(target, action_todos)
+
+        self.add_field_event(registry, namespace, fieldname, 'set',
+                             expire_related_attribute)
 
 
 class Function(Field):

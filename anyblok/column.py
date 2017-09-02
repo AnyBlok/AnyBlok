@@ -75,7 +75,6 @@ class Column(Field):
     This class can't be instanciated
     """
 
-    use_hybrid_property = True
     foreign_key = None
     sqlalchemy_type = None
 
@@ -202,6 +201,11 @@ class Column(Field):
 
         return False
 
+    def add_field_events(self, registry, namespace, fieldname):
+        super(Column, self).add_field_events(registry, namespace, fieldname)
+        if self.foreign_key:
+            self.add_expire_events(registry, namespace, fieldname)
+
 
 class Integer(Column):
     """ Integer column
@@ -300,6 +304,14 @@ class Float(Column):
     sqlalchemy_type = types.Float
 
 
+def format_decimal_value(target, value, oldvalue, initiator):
+    if value is not None:
+        if not isinstance(value, decimal.Decimal):
+            value = decimal.Decimal(value)
+
+    return value
+
+
 class Decimal(Column):
     """ Decimal column
 
@@ -318,12 +330,10 @@ class Decimal(Column):
     """
     sqlalchemy_type = types.DECIMAL
 
-    def setter_format_value(self, value):
-        if value is not None:
-            if not isinstance(value, decimal.Decimal):
-                value = decimal.Decimal(value)
-
-        return value
+    def add_field_events(self, registry, namespace, fieldname):
+        super(Decimal, self).add_field_events(registry, namespace, fieldname)
+        self.add_field_event(registry, namespace, fieldname, 'set',
+                             format_decimal_value, retval=True)
 
 
 class Date(Column):
@@ -376,6 +386,16 @@ class DateTimeType(types.TypeDecorator):
         return datetime
 
 
+def format_datetime_value(target, value, oldvalue, initiator):
+    value = convert_string_to_datetime(value)
+    if value is not None:
+        if value.tzinfo is None:
+            timezone = pytz.timezone(time.tzname[0])
+            value = timezone.localize(value)
+
+    return value
+
+
 class DateTime(Column):
     """ DateTime column
 
@@ -394,14 +414,10 @@ class DateTime(Column):
     """
     sqlalchemy_type = DateTimeType
 
-    def setter_format_value(self, value):
-        value = convert_string_to_datetime(value)
-        if value is not None:
-            if value.tzinfo is None:
-                timezone = pytz.timezone(time.tzname[0])
-                value = timezone.localize(value)
-
-        return value
+    def add_field_events(self, registry, namespace, fieldname):
+        super(DateTime, self).add_field_events(registry, namespace, fieldname)
+        self.add_field_event(registry, namespace, fieldname, 'set',
+                             format_datetime_value, retval=True)
 
 
 class Time(Column):
@@ -531,10 +547,19 @@ class Password(Column):
         self.sqlalchemy_type = PasswordType(max_length=size, **crypt_context)
         super(Password, self).__init__(*args, **kwargs)
 
-    def setter_format_value(self, value):
+    def format_value(self, value):
         value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
+
+    def add_field_events(self, registry, namespace, fieldname):
+        super(Password, self).add_field_events(registry, namespace, fieldname)
+
+        def format_password_value(target, value, oldvalue, initiator):
+            return self.format_value(value)
+
+        self.add_field_event(registry, namespace, fieldname, 'set',
+                             format_password_value, retval=True)
 
     def autodoc_get_properties(self):
         res = super(Password, self).autodoc_get_properties()
@@ -750,20 +775,25 @@ class Selection(Column):
         res['size'] = self.size
         return res
 
-    def getter_format_value(self, value):
-        if value is None:
-            return None
-
-        return self.sqlalchemy_type.python_type(value)
-
-    def setter_format_value(self, value):
+    def format_value(self, value):
         if value is not None:
             val = self.sqlalchemy_type.python_type(value)
             if not val.validate():
                 raise FieldException('%r is not in the selections (%s)' % (
                     value, ', '.join(val.get_selections())))
 
+            return val
+
         return value
+
+    def add_field_events(self, registry, namespace, fieldname):
+        super(Selection, self).add_field_events(registry, namespace, fieldname)
+
+        def format_selection_value(target, value, oldvalue, initiator):
+            return self.format_value(value)
+
+        self.add_field_event(registry, namespace, fieldname, 'set',
+                             format_selection_value, retval=True)
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -908,6 +938,15 @@ class Sequence(String):
         return default_value
 
 
+def format_color_value(target, value, oldvalue, initiator):
+    import colour
+
+    if isinstance(value, str):
+        value = colour.Color(value)
+
+    return value
+
+
 class Color(Column):
     """Color column.
     `See coulour pakage <https://pypi.python.org/pypi/colour/>`_
@@ -936,11 +975,10 @@ class Color(Column):
         self.sqlalchemy_type = ColorType(max_length)
         super(Color, self).__init__(*args, **kwargs)
 
-    def setter_format_value(self, value):
-        if isinstance(value, str):
-            value = self.sqlalchemy_type.python_type(value)
-
-        return value
+    def add_field_events(self, registry, namespace, fieldname):
+        super(Color, self).add_field_events(registry, namespace, fieldname)
+        self.add_field_event(registry, namespace, fieldname, 'set',
+                             format_color_value, retval=True)
 
 
 class UUID(String):
@@ -970,6 +1008,16 @@ class UUID(String):
         super(String, self).__init__(*args, **kwargs)
 
 
+def format_url_value(target, value, oldvalue, initiator):
+    from furl import furl
+
+    if value is not None:
+        if isinstance(value, str):
+            value = furl(value)
+
+    return value
+
+
 class URL(Column):
     """ Integer column
 
@@ -987,11 +1035,7 @@ class URL(Column):
     """
     sqlalchemy_type = URLType
 
-    def setter_format_value(self, value):
-        from furl import furl
-
-        if value is not None:
-            if isinstance(value, str):
-                value = furl(value)
-
-        return value
+    def add_field_events(self, registry, namespace, fieldname):
+        super(URL, self).add_field_events(registry, namespace, fieldname)
+        self.add_field_event(registry, namespace, fieldname, 'set',
+                             format_url_value, retval=True)

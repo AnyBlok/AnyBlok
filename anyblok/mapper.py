@@ -6,7 +6,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.schema import ForeignKey
-from anyblok.common import anyblok_column_prefix
 
 
 class ModelReprException(Exception):
@@ -65,11 +64,10 @@ class ModelAttribute:
         self.attribute_name = attribute_name
         self._options = {}
 
-    def get_attribute(self, registry, usehybrid=True):
+    def get_attribute(self, registry):
         """Return the assembled attribute, the model need to be assembled
 
         :param registry: instance of the registry
-        :param usehybrid: if True return the hybrid property if exist
         :rtype: instance of the attribute
         :exceptions: ModelAttributeException
         """
@@ -84,12 +82,7 @@ class ModelAttribute:
                 "Model %r has not get %r attribute" % (
                     self.model_name, self.attribute_name))
 
-        attribute_name = self.attribute_name
-        if not usehybrid:
-            if attribute_name in Model.hybrid_property_columns:
-                attribute_name = anyblok_column_prefix + attribute_name
-
-        return getattr(Model, attribute_name)
+        return getattr(Model, self.attribute_name)
 
     def get_fk_column(self, registry):
         """Return the foreign key which represent the attribute in the data
@@ -341,7 +334,7 @@ class ModelMapper:
     sqlalchemy_known_events = [
         'after_delete', 'after_insert', 'after_update', 'append_result',
         'before_delete', 'before_insert', 'before_update', 'create_instance',
-        'expire', 'first_init', 'init', 'load', 'refresh',
+        'expire', 'first_init', 'init', 'load', 'refresh', 'set', 'append',
     ]
 
     def __init__(self, mapper, event, *args, **kwargs):
@@ -413,13 +406,13 @@ class ModelAttributeMapper:
         method.is_an_sqlalchemy_event_listener = True
         method.sqlalchemy_listener = self
 
-    def mapper(self, registry, namespace, usehybrid=True):
+    def mapper(self, registry, namespace):
         attribute = self.attribute
         if self.attribute.model_name.upper() == 'SELF':
             attribute = ModelAttribute(
                 namespace, self.attribute.attribute_name)
 
-        return attribute.get_attribute(registry, usehybrid=usehybrid)
+        return attribute.get_attribute(registry)
 
 
 def MapperAdapter(mapper, *args, **kwargs):

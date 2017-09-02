@@ -6,7 +6,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-from anyblok.common import anyblok_column_prefix
 from sqlalchemy.orm import query
 
 
@@ -38,10 +37,6 @@ class Query(query.Query):
     def get_field_nams_in_column_description(self):
         field2get = [x['name'] for x in self.column_descriptions
                      if not hasattr(x['type'], '__table__')]
-        field2get = [(x[len(anyblok_column_prefix):]
-                      if x.startswith(anyblok_column_prefix)
-                      else x, x)
-                     for x in field2get]
         return field2get
 
     def dictone(self):

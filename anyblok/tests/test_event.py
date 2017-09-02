@@ -225,5 +225,4 @@ class TestEvent(DBTestCase):
         t = registry.Test.insert()
         self.assertIsNone(t.val)
         t.val = 'test'
-        registry.flush()
         self.assertEqual(t.val, 'test_test')
