@@ -9,6 +9,11 @@
 CHANGELOG
 =========
 
+Futur
+-----
+
+* [ADD] fields_description add remote_name
+
 0.9.7 (2017-07-03)
 ------------------
 
