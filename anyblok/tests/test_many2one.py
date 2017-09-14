@@ -514,3 +514,47 @@ class TestMany2One(DBTestCase):
         test1 = registry.Test1.insert(test=test)
         test2 = registry.Test2.insert(test=test)
         self.assertEqual(test1.test_id, test2.test_id)
+
+    def test_delete_m2o_without_fk_options_on_delete_cascade(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class TestM2O:
+
+                id = Integer(primary_key=True)
+                test = Many2One(model=Model.Test, nullable=True)
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert()
+        testM2O = registry.TestM2O.insert(test=test)
+        self.assertIs(testM2O.test, test)
+        with self.assertRaises(IntegrityError):
+            test.delete()
+
+    def test_delete_m2o_with_fk_options_on_delete_cascade(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class TestM2O:
+
+                id = Integer(primary_key=True)
+                test = Many2One(model=Model.Test, nullable=True,
+                                foreign_key_options={'ondelete': 'cascade'})
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert()
+        testM2O = registry.TestM2O.insert(test=test)
+        self.assertIs(testM2O.test, test)
+        test.delete()

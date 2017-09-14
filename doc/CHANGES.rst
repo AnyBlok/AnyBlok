@@ -13,6 +13,7 @@ Futur
 -----
 
 * [ADD] fields_description add remote_name
+* Update doc, add foreign_key_option for Many2One
 
 0.9.7 (2017-07-03)
 ------------------
