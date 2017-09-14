@@ -612,7 +612,7 @@ the model.::
 
 .. note::
 
-    Since the version 0.4.0 the ``RelationShip`` are not ``Declarations``
+    Since the version 0.4.0 the ``RelationShip`` don't come from ``Declarations``
 
 List of the RelationShip type:
 
@@ -663,6 +663,8 @@ Parameters of the ``Many2One`` field:
 |                         | 'tablename' + '_' + name of the relationships     |
 +-------------------------+---------------------------------------------------+
 | ``nullable``            | Indicate if the column name is nullable or not    |
++-------------------------+---------------------------------------------------+
+| ``unique``              | Add unique information in created collumn         |
 +-------------------------+---------------------------------------------------+
 | ``one2many``            | Opposite One2Many link with this Many2one         |
 +-------------------------+---------------------------------------------------+
