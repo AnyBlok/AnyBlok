@@ -42,12 +42,12 @@ class Mapping:
         """
         return (self.model == model) & self.key.in_(keys)
 
-    def remove_element(self):
+    def remove_element(self, byquery=False):
         val = self.registry.get(self.model).from_primary_keys(
             **self.primary_key)
         logger.info("Remove entity for %r.%r: %r" % (
             self.model, self.key, val))
-        val.delete()
+        val.delete(byquery=byquery)
 
     @classmethod
     def multi_delete(cls, model, *keys, **kwargs):
@@ -58,14 +58,16 @@ class Mapping:
         :rtype: Boolean True if the mappings are removed
         """
         mapping_only = kwargs.get('mapping_only', True)
+        byquery = kwargs.get('byquery', False)
         query = cls.query()
         query = query.filter(cls.filter_by_model_and_keys(model, *keys))
         count = query.count()
         if count:
             if not mapping_only:
-                query.all().remove_element()
+                query.all().remove_element(byquery=byquery)
 
             query.delete(synchronize_session='fetch')
+            cls.registry.expire_all()
             return count
 
         return 0

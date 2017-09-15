@@ -21,6 +21,8 @@ Futur
   polymorphic model
 * FIX: if ondelete=cascade in foreign keu options, then the many2one force
   the delete directely in the session
+* FIX: delete method can be also be que session.query, mapping.remove can
+  use this session.query.delete to remove in case of recursivity
 
 0.9.7 (2017-07-03)
 ------------------
