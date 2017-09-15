@@ -174,6 +174,23 @@ class SqlMixin:
 
         return res
 
+    @classmethod_cache()
+    def get_hybrid_property_columns(cls):
+        """Return the hybrid properties columns name from the Model and the
+        inherited model if they come from polymorphisme
+        """
+        hybrid_property_columns = cls.hybrid_property_columns
+        if 'polymorphic_identity' in cls.__mapper_args__:
+            pks = cls.get_primary_keys()
+            fd = cls.fields_description(*pks)
+            for pk in pks:
+                if fd[pk].get('model'):
+                    Model = cls.registry.get(fd[pk]['model'])
+                    hybrid_property_columns.extend(
+                        Model.get_hybrid_property_columns())
+
+        return hybrid_property_columns
+
     def _format_field(self, field):
         related_fields = None
         if isinstance(field, (tuple, list)):

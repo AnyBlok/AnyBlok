@@ -1049,10 +1049,14 @@ class Registry:
         :param attribute_names: list of string, names of the attr to expire
         """
         if attribute_names:
+            hybrid_property_columns = (
+                obj.__class__.get_hybrid_property_columns()
+            )
             attribute_names = [
                 (anyblok_column_prefix + x
-                 if x in obj.hybrid_property_columns else x)
-                for x in attribute_names]
+                 if x in hybrid_property_columns else x)
+                for x in attribute_names
+            ]
 
         self.session.expire(obj, attribute_names=attribute_names)
 

@@ -45,6 +45,8 @@ class Model:
         cls.registry.System.Cache.invalidate(model, '_fields_description')
         cls.registry.System.Cache.invalidate(
             model, 'find_remote_attribute_to_expire')
+        cls.registry.System.Cache.invalidate(
+            model, 'get_hybrid_property_columns')
 
     @classmethod
     def get_field_model(cls, field):

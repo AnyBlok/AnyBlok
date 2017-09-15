@@ -17,6 +17,8 @@ Futur
 * IMP add ``expire_all`` and ``expunge`` registry methods, expire all the 
   instance in the session
 * IMP add ``expunge`` method on the instance 
+* FIX: expire attribute must use also all the fields which come from
+  polymorphic model
 
 0.9.7 (2017-07-03)
 ------------------
