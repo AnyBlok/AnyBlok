@@ -19,6 +19,8 @@ Futur
 * IMP add ``expunge`` method on the instance 
 * FIX: expire attribute must use also all the fields which come from
   polymorphic model
+* FIX: if ondelete=cascade in foreign keu options, then the many2one force
+  the delete directely in the session
 
 0.9.7 (2017-07-03)
 ------------------

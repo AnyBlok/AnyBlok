@@ -558,3 +558,4 @@ class TestMany2One(DBTestCase):
         testM2O = registry.TestM2O.insert(test=test)
         self.assertIs(testM2O.test, test)
         test.delete()
+        self.assertFalse(registry.TestM2O.query().count())
