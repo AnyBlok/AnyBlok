@@ -14,6 +14,9 @@ Futur
 
 * [ADD] fields_description add remote_name
 * Update doc, add foreign_key_option  and unique for Many2One
+* IMP add ``expire_all`` and ``expunge`` registry methods, expire all the 
+  instance in the session
+* IMP add ``expunge`` method on the instance 
 
 0.9.7 (2017-07-03)
 ------------------

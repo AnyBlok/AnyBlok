@@ -457,6 +457,10 @@ class SqlBase(SqlMixin):
         """
         self.registry.refresh(self, fields)
 
+    def expunge(self):
+        """Expunge the instance in the session"""
+        self.registry.session.expunge(self)
+
     def expire(self, *fields):
         """ Expire the attribute of the instance, theses attributes will be
         load at the next  call of the instance

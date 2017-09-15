@@ -1056,6 +1056,23 @@ class Registry:
 
         self.session.expire(obj, attribute_names=attribute_names)
 
+    def expire_all(self):
+        """Expire all the objects in session::
+
+            registry.expire_all()
+
+        """
+        self.session.expire_all()
+
+    def expunge(self, obj):
+        """Expunge instance of the session, remove all links of this instance
+        in the session::
+
+            registry.expunge(instance_of_model)
+
+        """
+        self.session.expunge(obj)
+
     def refresh(self, obj, attribute_names=None):
         """Expire  and reload object in session, you can define some attribute
         which are refreshed::
