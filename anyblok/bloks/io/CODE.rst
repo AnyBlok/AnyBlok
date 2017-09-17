@@ -43,6 +43,20 @@ API doc
     :show-inheritance:
     :noindex:
 
+**core**
+
+.. automodule:: anyblok.bloks.io.core
+
+.. autoanyblok-declaration:: Query
+    :members:
+    :show-inheritance:
+    :noindex:
+
+.. autoanyblok-declaration:: SqlBase
+    :members:
+    :show-inheritance:
+    :noindex:
+
 **mapping**
 
 .. automodule:: anyblok.bloks.io.mapping

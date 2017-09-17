@@ -24,6 +24,8 @@ Futur
 * FIX: delete method can be also be que session.query, mapping.remove can
   use this session.query.delete to remove in case of recursivity
 * IMP: IO.Mapping save the blok name when use the Blok.import_file method
+* IMP: IO blok overload ``Model.delete`` and ``Query.delete`` to delete mapping
+  with instances of the Models
 
 0.9.7 (2017-07-03)
 ------------------

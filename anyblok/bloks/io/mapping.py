@@ -49,7 +49,7 @@ class Mapping:
             **self.primary_key)
         logger.info("Remove entity for %r.%r: %r" % (
             self.model, self.key, val))
-        val.delete(byquery=byquery)
+        val.delete(byquery=byquery, remove_mapping=False)
 
     @classmethod
     def multi_delete(cls, model, *keys, **kwargs):
@@ -68,7 +68,7 @@ class Mapping:
             if not mapping_only:
                 query.all().remove_element(byquery=byquery)
 
-            query.delete(synchronize_session='fetch')
+            query.delete(synchronize_session='fetch', remove_mapping=False)
             cls.registry.expire_all()
             return count
 
@@ -89,7 +89,7 @@ class Mapping:
             if not mapping_only:
                 query.one().remove_element()
 
-            query.delete()
+            query.delete(remove_mapping=False)
             return count
 
         return 0
