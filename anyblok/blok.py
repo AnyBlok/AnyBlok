@@ -334,7 +334,7 @@ class Blok:
 
         importer = Importer.insert(
             model=model, file_to_import=file_to_import, **kwargs)
-        res = importer.run()
+        res = importer.run(self.name)
         logger.info("Create %d entries, Update %d entries",
                     len(res['created_entries']), len(res['updated_entries']))
         if res['error_found']:

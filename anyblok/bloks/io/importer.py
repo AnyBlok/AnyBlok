@@ -18,8 +18,8 @@ class Importer(Declarations.Mixin.IOMixin):
     commit_at_each_grouped = Boolean(default=True)
     check_import = Boolean(default=False)
 
-    def run(self):
-        return self.get_model(self.mode)(self).run()
+    def run(self, blokname=None):
+        return self.get_model(self.mode)(self, blokname=blokname).run()
 
     def get_key_mapping(self, key):
         Mapping = self.registry.IO.Mapping

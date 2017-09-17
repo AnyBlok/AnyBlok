@@ -23,6 +23,8 @@ class Mapping:
     model = String(primary_key=True,
                    foreign_key=Model.System.Model.use('name'))
     primary_key = Json(nullable=False)
+    blokname = String(label="Blok name",
+                      foreign_key=Model.System.Blok.use('name'))
 
     @hybrid_method
     def filter_by_model_and_key(self, model, key):
@@ -125,7 +127,8 @@ class Mapping:
                         pk, pks, model))
 
     @classmethod
-    def set_primary_keys(cls, model, key, pks, raiseifexist=True):
+    def set_primary_keys(cls, model, key, pks, raiseifexist=True,
+                         blokname=None):
         """ Add or update a mmping with a model and a external key
 
         :param model: model to check
@@ -133,6 +136,7 @@ class Mapping:
         :param pks: dict of the primary key to save
         :param raiseifexist: boolean (True by default), if True and the entry
             exist then an exception is raised
+        :param blokname: name of the blok where come from the mapping
         :exception: IOMappingSetException
         """
         if cls.get_mapping_primary_keys(model, key):
@@ -147,10 +151,14 @@ class Mapping:
                     pks, model, key))
 
         cls.check_primary_keys(model, *pks.keys())
-        return cls.insert(model=model, key=key, primary_key=pks)
+        vals = dict(model=model, key=key, primary_key=pks)
+        if blokname is not None:
+            vals['blokname'] = blokname
+
+        return cls.insert(**vals)
 
     @classmethod
-    def set(cls, key, instance, raiseifexist=True):
+    def set(cls, key, instance, raiseifexist=True, blokname=None):
         """ Add or update a mmping with a model and a external key
 
         :param model: model to check
@@ -158,10 +166,12 @@ class Mapping:
         :param instance: instance of the model to save
         :param raiseifexist: boolean (True by default), if True and the entry
             exist then an exception is raised
+        :param blokname: name of the blok where come from the mapping
         :exception: IOMappingSetException
         """
         pks = instance.to_primary_keys()
         return cls.set_primary_keys(instance.__registry_name__, key, pks,
+                                    blokname=blokname,
                                     raiseifexist=raiseifexist)
 
     @classmethod

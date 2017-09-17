@@ -23,6 +23,7 @@ Futur
   the delete directely in the session
 * FIX: delete method can be also be que session.query, mapping.remove can
   use this session.query.delete to remove in case of recursivity
+* IMP: IO.Mapping save the blok name when use the Blok.import_file method
 
 0.9.7 (2017-07-03)
 ------------------

@@ -30,13 +30,14 @@ class Importer:
 @register(IO.Importer)
 class XML:
 
-    def __init__(self, importer):
+    def __init__(self, importer, blokname=None):
         self.importer = importer
         self.error_found = []
         self.created_entries = []
         self.updated_entries = []
         self.params = {}
         self.two_way_external_id = {}
+        self.blokname = blokname
 
     def commit(self):
         if self.error_found:
@@ -129,6 +130,7 @@ class XML:
                 else:
                     raiseifexist = if_exist != 'overwrite'
                     self.registry.IO.Mapping.set(external_id, entry,
+                                                 blokname=self.blokname,
                                                  raiseifexist=raiseifexist)
 
     def import_entry(self, entry, values, model=None, external_id=None,
