@@ -26,6 +26,7 @@ Futur
 * IMP: IO.Mapping save the blok name when use the Blok.import_file method
 * IMP: IO blok overload ``Model.delete`` and ``Query.delete`` to delete mapping
   with instances of the Models
+* FIX: create new session make must commit and remove all old session instances
 
 0.9.7 (2017-07-03)
 ------------------
