@@ -211,3 +211,70 @@ class TestIOMapping(BlokTestCase):
             Blok.__registry_name__, blok.to_primary_keys())
         entry = Mapping.get(blok.__registry_name__, mapping.key)
         self.assertEqual(entry, blok)
+
+    def test_delete_for_blokname(self):
+        self.Blok.insert(name='Test', version='0.0.0')
+        self.assertFalse(
+            self.Mapping.query().filter_by(blokname="Test").count()
+        )
+        for column in self.Column.query().limit(10).all():
+            self.Mapping.set('test_' + column.code, column, blokname='Test')
+        self.assertTrue(
+            self.Mapping.query().filter_by(blokname="Test").count()
+        )
+        removed = self.Mapping.delete_for_blokname('Test')
+        self.assertEqual(removed, 10)
+        self.assertFalse(
+            self.Mapping.query().filter_by(blokname="Test").count()
+        )
+
+    def test_delete_for_blokname_filter_by_model_1(self):
+        self.Blok.insert(name='Test', version='0.0.0')
+        nb_column = self.Column.query().count()
+        self.assertFalse(
+            self.Mapping.query().filter_by(blokname="Test").count()
+        )
+        for field in self.Field.query().all():
+            self.Mapping.set('test_' + field.code, field, blokname='Test')
+
+        self.assertEqual(
+            self.Mapping.query().filter_by(blokname="Test").count(),
+            self.Field.query().count()
+        )
+        removed = self.Mapping.delete_for_blokname(
+            'Test', ['Model.System.Column'])
+        self.assertEqual(removed, nb_column)
+
+    def test_delete_for_blokname_filter_by_model_2(self):
+        nb_column = self.Column.query().count()
+        self.Blok.insert(name='Test', version='0.0.0')
+        self.assertFalse(
+            self.Mapping.query().filter_by(blokname="Test").count()
+        )
+        for field in self.Field.query().all():
+            self.Mapping.set('test_' + field.code, field, blokname='Test')
+
+        self.assertEqual(
+            self.Mapping.query().filter_by(blokname="Test").count(),
+            self.Field.query().count()
+        )
+        removed = self.Mapping.delete_for_blokname(
+            'Test', [self.registry.System.Column])
+        self.assertEqual(removed, nb_column)
+
+    def test_delete_for_blokname_filter_by_model_3(self):
+        nb_column = self.Column.query().count()
+        self.Blok.insert(name='Test', version='0.0.0')
+        self.assertFalse(
+            self.Mapping.query().filter_by(blokname="Test").count()
+        )
+        for field in self.Field.query().all():
+            self.Mapping.set('test_' + field.code, field, blokname='Test')
+
+        self.assertEqual(
+            self.Mapping.query().filter_by(blokname="Test").count(),
+            self.Field.query().count()
+        )
+        removed = self.Mapping.delete_for_blokname(
+            'Test', self.registry.System.Column)
+        self.assertEqual(removed, nb_column)

@@ -75,7 +75,7 @@ class Mapping:
         return 0
 
     @classmethod
-    def delete(cls, model, key, mapping_only=True):
+    def delete(cls, model, key, mapping_only=True, byquery=False):
         """ Delete the key for this model
 
         :param model: model of the mapping
@@ -87,7 +87,7 @@ class Mapping:
         count = query.count()
         if count:
             if not mapping_only:
-                query.one().remove_element()
+                query.one().remove_element(byquery=byquery)
 
             query.delete(remove_mapping=False)
             return count
@@ -248,5 +248,34 @@ class Mapping:
                     if cls.get(model, key) is None:
                         cls.delete(model, key)
                         removed += 1
+
+        return removed
+
+    @classmethod
+    def delete_for_blokname(cls, blokname, models=None, byquery=False):
+        """Clean all mapping with removed object linked::
+
+            Mapping.clean('My blok')
+
+        .. warning::
+
+            For filter only the no blokname::
+
+                Mapping.clean(None)
+
+        :params blokname: filter by blok
+        :params models: filter by model, keep the order to remove the mapping
+        """
+        models = cls.__get_models(models)
+
+        removed = 0
+        for model in models:
+            query = cls.query().filter_by(blokname=blokname, model=model)
+            for key in query.all().key:
+                print(blokname, model, key)
+                if cls.get(model, key):
+                    cls.delete(model, key, mapping_only=False, byquery=byquery)
+                    cls.registry.flush()
+                    removed += 1
 
         return removed
