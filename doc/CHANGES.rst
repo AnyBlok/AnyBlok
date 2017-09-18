@@ -1,6 +1,9 @@
 .. This file is a part of the AnyBlok project
 ..
+..    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -14,9 +17,9 @@ Futur
 
 * [ADD] fields_description add remote_name
 * Update doc, add foreign_key_option  and unique for Many2One
-* IMP add ``expire_all`` and ``expunge`` registry methods, expire all the 
+* IMP add ``expire_all`` and ``expunge`` registry methods, expire all the
   instance in the session
-* IMP add ``expunge`` method on the instance 
+* IMP add ``expunge`` method on the instance
 * FIX: expire attribute must use also all the fields which come from
   polymorphic model
 * FIX: if ondelete=cascade in foreign keu options, then the many2one force
@@ -27,6 +30,7 @@ Futur
 * IMP: IO blok overload ``Model.delete`` and ``Query.delete`` to delete mapping
   with instances of the Models
 * FIX: create new session make must commit and remove all old session instances
+* IMP: add ``Mapping.clean`` method to clean unlinked mapping
 
 0.9.7 (2017-07-03)
 ------------------
@@ -36,7 +40,7 @@ Futur
 0.9.6 (2017-07-03)
 ------------------
 
-* [FIX] in One2Many and Many2Many field, the attribute model can be used on 
+* [FIX] in One2Many and Many2Many field, the attribute model can be used on
   record node. Used for Polymorphisme
 
 0.9.5 (2016-12-05)
@@ -58,11 +62,11 @@ Futur
   If the field is an Integer and a primary_key with autoincrement='auto'
   then the value is True else False
 * [FIX] SQLAlchemy 1.1.*, primary_key attribute don't define autoincrement.
-  The column Integer with a primary_key=True whithout autoincrement 
+  The column Integer with a primary_key=True whithout autoincrement
   declaration use autoincrement=True
 * [FIX] SQLAlchemy 1.1.*, backref property check if the collection_class has
   __emulates__ attributes. InstrumentedList haven't to have this attribute
-* [FIX] SQLAlchemy 1.1.*, Session State changed, update the update method 
+* [FIX] SQLAlchemy 1.1.*, Session State changed, update the update method
   of the registry to install / update / uninstall bloks
 * [FIX] SQLAlchemy 1.1.*, Hybrid property don't propagate the relationship
   info attribute. The propagate is forced for Many2One and One2One. The only
@@ -105,7 +109,7 @@ Futur
   * get_url
 
 * [IMP] add LogCapture
-* [IMP] TestCase.Configuration, use to update Configuration only in 
+* [IMP] TestCase.Configuration, use to update Configuration only in
   a context manager
 * [IMP] add Registry.db_exists class method, check with the configuration
   and the db_name if the connection is possible

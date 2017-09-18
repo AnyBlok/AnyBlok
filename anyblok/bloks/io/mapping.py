@@ -201,3 +201,52 @@ class Mapping:
     def get_from_entry(cls, entry):
         return cls.get_from_model_and_primary_keys(
             entry.__registry_name__, entry.to_primary_keys())
+
+    @classmethod
+    def __get_models(cls, models):
+        """Return models name
+
+        if models is not: return all the existing model
+        if models is a list of instance model, convert them
+
+        :params models: list of model
+        """
+        if models is None:
+            models = cls.registry.System.Model.query().all().name
+        elif not isinstance(models, (list, tuple)):
+            models = [models]
+
+        return [m.__registry_name__ if hasattr(m, '__registry_name__') else m
+                for m in models]
+
+    @classmethod
+    def clean(cls, bloknames=None, models=None):
+        """Clean all mapping with removed object linked::
+
+            Mapping.clean(bloknames=['My blok'])
+
+        .. warning::
+
+            For filter only the no blokname::
+
+                Mapping.clean(bloknames=[None])
+
+        :params bloknames: filter by blok, keep the order to remove the mapping
+        :params models: filter by model, keep the order to remove the mapping
+        """
+        if bloknames is None:
+            bloknames = cls.registry.System.Blok.query().all().name + [None]
+        elif not isinstance(bloknames, (list, tuple)):
+            bloknames = [bloknames]
+        models = cls.__get_models(models)
+
+        removed = 0
+        for blokname in bloknames:
+            for model in models:
+                query = cls.query().filter_by(blokname=blokname, model=model)
+                for key in query.all().key:
+                    if cls.get(model, key) is None:
+                        cls.delete(model, key)
+                        removed += 1
+
+        return removed
