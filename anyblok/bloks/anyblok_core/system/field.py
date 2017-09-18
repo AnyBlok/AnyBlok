@@ -32,7 +32,8 @@ class Field:
         if cls.__registry_name__ != System.Field.__registry_name__:
             F = cls.registry.System.Field
             return table_args + (ForeignKeyConstraint([cls.name, cls.model],
-                                                      [F.name, F.model]),)
+                                                      [F.name, F.model],
+                                                      ondelete="CASCADE"),)
 
         return table_args
 
