@@ -350,6 +350,7 @@ class Many2One(RelationShip):
                 self._column_names = [self._column_names]
 
         self.foreign_key_options = self.kwargs.pop('foreign_key_options', {})
+        self.cascade = self.kwargs.pop('cascade', 'save-update, merge')
 
     def autodoc_get_properties(self):
         res = super(Many2One, self).autodoc_get_properties()
@@ -495,6 +496,10 @@ class Many2One(RelationShip):
             'InstrumentedList', (RelationShipListMany2One, RelationShipList,
                                  registry.InstrumentedList), properties)
         self.backref_properties['collection_class'] = InstrumentedList
+        cascade = self.cascade
+        if self.foreign_key_options.get('ondelete') == 'cascade':
+            cascade += ', delete'
+        self.backref_properties['cascade'] = cascade
 
     def create_column(self, cname, remote_type, foreign_key, properties):
 

@@ -551,8 +551,9 @@ class Registry:
                 toinstall.append(blok)
 
         if toinstall and self.withoutautomigration:
-            raise RegistryManagerException("Install module is forbidden with "
-                                           "no auto migration mode")
+            raise RegistryManagerException(
+                "Install modules %r is forbidden with no auto migration "
+                "mode" % toinstall)
 
         return toinstall
 
@@ -836,6 +837,17 @@ class Registry:
         in function of the Core Session class ans the Core Qery class
         """
         if self.Session is None or self.must_recreate_session_factory():
+            bind = self.bind
+            if self.Session:
+                if not self.withoutautomigration:
+                    # this is the only case to use commit in the construction
+                    # of the registry
+                    self.commit()
+
+                # remove all existing instance to create a new instance
+                # because the instance are cached
+                self.Session.remove()
+
             query_bases = [] + self.loaded_cores['Query']
             query_bases += [self.registry_base]
             Query = type('Query', tuple(query_bases), {})
@@ -843,7 +855,6 @@ class Registry:
             Session = type('Session', tuple(session_bases), {
                 'registry_query': Query})
 
-            bind = self.connection() if self.Session else self.bind
             extension = self.additional_setting.get('sa.session.extension')
             if extension:
                 extension = extension()
@@ -1049,12 +1060,33 @@ class Registry:
         :param attribute_names: list of string, names of the attr to expire
         """
         if attribute_names:
+            hybrid_property_columns = (
+                obj.__class__.get_hybrid_property_columns()
+            )
             attribute_names = [
                 (anyblok_column_prefix + x
-                 if x in obj.hybrid_property_columns else x)
-                for x in attribute_names]
+                 if x in hybrid_property_columns else x)
+                for x in attribute_names
+            ]
 
         self.session.expire(obj, attribute_names=attribute_names)
+
+    def expire_all(self):
+        """Expire all the objects in session::
+
+            registry.expire_all()
+
+        """
+        self.session.expire_all()
+
+    def expunge(self, obj):
+        """Expunge instance of the session, remove all links of this instance
+        in the session::
+
+            registry.expunge(instance_of_model)
+
+        """
+        self.session.expunge(obj)
 
     def refresh(self, obj, attribute_names=None):
         """Expire  and reload object in session, you can define some attribute
@@ -1300,7 +1332,7 @@ class Registry:
         upgrade_state_bloks('toinstall')(install or [])
         upgrade_state_bloks('toupdate')(update or [])
         self.reload()
-        self.session.expire_all()
+        self.expire_all()
 
     @log(logger)
     def update_blok_list(self):

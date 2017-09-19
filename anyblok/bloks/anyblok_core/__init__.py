@@ -21,6 +21,8 @@ class AnyBlokCore(Blok):
     version = version
     autoinstall = True
     priority = 0
+    author = 'Suzanne Jean-Sébastien'
+    logo = '../anyblok-logo_alpha_256.png'
 
     def pre_migration(self, latest_version):
         if latest_version is not None and latest_version < '0.4.1':

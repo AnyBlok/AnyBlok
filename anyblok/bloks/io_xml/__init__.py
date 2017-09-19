@@ -18,6 +18,8 @@ class AnyBlokIOXML(Blok):
 
     """
     version = version
+    author = 'Suzanne Jean-Sébastien'
+    logo = '../anyblok-logo_alpha_256.png'
 
     required = [
         'anyblok-io',

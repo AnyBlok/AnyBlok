@@ -24,7 +24,7 @@ from copy import deepcopy
 from sqlalchemy.orm import clear_mappers
 
 skipAlembicVersion = (
-    tuple(int(x) for x in alembic.__version__.split('.')) < (0, 9, 5)
+    tuple(int(x) for x in alembic.__version__.split('.')) < (0, 9, 6)
 )
 
 

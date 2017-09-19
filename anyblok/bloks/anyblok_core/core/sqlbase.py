@@ -174,6 +174,23 @@ class SqlMixin:
 
         return res
 
+    @classmethod_cache()
+    def get_hybrid_property_columns(cls):
+        """Return the hybrid properties columns name from the Model and the
+        inherited model if they come from polymorphisme
+        """
+        hybrid_property_columns = cls.hybrid_property_columns
+        if 'polymorphic_identity' in cls.__mapper_args__:
+            pks = cls.get_primary_keys()
+            fd = cls.fields_description(*pks)
+            for pk in pks:
+                if fd[pk].get('model'):
+                    Model = cls.registry.get(fd[pk]['model'])
+                    hybrid_property_columns.extend(
+                        Model.get_hybrid_property_columns())
+
+        return hybrid_property_columns
+
     def _format_field(self, field):
         related_fields = None
         if isinstance(field, (tuple, list)):
@@ -457,6 +474,10 @@ class SqlBase(SqlMixin):
         """
         self.registry.refresh(self, fields)
 
+    def expunge(self):
+        """Expunge the instance in the session"""
+        self.registry.session.expunge(self)
+
     def expire(self, *fields):
         """ Expire the attribute of the instance, theses attributes will be
         load at the next  call of the instance
@@ -466,7 +487,7 @@ class SqlBase(SqlMixin):
         """
         self.registry.expire(self, fields)
 
-    def delete(self, flush=True):
+    def delete(self, byquery=False, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
         model::
 
@@ -479,12 +500,19 @@ class SqlBase(SqlMixin):
             and expire all the session, to reload the relation ship
 
         """
-        model = self.registry.loaded_namespaces_first_step[
-            self.__registry_name__]
-        fields = model.keys()
-        mappers = self.__class__.find_remote_attribute_to_expire(*fields)
-        self.expire_relationship_mapped(mappers)
-        self.registry.session.delete(self)
+        if byquery:
+            cls = self.__class__
+            cls.query().filter(*cls.get_where_clause_from_primary_keys(
+                **self.to_primary_keys())).delete()
+            self.expunge()
+        else:
+            model = self.registry.loaded_namespaces_first_step[
+                self.__registry_name__]
+            fields = model.keys()
+            mappers = self.__class__.find_remote_attribute_to_expire(*fields)
+            self.expire_relationship_mapped(mappers)
+            self.registry.session.delete(self)
+
         if flush:
             self.registry.flush()
 

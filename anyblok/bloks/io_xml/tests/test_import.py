@@ -22,9 +22,9 @@ class TestImportCSV(BlokTestCase):
             file_to_import = urandom(100000)
         return XML.insert(file_to_import=file_to_import, **kwargs)
 
-    def create_XML_importer(self, **kwargs):
+    def create_XML_importer(self, blokname=None, **kwargs):
         XML = self.registry.IO.Importer.XML
-        return XML(self.create_importer(**kwargs))
+        return XML(self.create_importer(**kwargs), blokname=blokname)
 
     def test_commit_if_error_found(self):
         importer = self.create_XML_importer()
@@ -175,6 +175,14 @@ class TestImportCSV(BlokTestCase):
                               if_exist='continue', external_id='test_import')
         self.assertEqual(self.registry.IO.Mapping.get(model, 'test_import'),
                          importer.importer)
+
+    def test_import_entry_external_id_with_blokname(self):
+        importer = self.create_XML_importer()
+        model = 'Model.IO.Importer'
+        importer.import_entry(importer.importer, None, model=model,
+                              if_exist='continue', external_id='test_import')
+        mapping = self.registry.IO.Mapping.get(model, 'test_import')
+        mapping.blokname = 'Test'
 
     def test_import_entry_mapper(self):
         importer = self.create_XML_importer()

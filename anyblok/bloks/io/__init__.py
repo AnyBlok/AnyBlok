@@ -18,6 +18,8 @@ class AnyBlokIO(Blok):
     * Exporter: main model to define an export,
     """
     version = version
+    author = 'Suzanne Jean-Sébastien'
+    logo = '../anyblok-logo_alpha_256.png'
 
     required = [
         'anyblok-core',
@@ -33,6 +35,7 @@ class AnyBlokIO(Blok):
 
     @classmethod
     def import_declaration_module(cls):
+        from . import core  # noqa
         cls.declare_io()
         from . import mapping  # noqa
         from . import mixin  # noqa
@@ -42,6 +45,8 @@ class AnyBlokIO(Blok):
 
     @classmethod
     def reload_declaration_module(cls, reload):
+        from . import core
+        reload(core)
         cls.declare_io()
         from . import mapping
         reload(mapping)

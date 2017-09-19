@@ -272,6 +272,8 @@ class Blok:
     conditional = []
     conflicting = []
     name = None  # filled by the BlokManager
+    author = ''
+    logo = ''
 
     def __init__(self, registry):
         self.registry = registry
@@ -334,7 +336,7 @@ class Blok:
 
         importer = Importer.insert(
             model=model, file_to_import=file_to_import, **kwargs)
-        res = importer.run()
+        res = importer.run(self.name)
         logger.info("Create %d entries, Update %d entries",
                     len(res['created_entries']), len(res['updated_entries']))
         if res['error_found']:

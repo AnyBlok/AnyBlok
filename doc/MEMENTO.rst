@@ -612,7 +612,7 @@ the model.::
 
 .. note::
 
-    Since the version 0.4.0 the ``RelationShip`` are not ``Declarations``
+    Since the version 0.4.0 the ``RelationShip`` don't come from ``Declarations``
 
 List of the RelationShip type:
 
@@ -653,19 +653,31 @@ Parameters of the ``One2One`` field:
 
 Parameters of the ``Many2One`` field:
 
-+-------------------+---------------------------------------------------------+
-| Parameter         | Description                                             |
-+===================+=========================================================+
-| ``column_names``  | Name of the local column.                               |
-|                   | If the column doesn't exist then this column will be    |
-|                   | created.                                                |
-|                   | If no column name then the name will be 'tablename' +   |
-|                   | '_' + name of the relationships                         |
-+-------------------+---------------------------------------------------------+
-| ``nullable``      | Indicate if the column name is nullable or not          |
-+-------------------+---------------------------------------------------------+
-| ``one2many``      | Opposite One2Many link with this Many2one               |
-+-------------------+---------------------------------------------------------+
++-------------------------+---------------------------------------------------+
+| Parameter               | Description                                       |
++=========================+===================================================+
+| ``column_names``        | Name of the local column.                         |
+|                         | If the column doesn't exist then this column will |
+|                         | be created.                                       |
+|                         | If no column name then the name will be           |
+|                         | 'tablename' + '_' + name of the relationships     |
++-------------------------+---------------------------------------------------+
+| ``nullable``            | Indicate if the column name is nullable or not    |
++-------------------------+---------------------------------------------------+
+| ``unique``              | Add unique information in created collumn         |
++-------------------------+---------------------------------------------------+
+| ``one2many``            | Opposite One2Many link with this Many2one         |
++-------------------------+---------------------------------------------------+
+| ``foreign_key_options`` | take a dict with the option for create the        |
+|                         | foreign key::                                     |
++-------------------------+---------------------------------------------------+
+
+::
+
+    Many2One(model=The.Model, nullable=True, 
+             foreign_key_options={'ondelete': cascade})
+
+
 
 Parameters of the ``One2Many`` field:
 

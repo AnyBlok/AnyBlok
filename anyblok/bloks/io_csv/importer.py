@@ -45,7 +45,7 @@ class Importer(Mixin.IOCSVMixin):
 @register(IO.Importer)
 class CSV:
 
-    def __init__(self, importer):
+    def __init__(self, importer, blokname=None):
         self.importer = importer
         self.error_found = []
         self.reader = None
@@ -56,6 +56,7 @@ class CSV:
         self.header_external_ids = {}
         self.header_fields = []
         self.fields_description = {}
+        self.blokname = blokname
 
     def commit(self):
         if self.error_found:
@@ -136,7 +137,8 @@ class CSV:
             entry = Model.insert(**values)
             self.created_entries.append(entry)
             if self.header_external_id:
-                Mapping.set(row[self.header_external_id], entry)
+                Mapping.set(row[self.header_external_id], entry,
+                            blokname=self.blokname)
 
         elif self.importer.csv_if_does_not_exist == 'raise':
             raise CSVImporterException(
