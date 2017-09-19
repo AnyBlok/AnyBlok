@@ -18,6 +18,8 @@ class AnyBlokIO(Blok):
     * Exporter: main model to define an export,
     """
     version = version
+    author = 'Suzanne Jean-Sébastien'
+    logo = '../anyblok-logo_alpha_256.png'
 
     required = [
         'anyblok-core',

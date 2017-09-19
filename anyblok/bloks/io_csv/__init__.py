@@ -13,6 +13,8 @@ class AnyBlokIOCSV(Blok):
     """ CSV Importer / Exporter behaviour
     """
     version = version
+    author = 'Suzanne Jean-Sébastien'
+    logo = '../anyblok-logo_alpha_256.png'
 
     required = [
         'anyblok-io',

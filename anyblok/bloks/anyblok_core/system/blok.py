@@ -32,9 +32,11 @@ class Blok:
 
     name = String(primary_key=True, nullable=False)
     state = Selection(selections=STATES, default='uninstalled', nullable=False)
+    author = String()
     order = Integer(default=-1, nullable=False)
     short_description = Function(fget='get_short_description')
     long_description = Function(fget='get_long_description')
+    logo = Function(fget='get_logo')
     version = String(nullable=False)
     installed_version = String()
 
@@ -68,6 +70,19 @@ class Blok:
 
         return description
 
+    def get_logo(self):
+        """fget of ``logo`` return the path in the blok of the logo
+
+        :rtype: absolute path or None if unexiste logo
+        """
+        blok = BlokManager.get(self.name)
+        blok_path = BlokManager.getPath(blok.name)
+        file_path = join(blok_path, blok.logo)
+        if isfile(file_path):
+            return file_path
+
+        return None
+
     def __repr__(self):
         return "%s (%s)" % (self.name, self.state)
 
@@ -99,10 +114,12 @@ class Blok:
         for order, blok in enumerate(BlokManager.ordered_bloks):
             b = cls.query().filter(cls.name == blok)
             version = BlokManager.bloks[blok].version
+            author = BlokManager.bloks[blok].author
             if b.count():
-                b.update(dict(order=order, version=version))
+                b.update(dict(order=order, version=version, author=author))
             else:
-                cls.insert(name=blok, order=order, version=version)
+                cls.insert(name=blok, order=order, version=version,
+                           author=author)
 
     @classmethod
     def apply_state(cls, *bloks):

@@ -32,6 +32,7 @@ Futur
 * FIX: create new session make must commit and remove all old session instances
 * IMP: add ``Mapping.clean`` method to clean unlinked mapping
 * IMP: add ``Mapping.remove_for_blokname`` method to remove mapping and obj
+* IMP: add new field in ``Model.System.Blok`` ``author`` and ``logo``
 
 0.9.7 (2017-07-03)
 ------------------

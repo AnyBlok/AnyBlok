@@ -12,6 +12,8 @@ from anyblok import release
 class ModelBasedAuthorizationBlok(Blok):
 
     version = release.version
+    author = 'Suzanne Jean-Sébastien'
+    logo = '../anyblok-logo_alpha_256.png'
 
     @classmethod
     def import_declaration_module(cls):

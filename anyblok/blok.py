@@ -272,6 +272,8 @@ class Blok:
     conditional = []
     conflicting = []
     name = None  # filled by the BlokManager
+    author = ''
+    logo = ''
 
     def __init__(self, registry):
         self.registry = registry

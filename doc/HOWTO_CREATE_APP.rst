@@ -108,6 +108,8 @@ File tree::
     class OfficeBlok(Blok):
 
         version = '1.0.0'
+        author = 'Suzanne Jean-Sébastien'
+        logo = 'relative/path'
 
         def install(self):
             """ method called at blok installation time """
