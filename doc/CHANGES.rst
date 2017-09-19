@@ -12,8 +12,8 @@
 CHANGELOG
 =========
 
-Futur
------
+0.9.8 (2017-09-19)
+------------------
 
 * [ADD] fields_description add remote_name
 * Update doc, add foreign_key_option  and unique for Many2One
