@@ -12,14 +12,19 @@
 CHANGELOG
 =========
 
+0.9.9 (2017-09-19)
+------------------
+
+* FIX: add logo in the MANIFEST.in
+
 0.9.8 (2017-09-19)
 ------------------
 
-* [ADD] fields_description add remote_name
+* IMP: fields_description add remote_name
 * Update doc, add foreign_key_option  and unique for Many2One
-* IMP add ``expire_all`` and ``expunge`` registry methods, expire all the
+* IMP: add ``expire_all`` and ``expunge`` registry methods, expire all the
   instance in the session
-* IMP add ``expunge`` method on the instance
+* IMP: add ``expunge`` method on the instance
 * FIX: expire attribute must use also all the fields which come from
   polymorphic model
 * FIX: if ondelete=cascade in foreign keu options, then the many2one force
