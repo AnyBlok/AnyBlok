@@ -17,6 +17,8 @@ Futur
 
 * FIX: type ``Paramater`` => ``Parameter``
 * IMP: add the the author in autodoc
+* IMP: in the script blok the exclude and include model can use ``.*`` to take
+  children in the namespace
 
 0.9.9 (2017-09-19)
 ------------------
