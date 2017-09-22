@@ -19,6 +19,8 @@ Futur
 * IMP: add the the author in autodoc
 * IMP: in the script blok the exclude and include model can use ``.*`` to take
   children in the namespace
+* FIX: anyblok_doc with UML, don 't make agregation when the model doesn't 
+  exist
 
 0.9.9 (2017-09-19)
 ------------------
