@@ -12,6 +12,12 @@
 CHANGELOG
 =========
 
+Futur
+-----
+
+* FIX: type ``Paramater`` => ``Parameter``
+* IMP: add the the author in autodoc
+
 0.9.9 (2017-09-19)
 ------------------
 
