@@ -296,6 +296,10 @@ class ModelSchema(BaseSchema):
                        label_to=None, multiplicity_to=None):
         label_from, label_to = self.format_label(
             label_from, multiplicity_from, label_to, multiplicity_to)
+
+        if not cls_1 or not cls_2:
+            return
+
         self.add_edge(cls_1, cls_2, attr={
             'dir': 'back',
             'arrowtail': 'odiamond',

@@ -26,13 +26,33 @@ class Model(Declarations.Mixin.DocElement):
         return self.registry.has(self.model.name)
 
     @classmethod
+    def get_all_models(cls, models):
+        Model = cls.registry.System.Model
+        res = []
+        for model in models:
+            if model[-2:] == '.*':
+                query = Model.query().filter(Model.name.like(model[:-1] + '%'))
+                res.extend(query.all().name)
+            else:
+                res.append(model)
+
+        return res
+
+    @classmethod
     def filterModel(cls, query):
         Model = cls.registry.System.Model
         wanted_models = Configuration.get('doc_wanted_models')
         if wanted_models:
+            wanted_models = cls.get_all_models(wanted_models)
             query = query.filter(Model.name.in_(wanted_models))
+        else:
+            wanted_models = []
+
         unwanted_models = Configuration.get('doc_unwanted_models')
         if unwanted_models:
+            unwanted_models = cls.get_all_models(unwanted_models)
+            unwanted_models = [x for x in unwanted_models
+                               if x not in wanted_models]
             query = query.filter(Model.name.notin_(unwanted_models))
 
         return query

@@ -46,11 +46,11 @@ class Blok:
         doc.write(self.blok.long_description + '\n\n')
 
     def toRST_get_field(self):
-        return ('version', 'installed_version')
+        return ('author', 'version', 'installed_version')
 
     def toRST_write_params(self, doc):
         fields = self.toRST_get_field()
-        msg = "Paramater:\n\n* "
+        msg = "Parameter:\n\n* "
         msg += '\n* '.join('**%s** = %s' % (f, getattr(self.blok, f))
                            for f in fields)
         doc.write(msg + '\n\n')
