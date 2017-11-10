@@ -947,9 +947,9 @@ class Registry:
             mustreload = self.apply_model_schema_on_table(
                 blok2install) or mustreload
 
-        except:
+        except Exception as e:
             self.close()
-            raise
+            raise e
 
         test_blok = blok2install and Configuration.get(
             'test_blok_at_install')

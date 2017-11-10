@@ -393,10 +393,10 @@ class Configuration:
                 cls.configuration[opt].set(value)
             else:
                 cls.add_argument(opt, value, type(value))
-        except:
+        except Exception as e:
             logger.exception("Error durring set the value %r on the option "
                              "%r" % (value, opt))
-            raise
+            raise e
 
     @classmethod
     def update(cls, *args, **kwargs):

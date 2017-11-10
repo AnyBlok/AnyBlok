@@ -96,7 +96,7 @@ class TestMigration(TestCase):
                       'testunique', 'reltab', 'testm2m1', 'testm2m2'):
             try:
                 self.registry.migration.table(table).drop()
-            except:
+            except Exception:
                 pass
 
         self.registry.migration.conn.close()

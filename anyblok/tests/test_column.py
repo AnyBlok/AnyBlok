@@ -20,25 +20,25 @@ from unittest import skipIf
 try:
     import cryptography  # noqa
     has_cryptography = True
-except:
+except Exception:
     has_cryptography = False
 
 try:
     import passlib  # noqa
     has_passlib = True
-except:
+except Exception:
     has_passlib = False
 
 try:
     import colour  # noqa
     has_colour = True
-except:
+except Exception:
     has_colour = False
 
 try:
     import furl  # noqa
     has_furl = True
-except:
+except Exception:
     has_furl = False
 
 
