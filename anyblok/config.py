@@ -2,6 +2,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -847,3 +848,9 @@ def add_logging(group):
                        help="Relative path of the logging config file (yaml). "
                             "Only if the logging and json config file doesn't "
                             "filled")
+
+
+@Configuration.add('preload', label="Preload")
+def define_preload_option(group):
+    group.add_argument('--databases', dest='db_names', nargs="+",
+                       help='List of the database allow to be load')

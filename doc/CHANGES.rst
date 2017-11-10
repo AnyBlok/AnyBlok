@@ -22,6 +22,7 @@ Futur
 * FIX: when the applications configuration has not ``configuration_groups``
   then the configuration use the ``configuration_groups`` of the default
   application
+* ADD: Add configuration group ``preload`` definition, but not used 
 
 0.9.10 (2017-09-23)
 -------------------
