@@ -12,6 +12,12 @@
 CHANGELOG
 =========
 
+Futur
+-----
+
+* Add ``anyblok_configuration.post_load`` to initialize some services in 
+  function of configuration
+
 0.9.10 (2017-09-23)
 -------------------
 

@@ -17,7 +17,10 @@ from os.path import join, exists
 from argparse import RawDescriptionHelpFormatter
 from textwrap import dedent
 from sqlalchemy_utils.functions import create_database
-from anyblok import load_init_function_from_entry_points
+from anyblok import (
+    load_init_function_from_entry_points,
+    configuration_post_load,
+)
 
 Configuration.applications.update({
     'createdb': {
@@ -79,6 +82,7 @@ def createdb(application, configuration_groups, **kwargs):
     load_init_function_from_entry_points()
     Configuration.load(application, configuration_groups=configuration_groups,
                        **kwargs)
+    configuration_post_load()
     BlokManager.load()
     db_name = Configuration.get('db_name')
     db_template_name = Configuration.get('db_template_name', None)

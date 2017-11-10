@@ -19,6 +19,12 @@ anyblok module
 .. autofunction:: start
     :noindex:
 
+.. autofunction:: load_init_function_from_entry_points
+    :noindex:
+
+.. autofunction:: configuration_post_load
+    :noindex:
+
 anyblok.declarations module
 ---------------------------
 

@@ -2,6 +2,9 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -16,7 +19,7 @@ def load_init_function_from_entry_points(unittest=False):
 
     the callable need to have one parametter, it is a dict::
 
-        def init_function():
+        def init_function(unittest=False):
             ...
 
     We add the entry point by the setup file::
@@ -37,6 +40,36 @@ def load_init_function_from_entry_points(unittest=False):
     from pkg_resources import iter_entry_points
     for i in iter_entry_points('anyblok.init'):
         print('AnyBlok Load init: %r' % i)
+        i.load()(unittest=unittest)
+
+
+def configuration_post_load(unittest=False):
+    """Call all the entry point ``anyblok_configuration.post_load`` to
+    initialize some service in function of the configuration
+
+    the callable need to have one parametter, it is a dict::
+
+        def post_load_function(unittest=False):
+            ...
+
+    We add the entry point by the setup file::
+
+        setup(
+            ...,
+            entry_points={
+                'anyblok_configuration.post_load': [
+                    post_load_function=path:post_load_function,
+                    ...
+                ],
+            },
+            ...,
+        )
+
+
+    """
+    from pkg_resources import iter_entry_points
+    for i in iter_entry_points('anyblok_configuration.post_load'):
+        logger.info('AnyBlok configuration post load: %r' % i)
         i.load()(unittest=unittest)
 
 
@@ -74,6 +107,7 @@ def start(processName, configuration_groups=None, entry_points=None,
                            configuration_groups=configuration_groups,
                            useseparator=useseparator, **config)
 
+    configuration_post_load()
     if entry_points:
         BlokManager.load(entry_points=entry_points)
     else:

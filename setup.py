@@ -112,6 +112,7 @@ setup(
             'anyblok-bloks=anyblok.plugins:AnyBlokPlugin',
         ],
         'anyblok.init': [],
+        'anyblok_configuration.post_load': [],
     },
     extras_require={},
 )
