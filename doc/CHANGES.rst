@@ -15,8 +15,13 @@ CHANGELOG
 Futur
 -----
 
-* Add ``anyblok_configuration.post_load`` to initialize some services in 
+* Add: ``anyblok_configuration.post_load`` to initialize some services in 
   function of configuration
+* REF: Update configuration groups to add ``dramatiq-broker`` by default. 
+  This configuration groups is filled by **anyblok_dramatiq** package
+* FIX: when the applications configuration has not ``configuration_groups``
+  then the configuration use the ``configuration_groups`` of the default
+  application
 
 0.9.10 (2017-09-23)
 -------------------

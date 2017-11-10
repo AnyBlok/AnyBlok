@@ -263,7 +263,7 @@ class Configuration:
     applications = {
         'default': {
             'description': "[options] -- other arguments",
-            'configuration_groups': ['config', 'database'],
+            'configuration_groups': ['config', 'database', 'dramatiq-broker'],
         },
     }
 
@@ -540,8 +540,9 @@ class Configuration:
             description.update(cls.applications['default'])
 
         description.update(kwargs)
-        _configuration_groups = description.pop('configuration_groups',
-                                                ['config', 'database'])
+        _configuration_groups = description.pop(
+            'configuration_groups',
+            cls.applications['default']['configuration_groups'])
         configuration_groups = set(configuration_groups or []).union(
             _configuration_groups)
         configuration_groups.add('plugins')
