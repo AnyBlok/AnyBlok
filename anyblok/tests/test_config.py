@@ -7,21 +7,24 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from os.path import join
 from anyblok import config
-from anyblok.config import (Configuration,
-                            add_configuration_file,
-                            add_plugins,
-                            add_database,
-                            add_install_bloks,
-                            add_uninstall_bloks,
-                            add_update_bloks,
-                            add_interpreter,
-                            add_schema,
-                            add_doc,
-                            add_unittest,
-                            ConfigurationException,
-                            AnyBlokActionsContainer,
-                            ConfigOption,
-                            AnyBlokPlugin)
+from anyblok.config import (
+    Configuration,
+    add_configuration_file,
+    add_plugins,
+    add_database,
+    add_install_bloks,
+    add_uninstall_bloks,
+    add_update_bloks,
+    add_interpreter,
+    add_schema,
+    add_doc,
+    add_unittest,
+    ConfigurationException,
+    AnyBlokActionsContainer,
+    ConfigOption,
+    AnyBlokPlugin,
+    define_preload_option,
+)
 from anyblok.tests.testcase import TestCase
 from sqlalchemy.engine.url import make_url
 from anyblok.config import get_url
@@ -543,6 +546,7 @@ class TestConfigurationOption(TestCase):
             'add_schema': add_schema,
             'add_doc': add_doc,
             'add_unittest': add_unittest,
+            'define_preload_option': define_preload_option,
         }
 
     def test_add_configuration_file(self):
@@ -574,3 +578,6 @@ class TestConfigurationOption(TestCase):
 
     def test_add_unittest(self):
         self.function['add_unittest'](self.group)
+
+    def test_define_preload_option(self):
+        self.function['define_preload_option'](self.parser)
