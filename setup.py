@@ -113,7 +113,9 @@ setup(
         ],
         'anyblok.init': [],
         'anyblok_configuration.post_load': [],
-        'anyblok.model.plugin': [],
+        'anyblok.model.plugin': [
+            'hybrid_method=anyblok.model.hybrid_method:HybridMethodPlugin',
+        ],
     },
     extras_require={},
 )

@@ -15,7 +15,6 @@ from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper, synonym
 from sqlalchemy import inspection
-from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
@@ -302,25 +301,6 @@ class Model:
                  ModelAttribute(namespace, attr)))
 
     @classmethod
-    def detect_hybrid_method(cls, attr, method, registry, namespace, base,
-                             properties):
-        """ Find the sqlalchemy hybrid methods in the base to save the
-        namespace and the method in the registry
-
-        :param attr: name of the attibute
-        :param method: method pointer
-        :param registry: the current registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param properties: the properties of the model
-        """
-        if not hasattr(method, 'is_an_hybrid_method'):
-            return
-        elif method.is_an_hybrid_method is True:
-            if attr not in properties['hybrid_method']:
-                properties['hybrid_method'].append(attr)
-
-    @classmethod
     def detect_table_and_mapper_args(cls, registry, namespace, base,
                                      properties):
         """Test if define_table/mapper_args are in the base, and call them
@@ -373,8 +353,6 @@ class Model:
                 attr, method, registry, namespace, base, properties)
             cls.apply_sqlalchemy_event_listner(
                 attr, method, registry, namespace, base, properties)
-            cls.detect_hybrid_method(
-                attr, method, registry, namespace, base, properties)
             cls.call_plugins(
                 'transform_base_attribute',
                 attr, method, namespace, base, properties, new_type_properties)
@@ -388,40 +366,6 @@ class Model:
             return [type(namespace, (), new_type_properties), base]
 
         return [base]
-
-    @classmethod
-    def apply_hybrid_method(cls, base, registry, namespace, bases,
-                            transformation_properties, properties):
-        """ Create overload to define the write declaration of sqlalchemy
-        hybrid method, add the overload in the declared bases of the
-        namespace
-
-        :param registry: the current registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param properties: assembled attributes of the namespace
-        """
-        type_properties = {}
-
-        def apply_wrapper(attr):
-
-            def wrapper(self, *args, **kwargs):
-                self_ = self.registry.loaded_namespaces[self.__registry_name__]
-                if self is self_:
-                    return getattr(super(base, self), attr)(
-                        self, *args, **kwargs)
-                else:
-                    return getattr(super(base, self), attr)(
-                        *args, **kwargs)
-
-            setattr(base, attr, hybrid_method(wrapper))
-
-        if transformation_properties['hybrid_method']:
-            for attr in transformation_properties['hybrid_method']:
-                apply_wrapper(attr)
-
-        return type_properties
 
     @classmethod
     def apply_table_and_mapper_args(cls, base, registry, namespace, bases,
@@ -481,8 +425,6 @@ class Model:
         """
         new_base = type(namespace, (), {})
         bases.insert(0, new_base)
-        cls.apply_hybrid_method(new_base, registry, namespace, bases,
-                                transformation_properties, properties)
         cls.apply_table_and_mapper_args(new_base, registry, namespace, bases,
                                         transformation_properties, properties)
         cls.call_plugins('insert_in_bases', new_base, namespace,
@@ -643,7 +585,6 @@ class Model:
 
         if transformation_properties is None:
             transformation_properties = {
-                'hybrid_method': [],
                 'table_args': False,
                 'mapper_args': False,
             }
