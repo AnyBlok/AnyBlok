@@ -272,7 +272,6 @@ class Mapping:
         for model in models:
             query = cls.query().filter_by(blokname=blokname, model=model)
             for key in query.all().key:
-                print(blokname, model, key)
                 if cls.get(model, key):
                     cls.delete(model, key, mapping_only=False, byquery=byquery)
                     cls.registry.flush()
