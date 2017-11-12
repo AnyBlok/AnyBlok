@@ -23,6 +23,7 @@ Futur
   then the configuration use the ``configuration_groups`` of the default
   application
 * ADD: Add configuration group ``preload`` definition, but not used 
+* ADD: Entry point ``anyblok.model.plugin`` to add behaviour on the model
 
 0.9.10 (2017-09-23)
 -------------------

@@ -57,6 +57,17 @@ anyblok.model module
     :show-inheritance:
     :inherited-members:
 
+anyblok.model.plugins module
+----------------------------
+
+.. automodule:: anyblok.model.plugins
+
+.. autoclass:: ModelPluginBase
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
 anyblok.mapper module
 ---------------------
 

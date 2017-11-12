@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -18,10 +19,11 @@ from sqlalchemy.ext.hybrid import hybrid_method
 from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
-from .mapper import ModelAttribute
+from anyblok.mapper import ModelAttribute
 from sqlalchemy import ForeignKeyConstraint
 from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
+from .plugins import get_model_plugins
 
 
 class ModelException(Exception):
@@ -141,6 +143,16 @@ class Model:
         the table. But they must have the same column.
     """
 
+    """Plugins to apply on Model to assemble all the Model"""
+    plugins = []
+
+    @classmethod
+    def call_plugins(cls, method, *args, **kwargs):
+        """call the method on each plugin"""
+        for plugin in cls.plugins:
+            if hasattr(plugin, method):
+                getattr(plugin, method)(*args, **kwargs)
+
     @classmethod
     def register(self, parent, name, cls_, **kwargs):
         """ add new sub registry in the registry
@@ -194,7 +206,8 @@ class Model:
         RegistryManager.remove_in_register(cls_)
 
     @classmethod
-    def declare_field(self, registry, name, field, namespace, properties):
+    def declare_field(cls, registry, name, field, namespace, properties,
+                      transformation_properties):
         """ Declare the field/column/relationship to put in the properties
         of the model
 
@@ -232,6 +245,9 @@ class Model:
             properties[name] = field.get_property(
                 registry, namespace, name, properties)
             properties['hybrid_property_columns'].append(name)
+
+        cls.call_plugins('declare_field', name, field, namespace,
+                         properties, transformation_properties)
 
         properties['loaded_columns'].append(name)
         field.update_properties(registry, namespace, name, properties)
@@ -359,9 +375,14 @@ class Model:
                 attr, method, registry, namespace, base, properties)
             cls.detect_hybrid_method(
                 attr, method, registry, namespace, base, properties)
+            cls.call_plugins(
+                'transform_base_attribute',
+                attr, method, namespace, base, properties, new_type_properties)
 
         cls.detect_table_and_mapper_args(
             registry, namespace, base, properties)
+        cls.call_plugins(
+            'transform_base', namespace, base, properties, new_type_properties)
 
         if new_type_properties:
             return [type(namespace, (), new_type_properties), base]
@@ -464,6 +485,8 @@ class Model:
                                 transformation_properties, properties)
         cls.apply_table_and_mapper_args(new_base, registry, namespace, bases,
                                         transformation_properties, properties)
+        cls.call_plugins('insert_in_bases', new_base, namespace,
+                         properties, transformation_properties)
 
     @classmethod
     def raise_if_has_sqlalchemy(cls, base):
@@ -569,7 +592,8 @@ class Model:
         bases.extend([x for x in registry.loaded_cores['Base']])
 
     @classmethod
-    def declare_all_fields(cls, registry, namespace, bases, properties):
+    def declare_all_fields(cls, registry, namespace, bases, properties,
+                           transformation_properties):
         # do in the first time the fields and columns
         # because for the relationship on the same model
         # the primary keys must exist before the relationship
@@ -579,12 +603,14 @@ class Model:
             for p, f in get_fields(b,
                                    without_relationship=True).items():
                 cls.declare_field(
-                    registry, p, f, namespace, properties)
+                    registry, p, f, namespace, properties,
+                    transformation_properties)
 
         for b in bases:
             for p, f in get_fields(b, only_relationship=True).items():
                 cls.declare_field(
-                    registry, p, f, namespace, properties)
+                    registry, p, f, namespace, properties,
+                    transformation_properties)
 
     @classmethod
     def apply_existing_table(cls, registry, namespace, tablename, properties):
@@ -621,6 +647,8 @@ class Model:
                 'table_args': False,
                 'mapper_args': False,
             }
+            cls.call_plugins('initialisation_tranformation_properties',
+                             transformation_properties)
 
         bases = TypeList(cls, registry, namespace, transformation_properties)
         ns = registry.loaded_registries[namespace]
@@ -642,7 +670,8 @@ class Model:
                 cls.apply_existing_table(
                     registry, namespace, tablename, properties)
             else:
-                cls.declare_all_fields(registry, namespace, bases, properties)
+                cls.declare_all_fields(registry, namespace, bases, properties,
+                                       transformation_properties)
 
             bases.append(registry.registry_base)
             cls.insert_in_bases(registry, namespace, bases,
@@ -659,6 +688,8 @@ class Model:
             properties = {}
             registry.add_in_registry(namespace, bases[0])
             registry.loaded_namespaces[namespace] = bases[0]
+            cls.call_plugins('after_model_construction', bases[0], namespace,
+                             transformation_properties)
 
         return bases, properties
 
@@ -726,8 +757,12 @@ class Model:
         """
         registry.loaded_namespaces_first_step = {}
         registry.loaded_views = {}
+
+        # TODO TO remove
         registry.caches = {}
         registry.events = {}
+
+        cls.plugins = get_model_plugins(registry)
 
         # get all the information to create a namespace
         for namespace in registry.loaded_registries['Model_names']:

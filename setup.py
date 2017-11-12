@@ -113,6 +113,7 @@ setup(
         ],
         'anyblok.init': [],
         'anyblok_configuration.post_load': [],
+        'anyblok.model.plugin': [],
     },
     extras_require={},
 )
