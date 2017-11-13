@@ -26,23 +26,13 @@ Configuration.applications.update({
     'createdb': {
         'prog': 'AnyBlok create database, version %r' % version,
         'description': "Create a database and install bloks to populate it",
-        'configuration_groups': [
-            'config',
-            'database',
-            'unittest',
-            'dramatiq-broker',
-        ],
+        'configuration_groups': ['config', 'database', 'unittest'],
     },
     'updatedb': {
         'prog': 'AnyBlok update database, version %r' % version,
         'description': ("Update a database: install, upgrade or uninstall the "
                         "bloks "),
-        'configuration_groups': [
-            'config',
-            'database',
-            'unittest',
-            'dramatiq-broker',
-        ],
+        'configuration_groups': ['config', 'database', 'unittest'],
     },
     'nose': {
         'prog': 'AnyBlok nose, version %r' % version,

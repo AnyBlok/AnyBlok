@@ -264,7 +264,7 @@ class Configuration:
     applications = {
         'default': {
             'description': "[options] -- other arguments",
-            'configuration_groups': ['config', 'database', 'dramatiq-broker'],
+            'configuration_groups': ['config', 'database'],
         },
     }
 
