@@ -118,6 +118,7 @@ setup(
             'table_mapper=anyblok.model.table_and_mapper:TableMapperPlugin',
             'event=anyblok.model.event:EventPlugin',
             'sqla-event=anyblok.model.event:SQLAlchemyEventPlugin',
+            'cache=anyblok.model.cache:CachePlugin',
         ],
     },
     extras_require={},

@@ -15,7 +15,7 @@ from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper, synonym
 from sqlalchemy import inspection
-from anyblok.common import TypeList, apply_cache
+from anyblok.common import TypeList
 from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
 from anyblok.mapper import ModelAttribute
@@ -256,8 +256,6 @@ class Model:
         new_type_properties = {}
         for attr in dir(base):
             method = getattr(base, attr)
-            new_type_properties.update(apply_cache(
-                attr, method, registry, namespace, base, properties))
             cls.call_plugins(
                 'transform_base_attribute',
                 attr, method, namespace, base, properties, new_type_properties)
@@ -551,9 +549,6 @@ class Model:
         """
         registry.loaded_namespaces_first_step = {}
         registry.loaded_views = {}
-
-        # TODO TO remove
-        registry.caches = {}
 
         cls.plugins = get_model_plugins(registry)
 

@@ -12,9 +12,10 @@ from anyblok.mapper import ModelAttribute
 class EventPlugin(ModelPluginBase):
 
     def __init__(self, registry):
-        self.registry = registry
         if not hasattr(registry, 'events'):
             registry.events = {}
+
+        super(EventPlugin, self).__init__(registry)
 
     def transform_base_attribute(self, attr, method, namespace, base,
                                  transformation_properties,
