@@ -244,26 +244,6 @@ class Model:
         field.update_properties(registry, namespace, name, properties)
 
     @classmethod
-    def apply_sqlalchemy_event_listner(cls, attr, method, registry, namespace,
-                                       base, properties):
-        """declare in the registry the sqlalchemy event
-
-        :param attr: name of the attibute
-        :param method: method pointer
-        :param registry: the current  registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param properties: the properties of the model
-        """
-        if not hasattr(method, 'is_an_sqlalchemy_event_listener'):
-            return
-        elif method.is_an_sqlalchemy_event_listener is True:
-            registry._sqlalchemy_known_events.append(
-                (method.sqlalchemy_listener,
-                 namespace,
-                 ModelAttribute(namespace, attr)))
-
-    @classmethod
     def transform_base(cls, registry, namespace, base, properties):
         """ Detect specific declaration which must define by registry
 
@@ -278,8 +258,6 @@ class Model:
             method = getattr(base, attr)
             new_type_properties.update(apply_cache(
                 attr, method, registry, namespace, base, properties))
-            cls.apply_sqlalchemy_event_listner(
-                attr, method, registry, namespace, base, properties)
             cls.call_plugins(
                 'transform_base_attribute',
                 attr, method, namespace, base, properties, new_type_properties)

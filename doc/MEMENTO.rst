@@ -1359,6 +1359,7 @@ This a hook to add new feature in Model, this is already use for:
 * hybrid_method
 * table and mapper args
 * event
+* Sqlalchemy event
 
 Start by implement the plugin::
 
