@@ -115,6 +115,7 @@ setup(
         'anyblok_configuration.post_load': [],
         'anyblok.model.plugin': [
             'hybrid_method=anyblok.model.hybrid_method:HybridMethodPlugin',
+            'table_mapper=anyblok.model.table_and_mapper:TableMapperPlugin',
         ],
     },
     extras_require={},

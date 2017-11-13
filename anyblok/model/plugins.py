@@ -25,10 +25,11 @@ class ModelPluginBase:
     def __init__(self, registry):
         self.registry = registry
 
-    def initialisation_tranformation_properties(self,
+    def initialisation_tranformation_properties(self, properties,
                                                 transformation_properties):
         """ Initialise the transform properties
 
+        :param properties: the properties declared in the model
         :param new_type_properties: param to add in a new base if need
         """
 

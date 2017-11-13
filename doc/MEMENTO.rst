@@ -1357,6 +1357,7 @@ Use the plugin::
 This a hook to add new feature in Model, this is already use for:
 
 * hybrid_method
+* table and mapper args
 
 Start by implement the plugin::
 

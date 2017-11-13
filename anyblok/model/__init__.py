@@ -19,18 +19,10 @@ from anyblok.common import TypeList, apply_cache
 from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
 from anyblok.mapper import ModelAttribute
-from sqlalchemy import ForeignKeyConstraint
 from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
 from .plugins import get_model_plugins
-
-
-class ModelException(Exception):
-    """Exception for Model declaration"""
-
-
-class ViewException(ModelException):
-    """Exception for View declaration"""
+from .exceptions import ModelException, ViewException
 
 
 class CreateView(DDLElement):
@@ -301,40 +293,6 @@ class Model:
                  ModelAttribute(namespace, attr)))
 
     @classmethod
-    def detect_table_and_mapper_args(cls, registry, namespace, base,
-                                     properties):
-        """Test if define_table/mapper_args are in the base, and call them
-        save the value in the properties
-
-        if  __table/mapper_args\_\_ are in the base then raise ModelException
-
-        :param registry: the current registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param properties: the properties of the model
-        :exception: ModelException
-        """
-        if hasattr(base, '__table_args__'):
-            raise ModelException(
-                "'__table_args__' attribute is forbidden, on Model : %r (%r)."
-                "Use the class method 'define_table_args' to define the value "
-                "allow anyblok to fill his own '__table_args__' attribute" % (
-                    namespace, base.__table_args__))
-
-        if hasattr(base, '__mapper_args__'):
-            raise ModelException(
-                "'__mapper_args__' attribute is forbidden, on Model : %r (%r)."
-                "Use the class method 'define_mapper_args' to define the "
-                "value allow anyblok to fill his own '__mapper_args__' "
-                "attribute" % (namespace, base.__mapper_args__))
-
-        if hasattr(base, 'define_table_args'):
-            properties['table_args'] = True
-
-        if hasattr(base, 'define_mapper_args'):
-            properties['mapper_args'] = True
-
-    @classmethod
     def transform_base(cls, registry, namespace, base, properties):
         """ Detect specific declaration which must define by registry
 
@@ -357,8 +315,6 @@ class Model:
                 'transform_base_attribute',
                 attr, method, namespace, base, properties, new_type_properties)
 
-        cls.detect_table_and_mapper_args(
-            registry, namespace, base, properties)
         cls.call_plugins(
             'transform_base', namespace, base, properties, new_type_properties)
 
@@ -366,51 +322,6 @@ class Model:
             return [type(namespace, (), new_type_properties), base]
 
         return [base]
-
-    @classmethod
-    def apply_table_and_mapper_args(cls, base, registry, namespace, bases,
-                                    transformation_properties, properties):
-        """ Create overwrite to define table and mapper args to define some
-        options for SQLAlchemy
-
-        :param registry: the current registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param properties: assembled attributes of the namespace
-        """
-        table_args = tuple(properties['add_in_table_args'])
-        if table_args:
-            def define_table_args(cls_):
-                if cls_.__registry_name__ == namespace:
-                    res = super(base, cls_).define_table_args()
-                    fks = [x.name for x in res
-                           if isinstance(x, ForeignKeyConstraint)]
-
-                    t_args = [x for x in table_args
-                              if (not isinstance(x, ForeignKeyConstraint) or
-                                  x.name not in fks)]
-
-                    return res + tuple(t_args)
-
-                return ()
-
-            base.define_table_args = classmethod(define_table_args)
-            transformation_properties['table_args'] = True
-
-        if transformation_properties['table_args']:
-
-            def __table_args__(cls_):
-                return cls_.define_table_args()
-
-            base.__table_args__ = declared_attr(__table_args__)
-
-        if transformation_properties['mapper_args']:
-
-            def __mapper_args__(cls_):
-                return cls_.define_mapper_args()
-
-            base.__mapper_args__ = declared_attr(__mapper_args__)
 
     @classmethod
     def insert_in_bases(cls, registry, namespace, bases,
@@ -425,8 +336,6 @@ class Model:
         """
         new_base = type(namespace, (), {})
         bases.insert(0, new_base)
-        cls.apply_table_and_mapper_args(new_base, registry, namespace, bases,
-                                        transformation_properties, properties)
         cls.call_plugins('insert_in_bases', new_base, namespace,
                          properties, transformation_properties)
 
@@ -584,17 +493,14 @@ class Model:
             return [registry.loaded_namespaces[namespace]], {}
 
         if transformation_properties is None:
-            transformation_properties = {
-                'table_args': False,
-                'mapper_args': False,
-            }
-            cls.call_plugins('initialisation_tranformation_properties',
-                             transformation_properties)
+            transformation_properties = {}
 
         bases = TypeList(cls, registry, namespace, transformation_properties)
         ns = registry.loaded_registries[namespace]
         properties = ns['properties'].copy()
-        properties['add_in_table_args'] = []
+
+        cls.call_plugins('initialisation_tranformation_properties',
+                         properties, transformation_properties)
 
         if 'is_sql_view' not in properties:
             properties['is_sql_view'] = False

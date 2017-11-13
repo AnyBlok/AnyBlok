@@ -11,10 +11,11 @@ from .plugins import ModelPluginBase
 
 class HybridMethodPlugin(ModelPluginBase):
 
-    def initialisation_tranformation_properties(self,
+    def initialisation_tranformation_properties(self, properties,
                                                 transformation_properties):
         """ Initialise the transform properties: hybrid_method
 
+        :param properties: the properties declared in the model
         :param new_type_properties: param to add in a new base if need
         """
         if 'hybrid_method' not in transformation_properties:
