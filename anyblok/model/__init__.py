@@ -97,6 +97,7 @@ def get_fields(base, without_relationship=False, only_relationship=False):
 
 
 @Declarations.add_declaration_type(isAnEntry=True,
+                                   pre_assemble='pre_assemble_callback',
                                    assemble='assemble_callback',
                                    initialize='initialize_callback')
 class Model:
@@ -134,15 +135,17 @@ class Model:
         the table. But they must have the same column.
     """
 
-    """Plugins to apply on Model to assemble all the Model"""
-    plugins = []
-
     @classmethod
-    def call_plugins(cls, method, *args, **kwargs):
-        """call the method on each plugin"""
-        for plugin in cls.plugins:
-            if hasattr(plugin, method):
-                getattr(plugin, method)(*args, **kwargs)
+    def pre_assemble_callback(cls, registry):
+        plugins = get_model_plugins(registry)
+
+        def call_plugins(method, *args, **kwargs):
+            """call the method on each plugin"""
+            for plugin in plugins:
+                if hasattr(plugin, method):
+                    getattr(plugin, method)(*args, **kwargs)
+
+        registry.call_plugins = call_plugins
 
     @classmethod
     def register(self, parent, name, cls_, **kwargs):
@@ -237,8 +240,8 @@ class Model:
                 registry, namespace, name, properties)
             properties['hybrid_property_columns'].append(name)
 
-        cls.call_plugins('declare_field', name, field, namespace,
-                         properties, transformation_properties)
+        registry.call_plugins('declare_field', name, field, namespace,
+                              properties, transformation_properties)
 
         properties['loaded_columns'].append(name)
         field.update_properties(registry, namespace, name, properties)
@@ -256,11 +259,11 @@ class Model:
         new_type_properties = {}
         for attr in dir(base):
             method = getattr(base, attr)
-            cls.call_plugins(
+            registry.call_plugins(
                 'transform_base_attribute',
                 attr, method, namespace, base, properties, new_type_properties)
 
-        cls.call_plugins(
+        registry.call_plugins(
             'transform_base', namespace, base, properties, new_type_properties)
 
         if new_type_properties:
@@ -281,8 +284,8 @@ class Model:
         """
         new_base = type(namespace, (), {})
         bases.insert(0, new_base)
-        cls.call_plugins('insert_in_bases', new_base, namespace,
-                         properties, transformation_properties)
+        registry.call_plugins('insert_in_bases', new_base, namespace,
+                              properties, transformation_properties)
 
     @classmethod
     def raise_if_has_sqlalchemy(cls, base):
@@ -444,8 +447,8 @@ class Model:
         ns = registry.loaded_registries[namespace]
         properties = ns['properties'].copy()
 
-        cls.call_plugins('initialisation_tranformation_properties',
-                         properties, transformation_properties)
+        registry.call_plugins('initialisation_tranformation_properties',
+                              properties, transformation_properties)
 
         if 'is_sql_view' not in properties:
             properties['is_sql_view'] = False
@@ -480,8 +483,8 @@ class Model:
             properties = {}
             registry.add_in_registry(namespace, bases[0])
             registry.loaded_namespaces[namespace] = bases[0]
-            cls.call_plugins('after_model_construction', bases[0], namespace,
-                             transformation_properties)
+            registry.call_plugins('after_model_construction', bases[0],
+                                  namespace, transformation_properties)
 
         return bases, properties
 
@@ -549,8 +552,6 @@ class Model:
         """
         registry.loaded_namespaces_first_step = {}
         registry.loaded_views = {}
-
-        cls.plugins = get_model_plugins(registry)
 
         # get all the information to create a namespace
         for namespace in registry.loaded_registries['Model_names']:

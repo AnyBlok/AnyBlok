@@ -80,11 +80,13 @@ class Declarations:
 
     @classmethod
     def add_declaration_type(cls, cls_=None, isAnEntry=False,
-                             assemble=None, initialize=None, unload=None):
+                             pre_assemble=None, assemble=None,
+                             initialize=None, unload=None):
         """ Add a declaration type
 
         :param cls_: The ``class`` object to add as a world of the MetaData
         :param isAnEntry: if true the type will be assembled by the registry
+        :param pre_assemble: name of the method callback to call (classmethod)
         :param assemble: name of the method callback to call (classmethod)
         :param initialize: name of the method callback to call (classmethod)
         :param unload: name of the method callback to call (classmethod)
@@ -105,7 +107,11 @@ class Declarations:
             setattr(cls, name, self)
 
             if isAnEntry:
-                assemble_callback = initialize_callback = None
+                pre_assemble_callback = assemble_callback = None
+                initialize_callback = None
+                if pre_assemble and hasattr(self, pre_assemble):
+                    pre_assemble_callback = getattr(self, pre_assemble)
+
                 if assemble and hasattr(self, assemble):
                     assemble_callback = getattr(self, assemble)
 
@@ -113,7 +119,9 @@ class Declarations:
                     initialize_callback = getattr(self, initialize)
 
                 RegistryManager.declare_entry(
-                    name, assemble_callback=assemble_callback,
+                    name,
+                    pre_assemble_callback=pre_assemble_callback,
+                    assemble_callback=assemble_callback,
                     initialize_callback=initialize_callback)
 
             # All declaration type can need to be unload declarated values

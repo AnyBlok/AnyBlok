@@ -67,6 +67,7 @@ class RegistryManager:
     loaded_bloks = {}
     declared_entries = []
     declared_cores = []
+    callback_pre_assemble_entries = {}
     callback_assemble_entries = {}
     callback_initialize_entries = {}
     callback_unload_entries = {}
@@ -165,7 +166,9 @@ class RegistryManager:
             cls.declared_cores.remove(core)
 
     @classmethod
-    def declare_entry(cls, entry, assemble_callback=None,
+    def declare_entry(cls, entry,
+                      pre_assemble_callback=None,
+                      assemble_callback=None,
                       initialize_callback=None):
         """ Add new entry in the declared entries
 
@@ -199,6 +202,9 @@ class RegistryManager:
         if entry not in cls.declared_entries:
             cls.declared_entries.append(entry)
 
+            if pre_assemble_callback:
+                cls.callback_pre_assemble_entries[entry] = pre_assemble_callback
+
             if assemble_callback:
                 cls.callback_assemble_entries[entry] = assemble_callback
 
@@ -218,6 +224,9 @@ class RegistryManager:
     def undeclare_entry(cls, entry):
         if entry in cls.declared_entries:
             cls.declared_entries.remove(entry)
+
+            if entry in cls.callback_pre_assemble_entries:
+                del cls.callback_pre_assemble_entries[entry]
 
             if entry in cls.callback_assemble_entries:
                 del cls.callback_assemble_entries[entry]
@@ -415,6 +424,7 @@ class Registry:
         self.Session = None
         self.nb_query_bases = self.nb_session_bases = 0
         self.blok_list_is_loaded = False
+        self.pre_assemble_entries()
         self.load()
 
     def init_bind(self):
@@ -1003,6 +1013,12 @@ class Registry:
             if entry in RegistryManager.callback_assemble_entries:
                 logger.info('Assemble %r entry' % entry)
                 RegistryManager.callback_assemble_entries[entry](self)
+
+    def pre_assemble_entries(self):
+        for entry in RegistryManager.declared_entries:
+            if entry in RegistryManager.callback_pre_assemble_entries:
+                logger.info('Pre assemble %r entry' % entry)
+                RegistryManager.callback_pre_assemble_entries[entry](self)
 
     def apply_model_schema_on_table(self, blok2install):
         # replace the engine by the session.connection for bind attribute
