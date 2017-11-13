@@ -269,6 +269,26 @@ class Configuration:
     }
 
     @classmethod
+    def add_configuration_groups(cls, application, new_groups):
+        """Add configuration_groups to an existing application"""
+        if not new_groups:
+            return
+
+        if application not in cls.applications:
+            return
+
+        app = cls.applications[application]
+        if 'configuration_groups' not in app:
+            app['configuration_groups'] = []
+            app['configuration_groups'].extend(
+                cls.applications['default']['configuration_groups'])
+
+        cg = app['configuration_groups']
+        for new_group in new_groups:
+            if new_group not in cg:
+                cg.append(new_group)
+
+    @classmethod
     def init_groups_for(cls, group, part, label):
         if part not in cls.groups:
             cls.groups[part] = {group: []}
