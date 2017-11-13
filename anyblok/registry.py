@@ -487,14 +487,20 @@ class Registry:
 
     def listen_sqlalchemy_known_event(self):
         for e, namespace, method in self._sqlalchemy_known_events:
+            if hasattr(method, 'get_attribute'):
+                method = method.get_attribute(self)
+
             event.listen(e.mapper(self, namespace, usehybrid=False), e.event,
-                         method.get_attribute(self), *e.args, **e.kwargs)
+                         method, *e.args, **e.kwargs)
 
     def remove_sqlalchemy_known_event(self):
         for e, namespace, method in self._sqlalchemy_known_events:
             try:
+                if hasattr(method, 'get_attribute'):
+                    method = method.get_attribute(self)
+
                 event.remove(e.mapper(self, namespace), e.event,
-                             method.get_attribute(self))
+                             method)
             except InvalidRequestError:
                 pass
 

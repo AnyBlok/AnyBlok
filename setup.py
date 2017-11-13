@@ -119,6 +119,7 @@ setup(
             'event=anyblok.model.event:EventPlugin',
             'sqla-event=anyblok.model.event:SQLAlchemyEventPlugin',
             'cache=anyblok.model.cache:CachePlugin',
+            'field_datetime=anyblok.model.field_datetime:AutoUpdatePlugin',
         ],
     },
     extras_require={},

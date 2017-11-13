@@ -31,6 +31,8 @@ Futur
 * [REF] **cache** and **classmethod_cache** become an ``anyblok.model.plugin``
 * [IMP] **Configuration.add_configuration_group** need to add a new group for
   a console script
+* [IMP] add new ``anyblok.model.plugin`` to update datetime columns when the
+  auto_update is True
 
 0.9.10 (2017-09-23)
 -------------------

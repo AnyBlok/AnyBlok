@@ -587,6 +587,15 @@ Other attribute for ``UUID``:
 |                | falls back to a BINARY(16) or a CHAR(32)                   |
 +----------------+------------------------------------------------------------+
 
+Other attribute for ``DateTime``:
+
++-----------------+-----------------------------------------------------------+
+| Param           | Description                                               |
++=================+===========================================================+
+| ``auto_update`` | Boolean (default: **False**) if True the value will be    |
+|                 | update when the session will be flush                     |
++-----------------+-----------------------------------------------------------+
+
 RelationShip
 ------------
 

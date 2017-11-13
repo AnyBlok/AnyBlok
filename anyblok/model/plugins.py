@@ -33,15 +33,15 @@ class ModelPluginBase:
         :param new_type_properties: param to add in a new base if need
         """
 
-    def declare_field(self, name, field, namespace,
-                      transformation_properties,
-                      new_type_properties):
+    def declare_field(self, name, field, namespace, properties,
+                      transformation_properties):
         """Declare a field in the model
 
         :param name: field name
         :param field: field instance
         :param namespace: the namespace of the model
-        :param transformation_properties: the properties of the model
+        :param properties: the properties of the model
+        :param transformation_properties: the transformation properties
         """
 
     def transform_base_attribute(self, attr, method, namespace, base,
