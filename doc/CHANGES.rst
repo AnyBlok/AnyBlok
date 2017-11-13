@@ -26,6 +26,7 @@ Futur
 * [ADD]: Entry point ``anyblok.model.plugin`` to add behaviour on the model
 * [REF]: **hybrid_method** become an ``anyblok.model.plugin``
 * [REF]: adapter of mapper_args and table_args become an ``anyblok.model.plugin``
+* [REF]: **event** become an ``anyblok.model.plugin``
 
 0.9.10 (2017-09-23)
 -------------------

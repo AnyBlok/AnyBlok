@@ -244,35 +244,6 @@ class Model:
         field.update_properties(registry, namespace, name, properties)
 
     @classmethod
-    def apply_event_listner(cls, attr, method, registry, namespace, base,
-                            properties):
-        """ Find the event listener methods in the base to save the
-        namespace and the method in the registry
-
-        :param attr: name of the attibute
-        :param method: method pointer
-        :param registry: the current  registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param properties: the properties of the model
-        """
-        if not hasattr(method, 'is_an_event_listener'):
-            return
-        elif method.is_an_event_listener is True:
-            model = method.model
-            event = method.event
-            events = registry.events
-            if model not in events:
-                events[model] = {event: []}
-            elif event not in events[model]:
-                events[model][event] = []
-
-            val = (namespace, attr)
-            ev = events[model][event]
-            if val not in ev:
-                ev.append(val)
-
-    @classmethod
     def apply_sqlalchemy_event_listner(cls, attr, method, registry, namespace,
                                        base, properties):
         """declare in the registry the sqlalchemy event
@@ -307,8 +278,6 @@ class Model:
             method = getattr(base, attr)
             new_type_properties.update(apply_cache(
                 attr, method, registry, namespace, base, properties))
-            cls.apply_event_listner(
-                attr, method, registry, namespace, base, properties)
             cls.apply_sqlalchemy_event_listner(
                 attr, method, registry, namespace, base, properties)
             cls.call_plugins(
@@ -607,7 +576,6 @@ class Model:
 
         # TODO TO remove
         registry.caches = {}
-        registry.events = {}
 
         cls.plugins = get_model_plugins(registry)
 
