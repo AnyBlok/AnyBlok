@@ -12,8 +12,13 @@
 CHANGELOG
 =========
 
-Futur
------
+0.10.1 (2017-10-14)
+-------------------
+
+[FIX] change log
+
+0.10.0 (2017-10-14)
+-------------------
 
 * [ADD] ``anyblok_configuration.post_load`` to initialize some services in 
   function of configuration
