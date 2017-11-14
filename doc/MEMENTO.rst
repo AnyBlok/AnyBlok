@@ -593,7 +593,7 @@ Other attribute for ``DateTime``:
 | Param           | Description                                               |
 +=================+===========================================================+
 | ``auto_update`` | Boolean (default: **False**) if True the value will be    |
-|                 | update when the session will be flush                     |
+|                 | update when the session is flushed                        |
 +-----------------+-----------------------------------------------------------+
 
 RelationShip

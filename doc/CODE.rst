@@ -65,8 +65,6 @@ anyblok.model.plugins module
 .. autoclass:: ModelPluginBase
     :members:
     :noindex:
-    :show-inheritance:
-    :inherited-members:
 
 Plugin: hybrid_method
 ~~~~~~~~~~~~~~~~~~~~~
@@ -77,7 +75,6 @@ Plugin: hybrid_method
     :members:
     :noindex:
     :show-inheritance:
-    :inherited-members:
 
 Plugin: table_mapper
 ~~~~~~~~~~~~~~~~~~~~
@@ -88,7 +85,6 @@ Plugin: table_mapper
     :members:
     :noindex:
     :show-inheritance:
-    :inherited-members:
 
 Plugin: event / SQLAlchemy event
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,13 +95,11 @@ Plugin: event / SQLAlchemy event
     :members:
     :noindex:
     :show-inheritance:
-    :inherited-members:
 
 .. autoclass:: SQLAlchemyEventPlugin
     :members:
     :noindex:
     :show-inheritance:
-    :inherited-members:
 
 Plugin: cache
 ~~~~~~~~~~~~~
@@ -116,7 +110,6 @@ Plugin: cache
     :members:
     :noindex:
     :show-inheritance:
-    :inherited-members:
 
 Plugin: field datetime
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -127,7 +120,6 @@ Plugin: field datetime
     :members:
     :noindex:
     :show-inheritance:
-    :inherited-members:
 
 
 anyblok.mapper module
