@@ -587,6 +587,15 @@ Other attribute for ``UUID``:
 |                | falls back to a BINARY(16) or a CHAR(32)                   |
 +----------------+------------------------------------------------------------+
 
+Other attribute for ``DateTime``:
+
++-----------------+-----------------------------------------------------------+
+| Param           | Description                                               |
++=================+===========================================================+
+| ``auto_update`` | Boolean (default: **False**) if True the value will be    |
+|                 | update when the session will be flush                     |
++-----------------+-----------------------------------------------------------+
+
 RelationShip
 ------------
 
@@ -1349,3 +1358,46 @@ Add the plugin definition in the configuration::
 Use the plugin::
 
     plugin = Configuration.get('plugin_name')
+
+
+**anyblok.model.plugin**
+------------------------
+
+This a hook to add new feature in Model, this is already use for:
+
+* hybrid_method
+* table and mapper args
+* event
+* Sqlalchemy event
+* cache / classmethod_cache
+
+Start by implement the plugin::
+
+    from anyblok.model.plugins import 
+
+    class MyPlugin(ModelPluginBase):
+        ...
+
+
+.. automodule:: anyblok.model.plugins
+
+.. autoclass:: ModelPluginBase
+    :members:
+    :noindex:
+    :show-inheritance:
+    :inherited-members:
+
+
+Add the Plugin in the setup::
+
+    setup(
+        ...
+        entry_points={
+            ...
+            'anyblok.model.plugin': [
+                'myplugin=path:MyPlugin',
+            ],
+            ...
+        },
+        ...
+    )

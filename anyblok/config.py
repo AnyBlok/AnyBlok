@@ -2,6 +2,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -268,6 +269,26 @@ class Configuration:
     }
 
     @classmethod
+    def add_configuration_groups(cls, application, new_groups):
+        """Add configuration_groups to an existing application"""
+        if not new_groups:
+            return
+
+        if application not in cls.applications:
+            return
+
+        app = cls.applications[application]
+        if 'configuration_groups' not in app:
+            app['configuration_groups'] = []
+            app['configuration_groups'].extend(
+                cls.applications['default']['configuration_groups'])
+
+        cg = app['configuration_groups']
+        for new_group in new_groups:
+            if new_group not in cg:
+                cg.append(new_group)
+
+    @classmethod
     def init_groups_for(cls, group, part, label):
         if part not in cls.groups:
             cls.groups[part] = {group: []}
@@ -392,10 +413,10 @@ class Configuration:
                 cls.configuration[opt].set(value)
             else:
                 cls.add_argument(opt, value, type(value))
-        except:
+        except Exception as e:
             logger.exception("Error durring set the value %r on the option "
                              "%r" % (value, opt))
-            raise
+            raise e
 
     @classmethod
     def update(cls, *args, **kwargs):
@@ -540,8 +561,9 @@ class Configuration:
             description.update(cls.applications['default'])
 
         description.update(kwargs)
-        _configuration_groups = description.pop('configuration_groups',
-                                                ['config', 'database'])
+        _configuration_groups = description.pop(
+            'configuration_groups',
+            cls.applications['default']['configuration_groups'])
         configuration_groups = set(configuration_groups or []).union(
             _configuration_groups)
         configuration_groups.add('plugins')
@@ -846,3 +868,9 @@ def add_logging(group):
                        help="Relative path of the logging config file (yaml). "
                             "Only if the logging and json config file doesn't "
                             "filled")
+
+
+@Configuration.add('preload', label="Preload")
+def define_preload_option(group):
+    group.add_argument('--databases', dest='db_names', nargs="+",
+                       help='List of the database allow to be load')

@@ -20,25 +20,25 @@ from unittest import skipIf
 try:
     import cryptography  # noqa
     has_cryptography = True
-except:
+except Exception:
     has_cryptography = False
 
 try:
     import passlib  # noqa
     has_passlib = True
-except:
+except Exception:
     has_passlib = False
 
 try:
     import colour  # noqa
     has_colour = True
-except:
+except Exception:
     has_colour = False
 
 try:
     import furl  # noqa
     has_furl = True
-except:
+except Exception:
     has_furl = False
 
 
@@ -574,6 +574,63 @@ class TestColumns(DBTestCase):
         self.assertIs(
             Test.query().filter(
                 Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f')).one(), test)
+
+    def test_datetime_without_auto_update_1(self):
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+                id = Integer(primary_key=True)
+                update_at = DateTime()
+                val = String()
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert(val='first add')
+        self.assertIsNone(test.update_at)
+        test.val = 'other'
+        registry.flush()
+        self.assertIsNone(test.update_at)
+
+    def test_datetime_without_auto_update_2(self):
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+                id = Integer(primary_key=True)
+                update_at = DateTime(auto_update=False)
+                val = String()
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert(val='first add')
+        self.assertIsNone(test.update_at)
+        test.val = 'other'
+        registry.flush()
+        self.assertIsNone(test.update_at)
+
+    def test_datetime_with_auto_update(self):
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+                id = Integer(primary_key=True)
+                update_at = DateTime(auto_update=True)
+                val = String()
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert(val='first add')
+        self.assertIsNone(test.update_at)
+        test.val = 'other'
+        registry.flush()
+        self.assertIsNotNone(test.update_at)
 
     def test_interval(self):
         from datetime import timedelta

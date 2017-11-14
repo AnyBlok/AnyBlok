@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -14,22 +15,14 @@ from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper, synonym
 from sqlalchemy import inspection
-from sqlalchemy.ext.hybrid import hybrid_method
-from anyblok.common import TypeList, apply_cache
+from anyblok.common import TypeList
 from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
-from .mapper import ModelAttribute
-from sqlalchemy import ForeignKeyConstraint
+from anyblok.mapper import ModelAttribute
 from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
-
-
-class ModelException(Exception):
-    """Exception for Model declaration"""
-
-
-class ViewException(ModelException):
-    """Exception for View declaration"""
+from .plugins import get_model_plugins
+from .exceptions import ModelException, ViewException
 
 
 class CreateView(DDLElement):
@@ -104,6 +97,7 @@ def get_fields(base, without_relationship=False, only_relationship=False):
 
 
 @Declarations.add_declaration_type(isAnEntry=True,
+                                   pre_assemble='pre_assemble_callback',
                                    assemble='assemble_callback',
                                    initialize='initialize_callback')
 class Model:
@@ -140,6 +134,18 @@ class Model:
         Two models can have the same table name, both models are mapped on
         the table. But they must have the same column.
     """
+
+    @classmethod
+    def pre_assemble_callback(cls, registry):
+        plugins = get_model_plugins(registry)
+
+        def call_plugins(method, *args, **kwargs):
+            """call the method on each plugin"""
+            for plugin in plugins:
+                if hasattr(plugin, method):
+                    getattr(plugin, method)(*args, **kwargs)
+
+        registry.call_plugins = call_plugins
 
     @classmethod
     def register(self, parent, name, cls_, **kwargs):
@@ -194,7 +200,8 @@ class Model:
         RegistryManager.remove_in_register(cls_)
 
     @classmethod
-    def declare_field(self, registry, name, field, namespace, properties):
+    def declare_field(cls, registry, name, field, namespace, properties,
+                      transformation_properties):
         """ Declare the field/column/relationship to put in the properties
         of the model
 
@@ -233,110 +240,11 @@ class Model:
                 registry, namespace, name, properties)
             properties['hybrid_property_columns'].append(name)
 
+        registry.call_plugins('declare_field', name, field, namespace,
+                              properties, transformation_properties)
+
         properties['loaded_columns'].append(name)
         field.update_properties(registry, namespace, name, properties)
-
-    @classmethod
-    def apply_event_listner(cls, attr, method, registry, namespace, base,
-                            properties):
-        """ Find the event listener methods in the base to save the
-        namespace and the method in the registry
-
-        :param attr: name of the attibute
-        :param method: method pointer
-        :param registry: the current  registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param properties: the properties of the model
-        """
-        if not hasattr(method, 'is_an_event_listener'):
-            return
-        elif method.is_an_event_listener is True:
-            model = method.model
-            event = method.event
-            events = registry.events
-            if model not in events:
-                events[model] = {event: []}
-            elif event not in events[model]:
-                events[model][event] = []
-
-            val = (namespace, attr)
-            ev = events[model][event]
-            if val not in ev:
-                ev.append(val)
-
-    @classmethod
-    def apply_sqlalchemy_event_listner(cls, attr, method, registry, namespace,
-                                       base, properties):
-        """declare in the registry the sqlalchemy event
-
-        :param attr: name of the attibute
-        :param method: method pointer
-        :param registry: the current  registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param properties: the properties of the model
-        """
-        if not hasattr(method, 'is_an_sqlalchemy_event_listener'):
-            return
-        elif method.is_an_sqlalchemy_event_listener is True:
-            registry._sqlalchemy_known_events.append(
-                (method.sqlalchemy_listener,
-                 namespace,
-                 ModelAttribute(namespace, attr)))
-
-    @classmethod
-    def detect_hybrid_method(cls, attr, method, registry, namespace, base,
-                             properties):
-        """ Find the sqlalchemy hybrid methods in the base to save the
-        namespace and the method in the registry
-
-        :param attr: name of the attibute
-        :param method: method pointer
-        :param registry: the current registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param properties: the properties of the model
-        """
-        if not hasattr(method, 'is_an_hybrid_method'):
-            return
-        elif method.is_an_hybrid_method is True:
-            if attr not in properties['hybrid_method']:
-                properties['hybrid_method'].append(attr)
-
-    @classmethod
-    def detect_table_and_mapper_args(cls, registry, namespace, base,
-                                     properties):
-        """Test if define_table/mapper_args are in the base, and call them
-        save the value in the properties
-
-        if  __table/mapper_args\_\_ are in the base then raise ModelException
-
-        :param registry: the current registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param properties: the properties of the model
-        :exception: ModelException
-        """
-        if hasattr(base, '__table_args__'):
-            raise ModelException(
-                "'__table_args__' attribute is forbidden, on Model : %r (%r)."
-                "Use the class method 'define_table_args' to define the value "
-                "allow anyblok to fill his own '__table_args__' attribute" % (
-                    namespace, base.__table_args__))
-
-        if hasattr(base, '__mapper_args__'):
-            raise ModelException(
-                "'__mapper_args__' attribute is forbidden, on Model : %r (%r)."
-                "Use the class method 'define_mapper_args' to define the "
-                "value allow anyblok to fill his own '__mapper_args__' "
-                "attribute" % (namespace, base.__mapper_args__))
-
-        if hasattr(base, 'define_table_args'):
-            properties['table_args'] = True
-
-        if hasattr(base, 'define_mapper_args'):
-            properties['mapper_args'] = True
 
     @classmethod
     def transform_base(cls, registry, namespace, base, properties):
@@ -351,101 +259,17 @@ class Model:
         new_type_properties = {}
         for attr in dir(base):
             method = getattr(base, attr)
-            new_type_properties.update(apply_cache(
-                attr, method, registry, namespace, base, properties))
-            cls.apply_event_listner(
-                attr, method, registry, namespace, base, properties)
-            cls.apply_sqlalchemy_event_listner(
-                attr, method, registry, namespace, base, properties)
-            cls.detect_hybrid_method(
-                attr, method, registry, namespace, base, properties)
+            registry.call_plugins(
+                'transform_base_attribute',
+                attr, method, namespace, base, properties, new_type_properties)
 
-        cls.detect_table_and_mapper_args(
-            registry, namespace, base, properties)
+        registry.call_plugins(
+            'transform_base', namespace, base, properties, new_type_properties)
 
         if new_type_properties:
             return [type(namespace, (), new_type_properties), base]
 
         return [base]
-
-    @classmethod
-    def apply_hybrid_method(cls, base, registry, namespace, bases,
-                            transformation_properties, properties):
-        """ Create overload to define the write declaration of sqlalchemy
-        hybrid method, add the overload in the declared bases of the
-        namespace
-
-        :param registry: the current registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param properties: assembled attributes of the namespace
-        """
-        type_properties = {}
-
-        def apply_wrapper(attr):
-
-            def wrapper(self, *args, **kwargs):
-                self_ = self.registry.loaded_namespaces[self.__registry_name__]
-                if self is self_:
-                    return getattr(super(base, self), attr)(
-                        self, *args, **kwargs)
-                else:
-                    return getattr(super(base, self), attr)(
-                        *args, **kwargs)
-
-            setattr(base, attr, hybrid_method(wrapper))
-
-        if transformation_properties['hybrid_method']:
-            for attr in transformation_properties['hybrid_method']:
-                apply_wrapper(attr)
-
-        return type_properties
-
-    @classmethod
-    def apply_table_and_mapper_args(cls, base, registry, namespace, bases,
-                                    transformation_properties, properties):
-        """ Create overwrite to define table and mapper args to define some
-        options for SQLAlchemy
-
-        :param registry: the current registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param properties: assembled attributes of the namespace
-        """
-        table_args = tuple(properties['add_in_table_args'])
-        if table_args:
-            def define_table_args(cls_):
-                if cls_.__registry_name__ == namespace:
-                    res = super(base, cls_).define_table_args()
-                    fks = [x.name for x in res
-                           if isinstance(x, ForeignKeyConstraint)]
-
-                    t_args = [x for x in table_args
-                              if (not isinstance(x, ForeignKeyConstraint) or
-                                  x.name not in fks)]
-
-                    return res + tuple(t_args)
-
-                return ()
-
-            base.define_table_args = classmethod(define_table_args)
-            transformation_properties['table_args'] = True
-
-        if transformation_properties['table_args']:
-
-            def __table_args__(cls_):
-                return cls_.define_table_args()
-
-            base.__table_args__ = declared_attr(__table_args__)
-
-        if transformation_properties['mapper_args']:
-
-            def __mapper_args__(cls_):
-                return cls_.define_mapper_args()
-
-            base.__mapper_args__ = declared_attr(__mapper_args__)
 
     @classmethod
     def insert_in_bases(cls, registry, namespace, bases,
@@ -460,10 +284,8 @@ class Model:
         """
         new_base = type(namespace, (), {})
         bases.insert(0, new_base)
-        cls.apply_hybrid_method(new_base, registry, namespace, bases,
-                                transformation_properties, properties)
-        cls.apply_table_and_mapper_args(new_base, registry, namespace, bases,
-                                        transformation_properties, properties)
+        registry.call_plugins('insert_in_bases', new_base, namespace,
+                              properties, transformation_properties)
 
     @classmethod
     def raise_if_has_sqlalchemy(cls, base):
@@ -569,7 +391,8 @@ class Model:
         bases.extend([x for x in registry.loaded_cores['Base']])
 
     @classmethod
-    def declare_all_fields(cls, registry, namespace, bases, properties):
+    def declare_all_fields(cls, registry, namespace, bases, properties,
+                           transformation_properties):
         # do in the first time the fields and columns
         # because for the relationship on the same model
         # the primary keys must exist before the relationship
@@ -579,12 +402,14 @@ class Model:
             for p, f in get_fields(b,
                                    without_relationship=True).items():
                 cls.declare_field(
-                    registry, p, f, namespace, properties)
+                    registry, p, f, namespace, properties,
+                    transformation_properties)
 
         for b in bases:
             for p, f in get_fields(b, only_relationship=True).items():
                 cls.declare_field(
-                    registry, p, f, namespace, properties)
+                    registry, p, f, namespace, properties,
+                    transformation_properties)
 
     @classmethod
     def apply_existing_table(cls, registry, namespace, tablename, properties):
@@ -616,16 +441,14 @@ class Model:
             return [registry.loaded_namespaces[namespace]], {}
 
         if transformation_properties is None:
-            transformation_properties = {
-                'hybrid_method': [],
-                'table_args': False,
-                'mapper_args': False,
-            }
+            transformation_properties = {}
 
         bases = TypeList(cls, registry, namespace, transformation_properties)
         ns = registry.loaded_registries[namespace]
         properties = ns['properties'].copy()
-        properties['add_in_table_args'] = []
+
+        registry.call_plugins('initialisation_tranformation_properties',
+                              properties, transformation_properties)
 
         if 'is_sql_view' not in properties:
             properties['is_sql_view'] = False
@@ -642,7 +465,8 @@ class Model:
                 cls.apply_existing_table(
                     registry, namespace, tablename, properties)
             else:
-                cls.declare_all_fields(registry, namespace, bases, properties)
+                cls.declare_all_fields(registry, namespace, bases, properties,
+                                       transformation_properties)
 
             bases.append(registry.registry_base)
             cls.insert_in_bases(registry, namespace, bases,
@@ -659,6 +483,8 @@ class Model:
             properties = {}
             registry.add_in_registry(namespace, bases[0])
             registry.loaded_namespaces[namespace] = bases[0]
+            registry.call_plugins('after_model_construction', bases[0],
+                                  namespace, transformation_properties)
 
         return bases, properties
 
@@ -726,8 +552,6 @@ class Model:
         """
         registry.loaded_namespaces_first_step = {}
         registry.loaded_views = {}
-        registry.caches = {}
-        registry.events = {}
 
         # get all the information to create a namespace
         for namespace in registry.loaded_registries['Model_names']:

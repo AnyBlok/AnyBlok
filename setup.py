@@ -112,6 +112,15 @@ setup(
             'anyblok-bloks=anyblok.plugins:AnyBlokPlugin',
         ],
         'anyblok.init': [],
+        'anyblok_configuration.post_load': [],
+        'anyblok.model.plugin': [
+            'hybrid_method=anyblok.model.hybrid_method:HybridMethodPlugin',
+            'table_mapper=anyblok.model.table_and_mapper:TableMapperPlugin',
+            'event=anyblok.model.event:EventPlugin',
+            'sqla-event=anyblok.model.event:SQLAlchemyEventPlugin',
+            'cache=anyblok.model.cache:CachePlugin',
+            'field_datetime=anyblok.model.field_datetime:AutoUpdatePlugin',
+        ],
     },
     extras_require={},
 )

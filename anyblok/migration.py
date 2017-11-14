@@ -54,7 +54,7 @@ class MigrationReport:
             for column in columns:
                 table.column(column)
             return True
-        except:
+        except Exception:
             return False
 
     def can_remove_constraints(self, name):

@@ -394,6 +394,10 @@ class DateTime(Column):
     """
     sqlalchemy_type = DateTimeType
 
+    def __init__(self, *args, **kwargs):
+        self.auto_update = kwargs.pop('auto_update', False)
+        super(DateTime, self).__init__(*args, **kwargs)
+
     def setter_format_value(self, value):
         value = convert_string_to_datetime(value)
         if value is not None:

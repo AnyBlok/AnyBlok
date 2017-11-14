@@ -12,42 +12,64 @@
 CHANGELOG
 =========
 
+Futur
+-----
+
+* [ADD] ``anyblok_configuration.post_load`` to initialize some services in 
+  function of configuration
+* [REF] Update configuration groups to add ``dramatiq-broker`` by default. 
+  This configuration groups is filled by **anyblok_dramatiq** package
+* [FIX] when the applications configuration has not ``configuration_groups``
+  then the configuration use the ``configuration_groups`` of the default
+  application
+* [ADD] Add configuration group ``preload`` definition, but not used 
+* [ADD] Entry point ``anyblok.model.plugin`` to add behaviour on the model
+* [REF] **hybrid_method** become an ``anyblok.model.plugin``
+* [REF] adapter of mapper_args and table_args become an ``anyblok.model.plugin``
+* [REF] **event** become an ``anyblok.model.plugin``
+* [REF] **sqlachemy event** become an ``anyblok.model.plugin``
+* [REF] **cache** and **classmethod_cache** become an ``anyblok.model.plugin``
+* [IMP] **Configuration.add_configuration_group** need to add a new group for
+  a console script
+* [IMP] add new ``anyblok.model.plugin`` to update datetime columns when the
+  auto_update is True
+
 0.9.10 (2017-09-23)
 -------------------
 
-* FIX: type ``Paramater`` => ``Parameter``
-* IMP: add the the author in autodoc
-* IMP: in the script blok the exclude and include model can use ``.*`` to take
+* [FIX] type ``Paramater`` => ``Parameter``
+* [IMP] add the the author in autodoc
+* [IMP] in the script blok the exclude and include model can use ``.*`` to take
   children in the namespace
-* FIX: anyblok_doc with UML, don 't make agregation when the model doesn't 
+* [FIX] anyblok_doc with UML, don 't make agregation when the model doesn't 
   exist
 
 0.9.9 (2017-09-19)
 ------------------
 
-* FIX: add logo in the MANIFEST.in
+* [FIX]: add logo in the MANIFEST.in
 
 0.9.8 (2017-09-19)
 ------------------
 
-* IMP: fields_description add remote_name
-* Update doc, add foreign_key_option  and unique for Many2One
-* IMP: add ``expire_all`` and ``expunge`` registry methods, expire all the
+* [IMP] fields_description add remote_name
+* [Update] doc, add foreign_key_option  and unique for Many2One
+* [IMP] add ``expire_all`` and ``expunge`` registry methods, expire all the
   instance in the session
-* IMP: add ``expunge`` method on the instance
-* FIX: expire attribute must use also all the fields which come from
+* [IMP] add ``expunge`` method on the instance
+* FIX]: expire attribute must use also all the fields which come from
   polymorphic model
-* FIX: if ondelete=cascade in foreign keu options, then the many2one force
+* [FIX] if ondelete=cascade in foreign keu options, then the many2one force
   the delete directely in the session
-* FIX: delete method can be also be que session.query, mapping.remove can
+* [FIX] delete method can be also be que session.query, mapping.remove can
   use this session.query.delete to remove in case of recursivity
-* IMP: IO.Mapping save the blok name when use the Blok.import_file method
-* IMP: IO blok overload ``Model.delete`` and ``Query.delete`` to delete mapping
+* [IMP] IO.Mapping save the blok name when use the Blok.import_file method
+* [IMP] IO blok overload ``Model.delete`` and ``Query.delete`` to delete mapping
   with instances of the Models
-* FIX: create new session make must commit and remove all old session instances
-* IMP: add ``Mapping.clean`` method to clean unlinked mapping
-* IMP: add ``Mapping.remove_for_blokname`` method to remove mapping and obj
-* IMP: add new field in ``Model.System.Blok`` ``author`` and ``logo``
+* [FIX] create new session make must commit and remove all old session instances
+* [IMP] add ``Mapping.clean`` method to clean unlinked mapping
+* [IMP] add ``Mapping.remove_for_blokname`` method to remove mapping and obj
+* [IMP] add new field in ``Model.System.Blok`` ``author`` and ``logo``
 
 0.9.7 (2017-07-03)
 ------------------

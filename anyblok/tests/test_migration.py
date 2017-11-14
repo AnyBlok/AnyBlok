@@ -24,7 +24,7 @@ from copy import deepcopy
 from sqlalchemy.orm import clear_mappers
 
 skipAlembicVersion = (
-    tuple(int(x) for x in alembic.__version__.split('.')) < (0, 9, 6)
+    tuple(int(x) for x in alembic.__version__.split('.')) < (0, 9, 7)
 )
 
 
@@ -96,7 +96,7 @@ class TestMigration(TestCase):
                       'testunique', 'reltab', 'testm2m1', 'testm2m2'):
             try:
                 self.registry.migration.table(table).drop()
-            except:
+            except Exception:
                 pass
 
         self.registry.migration.conn.close()
