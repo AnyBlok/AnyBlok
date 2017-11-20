@@ -12,20 +12,20 @@
 CHANGELOG
 =========
 
-Futur
------
+0.11.0 (2017-11-20)
+-------------------
 
 * [ADD] log debug for commit / rollback
 * [REF] precommit_hook, can also be on no SQL Model
 * [ADD] postcommit_hook
 * [FIX] UUID inheritance
 
-0.10.1 (2017-10-14)
+0.10.1 (2017-11-14)
 -------------------
 
 * [FIX] change log
 
-0.10.0 (2017-10-14)
+0.10.0 (2017-11-14)
 -------------------
 
 * [ADD] ``anyblok_configuration.post_load`` to initialize some services in 
