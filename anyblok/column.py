@@ -971,7 +971,7 @@ class UUID(Column):
             self.foreign_key = kwargs.pop('foreign_key')
 
         self.sqlalchemy_type = UUIDType(**uuid_kwargs)
-        super(Column, self).__init__(*args, **kwargs)
+        super(UUID, self).__init__(*args, **kwargs)
 
 
 class URL(Column):
