@@ -474,6 +474,7 @@ class Registry:
         self.properties = {}
         self.removed = []
         EnvironmentManager.set('_precommit_hook', [])
+        EnvironmentManager.set('_postcommit_hook', [])
         self._sqlalchemy_known_events = []
         self.expire_attributes = {}
 
@@ -1128,8 +1129,10 @@ class Registry:
         self.session.refresh(obj, attribute_names=attribute_names)
 
     def rollback(self, *args, **kwargs):
+        logger.debug('[ROLLACK] with args=%r and kwargs = %r', args, kwargs)
         self.session.rollback(*args, **kwargs)
         EnvironmentManager.set('_precommit_hook', [])
+        EnvironmentManager.set('_postcommit_hook', [])
 
     def close_session(self):
         """ Close only the session, not the registry
@@ -1172,7 +1175,7 @@ class Registry:
     def precommit_hook(self, registryname, method, *args, **kwargs):
         """ Add a method in the precommit_hook list
 
-        a precommit hook is a method called just after the commit, it is used
+        a precommit hook is a method called just before the commit, it is used
         to call this method once, because a hook is saved only once
 
         :param registryname: namespace of the model
@@ -1180,9 +1183,7 @@ class Registry:
         :param put_at_the_end_if_exist: if true and hook allready exist then the
             hook are moved at the end
         """
-        put_at_the_end_if_exist = False
-        if 'put_at_the_end_if_exist' in kwargs:
-            put_at_the_end_if_exist = kwargs.pop('put_at_the_end_if_exist')
+        put_at_the_end_if_exist = kwargs.pop('put_at_the_end_if_exist', False)
 
         entry = (registryname, method, args, kwargs)
         _precommit_hook = EnvironmentManager.get('_precommit_hook')
@@ -1193,6 +1194,37 @@ class Registry:
 
         else:
             _precommit_hook.append(entry)
+
+    def postcommit_hook(self, registryname, method, *args, **kwargs):
+        """ Add a method in the postcommit_hook list
+
+        a precommit hook is a method called just after the commit, it is used
+        to call this method once, because a hook is saved only once
+
+        you can choice if the hook is called in function of ``call_only_if``:
+
+        * ``commited``: Call if the commit is done without exception
+        * ``raised``: Call if one exception was raised
+        * ``always``: Always call
+
+        :param registryname: namespace of the model
+        :param method: method to call on the registryname
+        :param put_at_the_end_if_exist: if true and hook allready exist then the
+            hook are moved at the end
+        :param call_only_if: ['commited' (default), 'raised', 'always']
+        """
+        put_at_the_end_if_exist = kwargs.pop('put_at_the_end_if_exist', False)
+        call_only_if = kwargs.pop('call_only_if', 'commited')
+
+        entry = (registryname, method, call_only_if, args, kwargs)
+        _postcommit_hook = EnvironmentManager.get('_postcommit_hook')
+        if entry in _postcommit_hook:
+            if put_at_the_end_if_exist:
+                _postcommit_hook.remove(entry)
+                _postcommit_hook.append(entry)
+
+        else:
+            _postcommit_hook.append(entry)
 
     def apply_precommit_hook(self):
         hooks = []
@@ -1208,10 +1240,45 @@ class Registry:
             getattr(Model, method)(*a, **kw)
             _precommit_hook.remove(hook)
 
+    def apply_postcommit_hook(self, withexception=False):
+        hooks = []
+        _postcommit_hook = EnvironmentManager.get('_postcommit_hook')
+        if _postcommit_hook:
+            hooks.extend(_postcommit_hook)
+
+        for hook in hooks:
+            registryname, method, call_only_if, a, kw = hook
+            if withexception is False and call_only_if == 'raised':
+                continue
+
+            if withexception is True and call_only_if == 'commited':
+                continue
+
+            Model = self.loaded_namespaces[registryname]
+            try:
+                getattr(Model, method)(*a, **kw)
+            except Exception as e:
+                logger.exception(str(e))
+            finally:
+                _postcommit_hook.remove(hook)
+
     def commit(self, *args, **kwargs):
         """ Overload the commit method of the SqlAlchemy session """
-        self.apply_precommit_hook()
-        self.session_commit(*args, **kwargs)
+        logger.debug('[COMMIT] with args=%r and kwargs = %r', args, kwargs)
+        try:
+            self.apply_precommit_hook()
+            self.session_commit(*args, **kwargs)
+            try:
+                self.apply_postcommit_hook(withexception=False)
+            except Exception as e:
+                logger.exception(str(e))
+        except Exception as e:
+            try:
+                self.apply_postcommit_hook(withexception=True)
+            except Exception as e:
+                logger.exception(str(e))
+
+            raise e
 
     def flush(self):
         if not self.session._flushing:

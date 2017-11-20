@@ -6,12 +6,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase, DBTestCase
+from anyblok.tests.testcase import TestCase, DBTestCase, LogCapture
 from anyblok.registry import RegistryManager
 from anyblok.config import Configuration
 from anyblok.blok import BlokManager, Blok
 from anyblok.column import Integer
 from threading import Thread
+from logging import ERROR
 
 
 class Test:
@@ -367,3 +368,218 @@ class TestRegistry2(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         self.assertEqual(registry.Test.foo(), 9)
+
+    def test_postcommit_hook(self):
+        do_somthing = 0
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+                @classmethod
+                def _postcommit_hook(cls):
+                    nonlocal do_somthing
+                    do_somthing += 1
+
+                def add_precommit_hook(self):
+                    self.postcommit_hook('_postcommit_hook')
+
+                @classmethod
+                def add_cl_precommit_hook(cls):
+                    cls.postcommit_hook('_postcommit_hook')
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        t.add_precommit_hook()
+        self.assertEqual(do_somthing, 0)
+        registry.commit()
+        self.assertEqual(do_somthing, 1)
+        registry.commit()
+        self.assertEqual(do_somthing, 1)
+        registry.Test.add_cl_precommit_hook()
+        self.assertEqual(do_somthing, 1)
+        registry.commit()
+        self.assertEqual(do_somthing, 2)
+        registry.commit()
+        self.assertEqual(do_somthing, 2)
+        t.add_precommit_hook()
+        self.assertEqual(do_somthing, 2)
+        registry.commit()
+        self.assertEqual(do_somthing, 3)
+
+    def test_postcommit_hook_in_thread(self):
+        do_somthing = 0
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+
+                @classmethod
+                def _postcommit_hook(cls):
+                    nonlocal do_somthing
+                    do_somthing += 1
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.postcommit_hook('_postcommit_hook')
+        self.assertEqual(do_somthing, 0)
+
+        def target():
+            registry.commit()
+
+        t = Thread(target=target)
+        t.start()
+        t.join()
+
+        self.assertEqual(do_somthing, 0)
+        registry.commit()
+        self.assertEqual(do_somthing, 1)
+
+    def test_postcommit_hook_call_only_if_commited(self):
+        do_somthing = 0
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+
+                @classmethod
+                def _precommit_hook(cls):
+                    raise Exception('Test')
+
+                @classmethod
+                def _postcommit_hook(cls):
+                    nonlocal do_somthing
+                    do_somthing += 1
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.postcommit_hook('_postcommit_hook')
+        self.assertEqual(do_somthing, 0)
+        registry.commit()
+        self.assertEqual(do_somthing, 1)
+        registry.Test.precommit_hook('_precommit_hook')
+        registry.Test.postcommit_hook('_postcommit_hook')
+        with self.assertRaises(Exception):
+            registry.commit()
+
+        self.assertEqual(do_somthing, 1)
+
+    def test_postcommit_hook_call_only_if_raised(self):
+        do_somthing = 0
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+
+                @classmethod
+                def _precommit_hook(cls):
+                    raise Exception('Test')
+
+                @classmethod
+                def _postcommit_hook(cls):
+                    nonlocal do_somthing
+                    do_somthing += 1
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.postcommit_hook(
+            '_postcommit_hook', call_only_if='raised')
+        self.assertEqual(do_somthing, 0)
+        registry.commit()
+        self.assertEqual(do_somthing, 0)
+        registry.Test.precommit_hook('_precommit_hook')
+        registry.Test.postcommit_hook(
+            '_postcommit_hook', call_only_if='raised')
+        with self.assertRaises(Exception):
+            registry.commit()
+
+        self.assertEqual(do_somthing, 1)
+
+    def test_postcommit_hook_call_only_if_always(self):
+        do_somthing = 0
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+
+                @classmethod
+                def _precommit_hook(cls):
+                    raise Exception('Test')
+
+                @classmethod
+                def _postcommit_hook(cls):
+                    nonlocal do_somthing
+                    do_somthing += 1
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.postcommit_hook(
+            '_postcommit_hook', call_only_if='always')
+        self.assertEqual(do_somthing, 0)
+        registry.commit()
+        self.assertEqual(do_somthing, 1)
+        registry.Test.precommit_hook('_precommit_hook')
+        registry.Test.postcommit_hook(
+            '_postcommit_hook', call_only_if='always')
+        with self.assertRaises(Exception):
+            registry.commit()
+
+        self.assertEqual(do_somthing, 2)
+
+    def test_postcommit_hook_with_rollback(self):
+        do_somthing = 0
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+
+                @classmethod
+                def _postcommit_hook(cls):
+                    nonlocal do_somthing
+                    do_somthing += 1
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.postcommit_hook(
+            '_postcommit_hook')
+        self.assertEqual(do_somthing, 0)
+        registry.rollback()
+        registry.commit()
+        self.assertEqual(do_somthing, 0)
+
+    def test_postcommit_hook_with_exception(self):
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+
+                @classmethod
+                def _postcommit_hook(cls):
+                    raise Exception('Here one exception')
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.postcommit_hook(
+            '_postcommit_hook')
+        with LogCapture('anyblok.registry', level=ERROR) as logs:
+            registry.commit()
+            messages = logs.get_error_messages()
+            message = messages[0]
+            self.assertIn('Here one exception', message)

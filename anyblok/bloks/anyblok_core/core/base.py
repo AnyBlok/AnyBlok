@@ -71,3 +71,40 @@ class Base:
         model class will be considered for the permission check.
         """
         return cls.registry.check_permission(cls, principals, permission)
+
+    @classmethod
+    def precommit_hook(cls, method, *args, **kwargs):
+        """ Same in the registry a hook to call just before the commit
+
+        .. warning::
+
+            Only one instance with same parameters of the hook is called before
+            the commit
+
+        :param method: the method to call on this model
+        :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
+        """
+        cls.registry.precommit_hook(
+            cls.__registry_name__, method, *args, **kwargs)
+
+    @classmethod
+    def postcommit_hook(cls, method, *args, **kwargs):
+        """ Same in the registry a hook to call just after the commit
+
+        you can choice if the hook is called in function of ``call_only_if``:
+
+        * ``commited``: Call if the commit is done without exception
+        * ``raised``: Call if one exception was raised
+        * ``always``: Always call
+
+        .. warning::
+
+            Only one instance with same paramters of the hook is called
+            after the commit
+
+        :param method: the method to call on this model
+        :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
+        :param call_only_if: ['commited' (default), 'raised', 'always']
+        """
+        cls.registry.postcommit_hook(
+            cls.__registry_name__, method, *args, **kwargs)

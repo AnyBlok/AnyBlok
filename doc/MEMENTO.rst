@@ -1258,12 +1258,32 @@ session::
         val = Integer(default=0)
 
         @classmethod
-        def method2call_just_before_the_commit(cls):
+        def method2call_just_before_the_commit(cls, *a, **kw):
             pass
 
     -----------------------------------------------------
 
-    registry.Test.precommit_hook('method2call_just_before_the_commit')
+    registry.Test.precommit_hook('method2call_just_before_the_commit', *a, **kw)
+
+Post-commit hook
+~~~~~~~~~~~~~~~~
+
+It is possible to call specific classmethods just after the commit of the
+session::
+
+    @register(Model)
+    class Test:
+
+        id = Integer(primary_key=True)
+        val = Integer(default=0)
+
+        @classmethod
+        def method2call_just_after_the_commit(cls, *a, **kw):
+            pass
+
+    -----------------------------------------------------
+
+    registry.Test.postcommit_hook('method2call_just_after_the_commit', *a, **kw)
 
 
 Aliased
