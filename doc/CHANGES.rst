@@ -18,6 +18,7 @@ Futur
 * [ADD] log debug for commit / rollback
 * [REF] precommit_hook, can also be on no SQL Model
 * [ADD] postcommit_hook
+* [FIX] UUID inheritance
 
 0.10.1 (2017-10-14)
 -------------------
