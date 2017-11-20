@@ -947,7 +947,7 @@ class Color(Column):
         return value
 
 
-class UUID(String):
+class UUID(Column):
     """ Sequence column
 
     ::
@@ -971,7 +971,7 @@ class UUID(String):
             self.foreign_key = kwargs.pop('foreign_key')
 
         self.sqlalchemy_type = UUIDType(**uuid_kwargs)
-        super(String, self).__init__(*args, **kwargs)
+        super(Column, self).__init__(*args, **kwargs)
 
 
 class URL(Column):
