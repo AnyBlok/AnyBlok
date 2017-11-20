@@ -1249,9 +1249,11 @@ class Registry:
         for hook in hooks:
             registryname, method, call_only_if, a, kw = hook
             if withexception is False and call_only_if == 'raised':
+                _postcommit_hook.remove(hook)
                 continue
 
             if withexception is True and call_only_if == 'commited':
+                _postcommit_hook.remove(hook)
                 continue
 
             Model = self.loaded_namespaces[registryname]
