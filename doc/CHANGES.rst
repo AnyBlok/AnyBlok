@@ -17,6 +17,7 @@ CHANGELOG
 
 * [ADD] in DBTestCase add init_registry_with_bloks, this method is similar at
   init_registry, it install the bloks after add the new model
+* [FIX] create precommit_hooks in the EnvironnementManager if it does not exist
 
 0.11.0 (2017-11-20)
 -------------------

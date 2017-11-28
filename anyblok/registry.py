@@ -1186,7 +1186,7 @@ class Registry:
         put_at_the_end_if_exist = kwargs.pop('put_at_the_end_if_exist', False)
 
         entry = (registryname, method, args, kwargs)
-        _precommit_hook = EnvironmentManager.get('_precommit_hook')
+        _precommit_hook = EnvironmentManager.get('_precommit_hook', [])
         if entry in _precommit_hook:
             if put_at_the_end_if_exist:
                 _precommit_hook.remove(entry)
@@ -1194,6 +1194,8 @@ class Registry:
 
         else:
             _precommit_hook.append(entry)
+
+        EnvironmentManager.set('_precommit_hook', _precommit_hook)
 
     def postcommit_hook(self, registryname, method, *args, **kwargs):
         """ Add a method in the postcommit_hook list

@@ -241,6 +241,35 @@ class TestRegistry2(DBTestCase):
         self.assertEqual(t1.val, t1.id)
         self.assertEqual(t2.val, t2.id)
 
+    def test_precommit_hook_in_thread_2(self):
+        do_somthing = 0
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+
+                @classmethod
+                def _precommit_hook(cls):
+                    nonlocal do_somthing
+                    do_somthing += 1
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(do_somthing, 0)
+
+        def target():
+            registry.Test.precommit_hook('_precommit_hook')
+            registry.commit()
+
+        t = Thread(target=target)
+        t.start()
+        t.join()
+
+        registry.commit()
+        self.assertEqual(do_somthing, 1)
+
     def define_cls(self, typename='Model', name='Test', val=1, usesuper=False,
                    inherit=None):
 
