@@ -471,6 +471,34 @@ class TestRegistry2(DBTestCase):
         registry.commit()
         self.assertEqual(do_somthing, 1)
 
+    def test_postcommit_hook_in_thread_2(self):
+        do_somthing = 0
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+
+                @classmethod
+                def _postcommit_hook(cls):
+                    nonlocal do_somthing
+                    do_somthing += 1
+
+        registry = self.init_registry(add_in_registry)
+        self.assertEqual(do_somthing, 0)
+
+        def target():
+            registry.Test.postcommit_hook('_postcommit_hook')
+            registry.commit()
+
+        t = Thread(target=target)
+        t.start()
+        t.join()
+
+        self.assertEqual(do_somthing, 1)
+
     def test_postcommit_hook_call_only_if_commited(self):
         do_somthing = 0
 

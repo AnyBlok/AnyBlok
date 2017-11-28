@@ -1219,7 +1219,7 @@ class Registry:
         call_only_if = kwargs.pop('call_only_if', 'commited')
 
         entry = (registryname, method, call_only_if, args, kwargs)
-        _postcommit_hook = EnvironmentManager.get('_postcommit_hook')
+        _postcommit_hook = EnvironmentManager.get('_postcommit_hook', [])
         if entry in _postcommit_hook:
             if put_at_the_end_if_exist:
                 _postcommit_hook.remove(entry)
@@ -1227,6 +1227,8 @@ class Registry:
 
         else:
             _postcommit_hook.append(entry)
+
+        EnvironmentManager.set('_postcommit_hook', _postcommit_hook)
 
     def apply_precommit_hook(self):
         hooks = []
