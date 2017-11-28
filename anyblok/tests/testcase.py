@@ -243,6 +243,17 @@ class DBTestCase(TestCase):
         :param kwargs: kwargs for the function
         :rtype: registry instance
         """
+        return self.init_registry_with_bloks(None, function, **kwargs)
+
+    def init_registry_with_bloks(self, bloks, function, **kwargs):
+        """ call a function to filled the blok manager with new model and
+        bloks to install
+
+        :param bloks: list of blok's names
+        :param function: function to call
+        :param kwargs: kwargs for the function
+        :rtype: registry instance
+        """
         from copy import deepcopy
         loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
         if function is not None:
@@ -254,6 +265,8 @@ class DBTestCase(TestCase):
 
         try:
             self.registry = registry = self.__class__.getRegistry()
+            if bloks:
+                registry.upgrade(install=bloks)
         finally:
             RegistryManager.loaded_bloks = loaded_bloks
 
