@@ -12,8 +12,8 @@
 CHANGELOG
 =========
 
-0.11.1
-------
+0.11.1 (2017-11-28)
+-------------------
 
 * [ADD] in DBTestCase add init_registry_with_bloks, this method is similar at
   init_registry, it install the bloks after add the new model
