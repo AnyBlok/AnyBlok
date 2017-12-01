@@ -21,7 +21,8 @@ from anyblok.column import (Integer,
                             Boolean,
                             DateTime,
                             Date,
-                            Time)
+                            Time,
+                            Sequence)
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
 
@@ -176,6 +177,26 @@ class TestMany2One(DBTestCase):
         person = registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
         self.assertEqual(person.address, address)
+
+    def test_minimum_many2one_on_sequence(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+                seq = Sequence(primary_key=True, formater="V-{seq}")
+
+            @register(Model)
+            class Test2:
+
+                seq = Sequence(primary_key=True)
+                test = Many2One(model=Model.Test)
+
+        registry = self.init_registry(add_in_registry)
+        test = registry.Test.insert()
+        test2 = registry.Test2.insert(test=test)
+        self.assertIs(test, test2.test)
 
     def test_minimum_many2one_expire_field(self):
         registry = self.init_registry(_minimum_many2one)

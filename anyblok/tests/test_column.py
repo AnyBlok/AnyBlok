@@ -877,6 +877,12 @@ class TestColumns(DBTestCase):
         self.assertEqual(
             Seq.query().filter(Seq.code == 'Model.Test=>col').count(), 1)
 
+    def test_sequence_with_primary_key(self):
+        registry = self.init_registry(simple_column, ColumnType=Sequence,
+                                      primary_key=True)
+        self.assertEqual(registry.Test.insert().col, "1")
+        self.assertEqual(registry.Test.insert().col, "2")
+
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       code="SO", formater="{code}-{seq:06d}")
