@@ -6,7 +6,11 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .plugins import ModelPluginBase
-from anyblok.mapper import ModelAttribute
+from anyblok.mapper import ModelAttribute, ModelMapper
+
+
+class ORMEventException(Exception):
+    pass
 
 
 class EventPlugin(ModelPluginBase):
@@ -68,3 +72,21 @@ class SQLAlchemyEventPlugin(ModelPluginBase):
                 (method.sqlalchemy_listener,
                  namespace,
                  ModelAttribute(namespace, attr)))
+
+
+class AutoSQLAlchemyORMEventPlugin(ModelPluginBase):
+
+    def after_model_construction(self, base, namespace,
+                                 transformation_properties):
+        for eventtype in ('before_insert', 'after_insert',
+                          'before_update', 'after_update',
+                          'before_delete', 'after_delete'):
+            attr = eventtype + '_orm_event'
+            if hasattr(base, attr):
+                if not hasattr(getattr(base, attr), '__self__'):
+                    raise ORMEventException(
+                        "On %s %s is not a classmethod" % (base, attr))
+
+                self.registry._sqlalchemy_known_events.append((
+                    ModelMapper(base, eventtype), namespace,
+                    ModelAttribute(namespace, attr)))

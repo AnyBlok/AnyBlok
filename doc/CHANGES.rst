@@ -17,6 +17,7 @@ CHANGELOG
 
 * [FIX] Declare Field Fonction in Polymophic subclass
 * [FIX] Declare Field Fonction in Polymophic
+* [ADD] auto register of salalchemy ORM event
 
 0.11.1 (2017-11-28)
 -------------------

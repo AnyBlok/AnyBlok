@@ -8,6 +8,7 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok.declarations import Declarations, listen
 from anyblok.column import Integer, Boolean, String
+from anyblok.model.event import ORMEventException
 
 
 register = Declarations.register
@@ -227,3 +228,167 @@ class TestEvent(DBTestCase):
         t.val = 'test'
         registry.flush()
         self.assertEqual(t.val, 'test_test')
+
+
+class TestAutoORMEvent(DBTestCase):
+
+    def test_before_insert_orm_event(self):
+
+        listen_called = False
+        id_value = 0
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+                @classmethod
+                def before_insert_orm_event(cls, mapper, connection, target):
+                    nonlocal listen_called, id_value
+                    listen_called = True
+                    id_value = target.id
+
+        registry = self.init_registry(add_in_registry)
+        self.assertFalse(listen_called)
+        self.assertEqual(id_value, 0)
+        registry.Test.insert()
+        self.assertTrue(listen_called)
+        self.assertIsNone(id_value)
+
+    def test_before_insert_orm_event_is_not_metaclass(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+                def before_insert_orm_event(cls, mapper, connection, target):
+                    pass
+
+        with self.assertRaises(ORMEventException):
+            self.init_registry(add_in_registry)
+
+    def test_after_insert_orm_event(self):
+
+        listen_called = False
+        id_value = 0
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+                @classmethod
+                def after_insert_orm_event(cls, mapper, connection, target):
+                    nonlocal listen_called, id_value
+                    listen_called = True
+                    id_value = target.id
+
+        registry = self.init_registry(add_in_registry)
+        self.assertFalse(listen_called)
+        self.assertEqual(id_value, 0)
+        t = registry.Test.insert()
+        self.assertTrue(listen_called)
+        self.assertEqual(id_value, t.id)
+
+    def test_before_update_orm_event(self):
+
+        listen_called = False
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                name = String()
+
+                @classmethod
+                def before_update_orm_event(cls, mapper, connection, target):
+                    nonlocal listen_called
+                    listen_called = True
+
+        registry = self.init_registry(add_in_registry)
+        self.assertFalse(listen_called)
+        t = registry.Test.insert()
+        self.assertFalse(listen_called)
+        t.name = 'test'
+        registry.flush()
+        self.assertTrue(listen_called)
+
+    def test_after_update_orm_event(self):
+
+        listen_called = False
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                name = String()
+
+                @classmethod
+                def after_update_orm_event(cls, mapper, connection, target):
+                    nonlocal listen_called
+                    listen_called = True
+
+        registry = self.init_registry(add_in_registry)
+        self.assertFalse(listen_called)
+        t = registry.Test.insert()
+        self.assertFalse(listen_called)
+        t.name = 'test'
+        registry.flush()
+        self.assertTrue(listen_called)
+
+    def test_before_delete_orm_event(self):
+
+        listen_called = False
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+                @classmethod
+                def before_delete_orm_event(cls, mapper, connection, target):
+                    nonlocal listen_called
+                    listen_called = True
+
+        registry = self.init_registry(add_in_registry)
+        self.assertFalse(listen_called)
+        t = registry.Test.insert()
+        self.assertFalse(listen_called)
+        t.delete()
+        self.assertTrue(listen_called)
+
+    def test_after_delete_orm_event(self):
+
+        listen_called = False
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+                @classmethod
+                def after_delete_orm_event(cls, mapper, connection, target):
+                    nonlocal listen_called
+                    listen_called = True
+
+        registry = self.init_registry(add_in_registry)
+        self.assertFalse(listen_called)
+        t = registry.Test.insert()
+        self.assertFalse(listen_called)
+        t.delete()
+        self.assertTrue(listen_called)

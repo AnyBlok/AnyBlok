@@ -1226,6 +1226,25 @@ decorated method::
 Some of the Attribute events of the Mapper events are implemented. See the
 SQLAlchemy ORM Events http://docs.sqlalchemy.org/en/latest/orm/events.html#orm-events
 
+You may also add a classmethod with the name ``event type + '_orm_event'``. The event will be automaticly
+create with on the Model and the event type without arguments::
+
+    @register(Model)
+    class Test:
+
+            x = 0
+
+            @classmethod
+            def after_insert_orm_event(cls, mapper, connection, target):
+                # call when a new instance of Test is added in the session
+                pass
+
+            @listen('Model.Test', 'after_insert')
+            def another_orm_event(cls, mapper, connection, target):
+                # it is the same effect as ``after_insert_orm_event``,
+                # it is call after the add of a new instance in the session
+
+
 Hybrid method
 ~~~~~~~~~~~~~
 
