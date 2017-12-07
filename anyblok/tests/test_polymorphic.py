@@ -10,6 +10,7 @@ from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from anyblok.column import Integer, String, Date
 from anyblok.relationship import Many2One
+from anyblok.field import Function
 from datetime import date
 
 
@@ -223,6 +224,7 @@ class TestPolymorphic(DBTestCase):
         t2 = Model.query().filter(
             Model.type_entity == Model.__mapper__.polymorphic_identity).first()
         self.assertEqual(t2, t)
+        return t
 
     def test_single_table_poly(self):
         registry = self.init_registry(single_table_poly)
@@ -230,6 +232,29 @@ class TestPolymorphic(DBTestCase):
         self.check_registry(registry.Engineer,
                             engineer_name='An engineer')
         self.check_registry(registry.Manager, manager_name='An manager')
+
+    def test_field_function_only_must_not_create_a_new_table(self):
+
+        def single_table_poly_with_field_function():
+            single_table_poly()
+
+            @register(Model, tablename=Model.Employee)
+            class Manager:
+
+                full_name = Function(fget='get_full_name')
+
+                def get_full_name(self):
+                    return self.name + ' - ' + self.manager_name
+
+        registry = self.init_registry(single_table_poly_with_field_function)
+        self.check_registry(registry.Employee)
+        self.check_registry(registry.Engineer,
+                            engineer_name='An engineer')
+        t = self.check_registry(registry.Manager,
+                                manager_name='An manager')
+        self.assertEqual(registry.Employee.__tablename__,
+                         registry.Manager.__tablename__)
+        self.assertEqual(t.full_name, 'test - An manager')
 
     def test_multi_table_poly(self):
         registry = self.init_registry(multi_table_poly)

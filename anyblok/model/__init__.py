@@ -10,6 +10,7 @@ from anyblok.registry import RegistryManager
 from anyblok import Declarations
 from anyblok.field import Field
 from anyblok.relationship import RelationShip
+from anyblok.column import Column
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
@@ -71,12 +72,14 @@ def has_sqlalchemy_fields(base):
     return False
 
 
-def get_fields(base, without_relationship=False, only_relationship=False):
+def get_fields(base, without_relationship=False, only_relationship=False,
+               without_column=False):
     """ Return the fields for a model
 
     :param base: Model Class
     :param without_relationship: Do not return the relationship field
     :param only_relationship: return only the relationship field
+    :param without_column: Do not return the column field
     :rtype: dict with name of the field in key and instance of Field in value
     """
     fields = {}
@@ -84,6 +87,10 @@ def get_fields(base, without_relationship=False, only_relationship=False):
         if hasattr(getattr(base, p), '__class__'):
             if without_relationship:
                 if RelationShip in getattr(base, p).__class__.__mro__:
+                    continue
+
+            if without_column:
+                if Column in getattr(base, p).__class__.__mro__:
                     continue
 
             if only_relationship:
@@ -412,7 +419,8 @@ class Model:
                     transformation_properties)
 
     @classmethod
-    def apply_existing_table(cls, registry, namespace, tablename, properties):
+    def apply_existing_table(cls, registry, namespace, tablename, properties,
+                             bases, transformation_properties):
         if '__tablename__' in properties:
             del properties['__tablename__']
 
@@ -423,6 +431,14 @@ class Model:
                     if m.__tablename__ == tablename:
                         properties['__table__'] = m.__table__
                         tablename = namespace.replace('.', '_').lower()
+
+        for b in bases:
+            for p, f in get_fields(b,
+                                   without_relationship=True,
+                                   without_column=True).items():
+                cls.declare_field(
+                    registry, p, f, namespace, properties,
+                    transformation_properties)
 
     @classmethod
     def load_namespace_second_step(cls, registry, namespace,
@@ -463,7 +479,8 @@ class Model:
 
             if tablename in registry.declarativebase.metadata.tables:
                 cls.apply_existing_table(
-                    registry, namespace, tablename, properties)
+                    registry, namespace, tablename, properties,
+                    bases, transformation_properties)
             else:
                 cls.declare_all_fields(registry, namespace, bases, properties,
                                        transformation_properties)
