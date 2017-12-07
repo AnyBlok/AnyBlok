@@ -257,6 +257,57 @@ class TestAutoORMEvent(DBTestCase):
         self.assertTrue(listen_called)
         self.assertIsNone(id_value)
 
+    def test_before_insert_orm_event_on_mixin(self):
+
+        listen_called = False
+        id_value = 0
+
+        def add_in_registry():
+
+            @register(Mixin)
+            class MTest:
+
+                @classmethod
+                def before_insert_orm_event(cls, mapper, connection, target):
+                    nonlocal listen_called, id_value
+                    listen_called = True
+                    id_value = target.id
+
+            @register(Model)
+            class Test(Mixin.MTest):
+
+                id = Integer(primary_key=True)
+
+        registry = self.init_registry(add_in_registry)
+        self.assertFalse(listen_called)
+        self.assertEqual(id_value, 0)
+        registry.Test.insert()
+        self.assertTrue(listen_called)
+        self.assertIsNone(id_value)
+
+    def test_before_insert_orm_event_on_core(self):
+
+        def add_in_registry():
+
+            @register(Core)
+            class SqlBase:
+
+                @classmethod
+                def before_insert_orm_event(cls, mapper, connection, target):
+                    nonlocal listen_called
+                    listen_called = True
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+        registry = self.init_registry(add_in_registry)
+        listen_called = False
+        self.assertFalse(listen_called)
+        registry.Test.insert()
+        self.assertTrue(listen_called)
+
     def test_before_insert_orm_event_is_not_metaclass(self):
 
         def add_in_registry():
