@@ -256,6 +256,34 @@ class TestPolymorphic(DBTestCase):
                          registry.Manager.__tablename__)
         self.assertEqual(t.full_name, 'test - An manager')
 
+    def test_field_function_must_be_available_in_subclass(self):
+
+        def single_table_poly_with_field_function():
+            single_table_poly()
+
+            @register(Model)
+            class Employee:
+
+                full_name = Function(fget='get_full_name')
+
+                def get_full_name(self):
+                    sub_name = ''
+                    if self.type_entity == 'manager':
+                        sub_name = self.manager_name
+                    elif self.type_entity == 'engineer':
+                        sub_name = self.engineer_name
+
+                    return self.name + ' - ' + sub_name
+
+        registry = self.init_registry(single_table_poly_with_field_function)
+        self.check_registry(registry.Employee)
+        t1 = self.check_registry(registry.Engineer,
+                                 engineer_name='An engineer')
+        self.assertEqual(t1.full_name, 'test - An engineer')
+        t2 = self.check_registry(registry.Manager,
+                                 manager_name='An manager')
+        self.assertEqual(t2.full_name, 'test - An manager')
+
     def test_multi_table_poly(self):
         registry = self.init_registry(multi_table_poly)
         self.check_registry(registry.Employee)

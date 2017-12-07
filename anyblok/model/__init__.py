@@ -8,7 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.registry import RegistryManager
 from anyblok import Declarations
-from anyblok.field import Field
+from anyblok.field import Field, FieldException
 from anyblok.relationship import RelationShip
 from anyblok.column import Column
 from sqlalchemy.ext.compiler import compiles
@@ -56,9 +56,13 @@ def has_sql_fields(bases):
     """
     for base in bases:
         for p in base.__dict__.keys():
-            if hasattr(getattr(base, p), '__class__'):
-                if Field in getattr(base, p).__class__.__mro__:
-                    return True
+            try:
+                if hasattr(getattr(base, p), '__class__'):
+                    if Field in getattr(base, p).__class__.__mro__:
+                        return True
+            except FieldException:
+                # field function case already computed
+                return True
 
     return False
 
@@ -70,6 +74,10 @@ def has_sqlalchemy_fields(base):
             return True
 
     return False
+
+
+def is_in_mro(cls, base, attr):
+    return cls in getattr(base, attr).__class__.__mro__
 
 
 def get_fields(base, without_relationship=False, only_relationship=False,
@@ -84,21 +92,22 @@ def get_fields(base, without_relationship=False, only_relationship=False,
     """
     fields = {}
     for p in base.__dict__.keys():
-        if hasattr(getattr(base, p), '__class__'):
-            if without_relationship:
-                if RelationShip in getattr(base, p).__class__.__mro__:
+        try:
+            if hasattr(getattr(base, p), '__class__'):
+                if without_relationship and is_in_mro(RelationShip, base, p):
                     continue
 
-            if without_column:
-                if Column in getattr(base, p).__class__.__mro__:
+                if without_column and is_in_mro(Column, base, p):
                     continue
 
-            if only_relationship:
-                if RelationShip not in getattr(base, p).__class__.__mro__:
+                if only_relationship and not is_in_mro(RelationShip, base, p):
                     continue
 
-            if Field in getattr(base, p).__class__.__mro__:
-                fields[p] = getattr(base, p)
+                if is_in_mro(Field, base, p):
+                    fields[p] = getattr(base, p)
+
+        except FieldException:
+            pass
 
     return fields
 

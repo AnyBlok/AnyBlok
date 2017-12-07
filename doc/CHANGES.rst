@@ -16,6 +16,7 @@ CHANGELOG
 ------
 
 * [FIX] Declare Field Fonction in Polymophic subclass
+* [FIX] Declare Field Fonction in Polymophic
 
 0.11.1 (2017-11-28)
 -------------------
