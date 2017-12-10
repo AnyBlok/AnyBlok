@@ -19,6 +19,7 @@ CHANGELOG
 * [FIX] Declare Field Fonction in Polymophic
 * [ADD] auto register of sqlalchemy ORM event
 * [ADD] Mixin to do readonly
+* [REMOVE] cron, functionality, it will be add in another package
 
 0.11.1 (2017-11-28)
 -------------------

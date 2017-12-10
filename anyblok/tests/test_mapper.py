@@ -14,7 +14,7 @@ from anyblok.mapper import (ModelAttribute, ModelAttributeException,
                             ModelMapper, ModelAttributeMapper, MapperAdapter,
                             MapperException)
 from anyblok import Declarations
-from anyblok.column import String
+from anyblok.column import String, Integer
 
 register = Declarations.register
 unregister = Declarations.unregister
@@ -151,11 +151,25 @@ class TestModelRepr(DBTestCase):
         self.assertEqual([x.attribute_name for x in mas], ['name'])
 
     def test_get_foreign_key_for(self):
-        registry = self.init_registry(None)
-        mr = ModelRepr('Model.System.Cron.Job')
-        mas = mr.foreign_keys_for(registry, 'Model.System.Model')
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                test_id = Integer(foreign_key=Model.Test.use('id'))
+
+        registry = self.init_registry(add_in_registry)
+        mr = ModelRepr('Model.Test2')
+        mas = mr.foreign_keys_for(registry, 'Model.Test')
         self.assertEqual(len(mas), 1)
-        self.assertEqual([x.attribute_name for x in mas], ['model'])
+        self.assertEqual([x.attribute_name for x in mas], ['test_id'])
 
     def test_without_model(self):
         with self.assertRaises(ModelReprException):
