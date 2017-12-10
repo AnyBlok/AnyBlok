@@ -28,5 +28,3 @@ from . import parameter  # noqa
 reload_module_if_blok_is_reloading(parameter)
 from . import sequence  # noqa
 reload_module_if_blok_is_reloading(sequence)
-from . import cron  # noqa
-reload_module_if_blok_is_reloading(cron)

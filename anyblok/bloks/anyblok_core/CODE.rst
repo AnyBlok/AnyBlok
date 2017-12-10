@@ -118,23 +118,6 @@ API doc
     :show-inheritance:
     :noindex:
 
-.. automodule:: anyblok.bloks.anyblok_core.system.cron
-
-.. autoanyblok-declaration:: Cron                                                     
-    :members:                                                                   
-    :show-inheritance:
-    :noindex:
-
-.. autoanyblok-declaration:: Job                                                     
-    :members:                                                                   
-    :show-inheritance:
-    :noindex:
-
-.. autoanyblok-declaration:: Worker                                                     
-    :members:                                                                   
-    :show-inheritance:
-    :noindex:
-
 .. automodule:: anyblok.bloks.anyblok_core.system.model
 
 .. autoanyblok-declaration:: Model                                                     
@@ -242,11 +225,6 @@ API doc
     :noindex:
 
 .. autoexception:: ParameterException
-    :members:                                                                   
-    :show-inheritance:
-    :noindex:
-
-.. autoexception:: CronWorkerException
     :members:                                                                   
     :show-inheritance:
     :noindex:

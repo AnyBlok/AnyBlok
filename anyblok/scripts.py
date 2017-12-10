@@ -54,9 +54,6 @@ Configuration.applications.update({
                          "  if the ipython is in the python path, then "
                          "the interpretor will be an ipyton interpretor")
     },
-    'worker': {
-        'prog': 'AnyBlok cron worker, version %r' % version,
-    },
 })
 
 
@@ -207,21 +204,6 @@ def interpreter(application, configuration_groups, **kwargs):
                 code.interact(local=locals())
 
 
-def cron_worker(application, configuration_groups, **kwargs):
-    """Execute a cron worker
-
-    :param application: name of the application
-    :param configuration_groups: list configuration groupe to load
-    :param \**kwargs: ArgumentParser named arguments
-    """
-    registry = anyblok.start(application,
-                             configuration_groups=configuration_groups,
-                             **kwargs)
-    if registry:
-        registry.commit()
-        registry.System.Cron.run()
-
-
 def registry2doc(application, configuration_groups, **kwargs):
     """Return auto documentation for the registry
 
@@ -268,10 +250,6 @@ def anyblok_nose():
 
 def anyblok_interpreter():
     interpreter('interpreter', ['logging'])
-
-
-def anyblok_cron_worker():
-    cron_worker('worker', ['logging'])
 
 
 def anyblok2doc():
