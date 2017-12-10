@@ -1,17 +1,23 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase
+from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.registry import RegistryManager
 from anyblok import Declarations
 from anyblok.environment import EnvironmentManager
+from anyblok.column import Integer, String
+from anyblok.bloks.anyblok_core.exceptions import (
+    ForbidDeleteException, ForbidUpdateException
+)
 register = Declarations.register
 unregister = Declarations.unregister
 Mixin = Declarations.Mixin
+Model = Declarations.Model
 
 
 class OneInterface:
@@ -102,3 +108,66 @@ class TestCoreInterfaceMixin(TestCase):
         unregister(Mixin.MyMixin, OneInterface)
         self.assertInMixin(MyMixin, OneInterface)
         self.assertInRemoved(OneInterface)
+
+
+class TestGivenMixin(DBTestCase):
+
+    def test_forbidden_delete(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test(Mixin.ForbidDelete):
+
+                id = Integer(primary_key=True)
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        with self.assertRaises(ForbidDeleteException):
+            t.delete()
+
+    def test_forbidden_update(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test(Mixin.ForbidUpdate):
+
+                id = Integer(primary_key=True)
+                name = String()
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        t.name = 'test'
+        with self.assertRaises(ForbidUpdateException):
+            registry.flush()
+
+    def test_readonly_delete(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test(Mixin.ReadOnly):
+
+                id = Integer(primary_key=True)
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        with self.assertRaises(ForbidDeleteException):
+            t.delete()
+
+    def test_readonly_update(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test(Mixin.ReadOnly):
+
+                id = Integer(primary_key=True)
+                name = String()
+
+        registry = self.init_registry(add_in_registry)
+        t = registry.Test.insert()
+        t.name = 'test'
+        with self.assertRaises(ForbidUpdateException):
+            registry.flush()

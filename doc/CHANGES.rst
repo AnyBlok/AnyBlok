@@ -17,7 +17,8 @@ CHANGELOG
 
 * [FIX] Declare Field Fonction in Polymophic subclass
 * [FIX] Declare Field Fonction in Polymophic
-* [ADD] auto register of salalchemy ORM event
+* [ADD] auto register of sqlalchemy ORM event
+* [ADD] Mixin to do readonly
 
 0.11.1 (2017-11-28)
 -------------------

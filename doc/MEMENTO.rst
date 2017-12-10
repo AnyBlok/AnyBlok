@@ -678,7 +678,7 @@ Parameters of the ``Many2One`` field:
 | ``one2many``            | Opposite One2Many link with this Many2one         |
 +-------------------------+---------------------------------------------------+
 | ``foreign_key_options`` | take a dict with the option for create the        |
-|                         | foreign key::                                     |
+|                         | foreign key                                       |
 +-------------------------+---------------------------------------------------+
 
 ::
@@ -1371,6 +1371,30 @@ In the path the init_function must be defined::
 
     Use unittest parameter to defined if the function must be call
     or not
+
+Make easily ReadOnly model
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In somme case you want that your model is:
+
+* readonly: No modification, No deletion::
+
+      @register(...)
+      class MyModel(Mixin.ReadOnly):
+        ...
+
+* forbid modification: No modification but can delete::
+
+      @register(...)
+      class MyModel(Mixin.ForbidUpdate):
+        ...
+
+* forbid deletion: No deletion but can modify::
+
+      @register(...)
+      class MyModel(Mixin.ForbidDelete):
+        ...
+
 
 Plugin
 ------

@@ -198,6 +198,25 @@ API doc
     :show-inheritance:
     :noindex:
 
+**Mixins**
+
+.. automodule:: anyblok.bloks.anyblok_core.mixins
+
+.. autoanyblok-declaration:: ForbidUpdate
+    :members:                                                                   
+    :show-inheritance:
+    :noindex:
+
+.. autoanyblok-declaration:: ForbidDelete
+    :members:                                                                   
+    :show-inheritance:
+    :noindex:
+
+.. autoanyblok-declaration:: ReadOnly
+    :members:                                                                   
+    :show-inheritance:
+    :noindex:
+
 **exception**
 
 .. automodule:: anyblok.bloks.anyblok_core.exceptions
@@ -228,6 +247,16 @@ API doc
     :noindex:
 
 .. autoexception:: CronWorkerException
+    :members:                                                                   
+    :show-inheritance:
+    :noindex:
+
+.. autoexception:: ForbidUpdateException
+    :members:                                                                   
+    :show-inheritance:
+    :noindex:
+
+.. autoexception:: ForbidDeleteException
     :members:                                                                   
     :show-inheritance:
     :noindex:
