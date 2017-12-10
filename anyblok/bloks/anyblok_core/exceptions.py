@@ -28,10 +28,6 @@ class ParameterException(Exception):
     """ Simple exception for System.Parameter """
 
 
-class CronWorkerException(Exception):
-    """ Simple exception for System.Parameter """
-
-
 class ForbidUpdateException(Exception):
     """ Simple exception for Mixin.ForbiddenUpdate """
 

@@ -571,8 +571,5 @@ anyblok.scripts module
 .. autofunction:: run_exit
     :noindex:
 
-.. autofunction:: cron_worker
-    :noindex:
-
 .. autofunction:: registry2doc
     :noindex:
