@@ -407,6 +407,11 @@ class DateTime(Column):
 
         return value
 
+    def autodoc_get_properties(self):
+        res = super(Column, self).autodoc_get_properties()
+        res['is auto updated'] = self.auto_update
+        return res
+
 
 class Time(Column):
     """ Time column

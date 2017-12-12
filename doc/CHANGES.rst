@@ -19,7 +19,8 @@ CHANGELOG
 * [FIX] Declare Field Fonction in Polymophic
 * [ADD] auto register of sqlalchemy ORM event
 * [ADD] Mixin to do readonly
-* [REMOVE] cron, functionality, it will be add in another package
+* [REMOVE] cron functionality, it will be add in another package **anyblok_dramatiq**
+* [FIX] Field.DateTime documentation, add ``is auto updated``
 
 0.11.1 (2017-11-28)
 -------------------
