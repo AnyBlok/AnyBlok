@@ -23,6 +23,7 @@ from .blok import BlokManager
 from .environment import EnvironmentManager
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
 from anyblok.common import anyblok_column_prefix
+from pkg_resources import iter_entry_points
 from .logging import log
 logger = getLogger(__name__)
 
@@ -880,6 +881,7 @@ class Registry:
                 EnvironmentManager.scoped_function_for_session())
             self.nb_query_bases = len(self.loaded_cores['Query'])
             self.nb_session_bases = len(self.loaded_cores['Session'])
+            self.apply_session_events()
         else:
             self.flush()
 
@@ -988,6 +990,22 @@ class Registry:
                 self.System.Blok.load_all()
 
         self.loadwithoutmigration = False
+
+    def apply_session_events(self):
+        """Add session events
+
+        the session event come from:
+
+        * entrypoints: ``anyblok.session.event``
+        * registry additional_setting: ``anyblok.session.event``
+        """
+        for i in iter_entry_points('anyblok.session.event'):
+            logger.info('Update session event from entrypoint %r' % i)
+            i.load()(self.session)
+
+        for funct in self.additional_setting.get('anyblok.session.event', []):
+            logger.info('Update session event %r' % funct)
+            funct(self.session)
 
     def run_test(registry, blok2install):
         defaultTest = join(BlokManager.getPath(blok2install), 'tests')

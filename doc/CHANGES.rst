@@ -21,6 +21,8 @@ CHANGELOG
 * [ADD] Mixin to do readonly
 * [REMOVE] cron functionality, it will be add in another package **anyblok_dramatiq**
 * [FIX] Field.DateTime documentation, add ``is auto updated``
+* [REF] add entry point ``anyblok.session.event`` and additional_setting 
+  ``anyblok.session.event`` to add some events on the session
 
 0.11.1 (2017-11-28)
 -------------------
