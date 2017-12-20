@@ -24,6 +24,7 @@ CHANGELOG
 * [REF] add entry point ``anyblok.session.event`` and additional_setting 
   ``anyblok.session.event`` to add some events on the session
 * [FIX] clean foreign_key in some column type, now the foreign_key is made by Column class
+* [FIX] remove for System.Field and System.Model the removed fields
 
 0.11.1 (2017-11-28)
 -------------------

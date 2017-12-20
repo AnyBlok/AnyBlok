@@ -73,6 +73,15 @@ class Model:
     def update_fields(cls, model, table):
         fsp = cls.registry.loaded_namespaces_first_step
         m = cls.registry.get(model)
+        # remove useless column
+        Field = cls.registry.System.Field
+        query = Field.query()
+        query = query.filter(Field.model == model)
+        query = query.filter(Field.name.notin_(m.loaded_columns))
+        for model_ in query.all():
+            model_.delete()
+
+        # add or update new column
         for cname in m.loaded_columns:
             ftype = fsp[model][cname].__class__.__name__
             field, Field = cls.get_field(m, cname)
@@ -124,3 +133,16 @@ class Model:
 
             except Exception as e:
                 logger.exception(str(e))
+
+        # remove model and field which are not in loaded_namespaces
+        query = cls.query()
+        query = query.filter(
+            cls.name.notin_(cls.registry.loaded_namespaces.keys()))
+        Field = cls.registry.System.Field
+        for model_ in query.all():
+            Q = Field.query().filter(Field.name == model.name)
+            for field in Q.all():
+                field.delete()
+
+            model.delete()
+            cls.fire('Update Model', model.name)
