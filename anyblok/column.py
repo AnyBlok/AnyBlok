@@ -482,9 +482,6 @@ class String(Column):
         if 'type_' in kwargs:
             del kwargs['type_']
 
-        if 'foreign_key' in kwargs:
-            self.foreign_key = kwargs.pop('foreign_key')
-
         self.sqlalchemy_type = StringType(self.size)
         super(String, self).__init__(*args, **kwargs)
 
@@ -586,11 +583,7 @@ class uString(Column):
         if 'type_' in kwargs:
             del kwargs['type_']
 
-        if 'foreign_key' in kwargs:
-            self.foreign_key = kwargs.pop('foreign_key')
-
         self.sqlalchemy_type = uStringType(size)
-
         super(uString, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
@@ -939,9 +932,6 @@ class Color(Column):
         if 'type_' in kwargs:
             del kwargs['type_']
 
-        if 'foreign_key' in kwargs:
-            self.foreign_key = kwargs.pop('foreign_key')
-
         self.sqlalchemy_type = ColorType(max_length)
         super(Color, self).__init__(*args, **kwargs)
 
@@ -971,9 +961,6 @@ class UUID(Column):
         for kwarg in ('binary', 'native'):
             if kwarg in kwargs:
                 uuid_kwargs[kwarg] = kwargs.pop(kwarg)
-
-        if 'foreign_key' in kwargs:
-            self.foreign_key = kwargs.pop('foreign_key')
 
         self.sqlalchemy_type = UUIDType(**uuid_kwargs)
         super(UUID, self).__init__(*args, **kwargs)
