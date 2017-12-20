@@ -140,9 +140,9 @@ class Model:
             cls.name.notin_(cls.registry.loaded_namespaces.keys()))
         Field = cls.registry.System.Field
         for model_ in query.all():
-            Q = Field.query().filter(Field.name == model.name)
+            Q = Field.query().filter(Field.name == model_.name)
             for field in Q.all():
                 field.delete()
 
-            model.delete()
-            cls.fire('Update Model', model.name)
+            model_.delete()
+            cls.fire('Update Model', model_.name)
