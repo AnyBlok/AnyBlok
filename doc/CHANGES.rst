@@ -15,8 +15,8 @@ CHANGELOG
 0.12.0
 ------
 
-* [FIX] Declare Field Fonction in Polymophic subclass
-* [FIX] Declare Field Fonction in Polymophic
+* [FIX] Declare Field Function in Polymophic subclass
+* [FIX] Declare Field Function in Polymophic
 * [ADD] auto register of sqlalchemy ORM event
 * [ADD] Mixin to do readonly
 * [REMOVE] cron functionality, it will be add in another package **anyblok_dramatiq**
