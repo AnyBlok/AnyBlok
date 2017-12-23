@@ -12,8 +12,8 @@
 CHANGELOG
 =========
 
-0.12.0
-------
+0.12.0 (2017-12-23)
+-------------------
 
 * [FIX] Declare Field Function in Polymophic subclass
 * [FIX] Declare Field Function in Polymophic
