@@ -12,8 +12,8 @@
 CHANGELOG
 =========
 
-0.12.1
-------
+0.12.1 (2017-12-23)
+-------------------
 
 * [FIX] not invalidate cache on an uninstalled model
 
