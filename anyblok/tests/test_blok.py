@@ -129,11 +129,8 @@ class TestBlok(DBTestCase):
 
     def test_uninstall_an_uninstalled_blok(self):
         registry = self.init_registry(None)
-        try:
+        with self.assertRaises(RegistryException):
             registry.upgrade(uninstall=('test-blok1',))
-            self.fail('No watchdog to uninstall an uninstalled blok')
-        except RegistryException:
-            pass
 
     def test_update(self):
         registry = self.init_registry(None)
@@ -147,11 +144,8 @@ class TestBlok(DBTestCase):
 
     def test_update_an_uninstalled_blok(self):
         registry = self.init_registry(None)
-        try:
+        with self.assertRaises(RegistryException):
             registry.upgrade(update=('test-blok1',))
-            self.fail('No watchdog to update an uninstalled blok')
-        except RegistryException:
-            pass
 
 
 class TestBlokRequired(DBTestCase):
