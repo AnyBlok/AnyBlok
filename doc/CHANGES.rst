@@ -12,6 +12,27 @@
 CHANGELOG
 =========
 
+0.12.2
+------
+
+* [FIX] name of the created class, before the fix anyblok use the tablename.
+  In the case of polymorphism on single table, sqlalchemy found two two or more
+  mappers for a single mapper name. Now the class name is the registry name 
+  without dot.
+  This change have consequence only if the primary join is forced.
+  In the case::
+      
+      Test = registry.Test
+      Test.id
+
+  you need to change::
+
+      primaryjoin = 'test.id == ...'
+
+  by::
+      
+      primaryjoin = 'ModelTest.id == ...'
+
 0.12.1 (2017-12-23)
 -------------------
 

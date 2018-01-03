@@ -255,7 +255,7 @@ class RelationShip(Field):
         self.apply_instrumentedlist(registry, namespace, fieldname)
         self.format_backref(registry, namespace, fieldname, properties)
         return self.get_relationship_cls()(
-            self.model.tablename(registry), **self.kwargs)
+            self.model.modelname(registry), **self.kwargs)
 
     def must_be_declared_as_attr(self):
         """ Return True, because it is a relationship """
@@ -531,7 +531,7 @@ class Many2One(RelationShip):
         :rtype: Many2One relationship
         """
         self.kwargs['foreign_keys'] = '[%s]' % ', '.join(
-            [x.get_fk_name(registry) for x in self.column_names])
+            [x.get_complete_name(registry) for x in self.column_names])
         return super(Many2One, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
 
@@ -934,8 +934,8 @@ class One2Many(RelationShip):
             pjs = []
             for cname in self.remote_columns:
                 pjs.append("%s == %s" % (
-                    cname.get_fk_remote(registry),
-                    cname.get_fk_name(registry)))
+                    cname.get_complete_remote(registry),
+                    cname.get_complete_name(registry)))
 
             # This must be a python and not a SQL AND cause of eval do
             # on the primaryjoin

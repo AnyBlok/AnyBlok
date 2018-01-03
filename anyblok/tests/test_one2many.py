@@ -19,7 +19,7 @@ Mixin = Declarations.Mixin
 
 
 def _complete_one2many(**kwargs):
-    primaryjoin = "address.id == person.address_id"
+    primaryjoin = "ModelAddress.id == ModelPerson.address_id"
 
     @register(Model)
     class Address:
@@ -203,8 +203,8 @@ class TestOne2Many(DBTestCase):
     def test_complet_with_multi_foreign_key(self):
 
         def add_in_registry():
-            primaryjoin = "test.id == test2.test_id and "
-            primaryjoin += "test.id2 == test2.test_id2"
+            primaryjoin = "ModelTest.id == ModelTest2.test_id and "
+            primaryjoin += "ModelTest.id2 == ModelTest2.test_id2"
 
             @register(Model)
             class Test:

@@ -484,6 +484,7 @@ class Model:
 
         if namespace in registry.loaded_registries['Model_names']:
             tablename = properties['__tablename__']
+            modelname = namespace.replace('.', '')
             cls.init_core_properties_and_bases(registry, bases, properties)
 
             if tablename in registry.declarativebase.metadata.tables:
@@ -499,12 +500,12 @@ class Model:
                                 transformation_properties, properties)
             if properties['is_sql_view']:
                 cls.replace_properties_by_synonym(properties)
-                bases = [type(tablename, tuple(bases), properties)]
+                bases = [type(modelname, tuple(bases), properties)]
                 if properties['is_sql_view']:
                     cls.apply_view(namespace, tablename, bases[0], registry,
                                    properties)
             else:
-                bases = [type(tablename, tuple(bases), properties)]
+                bases = [type(modelname, tuple(bases), properties)]
 
             properties = {}
             registry.add_in_registry(namespace, bases[0])

@@ -157,6 +157,24 @@ class ModelAttribute:
 
         return tablename + '.' + column_name
 
+    def get_complete_name(self, registry):
+        """Return the name of the foreign key
+
+        the need of foreign key may be before the creation of the model in
+        the registry, so we must use the first step of assembling
+
+        :param registry: instance of the registry
+        :rtype: str of the foreign key (modelname.columnname)
+        :exceptions: ModelAttributeException
+        """
+        Model = self.check_model_in_first_step(registry)
+        column_name = self.check_column_in_first_step(registry, Model)
+        modelname = self.model_name.replace('.', '')
+        if Model[self.attribute_name].db_column_name:
+            column_name = Model[self.attribute_name].db_column_name
+
+        return modelname + '.' + column_name
+
     def get_fk_remote(self, registry):
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
@@ -165,6 +183,15 @@ class ModelAttribute:
             return None
 
         return remote.get_fk_name(registry)
+
+    def get_complete_remote(self, registry):
+        Model = self.check_model_in_first_step(registry)
+        column_name = self.check_column_in_first_step(registry, Model)
+        remote = Model[column_name].foreign_key
+        if not remote:
+            return None
+
+        return remote.get_complete_name(registry)
 
     def add_fake_column(self, registry):
         Model = self.check_model_in_first_step(registry)
@@ -268,6 +295,15 @@ class ModelRepr:
         """
         Model = self.check_model(registry)
         return Model['__tablename__']
+
+    def modelname(self, registry):
+        """Return the  real tablename of the Model
+
+        :param registry: instance of the registry
+        :rtype: string
+        """
+        self.check_model(registry)
+        return self.model_name.replace('.', '')
 
     def primary_keys(self, registry):
         """Return the  of the primary keys
