@@ -338,6 +338,22 @@ class ModelRepr:
 
         return fks
 
+    def many2one_for(self, registry, remote_model):
+        """Return the many2one links to the remote_model
+
+        :param registry: instance of the registry
+        :rtype: list of many2one field
+        """
+        from anyblok.relationship import Many2One
+        Model = self.check_model(registry)
+        many2ones = []
+        for k, v in Model.items():
+            if isinstance(v, Many2One):
+                if v.model.model_name == remote_model:
+                    many2ones.append((k, v))
+
+        return many2ones
+
 
 def ModelAttributeAdapter(Model):
     """ Return a ModelAttribute

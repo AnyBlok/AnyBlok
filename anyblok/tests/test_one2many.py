@@ -53,17 +53,13 @@ def _minimum_one2many(**kwargs):
         street = String()
         zip = String()
         city = String()
+        persons = One2Many(model='Model.Person')
 
     @register(Model)
     class Person:
 
         name = String(primary_key=True)
         address_id = Integer(foreign_key=Model.Address.use('id'))
-
-    @register(Model)  # noqa
-    class Address:
-
-        persons = One2Many(model=Model.Person)
 
 
 def _minimum_one2many_remote_field_in_mixin(**kwargs):

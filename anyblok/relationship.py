@@ -363,29 +363,36 @@ class Many2One(RelationShip):
         res['unique'] = self.unique
         return res
 
-    def update_local_and_remote_columns_names(self, registry, namespace,
-                                              fieldname):
+    def get_remote_columns(self, registry):
         if self._remote_columns is None:
-            self.remote_columns = self.model.primary_keys(registry)
-        else:
-            self.remote_columns = [ModelAttribute(self.model.model_name, x)
-                                   for x in self._remote_columns]
+            return self.model.primary_keys(registry)
 
-        self.kwargs['info']['remote_columns'] = [str(x)
-                                                 for x in self.remote_columns]
+        return [ModelAttribute(self.model.model_name, x)
+                for x in self._remote_columns]
 
+    def get_columns_names(self, registry, namespace, fieldname, remote_columns):
         if self._column_names is None:
             model = ModelRepr(namespace)
-            self.column_names = model.foreign_keys_for(
+            column_names = model.foreign_keys_for(
                 registry, self.model.model_name)
-            if not self.column_names:
-                self.column_names = []
-                for x in self.remote_columns:
+            if not column_names:
+                column_names = []
+                for x in remote_columns:
                     cname = fieldname + '_' + x.attribute_name
-                    self.column_names.append(ModelAttribute(namespace, cname))
+                    column_names.append(ModelAttribute(namespace, cname))
         else:
-            self.column_names = [ModelAttribute(namespace, x)
-                                 for x in self._column_names]
+            column_names = [ModelAttribute(namespace, x)
+                            for x in self._column_names]
+
+        return column_names
+
+    def update_local_and_remote_columns_names(self, registry, namespace,
+                                              fieldname):
+        self.remote_columns = self.get_remote_columns(registry)
+        self.kwargs['info']['remote_columns'] = [str(x)
+                                                 for x in self.remote_columns]
+        self.column_names = self.get_columns_names(
+            registry, namespace, fieldname, self.remote_columns)
 
     def get_property(self, registry, namespace, fieldname, properties):
         """Return the property of the field
@@ -914,27 +921,14 @@ class One2Many(RelationShip):
                 registry.expire_attributes[model_name][_rname].add(
                     (backref, fieldname))
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
-                               properties):
-        """ Create the relationship
-
-        :param registry: the registry which load the relationship
-        :param namespace: the name space of the model
-        :param fieldname: fieldname of the relationship
-        :param propertie: the properties known
-        :rtype: Many2One relationship
-        """
-        self.model.check_model(registry)
-        if not self.remote_columns:
-            self.remote_columns = self.model.foreign_keys_for(
-                registry, namespace)
+    def format_join_from_remote_columns(self, registry, namespace, fieldname):
 
         self.kwargs['info']['remote_columns'] = [x.attribute_name
                                                  for x in self.remote_columns]
-
         self.link_between_columns = [
             (x.attribute_name, x.get_fk_mapper(registry).attribute_name)
-            for x in self.remote_columns]
+            for x in self.remote_columns
+        ]
 
         if 'primaryjoin' not in self.kwargs:
             pjs_ = {}
@@ -958,6 +952,60 @@ class One2Many(RelationShip):
                     pjs.append(pj)
 
             self.kwargs['primaryjoin'] = 'and_(' + ', '.join(pjs) + ')'
+
+    def format_join_and_remote_columns(self, registry, namespace, fieldname):
+        many2ones = self.model.many2one_for(registry, namespace)
+        cmodel = self.model.model_name.replace('.', '')
+        model = namespace.replace('.', '')
+        pjs_ = {}
+        self.link_between_columns = []
+        self.kwargs['info']['remote_columns'] = []
+        for m2o_name, many2one in many2ones:
+            remote_columns = many2one.get_remote_columns(registry)
+            for x in remote_columns:
+                cname = m2o_name + '_' + x.attribute_name
+                self.link_between_columns.append((cname, x.attribute_name))
+                self.kwargs['info']['remote_columns'].append(cname)
+                complete_name = cmodel + '.' + cname
+                remote_name = model + '.' + x.attribute_name
+                if remote_name in pjs_:
+                    pjs_[remote_name].append(complete_name)
+                else:
+                    pjs_[remote_name] = [complete_name]
+
+        if 'primaryjoin' not in self.kwargs:
+            pjs = []
+            for k, v in pjs_.items():
+                if len(v) == 1:
+                    pjs.append("%s == %s" % (k, v[0]))
+                else:
+                    pj = 'or_(%s)' % ', '.join("%s == %s" % (k, y) for y in v)
+                    logger.warning(
+                        ("The One2Many %r on %r do a jointure on two identical "
+                         "primary key : %r"), fieldname, namespace, pj)
+                    pjs.append(pj)
+
+            self.kwargs['primaryjoin'] = 'and_(' + ', '.join(pjs) + ')'
+
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
+                               properties):
+        """ Create the relationship
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param fieldname: fieldname of the relationship
+        :param propertie: the properties known
+        :rtype: Many2One relationship
+        """
+        self.model.check_model(registry)
+        if not self.remote_columns:
+            self.remote_columns = self.model.foreign_keys_for(
+                registry, namespace)
+
+        if self.remote_columns:
+            self.format_join_from_remote_columns(registry, namespace, fieldname)
+        else:
+            self.format_join_and_remote_columns(registry, namespace, fieldname)
 
         self.add_expire_attributes(registry, namespace, fieldname)
         return super(One2Many, self).get_sqlalchemy_mapping(

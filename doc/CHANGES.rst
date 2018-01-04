@@ -45,6 +45,7 @@ CHANGELOG
 
 * [FIX] In the One2Many when two foreign keys found to the same primary key
   the primary join of the relation ship is now a ``or_`` not a ``and_``
+* [FIX] One2Many detect also the Many2One to get the FakeColumn to do primary join
 
 0.12.1 (2017-12-23)
 -------------------
