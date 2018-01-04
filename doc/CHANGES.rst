@@ -12,8 +12,8 @@
 CHANGELOG
 =========
 
-0.12.2
-------
+0.12.2 (2018-01-04)
+-------------------
 
 * [FIX] name of the created class, before the fix anyblok use the tablename.
   In the case of polymorphism on single table, sqlalchemy found two two or more
