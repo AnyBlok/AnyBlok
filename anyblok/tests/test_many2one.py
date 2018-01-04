@@ -580,3 +580,28 @@ class TestMany2One(DBTestCase):
         self.assertIs(testM2O.test, test)
         test.delete()
         self.assertFalse(registry.TestM2O.query().count())
+
+    def test_2_simple_many2one_on_the_same_model(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                address_1 = Many2One(model=Model.Address)
+                address_2 = Many2One(model=Model.Address)
+
+        registry = self.init_registry(add_in_registry)
+        address_1 = registry.Address.insert()
+        address_2 = registry.Address.insert()
+        person = registry.Person.insert(
+            name='test', address_1=address_1, address_2=address_2)
+        self.assertIs(person.address_1, address_1)
+        self.assertIs(person.address_2, address_2)
+        self.assertIsNot(person.address_1, person.address_2)

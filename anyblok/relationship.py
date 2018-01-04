@@ -359,7 +359,8 @@ class Many2One(RelationShip):
         res['unique'] = self.unique
         return res
 
-    def update_local_and_remote_columns_names(self, registry, namespace):
+    def update_local_and_remote_columns_names(self, registry, namespace,
+                                              fieldname):
         if self._remote_columns is None:
             self.remote_columns = self.model.primary_keys(registry)
         else:
@@ -376,7 +377,7 @@ class Many2One(RelationShip):
             if not self.column_names:
                 self.column_names = []
                 for x in self.remote_columns:
-                    cname = x.get_fk_name(registry).replace('.', '_')
+                    cname = fieldname + '_' + x.attribute_name
                     self.column_names.append(ModelAttribute(namespace, cname))
         else:
             self.column_names = [ModelAttribute(namespace, x)
@@ -420,7 +421,8 @@ class Many2One(RelationShip):
         add_fksc = False
         self.link_between_columns = []
         self.model.check_model(registry)
-        self.update_local_and_remote_columns_names(registry, namespace)
+        self.update_local_and_remote_columns_names(
+            registry, namespace, fieldname)
         if fieldname in [x.attribute_name for x in self.column_names]:
             raise FieldException("The column_names and the fieldname %r are "
                                  "the same, please choose another "

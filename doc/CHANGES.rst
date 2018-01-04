@@ -33,6 +33,16 @@ CHANGELOG
       
       primaryjoin = 'ModelTest.id == ...'
 
+* [FIX] name of the fakecolumn when a Many2One is added whitout
+  existing column names. This action allow to create two Many2One
+  to the same remote Model.
+
+  .. warning::
+
+      This change have a big consequence on existing table, because a new column
+      is added and the origin column is mark as unknown. You have to rename the column
+      by SQL migration or add the column in Model or force the name in Many2One.
+
 0.12.1 (2017-12-23)
 -------------------
 

@@ -652,8 +652,8 @@ Parameters of the ``One2One`` field:
 | ``column_names``  | Name of the local column.                               |
 |                   | If the column doesn't exist then this column will be    |
 |                   | created.                                                |
-|                   | If no column name then the name will be 'tablename' +   |
-|                   | '_' + name of the relationships                         |
+|                   | If no column name then the name will be 'M2O name' +    |
+|                   | '_' + 'name of the remote column'                       |
 +-------------------+---------------------------------------------------------+
 | ``nullable``      | Indicates if the column name is nullable or not         |
 +-------------------+---------------------------------------------------------+
@@ -669,7 +669,7 @@ Parameters of the ``Many2One`` field:
 |                         | If the column doesn't exist then this column will |
 |                         | be created.                                       |
 |                         | If no column name then the name will be           |
-|                         | 'tablename' + '_' + name of the relationships     |
+|                         | 'M2O name' + '_' + 'name of the remote column'    |
 +-------------------------+---------------------------------------------------+
 | ``nullable``            | Indicate if the column name is nullable or not    |
 +-------------------------+---------------------------------------------------+
