@@ -254,3 +254,74 @@ class TestOne2Many(DBTestCase):
         self.assertIn(
             ('test', 'test2'),
             registry.expire_attributes['Model.Test2']['test_id2'])
+
+    def test_with_multi_parallel_foreign_key_auto_detect(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                address_1_id = Integer(foreign_key=Model.Address.use('id'))
+                address_2_id = Integer(foreign_key=Model.Address.use('id'))
+
+            @register(Model)  # noqa
+            class Address:
+
+                persons = One2Many(model=Model.Person)
+
+        registry = self.init_registry(add_in_registry)
+        address_1 = registry.Address.insert()
+        address_2 = registry.Address.insert()
+        person = registry.Person.insert(
+            name='test', address_1_id=address_1.id, address_2_id=address_2.id)
+        self.assertEqual(address_1.persons, [person])
+        self.assertEqual(address_2.persons, [person])
+
+    def test_with_multi_parallel_foreign_key_with_specific_primaryjoin(self):
+
+        def add_in_registry():
+            primaryjoin = (
+                "or_("
+                "ModelAddress.id == ModelPerson.address_1_id,"
+                "ModelAddress.id == ModelPerson.address_2_id"
+                ")"
+            )
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                address_1_id = Integer(foreign_key=Model.Address.use('id'))
+                address_2_id = Integer(foreign_key=Model.Address.use('id'))
+
+            @register(Model)  # noqa
+            class Address:
+
+                persons = One2Many(model=Model.Person,
+                                   primaryjoin=primaryjoin)
+
+        registry = self.init_registry(add_in_registry)
+        address_1 = registry.Address.insert()
+        address_2 = registry.Address.insert()
+        person = registry.Person.insert(
+            name='test', address_1_id=address_1.id, address_2_id=address_2.id)
+        self.assertEqual(address_1.persons, [person])
+        self.assertEqual(address_2.persons, [person])

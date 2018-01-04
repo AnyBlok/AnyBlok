@@ -699,6 +699,12 @@ Parameters of the ``One2Many`` field:
 | ``many2one``      | Opposite Many2One link with this One2Many               |
 +-------------------+---------------------------------------------------------+
 
+.. warning::
+
+    In the case where two or more foreign keys is found to the same primary key,
+    then the primary join become a ``or`` between them. You must considere this
+    field as a readonly field, because SQLAlchemy will change the both foreign key
+
 Parameters of the ``Many2Many`` field:
 
 +------------------------+----------------------------------------------------+

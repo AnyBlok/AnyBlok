@@ -43,6 +43,9 @@ CHANGELOG
       is added and the origin column is mark as unknown. You have to rename the column
       by SQL migration or add the column in Model or force the name in Many2One.
 
+* [FIX] In the One2Many when two foreign keys found to the same primary key
+  the primary join of the relation ship is now a ``or_`` not a ``and_``
+
 0.12.1 (2017-12-23)
 -------------------
 

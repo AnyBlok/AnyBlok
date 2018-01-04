@@ -16,6 +16,10 @@ from sqlalchemy import exc as sa_exc, util
 from .field import Field, FieldException
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr
 from anyblok.common import anyblok_column_prefix
+from logging import getLogger
+
+
+logger = getLogger(__name__)
 
 
 class RelationshipProperty(relationships.RelationshipProperty):
@@ -933,15 +937,27 @@ class One2Many(RelationShip):
             for x in self.remote_columns]
 
         if 'primaryjoin' not in self.kwargs:
-            pjs = []
+            pjs_ = {}
             for cname in self.remote_columns:
-                pjs.append("%s == %s" % (
-                    cname.get_complete_remote(registry),
-                    cname.get_complete_name(registry)))
+                remote = cname.get_complete_remote(registry)
+                complete = cname.get_complete_name(registry)
+                if remote in pjs_:
+                    pjs_[remote].append(complete)
+                else:
+                    pjs_[remote] = [complete]
 
-            # This must be a python and not a SQL AND cause of eval do
-            # on the primaryjoin
-            self.kwargs['primaryjoin'] = ' and '.join(pjs)
+            pjs = []
+            for k, v in pjs_.items():
+                if len(v) == 1:
+                    pjs.append("%s == %s" % (k, v[0]))
+                else:
+                    pj = 'or_(%s)' % ', '.join("%s == %s" % (k, y) for y in v)
+                    logger.warning(
+                        ("The One2Many %r on %r do a jointure on two identical "
+                         "primary key : %r"), fieldname, namespace, pj)
+                    pjs.append(pj)
+
+            self.kwargs['primaryjoin'] = 'and_(' + ', '.join(pjs) + ')'
 
         self.add_expire_attributes(registry, namespace, fieldname)
         return super(One2Many, self).get_sqlalchemy_mapping(
