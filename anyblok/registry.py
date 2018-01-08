@@ -15,14 +15,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
-from sqlalchemy.schema import ForeignKeyConstraint
 from sqlalchemy_utils.functions import database_exists
 from .config import Configuration, get_url
 from .migration import Migration
 from .blok import BlokManager
 from .environment import EnvironmentManager
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
-from anyblok.common import anyblok_column_prefix
+from anyblok.common import anyblok_column_prefix, naming_convention
 from pkg_resources import iter_entry_points
 from .logging import log
 logger = getLogger(__name__)
@@ -900,25 +899,6 @@ class Registry:
 
         return False
 
-    def all_column_name(self, constraint, table):
-        if isinstance(constraint, ForeignKeyConstraint):
-            return '_'.join(constraint.column_keys)
-        else:
-            return '_'.join(constraint.columns.keys())
-
-    def all_referred_column_name(self, constraint, table):
-        referred_columns = []
-        for el in constraint.elements:
-            refs = el.target_fullname.split(".")
-            if len(refs) == 3:
-                refschema, reftable, refcol = refs
-            else:
-                reftable, refcol = refs
-
-            referred_columns.append(refcol)
-
-        return '_'.join(referred_columns)
-
     @log(logger)
     def load(self):
         """ Load all the namespaces of the registry
@@ -929,19 +909,8 @@ class Registry:
         mustreload = False
         blok2install = None
         try:
-            convention = {
-                "all_column_name": self.all_column_name,
-                "all_referred_column_name": self.all_referred_column_name,
-                "ix": "anyblok_ix_%(table_name)s__%(all_column_name)s",
-                "uq": "anyblok_uq_%(table_name)s__%(all_column_name)s",
-                "ck": "anyblok_ck_%(table_name)s_%(constraint_name)s",
-                "fk": ("anyblok_fk_%(table_name)s_%(all_column_name)s_on_"
-                       "%(referred_table_name)s__"
-                       "%(all_referred_column_name)s"),
-                "pk": "anyblok_pk_%(table_name)s"
-            }
             self.declarativebase = declarative_base(
-                metadata=MetaData(naming_convention=convention),
+                metadata=MetaData(naming_convention=naming_convention),
                 class_registry=dict(registry=self))
             toload = self.get_bloks_to_load()
             toinstall = self.get_bloks_to_install(toload)

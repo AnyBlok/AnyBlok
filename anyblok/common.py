@@ -7,10 +7,48 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import sys
 from functools import lru_cache
+from sqlalchemy.schema import ForeignKeyConstraint
 
 
 """Define the prefixe for the mapper attribute for the column"""
 anyblok_column_prefix = '__anyblok_field_'
+
+
+def all_column_name(constraint, table):
+    """Define the convention for merge the column"""
+    if isinstance(constraint, ForeignKeyConstraint):
+        return '-'.join(constraint.column_keys)
+    else:
+        return '-'.join(constraint.columns.keys())
+
+
+def all_referred_column_name(constraint, table):
+    """Define the convention for merge the referred column"""
+    referred_columns = []
+    for el in constraint.elements:
+        refs = el.target_fullname.split(".")
+        if len(refs) == 3:
+            refschema, reftable, refcol = refs
+        else:
+            reftable, refcol = refs
+
+        referred_columns.append(refcol)
+
+    return '-'.join(referred_columns)
+
+
+"""table convention for constraint"""
+naming_convention = {
+    "all_column_name": all_column_name,
+    "all_referred_column_name": all_referred_column_name,
+    "ix": "ix_%(table_name)s__%(all_column_name)s",
+    "uq": "uq_%(table_name)s__%(all_column_name)s",
+    "ck": "ck_%(table_name)s__%(constraint_name)s",
+    "fk": ("fk_%(table_name)s_%(all_column_name)s_on_"
+           "%(referred_table_name)s__"
+           "%(all_referred_column_name)s"),
+    "pk": "pk_%(table_name)s"
+}
 
 
 def add_autodocs(meth, autodoc):

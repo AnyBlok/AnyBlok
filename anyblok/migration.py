@@ -58,12 +58,14 @@ class MigrationReport:
             return False
 
     def can_remove_constraints(self, name):
-        unique = "anyblok_uq_(?P<table>\w+)__(?P<columns>\w+)"
-        check = "anyblok_ck_(?P<table>\w+)_(?P<constraint>\w+)"
+        unique = "uq_(?P<table>\w+)__(?P<columns>[\w-]+)"
+        check = "ck_(?P<table>\w+)__(?P<constraint>\w+)"
 
         m = re.search(unique, name)
-        if m and self.check_if_table_and_columns_exist(m.group('table'),
-                                                       m.group('columns')):
+        if m and self.check_if_table_and_columns_exist(
+            m.group('table'),
+            m.group('columns').split('-')
+        ):
             return True
 
         m = re.search(check, name)
@@ -79,14 +81,15 @@ class MigrationReport:
         return False
 
     def can_remove_fk_constraints(self, name):
-        fk = ("anyblok_fk_(?P<table>\w+)__(?P<columns>\w+)_on_"
-              "(?P<referred_table>\w+)__(?P<referred_columns>\w+)")
+        fk = ("fk_(?P<table>\w+)__(?P<columns>[\w-]+)_on_"
+              "(?P<referred_table>\w+)__(?P<referred_columns>[\w-]+)")
         m = re.search(fk, name)
         if m is not None:
             local = self.check_if_table_and_columns_exist(
-                m.group('table'), m.group('columns'))
+                m.group('table'), m.group('columns').split('-'))
             referred = self.check_if_table_and_columns_exist(
-                m.group('referred_table'), m.group('referred_columns'))
+                m.group('referred_table'),
+                m.group('referred_columns').split('-'))
             if local and referred:
                 return True
 
@@ -109,10 +112,12 @@ class MigrationReport:
             return True
 
     def can_remove_index(self, name):
-        key = "anyblok_ix_(?P<table>\w+)__(?P<columns>\w+)"
+        key = "ix_(?P<table>\w+)__(?P<columns>[\w-]+)"
         m = re.search(key, name)
-        if m and self.check_if_table_and_columns_exist(m.group('table'),
-                                                       m.group('columns')):
+        if m and self.check_if_table_and_columns_exist(
+            m.group('table'),
+            m.group('columns').split('-')
+        ):
             return True
 
         if self.migration.reinit_indexes:
@@ -688,7 +693,7 @@ class MigrationConstraintPrimaryKey:
         self.name = self.format_name()
 
     def format_name(self, *columns):
-        return 'anyblok_pk_%s' % self.table.name
+        return 'pk_%s' % self.table.name
 
     def add(self, *columns):
         """ Add the constraint
