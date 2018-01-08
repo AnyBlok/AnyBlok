@@ -256,7 +256,7 @@ class MigrationReport:
                     if fnct(diff):
                         continue
                 else:
-                    print(diff)
+                    logger.warn('Unknow diff', diff)
 
                 self.actions.append(diff)
 
@@ -505,10 +505,10 @@ class MigrationColumn:
 
         t = self.table.migration.metadata.tables[self.table.name]
         for constraint in t.constraints:
-            if not isinstance(constraint, schema.PrimaryKeyConstraint):
-                if not isinstance(constraint, schema.ForeignKeyConstraint):
-                    self.table.migration.operation.impl.add_constraint(
-                        constraint)
+            if not isinstance(constraint, (schema.PrimaryKeyConstraint,
+                                           schema.ForeignKeyConstraint,
+                                           schema.CheckConstraint)):
+                self.table.migration.operation.impl.add_constraint(constraint)
 
         # TODO get the default value of the column and apply it on null value
 
