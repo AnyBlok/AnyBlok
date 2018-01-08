@@ -64,7 +64,7 @@ class MigrationReport:
         m = re.search(unique, name)
         if m and self.check_if_table_and_columns_exist(
             m.group('table'),
-            m.group('columns').split('-')
+            *m.group('columns').split('-')
         ):
             return True
 
@@ -86,10 +86,10 @@ class MigrationReport:
         m = re.search(fk, name)
         if m is not None:
             local = self.check_if_table_and_columns_exist(
-                m.group('table'), m.group('columns').split('-'))
+                m.group('table'), *m.group('columns').split('-'))
             referred = self.check_if_table_and_columns_exist(
                 m.group('referred_table'),
-                m.group('referred_columns').split('-'))
+                *m.group('referred_columns').split('-'))
             if local and referred:
                 return True
 
@@ -116,7 +116,7 @@ class MigrationReport:
         m = re.search(key, name)
         if m and self.check_if_table_and_columns_exist(
             m.group('table'),
-            m.group('columns').split('-')
+            *m.group('columns').split('-')
         ):
             return True
 
