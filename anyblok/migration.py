@@ -345,7 +345,7 @@ class MigrationReport:
     def apply_change_add_ck(self, action):
         _, table, ck = action
         t = self.migration.table(table)
-        # TODO
+        t.check(ck.name).add(str(ck.sqltext))
 
     def apply_change_remove_fk(self, action):
         _, fk = action

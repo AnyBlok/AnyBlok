@@ -19,6 +19,7 @@ CHANGELOG
   because the column of the constraint could have not exist yet
 * [REF] change namimg convention
 * [FIX] detect and apply drop check constraint in the migration
+* [FIX] detect and apply add check constraint in the migration
 
 0.12.2 (2018-01-04)
 -------------------

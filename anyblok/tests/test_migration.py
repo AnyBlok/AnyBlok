@@ -15,7 +15,7 @@ from anyblok.column import Integer as Int, String as Str
 from anyblok.migration import MigrationException
 from anyblok.relationship import Many2Many
 from contextlib import contextmanager
-from sqlalchemy import Column, Integer, TEXT
+from sqlalchemy import Column, Integer, TEXT, CheckConstraint
 from anyblok import Declarations
 from sqlalchemy.exc import InternalError, IntegrityError
 from unittest import skipIf
@@ -52,6 +52,16 @@ class TestMigration(TestCase):
         class TestUnique:
             integer = Int(primary_key=True)
             other = Str(unique=True)
+
+        @register(Model)
+        class TestCheck:
+            integer = Int(primary_key=True)
+
+            @classmethod
+            def define_table_args(cls):
+                table_args = super(TestCheck, cls).define_table_args()
+                return table_args + (
+                    CheckConstraint('integer > 0', name='test'),)
 
         @register(Model)
         class TestFKTarget:
@@ -93,7 +103,8 @@ class TestMigration(TestCase):
     def tearDown(self):
         super(TestMigration, self).tearDown()
         for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget',
-                      'testunique', 'reltab', 'testm2m1', 'testm2m2'):
+                      'testunique', 'reltab', 'testm2m1', 'testm2m2',
+                      'testcheck'):
             try:
                 self.registry.migration.table(table).drop()
             except Exception:
@@ -712,6 +723,21 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(
             report.log_has("Drop constraint unique_other on test"))
+
+    def test_detect_add_check_constraint(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE testcheck")
+            conn.execute(
+                """CREATE TABLE testcheck(
+                    integer INT PRIMARY KEY NOT NULL
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Add check constraint ck_testcheck__test on testcheck"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has(
+            "Add check constraint ck_testcheck__test on testcheck"))
 
     def test_detect_drop_check_constraint(self):
         with self.cnx() as conn:
