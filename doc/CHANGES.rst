@@ -12,8 +12,8 @@
 CHANGELOG
 =========
 
-0.13.0
-------
+0.13.0 (2018-01-09)
+-------------------
 
 * [FIX] check constraint must not be create at the same time that the column, 
   because the column of the constraint could have not exist yet
