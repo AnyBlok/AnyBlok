@@ -18,6 +18,7 @@ CHANGELOG
 * [FIX] check constraint must not be create at the same time that the column, 
   because the column of the constraint could have not exist yet
 * [REF] change namimg convention
+* [FIX] detect and apply drop check constraint in the migration
 
 0.12.2 (2018-01-04)
 -------------------

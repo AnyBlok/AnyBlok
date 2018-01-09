@@ -713,7 +713,6 @@ class TestMigration(TestCase):
         self.assertFalse(
             report.log_has("Drop constraint unique_other on test"))
 
-    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_drop_check_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -723,30 +722,30 @@ class TestMigration(TestCase):
                     other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
                 );""")
         report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Drop constraint ck_other on test"))
+        self.assertTrue(
+            report.log_has("Drop check constraint ck_other on test"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Drop constraint ck_other on test"))
+        self.assertTrue(
+            report.log_has("Drop check constraint ck_other on test"))
 
-    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_drop_check_anyblok_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
             conn.execute(
                 """CREATE TABLE test(
                     integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT anyblok_ck_test_check
+                    other CHAR(64) CONSTRAINT ck_test__check
                         CHECK (other != 'test')
                 );""")
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has(
-            "Drop constraint anyblok_ck_test_check on test"))
+            "Drop check constraint ck_test__check on test"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has(
-            "Drop constraint anyblok_ck_test_check on test"))
+            "Drop check constraint ck_test__check on test"))
 
-    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_drop_check_constraint_with_reinit_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -757,12 +756,13 @@ class TestMigration(TestCase):
                 );""")
         self.registry.migration.reinit_constraints = True
         report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Drop constraint ck_other on test"))
+        self.assertTrue(
+            report.log_has("Drop check constraint ck_other on test"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertFalse(report.log_has("Drop constraint ck_other on test"))
+        self.assertFalse(
+            report.log_has("Drop check constraint ck_other on test"))
 
-    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_drop_check_constraint_with_reinit_all(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -773,10 +773,12 @@ class TestMigration(TestCase):
                 );""")
         self.registry.migration.reinit_all = True
         report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Drop constraint ck_other on test"))
+        self.assertTrue(
+            report.log_has("Drop check constraint ck_other on test"))
         report.apply_change()
         report = self.registry.migration.detect_changed()
-        self.assertFalse(report.log_has("Drop constraint ck_other on test"))
+        self.assertFalse(
+            report.log_has("Drop check constraint ck_other on test"))
 
     def test_savepoint(self):
         Test = self.registry.Test

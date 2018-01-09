@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from sqlalchemy import func, select, update, join, alias, and_
 from anyblok.config import Configuration
 import re
+from sqlalchemy.engine.reflection import Inspector
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -162,6 +163,22 @@ class MigrationReport:
 
         self.raise_if_withoutautomigration()
 
+    def init_add_ck(self, diff):
+        self.raise_if_withoutautomigration()
+        _, table, ck = diff
+        self.log_names.append('Add check constraint %s on %s' % (
+            ck.name, table))
+
+    def init_remove_ck(self, diff):
+        _, table, ck = diff
+        self.log_names.append('Drop check constraint %s on %s' % (
+            ck['name'], table))
+
+        if not self.can_remove_constraints(ck['name']):
+            return True
+
+        self.raise_if_withoutautomigration()
+
     def init_add_constraint(self, diff):
         self.raise_if_withoutautomigration()
         _, constraint = diff
@@ -244,6 +261,8 @@ class MigrationReport:
             'remove_index': self.init_remove_index,
             'add_fk': self.init_add_fk,
             'remove_fk': self.init_remove_fk,
+            'add_ck': self.init_add_ck,
+            'remove_ck': self.init_remove_ck,
             'add_constraint': self.init_add_constraint,
             'remove_column': self.init_remove_column,
             'remove_table': self.init_remove_table,
@@ -261,7 +280,7 @@ class MigrationReport:
                     if fnct(diff):
                         continue
                 else:
-                    logger.warn('Unknow diff', diff)
+                    logger.warn('Unknow diff: %r', diff)
 
                 self.actions.append(diff)
 
@@ -299,7 +318,6 @@ class MigrationReport:
             **kwargs)
 
     def apply_change_remove_constraint(self, action):
-        # FIXME, test for check, foreignkey
         _, constraint = action
         if constraint.__class__ is schema.UniqueConstraint:
             table = self.migration.table(constraint.table)
@@ -324,10 +342,20 @@ class MigrationReport:
         name = 'fk_%s' % '_'.join(from_)
         t.foreign_key(name).add(from_, to_)
 
+    def apply_change_add_ck(self, action):
+        _, table, ck = action
+        t = self.migration.table(table)
+        # TODO
+
     def apply_change_remove_fk(self, action):
         _, fk = action
         t = self.migration.table(fk.table.name)
         t.foreign_key(fk.name).drop()
+
+    def apply_change_remove_ck(self, action):
+        _, table, ck = action
+        t = self.migration.table(table)
+        t.foreign_key(ck['name']).drop()
 
     def apply_change_add_constraint(self, action):
         _, constraint = action
@@ -356,10 +384,12 @@ class MigrationReport:
             'modify_type': self.apply_change_modify_type,
             'modify_default': self.apply_change_modify_default,
             'add_fk': self.apply_change_add_fk,
+            'add_ck': self.apply_change_add_ck,
             'add_constraint': self.apply_change_add_constraint,
             'remove_constraint': self.apply_change_remove_constraint,
             'remove_index': self.apply_change_remove_index,
             'remove_fk': self.apply_change_remove_fk,
+            'remove_ck': self.apply_change_remove_ck,
             'remove_table': self.apply_remove_table,
             'remove_column': self.apply_remove_column,
         }
@@ -938,7 +968,35 @@ class Migration:
         :rtype: MigrationReport instance
         """
         diff = compare_metadata(self.context, self.metadata)
+        inspector = Inspector(self.conn)
+        diff.extend(self.detect_check_constraint(inspector))
         return MigrationReport(self, diff)
+
+    def detect_check_constraint(self, inspector):
+        diff = []
+        for table in inspector.get_table_names():
+            if table not in self.metadata.tables:
+                continue
+
+            reflected_constraints = {
+                ck['name']: ck
+                for ck in inspector.get_check_constraints(table)
+            }
+            constraints = {
+                ck.name: ck
+                for ck in self.metadata.tables[table].constraints
+                if isinstance(ck, schema.CheckConstraint)
+                if ck.name != '_unnamed_'
+            }
+            todrop = set(reflected_constraints.keys()) - set(constraints.keys())
+            toadd = set(constraints.keys()) - set(reflected_constraints.keys())
+            for ck in todrop:
+                diff.append(('remove_ck', table, reflected_constraints[ck]))
+
+            for ck in toadd:
+                diff.append(('add_ck', table, constraints[ck]))
+
+        return diff
 
     def savepoint(self, name=None):
         """ Add a savepoint
