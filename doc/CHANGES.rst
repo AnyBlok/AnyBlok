@@ -16,6 +16,8 @@ CHANGELOG
 ------
 
 * [REF] change log level, the instalation become less verbose
+* [REF] change namimg convention, dont check in function of 
+  table and column name to know if it is an AnyBlok constraint
 
 0.13.0 (2018-01-09)
 -------------------

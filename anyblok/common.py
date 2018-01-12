@@ -17,9 +17,9 @@ anyblok_column_prefix = '__anyblok_field_'
 def all_column_name(constraint, table):
     """Define the convention for merge the column"""
     if isinstance(constraint, ForeignKeyConstraint):
-        return '-'.join(constraint.column_keys)
+        return '_'.join(constraint.column_keys)
     else:
-        return '-'.join(constraint.columns.keys())
+        return '_'.join(constraint.columns.keys())
 
 
 def all_referred_column_name(constraint, table):
@@ -34,20 +34,47 @@ def all_referred_column_name(constraint, table):
 
         referred_columns.append(refcol)
 
-    return '-'.join(referred_columns)
+    return '_'.join(referred_columns)
+
+
+def model_name(constraint, table):
+    """return a shortest table name"""
+    name = table.name.split('_')
+    if len(name) == 1:
+        return name[0]
+
+    return ''.join(x[0] for x in name[:-1]) + '_' + name[-1]
+
+
+def referred_model_name(constraint, table):
+    """return a shortest referred table name"""
+    el = constraint.elements[0]
+    refs = el.target_fullname.split(".")
+    if len(refs) == 3:
+        refschema, reftable, refcol = refs
+    else:
+        reftable, refcol = refs
+
+    name = reftable.split('_')
+    if len(name) == 1:
+        return name[0]
+
+    return ''.join(x[0] for x in name[:-1]) + '_' + name[-1]
 
 
 """table convention for constraint"""
 naming_convention = {
     "all_column_name": all_column_name,
     "all_referred_column_name": all_referred_column_name,
-    "ix": "ix_%(table_name)s__%(all_column_name)s",
-    "uq": "uq_%(table_name)s__%(all_column_name)s",
-    "ck": "ck_%(table_name)s__%(constraint_name)s",
-    "fk": ("fk_%(table_name)s_%(all_column_name)s_on_"
-           "%(referred_table_name)s__"
+    "model_name": model_name,
+    "referred_model_name": referred_model_name,
+    "ix": "anyblok_ix_%(model_name)s__%(all_column_name)s",
+    "uq": "anyblok_uq_%(model_name)s__%(all_column_name)s",
+    "ck": "anyblok_ck_%(model_name)s__%(constraint_name)s",
+    "fk": ("anyblok_fk_%(model_name)s_%(all_column_name)s_on_"
+           "%(referred_model_name)s__"
            "%(all_referred_column_name)s"),
-    "pk": "pk_%(table_name)s"
+    "pk": "anyblok_pk_%(table_name)s"
 }
 
 

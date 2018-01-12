@@ -49,28 +49,11 @@ class MigrationReport:
         _, _, table, column = diff
         self.log_names.append('Add %s.%s' % (table, column.name))
 
-    def check_if_table_and_columns_exist(self, table, *columns):
-        try:  # check if the table and the column exist
-            table = self.migration.table(table)
-            for column in columns:
-                table.column(column)
-            return True
-        except Exception:
-            return False
-
     def can_remove_constraints(self, name):
-        unique = "uq_(?P<table>\w+)__(?P<columns>[\w-]+)"
-        check = "ck_(?P<table>\w+)__(?P<constraint>\w+)"
+        unique = "anyblok_uq_(?P<table>\w+)__(?P<columns>\w+)"
 
         m = re.search(unique, name)
-        if m and self.check_if_table_and_columns_exist(
-            m.group('table'),
-            *m.group('columns').split('-')
-        ):
-            return True
-
-        m = re.search(check, name)
-        if m and self.check_if_table_and_columns_exist(m.group('table')):
+        if m and m.groups():
             return True
 
         if self.migration.reinit_constraints:
@@ -82,17 +65,25 @@ class MigrationReport:
         return False
 
     def can_remove_fk_constraints(self, name):
-        fk = ("fk_(?P<table>\w+)__(?P<columns>[\w-]+)_on_"
-              "(?P<referred_table>\w+)__(?P<referred_columns>[\w-]+)")
+        fk = ("anyblok_fk_(?P<table>\w+)__(?P<columns>\w+)_on_"
+              "(?P<referred_table>\w+)__(?P<referred_columns>\w+)")
         m = re.search(fk, name)
-        if m is not None:
-            local = self.check_if_table_and_columns_exist(
-                m.group('table'), *m.group('columns').split('-'))
-            referred = self.check_if_table_and_columns_exist(
-                m.group('referred_table'),
-                *m.group('referred_columns').split('-'))
-            if local and referred:
-                return True
+        if m is not None and m.groups():
+            return True
+
+        if self.migration.reinit_constraints:
+            return True
+
+        if self.migration.reinit_all:
+            return True
+
+        return False
+
+    def can_remove_check_constraints(self, name):
+        check = "anyblok_ck_(?P<table>\w+)__(?P<constraint>\w+)"
+        m = re.search(check, name)
+        if m is not None and m.groups():
+            return True
 
         if self.migration.reinit_constraints:
             return True
@@ -113,12 +104,9 @@ class MigrationReport:
             return True
 
     def can_remove_index(self, name):
-        key = "ix_(?P<table>\w+)__(?P<columns>[\w-]+)"
+        key = "anyblok_ix_(?P<table>\w+)__(?P<columns>\w+)"
         m = re.search(key, name)
-        if m and self.check_if_table_and_columns_exist(
-            m.group('table'),
-            *m.group('columns').split('-')
-        ):
+        if m and m.groups():
             return True
 
         if self.migration.reinit_indexes:
@@ -174,7 +162,7 @@ class MigrationReport:
         self.log_names.append('Drop check constraint %s on %s' % (
             ck['name'], table))
 
-        if not self.can_remove_constraints(ck['name']):
+        if not self.can_remove_check_constraints(ck['name']):
             return True
 
         self.raise_if_withoutautomigration()
@@ -723,7 +711,7 @@ class MigrationConstraintPrimaryKey:
         self.name = self.format_name()
 
     def format_name(self, *columns):
-        return 'pk_%s' % self.table.name
+        return 'anyblok_pk_%s' % self.table.name
 
     def add(self, *columns):
         """ Add the constraint
