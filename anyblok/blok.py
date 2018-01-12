@@ -92,7 +92,7 @@ class BlokManager:
         cls.ordered_bloks.append(blokname)
 
     @classmethod
-    @log(logger)
+    @log(logger, level='debug')
     def reload(cls):
         """ Reload the entry points
 
@@ -111,7 +111,7 @@ class BlokManager:
         cls.load(entry_points=entry_points)
 
     @classmethod
-    @log(logger)
+    @log(logger, level='debug')
     def unload(cls):
         """ Unload all the bloks but not the registry """
         cls.bloks = {}
@@ -166,7 +166,7 @@ class BlokManager:
         return True
 
     @classmethod
-    @log(logger)
+    @log(logger, level='debug')
     def load(cls, entry_points=('bloks',)):
         """ Load all the bloks and import them
 

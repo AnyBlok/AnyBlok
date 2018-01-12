@@ -744,7 +744,7 @@ class Registry:
         self.load_removed(blok)
         self.loaded_bloks[blok] = b
         self.ordered_loaded_bloks.append(blok)
-        logger.info("Blok %r loaded" % blok)
+        logger.debug("Blok %r loaded" % blok)
         return True
 
     def check_dependencies(self, blok, dependencies_to_install, toinstall):
@@ -899,7 +899,7 @@ class Registry:
 
         return False
 
-    @log(logger)
+    @log(logger, level='debug')
     def load(self):
         """ Load all the namespaces of the registry
 
@@ -1005,13 +1005,13 @@ class Registry:
     def assemble_entries(self):
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_assemble_entries:
-                logger.info('Assemble %r entry' % entry)
+                logger.debug('Assemble %r entry' % entry)
                 RegistryManager.callback_assemble_entries[entry](self)
 
     def pre_assemble_entries(self):
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_pre_assemble_entries:
-                logger.info('Pre assemble %r entry' % entry)
+                logger.debug('Pre assemble %r entry' % entry)
                 RegistryManager.callback_pre_assemble_entries[entry](self)
 
     def apply_model_schema_on_table(self, blok2install):
@@ -1053,7 +1053,7 @@ class Registry:
         mustreload = False
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_initialize_entries:
-                logger.info('Initialize %r entry' % entry)
+                logger.debug('Initialize %r entry' % entry)
                 r = RegistryManager.callback_initialize_entries[entry](
                     self)
                 mustreload = mustreload or r
@@ -1289,13 +1289,13 @@ class Registry:
             if hasattr(self, name) and getattr(self, name):
                 setattr(self, name, None)
 
-    @log(logger)
+    @log(logger, level='debug')
     def complete_reload(self):
         """ Reload the code and registry"""
         BlokManager.reload()
         RegistryManager.reload()
 
-    @log(logger)
+    @log(logger, level='debug')
     def reload(self):
         """ Reload the registry, close session, clean registry, reinit var """
         # self.close_session()
@@ -1367,7 +1367,7 @@ class Registry:
             blok.state, state, blok_name))
         query.update({Blok.state: state})
 
-    @log(logger, withargs=True)
+    @log(logger, level='debug', withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):
         """ Upgrade the current registry
 
@@ -1416,7 +1416,7 @@ class Registry:
         self.reload()
         self.expire_all()
 
-    @log(logger)
+    @log(logger, level='debug')
     def update_blok_list(self):
         if not self.blok_list_is_loaded:
             self.System.Blok.update_list()

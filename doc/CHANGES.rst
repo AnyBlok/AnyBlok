@@ -12,6 +12,11 @@
 CHANGELOG
 =========
 
+0.14.0
+------
+
+* [REF] change log level, the instalation become less verbose
+
 0.13.0 (2018-01-09)
 -------------------
 

@@ -540,7 +540,7 @@ class Configuration:
                             fnct(parser)
 
     @classmethod
-    @log(logger)
+    @log(logger, level='debug')
     def load(cls, application, configuration_groups=None,
              parts_to_load=('bloks',), useseparator=False, **kwargs):
         """ Load the argparse definition and parse them
