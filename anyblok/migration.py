@@ -7,7 +7,6 @@ from sqlalchemy import schema
 from contextlib import contextmanager
 from sqlalchemy import func, select, update, join, alias, and_
 from anyblok.config import Configuration
-import re
 from sqlalchemy.engine.reflection import Inspector
 from logging import getLogger
 
@@ -50,10 +49,7 @@ class MigrationReport:
         self.log_names.append('Add %s.%s' % (table, column.name))
 
     def can_remove_constraints(self, name):
-        unique = "anyblok_uq_(?P<table>\w+)__(?P<columns>\w+)"
-
-        m = re.search(unique, name)
-        if m and m.groups():
+        if name.startswith('anyblok_uq_'):
             return True
 
         if self.migration.reinit_constraints:
@@ -65,10 +61,7 @@ class MigrationReport:
         return False
 
     def can_remove_fk_constraints(self, name):
-        fk = ("anyblok_fk_(?P<table>\w+)__(?P<columns>\w+)_on_"
-              "(?P<referred_table>\w+)__(?P<referred_columns>\w+)")
-        m = re.search(fk, name)
-        if m is not None and m.groups():
+        if name.startswith('anyblok_fk_'):
             return True
 
         if self.migration.reinit_constraints:
@@ -80,9 +73,7 @@ class MigrationReport:
         return False
 
     def can_remove_check_constraints(self, name):
-        check = "anyblok_ck_(?P<table>\w+)__(?P<constraint>\w+)"
-        m = re.search(check, name)
-        if m is not None and m.groups():
+        if name.startswith('anyblok_ck_'):
             return True
 
         if self.migration.reinit_constraints:
@@ -104,9 +95,7 @@ class MigrationReport:
             return True
 
     def can_remove_index(self, name):
-        key = "anyblok_ix_(?P<table>\w+)__(?P<columns>\w+)"
-        m = re.search(key, name)
-        if m and m.groups():
+        if name.startswith('anyblok_ix_'):
             return True
 
         if self.migration.reinit_indexes:
