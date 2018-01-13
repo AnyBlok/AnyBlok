@@ -213,6 +213,16 @@ class MigrationReport:
 
         return False
 
+    def init_change_pk(self, diff):
+        name, table, constraint = diff
+        raise MigrationException(
+            (
+                "Change primary key constraint %s on %s: (%s). "
+                "AnyBlok can't determine the good action to do "
+                "for relation ship based on primary key who changed, "
+                "You must make the migration by your self before."
+            ) % (name, table, ', '.join([x.name for x in constraint.columns])))
+
     def init_remove_table(self, diff):
         self.log_names.append("Drop Table %s" % diff[1].name)
         if self.can_remove_table():
@@ -243,6 +253,7 @@ class MigrationReport:
             'add_constraint': self.init_add_constraint,
             'remove_column': self.init_remove_column,
             'remove_table': self.init_remove_table,
+            'change_pk': self.init_change_pk,
         }
         for diff in diffs:
             if isinstance(diff, list):
@@ -946,10 +957,11 @@ class Migration:
         """
         diff = compare_metadata(self.context, self.metadata)
         inspector = Inspector(self.conn)
-        diff.extend(self.detect_check_constraint(inspector))
+        diff.extend(self.detect_check_constraint_changed(inspector))
+        diff.extend(self.detect_pk_constraint_changed(inspector))
         return MigrationReport(self, diff)
 
-    def detect_check_constraint(self, inspector):
+    def detect_check_constraint_changed(self, inspector):
         diff = []
         for table in inspector.get_table_names():
             if table not in self.metadata.tables:
@@ -983,6 +995,26 @@ class Migration:
 
             for ck in toadd:
                 diff.append(('add_ck', table, constraints[ck]))
+
+        return diff
+
+    def detect_pk_constraint_changed(self, inspector):
+        diff = []
+        for table in inspector.get_table_names():
+            if table not in self.metadata.tables:
+                continue
+
+            reflected_constraint = inspector.get_pk_constraint(table)
+            constraint = [
+                pk
+                for pk in self.metadata.tables[table].constraints
+                if isinstance(pk, schema.PrimaryKeyConstraint)
+            ][0]
+            reflected_columns = set(
+                reflected_constraint['constrained_columns'])
+            columns = set(x.name for x in constraint.columns)
+            if columns != reflected_columns:
+                diff.append(('change_pk', table, constraint))
 
         return diff
 

@@ -20,6 +20,9 @@ CHANGELOG
   table and column name to know if it is an AnyBlok constraint
 * [FIX] check if a drop check constraint is not a add check constraint
   truncated
+* [ADD] raise an exception if the primary changed, this action is too
+  complexe to know how transform the relationship and keep the real
+  value
 
 0.13.0 (2018-01-09)
 -------------------

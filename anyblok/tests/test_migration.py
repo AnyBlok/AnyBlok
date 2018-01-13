@@ -537,7 +537,6 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
 
-    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_primary_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -546,13 +545,9 @@ class TestMigration(TestCase):
                     integer INT NOT NULL,
                     other CHAR(64) PRIMARY KEY NOT NULL
                 );""")
-        report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Alter test.integer"))
-        self.assertTrue(report.log_has("Alter test.other"))
-        report.apply_change()
-        report = self.registry.migration.detect_changed()
-        self.assertFalse(report.log_has("Alter test.integer"))
-        self.assertFalse(report.log_has("Alter test.other"))
+
+        with self.assertRaises(MigrationException):
+            self.registry.migration.detect_changed()
 
     def test_detect_add_foreign_key(self):
         with self.cnx() as conn:
