@@ -64,6 +64,19 @@ class TestMigration(TestCase):
                     CheckConstraint('integer > 0', name='test'),)
 
         @register(Model)
+        class TestCheckLongConstraintName:
+            integer = Int(primary_key=True)
+
+            @classmethod
+            def define_table_args(cls):
+                table_args = super(TestCheckLongConstraintName,
+                                   cls).define_table_args()
+                return table_args + (
+                    CheckConstraint('integer > 0', name=(
+                        'long_long_long_long_long_long_long_long_long_long_'
+                        'long_long_long_long_long_long_long_long_test')),)
+
+        @register(Model)
         class TestFKTarget:
             integer = Int(primary_key=True)
 
@@ -104,7 +117,7 @@ class TestMigration(TestCase):
         super(TestMigration, self).tearDown()
         for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget',
                       'testunique', 'reltab', 'testm2m1', 'testm2m2',
-                      'testcheck'):
+                      'testcheck', 'testchecklongconstraintname'):
             try:
                 self.registry.migration.table(table).drop()
             except Exception:
@@ -723,6 +736,23 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(
             report.log_has("Drop constraint unique_other on test"))
+
+    def test_no_detect_drop_and_add_check_constraint_with_long_name(self):
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(
+            report.log_has(
+                "Drop check constraint anyblok_ck_testchecklongconstraintname"
+                "__long_long_long_long_lon on testchecklongconstraintname"
+            )
+        )
+        self.assertFalse(
+            report.log_has(
+                "Add check constraint anyblok_ck_testchecklongconstraintname__"
+                "long_long_long_long_long_long_long_long_long_long_long_long_"
+                "long_long_long_long_long_long_test on "
+                "testchecklongconstraintname"
+            )
+        )
 
     def test_detect_add_check_constraint(self):
         with self.cnx() as conn:

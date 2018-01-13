@@ -967,6 +967,17 @@ class Migration:
             }
             todrop = set(reflected_constraints.keys()) - set(constraints.keys())
             toadd = set(constraints.keys()) - set(reflected_constraints.keys())
+
+            if toadd and todrop:
+                # check a constraint have not been truncated
+                todrop_ = todrop.copy()
+                for x in todrop_:
+                    for y in toadd:
+                        if y.startswith(x):
+                            toadd.remove(y)
+                            todrop.remove(x)
+                            break
+
             for ck in todrop:
                 diff.append(('remove_ck', table, reflected_constraints[ck]))
 

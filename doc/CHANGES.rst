@@ -18,6 +18,8 @@ CHANGELOG
 * [REF] change log level, the instalation become less verbose
 * [REF] change namimg convention, dont check in function of 
   table and column name to know if it is an AnyBlok constraint
+* [FIX] check if a drop check constraint is not a add check constraint
+  truncated
 
 0.13.0 (2018-01-09)
 -------------------
