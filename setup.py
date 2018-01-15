@@ -13,7 +13,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.13.0'
+version = '0.14.0'
 
 
 if sys.version_info < (3, 3):

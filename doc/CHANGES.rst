@@ -12,8 +12,8 @@
 CHANGELOG
 =========
 
-0.14.0
-------
+0.14.0 (2018-01-15)
+-------------------
 
 * [REF] change log level, the instalation become less verbose
 * [REF] change namimg convention, dont check in function of 
