@@ -327,8 +327,7 @@ class MigrationReport:
                 from_.append(column.name)
                 to_.append(fk_.column)
 
-        name = 'fk_%s' % '_'.join(from_)
-        t.foreign_key(name).add(from_, to_)
+        t.foreign_key(fk.name).add(from_, to_)
 
     def apply_change_add_ck(self, action):
         _, table, ck = action
@@ -957,9 +956,14 @@ class Migration:
         """
         diff = compare_metadata(self.context, self.metadata)
         inspector = Inspector(self.conn)
+        diff.extend(self.detect_undetected_constraint_from_alembic(inspector))
+        return MigrationReport(self, diff)
+
+    def detect_undetected_constraint_from_alembic(self, inspector):
+        diff = []
         diff.extend(self.detect_check_constraint_changed(inspector))
         diff.extend(self.detect_pk_constraint_changed(inspector))
-        return MigrationReport(self, diff)
+        return diff
 
     def detect_check_constraint_changed(self, inspector):
         diff = []

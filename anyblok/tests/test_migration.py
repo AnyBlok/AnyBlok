@@ -83,7 +83,15 @@ class TestMigration(TestCase):
         @register(Model)
         class TestFK:
             integer = Int(primary_key=True)
-            other = Int(foreign_key=Model.TestFKTarget.use('integer'))
+            other = Int(
+                foreign_key=Model.TestFKTarget.use('integer'))
+
+        @register(Model)
+        class TestFK2:
+            integer = Int(primary_key=True)
+            other = Int(
+                foreign_key=Model.TestFKTarget.use('integer').options(
+                    ondelete='cascade'))
 
         @register(Model)
         class TestM2M1:
@@ -117,7 +125,7 @@ class TestMigration(TestCase):
         super(TestMigration, self).tearDown()
         for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget',
                       'testunique', 'reltab', 'testm2m1', 'testm2m2',
-                      'testcheck', 'testchecklongconstraintname'):
+                      'testfk2', 'testcheck', 'testchecklongconstraintname'):
             try:
                 self.registry.migration.table(table).drop()
             except Exception:
@@ -564,6 +572,22 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)"))
+
+    def test_detect_foreign_key_options_changed(self):
+        with self.cnx() as conn:
+            conn.execute("drop table testfk2")
+            conn.execute(
+                """create table testfk2(
+                    integer int primary key not null,
+                    other int
+                        CONSTRAINT anyblok_fk_testfk2__other
+                        references testfktarget(integer)
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Drop Foreign keys on testfk2.other => testfktarget.integer"))
+        self.assertTrue(report.log_has(
+            "Add Foreign keys on (testfk2.other) => (testfktarget.integer)"))
 
     def test_detect_drop_foreign_key(self):
         with self.cnx() as conn:
