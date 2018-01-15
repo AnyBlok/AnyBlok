@@ -364,7 +364,7 @@ class MigrationReport:
         system to apply the change with the api of Declarations
         """
         for log in self.logs:
-            logger.info(log)
+            logger.debug(log)
 
         mappers = {
             'add_column': self.apply_change_add_column,
