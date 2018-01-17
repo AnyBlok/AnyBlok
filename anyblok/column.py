@@ -817,7 +817,7 @@ class Selection(Column):
             constraint = None
 
         if constraint:
-            name = self.fieldname + '_' + str(hash(constraint)) + '_types'
+            name = self.fieldname + '_' + str(len(enum)) + '_types'
             return [CheckConstraint(constraint, name=name)]
 
         return []
