@@ -812,7 +812,7 @@ class Selection(Column):
             constraint = """"%s" in ('%s')""" % (
                 self.fieldname, "', '".join(enum))
         elif enum:
-            constraint = """"%s" = '%s'""" % (self.fieldname, enum[0])
+            constraint = """"%s" = '%s'""" % (self.fieldname, list(enum)[0])
         else:
             constraint = None
 
