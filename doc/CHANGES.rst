@@ -12,8 +12,8 @@
 CHANGELOG
 =========
 
-0.15.0
-------
+0.15.0 (2018-01-17)
+-------------------
 
 * [REF] column Selection add check constraint to forbid other
   value than the wanted
