@@ -476,9 +476,16 @@ class Many2One(RelationShip):
                 for x in self.remote_columns]
 
         if (len(self.column_names) > 1 or add_fksc) and col_names and fk_names:
-            properties['add_in_table_args'].append(
-                ForeignKeyConstraint(col_names, fk_names,
-                                     **self.foreign_key_options))
+            self.col_names = col_names
+            self.fk_names = fk_names
+            properties['add_in_table_args'].append(self)
+
+    def update_table_args(self, Model):
+        """Add foreign key constraint in table args"""
+        return [
+            ForeignKeyConstraint(self.col_names, self.fk_names,
+                                 **self.foreign_key_options)
+        ]
 
     def get_column_information(self, registry, cname, remote_types):
         if len(remote_types) == 1:

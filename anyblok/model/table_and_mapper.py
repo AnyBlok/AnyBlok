@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .plugins import ModelPluginBase
 from .exceptions import ModelException
-from sqlalchemy import ForeignKeyConstraint
+from sqlalchemy import ForeignKeyConstraint, CheckConstraint
 from sqlalchemy.ext.declarative import declared_attr
 
 
@@ -76,9 +76,17 @@ class TableMapperPlugin(ModelPluginBase):
                     fks = [x.name for x in res
                            if isinstance(x, ForeignKeyConstraint)]
 
-                    t_args = [x for x in table_args
-                              if (not isinstance(x, ForeignKeyConstraint) or
-                                  x.name not in fks)]
+                    t_args = []
+                    for field in table_args:
+                        for constraint in field.update_table_args(cls_):
+                            if (
+                                not isinstance(constraint,
+                                               ForeignKeyConstraint) or
+                                constraint.name not in fks
+                            ):
+                                t_args.append(constraint)
+                            elif isinstance(constraint, CheckConstraint):
+                                t_args.append(constraint)
 
                     return res + tuple(t_args)
 
@@ -87,6 +95,15 @@ class TableMapperPlugin(ModelPluginBase):
             new_base.define_table_args = classmethod(define_table_args)
             transformation_properties['table_args'] = True
 
+        self.insert_in_bases_table_args(new_base, transformation_properties)
+        self.insert_in_bases_mapper_args(new_base, transformation_properties)
+
+    def insert_in_bases_table_args(self, new_base, transformation_properties):
+        """Add table __table_args__ in new_base
+
+        :param new_base: the base to be put on front of all bases
+        :param transformation_properties: the properties of the model
+        """
         if transformation_properties['table_args']:
 
             def __table_args__(cls_):
@@ -94,6 +111,12 @@ class TableMapperPlugin(ModelPluginBase):
 
             new_base.__table_args__ = declared_attr(__table_args__)
 
+    def insert_in_bases_mapper_args(self, new_base, transformation_properties):
+        """Add table __mapper_args__ in new_base
+
+        :param new_base: the base to be put on front of all bases
+        :param transformation_properties: the properties of the model
+        """
         if transformation_properties['mapper_args']:
 
             def __mapper_args__(cls_):

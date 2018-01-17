@@ -685,8 +685,6 @@ class TestColumns(DBTestCase):
         t = registry.Test.insert()
         self.assertIsNone(t.col)
 
-    @skipIf(True, "Find a better way to check a column selection by query "
-                  "update")
     def test_selection_change_by_query(self):
         SELECTIONS = [
             ('admin', 'Admin'),

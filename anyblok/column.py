@@ -8,7 +8,7 @@
 from .field import Field, FieldException
 from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
-from sqlalchemy import types
+from sqlalchemy import types, CheckConstraint
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.encrypted import EncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
@@ -789,6 +789,39 @@ class Selection(Column):
             return True
         else:
             return False
+
+    def update_properties(self, registry, namespace, fieldname, properties):
+        super(Selection, self).update_properties(registry, namespace,
+                                                 fieldname, properties)
+        self.fieldname = fieldname
+        properties['add_in_table_args'].append(self)
+
+    def update_table_args(self, Model):
+        """return check constraint to limit the value"""
+        selections = self.sqlalchemy_type.selections
+        if isinstance(selections, dict):
+            enum = selections.keys()
+        else:
+            enum = getattr(Model, selections)()
+            if isinstance(enum, (list, tuple)):
+                enum = dict(enum)
+
+            enum = enum.keys()
+
+        if len(enum) > 1:
+            constraint = """"%s" in ('%s')""" % (
+                self.fieldname, "', '".join(enum))
+        elif enum:
+            constraint = """"%s" = '%s'""" % (self.fieldname, enum[0])
+        else:
+            constraint = None
+
+        if constraint:
+            return [
+                CheckConstraint(constraint, name=self.fieldname + '_types')
+            ]
+
+        return []
 
 
 json_null = object()
