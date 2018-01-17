@@ -18,14 +18,8 @@ from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT, CheckConstraint
 from anyblok import Declarations
 from sqlalchemy.exc import InternalError, IntegrityError
-from unittest import skipIf
-import alembic
 from copy import deepcopy
 from sqlalchemy.orm import clear_mappers
-
-skipAlembicVersion = (
-    tuple(int(x) for x in alembic.__version__.split('.')) < (0, 9, 7)
-)
 
 
 class TestMigration(TestCase):
@@ -457,7 +451,6 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
 
-    @skipIf(skipAlembicVersion, "Alembic doesn't implement yet")
     def test_detect_m2m_primary_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE reltable")
@@ -468,13 +461,9 @@ class TestMigration(TestCase):
                     FOREIGN KEY (idmodel1) REFERENCES testm2m1 (idmodel1),
                     FOREIGN KEY (idmodel2) REFERENCES testm2m2 (idmodel2)
                 );""")
-        report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Alter reltable.idmodel1"))
-        self.assertTrue(report.log_has("Alter reltable.idmodel2"))
-        report.apply_change()
-        report = self.registry.migration.detect_changed()
-        self.assertFalse(report.log_has("Alter reltable.idmodel1"))
-        self.assertFalse(report.log_has("Alter reltable.idmodel2"))
+
+        with self.assertRaises(MigrationException):
+            self.registry.migration.detect_changed()
 
     def test_detect_server_default(self):
         with self.cnx() as conn:
