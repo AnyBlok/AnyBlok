@@ -4,6 +4,7 @@
 ..    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -11,6 +12,12 @@
 
 CHANGELOG
 =========
+
+0.16.0
+------
+
+* [REF] Json field, use the Json field from SQLAlchemy, because it
+  is implemented by the db
 
 0.15.0 (2018-01-17)
 -------------------

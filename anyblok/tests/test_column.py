@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase, DBTestCase
-from sqlalchemy import Integer as SA_Integer
+from sqlalchemy import Integer as SA_Integer, String as SA_String
 from sqlalchemy.exc import StatementError
 from anyblok import Declarations
 from anyblok.field import FieldException
@@ -774,7 +774,9 @@ class TestColumns(DBTestCase):
         Test.insert(col={'a': 'test'})
         Test.insert(col={'b': 'test'})
         self.assertEqual(
-            Test.query().filter(Test.col == {'a': 'test'}).count(), 2)
+            Test.query().filter(
+                Test.col['a'].cast(SA_String) == '"test"').count(),
+            2)
 
     def test_json_null(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
@@ -782,8 +784,8 @@ class TestColumns(DBTestCase):
         Test.insert(col=None)
         Test.insert(col=None)
         Test.insert(col={'a': 'test'})
-        self.assertEqual(Test.query().filter(Test.col == Json.Null).count(), 2)
-        self.assertEqual(Test.query().filter(Test.col != Json.Null).count(), 1)
+        self.assertEqual(Test.query().filter(Test.col.is_(None)).count(), 2)
+        self.assertEqual(Test.query().filter(Test.col.isnot(None)).count(), 1)
 
     def test_add_default_classmethod(self):
         val = 'test'

@@ -16,8 +16,6 @@ from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy_utils.types.url import URLType
 from datetime import datetime, date
 from dateutil.parser import parse
-import json
-from copy import deepcopy
 from inspect import ismethod
 from anyblok.config import Configuration
 import time
@@ -78,6 +76,7 @@ class Column(Field):
     use_hybrid_property = True
     foreign_key = None
     sqlalchemy_type = None
+    type = None
 
     def __init__(self, *args, **kwargs):
         """ Initialize the column
@@ -823,34 +822,6 @@ class Selection(Column):
         return []
 
 
-json_null = object()
-
-
-class JsonType(types.TypeDecorator):
-    """ Generic type for Column JSON """
-    impl = types.Unicode
-
-    def process_bind_param(self, value, dialect):
-        if value is json_null:
-            value = None
-        return json.dumps(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return None
-        return json.loads(value)
-
-    def copy_value(self, value):
-        return deepcopy(value)
-
-    def compare_values(self, x, y):
-        return x == y
-
-    @property
-    def python_type(self):
-        return object
-
-
 class Json(Column):
     """ JSON column
 
@@ -866,8 +837,7 @@ class Json(Column):
             x = Json()
 
     """
-    sqlalchemy_type = JsonType
-    Null = json_null
+    sqlalchemy_type = types.JSON(none_as_null=True)
 
 
 class LargeBinary(Column):
