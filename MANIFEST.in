@@ -2,3 +2,5 @@ include doc/*.rst
 include anyblok/bloks/anyblok-logo_alpha_256.png
 recursive-include anyblok/test_bloks */*.rst
 recursive-include anyblok/bloks */*.rst
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
