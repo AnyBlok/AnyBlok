@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.16.0
-------
+0.16.0 (2018-01-25)
+-------------------
 
 * [REF] Json field, use the Json field from SQLAlchemy, because it
   is implemented by the db
