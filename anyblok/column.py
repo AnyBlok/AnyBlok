@@ -22,6 +22,7 @@ import time
 import pytz
 import decimal
 from logging import getLogger
+from hashlib import md5
 logger = getLogger(__name__)
 
 
@@ -816,7 +817,11 @@ class Selection(Column):
             constraint = None
 
         if constraint:
-            name = self.fieldname + '_' + str(len(enum)) + '_types'
+            enum = list(enum)
+            enum.sort()
+            key = md5()
+            key.update(str(enum).encode('utf-8'))
+            name = self.fieldname + '_' + key.hexdigest() + '_types'
             return [CheckConstraint(constraint, name=name)]
 
         return []

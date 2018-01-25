@@ -18,6 +18,8 @@ CHANGELOG
 
 * [REF] Json field, use the Json field from SQLAlchemy, because it
   is implemented by the db
+* [FIX] check constraint on selection to get a name without number
+  of entry
 
 0.15.0 (2018-01-17)
 -------------------
