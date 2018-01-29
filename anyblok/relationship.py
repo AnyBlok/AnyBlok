@@ -820,7 +820,7 @@ class Many2Many(RelationShip):
                 local_columns + remote_columns + [local_fk, remote_fk]))
 
             if namespace == self.model.model_name:
-                type('JoinTestAndTest', (registry.declarativebase,), {
+                type(modelname, (registry.declarativebase,), {
                     '__table__': Node
                 })
                 self.kwargs['primaryjoin'] = primaryjoin
