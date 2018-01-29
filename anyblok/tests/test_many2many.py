@@ -442,3 +442,42 @@ class TestMany2Many(DBTestCase):
         t2 = registry.Test2.insert(id2="test2")
         t2.test.append(t1)
         self.assertIs(t1.test2[0], t2)
+
+    def test_many2many_on_self(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    m2m_remote_columns='id2',
+                    many2many='parents'
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert()
+        t1.childs.append(t2)
+        self.assertIn(t1, t2.parents)
+
+    def test_many2many_on_self_auto_column(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    many2many='parents'
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert()
+        t1.childs.append(t2)
+        self.assertIn(t1, t2.parents)
