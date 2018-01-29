@@ -456,7 +456,7 @@ class Many2One(RelationShip):
                                        cname.attribute_name)
             if not cname.is_declared(registry):
                 rc, remote_type = self.get_column_information(
-                    registry, cname, remote_types)
+                    registry, cname, remote_types, fieldname)
                 cname.add_fake_column(registry)
                 foreign_key = remote_columns[rc].get_fk_name(registry)
                 self.create_column(cname, remote_type, foreign_key, properties)
@@ -487,15 +487,14 @@ class Many2One(RelationShip):
                                  **self.foreign_key_options)
         ]
 
-    def get_column_information(self, registry, cname, remote_types):
+    def get_column_information(self, registry, cname, remote_types, fieldname):
         if len(remote_types) == 1:
             rc = [x for x in remote_types][0]
             return rc, remote_types[rc]
         else:
             rc = cname.get_fk_column(registry)
             if rc is None:
-                rc = cname.attribute_name[len(
-                    self.model.tablename(registry)) + 1:]
+                rc = cname.attribute_name[len(fieldname) + 1:]
 
             if rc in remote_types:
                 return rc, remote_types[rc]

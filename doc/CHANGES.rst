@@ -17,6 +17,7 @@ CHANGELOG
 ------
 
 * [FIX] Many2Many on the same Model
+* [FIX] Many2One with multi primary key
 
 0.16.0 (2018-01-25)
 -------------------
