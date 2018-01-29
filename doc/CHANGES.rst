@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.16.1
-------
+0.16.1 (2018-01-29)
+-------------------
 
 * [FIX] Many2Many on the same Model
 * [FIX] Many2One with multi primary key
