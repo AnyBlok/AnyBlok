@@ -468,16 +468,16 @@ class TestMany2Many(DBTestCase):
         def add_in_registry():
 
             @register(Model)
-            class Test:
+            class Test2:
 
                 id = Integer(primary_key=True)
                 childs = Many2Many(
-                    model='Model.Test',
+                    model='Model.Test2',
                     many2many='parents'
                 )
 
         registry = self.init_registry(add_in_registry)
-        t1 = registry.Test.insert()
-        t2 = registry.Test.insert()
+        t1 = registry.Test2.insert()
+        t2 = registry.Test2.insert()
         t1.childs.append(t2)
         self.assertIn(t1, t2.parents)
