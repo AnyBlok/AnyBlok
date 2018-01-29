@@ -12,6 +12,7 @@ from anyblok import Declarations
 from anyblok.mapper import ModelAttributeException
 from anyblok.column import Integer, String
 from anyblok.relationship import Many2Many
+from anyblok.field import FieldException
 
 register = Declarations.register
 Model = Declarations.Model
@@ -481,3 +482,24 @@ class TestMany2Many(DBTestCase):
         t2 = registry.Test2.insert()
         t1.childs.append(t2)
         self.assertIn(t1, t2.parents)
+
+    def test_many2many_on_multi_fk_miss_on_m2m_column(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+                street = String(primary_key=True)
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                addresses = Many2Many(
+                    m2m_remote_columns=['test_id'],
+                    model=Model.Address)
+
+        with self.assertRaises(FieldException):
+            self.init_registry(add_in_registry)

@@ -748,6 +748,14 @@ class Many2Many(RelationShip):
             m2m_columns = [x.get_fk_name(registry).replace('.', '_') + suffix
                            for x in columns]
 
+        if len(columns) != len(m2m_columns):
+            raise FieldException((
+                "The number of the column (%r) is not the same that the "
+                "number m2m column (%r)") % (
+                    columns, m2m_columns
+                )
+            )
+
         cols = []
         col_names = []
         ref_cols = []

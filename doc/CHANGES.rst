@@ -18,6 +18,8 @@ CHANGELOG
 
 * [FIX] Many2Many on the same Model
 * [FIX] Many2One with multi primary key
+* [FIX] add specific exception when the number of column in join table
+  for many2many is not the same that primary key
 
 0.16.0 (2018-01-25)
 -------------------
