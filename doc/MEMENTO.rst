@@ -570,8 +570,8 @@ Other attribute for ``Password``:
 | ``size``          | password max size in the table                          |
 +-------------------+---------------------------------------------------------+
 | ``crypt_context`` | see the option for the python lib `passlib              |
-|                   | <https://pythonhosted.org/passlib/lib/passlib.context.ht|
-|                   | ml>`_                                                   |
+|                   | <https://passlib.readthedocs.io/en/stable/lib/passlib.co|
+|                   | ntext.html>`_                                           |
 +-------------------+---------------------------------------------------------+
 
 ..warning::
