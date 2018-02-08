@@ -13,6 +13,13 @@
 CHANGELOG
 =========
 
+0.16.2
+------
+
+* [FIX] The column added with an unique constraint is added in a model,
+  alembic declare now two changes: **add column** and **add unique constraint**
+  . Then the migration operation **add column** must not create the constraint
+
 0.16.1 (2018-01-29)
 -------------------
 

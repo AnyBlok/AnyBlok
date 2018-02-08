@@ -525,15 +525,7 @@ class MigrationColumn:
                     existing_autoincrement=column.autoincrement,
                     existing_nullable=True, nullable=False)
 
-        t = self.table.migration.metadata.tables[self.table.name]
-        for constraint in t.constraints:
-            if not isinstance(constraint, (schema.PrimaryKeyConstraint,
-                                           schema.ForeignKeyConstraint,
-                                           schema.CheckConstraint)):
-                self.table.migration.operation.impl.add_constraint(constraint)
-
-        # TODO get the default value of the column and apply it on null value
-
+        self.table.migration.metadata.tables[self.table.name]
         return MigrationColumn(self.table, column.name)
 
     def alter(self, **kwargs):

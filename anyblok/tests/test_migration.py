@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2015 Pierre Verkest <pverkest@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
@@ -672,6 +673,21 @@ class TestMigration(TestCase):
                 """CREATE TABLE testunique(
                     integer INT  PRIMARY KEY NOT NULL,
                     other CHAR(64)
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Add unique constraint on testunique (other)"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has(
+            "Add unique constraint on testunique (other)"))
+
+    def test_detect_add_column_with_unique_constrainte(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE testunique")
+            conn.execute(
+                """CREATE TABLE testunique(
+                    integer INT  PRIMARY KEY NOT NULL
                 );""")
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has(
