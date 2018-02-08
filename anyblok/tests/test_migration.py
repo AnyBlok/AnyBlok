@@ -49,6 +49,11 @@ class TestMigration(TestCase):
             other = Str(unique=True)
 
         @register(Model)
+        class TestIndex:
+            integer = Int(primary_key=True)
+            other = Str(index=True)
+
+        @register(Model)
         class TestCheck:
             integer = Int(primary_key=True)
 
@@ -120,7 +125,8 @@ class TestMigration(TestCase):
         super(TestMigration, self).tearDown()
         for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget',
                       'testunique', 'reltab', 'testm2m1', 'testm2m2',
-                      'testfk2', 'testcheck', 'testchecklongconstraintname'):
+                      'testfk2', 'testcheck', 'testchecklongconstraintname',
+                      'testindex'):
             try:
                 self.registry.migration.table(table).drop()
             except Exception:
@@ -479,6 +485,39 @@ class TestMigration(TestCase):
         report.apply_change()
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
+
+    def test_detect_add_index_constrainte(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE testindex")
+            conn.execute(
+                """CREATE TABLE testindex(
+                    integer INT  PRIMARY KEY NOT NULL,
+                    other CHAR(64)
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has(
+            "Add index constraint on testindex (other)"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has(
+            "Add index constraint on testindex (other)"))
+
+    def test_detect_add_column_with_index_constrainte(self):
+        with self.cnx() as conn:
+            conn.execute("DROP TABLE testindex")
+            conn.execute(
+                """CREATE TABLE testindex(
+                    integer INT  PRIMARY KEY NOT NULL
+                );""")
+        report = self.registry.migration.detect_changed()
+        self.assertTrue(report.log_has("Add testindex.other"))
+        self.assertTrue(report.log_has(
+            "Add index constraint on testindex (other)"))
+        report.apply_change()
+        report = self.registry.migration.detect_changed()
+        self.assertFalse(report.log_has("Add testindex.other"))
+        self.assertFalse(report.log_has(
+            "Add index constraint on testindex (other)"))
 
     def test_detect_drop_index(self):
         with self.cnx() as conn:

@@ -19,6 +19,9 @@ CHANGELOG
 * [FIX] Add column with an unique constraint.
   Alembic declare now two changes: **add column** and **add unique constraint**
   . Then the migration operation **add column** must not create the constraint
+* [IMP] add index constraint operation.
+  Alembic declare now **add unique constraint**, the migration operation
+  create the constraint on an existing and an unexisting columns
 
 0.16.1 (2018-01-29)
 -------------------

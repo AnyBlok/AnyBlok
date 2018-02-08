@@ -106,6 +106,13 @@ class MigrationReport:
 
         return False
 
+    def init_add_index(self, diff):
+        self.raise_if_withoutautomigration()
+        _, constraint = diff
+        columns = [x.name for x in constraint.columns]
+        self.log_names.append('Add index constraint on %s (%s)' % (
+            constraint.table.name, ', '.join(columns)))
+
     def init_remove_index(self, diff):
         _, index = diff
         self.log_names.append('Drop index %s on %s' % (index.name,
@@ -245,6 +252,7 @@ class MigrationReport:
         mappers = {
             'add_column': self.init_add_column,
             'remove_constraint': self.init_remove_constraint,
+            'add_index': self.init_add_index,
             'remove_index': self.init_remove_index,
             'add_fk': self.init_add_fk,
             'remove_fk': self.init_remove_fk,
@@ -347,8 +355,12 @@ class MigrationReport:
     def apply_change_add_constraint(self, action):
         _, constraint = action
         table = self.migration.table(constraint.table.name)
-        # FIXME, test for check, foreignkey
         table.unique(name=constraint.name).add(*constraint.columns)
+
+    def apply_change_add_index(self, action):
+        _, constraint = action
+        table = self.migration.table(constraint.table.name)
+        table.index().add(*constraint.columns, name=constraint.name)
 
     def apply_remove_table(self, action):
         self.migration.table(action[1].name).drop()
@@ -370,6 +382,7 @@ class MigrationReport:
             'modify_nullable': self.apply_change_modify_nullable,
             'modify_type': self.apply_change_modify_type,
             'modify_default': self.apply_change_modify_default,
+            'add_index': self.apply_change_add_index,
             'add_fk': self.apply_change_add_fk,
             'add_ck': self.apply_change_add_ck,
             'add_constraint': self.apply_change_add_constraint,
@@ -771,7 +784,7 @@ class MigrationIndex:
 
         return None
 
-    def add(self, *columns):
+    def add(self, *columns, **kwargs):
         """ Add the constraint
 
         :param \*column: list of column name
@@ -782,12 +795,12 @@ class MigrationIndex:
             raise MigrationException(
                 "To add an index you must define one or more columns")
 
-        index_name = self.format_name(*columns)
+        index_name = kwargs.get('name', self.format_name(*columns))
         columns_name = [x.name for x in columns]
         self.table.migration.operation.create_index(
             index_name, self.table.name, columns_name)
 
-        return MigrationIndex(self.table, *columns)
+        return MigrationIndex(self.table, *columns, **kwargs)
 
     def drop(self):
         """ Drop the constraint """
