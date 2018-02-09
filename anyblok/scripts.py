@@ -9,11 +9,12 @@ import anyblok
 from anyblok.release import version
 from anyblok.blok import BlokManager
 from anyblok.config import Configuration
-from anyblok.registry import RegistryManager
+from anyblok.registry import RegistryManager, return_list
 from anyblok._graphviz import ModelSchema, SQLSchema
 from nose import main
 import sys
-from os.path import join, exists
+from os.path import join
+from os import walk
 from argparse import RawDescriptionHelpFormatter
 from textwrap import dedent
 from sqlalchemy_utils.functions import create_database
@@ -162,17 +163,22 @@ def run_exit(application, configuration_groups, **kwargs):
     defaultTest = []
     if registry:
         installed_bloks = registry.System.Blok.list_by_state("installed")
-        selected_bloks = Configuration.get('selected_bloks')
-        if not selected_bloks:
-            selected_bloks = installed_bloks
+        selected_bloks = return_list(
+            Configuration.get('selected_bloks')) or installed_bloks
 
-        unwanted_bloks = Configuration.get('unwanted_bloks') or []
+        unwanted_bloks = return_list(
+            Configuration.get('unwanted_bloks')) or []
 
-        defaultTest = [path
-                       for blok in installed_bloks
-                       if blok in selected_bloks and blok not in unwanted_bloks
-                       for path in [join(BlokManager.getPath(blok), 'tests')]
-                       if exists(path)]
+        defaultTest = []
+        for blok in installed_bloks:
+            if blok not in selected_bloks or blok in unwanted_bloks:
+                continue
+
+            startpath = BlokManager.getPath(blok)
+            for root, dirs, _ in walk(startpath):
+                if 'tests' in dirs:
+                    defaultTest.append(join(root, 'tests'))
+
         registry.close()  # free the registry to force create it again
 
     sys.exit(main(defaultTest=defaultTest))
