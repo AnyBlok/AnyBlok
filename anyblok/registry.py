@@ -39,6 +39,13 @@ class RegistryConflictingException(Exception):
     """ Simple Exception for Registry """
 
 
+def return_list(entry):
+    if entry is not None and not isinstance(entry, (list, tuple)):
+        entry = [entry]
+
+    return entry
+
+
 class RegistryManager:
     """ Manage the global registry
 
@@ -945,9 +952,9 @@ class Registry:
 
         test_blok = blok2install and Configuration.get(
             'test_blok_at_install')
-        selected_bloks = Configuration.get('selected_bloks')
+        selected_bloks = return_list(Configuration.get('selected_bloks'))
         in_selected_bloks = blok2install in (selected_bloks or [blok2install])
-        unwanted_bloks = Configuration.get('unwanted_bloks')
+        unwanted_bloks = return_list(Configuration.get('unwanted_bloks'))
         not_in_unwanted_bloks = blok2install not in (unwanted_bloks or [])
 
         if test_blok and in_selected_bloks and not_in_unwanted_bloks:

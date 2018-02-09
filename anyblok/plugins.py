@@ -5,8 +5,9 @@ from anyblok import (
     configuration_post_load,
 )
 from anyblok.blok import BlokManager
-from anyblok.registry import RegistryManager
-from os.path import join, exists
+from anyblok.registry import RegistryManager, return_list
+from os.path import join
+from os import walk
 
 
 class Arg2OptOptions:
@@ -86,22 +87,26 @@ class AnyBlokPlugin(Plugin):
             if registry:
                 installed_bloks = registry.System.Blok.list_by_state(
                     "installed")
-                selected_bloks = Configuration.get('selected_bloks')
-                if not selected_bloks:
-                    selected_bloks = installed_bloks
+                selected_bloks = return_list(
+                    Configuration.get('selected_bloks')) or installed_bloks
 
-                unwanted_bloks = Configuration.get('unwanted_bloks')
-                if unwanted_bloks is None:
-                    unwanted_bloks = []
+                unwanted_bloks = return_list(
+                    Configuration.get('unwanted_bloks')) or []
 
                 self.bloks_path = [BlokManager.getPath(x)
                                    for x in BlokManager.ordered_bloks]
 
-                self.authoried_bloks_test_files = [
-                    path for blok in installed_bloks
-                    if blok in selected_bloks and blok not in unwanted_bloks
-                    for path in [join(BlokManager.getPath(blok), 'tests')]
-                    if exists(path)]
+                self.authoried_bloks_test_files = []
+                for blok in installed_bloks:
+                    if blok not in selected_bloks or blok in unwanted_bloks:
+                        continue
+
+                    startpath = BlokManager.getPath(blok)
+                    for root, dirs, _ in walk(startpath):
+                        if 'tests' in dirs:
+                            self.authoried_bloks_test_files.append(
+                                join(root, 'tests'))
+
                 registry.close()  # free the registry to force create it again
 
     def file_from_blok(self, file):
