@@ -25,6 +25,7 @@ from anyblok.column import (Integer,
                             Sequence)
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
+from sqlalchemy.engine.reflection import Inspector
 
 
 register = Declarations.register
@@ -332,6 +333,25 @@ class TestMany2One(DBTestCase):
 
         with self.assertRaises(IntegrityError):
             registry.Person.insert(name="Other", address=address)
+
+    def test_add_index_constraint(self):
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                address = Many2One(model=Model.Address, index=True)
+
+        registry = self.init_registry(add_in_registry)
+        inspector = Inspector(registry.session.connection())
+        indexes = inspector.get_indexes(registry.Person.__tablename__)
+        self.assertEqual(len(indexes), 1)
 
     def test_complet_with_multi_foreign_key(self):
 

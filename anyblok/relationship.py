@@ -319,7 +319,8 @@ class Many2One(RelationShip):
     :param remote_columns: the column name on the remote model
     :param column_names: the column on the model which have the foreign key
     :param nullable: If the column_names is nullable
-    :param unique: If True, add the unique constraint on the column
+    :param unique: If True, add the unique constraint on the columns
+    :param index: If True, add the index constraint on the columns
     :param one2many: create the one2many link with this many2one
     """
     use_hybrid_property = True
@@ -343,6 +344,11 @@ class Many2One(RelationShip):
             self.unique = self.kwargs.pop('unique')
             self.kwargs['info']['unique'] = self.unique
 
+        self.index = False
+        if 'index' in kwargs:
+            self.index = self.kwargs.pop('index')
+            self.kwargs['info']['index'] = self.index
+
         if 'one2many' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('one2many')
             self.kwargs['info']['remote_name'] = self.kwargs['backref']
@@ -361,6 +367,7 @@ class Many2One(RelationShip):
         res['_remote_columns'] = self._remote_columns
         res['_column_names'] = self._column_names
         res['unique'] = self.unique
+        res['index'] = self.index
         return res
 
     def get_remote_columns(self, registry):
@@ -528,6 +535,7 @@ class Many2One(RelationShip):
                 remote_type,
                 nullable=self.nullable,
                 unique=self.unique,
+                index=self.index,
                 info=dict(label=self.label, foreign_key=foreign_key))
 
         properties[(anyblok_column_prefix +

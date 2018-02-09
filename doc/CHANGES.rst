@@ -22,6 +22,10 @@ CHANGELOG
 * [IMP] add index constraint operation.
   Alembic declare now **add unique constraint**, the migration operation
   create the constraint on an existing and an unexisting columns
+* [IMP] add index attibute on Many2One and One2One.
+  Only when the column is created by the relationship Many2One or One2One.
+  The column created get the attribute index gave to relationship and 
+  apply it.
 
 0.16.1 (2018-01-29)
 -------------------
