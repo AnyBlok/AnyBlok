@@ -443,6 +443,10 @@ class Registry:
             max_overflow=Configuration.get('db_max_overflow') or 10,
             echo_pool=Configuration.get('db_echo_pool') or False,
             pool_size=Configuration.get('db_pool_size') or 5,
+            isolation_level=self.additional_setting.get(
+                'isolation_level',
+                Configuration.get('isolation_level', 'READ_UNCOMMITTED')
+            ),
         )
 
     def init_engine(self, db_name=None):

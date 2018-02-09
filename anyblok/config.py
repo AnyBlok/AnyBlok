@@ -659,10 +659,10 @@ class Configuration:
         print('Load config file %r' % configfile)
         if not isfile(configfile):
             if required:
-                raise ConfigurationException(
-                    "The configuration file is required, wrong path "
-                    "%r was given" % configfile
-                )
+                raise ConfigurationException((
+                    "No such file : %r, for anyblok configuration file specify "
+                    "in the command line."
+                ) % configfile)
 
             return
 
@@ -741,6 +741,11 @@ def add_configuration_file(parser):
                         help="Relative path of the config file")
     parser.add_argument('--without-auto-migration', dest='withoutautomigration',
                         action='store_true')
+    parser.add_argument('--isolation-level',
+                        default="READ_COMMITTED",
+                        choices=["SERIALIZABLE", "REPEATABLE_READ",
+                                 "READ_COMMITTED", "READ_UNCOMMITTED",
+                                 "AUTOCOMMIT"])
 
 
 @Configuration.add('database', label="Database",

@@ -30,6 +30,11 @@ CHANGELOG
   if an inexisting configuration file is given the the exception is raised
 * [REF] update **anyblok.start**
   The configuration is now loaded when configuration_group is none
+* [ADD] **isolation_level** configuration
+  The isolation level can be passed by **anyblok.start** or by the Configuration
+  The default value is **READ_COMMITTED**, In the case or console script and
+  Configuration add isolation level, the isolation used is always the isolation
+  came from **anyblok.start**
 
 0.16.1 (2018-01-29)
 -------------------
