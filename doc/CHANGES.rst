@@ -28,6 +28,8 @@ CHANGELOG
   apply it.
 * [FIX] raise an ConfigurationException on wrong path
   if an inexisting configuration file is given the the exception is raised
+* [REF] update **anyblok.start**
+  The configuration is now loaded when configuration_group is none
 
 0.16.1 (2018-01-29)
 -------------------

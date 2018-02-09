@@ -98,13 +98,12 @@ def start(processName, configuration_groups=None, entry_points=None,
     from .registry import RegistryManager
 
     load_init_function_from_entry_points()
-    if configuration_groups is not None:
-        if config is None:
-            config = {}
+    if config is None:
+        config = {}
 
-        Configuration.load(processName,
-                           configuration_groups=configuration_groups,
-                           useseparator=useseparator, **config)
+    Configuration.load(processName,
+                       configuration_groups=configuration_groups,
+                       useseparator=useseparator, **config)
 
     configuration_post_load()
     if entry_points:
