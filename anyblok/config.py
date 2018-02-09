@@ -653,11 +653,17 @@ class Configuration:
                 getLogger(qualname).setLevel(level)
 
     @classmethod
-    def parse_configfile(cls, configfile, parts_to_load):
+    def parse_configfile(cls, configfile, parts_to_load, required):
         cur_cwd = os.getcwd()
         configfile = os.path.abspath(configfile)
         print('Load config file %r' % configfile)
         if not isfile(configfile):
+            if required:
+                raise ConfigurationException(
+                    "The configuration file is required, wrong path "
+                    "%r was given" % configfile
+                )
+
             return
 
         cwd_file, file_name = os.path.split(configfile)
@@ -681,7 +687,7 @@ class Configuration:
             if 'extend' in configuration:
                 extend = configuration.pop('extend')
                 if extend:
-                    cls.parse_configfile(extend, parts_to_load)
+                    cls.parse_configfile(extend, parts_to_load, required)
 
         finally:
             os.chdir(cur_cwd)
@@ -697,13 +703,13 @@ class Configuration:
         ad = AppDirs('AnyBlok')
         # load the global configuration file
         cls.parse_configfile(
-            join(ad.site_config_dir, 'conf.cfg'), parts_to_load)
+            join(ad.site_config_dir, 'conf.cfg'), parts_to_load, False)
         # load the user configuration file
         cls.parse_configfile(
-            join(ad.user_config_dir, 'conf.cfg'), parts_to_load)
+            join(ad.user_config_dir, 'conf.cfg'), parts_to_load, False)
         if 'configfile' in dict(arguments._get_kwargs()).keys():
             if arguments.configfile:
-                cls.parse_configfile(arguments.configfile, parts_to_load)
+                cls.parse_configfile(arguments.configfile, parts_to_load, True)
 
         for opt, value in arguments._get_kwargs():
             if opt not in cls.configuration or value:

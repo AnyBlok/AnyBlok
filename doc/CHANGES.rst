@@ -26,6 +26,8 @@ CHANGELOG
   Only when the column is created by the relationship Many2One or One2One.
   The column created get the attribute index gave to relationship and 
   apply it.
+* [FIX] raise an ConfigurationException on wrong path
+  if an inexisting configuration file is given the the exception is raised
 
 0.16.1 (2018-01-29)
 -------------------
