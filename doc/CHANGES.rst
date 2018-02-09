@@ -35,8 +35,10 @@ CHANGELOG
   The default value is **READ_COMMITTED**, In the case or console script and
   Configuration add isolation level, the isolation used is always the isolation
   came from **anyblok.start**
-* [REF] The nose plugins take the directory tests in any location in the blok
+* [REF] The nose plugins take the **tests** directories in any location in the blok
   not only at the root of the blok
+* [REF] The options **test-blok-at-install** take the **tests** directory in any 
+  location in the blok not only at the root of the blok
 
 0.16.1 (2018-01-29)
 -------------------
