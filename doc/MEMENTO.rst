@@ -659,6 +659,10 @@ Parameters of the ``One2One`` field:
 +-------------------+---------------------------------------------------------+
 | ``backref``       | Remote One2One link with the column name                |
 +-------------------+---------------------------------------------------------+
+| ``unique``        | Add unique constraint on the created column(s)          |
++-------------------+---------------------------------------------------------+
+| ``index``         | Add index constraint on the created column(s)           |
++-------------------------+---------------------------------------------------+
 
 Parameters of the ``Many2One`` field:
 
@@ -673,7 +677,9 @@ Parameters of the ``Many2One`` field:
 +-------------------------+---------------------------------------------------+
 | ``nullable``            | Indicate if the column name is nullable or not    |
 +-------------------------+---------------------------------------------------+
-| ``unique``              | Add unique information in created collumn         |
+| ``unique``              | Add unique constraint on the created column(s)    |
++-------------------------+---------------------------------------------------+
+| ``index``               | Add index constraint on the created column(s)     |
 +-------------------------+---------------------------------------------------+
 | ``one2many``            | Opposite One2Many link with this Many2one         |
 +-------------------------+---------------------------------------------------+
