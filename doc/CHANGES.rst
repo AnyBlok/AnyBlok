@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.16.2
-------
+0.16.2 (2018-02-12)
+-------------------
 
 * [FIX] Add column with an unique constraint.
   Alembic declare now two changes: **add column** and **add unique constraint**
