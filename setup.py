@@ -13,7 +13,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.16.2'
+version = '0.16.3'
 
 
 if sys.version_info < (3, 3):
@@ -23,7 +23,7 @@ if sys.version_info < (3, 3):
 
 requires = [
     'sqlalchemy',
-    'sqlalchemy-utils',
+    'sqlalchemy-utils >= 0.33.0',
     'argparse',
     'alembic',
     'graphviz',

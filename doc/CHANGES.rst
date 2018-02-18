@@ -13,8 +13,15 @@
 CHANGELOG
 =========
 
-0.16.2
+0.16.3
 ------
+
+* [FIX] **SQLAlchemy_Utils** changed the import path of **EncryptedType** in 
+  version **0.33.0**
+
+
+0.16.2 (2018-02-12)
+-------------------
 
 * [FIX] Add column with an unique constraint.
   Alembic declare now two changes: **add column** and **add unique constraint**

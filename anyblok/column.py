@@ -10,7 +10,7 @@ from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types, CheckConstraint
 from sqlalchemy_utils.types.color import ColorType
-from sqlalchemy_utils.types.encrypted import EncryptedType
+from sqlalchemy_utils.types.encrypted.encrypted_type import EncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
 from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy_utils.types.url import URLType
