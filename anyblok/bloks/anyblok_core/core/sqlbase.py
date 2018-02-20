@@ -10,10 +10,12 @@ from anyblok.field import FieldException
 from anyblok.column import Column
 from anyblok.mapper import FakeColumn, FakeRelationShip
 from anyblok.relationship import RelationShip, Many2Many
+from anyblok.common import anyblok_column_prefix
 from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty
 from sqlalchemy.sql.expression import true
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, inspect
+from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
 
 
 class uniquedict(dict):
@@ -28,6 +30,26 @@ class uniquedict(dict):
 
 
 class SqlMixin:
+
+    def __repr__(self):
+        state = inspect(self)
+        field_reprs = []
+        for key in state.mapper.columns.keys():
+            value = state.attrs[key].loaded_value
+            if value == NO_VALUE:
+                value = NOT_LOADED_REPR
+            else:
+                value = repr(value)
+
+            field_name = key
+            if field_name.startswith(anyblok_column_prefix):
+                field_name = field_name[len(anyblok_column_prefix):]
+
+            field_reprs.append('='.join((field_name, value)))
+
+        return '%s(%s)' % (
+            self.__class__.__registry_name__, ', '.join(field_reprs)
+        )
 
     @classmethod
     def define_table_args(cls):

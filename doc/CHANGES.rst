@@ -42,6 +42,7 @@ CHANGELOG
   Only when the column is created by the relationship Many2One or One2One.
   The column created get the attribute primary_key gave to relationship and 
   apply it.
+* [IMP] add repr default method on all SqlModel and ViewSqlModel
 
 0.16.2 (2018-02-12)
 -------------------
