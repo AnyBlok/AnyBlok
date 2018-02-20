@@ -83,6 +83,9 @@ def createdb(application, configuration_groups, **kwargs):
     configuration_post_load()
     BlokManager.load()
     db_name = Configuration.get('db_name')
+    if not db_name:
+        return
+
     db_template_name = Configuration.get('db_template_name', None)
     url = Configuration.get('get_url')(db_name=db_name)
     create_database(url, template=db_template_name)
