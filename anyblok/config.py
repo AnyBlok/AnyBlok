@@ -746,6 +746,10 @@ def add_configuration_file(parser):
                         choices=["SERIALIZABLE", "REPEATABLE_READ",
                                  "READ_COMMITTED", "READ_UNCOMMITTED",
                                  "AUTOCOMMIT"])
+    parser.add_argument('--default-timezone',
+                        default=os.environ.get('ANYBLOK_DEFAULT_TIMEZONE'),
+                        help="default timezone use by naive datetime "
+                             "(by default use the timezone of the serveur")
 
 
 @Configuration.add('database', label="Database",

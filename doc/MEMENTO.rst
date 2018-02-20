@@ -589,12 +589,20 @@ Other attribute for ``UUID``:
 
 Other attribute for ``DateTime``:
 
-+-----------------+-----------------------------------------------------------+
-| Param           | Description                                               |
-+=================+===========================================================+
-| ``auto_update`` | Boolean (default: **False**) if True the value will be    |
-|                 | update when the session is flushed                        |
-+-----------------+-----------------------------------------------------------+
++----------------------+------------------------------------------------------+
+| Param                | Description                                          |
++======================+======================================================+
+| ``auto_update``      | Boolean (default: **False**) if True the value will  |
+|                      | be update when the session is flushed                |
++----------------------+------------------------------------------------------+
+| ``default_timezone`` | timezone or timezone's name, define the timezone to  |
+|                      | on naive datetime.                                   |
+|                      |                                                      |
+|                      | ..warning::                                          |
+|                      |     The datetime with another timezone don't change  |
+|                      |     and keep their own timezone                      |
+|                      |                                                      |
++----------------------+------------------------------------------------------+
 
 RelationShip
 ------------

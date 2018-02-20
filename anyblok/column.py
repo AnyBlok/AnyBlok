@@ -358,18 +358,24 @@ def convert_string_to_datetime(value):
     return value
 
 
+def add_timezone_on_datetime(dt, default_timezone):
+    if dt is not None:
+        if dt.tzinfo is None:
+            dt = default_timezone.localize(dt)
+
+    return dt
+
+
 class DateTimeType(types.TypeDecorator):
 
     impl = types.DateTime(timezone=True)
 
+    def __init__(self, default_timezone):
+        self.default_timezone = default_timezone
+
     def process_bind_param(self, value, engine):
         value = convert_string_to_datetime(value)
-        if value is not None:
-            if value.tzinfo is None:
-                timezone = pytz.timezone(time.tzname[0])
-                value = timezone.localize(value)
-
-        return value
+        return add_timezone_on_datetime(value, self.default_timezone)
 
     @property
     def python_type(self):
@@ -392,20 +398,26 @@ class DateTime(Column):
             x = DateTime(default=datetime.now)
 
     """
-    sqlalchemy_type = DateTimeType
 
     def __init__(self, *args, **kwargs):
         self.auto_update = kwargs.pop('auto_update', False)
+        default_timezone = kwargs.pop(
+            'default_timezone',
+            Configuration.get(
+                'default_timezone',
+                time.tzname[0]
+            )
+        )
+        if isinstance(default_timezone, str):
+            default_timezone = pytz.timezone(default_timezone)
+
+        self.default_timezone = default_timezone
+        self.sqlalchemy_type = DateTimeType(default_timezone)
         super(DateTime, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
         value = convert_string_to_datetime(value)
-        if value is not None:
-            if value.tzinfo is None:
-                timezone = pytz.timezone(time.tzname[0])
-                value = timezone.localize(value)
-
-        return value
+        return add_timezone_on_datetime(value, self.default_timezone)
 
     def autodoc_get_properties(self):
         res = super(Column, self).autodoc_get_properties()

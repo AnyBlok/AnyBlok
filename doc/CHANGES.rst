@@ -18,7 +18,18 @@ CHANGELOG
 
 * [FIX] **SQLAlchemy_Utils** changed the import path of **EncryptedType** in 
   version **0.33.0**
+* [REF] Add default_time on configuration and **DateTime** column.
+  Before this change a naive datetime get the timezone of server host, now
+  it possible to add the attibute **default_timezone** on each column or
+  **default_timezone** on configuration for all the column.
+  For each **DateTime** column the default timezone use is define by the order:
+    1) default_timezone on column (if defined)
+    2) default_timezone in configuration (if defined)
+    3) timezone of the server
 
+  .. warning:: 
+      This options are only use for naive datetime, to save them with a timezone.
+      In the case of a datetime with timezone, this datetime keep their own datetime.
 
 0.16.2 (2018-02-12)
 -------------------

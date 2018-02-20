@@ -632,6 +632,51 @@ class TestColumns(DBTestCase):
         registry.flush()
         self.assertIsNotNone(test.update_at)
 
+    def test_datetime_with_default_timezone_tz(self):
+        import datetime
+        import pytz
+
+        timezone = pytz.timezone('Asia/Tokyo')
+        now = datetime.datetime.now()
+        registry = self.init_registry(
+            simple_column, ColumnType=DateTime,
+            default_timezone=timezone)
+        field = registry.loaded_namespaces_first_step['Model.Test']['col']
+        self.assertIs(field.default_timezone, timezone)
+
+        test = registry.Test.insert(col=now)
+        self.assertIs(test.col.tzinfo.zone, timezone.zone)
+
+    def test_datetime_with_default_timezone_str(self):
+        import datetime
+        import pytz
+
+        timezone = pytz.timezone('Asia/Tokyo')
+        now = datetime.datetime.now()
+        registry = self.init_registry(
+            simple_column, ColumnType=DateTime,
+            default_timezone='Asia/Tokyo')
+        field = registry.loaded_namespaces_first_step['Model.Test']['col']
+        self.assertIs(field.default_timezone, timezone)
+
+        test = registry.Test.insert(col=now)
+        self.assertIs(test.col.tzinfo.zone, timezone.zone)
+
+    def test_datetime_with_default_global_timezone_str(self):
+        import datetime
+        import pytz
+
+        timezone = pytz.timezone('Asia/Tokyo')
+        now = datetime.datetime.now()
+        with DBTestCase.Configuration(default_timezone='Asia/Tokyo'):
+            registry = self.init_registry(simple_column, ColumnType=DateTime)
+
+        field = registry.loaded_namespaces_first_step['Model.Test']['col']
+        self.assertIs(field.default_timezone, timezone)
+
+        test = registry.Test.insert(col=now)
+        self.assertIs(test.col.tzinfo.zone, timezone.zone)
+
     def test_interval(self):
         from datetime import timedelta
 
