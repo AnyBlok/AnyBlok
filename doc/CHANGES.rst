@@ -23,11 +23,13 @@ CHANGELOG
   it possible to add the attibute **default_timezone** on each column or
   **default_timezone** on configuration for all the column.
   For each **DateTime** column the default timezone use is define by the order:
+
     1) default_timezone on column (if defined)
     2) default_timezone in configuration (if defined)
     3) timezone of the server
 
   .. warning:: 
+
       This options are only use for naive datetime, to save them with a timezone.
       In the case of a datetime with timezone, this datetime keep their own datetime.
 

@@ -465,10 +465,6 @@ anyblok.column module
     :members:
     :noindex:
 
-.. autoclass:: JsonType
-    :members:
-    :noindex:
-
 .. autoclass:: Json
     :show-inheritance:
     :inherited-members:

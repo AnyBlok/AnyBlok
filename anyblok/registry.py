@@ -1093,8 +1093,9 @@ class Registry:
         self.session.expire(obj, attribute_names=attribute_names)
 
     def expire_all(self):
-        """Expire all the objects in session::
+        """Expire all the objects in session
 
+        ::
             registry.expire_all()
 
         """

@@ -598,7 +598,7 @@ Other attribute for ``DateTime``:
 | ``default_timezone`` | timezone or timezone's name, define the timezone to  |
 |                      | on naive datetime.                                   |
 |                      |                                                      |
-|                      | ..warning::                                          |
+|                      | .. warning::                                         |
 |                      |     The datetime with another timezone don't change  |
 |                      |     and keep their own timezone                      |
 |                      |                                                      |
