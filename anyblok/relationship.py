@@ -306,6 +306,8 @@ class Many2One(RelationShip):
                                                  "foreigh key",
                                     nullable=True,
                                     unique=False,
+                                    index=False,
+                                    primary_key=False,
                                     one2many="themodels")
 
     If the ``remote_columns`` are not define then, the system takes the primary
@@ -321,6 +323,7 @@ class Many2One(RelationShip):
     :param nullable: If the column_names is nullable
     :param unique: If True, add the unique constraint on the columns
     :param index: If True, add the index constraint on the columns
+    :param primary_key: If True, add the primary_key=True on the columns
     :param one2many: create the one2many link with this many2one
     """
     use_hybrid_property = True
@@ -339,15 +342,14 @@ class Many2One(RelationShip):
             self.nullable = self.kwargs.pop('nullable')
             self.kwargs['info']['nullable'] = self.nullable
 
-        self.unique = False
-        if 'unique' in kwargs:
-            self.unique = self.kwargs.pop('unique')
-            self.kwargs['info']['unique'] = self.unique
+        self.unique = self.kwargs.pop('unique', False)
+        self.kwargs['info']['unique'] = self.unique
 
-        self.index = False
-        if 'index' in kwargs:
-            self.index = self.kwargs.pop('index')
-            self.kwargs['info']['index'] = self.index
+        self.index = self.kwargs.pop('index', False)
+        self.kwargs['info']['index'] = self.index
+
+        self.primary_key = self.kwargs.pop('primary_key', False)
+        self.kwargs['info']['primary_key'] = self.primary_key
 
         if 'one2many' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('one2many')
@@ -368,6 +370,7 @@ class Many2One(RelationShip):
         res['_column_names'] = self._column_names
         res['unique'] = self.unique
         res['index'] = self.index
+        res['primary_key'] = self.primary_key
         return res
 
     def get_remote_columns(self, registry):
@@ -536,6 +539,7 @@ class Many2One(RelationShip):
                 nullable=self.nullable,
                 unique=self.unique,
                 index=self.index,
+                primary_key=self.primary_key,
                 info=dict(label=self.label, foreign_key=foreign_key))
 
         properties[(anyblok_column_prefix +

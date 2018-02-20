@@ -353,6 +353,25 @@ class TestMany2One(DBTestCase):
         indexes = inspector.get_indexes(registry.Person.__tablename__)
         self.assertEqual(len(indexes), 1)
 
+    def test_add_primary_keys_constraint(self):
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                address = Many2One(model=Model.Address, primary_key=True)
+
+        registry = self.init_registry(add_in_registry)
+        inspector = Inspector(registry.session.connection())
+        pks = inspector.get_primary_keys(registry.Person.__tablename__)
+        self.assertIn('address_id', pks)
+
     def test_complet_with_multi_foreign_key(self):
 
         def add_in_registry():

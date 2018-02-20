@@ -670,7 +670,9 @@ Parameters of the ``One2One`` field:
 | ``unique``        | Add unique constraint on the created column(s)          |
 +-------------------+---------------------------------------------------------+
 | ``index``         | Add index constraint on the created column(s)           |
-+-------------------------+---------------------------------------------------+
++-------------------+---------------------------------------------------------+
+| ``primary_key``   | The created column(s) are primary key                   |
++-------------------+---------------------------------------------------------+
 
 Parameters of the ``Many2One`` field:
 
@@ -688,6 +690,8 @@ Parameters of the ``Many2One`` field:
 | ``unique``              | Add unique constraint on the created column(s)    |
 +-------------------------+---------------------------------------------------+
 | ``index``               | Add index constraint on the created column(s)     |
++-------------------------+---------------------------------------------------+
+| ``primary_key``         | The created column(s) are primary key             |
 +-------------------------+---------------------------------------------------+
 | ``one2many``            | Opposite One2Many link with this Many2one         |
 +-------------------------+---------------------------------------------------+
