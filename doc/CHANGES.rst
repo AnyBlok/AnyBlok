@@ -33,6 +33,12 @@ CHANGELOG
       This options are only use for naive datetime, to save them with a timezone.
       In the case of a datetime with timezone, this datetime keep their own datetime.
 
+* [REF] add a function in config to get the name of the database from Configuration
+  **db_name** or **db_url**. The script **anyblok_createdb** and the plugin
+  use this function. 
+* [IMP] Add option **--anyblok-db-url** in plugin nose options. the options can have 
+  default value from environment variable **ANYBLOK_DATABASE_URL**
+
 0.16.2 (2018-02-12)
 -------------------
 

@@ -1,5 +1,12 @@
+# This file is a part of the AnyBlok project
+#
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file,You can
+# obtain one at http://mozilla.org/MPL/2.0/.
 from nose.plugins import Plugin
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_db_name
 from anyblok import (
     load_init_function_from_entry_points,
     configuration_post_load,
@@ -63,6 +70,9 @@ class AnyBlokPlugin(Plugin):
         parser.add_option('--anyblok-db-port', dest='db_port',
                           default=env.get('ANYBLOK_DATABASE_PORT'),
                           help="The port number")
+        parser.add_option('--anyblok-db-url', dest='db_url',
+                          default=env.get('ANYBLOK_DATABASE_URL'),
+                          help="Complete URL for connection with the database")
 
     def configure(self, options, conf):
         super(AnyBlokPlugin, self).configure(options, conf)
@@ -79,9 +89,7 @@ class AnyBlokPlugin(Plugin):
             Configuration.parse_options(self.AnyBlokOptions, ('bloks',))
             configuration_post_load()
             BlokManager.load()
-            db_name = Configuration.get('db_name')
-            if not db_name:
-                raise Exception("No database defined to run Test")
+            db_name = get_db_name()
 
             registry = RegistryManager.get(db_name)
             if registry:

@@ -3,6 +3,7 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -20,6 +21,27 @@ from sqlalchemy.engine.url import URL, make_url
 from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
                      CRITICAL, basicConfig, Logger)
 logger = getLogger(__name__)
+
+
+def get_db_name():
+    """ Return an sqlalchemy name of the database from configuration
+    db_name or db_url
+
+    :rtype: name of the database
+    :exception: ConfigurationException
+    """
+    url = Configuration.get('db_url', None)
+    db_name = Configuration.get('db_name', None)
+
+    if db_name is not None:
+        return db_name
+
+    if url:
+        url = make_url(url)
+        if url.database:
+            return url.database
+
+    raise ConfigurationException("No database's name defined")
 
 
 def get_url(db_name=None):

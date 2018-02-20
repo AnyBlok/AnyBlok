@@ -187,6 +187,14 @@ anyblok.config module
     :show-inheritance:
     :inherited-members:
 
+.. autofunction:: get_db_name:
+    :members:
+    :noindex:
+
+.. autofunction:: get_url:
+    :members:
+    :noindex:
+
 .. autoclass:: Configuration
     :members:
     :noindex:

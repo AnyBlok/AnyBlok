@@ -8,7 +8,7 @@
 import anyblok
 from anyblok.release import version
 from anyblok.blok import BlokManager
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_db_name
 from anyblok.registry import RegistryManager, return_list
 from anyblok._graphviz import ModelSchema, SQLSchema
 from nose import main
@@ -82,9 +82,7 @@ def createdb(application, configuration_groups, **kwargs):
                        **kwargs)
     configuration_post_load()
     BlokManager.load()
-    db_name = Configuration.get('db_name')
-    if not db_name:
-        return
+    db_name = get_db_name()
 
     db_template_name = Configuration.get('db_template_name', None)
     url = Configuration.get('get_url')(db_name=db_name)
