@@ -493,17 +493,17 @@ All the columns have the following optional parameters:
 |                |                                                            |
 |                |    @register(Model)                                        |
 |                |    class Foo:                                              |
-|                |        id : Integer(primary_key=True)                      |
+|                |        id = Integer(primary_key=True)                      |
 |                |                                                            |
 |                |    @register(Model)                                        |
 |                |    class Bar:                                              |
-|                |        id : Integer(primary_key=True)                      |
-|                |        foo: Integer(foreign_key=Model.Foo.use('id'))       |
+|                |        id = Integer(primary_key=True)                      |
+|                |        foo = Integer(foreign_key=Model.Foo.use('id'))      |
 |                |                                                            |
 |                | If the ``Model`` Declarations doesn't exist yet, you can   |
 |                | use the regisrty name::                                    |
 |                |                                                            |
-|                |     foo: Integer(foreign_key='Model.Foo=>id'))             |
+|                |     foo = Integer(foreign_key='Model.Foo=>id'))            |
 |                |                                                            |
 +----------------+------------------------------------------------------------+
 | db_column_name | String to define the real column name in the table,        |
@@ -601,6 +601,16 @@ Other attribute for ``DateTime``:
 |                      | .. warning::                                         |
 |                      |     The datetime with another timezone don't change  |
 |                      |     and keep their own timezone                      |
+|                      |                                                      |
+|                      | ::                                                   |
+|                      |                                                      |
+|                      |     tokyo_tz = pytz.timezone('Asia/Tokyo')           |
+|                      |                                                      |
+|                      |     @register(Model)                                 |
+|                      |     class Bar:                                       |
+|                      |         foo = DateTime(default_timezone=tokyo_tz)    |
+|                      |         //                                           |
+|                      |         foo = DateTime(default_timezone='Asia/Tokyo')|
 |                      |                                                      |
 +----------------------+------------------------------------------------------+
 
