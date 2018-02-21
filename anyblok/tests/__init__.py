@@ -15,4 +15,16 @@ from anyblok import (
 
 load_init_function_from_entry_points(unittest=True)
 Configuration.load_config_for_test()
+
+
+class MockParser:
+
+    def _get_kwargs(self):
+        return []
+
+    def _get_args(self):
+        return False
+
+
+Configuration.parse_options(MockParser(), ('bloks',))
 configuration_post_load(unittest=True)
