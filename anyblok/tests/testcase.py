@@ -329,6 +329,9 @@ class BlokTestCase(unittest.TestCase):
         super(BlokTestCase, cls).setUpClass()
         additional_setting = cls.additional_setting()
         if cls.registry is None:
+            if len(BlokManager.list()) == 0:
+                BlokManager.load()
+
             cls.registry = RegistryManager.get(Configuration.get('db_name'),
                                                **additional_setting)
 
