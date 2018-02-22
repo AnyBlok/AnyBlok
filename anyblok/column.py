@@ -403,11 +403,11 @@ class DateTime(Column):
         self.auto_update = kwargs.pop('auto_update', False)
         default_timezone = kwargs.pop(
             'default_timezone',
-            Configuration.get(
-                'default_timezone',
-                time.tzname[0]
-            )
+            Configuration.get('default_timezone')
         )
+        if not default_timezone:
+            default_timezone = time.tzname[0]
+
         if isinstance(default_timezone, str):
             default_timezone = pytz.timezone(default_timezone)
 
