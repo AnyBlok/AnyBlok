@@ -37,10 +37,12 @@ class SqlMixin:
         fields_description = self.fields_description()
         for key in fields_description.keys():
             type_ = fields_description[key]['type']
-            value = state.attrs.get(
-                key,
-                state.attrs.get(anyblok_column_prefix + key)
-            ).loaded_value
+            if key in state.attrs:
+                value = state.attrs.get(key).loaded_value
+            else:
+                value = state.attrs.get(
+                    anyblok_column_prefix + key).loaded_value
+
             if value == NO_VALUE:
                 value = NOT_LOADED_REPR
             elif type_ in ('One2Many', 'Many2Many'):
