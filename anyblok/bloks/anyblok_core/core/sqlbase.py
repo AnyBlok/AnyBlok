@@ -39,9 +39,11 @@ class SqlMixin:
             type_ = fields_description[key]['type']
             if key in state.attrs:
                 value = state.attrs.get(key).loaded_value
-            else:
+            elif (anyblok_column_prefix + key) in state.attrs:
                 value = state.attrs.get(
                     anyblok_column_prefix + key).loaded_value
+            else:
+                continue
 
             if value == NO_VALUE:
                 value = NOT_LOADED_REPR
