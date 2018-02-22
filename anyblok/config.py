@@ -291,24 +291,38 @@ class Configuration:
     }
 
     @classmethod
-    def add_configuration_groups(cls, application, new_groups):
-        """Add configuration_groups to an existing application"""
-        if not new_groups:
-            return
+    def add_application_properties(cls, application, new_groups,
+                                   add_default_group=True, **kwargs):
+        """Add argparse properties for an application
 
+        If the application does not exist, the application will be added in
+        the applications properties storage.
+
+        new_groups: extend the existing groups defined. If no group is defined
+        before, this extend the groups of the default application.
+
+        :param application: the name of the application
+        :param new_groups: list of the configuration groups
+        :param add_default_group: if True the default groups will be add
+        :params kwargs: other properties to change
+        """
         if application not in cls.applications:
-            return
-
+            cls.applications[application] = {}
         app = cls.applications[application]
-        if 'configuration_groups' not in app:
-            app['configuration_groups'] = []
-            app['configuration_groups'].extend(
-                cls.applications['default']['configuration_groups'])
+        if kwargs:
+            app.update(kwargs)
 
-        cg = app['configuration_groups']
-        for new_group in new_groups:
-            if new_group not in cg:
-                cg.append(new_group)
+        if new_groups:
+            if 'configuration_groups' not in app:
+                app['configuration_groups'] = []
+                if add_default_group:
+                    app['configuration_groups'].extend(
+                        cls.applications['default']['configuration_groups'])
+
+            cg = app['configuration_groups']
+            for new_group in new_groups:
+                if new_group not in cg:
+                    cg.append(new_group)
 
     @classmethod
     def init_groups_for(cls, group, part, label):
@@ -444,10 +458,10 @@ class Configuration:
     def update(cls, *args, **kwargs):
         if args:
             if len(args) > 1:
-                raise ConfigurationException("Wainting only one dict")
+                raise ConfigurationException("Waiting only one dict")
 
             if not isinstance(args[0], dict):
-                raise ConfigurationException("Wainting a dict")
+                raise ConfigurationException("Waiting a dict")
 
             for k, v in args[0].items():
                 cls.set(k, v)

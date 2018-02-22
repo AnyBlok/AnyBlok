@@ -23,39 +23,48 @@ from anyblok import (
     configuration_post_load,
 )
 
-Configuration.applications.update({
-    'createdb': {
-        'prog': 'AnyBlok create database, version %r' % version,
-        'description': "Create a database and install bloks to populate it",
-        'configuration_groups': ['config', 'database', 'unittest'],
-    },
-    'updatedb': {
-        'prog': 'AnyBlok update database, version %r' % version,
-        'description': ("Update a database: install, upgrade or uninstall the "
-                        "bloks "),
-        'configuration_groups': ['config', 'database', 'unittest'],
-    },
-    'nose': {
-        'prog': 'AnyBlok nose, version %r' % version,
-        'description': "Run fonctionnal nosetest of the installed bloks",
-    },
-    'interpreter': {
-        'prog': 'AnyBlok interpretor, version %r' % version,
-        'description': "Run an interpreter on the registry",
-        'formatter_class': RawDescriptionHelpFormatter,
-        'epilog': dedent("Example\n"
-                         "-------\n"
-                         "  $ anyblok_interpreter [anyblok arguments] \n"
-                         "  $ => registry \n"
-                         "  ... <registry> \n\n"
-                         "  The interpretor add in the local the registry of "
-                         "the selected database \n\n"
-                         "Note\n"
-                         "----\n"
-                         "  if the ipython is in the python path, then "
-                         "the interpretor will be an ipyton interpretor")
-    },
-})
+Configuration.add_application_properties(
+    'createdb',
+    [
+        'unittest',
+        'logging',
+        'create_db',
+        'install-bloks',
+        'install-or-update-bloks',
+    ],
+    prog='AnyBlok create database, version %r' % version,
+    description="Create a database and install bloks to populate it"
+)
+
+Configuration.add_application_properties(
+    'updatedb', ['unittest'],
+    prog='AnyBlok update database, version %r' % version,
+    description="Update a database: install, upgrade or uninstall the bloks "
+)
+
+Configuration.add_application_properties(
+    'nose', [],
+    prog='AnyBlok nose, version %r' % version,
+    description="Run fonctionnal nosetest of the installed bloks"
+)
+
+Configuration.add_application_properties(
+    'interpreter', [],
+    prog='AnyBlok interpretor, version %r' % version,
+    description="Run an interpreter on the registry",
+    formatter_class=RawDescriptionHelpFormatter,
+    epilog=dedent("Example\n"
+                  "-------\n"
+                  "  $ anyblok_interpreter [anyblok arguments] \n"
+                  "  $ => registry \n"
+                  "  ... <registry> \n\n"
+                  "  The interpretor add in the local the registry of "
+                  "the selected database \n\n"
+                  "Note\n"
+                  "----\n"
+                  "  if the ipython is in the python path, then "
+                  "the interpretor will be an ipyton interpretor")
+)
 
 
 def format_configuration(configuration_groups, *confs):
