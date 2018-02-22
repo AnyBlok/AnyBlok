@@ -272,8 +272,7 @@ class Configuration:
 
     This class stores three attributes:
 
-    * groups: lists of options indexed by part, a part is a ``ConfigParser``
-      group, or a process name
+    * groups: lists of options indexed
     * labels: if a group has got a label then all the options in group are
       gathered in a parser group
     * configuration: result of the ``Configuration`` after loading
@@ -325,22 +324,9 @@ class Configuration:
                     cg.append(new_group)
 
     @classmethod
-    def init_groups_for(cls, group, part, label):
-        if part not in cls.groups:
-            cls.groups[part] = {group: []}
-        elif group not in cls.groups[part]:
-            cls.groups[part][group] = []
-
-        if label:
-            if part not in cls.labels:
-                cls.labels[part] = {group: label}
-            else:
-                cls.labels[part][group] = label
-
-    @classmethod
-    def add(cls, group, part='bloks', label=None, function_=None,
+    def add(cls, group, label=None, function_=None,
             must_be_loaded_by_unittest=False):
-        """ Add a function in a part and a group.
+        """ Add a function in a group.
 
         The function must have two arguments:
 
@@ -370,7 +356,6 @@ class Configuration:
             def bar(parser, default):
                 pass
 
-        :param part: ConfigParser group or process name
         :param group: group is a set of parser option
         :param label: If the group has a label then all the functions in the
             group are put in group parser
@@ -378,19 +363,24 @@ class Configuration:
         :param must_be_loaded_by_unittest: unittest call this function to init
             configuration of AnyBlok for run unittest"
         """
-        cls.init_groups_for(group, part, label)
+        if group not in cls.groups:
+            cls.groups[group] = []
+
+        if label:
+            cls.labels[group] = label
+
         if function_:
-            if function_ not in cls.groups[part][group]:
+            if function_ not in cls.groups[group]:
                 function_.must_be_loaded_by_unittest = \
                     must_be_loaded_by_unittest
-                cls.groups[part][group].append(function_)
+                cls.groups[group].append(function_)
         else:
 
             def wrapper(function):
-                if function not in cls.groups[part][group]:
+                if function not in cls.groups[group]:
                     function.must_be_loaded_by_unittest = \
                         must_be_loaded_by_unittest
-                    cls.groups[part][group].append(function)
+                    cls.groups[group].append(function)
                 return function
 
             return wrapper
@@ -474,7 +464,7 @@ class Configuration:
         cls.configuration[key] = ConfigOption(value, type)
 
     @classmethod
-    def remove_label(cls, group, part='bloks'):
+    def remove_label(cls, group):
         """ Remove an existing label
 
         The goal of this function is to remove an existing label of a specific
@@ -486,15 +476,13 @@ class Configuration:
 
             Configuration.remove_label('create-db')
 
-        :param part: ConfigParser group or process name
         :param group: group is a set of parser option
         """
-        if part in cls.labels:
-            if group in cls.labels[part]:
-                del cls.labels[part][group]
+        if group in cls.labels:
+            del cls.labels[group]
 
     @classmethod
-    def remove(cls, group, function_, part='bloks'):
+    def remove(cls, group, function_):
         """ Remove an existing function
 
         If your application inherits some unwanted options from a specific
@@ -506,59 +494,12 @@ class Configuration:
             Configuration.add('create-db', function_=foo)
             Configuration.remove('create-db', function_=foo)
 
-        :param part: ConfigParser group or process name
         :param group: group is a set of parser option
         :param function_: function to add
         """
-        if part in cls.groups:
-            if group in cls.groups[part]:
-                if function_ in cls.groups[part][group]:
-                    cls.groups[part][group].remove(function_)
-
-    @classmethod
-    def _merge_groups(cls, *parts):
-        """ Internal method to merge groups in function of parts
-
-        :param parts: parts to merge
-        :exception: ConfigurationException
-        """
-        if not parts:
-            raise ConfigurationException("No parts to merge")
-
-        groups = {}
-
-        for part in parts:
-            if part not in cls.groups:
-                continue
-
-            for k, v in cls.groups[part].items():
-                if k in groups:
-                    groups[k].extend(v)
-                else:
-                    groups[k] = [] + v
-
-        return groups
-
-    @classmethod
-    def _merge_labels(cls, *parts):
-        """ Internal method to merge labels in function of parts
-
-        :param parts: parts to merge
-        :exception: ConfigurationException
-        """
-        if not parts:
-            raise ConfigurationException("No parts to merge")
-
-        labels = {}
-
-        for part in parts:
-            if part not in cls.labels:
-                continue
-
-            for k, v in cls.labels[part].items():
-                labels[k] = v
-
-        return labels
+        if group in cls.groups:
+            if function_ in cls.groups[group]:
+                cls.groups[group].remove(function_)
 
     @classmethod
     @log(logger)
@@ -566,24 +507,20 @@ class Configuration:
         """Load the argparse configuration need for the unittest"""
         if not cls.configuration:
             parser = getParser()
-            for parts in cls.groups.values():
-                for part, fncts in parts.items():
-                    for fnct in fncts:
-                        if (
-                            fnct.must_be_loaded_by_unittest or
-                            part in ('plugins',)
-                        ):
-                            fnct(parser)
+            for group in cls.groups.keys():
+                for fnct in cls.groups[group]:
+                    if (
+                        fnct.must_be_loaded_by_unittest or
+                        group in ('plugins',)
+                    ):
+                        fnct(parser)
 
     @classmethod
     @log(logger, level='debug')
-    def load(cls, application, configuration_groups=None,
-             parts_to_load=('bloks',), useseparator=False, **kwargs):
+    def load(cls, application, useseparator=False, **kwargs):
         """ Load the argparse definition and parse them
 
         :param application: name of the application
-        :param configuration_groups: iterable configuration group to load
-        :param parts_to_load: group of blok to load
         :param useseparator: boolean(default False)
         :param \**kwargs: ArgumentParser named arguments
         """
@@ -597,12 +534,12 @@ class Configuration:
             description.update(cls.applications['default'])
 
         description.update(kwargs)
-        _configuration_groups = description.pop(
+        configuration_groups = description.pop(
             'configuration_groups',
             cls.applications['default']['configuration_groups'])
-        configuration_groups = set(configuration_groups or []).union(
-            _configuration_groups)
-        configuration_groups.add('plugins')
+        if 'plugins' not in configuration_groups:
+            configuration_groups.append('plugins')
+
         if useseparator:
             parser = getParser(**description)
 
@@ -614,39 +551,35 @@ class Configuration:
         else:
             parser = getParser(**description)
 
-        cls._load(parser, configuration_groups, parts_to_load)
+        cls._load(parser, configuration_groups)
         args = parser.parse_args(our_argv)
         if sep is not None:
             del sys.argv[1:sep+1]
 
-        cls.parse_options(args, parts_to_load)
+        cls.parse_options(args)
 
     @classmethod
-    def _load(cls, parser, configuration_groups, parts_to_load):
+    def _load(cls, parser, configuration_groups):
         """ Load the argparse definition and parse them
 
         :param description: description of configuration
         :param configuration_groups: list configuration groupe to load
-        :param parts_to_load: group of blok to load
         :param useseparator: boolean(default False)
         """
         if configuration_groups is None:
             return
 
-        groups = cls._merge_groups(*parts_to_load)
-        labels = cls._merge_labels(*parts_to_load)
-
-        for group in groups:
+        for group in cls.groups:
             if group not in configuration_groups:
                 continue
 
-            label = labels.get(group)
+            label = cls.labels.get(group)
             if label:
                 g = parser.add_argument_group(label)
             else:
                 g = parser
 
-            for function in groups[group]:
+            for function in cls.groups[group]:
                 function(g)
 
     @classmethod
@@ -689,7 +622,7 @@ class Configuration:
                 getLogger(qualname).setLevel(level)
 
     @classmethod
-    def parse_configfile(cls, configfile, parts_to_load, required):
+    def parse_configfile(cls, configfile, required):
         cur_cwd = os.getcwd()
         configfile = os.path.abspath(configfile)
         print('Load config file %r' % configfile)
@@ -708,9 +641,7 @@ class Configuration:
             os.chdir(cwd_file)
             cparser = ConfigParser()
             cparser.read(configfile)
-            sections = [y for x in parts_to_load + ('AnyBlok',)
-                        if cparser.has_section(x)
-                        for y in cparser.items(x)]
+            sections = cparser.items('AnyBlok')
 
             for opt, value in sections:
                 if opt in ('logging_configfile', 'json_logging_configfile',
@@ -723,7 +654,7 @@ class Configuration:
             if 'extend' in configuration:
                 extend = configuration.pop('extend')
                 if extend:
-                    cls.parse_configfile(extend, parts_to_load, required)
+                    cls.parse_configfile(extend, True)
 
         finally:
             os.chdir(cur_cwd)
@@ -731,7 +662,7 @@ class Configuration:
         cls.update(**configuration)
 
     @classmethod
-    def parse_options(cls, arguments, parts_to_load):
+    def parse_options(cls, arguments):
         if arguments._get_args():
             raise ConfigurationException(
                 'Positional arguments are forbidden')
@@ -739,13 +670,13 @@ class Configuration:
         ad = AppDirs('AnyBlok')
         # load the global configuration file
         cls.parse_configfile(
-            join(ad.site_config_dir, 'conf.cfg'), parts_to_load, False)
+            join(ad.site_config_dir, 'conf.cfg'), False)
         # load the user configuration file
         cls.parse_configfile(
-            join(ad.user_config_dir, 'conf.cfg'), parts_to_load, False)
+            join(ad.user_config_dir, 'conf.cfg'), False)
         if 'configfile' in dict(arguments._get_kwargs()).keys():
             if arguments.configfile:
-                cls.parse_configfile(arguments.configfile, parts_to_load, True)
+                cls.parse_configfile(arguments.configfile, True)
 
         for opt, value in arguments._get_kwargs():
             if opt not in cls.configuration or value:

@@ -72,7 +72,7 @@ def configuration_post_load(unittest=False):
         i.load()(unittest=unittest)
 
 
-def start(processName, configuration_groups=None, entry_points=None,
+def start(processName, entry_points=None,
           useseparator=False, loadwithoutmigration=False, config=None,
           **kwargs):
     """ Function which initialize the application
@@ -80,13 +80,11 @@ def start(processName, configuration_groups=None, entry_points=None,
     ::
 
         registry = start('My application',
-                         configuration_groups=['config', 'database'],
                          entry_points=['AnyBlok'])
 
     :param processName: Name of the application
     :param version: Version of the application
     :param prompt: Prompt message for the help
-    :param configuration_groups: list of the group of option for argparse
     :param entry_points: entry point where load blok
     :param useseparator: boolean, indicate if configuration option are split
         betwwen two application
@@ -102,7 +100,6 @@ def start(processName, configuration_groups=None, entry_points=None,
         config = {}
 
     Configuration.load(processName,
-                       configuration_groups=configuration_groups,
                        useseparator=useseparator, **config)
 
     configuration_post_load()

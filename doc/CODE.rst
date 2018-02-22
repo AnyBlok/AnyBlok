@@ -561,17 +561,17 @@ anyblok.scripts module
 
 .. automodule:: anyblok.scripts
 
-.. autofunction:: createdb
+.. autofunction:: anyblok_createdb
     :noindex:
 
-.. autofunction:: updatedb
+.. autofunction:: anyblok_updatedb
     :noindex:
 
-.. autofunction:: interpreter
+.. autofunction:: anyblok_interpreter
     :noindex:
 
-.. autofunction:: run_exit
+.. autofunction:: anyblok_nose
     :noindex:
 
-.. autofunction:: registry2doc
+.. autofunction:: anyblok2doc
     :noindex:

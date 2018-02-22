@@ -86,7 +86,7 @@ class AnyBlokPlugin(Plugin):
             self.registryLoaded = True
             load_init_function_from_entry_points(unittest=True)
             Configuration.load_config_for_test()
-            Configuration.parse_options(self.AnyBlokOptions, ('bloks',))
+            Configuration.parse_options(self.AnyBlokOptions)
             configuration_post_load()
             BlokManager.load()
             db_name = get_db_name()
