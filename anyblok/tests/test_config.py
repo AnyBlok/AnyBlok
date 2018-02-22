@@ -149,11 +149,11 @@ class TestConfiguration(TestCase):
         Configuration.labels = {}
         Configuration.configuration = {}
 
-    def assertAdded(self, group, part='bloks', label=None, function_=None):
-        self.assertEqual(Configuration.groups[part][group], [function_])
+    def assertAdded(self, group, label=None, function_=None):
+        self.assertEqual(Configuration.groups[group], [function_])
 
         if label:
-            self.assertEqual(Configuration.labels[part][group], label)
+            self.assertEqual(Configuration.labels[group], label)
 
     def test_add(self):
         Configuration.add('new-group', function_=fnct_configuration)
@@ -164,18 +164,6 @@ class TestConfiguration(TestCase):
             'new-group', label="One label", function_=fnct_configuration)
         self.assertAdded(
             'new-group', label="One label", function_=fnct_configuration)
-
-    def test_add_other_part(self):
-        Configuration.add(
-            'new-group', part='other', function_=fnct_configuration)
-        self.assertAdded('new-group', part='other',
-                         function_=fnct_configuration)
-
-    def test_add_other_part_with_label(self):
-        Configuration.add('new-group', part='other', label="One label",
-                          function_=fnct_configuration)
-        self.assertAdded('new-group', part='other', label="One label",
-                         function_=fnct_configuration)
 
     def test_add_decorator(self):
 
@@ -331,76 +319,16 @@ class TestConfiguration(TestCase):
             with self.assertRaises(ConfigurationException):
                 get_url()
 
-    def test_merge_for_one_part(self):
-        Configuration.add('new-group', function_=fnct_configuration)
-        Configuration.add('new-group', function_=fnct_other_configuration)
-        Configuration.add('old-group', function_=fnct_configuration)
-        Configuration.add('old-group', part='other',
-                          function_=fnct_configuration)
-        groups = Configuration._merge_groups('bloks')
-        self.assertEqual(groups, {
-            'new-group': [fnct_configuration, fnct_other_configuration],
-            'old-group': [fnct_configuration]})
-
-    def test_merge_for_more_parts(self):
-        Configuration.add('new-group', function_=fnct_configuration)
-        Configuration.add('new-group', function_=fnct_other_configuration)
-        Configuration.add('old-group', function_=fnct_configuration)
-        Configuration.add('old-group', part='other',
-                          function_=fnct_other_configuration)
-        groups = Configuration._merge_groups('bloks', 'other')
-        self.assertEqual(groups, {
-            'new-group': [fnct_configuration, fnct_other_configuration],
-            'old-group': [fnct_configuration, fnct_other_configuration]})
-
-    def test_merge_no_parts(self):
-        with self.assertRaises(ConfigurationException):
-            Configuration._merge_groups()
-
-    def test_merge_inexisting_part(self):
-        Configuration._merge_groups('other')
-
-    def test_merge_label(self):
-        Configuration.add('new-group', label="Label 1",
-                          function_=fnct_other_configuration)
-        Configuration.add('old-group', label="Label 2", part='other',
-                          function_=fnct_configuration)
-        labels = Configuration._merge_labels('bloks')
-        self.assertEqual(labels, {'new-group': "Label 1"})
-
-    def test_merge_label_with_more_parts(self):
-        Configuration.add('new-group', label="Label 1",
-                          function_=fnct_other_configuration)
-        Configuration.add('old-group', label="Label 2", part='other',
-                          function_=fnct_configuration)
-        labels = Configuration._merge_labels('bloks', 'other')
-        self.assertEqual(labels, {'new-group': "Label 1",
-                                  'old-group': "Label 2"})
-
-    def test_merge_labels_with_no_parts(self):
-        with self.assertRaises(ConfigurationException):
-            Configuration._merge_labels()
-
-    def test_merge_labels_inexisting_part(self):
-        Configuration._merge_labels('other')
-
     def test_remove(self):
         Configuration.add('new-group', function_=fnct_configuration)
         Configuration.remove('new-group', function_=fnct_configuration)
-        self.assertEqual(Configuration.groups['bloks']['new-group'], [])
-
-    def test_remove_other_part(self):
-        Configuration.add('new-group', part='other',
-                          function_=fnct_configuration)
-        Configuration.remove('new-group', part='other',
-                             function_=fnct_configuration)
-        self.assertEqual(Configuration.groups['other']['new-group'], [])
+        self.assertEqual(Configuration.groups['new-group'], [])
 
     def test_remove_more_function(self):
         Configuration.add('new-group', function_=fnct_configuration)
         Configuration.add('new-group', function_=fnct_other_configuration)
         Configuration.remove('new-group', function_=fnct_configuration)
-        self.assertEqual(Configuration.groups['bloks']['new-group'],
+        self.assertEqual(Configuration.groups['new-group'],
                          [fnct_other_configuration])
 
     def test_remove_label(self):
@@ -410,19 +338,12 @@ class TestConfiguration(TestCase):
         with self.assertRaises(KeyError):
             Configuration.labels['AnyBlok']['new-group']
 
-    def test_remove_label_other_part(self):
-        Configuration.add('new-group', part='other', label="One label",
-                          function_=fnct_configuration)
-        Configuration.remove_label('new-group', part='other')
-        with self.assertRaises(KeyError):
-            Configuration.labels['other']['new-group']
-
     def test_load_without_configuration_groupes(self):
         self.assertEqual(Configuration.load('default'), None)
 
     def test_empty_parse_option(self):
         args = MockArgParseArguments()
-        Configuration.parse_options(args, ['AnyBlok'])
+        Configuration.parse_options(args)
         self.assertEqual(Configuration.configuration, {})
 
     def assertConfig(self, kwargs):
@@ -433,7 +354,7 @@ class TestConfiguration(TestCase):
         kwargs = {'test': 'value'}
         args = MockArgParseArguments(configfile="mock_configuration_file.cfg",
                                      kwargs=kwargs)
-        Configuration.parse_options(args, ())
+        Configuration.parse_options(args)
         kwargs.update({
             'db_name': 'anyblok',
             'db_driver_name': 'postgres',
@@ -446,7 +367,7 @@ class TestConfiguration(TestCase):
 
     def test_parse_option_configuration(self):
         args = MockArgParseArguments(configfile="mock_configuration_file.cfg")
-        Configuration.parse_options(args, ())
+        Configuration.parse_options(args)
         self.assertConfig({
             'db_name': 'anyblok',
             'db_driver_name': 'postgres',
@@ -460,7 +381,7 @@ class TestConfiguration(TestCase):
     def test_parse_option_configuration_with_extend(self):
         args = MockArgParseArguments(
             configfile="mockblok/mock_configuration_file.cfg")
-        Configuration.parse_options(args, ())
+        Configuration.parse_options(args)
         self.assertConfig({
             'db_name': 'anyblok',
             'db_driver_name': 'postgres',
@@ -474,14 +395,14 @@ class TestConfiguration(TestCase):
     def test_parse_option_kwargs(self):
         kwargs = {'test': 'value'}
         args = MockArgParseArguments(kwargs=kwargs)
-        Configuration.parse_options(args, ['AnyBlok'])
+        Configuration.parse_options(args)
         self.assertConfig(kwargs)
 
     def test_parse_option_args(self):
         args = ('test',)
         args = MockArgParseArguments(args=args)
         with self.assertRaises(ConfigurationException):
-            Configuration.parse_options(args, ['AnyBlok'])
+            Configuration.parse_options(args)
 
     def test_load_with_configuration_groupes(self):
         Configuration.load('default', configuration_groups=['install-bloks'])

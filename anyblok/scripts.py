@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -37,19 +38,27 @@ Configuration.add_application_properties(
 )
 
 Configuration.add_application_properties(
-    'updatedb', ['unittest'],
+    'updatedb',
+    [
+        'unittest',
+        'logging',
+        'install-bloks',
+        'uninstall-bloks',
+        'update-bloks',
+        'install-or-update-bloks',
+    ],
     prog='AnyBlok update database, version %r' % version,
     description="Update a database: install, upgrade or uninstall the bloks "
 )
 
 Configuration.add_application_properties(
-    'nose', [],
+    'nose', ['logging', 'unittest'],
     prog='AnyBlok nose, version %r' % version,
     description="Run fonctionnal nosetest of the installed bloks"
 )
 
 Configuration.add_application_properties(
-    'interpreter', [],
+    'interpreter', ['logging', 'interpreter'],
     prog='AnyBlok interpretor, version %r' % version,
     description="Run an interpreter on the registry",
     formatter_class=RawDescriptionHelpFormatter,
@@ -66,29 +75,16 @@ Configuration.add_application_properties(
                   "the interpretor will be an ipyton interpretor")
 )
 
-
-def format_configuration(configuration_groups, *confs):
-    if configuration_groups is None:
-        configuration_groups = []
-
-    for conf in confs:
-        if conf not in configuration_groups:
-            configuration_groups.append(conf)
+Configuration.add_application_properties(
+    'autodoc', ['logging', 'doc', 'schema'],
+    prog='AnyBlok auto documentation, version %r' % version,
+)
 
 
-def createdb(application, configuration_groups, **kwargs):
-    """ Create a database and install blok from config
-
-    :param application: name of the application
-    :param configuration_groups: list configuration groupe to load
-    :param \**kwargs: ArgumentParser named arguments
-    """
-    format_configuration(configuration_groups,
-                         'create_db', 'install-bloks',
-                         'install-or-update-bloks')
+def anyblok_createdb():
+    """Create a database and install blok from config"""
     load_init_function_from_entry_points()
-    Configuration.load(application, configuration_groups=configuration_groups,
-                       **kwargs)
+    Configuration.load('createdb')
     configuration_post_load()
     BlokManager.load()
     db_name = get_db_name()
@@ -112,20 +108,9 @@ def createdb(application, configuration_groups, **kwargs):
     registry.close()
 
 
-def updatedb(application, configuration_groups, **kwargs):
-    """ Update an existing database
-
-    :param application: name of the application
-    :param configuration_groups: list configuration groupe to load
-    :param \**kwargs: ArgumentParser named arguments
-    """
-    format_configuration(configuration_groups, 'install-bloks',
-                         'uninstall-bloks', 'update-bloks',
-                         'install-or-update-bloks')
-
-    registry = anyblok.start(application,
-                             configuration_groups=configuration_groups,
-                             loadwithoutmigration=True, **kwargs)
+def anyblok_updatedb():
+    """Update an existing database"""
+    registry = anyblok.start('updatedb', loadwithoutmigration=True)
 
     installed_bloks = registry.System.Blok.list_by_state('installed')
     required_install_bloks = []
@@ -158,17 +143,10 @@ def updatedb(application, configuration_groups, **kwargs):
         registry.close()
 
 
-def run_exit(application, configuration_groups, **kwargs):
+def anyblok_nose():
     """Run nose unit test for the registry
-
-    :param application: name of the application
-    :param configuration_groups: list configuration groupe to load
-    :param \**kwargs: ArgumentParser named arguments
     """
-    format_configuration(configuration_groups, 'unittest')
-    registry = anyblok.start(application,
-                             configuration_groups=configuration_groups,
-                             useseparator=True, unittest=True, **kwargs)
+    registry = anyblok.start('nose', useseparator=True, unittest=True)
 
     defaultTest = []
     if registry:
@@ -194,17 +172,10 @@ def run_exit(application, configuration_groups, **kwargs):
     sys.exit(main(defaultTest=defaultTest))
 
 
-def interpreter(application, configuration_groups, **kwargs):
+def anyblok_interpreter():
     """Execute a script or open an interpreter
-
-    :param application: name of the application
-    :param configuration_groups: list configuration groupe to load
-    :param \**kwargs: ArgumentParser named arguments
     """
-    format_configuration(configuration_groups, 'interpreter')
-    registry = anyblok.start(application,
-                             configuration_groups=configuration_groups,
-                             **kwargs)
+    registry = anyblok.start('interpreter')
     if registry:
         registry.commit()
         python_script = Configuration.get('python_script')
@@ -220,17 +191,10 @@ def interpreter(application, configuration_groups, **kwargs):
                 code.interact(local=locals())
 
 
-def registry2doc(application, configuration_groups, **kwargs):
+def anyblok2doc():
     """Return auto documentation for the registry
-
-    :param application: name of the application
-    :param configuration_groups: list configuration groupe to load
-    :param \**kwargs: ArgumentParser named arguments
     """
-    format_configuration(configuration_groups, 'doc', 'schema')
-    registry = anyblok.start(application,
-                             configuration_groups=configuration_groups,
-                             **kwargs)
+    registry = anyblok.start('autodoc')
     if registry:
         registry.commit()
         doc = registry.Documentation()
@@ -250,23 +214,3 @@ def registry2doc(application, configuration_groups, **kwargs):
             dot = SQLSchema(name_, format=format_)
             doc.toSQL(dot)
             dot.save()
-
-
-def anyblok_createdb():
-    createdb('createdb', ['logging'])
-
-
-def anyblok_updatedb():
-    updatedb('updatedb', ['logging'])
-
-
-def anyblok_nose():
-    run_exit("nose", ['logging'])
-
-
-def anyblok_interpreter():
-    interpreter('interpreter', ['logging'])
-
-
-def anyblok2doc():
-    registry2doc('autodoc', ['logging'])
