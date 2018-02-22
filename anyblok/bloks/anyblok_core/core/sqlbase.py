@@ -34,20 +34,32 @@ class SqlMixin:
     def __repr__(self):
         state = inspect(self)
         field_reprs = []
-        for key in state.mapper.columns.keys():
-            value = state.attrs[key].loaded_value
+        fields_description = self.fields_description()
+        for key in fields_description.keys():
+            type_ = fields_description[key]['type']
+            value = state.attrs.get(
+                key,
+                state.attrs.get(anyblok_column_prefix + key)
+            ).loaded_value
             if value == NO_VALUE:
                 value = NOT_LOADED_REPR
+            elif type_ in ('One2Many', 'Many2Many'):
+                value = '<%s len(%d)>' % (
+                    fields_description[key]['model'],
+                    len(value)
+                )
+            elif type_ in ('One2One', 'Many2One'):
+                value = '<%s(%s)>' % (
+                    fields_description[key]['model'],
+                    ', '.join(['='.join([x, str(y)])
+                               for x, y in value.to_primary_keys().items()])
+                )
             else:
                 value = repr(value)
 
-            field_name = key
-            if field_name.startswith(anyblok_column_prefix):
-                field_name = field_name[len(anyblok_column_prefix):]
+            field_reprs.append('='.join((key, value)))
 
-            field_reprs.append('='.join((field_name, value)))
-
-        return '%s(%s)' % (
+        return '<%s(%s)>' % (
             self.__class__.__registry_name__, ', '.join(field_reprs)
         )
 
