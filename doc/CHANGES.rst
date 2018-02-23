@@ -13,7 +13,7 @@
 CHANGELOG
 =========
 
-0.16.3
+0.17.0
 ------
 
 * [FIX] **SQLAlchemy_Utils** changed the import path of **EncryptedType** in 
@@ -43,6 +43,9 @@ CHANGELOG
   The column created get the attribute primary_key gave to relationship and 
   apply it.
 * [IMP] add repr default method on all SqlModel and ViewSqlModel
+* [FIX] Encrypt columns, the custom type from  anyblok did not implement 
+  the ``process_result_value`` need for decrypt value
+* [REF] Simplify Configuration, old and unused code are removed
 
 0.16.2 (2018-02-12)
 -------------------

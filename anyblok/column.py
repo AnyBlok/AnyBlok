@@ -370,12 +370,23 @@ class DateTimeType(types.TypeDecorator):
 
     impl = types.DateTime(timezone=True)
 
-    def __init__(self, default_timezone):
-        self.default_timezone = default_timezone
+    def __init__(self, field):
+        self.default_timezone = field.default_timezone
+        self.field = field
 
     def process_bind_param(self, value, engine):
         value = convert_string_to_datetime(value)
-        return add_timezone_on_datetime(value, self.default_timezone)
+        value = add_timezone_on_datetime(value, self.default_timezone)
+        if self.field.encrypt_key:
+            return value.isoformat()
+
+        return value
+
+    def process_result_value(self, value, dialect):
+        if self.field.encrypt_key:
+            return convert_string_to_datetime(value)
+
+        return value
 
     @property
     def python_type(self):
@@ -412,7 +423,7 @@ class DateTime(Column):
             default_timezone = pytz.timezone(default_timezone)
 
         self.default_timezone = default_timezone
-        self.sqlalchemy_type = DateTimeType(default_timezone)
+        self.sqlalchemy_type = DateTimeType(self)
         super(DateTime, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
@@ -471,6 +482,9 @@ class StringType(types.TypeDecorator):
         if value is False:
             value = ''
 
+        return value
+
+    def process_result_value(self, value, dialect):
         return value
 
 
@@ -570,6 +584,9 @@ class uStringType(types.TypeDecorator):
 
         return value
 
+    def process_result_value(self, value, dialect):
+        return value
+
 
 class uString(Column):
     """ Unicode column
@@ -614,6 +631,9 @@ class TextType(types.TypeDecorator):
 
         return value
 
+    def process_result_value(self, value, dialect):
+        return value
+
 
 class Text(Column):
     """ Text column
@@ -641,6 +661,9 @@ class UnicodeTextType(types.TypeDecorator):
         if value is False:
             value = ''
 
+        return value
+
+    def process_result_value(self, value, dialect):
         return value
 
 
@@ -723,6 +746,9 @@ class SelectionType(types.TypeDecorator):
         if value is not None:
             value = self.python_type(value)
 
+        return value
+
+    def process_result_value(self, value, dialect):
         return value
 
 

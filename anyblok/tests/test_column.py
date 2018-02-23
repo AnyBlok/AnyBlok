@@ -195,10 +195,25 @@ class TestColumns(DBTestCase):
         registry = self.init_registry(simple_column, ColumnType=String,
                                       encrypt_key='secretkey')
         test = registry.Test.insert(col='col')
+        registry.session.commit()
         self.assertEqual(test.col, 'col')
         res = registry.execute('select col from test where id = %s' % test.id)
         res = res.fetchall()[0][0]
         self.assertNotEqual(res, 'col')
+
+    @skipIf(not has_cryptography, "cryptography is not installed")
+    def test_datetime_with_encrypt_key(self):
+        import datetime
+        import time
+        import pytz
+
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        registry = self.init_registry(simple_column, ColumnType=DateTime,
+                                      encrypt_key='secretkey')
+        test = registry.Test.insert(col=now)
+        registry.session.commit()
+        self.assertEqual(test.col, now)
 
     def test_string_with_size(self):
         registry = self.init_registry(
