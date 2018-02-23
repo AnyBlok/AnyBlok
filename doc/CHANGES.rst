@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.17.0
-------
+0.17.0 (2018-02-23)
+-------------------
 
 * [FIX] **SQLAlchemy_Utils** changed the import path of **EncryptedType** in 
   version **0.33.0**
