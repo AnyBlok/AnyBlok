@@ -47,12 +47,12 @@ class SqlMixin:
 
             if value == NO_VALUE:
                 value = NOT_LOADED_REPR
-            elif type_ in ('One2Many', 'Many2Many'):
+            elif value and type_ in ('One2Many', 'Many2Many'):
                 value = '<%s len(%d)>' % (
                     fields_description[key]['model'],
                     len(value)
                 )
-            elif type_ in ('One2One', 'Many2One'):
+            elif value and type_ in ('One2One', 'Many2One'):
                 value = '<%s(%s)>' % (
                     fields_description[key]['model'],
                     ', '.join(['='.join([x, str(y)])
