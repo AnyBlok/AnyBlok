@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -577,3 +578,42 @@ class TestCoreSQLBase(DBTestCase):
         self.assertEqual(registry.Test2.getFieldType('name'), 'String')
         self.assertEqual(registry.Test2.getFieldType('test'), 'Many2One')
         self.assertEqual(registry.Test.getFieldType('test2'), 'One2Many')
+
+    def test_repr_m2o(self):
+        registry = self.init_registry(self.add_in_registry_m2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.assertEqual(
+            repr(t2),
+            "<Model.Test2(id=1, name='t2', test=<Model.Test(id=1)>"
+            ", test_id=1)>"
+        )
+
+    def test_repr_o2o(self):
+        registry = self.init_registry(self.add_in_registry_o2o)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2', test=t1)
+        self.assertEqual(
+            repr(t2),
+            "<Model.Test2(id=1, name='t2', test=<Model.Test(id=1)>"
+            ", test_id=1)>"
+        )
+
+    def test_repr_o2m(self):
+        registry = self.init_registry(self.add_in_registry_o2m)
+        t1 = registry.Test.insert(name='t1')
+        registry.Test2.insert(name='t2', test=t1)
+        self.assertEqual(
+            repr(t1),
+            "<Model.Test(id=1, name='t1', test2=<not loaded>)>"
+        )
+
+    def test_repr_m2m(self):
+        registry = self.init_registry(self.add_in_registry_m2m)
+        t1 = registry.Test.insert(name='t1')
+        t2 = registry.Test2.insert(name='t2')
+        t2.test.append(t1)
+        self.assertEqual(
+            repr(t2),
+            "<Model.Test2(id=1, name='t2', test=<Model.Test len(1)>)>"
+        )

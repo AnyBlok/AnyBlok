@@ -35,7 +35,9 @@ class SqlMixin:
         state = inspect(self)
         field_reprs = []
         fields_description = self.fields_description()
-        for key in fields_description.keys():
+        keys = list(fields_description.keys())
+        keys.sort()
+        for key in keys:
             type_ = fields_description[key]['type']
             if key in state.attrs:
                 value = state.attrs.get(key).loaded_value
