@@ -244,15 +244,12 @@ class Function(Field):
                 return None
 
             def function_method(model_self, *args, **kwargs):
-                try:
-                    return getattr(model_self, m)(*args, **kwargs)
-                except TypeError:
-                    if method == 'fget':
-                        raise FieldException("You must declare 'fexp' for "
-                                             "'%s: %s' field" % (namespace,
-                                                                 fieldname))
-                    else:
-                        raise
+                if method == 'fget':
+                    cls = registry.get(model_self.__registry_name__)
+                    if model_self is cls:
+                        return hasattr(model_self, m)
+
+                return getattr(model_self, m)(*args, **kwargs)
 
             return function_method
 
