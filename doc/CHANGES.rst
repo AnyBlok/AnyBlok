@@ -20,7 +20,7 @@ CHANGELOG
 * [IMP] Improve rich **Many2Many** to allow to have got a rich **Many2Many**
   with the same model on the both side, Add also a new attribute 
   **join_model** to compute the real join table from the table name defined
-  on the Model
+  on the Model, In the case of join_model with column based on Many2One
 * [ADD] New field.JsonRelated. The goal is to manipulate a json entry as a
   column
 

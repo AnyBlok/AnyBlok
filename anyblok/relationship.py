@@ -770,6 +770,29 @@ class Many2Many(RelationShip):
         if m2m_columns is None:
             m2m_columns = [x.get_fk_name(registry).replace('.', '_') + suffix
                            for x in columns]
+        elif self.join_model:
+            m2m_columns_ = []
+            first_step = registry.loaded_namespaces_first_step[
+                self.join_model.model_name]
+            for col in m2m_columns:
+                if col not in first_step:
+                    m2m_columns_.append(col)
+                elif isinstance(first_step[col], (Many2One, One2One)):
+                    c = first_step[col]
+                    remote_columns = c.get_remote_columns(registry)
+                    m2m_columns_.extend([
+                        x.attribute_name
+                        for x in c.get_columns_names(
+                            registry,
+                            self.join_model.model_name,
+                            col,
+                            remote_columns
+                        )
+                    ])
+                else:
+                    m2m_columns_.append(col)
+
+            m2m_columns = m2m_columns_
 
         if len(columns) != len(m2m_columns):
             raise FieldException((

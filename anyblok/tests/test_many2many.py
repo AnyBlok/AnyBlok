@@ -998,7 +998,7 @@ class TestMany2Many(DBTestCase):
         self.assertTrue(link.create_at)
         self.assertEqual(link.foo, 'bar')
 
-    def test_rich_many2many_minimum_config_on_self_with_pk_many2one(self):
+    def test_rich_many2many_minimum_config_on_self_with_pk_many2one_2(self):
 
         def add_in_registry():
 
@@ -1023,8 +1023,8 @@ class TestMany2Many(DBTestCase):
                     model='Model.Test',
                     many2many='parents',
                     join_model=Model.TestLink,
-                    m2m_local_columns='left_id',
-                    m2m_remote_columns='right_id',
+                    m2m_local_columns='left',
+                    m2m_remote_columns='right',
                 )
 
         registry = self.init_registry(add_in_registry)
