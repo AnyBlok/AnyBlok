@@ -740,6 +740,15 @@ Parameters of the ``Many2Many`` field:
 +========================+====================================================+
 | ``join_table``         | many2many intermediate table between both models   |
 +------------------------+----------------------------------------------------+
+| ``join_model``         | many2many intermediate table compute from a Model, |
+|                        | This attribute is used to build a rich Many2Many   |
+|                        |                                                    |
+|                        | .. warning::                                       |
+|                        |                                                    |
+|                        |     An exception is raised if the table come from  |
+|                        |     join_table and join_model are different        |
+|                        |                                                    |
++------------------------+----------------------------------------------------+
 | ``m2m_remote_columns`` | Column name in the join table which have got the   |
 |                        | foreign key to the remote model                    |
 +------------------------+----------------------------------------------------+

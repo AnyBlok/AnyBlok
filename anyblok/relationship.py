@@ -712,6 +712,7 @@ class Many2Many(RelationShip):
 
     :param model: the remote model
     :param join_table: the many2many table to join local and remote models
+    :param join_model: rich many2many where the join table come from a Model
     :param remote_columns: the column name on the remote model
     :param m2m_remote_columns: the column name to remote model in m2m table
     :param local_columns: the column on the model
@@ -723,6 +724,10 @@ class Many2Many(RelationShip):
         super(Many2Many, self).__init__(**kwargs)
 
         self.join_table = self.kwargs.pop('join_table', None)
+        self.join_model = self.kwargs.pop('join_model', None)
+        if self.join_model:
+            self.join_model = ModelAdapter(self.join_model)
+
         self.remote_columns = self.kwargs.pop('remote_columns', None)
         if self.remote_columns and not isinstance(self.remote_columns,
                                                   (list, tuple)):
@@ -748,7 +753,12 @@ class Many2Many(RelationShip):
 
     def autodoc_get_properties(self):
         res = super(Many2Many, self).autodoc_get_properties()
-        res['join table'] = self.join_table
+        if self.join_table:
+            res['join table'] = self.join_table
+
+        if self.join_model:
+            res['join model'] = self.join_model.model_name
+
         res['remote_columns'] = self.remote_columns
         res['m2m_remote_columns'] = self.m2m_remote_columns
         res['local_columns'] = self.local_columns
@@ -806,6 +816,38 @@ class Many2Many(RelationShip):
 
         return local_columns, remote_columns
 
+    def get_join_table(self, registry, namespace, fieldname):
+        """Get the join table name from join_table or join_model
+
+        :param registry: the registry which load the relationship
+        :param namespace: the name space of the model
+        :param fieldname: fieldname of the relationship
+        :rtype: name of the join table
+        :exception: FieldException
+        """
+        join_table = self.join_table
+        join_model_table = None
+        if self.join_model:
+            join_model_table = self.join_model.tablename(registry)
+
+        if join_table is None and join_model_table is None:
+            join_table = 'join_%s_and_%s' % (
+                self.local_model.tablename(registry),
+                self.model.tablename(registry))
+
+        elif join_table and join_model_table and join_table != join_model_table:
+            raise FieldException(
+                (
+                    "The join_table %r and join_model %r is both declared, "
+                    "on model %r and many2many %r, "
+                    "but the both table name are different and we can not "
+                    "determinate which is the good table's name"
+                ) % (self.join_table, self.join_model.model_name,
+                     namespace, fieldname)
+            )
+
+        return join_table or join_model_table
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Create the relationship
@@ -820,12 +862,7 @@ class Many2Many(RelationShip):
         self.local_model = ModelRepr(namespace)
         local_columns, remote_columns = self.get_local_and_remote_columns(
             registry)
-        join_table = self.join_table
-        if self.join_table is None:
-            join_table = 'join_%s_and_%s' % (
-                self.local_model.tablename(registry),
-                self.model.tablename(registry))
-
+        join_table = self.get_join_table(registry, namespace, fieldname)
         if join_table not in registry.declarativebase.metadata.tables:
             modelname = ''.join(x.capitalize() for x in join_table.split('_'))
             remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(
