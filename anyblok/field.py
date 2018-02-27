@@ -261,3 +261,145 @@ class Function(Field):
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
         return hybrid_property(fget, fset, fdel=fdel, expr=fexpr)
+
+
+def format_struc(entry, keys):
+    key = keys[0]
+    if len(keys) == 1:
+        if key not in entry:
+            entry[key] = None
+    else:
+        if key not in entry:
+            entry[key] = {}
+
+        format_struc(entry[key], keys[1:])
+
+
+class JsonRelated(Field):
+    """ Json Related Field
+
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.field import JsonRelated
+        from anyblok.column import Json
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+            properties = Json()
+            x = JsonRelated(json_column='properties', keys=['x'])
+
+    """
+    def __init__(self, *args, **kwargs):
+        self.json_column = kwargs.pop('json_column', None)
+        if self.json_column is None:
+            raise FieldException(
+                "json_column is a required attribute for "
+                "JsonRelated"
+            )
+        self.keys = kwargs.pop('keys', None)
+        if self.keys is None:
+            raise FieldException(
+                "keys is a required attribute for JsonRelated"
+            )
+        self.get_adapter = kwargs.pop('get_adapter', None)
+        self.set_adapter = kwargs.pop('set_adapter', None)
+        super(JsonRelated, self).__init__(*args, **kwargs)
+
+    def get_fget(self):
+        def fget(model_self):
+            json_column = getattr(model_self, self.json_column)
+            if json_column is None:
+                json_column = {}
+
+            format_struc(json_column, self.keys)
+            entry = json_column
+            for key in self.keys:
+                entry = entry[key]
+
+            if entry and self.get_adapter:
+                get_adapter = self.get_adapter
+                if isinstance(get_adapter, str):
+                    get_adapter = getattr(model_self, get_adapter)
+
+                entry = get_adapter(entry)
+
+            return entry
+
+        return fget
+
+    def get_fset(self):
+        def fset(model_self, value):
+            json_column = getattr(model_self, self.json_column)
+            if json_column is None:
+                json_column = {}
+
+            format_struc(json_column, self.keys)
+            entry = json_column
+            for key in self.keys[:-1]:
+                entry = entry[key]
+
+            if value and self.set_adapter:
+                set_adapter = self.set_adapter
+                if isinstance(set_adapter, str):
+                    set_adapter = getattr(model_self, set_adapter)
+
+                value = set_adapter(value)
+
+            entry[self.keys[-1]] = value
+            setattr(model_self, self.json_column, json_column)
+
+        return fset
+
+    def get_fdel(self):
+        def fdel(model_self):
+            json_column = getattr(model_self, self.json_column)
+            if json_column is None:
+                json_column = {}
+
+            format_struc(json_column, self.keys)
+            entry = json_column
+            for key in self.keys[:-1]:
+                entry = entry[key]
+
+            entry[self.keys[-1]] = None
+            setattr(model_self, self.json_column, json_column)
+
+        return fdel
+
+    def get_fexpr(self):
+        def fexpr(model_self):
+            entry = getattr(model_self, self.json_column)
+            for key in self.keys:
+                entry = entry[key]
+
+            return entry
+
+        return fexpr
+
+    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
+                               properties):
+        """Return the property of the field
+
+        :param registry: current registry
+        :param namespace: name of the model
+        :param fieldname: name of the field
+        :param properties: properties known to the model
+        """
+        self.format_label(fieldname)
+        properties['loaded_fields'][fieldname] = self.label
+        return hybrid_property(
+            self.get_fget(),
+            self.get_fset(),
+            fdel=self.get_fdel(),
+            expr=self.get_fexpr()
+        )
+
+    def autodoc_get_properties(self):
+        res = super(JsonRelated, self).autodoc_get_properties()
+        res.update({
+            'json_column': self.json_column,
+            'keys': ' -> '.join(self.keys),
+        })
+        return res

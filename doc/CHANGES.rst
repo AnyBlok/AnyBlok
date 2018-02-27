@@ -21,6 +21,8 @@ CHANGELOG
   with the same model on the both side, Add also a new attribute 
   **join_model** to compute the real join table from the table name defined
   on the Model
+* [ADD] New field.JsonRelated. The goal is to manipulate a json entry as a
+  column
 
 0.17.1 (2018-02-24)
 -------------------

@@ -806,6 +806,7 @@ SQL column.::
 List of the ``Field`` type:
 
 * ``Function``
+* ``JsonRelated``
 
 Parameters for ``Field.Function``
 
@@ -840,6 +841,26 @@ Parameters for ``Field.Function``
 |                   |       return func.concat(cls.first_name, ' ',           |
 |                   |                          cls.last_name)                 |
 |                   |                                                         |
++-------------------+---------------------------------------------------------+
+
+Parameters for ``Field.JsonRelated``
+
+Define setter, getter for a key in **Column.Json**, it is a helper to do an alias
+of specific entry in a **Column.Json**.
+
++-------------------+---------------------------------------------------------+
+| Parameter         | Description                                             |
++===================+=========================================================+
+| ``json_column``   | name of the json column in the Model                    |
++-------------------+---------------------------------------------------------+
+| ``keys``          | list of string, represent the path in json to store and |
+|                   | get the value                                           |
++-------------------+---------------------------------------------------------+
+| ``get_adapter``   | method to convert the date after get it. This value     |
+|                   | can be the name of a method on the model                |
++-------------------+---------------------------------------------------------+
+| ``set_adapter``   | method to convert the date before store it. This value  |
+|                   | can be the name of a method on the model                |
 +-------------------+---------------------------------------------------------+
 
 Mixin
