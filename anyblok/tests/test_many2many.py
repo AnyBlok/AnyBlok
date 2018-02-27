@@ -10,9 +10,10 @@
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from anyblok.mapper import ModelAttributeException
-from anyblok.column import Integer, String
+from anyblok.column import Integer, String, DateTime
 from anyblok.relationship import Many2Many
 from anyblok.field import FieldException
+from datetime import datetime
 
 register = Declarations.register
 Model = Declarations.Model
@@ -503,3 +504,48 @@ class TestMany2Many(DBTestCase):
 
         with self.assertRaises(FieldException):
             self.init_registry(add_in_registry)
+
+    def test_rich_many2many_complete_config(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class PersonAddress:
+                id = Integer(primary_key=True)
+                a_id = Integer(
+                    foreign_key=Model.Address.use('id'), nullable=False)
+                p_name = String(
+                    foreign_key='Model.Person=>name', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                addresses = Many2Many(model=Model.Address,
+                                      join_table="personaddress",
+                                      remote_columns="id", local_columns="name",
+                                      m2m_remote_columns='a_id',
+                                      m2m_local_columns='p_name',
+                                      many2many="persons")
+
+        registry = self.init_registry(add_in_registry)
+        person = registry.Person.insert(name='jssuzanne')
+        address = registry.Address.insert(
+            street='somewhere', zip="75001", city="Paris")
+        person.addresses.append(address)
+        personaddress = registry.PersonAddress.query().one()
+        self.assertEqual(personaddress.a_id, address.id)
+        self.assertEqual(personaddress.p_name, person.name)
+        self.assertTrue(personaddress.id)
+        self.assertTrue(personaddress.create_at)
+        self.assertEqual(personaddress.foo, 'bar')
