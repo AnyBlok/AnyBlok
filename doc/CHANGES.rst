@@ -20,7 +20,11 @@ CHANGELOG
 * [IMP] Improve rich **Many2Many** to allow to have got a rich **Many2Many**
   with the same model on the both side, Add also a new attribute 
   **join_model** to compute the real join table from the table name defined
-  on the Model, In the case of join_model with column based on Many2One
+  on the Model, In the case of join_model with column based on Many2One.
+  Add an option to force recompute secondaryjoin and primaryjoin in the
+  case where the model join have more than one foreign key to one of the
+  both model. the m2m_local_columns and m2m_remote_columns become required 
+  attribute
 * [ADD] New field.JsonRelated. The goal is to manipulate a json entry as a
   column
 

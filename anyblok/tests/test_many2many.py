@@ -663,7 +663,6 @@ class TestMany2Many(DBTestCase):
 
                 name = String(primary_key=True)
                 addresses = Many2Many(model=Model.Address,
-                                      join_table="personaddress",
                                       join_model=Model.PersonAddress,
                                       many2many="persons")
 
@@ -709,7 +708,6 @@ class TestMany2Many(DBTestCase):
 
                 name = String(primary_key=True)
                 addresses = Many2Many(model=Model.Address,
-                                      join_table="personaddress",
                                       join_model=Model.PersonAddress,
                                       many2many="persons")
 
@@ -751,7 +749,6 @@ class TestMany2Many(DBTestCase):
 
                 name = String(primary_key=True)
                 addresses = Many2Many(model=Model.Address,
-                                      join_table="personaddress",
                                       join_model=Model.PersonAddress,
                                       many2many="persons")
 

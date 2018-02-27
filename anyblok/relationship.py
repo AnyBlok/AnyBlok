@@ -748,6 +748,7 @@ class Many2Many(RelationShip):
                                                      (list, tuple)):
             self.m2m_local_columns = [self.m2m_local_columns]
 
+        self.compute_join = self.kwargs.pop('compute_join', False)
         self.kwargs['backref'] = self.kwargs.pop('many2many', None)
         self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
@@ -763,13 +764,15 @@ class Many2Many(RelationShip):
         res['m2m_remote_columns'] = self.m2m_remote_columns
         res['local_columns'] = self.local_columns
         res['m2m_local_columns'] = self.m2m_local_columns
+        res['compute_join'] = self.compute_join
         return res
 
     def get_m2m_columns(self, registry, columns, m2m_columns, modelname,
                         suffix=""):
         if m2m_columns is None:
-            m2m_columns = [x.get_fk_name(registry).replace('.', '_') + suffix
-                           for x in columns]
+            m2m_columns = [
+                x.get_fk_name(registry).replace('.', '_') + suffix
+                for x in columns]
         elif self.join_model:
             m2m_columns_ = []
             first_step = registry.loaded_namespaces_first_step[
@@ -907,40 +910,39 @@ class Many2Many(RelationShip):
                 self.kwargs['primaryjoin'] = primaryjoin
                 self.kwargs['secondaryjoin'] = secondaryjoin
 
-        else:
-            if namespace == self.model.model_name:
-                table = registry.declarativebase.metadata.tables[join_table]
-                cls = get_class_by_table(registry.declarativebase, table)
-                modelname = ModelRepr(cls.__registry_name__).modelname(registry)
-                if (
-                    self.m2m_local_columns is None and
-                    self.m2m_remote_columns is None
-                ):
-                    raise FieldException(
-                        "No 'm2m_local_columns' and 'm2m_remote_columns' "
-                        "attribute filled for many2many "
-                        "%r on model %r" % (fieldname, namespace))
-                elif self.m2m_local_columns is None:
-                    raise FieldException(
-                        "No 'm2m_local_columns' attribute filled for many2many "
-                        "%r on model %r" % (fieldname, namespace))
-                elif self.m2m_remote_columns is None:
-                    raise FieldException(
-                        "No 'm2m_remote_columns' attribute filled for many2many"
-                        " %r on model %r" % (fieldname, namespace))
+        elif namespace == self.model.model_name or self.compute_join:
+            table = registry.declarativebase.metadata.tables[join_table]
+            cls = get_class_by_table(registry.declarativebase, table)
+            modelname = ModelRepr(cls.__registry_name__).modelname(registry)
+            if (
+                self.m2m_local_columns is None and
+                self.m2m_remote_columns is None
+            ):
+                raise FieldException(
+                    "No 'm2m_local_columns' and 'm2m_remote_columns' "
+                    "attribute filled for many2many "
+                    "%r on model %r" % (fieldname, namespace))
+            elif self.m2m_local_columns is None:
+                raise FieldException(
+                    "No 'm2m_local_columns' attribute filled for many2many "
+                    "%r on model %r" % (fieldname, namespace))
+            elif self.m2m_remote_columns is None:
+                raise FieldException(
+                    "No 'm2m_remote_columns' attribute filled for many2many"
+                    " %r on model %r" % (fieldname, namespace))
 
-                remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(
-                    registry, remote_columns, self.m2m_remote_columns,
-                    modelname,
-                    suffix="right" if namespace == self.model.model_name else ""
-                )
+            remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(
+                registry, remote_columns, self.m2m_remote_columns,
+                modelname,
+                suffix="right" if namespace == self.model.model_name else ""
+            )
 
-                local_columns, local_fk, primaryjoin = self.get_m2m_columns(
-                    registry, local_columns, self.m2m_local_columns, modelname,
-                    suffix="left" if namespace == self.model.model_name else ""
-                )
-                self.kwargs['primaryjoin'] = primaryjoin
-                self.kwargs['secondaryjoin'] = secondaryjoin
+            local_columns, local_fk, primaryjoin = self.get_m2m_columns(
+                registry, local_columns, self.m2m_local_columns, modelname,
+                suffix="left" if namespace == self.model.model_name else ""
+            )
+            self.kwargs['primaryjoin'] = primaryjoin
+            self.kwargs['secondaryjoin'] = secondaryjoin
 
         self.kwargs['secondary'] = join_table
         # definition of expiration

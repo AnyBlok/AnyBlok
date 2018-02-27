@@ -764,6 +764,19 @@ Parameters of the ``Many2Many`` field:
 +------------------------+----------------------------------------------------+
 | ``many2many``          | Opposite Many2Many link with this relationship     |
 +------------------------+----------------------------------------------------+
+| ``compute_join``       | Force to compute secondaryjoin and primaryjoin     |
+|                        | In the most case this is forbidden because it is   |
+|                        | dangeourous, The only case where the compute is    |
+|                        | required, is when the model_join have more than    |
+|                        | one primary key to the main model for rich         |
+|                        | Many2Many                                          |
+|                        |                                                    |
+|                        | .. note::                                          |
+|                        |                                                    |
+|                        |     In the case where the both model are the same  |
+|                        |     this option is forced                          |
+|                        |                                                    |
++------------------------+----------------------------------------------------+
 
 .. note::
 
