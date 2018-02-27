@@ -550,6 +550,48 @@ class TestMany2Many(DBTestCase):
         self.assertTrue(personaddress.create_at)
         self.assertEqual(personaddress.foo, 'bar')
 
+    def test_rich_many2many_minimum_config(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class PersonAddress:
+                id = Integer(primary_key=True)
+                a_id = Integer(
+                    foreign_key=Model.Address.use('id'), nullable=False)
+                p_name = String(
+                    foreign_key='Model.Person=>name', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                addresses = Many2Many(model=Model.Address,
+                                      join_table="personaddress",
+                                      many2many="persons")
+
+        registry = self.init_registry(add_in_registry)
+        person = registry.Person.insert(name='jssuzanne')
+        address = registry.Address.insert(
+            street='somewhere', zip="75001", city="Paris")
+        person.addresses.append(address)
+        personaddress = registry.PersonAddress.query().one()
+        self.assertEqual(personaddress.a_id, address.id)
+        self.assertEqual(personaddress.p_name, person.name)
+        self.assertTrue(personaddress.id)
+        self.assertTrue(personaddress.create_at)
+        self.assertEqual(personaddress.foo, 'bar')
+
     def test_rich_many2many_complete_config_on_self(self):
 
         def add_in_registry():
@@ -585,3 +627,90 @@ class TestMany2Many(DBTestCase):
         self.assertTrue(link.id)
         self.assertTrue(link.create_at)
         self.assertEqual(link.foo, 'bar')
+
+    def test_rich_many2many_minimum_config_on_self(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class TestLink:
+                id = Integer(primary_key=True)
+                t_left = Integer(foreign_key='Model.Test=>id', nullable=False)
+                t_right = Integer(foreign_key='Model.Test=>id', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    many2many='parents',
+                    join_table="testlink",
+                    m2m_local_columns='t_left',
+                    m2m_remote_columns='t_right',
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert()
+        t1.parents.append(t2)
+        link = registry.TestLink.query().one()
+        self.assertEqual(link.t_left, t2.id)
+        self.assertEqual(link.t_right, t1.id)
+        self.assertTrue(link.id)
+        self.assertTrue(link.create_at)
+        self.assertEqual(link.foo, 'bar')
+
+    def test_rich_many2many_minimum_config_on_self_without_columns_1(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class TestLink:
+                id = Integer(primary_key=True)
+                t_left = Integer(foreign_key='Model.Test=>id', nullable=False)
+                t_right = Integer(foreign_key='Model.Test=>id', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    many2many='parents',
+                    join_table="testlink",
+                    m2m_local_columns='t_left',
+                )
+
+        with self.assertRaises(FieldException):
+            self.init_registry(add_in_registry)
+
+    def test_rich_many2many_minimum_config_on_self_without_columns_2(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class TestLink:
+                id = Integer(primary_key=True)
+                t_left = Integer(foreign_key='Model.Test=>id', nullable=False)
+                t_right = Integer(foreign_key='Model.Test=>id', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    many2many='parents',
+                    join_table="testlink",
+                    m2m_remote_columns='t_right',
+                )
+
+        with self.assertRaises(FieldException):
+            self.init_registry(add_in_registry)

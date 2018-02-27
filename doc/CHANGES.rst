@@ -17,6 +17,8 @@ CHANGELOG
 ------
 
 * [FIX] hasattr on field.Function
+* [IMP] Improve rich **Many2Many** to allow to have got a rich **Many2Many**
+  with the same model on the both side
 
 0.17.1 (2018-02-24)
 -------------------

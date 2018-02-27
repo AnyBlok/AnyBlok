@@ -13,6 +13,7 @@ from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import exc as sa_exc, util
+from sqlalchemy_utils.functions import get_class_by_table
 from .field import Field, FieldException
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr
 from anyblok.common import anyblok_column_prefix
@@ -843,6 +844,41 @@ class Many2Many(RelationShip):
                 type(modelname, (registry.declarativebase,), {
                     '__table__': Node
                 })
+                self.kwargs['primaryjoin'] = primaryjoin
+                self.kwargs['secondaryjoin'] = secondaryjoin
+
+        else:
+            if namespace == self.model.model_name:
+                table = registry.declarativebase.metadata.tables[join_table]
+                cls = get_class_by_table(registry.declarativebase, table)
+                modelname = ModelRepr(cls.__registry_name__).modelname(registry)
+                if (
+                    self.m2m_local_columns is None and
+                    self.m2m_remote_columns is None
+                ):
+                    raise FieldException(
+                        "No 'm2m_local_columns' and 'm2m_remote_columns' "
+                        "attribute filled for many2many "
+                        "%r on model %r" % (fieldname, namespace))
+                elif self.m2m_local_columns is None:
+                    raise FieldException(
+                        "No 'm2m_local_columns' attribute filled for many2many "
+                        "%r on model %r" % (fieldname, namespace))
+                elif self.m2m_remote_columns is None:
+                    raise FieldException(
+                        "No 'm2m_remote_columns' attribute filled for many2many"
+                        " %r on model %r" % (fieldname, namespace))
+
+                remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(
+                    registry, remote_columns, self.m2m_remote_columns,
+                    modelname,
+                    suffix="right" if namespace == self.model.model_name else ""
+                )
+
+                local_columns, local_fk, primaryjoin = self.get_m2m_columns(
+                    registry, local_columns, self.m2m_local_columns, modelname,
+                    suffix="left" if namespace == self.model.model_name else ""
+                )
                 self.kwargs['primaryjoin'] = primaryjoin
                 self.kwargs['secondaryjoin'] = secondaryjoin
 
