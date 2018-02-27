@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.17.2
-------
+0.17.2 (2018-02-27)
+-------------------
 
 * [FIX] hasattr on field.Function
 * [IMP] Improve rich **Many2Many** to allow to have got a rich **Many2Many**
