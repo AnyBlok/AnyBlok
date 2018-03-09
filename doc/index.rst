@@ -15,14 +15,28 @@ AnyBlok documentation
 =====================
 
 AnyBlok is a Python framework allowing to create highly dynamic and modular
-applications on top of SQLAlchemy. Applications are made of "bloks" that can be
-installed, extended, replaced, upgraded or uninstalled. Bloks can provide SQL
-Models, Column types, Fields, Mixins, SQL views, or plain Python code unrelated
-to the database.  Models can be dynamically customized, modified, or extended
-without strong dependencies between them, just by adding new bloks. Bloks are
-declared using `setuptools` entry-points.
+applications on top of the SQLAlchemy ORM. Applications are made of
+"bloks" that can be installed, extended, replaced, upgraded or uninstalled.
 
-AnyBlok is released under the terms of the `Mozilla Public License`.
+Bloks can provide SQL Models, Column types, Fields, Mixins, SQL views,
+or even plain Python code unrelated to the database, and all of these
+can be dynamically customized, modified, or extended
+without strong dependencies between them, just by adding new bloks.
+
+Bloks are declared (made available) through dedicated setuptools entry
+points, and are explicitely *installed* in the
+database, which provides the needed dynamicity for multi-tenant
+scenarios: a given AnyBlok process can connect to several databases,
+and execute different sets of code on each of them, according
+to their installed bloks. Installing bloks could, e.g., be done through
+some HTTP interface (not provided by AnyBlok itself).
+
+That being said, Anyblok's scope of usage is by no means limited to
+multi-tenant applications. The flexibility and extendability it
+provides can be enjoyed even when working on a single database.
+
+AnyBlok is released under the terms of the :doc:`Mozilla Public
+License version 2 <LICENSE>`.
 
 .. toctree::
     :maxdepth: 2

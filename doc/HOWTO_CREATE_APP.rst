@@ -8,19 +8,16 @@
 
 .. contents::
 
-How to create your own application
-==================================
+Basic usage
+===========
 
-This first part introduces how to create an application with his code.
-Why do we have to create an application ? Because AnyBlok is just a framework
-not an application.
+To demonstrate, we will write a simple application; let's call it
+``WorkApp``.
 
-The goal is that more than one application can use the same database for different usage.
-The web server needs to give access to the user, but a profiler needs another
-access with another access rule, or another application needs to provide one part
-of the functionnalities.
+Here are the Models we'll create, with their fields.
+Anyblok being an ORM framework, these will be Python classes, backed
+by database tables.
 
-We will write a simple application that connects to a new empty database:
 
 * Employee
     - name: employee's name
@@ -38,65 +35,36 @@ We will write a simple application that connects to a new empty database:
 * Position
     - name: position name
 
-Declare bloks in the entry points
----------------------------------
+.. _basedoc_bloks:
 
-A blok must be declared in a ``setuptools`` entry point named **bloks**.
+Bloks
+-----
+Within AnyBlok, all business logic objects, among them in the first place
+:ref:`Models <basedoc_models>` must be declared as part of some Blok.
 
-File tree::
+Bloks themselves are subclasses of the :class:`Blok <anyblok.blok.Blok>`
+base class. They have basic metadata attributes (author, version, dependencies…) and
+methods to import the business logic objects declarations.
 
-    WorkBlok
-    └── setup.py
+Bloks also bear the methods for installation, update and removal.
 
-
-We declare 4 bloks in the ``setup.py`` file that we will define explain after::
-
-    bloks = [
-        'office=exampleblok.office_blok:OfficeBlok',
-        'employee=exampleblok.employee_blok:EmployeeBlok',
-        'position=exampleblok.position_blok:PositionBlok',
-        'employee-position=exampleblok.employee_position_blok:EmployeePositionBlok',
-    ],
-
-    setup(
-        # (...)
-        entry_points={
-            'bloks': bloks,
-        },
-    )
-
-Create Bloks
-------------
-
-A blok contains Declarations such as:
-
-* Model: a Python class usable by the application and linked in the registry
-* Mixin: a Python class to extend Model
-* Column: a Python class, describing an sql column type
-* RelationShip: a Python class, allowing to surh on the join on the model data
-* ...
-
-The blok name must be declared in the blok group of the ``setup.py`` file of
-the distribution as explain before.
-
-And the blok must inherit the Blok class of anyblok in the ``__init__.py``
-file of a package::
+Here's a very minimal (and pretty much useless) valid Blok::
 
     from anyblok.blok import Blok
 
     class MyFirstBlok(Blok):
         """ This is valid blok """
 
-The blok class must be in the init file of the package so that all modules and
-sub-packages which have declarations have to be imported by anyblok, in the
-**import_declaration_module** method
-
+To demonstrate the extreme modularity that can be achieved with
+Anyblok, we'll organize the application in four different bloks:
 
 **Office blok**
 
 File tree::
 
-    office_blok
+  workapp
+  ├── (...)
+  └── office_blok
     ├── __init__.py
     └── office.py
 
@@ -123,17 +91,26 @@ File tree::
 
         @classmethod
         def import_declaration_module(cls):
-            from . import office  # noqa
+            from . import office
 
-    # office.py describe the models Address and Room
+So for instance, in this example, we'll import the ``office`` module
+(which defines ``Address`` and ``Room`` Models, :ref:`see below <basedoc_models>`) and at the time of
+first installation (detected by ``latest_version`` being ``None``),
+we'll create an ``Address`` and a ``Room`` instance right away, as
+base data.
+
+.. note:: this anticipates a bit on the :ref:`Model <basedoc_models>`
+          base usage.
 
 **Position blok**
 
 File tree::
 
-    position_blok
-    ├── __init__.py
-    └── position.py
+  workapp
+  ├── (...)
+  └── position_blok
+      ├── __init__.py
+      └── position.py
 
 ``__init__.py`` file::
 
@@ -159,17 +136,20 @@ File tree::
         def import_declaration_module(cls):
             from . import position  # noqa
 
-    # position.py describe the model Position
+
+Same here, the installation automatically creates some data, in this
+case ``Position`` instances.
 
 **Employee blok**
 
-Some bloks can have requirements. Each blok define its dependencies:
+Bloks can have requirements. Each blok define its dependencies:
 
-* required: required bloks must be loaded before
-* optional: If the blok exists, optional bloks will be loaded
-
-A blok can be declared as ``autoinstall`` if the blok is not installed upon the loading
-of the registry, then this blok will be loaded and installed.
+* required:
+    list of the bloks that must be installed (and loaded at
+    startup) before
+* optional:
+    list of bloks that will be installed before the present
+    one, if they are available in the application.
 
 File tree::
 
@@ -186,15 +166,10 @@ File tree::
     class EmployeeBlok(Blok):
 
         version = '1.0.0'
-        autoinstall = True
 
-        required = [
-            'office',
-        ]
+        required = ['office']
 
-        optional = [
-            'position',
-        ]
+        optional = ['position']
 
         def install(self):
             room = self.registry.Room.query().filter(
@@ -208,7 +183,7 @@ File tree::
                                           "Simon André",
                                           'Florent Jouatte',
                                           'Clovis Nzouendjou',
-                                          u"Jean-Sébastien Suzanne")]
+                                          "Jean-Sébastien Suzanne")]
             self.registry.Employee.multi_insert(*employees)
 
         def update(self, latest_version):
@@ -217,15 +192,14 @@ File tree::
 
         @classmethod
         def import_declaration_module(cls):
-            from . import config  # noqa
-            from . import employee  # noqa
+            from . import config
+            from . import employee
 
-    # employee.py describe the model Employee
 
 **EmployeePosition blok**:
 
-Some bloks can be installed when other bloks are installed, they are
-called conditional bloks.
+Some bloks can be installed automatically if some specific other bloks are
+installed. They are called conditional bloks.
 
 File tree::
 
@@ -236,7 +210,6 @@ File tree::
 ``__init__.py`` file::
 
     from anyblok.blok import Blok
-
 
     class EmployeePositionBlok(Blok):
 
@@ -282,11 +255,40 @@ File tree::
     and priorities so a blok with small dependency/priority will be loaded before a blok with
     an higher dependency/priority.
 
-Create Models
--------------
+.. _declare_blok:
 
-The Model must be added under the Model node of the declaration with the
-class decorator ``Declarations.register``::
+Bloks registration
+------------------
+
+Now that we have our Bloks, they must be registered through the ``bloks`` setuptools `entry point
+<https://setuptools.readthedocs.io/en/latest/setuptools.html#entry-points>`_::
+
+    setup(
+        # (...)
+        entry_points={
+            'bloks': [
+                'office=workapp.office_blok:OfficeBlok',
+                'employee=workapp.employee_blok:EmployeeBlok',
+                'position=workapp.position_blok:PositionBlok',
+                'employee-position=workapp.employee_position_blok:EmployeePositionBlok',
+            ],
+        },
+    )
+
+
+.. _basedoc_models:
+
+Models
+------
+With AnyBlok, most of the business logic is organized as Models.
+There are two types of Model:
+
+* SQL: They bear Fields, and correspond to a table in the database,
+  that's automatically created and updated if needed.
+* Non SQL: No persistent data, but still useful to attach methods onto
+  them, which then could be overridden by downstream Bloks.
+
+To declare a Model, use the ``Declarations.register`` decorator::
 
     from anyblok import Declarations
 
@@ -294,18 +296,14 @@ class decorator ``Declarations.register``::
     class AAnyBlokModel:
         """ The first Model of our application """
 
+.. note:: At this point, it is important to realize that this Model
+          class won't be used directly in this form, which is but a
+          Declaration. It will actually be just one element of
+          a whole inheritance hierarchy, which AnyBlok constructs for each
+          database, according to its installed Bloks. This is the fundamental
+          way AnyBlok's flexibility works (see :ref:`basedoc_override`).
 
-There are two types of Model:
-
-* SQL: Create a table in the database (inherit SqlBase and Base)
-* Non SQL: No table but the model exists in the registry and can be used (inherits Base).
-
-SqlBase and Base are core models. Directly calling them is not allowed.
-But they are inheritable and each subclass is propagated to all the anyblok
-models. This example uses ``insert`` and ``multi_insert`` added by the
-``anyblok-core`` blok.
-
-An SQL model can define columns::
+Here's an example SQL model, with just one Column::
 
     from anyblok import Declarations
     from anyblok.column import String
@@ -319,14 +317,37 @@ An SQL model can define columns::
 
         acolumn = String(label="The first column", primary_key=True)
 
-.. warning::
-    Any SQL Model must have a primary key composed with one or more columns.
+This Model will be backed by the ``asqlmodel`` table, whose rows will
+correspond to Model instances.
+
+Once the application has started, the fully assembled Model class is
+available within the Registry, which itself can be accessed in various ways, depending
+on the context.
+
+In particular, the Registry is available on any Model
+instance as the ``registry`` attribute. So, from instance, from a method of another
+Model, we could create an instance of ``ASQLModel`` in this way::
+
+  def mymethod(self):
+      self.registry.ASQLModel.insert(acolumn="Foo")
+
+Another example would be the ``install()`` methods of our
+:ref:`basedoc_bloks` above.
+
+.. note:: There is a Registry instance for each database, and it holds for each
+Model the resulting concrete class after all overrides have been applied.
 
 .. warning::
+    SQL Models must have a primary key made of one or more columns
+    (those flagged with ``primary_key=True``)
+
+.. note::
     The table name depends on the registry tree. Here the table is ``asqlmodel``.
     If a new model is defined under ASQLModel (example UnderModel:
     ``asqlcolumn_undermodel``), the registry model will be stored
     as Model.ASQLModel.UnderModel
+
+Let's then proceed with our more concrete example:
 
 **office_blok.office**::
 
@@ -362,7 +383,7 @@ An SQL model can define columns::
             return "Room %d at %s" % (self.number, self.address)
 
 The relationships can also define the opposite relation. Here the ``address`` Many2One relation
-also declares the ``room`` One2Many relation on the Address Model
+also declares the ``room`` One2Many relation on the Address Model.
 
 A Many2One or One2One relationship must have an existing column.
 The ``column_name`` attribute allows to choose the linked column, if this
@@ -406,13 +427,15 @@ column with the same type as the remote_column.
         def __str__(self):
             return "%s in %s" % (self.name, self.room)
 
+.. _basedoc_override:
 
-Updating an existing Model
---------------------------
+Overriding Models
+-----------------
 
-If you create 2 models with the same declaration position and the same name, the
-second model will subclass the first model. The two models will be merged to
-get the real model
+If one declares two Models with the same name, the
+second Model will subclass the first one in the final assembled Model
+class. This is mostly interesting when the two
+declarations belong to different bloks.
 
 **employee_position_blok.employee**::
 
@@ -432,9 +455,18 @@ get the real model
             res = super(Employee, self).__str__()
             return "%s (%s)" % (res, self.position)
 
+Standalone executables
+----------------------
+
+If the AnyBlok application is an HTTP server running through some WSGI compatibility
+layer, such as AnyBlok / Pyramid, one does not need to care about
+running processes: the WSGI server provides them already.
+
+But in other cases, including background processing alongside HTTP
+workers, we need to setup executables.
 
 Add entries in the argparse configuration
------------------------------------------
++++++++++++++++++++++++++++++++++++++++++
 
 Some applications may require options. Options are grouped by
 category. And the application chooses the option category to display.
@@ -450,8 +482,8 @@ category. And the application chooses the option category to display.
         parser.add_argument('--message-after', dest='message_after')
 
 
-Create an application
----------------------
+Create the executable
++++++++++++++++++++++
 
 The application can be a simple script or a setuptools script. For a setuptools
 script, add this in the ``setup.py``::
@@ -675,10 +707,10 @@ The registry is loaded twice:
 The registry is loaded only once, because the bloks are already installed
 
 
-Generic application of AnyBlok
-------------------------------
+Builtin generic scripts
++++++++++++++++++++++++
 
-Anyblok provides some console script to help :
+Anyblok provides some helper generic console scripts out of the box:
 
 * anyblok_createdb
 * anyblok_updatedb
@@ -699,12 +731,27 @@ AnyBlok plugin for nosetests
 ----------------------------
 
 You can test your bloks in your anyblok distribution with nose. use the option
-*--with-anyblok-bloks*. The plugin load the ``BlokManager`` et the
-``RegistryManager`` after load the ``coverage`` plugin.
+``--with-anyblok-bloks``.
+
+In case the ``coverage`` plugin is also in use, Anyblok's plugin will
+perform all Blok loadings and Model final classes assemblies (i.e.,
+loads of ``BlokManager`` and ``RegistryManager) *after* the ``coverage`` startup, thus giving you
+correct coverage results, in contrast with ``anyblok_nose`` which does
+not (but is more respectful of other ``nosetests`` options)
 
 
-Create the configuration file
------------------------------
+Configuration files
+-------------------
+
+Custom or builtin AnyBlok console scripts accept the ``-c`` parameter,
+to specify a configuration file instead of passing all the options in the
+command line. Example::
+
+  anyblok_createdb -c myapp.cfg
+
+
+Syntax
+++++++
 
 The configuration file allow to load all the initialisation variable::
 
@@ -754,8 +801,8 @@ The logging configuration are also loaded, see `logging configuration file forma
     format=%(database)s:%(levelname)s - %(message)s
     datefmt=
 
-Default configuration file
---------------------------
+Default configuration files
++++++++++++++++++++++++++++
 
 You can define default *system* or *user* configuration file in fonction of
 your *OS*:
@@ -775,5 +822,5 @@ your *OS*:
     * *system*: site_config_dir
     * *user*: user_config_dir
 
-Theses configuration files are load before the specific configuration file. If
-the the configuration file does not exist then it will not raise error
+Theses configuration files are loaded before the specific configuration file. If
+the configuration file does not exist then it will not raise error
