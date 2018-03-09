@@ -1128,7 +1128,7 @@ class Registry:
         self.session.refresh(obj, attribute_names=attribute_names)
 
     def rollback(self, *args, **kwargs):
-        logger.debug('[ROLLACK] with args=%r and kwargs = %r', args, kwargs)
+        logger.debug('[ROLLBACK] with args=%r and kwargs = %r', args, kwargs)
         self.session.rollback(*args, **kwargs)
         EnvironmentManager.set('_precommit_hook', [])
         EnvironmentManager.set('_postcommit_hook', [])
