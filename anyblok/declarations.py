@@ -39,6 +39,8 @@ class Declarations:
         """
 
         def wrapper(self):
+            if not hasattr(self, '__name__'):
+                import pdb; pdb.set_trace()
             name = kwargs.get('name_', self.__name__)
             if parent.__declaration_type__ not in cls.declaration_types:
                 raise DeclarationsException(

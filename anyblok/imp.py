@@ -44,19 +44,18 @@ class ImportManagerException(AttributeError):
 
 
 class ImportManager:
-    """ Use to import the blok or reload the blok imports
+    """Used to import bloks or reload the blok imports
 
-        Add a blok and imports its modules::
+    To add a blok and import its modules::
 
-            blok = ImportManager.add('my blok')
-            blok.imports()
+        blok = ImportManager.add('my blok')
+        blok.imports()
 
-        Reload the modules of a blok::
+    To reload the modules of a blok::
 
-            if ImportManager.has('my blok'):
-                blok = ImportManager.get('my blok')
-                blok.reload()
-                # import the unimported module
+        if ImportManager.has('my blok'):
+            blok = ImportManager.get('my blok')
+            blok.reload()
     """
     modules = {}
 

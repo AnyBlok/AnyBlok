@@ -100,10 +100,9 @@ class TypeList(list):
 
 
 def apply_cache(attr, method, registry, namespace, base, properties):
-    """ Find the cached methods in the base to apply the real cache
-    decorator
+    """Find the cached methods in the base to apply the real cache decorator.
 
-    :param attr: name of the attibute
+    :param attr: name of the attribute
     :param method: method pointer
     :param registry: the current  registry
     :param namespace: the namespace of the model
