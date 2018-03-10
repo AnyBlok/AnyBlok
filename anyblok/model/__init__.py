@@ -616,18 +616,21 @@ class Model:
 
     @classmethod
     def autodoc_class(cls, model_cls):
-        res = [":Declaration type: Model"]
-        res.extend([':%s: %s' % (x.replace('_', ' ').strip(), str(y))
-                    for x, y in model_cls.__anyblok_kwargs__.items()])
-        res.extend([':Inherit model or mixin:', ''])
-        res.extend([' * ' + str(x) for x in model_cls.__anyblok_bases__])
+        res = ["AnyBlok registration:", "", "- Type: Model"]
+        res.extend('- %s: %s' % (x.replace('_', ' ').strip().capitalize(), y)
+                   for x, y in model_cls.__anyblok_kwargs__.items())
+        ab_bases = model_cls.__anyblok_bases__
+        if ab_bases:
+            res.extend(['- Inherited Models or Mixins:', ''])
+            res.extend('   * :class:`%s.%s`' % (c.__module__, c.__name__)
+                       for c in ab_bases)
+            res.append('')
         res.extend(['', ''])
         if has_sql_fields([model_cls]):
-            rows = [['field name', 'Description']]
+            rows = [['Fields', '']]
             rows.extend([x, y.autodoc()]
                         for x, y in get_fields(model_cls).items())
-            table = Texttable(
-                max_width=4 + max(sum(map(len, r)) for r in rows))
+            table = Texttable(max_width=0)
             table.set_cols_valign(["m", "t"])
             table.add_rows(rows)
             res.extend(['', table.draw(), '', ''])
