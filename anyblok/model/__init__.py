@@ -112,6 +112,24 @@ def get_fields(base, without_relationship=False, only_relationship=False,
     return fields
 
 
+def autodoc_fields(declaration_cls, model_cls):
+    """Produces autodocumentation table for the fields.
+
+    Exposed as a function in order to be reusable by a simple export,
+    e.g., from anyblok.mixin.
+    """
+    if not has_sql_fields([model_cls]):
+        return ''
+
+    rows = [['Fields', '']]
+    rows.extend([x, y.autodoc()]
+                for x, y in get_fields(model_cls).items())
+    table = Texttable(max_width=0)
+    table.set_cols_valign(["m", "t"])
+    table.add_rows(rows)
+    return table.draw() + '\n\n'
+
+
 @Declarations.add_declaration_type(isAnEntry=True,
                                    pre_assemble='pre_assemble_callback',
                                    assemble='assemble_callback',
@@ -150,6 +168,12 @@ class Model:
         Two models can have the same table name, both models are mapped on
         the table. But they must have the same column.
     """
+
+    autodoc_anyblok_kwargs = True
+
+    autodoc_anyblok_bases = True
+
+    autodoc_anyblok_fields = True
 
     @classmethod
     def pre_assemble_callback(cls, registry):
@@ -613,26 +637,3 @@ class Model:
         bloks = Blok.list_by_state('touninstall')
         Blok.uninstall_all(*bloks)
         return Blok.apply_state(*registry.ordered_loaded_bloks)
-
-    @classmethod
-    def autodoc_class(cls, model_cls):
-        res = ["AnyBlok registration:", "", "- Type: Model"]
-        res.extend('- %s: %s' % (x.replace('_', ' ').strip().capitalize(), y)
-                   for x, y in model_cls.__anyblok_kwargs__.items())
-        ab_bases = model_cls.__anyblok_bases__
-        if ab_bases:
-            res.extend(['- Inherited Models or Mixins:', ''])
-            res.extend('   * :class:`%s.%s`' % (c.__module__, c.__name__)
-                       for c in ab_bases)
-            res.append('')
-        res.extend(['', ''])
-        if has_sql_fields([model_cls]):
-            rows = [['Fields', '']]
-            rows.extend([x, y.autodoc()]
-                        for x, y in get_fields(model_cls).items())
-            table = Texttable(max_width=0)
-            table.set_cols_valign(["m", "t"])
-            table.add_rows(rows)
-            res.extend(['', table.draw(), '', ''])
-
-        return '\n'.join(res)

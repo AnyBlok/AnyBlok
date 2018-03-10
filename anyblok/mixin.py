@@ -7,8 +7,6 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.registry import RegistryManager
 from anyblok import Declarations
-from anyblok.model import has_sql_fields, get_fields
-from texttable import Texttable
 
 
 class MixinType:
@@ -60,19 +58,6 @@ class Mixin(MixinType):
         Declarations.unregister(Declarations.Mixin.MyMixinclass, MyMixinclass)
     """
 
-    @classmethod
-    def autodoc_class(cls, model_cls):
-        res = [":Declaration type: Mixin"]
-        res.extend([':Inherit model or mixin:', ''])
-        res.extend([' * ' + str(x) for x in model_cls.__anyblok_bases__])
-        res.extend(['', ''])
-        if has_sql_fields([model_cls]):
-            rows = [['field name', 'Description']]
-            rows.extend([x, y.autodoc()]
-                        for x, y in get_fields(model_cls).items())
-            table = Texttable()
-            table.set_cols_valign(["m", "t"])
-            table.add_rows(rows)
-            res.extend([table.draw(), '', ''])
+    autodoc_anyblok_bases = True
 
-        return '\n'.join(res)
+    autodoc_anyblok_fields = True

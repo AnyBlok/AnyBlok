@@ -7,18 +7,31 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.release import version
 from anyblok.blok import BlokManager
+from anyblok.model import autodoc_fields
 from sphinx.ext.autodoc import ClassDocumenter, MethodDocumenter
 from sphinx.util.docstrings import prepare_docstring
 
 
-def default_autodoc_class(declaration):
+def autodoc_registration(declaration, cls):
+    res = ["**AnyBlok registration**:",
+           "",
+           "- Type: " + declaration.__declaration_type__,
+           "- Registry name: " + cls.__registry_name__,
+           ]
+    if getattr(declaration, 'autodoc_anyblok_kwargs', False):
+        res.extend('- %s: %s' % (x.replace('_', ' ').strip().capitalize(), y)
+                   for x, y in cls.__anyblok_kwargs__.items()
+                   if x != '__registry_name__')
 
-    def wrapper(cls):
-        return '\n\n'.join([
-            ":Declaration type: %s" % declaration.__declaration_type__,
-            ":Registry name: %s" % cls.__registry_name__])
-
-    return wrapper
+    if getattr(declaration, 'autodoc_anyblok_bases', False):
+        ab_bases = cls.__anyblok_bases__
+        if ab_bases:
+            res.extend(['- Inherited Models or Mixins:', ''])
+            res.extend('  * :class:`%s.%s`' % (c.__module__, c.__name__)
+                       for c in ab_bases)
+            res.append('')
+    res.extend(('', ''))
+    return '\n'.join(res)
 
 
 def default_autodoc_method(declaration):
@@ -44,9 +57,13 @@ class AnyBlokDeclarationDocumenter(ClassDocumenter):
         registry_name = self.get_attr(self.object, '__registry_name__', None)
         declaration = self.get_attr(self.object, '__declaration__', None)
         if registry_name and declaration:
-            autodoc = self.get_attr(declaration, 'autodoc_class',
-                                    default_autodoc_class(declaration))
-            docstrings = autodoc(self.object)
+            autodoc = self.get_attr(declaration, 'autodoc_class', None)
+            if autodoc is not None:
+                docstrings = autodoc(self.object)
+            else:
+                docstrings = autodoc_registration(declaration, self.object)
+                if getattr(declaration, 'autodoc_anyblok_fields', False):
+                    docstrings += autodoc_fields(declaration, self.object)
             if docstrings:
                 doc.append(prepare_docstring(docstrings, ignore))
 
