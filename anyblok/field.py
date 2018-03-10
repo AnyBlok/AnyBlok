@@ -186,23 +186,27 @@ class Field:
         res.update(self.kwargs)
         return res
 
-    def autodoc_format_dict(self, key, value, padding=0):
+    def autodoc_format_dict(self, key, value, level=0):
+        bullets = ['*', '+', '•', '‣']
+        bullet = bullets[level]
+        padding = '  ' * level
         key = key.strip()
         if isinstance(value, dict):
-            res = ' * ``%s``:\n' % key
+            res = padding + '%c ``%s``:\n\n' % (bullet, key)
             res += '\n'.join(
-                [self.autodoc_format_dict(x, y, padding=padding + 1)
+                [self.autodoc_format_dict(x, y, level=level + 1)
                  for x, y in value.items()])
             res += '\n'
             return res
         elif isinstance(value, (list, tuple)):
-            res = ' * ``%s``:\n' % key
-            res += '\n'.join([' ' * padding + ' * %s' % str(x)
-                              for x in value])
+            res = padding + '%c ``%s``:\n\n' % (bullet, key)
+            next_bullet = bullets[level + 1]
+            res += '\n'.join(padding + '  %c %s' % (next_bullet, x)
+                             for x in value)
             res += '\n'
             return res
         else:
-            return ' ' * padding + ' * ``%s`` - %s' % (key, str(value))
+            return padding + '%c ``%s`` - %s' % (bullet, key, value)
 
     def autodoc(self):
         return '\n'.join([self.autodoc_format_dict(x, y)

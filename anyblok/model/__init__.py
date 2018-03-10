@@ -626,7 +626,8 @@ class Model:
             rows = [['field name', 'Description']]
             rows.extend([x, y.autodoc()]
                         for x, y in get_fields(model_cls).items())
-            table = Texttable()
+            table = Texttable(
+                max_width=4 + max(sum(map(len, r)) for r in rows))
             table.set_cols_valign(["m", "t"])
             table.add_rows(rows)
             res.extend(['', table.draw(), '', ''])
