@@ -7,6 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.ext.hybrid import hybrid_property
 from anyblok.common import anyblok_column_prefix
+from anyblok.mapper import ModelRepr
 
 
 class FieldException(Exception):
@@ -180,11 +181,16 @@ class Field:
         return False
 
     def autodoc_get_properties(self):
-        res = {'Field type': str(self.__class__),
-               'Context': self.context,
-               'Label': self.label}
+        res = {'Type': self.__class__}
+        res['Context'] = self.context
+        res['Label'] = self.label
         res.update(self.kwargs)
         return res
+
+    autodoc_omit_property_values = set((
+        ('Label', None),
+        ('Context', None),
+        ))
 
     def autodoc_format_dict(self, key, value, level=0):
         bullets = ['*', '+', '•', '‣']
@@ -201,16 +207,40 @@ class Field:
         elif isinstance(value, (list, tuple)):
             res = padding + '%c ``%s``:\n\n' % (bullet, key)
             next_bullet = bullets[level + 1]
-            res += '\n'.join(padding + '  %c %s' % (next_bullet, x)
+            res += '\n'.join(padding + '  %c ``%r``' % (next_bullet, x)
                              for x in value)
             res += '\n'
             return res
         else:
-            return padding + '%c ``%s`` - %s' % (bullet, key, value)
+            if isinstance(value, type):
+                rst_val = ':class:`%s.%s`' % (value.__module__,
+                                              value.__name__)
+            elif isinstance(value, ModelRepr):
+                rst_val = value.model_name
+            else:
+                rst_val = '``%r``' % value
+            return padding + '%c ``%s`` - %s' % (bullet, key, rst_val)
+
+    def autodoc_do_omit(self, k, v):
+        """Maybe convert, then check in :attr:`autodoc_omit_property_values`
+
+        Mutable types aren't hashable, and usually, if not empty, it makes
+        sense to display them. Therefore, we replace them by None if
+        empty to decide and let through otherwise.
+
+        Hence, to exclude empty Context from autodoc, is done by putting
+        ``('Context', None)`` in :attr:`autodoc_omit_property_values`
+        """
+        if isinstance(v, list) or isinstance(v, dict) or isinstance(v, set):
+            if v:
+                return True
+            v = None
+        return (k, v) in self.autodoc_omit_property_values
 
     def autodoc(self):
-        return '\n'.join([self.autodoc_format_dict(x, y)
-                          for x, y in self.autodoc_get_properties().items()])
+        return '\n'.join(self.autodoc_format_dict(x, y)
+                         for x, y in self.autodoc_get_properties().items()
+                         if not self.autodoc_do_omit(x, y))
 
 
 class Function(Field):

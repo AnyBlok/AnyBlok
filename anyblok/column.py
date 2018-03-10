@@ -117,6 +117,13 @@ class Column(Field):
         res['is crypted'] = True if self.encrypt_key else False
         return res
 
+    autodoc_omit_property_values = Field.autodoc_omit_property_values.union((
+        ('foreign_key', None),
+        ('DB column name', None),
+        ('default', None),
+        ('is crypted', False),
+    ))
+
     def native_type(cls):
         """ Return the native SqlAlchemy type """
         return cls.sqlalchemy_type

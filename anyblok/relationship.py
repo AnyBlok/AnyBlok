@@ -367,12 +367,19 @@ class Many2One(RelationShip):
 
     def autodoc_get_properties(self):
         res = super(Many2One, self).autodoc_get_properties()
-        res['_remote_columns'] = self._remote_columns
-        res['_column_names'] = self._column_names
+        res['remote_columns'] = self._remote_columns
+        res['column_names'] = self._column_names
         res['unique'] = self.unique
         res['index'] = self.index
         res['primary_key'] = self.primary_key
         return res
+
+    autodoc_omit_property_values = Field.autodoc_omit_property_values.union((
+        ('remote_columns', None),
+        ('column_names', None),
+        ('unique', False),
+        ('primary_key', False),
+    ))
 
     def get_remote_columns(self, registry):
         if self._remote_columns is None:
