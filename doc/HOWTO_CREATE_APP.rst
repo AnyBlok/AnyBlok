@@ -335,7 +335,8 @@ Another example would be the ``install()`` methods of our
 :ref:`basedoc_bloks` above.
 
 .. note:: There is a Registry instance for each database, and it holds for each
-Model the resulting concrete class after all overrides have been applied.
+          Model the resulting concrete class after all overrides
+          have been applied.
 
 .. warning::
     SQL Models must have a primary key made of one or more columns
