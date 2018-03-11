@@ -16,7 +16,17 @@ System = Declarations.Model.System
 
 @register(Declarations.Model.System)
 class Parameter:
-    """System Parameter"""
+    """Applications parameters.
+
+    This Model is provided by ``anyblok-core`` to give applications a uniform
+    way of specifying in-database configuration.
+
+    It is a simple key/value representation, where values can be of any type
+    that can be encoded as JSON.
+
+    A simple access API is provided with the :meth:`get`, :meth:`set`,
+    :meth:`is_exist` and further methods.
+    """
 
     key = String(primary_key=True)
     value = Json(nullable=False)
@@ -24,9 +34,11 @@ class Parameter:
 
     @classmethod
     def set(cls, key, value):
-        """ Insert or Update parameter for the key
+        """ Insert or update parameter value for a key.
 
-        :param key: key to save
+        .. note:: if the key already exists, the value will be updated
+
+        :param str key: key to save
         :param value: value to save
         """
         multi = False
@@ -46,7 +58,7 @@ class Parameter:
         """ Check if one parameter exist for the key
 
         :param key: key to check
-        :rtype: Boolean, True if exist
+        :rtype: bool
         """
         query = cls.query().filter(cls.key == key)
         return True if query.count() else False
@@ -55,9 +67,10 @@ class Parameter:
     def get(cls, key):
         """ Return the value of the key
 
-        :param key: key to check
-        :rtype: return value
-        :exception: ExceptionParameter
+        :param key: key whose value to retrieve
+        :return: associated value
+        :rtype: anything JSON encodable
+        :raises ParameterException: if the key doesn't exist.
         """
         if not cls.is_exist(key):
             raise ParameterException(
@@ -71,11 +84,12 @@ class Parameter:
 
     @classmethod
     def pop(cls, key):
-        """Remove return the value of the key
+        """Remove the given key and return the associated value.
 
-        :param key: key to check
-        :rtype: return value
-        :exception: ExceptionParameter
+        :param str key: the key to remove
+        :return: the value before removal
+        :rtype: any JSON encodable type
+        :raises ParameterException: if the key wasn't present
         """
         if not cls.is_exist(key):
             raise ParameterException(

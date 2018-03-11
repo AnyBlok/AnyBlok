@@ -13,10 +13,36 @@ logger = getLogger(__name__)
 
 
 class AnyBlokCore(Blok):
-    """
-    This blok is required by all anyblok application. This blok define the main
-    fonctionnality to install, update and uninstall blok. And also list the
-    known models, fields, columns and relationships
+    """This Blok is required in all AnyBlok applications.
+
+    This Blok provides the main fonctionalities for Bloks management (install,
+    update, uninstall…).
+
+    It also brings the representation of Anyblok objects (Models, Fields, etc.)
+    within the database itself, and some fundamental facilities.
+
+    * Core Models
+
+      These are pure code Models, used as base classes:
+
+      - Base: inherited by all Models
+      - SqlBase: inherited by all models backed by an SQL table
+      - SqlViewBase: inherited by all models bacled by an SQL view
+
+    * System Models
+
+      These correspond to actual tables in the table. They provide reflection
+      or fundamental facilities.
+
+      - Blok: represent all *available* Bloks, with their state and more
+      - Model
+      - Field
+      - Column
+      - Relationship
+      - :class:`Sequence <.system.sequence.Sequence>`: database sequences,
+        for use in applications.
+      - :class:`Parameter <.system.parameter.Parameter>`: application
+        parameters
     """
 
     version = version

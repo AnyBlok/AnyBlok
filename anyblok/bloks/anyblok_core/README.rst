@@ -6,52 +6,6 @@
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
 .. obtain one at http://mozilla.org/MPL/2.0/.
 
-This blok is required by all anyblok application. This blok define the main
-fonctionnality to install, update and uninstall blok. And also list the
-known models, fields, columns and relationships:
-
-* Core ``Model``
-    - Base: inherited by all the Model
-    - SqlBase: Inherited only by the model with table
-    - SqlViewBase: Inherited only by the sql view model
-
-* System Models
-    - Blok: List the bloks
-    - Model: List the models
-    - Field: List of the fields
-    - Column: List of the columns
-    - Relationship: List of the relation ship
-    - Sequence: Define database sequence
-    - Parameter: Define application parameter
-
-Sequence
-~~~~~~~~
-
-Some behaviours need to have sequence::
-
-    sequence = registry.System.Sequence.insert(
-        code="string code",
-        formater="One prefix {seq} One suffix")
-
-.. note::
-
-    It is a python formater, you can use the variable:
-
-    * seq: numero of the current data base sequence
-    * code: code field
-    * id: id field
-
-Get the next value of the sequence::
-
-    sequence.nextval()
-
-exemple::
-
-    seq = Sequence.insert(code='SO', formater="{code}-{seq:06d}")
-    seq.nextval()
-    >>> SO-000001
-    seq.nextval()
-    >>> SO-000002
 
 Parameter
 ~~~~~~~~~

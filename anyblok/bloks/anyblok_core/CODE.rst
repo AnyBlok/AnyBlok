@@ -6,235 +6,187 @@
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
 .. obtain one at http://mozilla.org/MPL/2.0/.
 
-API doc
-~~~~~~~
-
-**Authorization**
+Authorization
+~~~~~~~~~~~~~
 
 .. automodule:: anyblok.bloks.anyblok_core.authorization
 
-.. autoclass:: Authorization
+.. autoanyblok-declaration:: Authorization
     :members:
     :undoc-members:
-    :show-inheritance:
-    :noindex:
 
 .. autoclass:: DefaultModelDeclaration
     :members:
     :undoc-members:
     :show-inheritance:
-    :noindex:
 
-**Core**
+Core Models
+~~~~~~~~~~~
 
 .. automodule:: anyblok.bloks.anyblok_core.core.base
 
 .. autoanyblok-declaration:: Base
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.sqlbase
 
 .. autoclass:: SqlMixin
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. autoanyblok-declaration:: SqlBase
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.sqlviewbase
 
 .. autoanyblok-declaration:: SqlViewBase
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.instrumentedlist
 
 .. autoanyblok-declaration:: InstrumentedList
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.query
 
 .. autoanyblok-declaration:: Query
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.session
 
 .. autoanyblok-declaration:: Session
     :members:
-    :show-inheritance:
-    :noindex:
 
-**system**
+System Models
+~~~~~~~~~~~~~
 
 .. automodule:: anyblok.bloks.anyblok_core.system
 
 .. autoanyblok-declaration:: System
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.blok
 
 .. autoanyblok-declaration:: Blok
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.cache
 
 .. autoanyblok-declaration:: Cache
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.field
 
 .. autoanyblok-declaration:: Field
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.column
 
 .. autoanyblok-declaration:: Column
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.relationship
 
 .. autoanyblok-declaration:: RelationShip
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.model
 
 .. autoanyblok-declaration:: Model
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.parameter
 
 .. autoanyblok-declaration:: Parameter
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.sequence
 
 .. autoanyblok-declaration:: Sequence
     :members:
-    :show-inheritance:
-    :noindex:
 
-**documentation**
+.. _blok_anyblok_core_documentation:
+
+Documentation Models
+~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation
 
 .. autoanyblok-declaration:: DocElement
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. autoanyblok-declaration:: Documentation
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.blok
 
 .. autoanyblok-declaration:: Blok
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.model
 
 .. autoanyblok-declaration:: Model
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.model.attribute
 
 .. autoanyblok-declaration:: Attribute
     :members:
-    :show-inheritance:
-    :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.model.field
 
 .. autoanyblok-declaration:: Field
     :members:
-    :show-inheritance:
-    :noindex:
 
-**Mixins**
+.. _blok_anyblok_core_mixins:
+
+Mixins
+~~~~~~
 
 .. automodule:: anyblok.bloks.anyblok_core.mixins
 
 .. autoanyblok-declaration:: ForbidUpdate
     :members:
     :show-inheritance:
-    :noindex:
 
 .. autoanyblok-declaration:: ForbidDelete
     :members:
     :show-inheritance:
-    :noindex:
 
 .. autoanyblok-declaration:: ReadOnly
     :members:
     :show-inheritance:
-    :noindex:
 
-**exception**
+.. _blok_anyblok_core_exceptions:
+
+Exceptions
+~~~~~~~~~~
 
 .. automodule:: anyblok.bloks.anyblok_core.exceptions
 
 .. autoexception:: CoreBaseException
     :members:
     :show-inheritance:
-    :noindex:
 
 .. autoexception:: SqlBaseException
     :members:
     :show-inheritance:
-    :noindex:
 
 .. autoexception:: QueryException
     :members:
     :show-inheritance:
-    :noindex:
 
 .. autoexception:: CacheException
     :members:
     :show-inheritance:
-    :noindex:
 
 .. autoexception:: ParameterException
     :members:
     :show-inheritance:
-    :noindex:
 
 .. autoexception:: ForbidUpdateException
     :members:
     :show-inheritance:
-    :noindex:
 
 .. autoexception:: ForbidDeleteException
     :members:
     :show-inheritance:
-    :noindex:
