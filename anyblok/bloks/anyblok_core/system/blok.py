@@ -58,9 +58,9 @@ class Blok:
         """
         blok = BlokManager.get(self.name)
         path = BlokManager.getPath(self.name)
-        readme = 'README.rst'
-        if hasattr(blok, 'readme'):
-            readme = blok.readme
+        readme = getattr(blok, 'readme', 'README.rst')
+        if readme == '__doc__':
+            return blok.__doc__
 
         file_path = join(path, readme)
         description = ''
