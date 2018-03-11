@@ -28,7 +28,6 @@ TestCase
     :members:
     :undoc-members:
     :show-inheritance:
-    :noindex:
 
 
 DBTestCase
@@ -40,7 +39,6 @@ DBTestCase
     :members:
     :undoc-members:
     :show-inheritance:
-    :noindex:
 
 
 BlokTestCase
@@ -50,7 +48,6 @@ BlokTestCase
     :members:
     :undoc-members:
     :show-inheritance:
-    :noindex:
 
 LogCapture
 ----------
@@ -60,4 +57,3 @@ LogCapture
     :undoc-members:
     :show-inheritance:
     :inherited-members:
-    :noindex:

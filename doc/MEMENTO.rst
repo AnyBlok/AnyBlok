@@ -1523,7 +1523,6 @@ Start by implement the plugin::
 
 .. autoclass:: ModelPluginBase
     :members:
-    :noindex:
     :show-inheritance:
     :inherited-members:
 

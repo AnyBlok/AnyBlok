@@ -19,7 +19,6 @@ Blok anyblok-core
     :members:
     :undoc-members:
     :show-inheritance:
-    :noindex:
 
 .. include:: ../anyblok/bloks/anyblok_core/README.rst
 .. include:: ../anyblok/bloks/anyblok_core/CODE.rst
@@ -32,7 +31,6 @@ Blok IO
     :members:
     :undoc-members:
     :show-inheritance:
-    :noindex:
 
 .. include:: ../anyblok/bloks/io/README.rst
 .. include:: ../anyblok/bloks/io/CODE.rst
@@ -45,7 +43,6 @@ Blok IO CSV
     :members:
     :undoc-members:
     :show-inheritance:
-    :noindex:
 
 .. include:: ../anyblok/bloks/io_csv/README.rst
 .. include:: ../anyblok/bloks/io_csv/CODE.rst
@@ -58,7 +55,6 @@ Blok IO XML
     :members:
     :undoc-members:
     :show-inheritance:
-    :noindex:
 
 .. include:: ../anyblok/bloks/io_xml/README.rst
 .. include:: ../anyblok/bloks/io_xml/CODE.rst
@@ -71,7 +67,6 @@ Blok Model Auth
     :members:
     :undoc-members:
     :show-inheritance:
-    :noindex:
 
 .. include:: ../anyblok/bloks/model_authz/README.rst
 .. include:: ../anyblok/bloks/model_authz/CODE.rst
