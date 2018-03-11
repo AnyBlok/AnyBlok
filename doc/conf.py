@@ -38,6 +38,7 @@
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
     'anyblok.sphinx.ext.load.blok',
 ]
 
