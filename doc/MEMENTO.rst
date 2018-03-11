@@ -1511,23 +1511,16 @@ This a hook to add new feature in Model, this is already use for:
 * Sqlalchemy event
 * cache / classmethod_cache
 
-Start by implement the plugin::
+Start by implementing the plugin (see
+:class:`ModelPluginBase <anyblok.model.plugins.ModelPluginBase>`)::
 
-    from anyblok.model.plugins import 
+    from anyblok.model.plugins import ModelPluginBase
 
     class MyPlugin(ModelPluginBase):
         ...
 
 
-.. automodule:: anyblok.model.plugins
-
-.. autoclass:: ModelPluginBase
-    :members:
-    :show-inheritance:
-    :inherited-members:
-
-
-Add the Plugin in the setup::
+Then, declare it in ``setup.py``::
 
     setup(
         ...
