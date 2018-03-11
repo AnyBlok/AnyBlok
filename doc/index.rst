@@ -43,8 +43,7 @@ License version 2 <LICENSE>`.
 
     FRONT.rst
     basic_usage
-    HOWTO_ADD_ENTRY_OR_CORE_TYPE.rst
-    HOWTO_Environment.rst
+    advanced_topics
     MEMENTO.rst
     internals
     UNITTEST.rst

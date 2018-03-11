@@ -1157,6 +1157,101 @@ Use the encrypt_key attribute on the column to define the key of cryptography::
 
 The encryption works for any Columns.
 
+Environment
+~~~~~~~~~~~
+
+The Environment contains non persistent contextual variables. By
+default, it is stored in the current :class:`Thread` object, but that
+is amendable (see :ref:`environment_types`).
+
+Use the current environment
++++++++++++++++++++++++++++
+
+The environment can be used from whereever in the code.
+
+Generic use
+///////////
+
+To get or set variable in environment, you must import the
+``EnvironmentManager``::
+
+    from anyblok.environment import EnvironmentManager
+
+Set a variable::
+
+    EnvironmentManager.set('my variable name', some_value)
+
+Get a variable::
+
+    EnvironmentManager.get('my variable name', default=some_default)
+
+Use from a ``Model``
+////////////////////
+
+A class-level attribute is present on all Model classes to access the
+Environment variables conveniently.
+
+To grab the EnvironmentManager from a ``Model`` method, just use
+``self.Env``. For a classmethod, that would be as in::
+
+    @classmethod
+    def myclsmeth(cls):
+      env = cls.Env
+      (...)
+
+Then, it's easy to get and set variables. Here's an example from a Model
+instance method::
+
+    self.Env.set('my variable name', some_value)
+    self.Env.get('my variable name', default=some_default_value)
+
+.. note:: the ``Env`` attribute is actually set in
+          ``registry.registry_base``, which is a class dynamically
+          generated at registry creation, and of which all assembled
+          classes stored in the registry inherit.
+
+.. _environment_types:
+
+Define a new environment type
++++++++++++++++++++++++++++++
+
+If you do not want to stock the environment in the ``Thread``, you  must
+implement a new type of environment.
+
+This type is a simple class which have theses class methods:
+
+* scoped_function_for_session
+* setter
+* getter
+
+::
+
+    MyEnvironmentClass:
+
+        @classmethod
+        def scoped_function_for_session(cls):
+            ...
+
+        @classmethod
+        def setter(cls, key, value):
+            ...
+
+        @classmethod
+        def getter(cls, key, default):
+            ...
+            return value
+
+Declare your class as the Environment class::
+
+    EnvironmentManager.define_environment_cls(MyEnvironmentClass)
+
+
+The classmethod ``scoped_function_for_session`` is passed at SQLAlchemy
+``scoped_session`` function `see <http://docs.sqlalchemy.org/en/rel_0_9/orm/
+contextual.html#contextual-thread-local-sessions>`_
+
+
+
 Cache
 ~~~~~
 
