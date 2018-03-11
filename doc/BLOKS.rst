@@ -6,10 +6,19 @@
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
 .. obtain one at http://mozilla.org/MPL/2.0/.
 
-.. contents::
+Builtin Bloks
+=============
 
-Bloks
-=====
+AnyBlok ships with some builtin Bloks.
+
+Among them, :ref:`blok_anyblok_core` is essential for the
+framework itself.
+
+The others provide primitives for data interchange and database
+support for builtin authorization rules.
+
+
+.. _blok_anyblok_core:
 
 Blok anyblok-core
 -----------------
@@ -23,6 +32,8 @@ Blok anyblok-core
 .. include:: ../anyblok/bloks/anyblok_core/README.rst
 .. include:: ../anyblok/bloks/anyblok_core/CODE.rst
 
+.. _blok_io:
+
 Blok IO
 -------
 
@@ -34,6 +45,8 @@ Blok IO
 
 .. include:: ../anyblok/bloks/io/README.rst
 .. include:: ../anyblok/bloks/io/CODE.rst
+
+.. _blok_io_csv:
 
 Blok IO CSV
 -----------
@@ -47,6 +60,8 @@ Blok IO CSV
 .. include:: ../anyblok/bloks/io_csv/README.rst
 .. include:: ../anyblok/bloks/io_csv/CODE.rst
 
+.. _blok_io_xml:
+
 Blok IO XML
 -----------
 
@@ -59,8 +74,10 @@ Blok IO XML
 .. include:: ../anyblok/bloks/io_xml/README.rst
 .. include:: ../anyblok/bloks/io_xml/CODE.rst
 
-Blok Model Auth
----------------
+.. _blok_model_authz:
+
+Blok Model Authz
+----------------
 
 .. automodule:: anyblok.bloks.model_authz
 .. autoclass:: ModelBasedAuthorizationBlok
