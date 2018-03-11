@@ -13,15 +13,15 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.authorization
 
-.. autoclass:: Authorization                                                     
-    :members:                                                                   
-    :undoc-members:                                                             
+.. autoclass:: Authorization
+    :members:
+    :undoc-members:
     :show-inheritance:
     :noindex:
 
-.. autoclass:: DefaultModelDeclaration                                                     
-    :members:                                                                   
-    :undoc-members:                                                             
+.. autoclass:: DefaultModelDeclaration
+    :members:
+    :undoc-members:
     :show-inheritance:
     :noindex:
 
@@ -29,48 +29,48 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.core.base
 
-.. autoanyblok-declaration:: Base                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Base
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.sqlbase
 
-.. autoclass:: SqlMixin                                                     
-    :members:                                                                   
+.. autoclass:: SqlMixin
+    :members:
     :show-inheritance:
     :noindex:
 
-.. autoanyblok-declaration:: SqlBase                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: SqlBase
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.sqlviewbase
 
-.. autoanyblok-declaration:: SqlViewBase                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: SqlViewBase
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.instrumentedlist
 
-.. autoanyblok-declaration:: InstrumentedList                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: InstrumentedList
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.query
 
-.. autoanyblok-declaration:: Query                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Query
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.core.session
 
-.. autoanyblok-declaration:: Session                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Session
+    :members:
     :show-inheritance:
     :noindex:
 
@@ -78,64 +78,64 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.system
 
-.. autoanyblok-declaration:: System                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: System
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.blok
 
-.. autoanyblok-declaration:: Blok                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Blok
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.cache
 
-.. autoanyblok-declaration:: Cache                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Cache
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.field
 
-.. autoanyblok-declaration:: Field                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Field
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.column
 
-.. autoanyblok-declaration:: Column                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Column
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.relationship
 
-.. autoanyblok-declaration:: RelationShip                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: RelationShip
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.model
 
-.. autoanyblok-declaration:: Model                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Model
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.parameter
 
-.. autoanyblok-declaration:: Parameter                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Parameter
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.system.sequence
 
-.. autoanyblok-declaration:: Sequence                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Sequence
+    :members:
     :show-inheritance:
     :noindex:
 
@@ -143,41 +143,41 @@ API doc
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation
 
-.. autoanyblok-declaration:: DocElement                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: DocElement
+    :members:
     :show-inheritance:
     :noindex:
 
-.. autoanyblok-declaration:: Documentation                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Documentation
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.blok
 
-.. autoanyblok-declaration:: Blok                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Blok
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.model
 
-.. autoanyblok-declaration:: Model                                                     
-    :members:                                                                   
+.. autoanyblok-declaration:: Model
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.model.attribute
 
-.. autoanyblok-declaration:: Attribute 
-    :members:                                                                   
+.. autoanyblok-declaration:: Attribute
+    :members:
     :show-inheritance:
     :noindex:
 
 .. automodule:: anyblok.bloks.anyblok_core.documentation.model.field
 
 .. autoanyblok-declaration:: Field
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
@@ -186,17 +186,17 @@ API doc
 .. automodule:: anyblok.bloks.anyblok_core.mixins
 
 .. autoanyblok-declaration:: ForbidUpdate
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: ForbidDelete
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
 .. autoanyblok-declaration:: ReadOnly
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
@@ -205,36 +205,36 @@ API doc
 .. automodule:: anyblok.bloks.anyblok_core.exceptions
 
 .. autoexception:: CoreBaseException
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: SqlBaseException
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: QueryException
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: CacheException
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: ParameterException
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: ForbidUpdateException
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
 
 .. autoexception:: ForbidDeleteException
-    :members:                                                                   
+    :members:
     :show-inheritance:
     :noindex:
