@@ -46,9 +46,9 @@ License version 2 <LICENSE>`.
     HOWTO_ADD_ENTRY_OR_CORE_TYPE.rst
     HOWTO_Environment.rst
     MEMENTO.rst
-    CODE.rst
+    internals
     UNITTEST.rst
-    BLOKS.rst
+    builtin_bloks
     CHANGES.rst
     ROADMAP.rst
     LICENSE.rst
