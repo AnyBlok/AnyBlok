@@ -9,14 +9,15 @@
 Builtin Bloks
 =============
 
-AnyBlok ships with some builtin Bloks.
+AnyBlok ships with some builtin Bloks. Among them,
+:ref:`anyblok-core <blok_anyblok_core>` is essential for the
+framework itself, while the others provide optional functionalities
+that have been found generic enough that uniformity across
+applications would be a good thing.
 
-Among them, :ref:`blok_anyblok_core` is essential for the
-framework itself.
-
-The others provide primitives for data interchange and database
-support for builtin authorization rules.
-
+.. contents:: Covered Bloks
+   :local:
+   :depth: 1
 
 .. _blok_anyblok_core:
 
@@ -25,11 +26,15 @@ Blok anyblok-core
 
 .. automodule:: anyblok.bloks.anyblok_core
 .. autoclass:: AnyBlokCore
-    :members:
-    :undoc-members:
     :show-inheritance:
 
-.. include:: ../anyblok/bloks/anyblok_core/README.rst
+    .. autoattribute:: name
+    .. autoattribute:: version
+    .. autoattribute:: author
+    .. autoattribute:: autoinstall
+    .. autoattribute:: priority
+
+
 .. include:: ../anyblok/bloks/anyblok_core/CODE.rst
 
 .. _blok_io:
