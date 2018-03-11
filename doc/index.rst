@@ -42,7 +42,7 @@ License version 2 <LICENSE>`.
     :maxdepth: 2
 
     FRONT.rst
-    HOWTO_CREATE_APP.rst
+    basic_usage
     HOWTO_ADD_ENTRY_OR_CORE_TYPE.rst
     HOWTO_Environment.rst
     MEMENTO.rst
