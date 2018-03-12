@@ -46,7 +46,6 @@ License version 2 <LICENSE>`.
     advanced_topics
     MEMENTO.rst
     internals
-    UNITTEST.rst
     builtin_bloks
     CHANGES.rst
     ROADMAP.rst

@@ -58,23 +58,28 @@ Installation will add the ``anyblok`` commands to the environment.
 
 .. note:: AnyBlok use Python version >= 3.3
 
-Unit Test
----------
+Running Tests
+-------------
 
-Run the framework test with ``nose``::
+.. seealso:: the :ref:`section about testing of AnyBlok applications
+             <basedoc_tests>`.
+
+
+To run framework tests with ``nose``::
 
     pip install nose
     nosetests anyblok/tests
 
-Run all the installed bloks::
+To run tests of all installed bloks::
 
     anyblok_nose -c config.file.cfg
 
-Run the blok tests at the installation::
+To run Blok tests during their installation::
 
     anyblok_updatedb -c config.file.cfg --install_bloks myblok --test-blok-at-install
 
-AnyBlok is tested using `Travis <https://travis-ci.org/AnyBlok/AnyBlok>`_
+AnyBlok is tested continuously using `Travis CI
+<https://travis-ci.org/AnyBlok/AnyBlok>`_
 
 Dependencies
 ------------

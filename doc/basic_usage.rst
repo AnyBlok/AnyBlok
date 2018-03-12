@@ -728,18 +728,131 @@ We could also display the full tree from root
 
 A direct link to download the full working example.
 
-AnyBlok plugin for nosetests
-----------------------------
+.. _basedoc_tests:
 
-You can test your bloks in your anyblok distribution with nose. use the option
-``--with-anyblok-bloks``.
+Writing and launching tests
+---------------------------
 
-In case the ``coverage`` plugin is also in use, Anyblok's plugin will
+We want to foster a very test friendly culture in the AnyBlok
+community, that's why we cover tests writing and launching in this
+"Basic usage" page.
+
+That being said, such a dynamic framework represent a challenge for
+tests, because the application constructs, e.g., application Models,
+must *not* be imported directly. Instead, a proper Registry must be
+set up one way or another before the test launcher kicks in, and that
+interferes wildly with coverage reports.
+
+Also, the Anyblok Registry being tightly tied to a database, we need
+to set it up before hand (most common in application tests) or manage
+it from the tests (mostly meant for the framework tests, but could
+find its use for some applications or middleware).
+
+.. note:: all of this means that the tests we're discussing aren't
+          stricto sensu unit tests, but rather integration
+          tests. Nevertheless, we casually speak of them as unit tests
+          if they stay lightweight and are about testing individual
+          AnyBlok
+          components.
+
+          Nothing prevents application developers to also write true unit
+          tests, perhaps for subroutines that don't interact with the
+          database at all.
+
+To address these challenges, AnyBlok ships with helper base classes
+(see below), and provides two different ways to lauch the tests, both based
+on `nose <https://pypi.python.org/pypi/nose/1.3.7>`_.
+
+.. _basedoc_testcases:
+
+Writing tests
++++++++++++++
+
+The most commonly used helper base class is :class:`BlokTestCase
+<anyblok.tests.testcase.BlokTestCase>`. It provides everything Blok
+developers need for their daily workflow: a working registry is setup
+once for the whole test run, is exposed as a class attribute,
+and the tests are insulated by rollbacking the database transaction.
+
+We should also mention :class:`DBTestCase
+<anyblok.tests.testcase.DBTestCase>`, which is more suited for
+code that interacts at a deeper level with
+the framework (including the framework itself). It creates and drops
+the database for each test case, and therefore makes the whole run
+terribly slow, but that's sometimes a price worth paying.
+
+.. warning:: One must separate the launches of BlokTestCases
+             and of DBTestCases in different runs.
+
+
+Launching tests with the nose plugin
+++++++++++++++++++++++++++++++++++++
+
+Summary: use this if you need accurate coverage results. This is a
+good fit for Continuous Integration (CI).
+
+AnyBlok comes with a `nose <https://pypi.python.org/pypi/nose/1.3.7>`_
+plugin right away. Once the testing database is set up, and described
+by proper environment variables or :ref:`default configuration files
+<basedoc_conf_files_default>`, you can test your bloks with the
+``--with-anyblok-bloks`` option.
+
+.. warning:: don't use this if you need advanced tests selection
+             such as replaying failed tests, or cherry picking one
+             specific test which triggers imports that are unwanted
+             before the registry is set up.
+
+             Prefer :ref:`anyblok_nose <basedoc_anyblok_nose>` in that case.
+
+Here's an example, adapted from AnyBlok's ``.travis.yml``::
+
+  export ANYBLOK_DATABASE_URL=postgresql:///travis_ci_test
+  anyblok_createdb --install-all-bloks
+  nosetests anyblok/bloks --with-anyblok-bloks -v -s --with-coverage --cover-package=anyblok
+
+In case the ``coverage`` plugin is also in use, as in the example
+above, Anyblok's nose plugin will
 perform all Blok loadings and Model final classes assemblies (i.e.,
-loads of ``BlokManager`` and ``RegistryManager) *after* the ``coverage`` startup, thus giving you
-correct coverage results, in contrast with ``anyblok_nose`` which does
-not (but is more respectful of other ``nosetests`` options)
+loads of ``BlokManager`` and ``RegistryManager``) *after* the
+``coverage`` startup, thus giving you correct coverage results)
 
+.. note:: If you want to test several Bloks depending on each other, while
+          making sure the tests of the lower ones don't need the upper ones
+          being installed, and still maintain proper coverage results, you can
+          do it with several runs.
+
+          For an example of this, see `anyblok_wms_base/.travis.yml
+          <https://github.com/AnyBlok/anyblok_wms_base/blob/master/.travis.yml>`_
+
+.. _basedoc_anyblok_nose:
+
+Launching tests with ``anyblok_nose``
++++++++++++++++++++++++++++++++++++++
+Summary: use this if you want the full tests selection capabilities of
+nosetests, and don't care about coverage. This is a good fit for
+development and debug workflows.
+
+AnyBlok provides the ``anyblok_nose`` script right out of the
+box. It takes care of all needed AnyBlok initialization, and *only
+then* invokes the nose launcher.
+
+This is the most respectful way of nose internals, but ``coverage`` is
+blind with respect to any code imported or run during the Registry
+setup. You can use it with ``--failed``, cherry pick any specific test
+without worrying whether that'll trigger ``nose`` importing a
+declaration class before the Registry, etc.
+
+
+Synopsis::
+
+  anyblok_nose [ANYBLOK OPTIONS...] -- [NOSE ARGUMENTS...]
+
+Typical usage is with a ``configuration file <basedoc_conf_files>``
+(this example also demonstrate the usage of more nose options)::
+
+  anyblok_nose -c mytest.cfg -- workapp/employee_blok --with-doctest --failed --pdb
+
+.. _basedoc_conf_files:
 
 Configuration files
 -------------------
@@ -801,6 +914,8 @@ The logging configuration are also loaded, see `logging configuration file forma
     class=anyblok.logging.consoleFormatter
     format=%(database)s:%(levelname)s - %(message)s
     datefmt=
+
+.. _basedoc_conf_files_default:
 
 Default configuration files
 +++++++++++++++++++++++++++

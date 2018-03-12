@@ -480,3 +480,28 @@ anyblok.scripts module
 .. autofunction:: anyblok_nose
 
 .. autofunction:: anyblok2doc
+
+anyblok.tests.testcase module
+-----------------------------
+.. automodule:: anyblok.tests.testcase
+
+.. autoclass:: BlokTestCase
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: LogCapture
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoclass:: DBTestCase
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: TestCase
+    :members:
+    :undoc-members:
+    :show-inheritance:
