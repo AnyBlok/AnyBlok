@@ -80,6 +80,16 @@ class Model:
         query = query.filter(Field.model == model)
         query = query.filter(Field.name.notin_(m.loaded_columns))
         for model_ in query.all():
+            if model_.entity_type == 'Model.System.RelationShip':
+                if model_.remote:
+                    continue
+
+                RelationShip = cls.registry.System.RelationShip
+                Q = RelationShip.query()
+                Q = Q.filter(RelationShip.name == model_.remote_name)
+                Q = Q.filter(RelationShip.model == model_.remote_model)
+                Q.delete()
+
             model_.delete()
 
         # add or update new column
@@ -141,7 +151,7 @@ class Model:
             cls.name.notin_(cls.registry.loaded_namespaces.keys()))
         Field = cls.registry.System.Field
         for model_ in query.all():
-            Q = Field.query().filter(Field.name == model_.name)
+            Q = Field.query().filter(Field.model == model_.name)
             for field in Q.all():
                 field.delete()
 
