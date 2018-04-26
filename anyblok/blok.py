@@ -339,7 +339,7 @@ class Blok:
         res = importer.run(self.name)
         logger.info("Create %d entries, Update %d entries",
                     len(res['created_entries']), len(res['updated_entries']))
-        if res['error_found']:
+        if 'error_found' in res and res['error_found']:
             for error in res['error_found']:
                 logger.error(error)
         else:
