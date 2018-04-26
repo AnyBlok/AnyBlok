@@ -17,6 +17,8 @@ CHANGELOG
 ------
 
 * [FIX] fix remove field
+* [FIX] ``io`` formater model with external id. The error forbidden the 
+  none / empty value.
 
 0.17.2 (2018-02-27)
 -------------------

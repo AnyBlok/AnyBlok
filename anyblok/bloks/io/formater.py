@@ -25,7 +25,7 @@ class Formater:
         mapping = self.registry.IO.Mapping.get(model, value)
         if mapping is None:
             raise FormaterException(
-                "Unexisting maping key %r with model %r" % (value, model))
+                "Unexisting mapping key %r with model %r" % (value, model))
 
         return mapping
 
@@ -175,6 +175,9 @@ class Many2One(IO.Formater):
         return Model.from_primary_keys(**pks)
 
     def externalIdStr2value(self, value, model):
+        if not value:
+            return None
+
         return self._externalIdStr2value(value, model)
 
     def value2str(self, value, model):
@@ -214,8 +217,9 @@ class Many2Many(IO.Formater):
         return [Model.from_primary_keys(**x) for x in pks if x]
 
     def externalIdStr2value(self, values, model):
-        if not values:
-            return None
+        if not values or values == 'null':
+            return []
+
         values = loads(values)
         return [self._externalIdStr2value(value, model) for value in values]
 
