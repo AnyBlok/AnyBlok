@@ -19,6 +19,8 @@ CHANGELOG
 * [FIX] fix remove field
 * [FIX] ``io`` formater model with external id. The error forbidden the 
   none / empty value.
+* [FIX] option ``install_or_update_bloks``, if one blok is marked as 
+  **toupdate**, then this blok will be not marked as **toinstall**
 
 0.17.2 (2018-02-27)
 -------------------

@@ -113,12 +113,13 @@ def anyblok_updatedb():
     registry = anyblok.start('updatedb', loadwithoutmigration=True)
 
     installed_bloks = registry.System.Blok.list_by_state('installed')
+    toupdate_bloks = registry.System.Blok.list_by_state('toupdate')
     required_install_bloks = []
     required_update_bloks = []
     for blok in (Configuration.get('install_or_update_bloks') or []):
         if blok in installed_bloks:
                 required_update_bloks.append(blok)
-        else:
+        elif blok not in toupdate_bloks:
             required_install_bloks.append(blok)
 
     if Configuration.get('install_all_bloks'):
