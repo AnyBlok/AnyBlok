@@ -187,9 +187,10 @@ class SqlMixin:
         :type: list of the primary keys name
         """
         C = cls.registry.System.Column
-        model = cls.__registry_name__
+        models = [base.__registry_name__ for base in cls.__anyblok_bases__]
+        models.append(cls.__registry_name__)
         query = C.query()
-        query = query.filter(C.model == model)
+        query = query.filter(C.model.in_(models))
         query = query.filter(C.primary_key == true())
         return query.all().name
 
