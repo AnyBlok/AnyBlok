@@ -44,8 +44,12 @@ class Model:
     @listen('Model.System.Model', 'Update Model')
     def listener_update_model(cls, model):
         cls.registry.System.Cache.invalidate(model, '_fields_description')
+        cls.registry.System.Cache.invalidate(model, 'getFieldType')
+        cls.registry.System.Cache.invalidate(model, 'get_primary_keys')
         cls.registry.System.Cache.invalidate(
             model, 'find_remote_attribute_to_expire')
+        cls.registry.System.Cache.invalidate(
+            model, 'find_relationship')
         cls.registry.System.Cache.invalidate(
             model, 'get_hybrid_property_columns')
 
