@@ -78,6 +78,12 @@ class SqlMixin:
         return {}
 
     @classmethod
+    def get_all_registry_names(cls):
+        models = [base.__registry_name__ for base in cls.__anyblok_bases__]
+        models.insert(0, cls.__registry_name__)
+        return models
+
+    @classmethod
     def query(cls, *elements):
         """ Facility to do a SqlAlchemy query::
 
@@ -180,16 +186,15 @@ class SqlMixin:
         pks = self.get_primary_keys()
         return {x: getattr(self, x) for x in pks}
 
-    @classmethod
+    @classmethod_cache()
     def get_primary_keys(cls):
         """ return the name of the primary keys of the model
 
         :type: list of the primary keys name
         """
         C = cls.registry.System.Column
-        model = cls.__registry_name__
         query = C.query()
-        query = query.filter(C.model == model)
+        query = query.filter(C.model.in_(cls.get_all_registry_names()))
         query = query.filter(C.primary_key == true())
         return query.all().name
 
@@ -360,7 +365,7 @@ class SqlMixin:
 
         return result
 
-    @classmethod
+    @classmethod_cache()
     def getFieldType(cls, name):
         """Return the type of the column
 
@@ -373,12 +378,10 @@ class SqlMixin:
         :param name: name of the column
         :rtype: String, the name of the Type of column used
         """
-        models = [x.__registry_name__ for x in cls.__anyblok_bases__]
-        models.insert(0, cls.__registry_name__)
         Field = cls.registry.System.Field
         query = Field.query()
         query = query.filter(Field.name == name)
-        query = query.filter(Field.model.in_(models))
+        query = query.filter(Field.model.in_(cls.get_all_registry_names()))
         query = query.limit(1)
         return query.one().ftype
 

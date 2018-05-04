@@ -15,6 +15,7 @@ from sys import modules
 from os.path import dirname
 from logging import getLogger
 from os.path import join
+from datetime import datetime
 
 logger = getLogger(__name__)
 
@@ -336,10 +337,14 @@ class Blok:
 
         importer = Importer.insert(
             model=model, file_to_import=file_to_import, **kwargs)
+        started_at = datetime.now()
         res = importer.run(self.name)
-        logger.info("Create %d entries, Update %d entries",
-                    len(res['created_entries']), len(res['updated_entries']))
-        if res['error_found']:
+        stoped_at = datetime.now()
+        dt = stoped_at - started_at
+        logger.info("Create %d entries, Update %d entries (%d.%d sec)",
+                    len(res['created_entries']), len(res['updated_entries']),
+                    dt.seconds, dt.microseconds)
+        if 'error_found' in res and res['error_found']:
             for error in res['error_found']:
                 logger.error(error)
         else:

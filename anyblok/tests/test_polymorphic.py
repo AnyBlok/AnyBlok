@@ -396,3 +396,9 @@ class TestPolymorphic(DBTestCase):
             fd_engineer, ['engineer_name', 'id', 'name', 'type_entity'])
         self.assertEqual(
             fd_manager, ['id', 'manager_name', 'name', 'type_entity'])
+
+    def test_get_primary_keys_on_single_table(self):
+        registry = self.init_registry(single_table_poly)
+        employee_pks = registry.Employee.get_primary_keys()
+        engineer_pks = registry.Engineer.get_primary_keys()
+        self.assertEqual(employee_pks, engineer_pks)

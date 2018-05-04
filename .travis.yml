@@ -27,7 +27,6 @@ services:
 
 install:
   - pip install -U pip
-  - pip install --no-binary pycparser
   - pip install psycopg2
   - pip install sqlalchemy
   - pip install flake8

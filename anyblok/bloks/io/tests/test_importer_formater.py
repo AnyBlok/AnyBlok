@@ -181,6 +181,16 @@ class TestImporterFormater(BlokTestCase):
                                model="Model.System.Model")
         self.assertEqual(value, [model])
 
+    def test_one2many_external_ids_is_none_1(self):
+        value = self.get_value(dumps(None), "One2Many", external_id=True,
+                               model="Model.System.Model")
+        self.assertEqual(value, [])
+
+    def test_one2many_external_ids_is_none_2(self):
+        value = self.get_value(dumps([]), "One2Many", external_id=True,
+                               model="Model.System.Model")
+        self.assertEqual(value, [])
+
     def test_one2many_multi_value_external_ids(self):
         key1 = 'formater_mapping1'
         key2 = 'formater_mapping2'
@@ -209,6 +219,11 @@ class TestImporterFormater(BlokTestCase):
         value = self.get_value(key, "Many2One", external_id=True,
                                model="Model.System.Model")
         self.assertEqual(value, model)
+
+    def test_many2one_external_ids_with_none_value(self):
+        value = self.get_value(None, "Many2One", external_id=True,
+                               model="Model.System.Model")
+        self.assertIsNone(value)
 
     def test_one2one(self):
         pks = dict(name='Model.System.Model')

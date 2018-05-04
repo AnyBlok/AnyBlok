@@ -17,6 +17,13 @@ CHANGELOG
 ------
 
 * [FIX] fix remove field
+* [FIX] ``io`` formater model with external id. The error forbidden the 
+  none / empty value.
+* [FIX] option ``install_or_update_bloks``, if one blok is marked as 
+  **toupdate**, then this blok will be not marked as **toinstall**
+* [FIX] ``Blok.import_file`` have not raise if does not found 
+  **error_found** in the result of the import
+* [FIX] ``Model.get_primary_keys`` with polymorphism (single table)
 
 0.17.2 (2018-02-27)
 -------------------
