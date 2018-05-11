@@ -319,11 +319,6 @@ anyblok.column module
     :inherited-members:
     :members:
 
-.. autoclass:: SmallInteger
-    :show-inheritance:
-    :inherited-members:
-    :members:
-
 .. autoclass:: BigInteger
     :show-inheritance:
     :inherited-members:

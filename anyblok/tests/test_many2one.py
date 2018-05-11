@@ -11,17 +11,9 @@ from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
-from anyblok.column import (Integer,
-                            String,
-                            SmallInteger,
-                            BigInteger,
-                            Float,
-                            Decimal,
-                            Boolean,
-                            DateTime,
-                            Date,
-                            Time,
-                            Sequence)
+from anyblok.column import (
+    Integer, String, BigInteger, Float, Decimal, Boolean, DateTime, Date, Time,
+    Sequence)
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.engine.reflection import Inspector
@@ -227,9 +219,6 @@ class TestMany2One(DBTestCase):
 
     def test_autodetect_type_integer(self):
         self.check_autodetect_type(Integer)
-
-    def test_autodetect_type_small_integer(self):
-        self.check_autodetect_type(SmallInteger)
 
     def test_autodetect_type_big_integer(self):
         self.check_autodetect_type(BigInteger)

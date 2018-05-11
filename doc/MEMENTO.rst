@@ -446,7 +446,6 @@ List of the column type:
  * ``Integer``
  * ``Interval``: use datetime.timedelta
  * ``LargeBinary``
- * ``SmallInteger``
  * ``String``
  * ``Text``
  * ``Selection``

@@ -235,24 +235,6 @@ class Integer(Column):
     sqlalchemy_type = types.Integer
 
 
-class SmallInteger(Column):
-    """ Small integer column
-
-    ::
-
-        from anyblok.declarations import Declarations
-        from anyblok.column import SmallInteger
-
-
-        @Declarations.register(Declarations.Model)
-        class Test:
-
-            x = SmallInteger(default=1)
-
-    """
-    sqlalchemy_type = types.SmallInteger
-
-
 class BigInteger(Column):
     """ Big integer column
 

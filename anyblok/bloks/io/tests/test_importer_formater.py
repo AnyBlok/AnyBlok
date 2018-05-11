@@ -93,11 +93,6 @@ class TestImporterFormater(BlokTestCase):
         self.assertTrue(isinstance(value, str))
         self.assertEqual(value, "selection")
 
-    def test_small_interger(self):
-        value = self.get_value("10", "SmallInteger")
-        self.assertTrue(isinstance(value, int))
-        self.assertEqual(value, 10)
-
     def test_string(self):
         value = self.get_value("selection", "String")
         self.assertTrue(isinstance(value, str))

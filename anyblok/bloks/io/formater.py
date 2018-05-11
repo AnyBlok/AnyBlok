@@ -107,11 +107,6 @@ class Integer(IO.Formater):
 
 
 @register(IO.Formater)
-class SmallInteger(IO.Formater.Integer):
-    pass
-
-
-@register(IO.Formater)
 class BigInteger(IO.Formater.Integer):
     pass
 

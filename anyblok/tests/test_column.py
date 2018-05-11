@@ -11,9 +11,9 @@ from sqlalchemy.exc import StatementError
 from anyblok import Declarations
 from anyblok.field import FieldException
 from anyblok.column import (
-    Column, Boolean, Json, String, BigInteger, SmallInteger, Text, Selection,
-    Date, DateTime, Time, Interval, Decimal, Float, LargeBinary, Integer,
-    Sequence, Color, Password, UUID, URL)
+    Column, Boolean, Json, String, BigInteger, Text, Selection, Date, DateTime,
+    Time, Interval, Decimal, Float, LargeBinary, Integer, Sequence, Color,
+    Password, UUID, URL)
 from unittest import skipIf
 
 try:
@@ -120,11 +120,6 @@ class TestColumns(DBTestCase):
 
     def test_big_integer(self):
         registry = self.init_registry(simple_column, ColumnType=BigInteger)
-        test = registry.Test.insert(col=1)
-        self.assertEqual(test.col, 1)
-
-    def test_small_integer(self):
-        registry = self.init_registry(simple_column, ColumnType=SmallInteger)
         test = registry.Test.insert(col=1)
         self.assertEqual(test.col, 1)
 

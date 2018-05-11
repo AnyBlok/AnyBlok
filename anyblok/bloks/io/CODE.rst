@@ -127,11 +127,6 @@ API doc
     :show-inheritance:
     :noindex:
 
-.. autoanyblok-declaration:: SmallInteger
-    :members:
-    :show-inheritance:
-    :noindex:
-
 .. autoanyblok-declaration:: BigInteger
     :members:
     :show-inheritance:
