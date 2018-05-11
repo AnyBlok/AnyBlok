@@ -369,11 +369,6 @@ anyblok.column module
     :inherited-members:
     :members:
 
-.. autoclass:: uString
-    :show-inheritance:
-    :inherited-members:
-    :members:
-
 .. autoclass:: Text
     :show-inheritance:
     :inherited-members:

@@ -17,7 +17,6 @@ from anyblok.column import (Integer,
                             BigInteger,
                             Float,
                             Decimal,
-                            uString,
                             Boolean,
                             DateTime,
                             Date,
@@ -243,9 +242,6 @@ class TestMany2One(DBTestCase):
 
     def test_autodetect_type_string(self):
         self.check_autodetect_type(String)
-
-    def test_autodetect_type_ustring(self):
-        self.check_autodetect_type(uString)
 
     def test_autodetect_type_boolean(self):
         self.check_autodetect_type(Boolean)

@@ -581,53 +581,6 @@ class Password(Column):
         return res
 
 
-class uStringType(types.TypeDecorator):
-
-    impl = types.Unicode
-
-    def process_bind_param(self, value, engine):
-        if value is False:
-            value = ''
-
-        return value
-
-    def process_result_value(self, value, dialect):
-        return value
-
-
-class uString(Column):
-    """ Unicode column
-
-    ::
-
-        from anyblok.declarations import Declarations
-        from anyblok.column import uString
-
-
-        @Declarations.register(Declarations.Model)
-        class Test:
-
-            x = uString(de", default=u'test')
-
-    """
-    def __init__(self, *args, **kwargs):
-        size = 64
-        if 'size' in kwargs:
-            size = kwargs.pop('size')
-            self.size = size
-
-        if 'type_' in kwargs:
-            del kwargs['type_']
-
-        self.sqlalchemy_type = uStringType(size)
-        super(uString, self).__init__(*args, **kwargs)
-
-    def autodoc_get_properties(self):
-        res = super(uString, self).autodoc_get_properties()
-        res['size'] = self.size
-        return res
-
-
 class TextType(types.TypeDecorator):
 
     impl = types.Text
@@ -658,20 +611,6 @@ class Text(Column):
 
     """
     sqlalchemy_type = TextType
-
-
-class UnicodeTextType(types.TypeDecorator):
-
-    impl = types.UnicodeText
-
-    def process_bind_param(self, value, engine):
-        if value is False:
-            value = ''
-
-        return value
-
-    def process_result_value(self, value, dialect):
-        return value
 
 
 class StrSelection(str):

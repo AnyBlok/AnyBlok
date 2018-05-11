@@ -10,11 +10,10 @@ from sqlalchemy import Integer as SA_Integer, String as SA_String
 from sqlalchemy.exc import StatementError
 from anyblok import Declarations
 from anyblok.field import FieldException
-from anyblok.column import (Column, Boolean, Json, String, BigInteger,
-                            SmallInteger, uString, Text, Selection,
-                            Date, DateTime, Time, Interval, Decimal, Float,
-                            LargeBinary, Integer, Sequence, Color, Password,
-                            UUID, URL)
+from anyblok.column import (
+    Column, Boolean, Json, String, BigInteger, SmallInteger, Text, Selection,
+    Date, DateTime, Time, Interval, Decimal, Float, LargeBinary, Integer,
+    Sequence, Color, Password, UUID, URL)
 from unittest import skipIf
 
 try:
@@ -254,42 +253,6 @@ class TestColumns(DBTestCase):
 
     def test_text_query_False(self):
         registry = self.init_registry(simple_column, ColumnType=Text)
-        test = registry.Test.insert()
-        self.registry.Test.query().filter_by(id=test.id).update({'col': False})
-        self.assertEqual(test.col, False)
-        self.registry.expire(test, ['col'])
-        self.assertEqual(test.col, '')
-
-    def test_ustring(self):
-        registry = self.init_registry(simple_column, ColumnType=uString)
-        test = registry.Test.insert(col='col')
-        self.assertEqual(test.col, 'col')
-
-    def test_ustring_with_size(self):
-        registry = self.init_registry(
-            simple_column, ColumnType=uString, size=100)
-        test = registry.Test.insert(col='col')
-        self.assertEqual(test.col, 'col')
-
-    def test_ustring_with_False(self):
-        registry = self.init_registry(simple_column, ColumnType=uString)
-        test = registry.Test.insert(col=False)
-        self.assertEqual(test.col, False)
-        self.registry.flush()
-        self.registry.expire(test, ['col'])
-        self.assertEqual(test.col, '')
-
-    def test_ustring_set_False(self):
-        registry = self.init_registry(simple_column, ColumnType=uString)
-        test = registry.Test.insert()
-        test.col = False
-        self.assertEqual(test.col, False)
-        self.registry.flush()
-        self.registry.expire(test, ['col'])
-        self.assertEqual(test.col, '')
-
-    def test_ustring_query_False(self):
-        registry = self.init_registry(simple_column, ColumnType=uString)
         test = registry.Test.insert()
         self.registry.Test.query().filter_by(id=test.id).update({'col': False})
         self.assertEqual(test.col, False)

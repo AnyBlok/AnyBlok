@@ -449,7 +449,6 @@ List of the column type:
  * ``SmallInteger``
  * ``String``
  * ``Text``
- * ``uString``
  * ``Selection``
  * ``Json``
  * ``Sequence``
@@ -522,7 +521,7 @@ All the columns have the following optional parameters:
 |                |                                                            |
 +----------------+------------------------------------------------------------+
 
-Other attribute for ``String`` and ``uString``:
+Other attribute for ``String``:
 
 +-------------+---------------------------------------------------------------+
 | Param       | Description                                                   |

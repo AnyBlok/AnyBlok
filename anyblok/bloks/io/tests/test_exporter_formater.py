@@ -83,10 +83,6 @@ class TestExporterFormater(BlokTestCase):
         value = self.get_value("selection", "Text")
         self.assertEqual(value, "selection")
 
-    def test_ustring(self):
-        value = self.get_value("selection", "uString")
-        self.assertEqual(value, "selection")
-
     def test_many2many(self):
         pks = dict(name='Model.System.Model')
         model = self.registry.System.Model.from_primary_keys(**pks)

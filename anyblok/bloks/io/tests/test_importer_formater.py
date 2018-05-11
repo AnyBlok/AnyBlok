@@ -108,11 +108,6 @@ class TestImporterFormater(BlokTestCase):
         self.assertTrue(isinstance(value, str))
         self.assertEqual(value, "selection")
 
-    def test_ustring(self):
-        value = self.get_value("selection", "uString")
-        self.assertTrue(isinstance(value, str))
-        self.assertEqual(value, "selection")
-
     def test_many2many(self):
         pks = dict(name='Model.System.Model')
         model = self.registry.System.Model.from_primary_keys(**pks)
