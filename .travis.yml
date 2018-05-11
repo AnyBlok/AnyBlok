@@ -27,6 +27,7 @@ services:
 
 install:
   - pip install -U pip
+  - pip install wheel
   - pip install psycopg2
   - pip install sqlalchemy
   - pip install flake8
