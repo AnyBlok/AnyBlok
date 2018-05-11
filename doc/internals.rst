@@ -379,11 +379,6 @@ anyblok.column module
     :inherited-members:
     :members:
 
-.. autoclass:: uText
-    :show-inheritance:
-    :inherited-members:
-    :members:
-
 .. autoclass:: StrSelection
     :members:
 

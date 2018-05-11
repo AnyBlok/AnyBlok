@@ -450,7 +450,6 @@ List of the column type:
  * ``String``
  * ``Text``
  * ``uString``
- * ``uText``
  * ``Selection``
  * ``Json``
  * ``Sequence``

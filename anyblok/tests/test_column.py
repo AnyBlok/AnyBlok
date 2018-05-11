@@ -11,7 +11,7 @@ from sqlalchemy.exc import StatementError
 from anyblok import Declarations
 from anyblok.field import FieldException
 from anyblok.column import (Column, Boolean, Json, String, BigInteger,
-                            SmallInteger, uString, Text, uText, Selection,
+                            SmallInteger, uString, Text, Selection,
                             Date, DateTime, Time, Interval, Decimal, Float,
                             LargeBinary, Integer, Sequence, Color, Password,
                             UUID, URL)
@@ -290,36 +290,6 @@ class TestColumns(DBTestCase):
 
     def test_ustring_query_False(self):
         registry = self.init_registry(simple_column, ColumnType=uString)
-        test = registry.Test.insert()
-        self.registry.Test.query().filter_by(id=test.id).update({'col': False})
-        self.assertEqual(test.col, False)
-        self.registry.expire(test, ['col'])
-        self.assertEqual(test.col, '')
-
-    def test_utext(self):
-        registry = self.init_registry(simple_column, ColumnType=uText)
-        test = registry.Test.insert(col='col')
-        self.assertEqual(test.col, 'col')
-
-    def test_utext_with_False(self):
-        registry = self.init_registry(simple_column, ColumnType=uText)
-        test = registry.Test.insert(col=False)
-        self.assertEqual(test.col, False)
-        self.registry.flush()
-        self.registry.expire(test, ['col'])
-        self.assertEqual(test.col, '')
-
-    def test_utext_set_False(self):
-        registry = self.init_registry(simple_column, ColumnType=uText)
-        test = registry.Test.insert()
-        test.col = False
-        self.assertEqual(test.col, False)
-        self.registry.flush()
-        self.registry.expire(test, ['col'])
-        self.assertEqual(test.col, '')
-
-    def test_utext_query_False(self):
-        registry = self.init_registry(simple_column, ColumnType=uText)
         test = registry.Test.insert()
         self.registry.Test.query().filter_by(id=test.id).update({'col': False})
         self.assertEqual(test.col, False)

@@ -674,24 +674,6 @@ class UnicodeTextType(types.TypeDecorator):
         return value
 
 
-class uText(Column):
-    """ Unicode text column
-
-    ::
-
-        from anyblok.declarations import Declarations
-        from anyblok.column import uText
-
-
-        @Declarations.register(Declarations.Model)
-        class Test:
-
-            x = uText(default=u'test')
-
-    """
-    sqlalchemy_type = UnicodeTextType
-
-
 class StrSelection(str):
     """ Class representing the data of one column Selection """
     selections = {}
