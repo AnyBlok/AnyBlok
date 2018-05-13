@@ -78,16 +78,20 @@ class Sequence:
         seq = SQLASequence(cls._cls_seq_name)
         seq.create(cls.registry.bind)
 
-        if hasattr(cls.registry, '_need_sequence_to_create_if_not_exist'):
-            if cls.registry._need_sequence_to_create_if_not_exist:
-                for vals in cls.registry._need_sequence_to_create_if_not_exist:
-                    if 'formater' in vals and vals['formater'] is None:
-                        del vals['formater']
+        to_create = getattr(cls.registry,
+                            '_need_sequence_to_create_if_not_exist', ())
+        if to_create is None:
+            return
 
-                    if cls.query().filter(cls.code == vals['code']).count():
-                        continue
+        for vals in to_create:
+            if cls.query().filter(cls.code == vals['code']).count():
+                continue
 
-                    cls.insert(**vals)
+            formatter = vals.get('formater')
+            if formatter is None:
+                del vals['formater']
+
+            cls.insert(**vals)
 
     @classmethod
     def create_sequence(cls, values):
@@ -96,18 +100,17 @@ class Sequence:
         :return: suitable field values for insertion of the Model instance
         :rtype: dict
         """
-        if 'seq_name' in values:
-            seq_name = values['seq_name']
-        else:
+        seq_name = values.get('seq_name')
+        if seq_name is None:
             seq_id = cls.registry.execute(SQLASequence(cls._cls_seq_name))
             seq_name = '%s_%d' % (cls.__tablename__, seq_id)
             values['seq_name'] = seq_name
-        if 'number' in values:
-            seq = SQLASequence(seq_name, values['number'])
-        else:
-            values['number'] = 0
-            seq = SQLASequence(seq_name)
 
+        number = values.setdefault('number', 0)
+        if number:
+            seq = SQLASequence(seq_name, number)
+        else:
+            seq = SQLASequence(seq_name)
         seq.create(cls.registry.bind)
         return values
 
@@ -140,10 +143,7 @@ class Sequence:
                  or ``None`` if there's no match.
         """
         filters = [getattr(cls, k) == v for k, v in crit.items()]
-        query = cls.query().filter(*filters)
-        # TODO PERF: no need to query twice
-        if query.count():
-            seq = query.first()
-            return seq.nextval()
-
-        return None
+        seq = cls.query().filter(*filters).first()
+        if seq is None:
+            return None
+        return seq.nextval()
