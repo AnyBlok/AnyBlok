@@ -625,13 +625,11 @@ class Configuration:
     def parse_configfile(cls, configfile, required):
         cur_cwd = os.getcwd()
         configfile = os.path.abspath(configfile)
-        print('Load config file %r' % configfile)
+        print('Loading config file %r' % configfile)
         if not isfile(configfile):
             if required:
-                raise ConfigurationException((
-                    "No such file : %r, for anyblok configuration file specify "
-                    "in the command line."
-                ) % configfile)
+                raise ConfigurationException(
+                    "No such file or not a regular file: %r " % configfile)
 
             return
 

@@ -119,11 +119,13 @@ class RegistryManager:
         EnvironmentManager.set('db_name', db_name)
         if db_name in cls.registries:
             if loadwithoutmigration:
-                logger.warning("loadwithoutmigration can not be used because "
-                               "the registry for %r is already load" % db_name)
+                logger.warning(
+                    "Ignoring loadwithoutmigration=True for database %r "
+                    "because its registry is already loaded", db_name)
             return cls.registries[db_name]
-
         _Registry = Configuration.get('Registry', Registry)
+        logger.debug("Loading registry for database %r with class %r",
+                     db_name, _Registry)
         registry = _Registry(
             db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
         cls.registries[db_name] = registry

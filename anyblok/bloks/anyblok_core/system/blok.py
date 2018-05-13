@@ -227,9 +227,16 @@ class Blok:
     def load(self):
         """ Method to load the blok when the registry is completly loaded
         """
-        if self.name in BlokManager.bloks:
-            logger.info("Load the blok %r" % self.name)
-            BlokManager.bloks[self.name](self.registry).load()
+        name = self.name
+        blok_cls = BlokManager.get(name)
+        if blok_cls is None:
+            logger.warning("load(): class of Blok %r not found, "
+                           "Blok can't be loaded", name)
+            return
+
+        logger.info("Loading Blok %r", name)
+        blok_cls(self.registry).load()
+        logger.debug("Succesfully loaded Blok %r", name)
 
     @classmethod
     def load_all(cls):
