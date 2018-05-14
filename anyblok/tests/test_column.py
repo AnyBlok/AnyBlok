@@ -13,7 +13,7 @@ from anyblok.field import FieldException
 from anyblok.column import (
     Column, Boolean, Json, String, BigInteger, Text, Selection, Date, DateTime,
     Time, Interval, Decimal, Float, LargeBinary, Integer, Sequence, Color,
-    Password, UUID, URL)
+    Password, UUID, URL, PhoneNumber)
 from unittest import skipIf
 
 try:
@@ -39,6 +39,13 @@ try:
     has_furl = True
 except Exception:
     has_furl = False
+
+try:
+    import phonenumbers  # noqa
+    has_phonenumbers = True
+    from sqlalchemy_utils import PhoneNumber as PN
+except Exception:
+    has_phonenumbers = False
 
 
 Model = Declarations.Model
@@ -981,3 +988,44 @@ class TestColumns(DBTestCase):
         Test = registry.Test
         test = Test.query().filter(Test.col == f).one()
         self.assertEqual(test.col.url, f.url)
+
+    @skipIf(not has_phonenumbers, "phonenumbers is not installed")
+    def test_phonenumbers_at_insert(self):
+        registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
+        test = registry.Test.insert(col='+120012301')
+        self.assertEqual(test.col.national, '20012301')
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0],
+            '+120012301')
+
+    @skipIf(not has_phonenumbers, "phonenumbers is not installed")
+    def test_phonenumbers_at_setter(self):
+        registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
+        test = registry.Test.insert()
+        test.col = '+120012301'
+        self.assertEqual(test.col.national, '20012301')
+        registry.flush()
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0],
+            '+120012301')
+
+    @skipIf(not has_phonenumbers, "phonenumbers is not installed")
+    def test_phonenumbers_obj_at_insert(self):
+        registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
+        col = PN("+120012301", None)
+        test = registry.Test.insert(col=col)
+        self.assertEqual(test.col, col)
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0],
+            '+120012301')
+
+    @skipIf(not has_phonenumbers, "phonenumbers is not installed")
+    def test_phonenumbers_obj_at_setter(self):
+        registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
+        test = registry.Test.insert()
+        test.col = PN("+120012301", None)
+        self.assertEqual(test.col.national, '20012301')
+        registry.flush()
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0],
+            '+120012301')

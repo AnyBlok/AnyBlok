@@ -400,6 +400,11 @@ anyblok.column module
     :inherited-members:
     :members:
 
+.. autoclass:: PhoneNumber
+    :show-inheritance:
+    :inherited-members:
+    :members:
+
 anyblok.relationship module
 ---------------------------
 

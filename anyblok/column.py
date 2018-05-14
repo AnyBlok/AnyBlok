@@ -14,6 +14,7 @@ from sqlalchemy_utils.types.encrypted.encrypted_type import EncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
 from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy_utils.types.url import URLType
+from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from datetime import datetime, date
 from dateutil.parser import parse
 from inspect import ismethod
@@ -23,6 +24,8 @@ import pytz
 import decimal
 from logging import getLogger
 from hashlib import md5
+
+
 logger = getLogger(__name__)
 
 
@@ -944,5 +947,38 @@ class URL(Column):
         if value is not None:
             if isinstance(value, str):
                 value = furl(value)
+
+        return value
+
+
+class PhoneNumber(Column):
+    """ String column
+
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import PhoneNumber
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = PhoneNumber(default='+120012301')
+
+
+    .. note:: ``phonenumbers`` >= **8.9.5** distribution is required
+
+    """
+    def __init__(self, region='FR', max_length=20, *args, **kwargs):
+        if 'type_' in kwargs:
+            del kwargs['type_']
+
+        self.sqlalchemy_type = PhoneNumberType(
+            region=region, max_length=max_length)
+        super(PhoneNumber, self).__init__(*args, **kwargs)
+
+    def setter_format_value(self, value):
+        if isinstance(value, str):
+            value = self.sqlalchemy_type.python_type(value)
 
         return value

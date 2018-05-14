@@ -455,6 +455,7 @@ List of the column type:
  * ``Password``: use sqlalchemy_utils.types.password.Password
  * ``UUID``: use uuid
  * ``URL``: use furl.furl
+ * ``PhoneNumber``: use phonenumbers
 
 All the columns have the following optional parameters:
 
@@ -609,6 +610,16 @@ Other attribute for ``DateTime``:
 |                      |         //                                           |
 |                      |         foo = DateTime(default_timezone='Asia/Tokyo')|
 |                      |                                                      |
++----------------------+------------------------------------------------------+
+
+Other attribute for ``PhoneNumber``:
+
++----------------------+------------------------------------------------------+
+| Param                | Description                                          |
++======================+======================================================+
+| ``region``           | Default region to save phone number (FR)             |
++----------------------+------------------------------------------------------+
+| ``max_length``       | max size of the column in the database (20)          |
 +----------------------+------------------------------------------------------+
 
 RelationShip
