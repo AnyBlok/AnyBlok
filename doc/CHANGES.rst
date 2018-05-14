@@ -26,6 +26,7 @@ CHANGELOG
 * [FIX] ``Model.get_primary_keys`` with polymorphism (single table)
 * Remove ``column.uText``, ``column.uString``, ``column.SmallInteger``
 * [ADD] ``column.PhoneNumber``
+* [ADD] ``column.Email``
 
 0.17.2 (2018-02-27)
 -------------------

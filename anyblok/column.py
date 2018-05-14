@@ -15,6 +15,7 @@ from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
 from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy_utils.types.url import URLType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
+from sqlalchemy_utils.types.email import EmailType
 from datetime import datetime, date
 from dateutil.parser import parse
 from inspect import ismethod
@@ -899,9 +900,14 @@ class Color(Column):
 
         return value
 
+    def autodoc_get_properties(self):
+        res = super(Color, self).autodoc_get_properties()
+        res['size'] = self.max_length
+        return res
+
 
 class UUID(Column):
-    """ Sequence column
+    """ UUID column
 
     ::
 
@@ -917,7 +923,7 @@ class UUID(Column):
     def __init__(self, *args, **kwargs):
         uuid_kwargs = {}
         for kwarg in ('binary', 'native'):
-            if kwarg in kwargs:
+            if kwarg in kwargs and kwargs[kwarg]:
                 uuid_kwargs[kwarg] = kwargs.pop(kwarg)
 
         self.sqlalchemy_type = UUIDType(**uuid_kwargs)
@@ -925,7 +931,7 @@ class UUID(Column):
 
 
 class URL(Column):
-    """ Integer column
+    """ URL column
 
     ::
 
@@ -952,7 +958,7 @@ class URL(Column):
 
 
 class PhoneNumber(Column):
-    """ String column
+    """ PhoneNumber column
 
     ::
 
@@ -970,6 +976,8 @@ class PhoneNumber(Column):
 
     """
     def __init__(self, region='FR', max_length=20, *args, **kwargs):
+        self.region = region
+        self.max_length = max_length
         if 'type_' in kwargs:
             del kwargs['type_']
 
@@ -981,4 +989,32 @@ class PhoneNumber(Column):
         if isinstance(value, str):
             value = self.sqlalchemy_type.python_type(value)
 
+        return value
+
+    def autodoc_get_properties(self):
+        res = super(Color, self).autodoc_get_properties()
+        res['region'] = self.region
+        res['max_length'] = self.max_length
+        return res
+
+
+class Email(Column):
+    """ Email column
+
+    ::
+
+        from anyblok.column import Email
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = Email()
+
+    """
+    sqlalchemy_type = EmailType
+
+    def setter_format_value(self, value):
+        if value is not None:
+            return value.lower()
         return value

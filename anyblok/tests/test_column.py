@@ -13,7 +13,7 @@ from anyblok.field import FieldException
 from anyblok.column import (
     Column, Boolean, Json, String, BigInteger, Text, Selection, Date, DateTime,
     Time, Interval, Decimal, Float, LargeBinary, Integer, Sequence, Color,
-    Password, UUID, URL, PhoneNumber)
+    Password, UUID, URL, PhoneNumber, Email)
 from unittest import skipIf
 
 try:
@@ -1029,3 +1029,20 @@ class TestColumns(DBTestCase):
         self.assertEqual(
             registry.execute('Select col from test').fetchone()[0],
             '+120012301')
+
+    def test_email_at_insert(self):
+        registry = self.init_registry(simple_column, ColumnType=Email)
+        test = registry.Test.insert(col='John.Smith@foo.com')
+        self.assertEqual(test.col, 'john.smith@foo.com')
+        self.assertEqual(
+            registry.Test.query().filter_by(col='John.Smith@foo.com').count(),
+            1)
+
+    def test_email_at_setter(self):
+        registry = self.init_registry(simple_column, ColumnType=Email)
+        test = registry.Test.insert()
+        test.col = 'John.Smith@foo.com'
+        self.assertEqual(test.col, 'john.smith@foo.com')
+        self.assertEqual(
+            registry.Test.query().filter_by(col='John.Smith@foo.com').count(),
+            1)

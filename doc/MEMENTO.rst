@@ -455,7 +455,8 @@ List of the column type:
  * ``Password``: use sqlalchemy_utils.types.password.Password
  * ``UUID``: use uuid
  * ``URL``: use furl.furl
- * ``PhoneNumber``: use phonenumbers
+ * ``PhoneNumber``: use sqlalchemy_utils.PhoneNumber
+ * ``Email``
 
 All the columns have the following optional parameters:
 

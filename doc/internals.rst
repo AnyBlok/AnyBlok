@@ -405,6 +405,11 @@ anyblok.column module
     :inherited-members:
     :members:
 
+.. autoclass:: Email
+    :show-inheritance:
+    :inherited-members:
+    :members:
+
 anyblok.relationship module
 ---------------------------
 
