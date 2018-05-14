@@ -922,12 +922,21 @@ class UUID(Column):
     """
     def __init__(self, *args, **kwargs):
         uuid_kwargs = {}
+        self.binary = None
+        self.native = None
         for kwarg in ('binary', 'native'):
-            if kwarg in kwargs and kwargs[kwarg]:
+            if kwarg in kwargs:
                 uuid_kwargs[kwarg] = kwargs.pop(kwarg)
+                setattr(self, kwarg, uuid_kwargs[kwarg])
 
         self.sqlalchemy_type = UUIDType(**uuid_kwargs)
         super(UUID, self).__init__(*args, **kwargs)
+
+    def autodoc_get_properties(self):
+        res = super(Color, self).autodoc_get_properties()
+        res['binary'] = self.binary
+        res['native'] = self.native
+        return res
 
 
 class URL(Column):
