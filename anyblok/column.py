@@ -31,10 +31,13 @@ from hashlib import md5
 
 
 pycountry = None
+python_pycountry_type = None
 try:
     import pycountry
     if not pycountry.countries._is_loaded:
         pycountry.countries._load()
+
+    python_pycountry_type = pycountry.countries.data_class
 except ImportError:
     pass
 
@@ -1045,7 +1048,7 @@ class CountryType(types.TypeDecorator, ScalarCoercible):
     """ Generic type for Column Country """
 
     impl = types.Unicode(3)
-    python_type = pycountry.countries.data_class
+    python_type = python_pycountry_type
 
     def __init__(self, *args, **kwargs):
         if pycountry is None:
