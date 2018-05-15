@@ -1,6 +1,8 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -13,7 +15,7 @@ from anyblok.field import FieldException
 from anyblok.column import (
     Column, Boolean, Json, String, BigInteger, Text, Selection, Date, DateTime,
     Time, Interval, Decimal, Float, LargeBinary, Integer, Sequence, Color,
-    Password, UUID, URL, PhoneNumber, Email)
+    Password, UUID, URL, PhoneNumber, Email, Country)
 from unittest import skipIf
 
 try:
@@ -40,12 +42,19 @@ try:
 except Exception:
     has_furl = False
 
+
 try:
     import phonenumbers  # noqa
     has_phonenumbers = True
-    from sqlalchemy_utils import PhoneNumber as PN
 except Exception:
     has_phonenumbers = False
+
+try:
+    import pycountry  # noqa
+    has_pycountry = True
+    from sqlalchemy_utils import PhoneNumber as PN
+except Exception:
+    has_pycountry = False
 
 
 Model = Declarations.Model
@@ -1046,3 +1055,94 @@ class TestColumns(DBTestCase):
         self.assertEqual(
             registry.Test.query().filter_by(col='John.Smith@foo.com').count(),
             1)
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_at_insert(self):
+        registry = self.init_registry(simple_column, ColumnType=Country)
+        test = registry.Test.insert(col='FR')
+        self.assertIs(test.col, pycountry.countries.get(alpha_2='FR'))
+        self.assertEqual(test.col.name, 'France')
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0], 'FRA')
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_at_insert_with_alpha_3(self):
+        registry = self.init_registry(
+            simple_column, ColumnType=Country, mode='alpha_3')
+        test = registry.Test.insert(col='FRA')
+        self.assertIs(test.col, pycountry.countries.get(alpha_2='FR'))
+        self.assertEqual(test.col.name, 'France')
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0], 'FRA')
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_at_insert_with_object(self):
+        registry = self.init_registry(simple_column, ColumnType=Country)
+        fr = pycountry.countries.get(alpha_2='FR')
+        test = registry.Test.insert(col=fr)
+        self.assertIs(test.col, fr)
+        self.assertEqual(test.col.name, 'France')
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0], 'FRA')
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_at_update(self):
+        registry = self.init_registry(simple_column, ColumnType=Country)
+        test = registry.Test.insert()
+        test.col = 'FR'
+        registry.flush()
+        self.assertIs(test.col, pycountry.countries.get(alpha_2='FR'))
+        self.assertEqual(test.col.name, 'France')
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0], 'FRA')
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_at_update_with_alpha_3(self):
+        registry = self.init_registry(
+            simple_column, ColumnType=Country, mode='alpha_3')
+        test = registry.Test.insert()
+        test.col = 'FRA'
+        registry.flush()
+        self.assertIs(test.col, pycountry.countries.get(alpha_2='FR'))
+        self.assertEqual(test.col.name, 'France')
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0], 'FRA')
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_at_update_with_object(self):
+        registry = self.init_registry(simple_column, ColumnType=Country)
+        fr = pycountry.countries.get(alpha_2='FR')
+        test = registry.Test.insert()
+        test.col = fr
+        registry.flush()
+        self.assertIs(test.col, fr)
+        self.assertEqual(test.col.name, 'France')
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0], 'FRA')
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_query_is_with_object(self):
+        registry = self.init_registry(simple_column, ColumnType=Country)
+        Test = registry.Test
+        fr = pycountry.countries.get(alpha_2='FR')
+        Test.insert(col='FR')
+        self.assertEqual(Test.query().filter(Test.col == fr).count(), 1)
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_query_is_with_alpha_3(self):
+        registry = self.init_registry(simple_column, ColumnType=Country)
+        Test = registry.Test
+        Test.insert(col='FR')
+        self.assertEqual(Test.query().filter(Test.col == 'FRA').count(), 1)
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_query_insert_wrong(self):
+        registry = self.init_registry(simple_column, ColumnType=Country)
+        with self.assertRaises(LookupError):
+            registry.Test.insert(col='WG')
+
+    @skipIf(not has_pycountry, "pycountry is not installed")
+    def test_pycoundtry_query_insert_by_wrong_query(self):
+        registry = self.init_registry(simple_column, ColumnType=Country)
+        with self.assertRaises(Exception):
+            registry.execute("insert into test (col) values ('WG2')")

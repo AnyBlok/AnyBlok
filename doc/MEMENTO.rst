@@ -457,6 +457,7 @@ List of the column type:
  * ``URL``: use furl.furl
  * ``PhoneNumber``: use sqlalchemy_utils.PhoneNumber
  * ``Email``
+ * ``Country``: use pycountry
 
 All the columns have the following optional parameters:
 

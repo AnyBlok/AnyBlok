@@ -27,6 +27,7 @@ CHANGELOG
 * Remove ``column.uText``, ``column.uString``, ``column.SmallInteger``
 * [ADD] ``column.PhoneNumber``
 * [ADD] ``column.Email``
+* [ADD] ``column.Country``
 
 0.17.2 (2018-02-27)
 -------------------

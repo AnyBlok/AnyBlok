@@ -1,6 +1,8 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -16,6 +18,7 @@ from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy_utils.types.url import URLType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils.types.email import EmailType
+from sqlalchemy_utils.types.scalar_coercible import ScalarCoercible
 from datetime import datetime, date
 from dateutil.parser import parse
 from inspect import ismethod
@@ -25,6 +28,15 @@ import pytz
 import decimal
 from logging import getLogger
 from hashlib import md5
+
+
+pycountry = None
+try:
+    import pycountry
+    if not pycountry.countries._is_loaded:
+        pycountry.countries._load()
+except ImportError:
+    pass
 
 
 logger = getLogger(__name__)
@@ -1027,3 +1039,88 @@ class Email(Column):
         if value is not None:
             return value.lower()
         return value
+
+
+class CountryType(types.TypeDecorator, ScalarCoercible):
+    """ Generic type for Column Country """
+
+    impl = types.Unicode(3)
+    python_type = pycountry.countries.data_class
+
+    def __init__(self, *args, **kwargs):
+        if pycountry is None:
+            raise FieldException(
+                "'pycountry' package is required for use 'CountryType'")
+
+        super(CountryType, self).__init__(*args, **kwargs)
+
+    def process_bind_param(self, value, dialect):
+        if value and isinstance(value, self.python_type):
+            return value.alpha_3
+
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value:
+            return pycountry.countries.get(alpha_3=value)
+
+        return value
+
+    def _coerce(self, value):
+        if value is not None and not isinstance(value, self.python_type):
+            return pycountry.countries.get(alpha_3=value)
+
+        return value
+
+
+class Country(Column):
+    """Country column.
+
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import Country
+        from pycountry import countries
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = Country(default=countries.get(alpha_2='FR'))
+
+    """
+    sqlalchemy_type = CountryType
+
+    def __init__(self, mode='alpha_2', *args, **kwargs):
+        self.mode = mode
+        super(Country, self).__init__(*args, **kwargs)
+
+    def setter_format_value(self, value):
+        if value and not isinstance(value, self.sqlalchemy_type.python_type):
+            try:
+                value = pycountry.countries.get(**{self.mode: value})
+            except LookupError:
+                value = pycountry.countries.lookup(value)
+
+        return value
+
+    def autodoc_get_properties(self):
+        res = super(Color, self).autodoc_get_properties()
+        res['mode'] = self.mode
+        return res
+
+    def update_properties(self, registry, namespace, fieldname, properties):
+        super(Country, self).update_properties(registry, namespace,
+                                               fieldname, properties)
+        self.fieldname = fieldname
+        properties['add_in_table_args'].append(self)
+
+    def update_table_args(self, Model):
+        """return check constraint to limit the value"""
+        enum = [country.alpha_3 for country in pycountry.countries]
+        constraint = """"%s" in ('%s')""" % (self.fieldname, "', '".join(enum))
+        enum.sort()
+        key = md5()
+        key.update(str(enum).encode('utf-8'))
+        name = self.fieldname + '_' + key.hexdigest() + '_types'
+        return [CheckConstraint(constraint, name=name)]

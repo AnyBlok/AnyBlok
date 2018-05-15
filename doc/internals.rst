@@ -410,6 +410,11 @@ anyblok.column module
     :inherited-members:
     :members:
 
+.. autoclass:: Country
+    :show-inheritance:
+    :inherited-members:
+    :members:
+
 anyblok.relationship module
 ---------------------------
 
