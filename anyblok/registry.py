@@ -107,25 +107,31 @@ class RegistryManager:
             unload_callback()
 
     @classmethod
-    def get(cls, db_name, loadwithoutmigration=False, **kwargs):
+    def get(cls, db_name, loadwithoutmigration=False, log_repeat=True,
+            **kwargs):
         """ Return an existing Registry
 
         If the Registry doesn't exist then the Registry are created and added
         to registries dict
 
         :param db_name: the name of the database linked to this registry
+        :param loadwithoutmigration: if True, registry is created without
+                                     any migration of the database
+        :param log_repeat: if False, when the registry is load whitout
+                           migration, the warning is not logged
         :rtype: ``Registry``
         """
         EnvironmentManager.set('db_name', db_name)
         if db_name in cls.registries:
-            if loadwithoutmigration:
+            if loadwithoutmigration and log_repeat:
                 logger.warning(
                     "Ignoring loadwithoutmigration=True for database %r "
                     "because its registry is already loaded", db_name)
             return cls.registries[db_name]
+
         _Registry = Configuration.get('Registry', Registry)
-        logger.debug("Loading registry for database %r with class %r",
-                     db_name, _Registry)
+        logger.info("Loading registry for database %r with class %r",
+                    db_name, _Registry)
         registry = _Registry(
             db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
         cls.registries[db_name] = registry

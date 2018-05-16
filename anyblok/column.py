@@ -1050,13 +1050,6 @@ class CountryType(types.TypeDecorator, ScalarCoercible):
     impl = types.Unicode(3)
     python_type = python_pycountry_type
 
-    def __init__(self, *args, **kwargs):
-        if pycountry is None:
-            raise FieldException(
-                "'pycountry' package is required for use 'CountryType'")
-
-        super(CountryType, self).__init__(*args, **kwargs)
-
     def process_bind_param(self, value, dialect):
         if value and isinstance(value, self.python_type):
             return value.alpha_3
@@ -1096,7 +1089,11 @@ class Country(Column):
 
     def __init__(self, mode='alpha_2', *args, **kwargs):
         self.mode = mode
-        self.choices = {getattr(country, mode): country.label
+        if pycountry is None:
+            raise FieldException(
+                "'pycountry' package is required for use 'CountryType'")
+
+        self.choices = {getattr(country, mode): country.name
                         for country in pycountry.countries}
         super(Country, self).__init__(*args, **kwargs)
 
