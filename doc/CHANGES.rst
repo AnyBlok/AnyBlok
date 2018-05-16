@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.17.3
-------
+0.17.3 (2018-05-16)
+-------------------
 
 * [FIX] fix remove field
 * [FIX] ``io`` formater model with external id. The error forbidden the 
