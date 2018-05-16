@@ -948,7 +948,7 @@ class UUID(Column):
         super(UUID, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
-        res = super(Color, self).autodoc_get_properties()
+        res = super(UUID, self).autodoc_get_properties()
         res['binary'] = self.binary
         res['native'] = self.native
         return res
@@ -1016,7 +1016,7 @@ class PhoneNumber(Column):
         return value
 
     def autodoc_get_properties(self):
-        res = super(Color, self).autodoc_get_properties()
+        res = super(PhoneNumber, self).autodoc_get_properties()
         res['region'] = self.region
         res['max_length'] = self.max_length
         return res
@@ -1107,7 +1107,7 @@ class Country(Column):
         return value
 
     def autodoc_get_properties(self):
-        res = super(Color, self).autodoc_get_properties()
+        res = super(Country, self).autodoc_get_properties()
         res['mode'] = self.mode
         res['choices'] = self.choices
         return res
