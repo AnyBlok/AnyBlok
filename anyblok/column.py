@@ -1096,6 +1096,8 @@ class Country(Column):
 
     def __init__(self, mode='alpha_2', *args, **kwargs):
         self.mode = mode
+        self.choices = {getattr(country, mode): country.label
+                        for country in pycountry.countries}
         super(Country, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
@@ -1110,6 +1112,7 @@ class Country(Column):
     def autodoc_get_properties(self):
         res = super(Color, self).autodoc_get_properties()
         res['mode'] = self.mode
+        res['choices'] = self.choices
         return res
 
     def update_properties(self, registry, namespace, fieldname, properties):
