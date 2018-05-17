@@ -87,41 +87,40 @@ class AnyBlokPlugin(Plugin):
             self.AnyBlokOptions = Arg2OptOptions(options)
 
     def load_registry(self):
-        if self.enabled and self.registryLoaded is False:
-            # Load the registry here not in configuration,
-            # because the configuration are not load in order of score
-            self.registryLoaded = True
-            load_init_function_from_entry_points(unittest=True)
-            Configuration.load_config_for_test()
-            Configuration.parse_options(self.AnyBlokOptions)
-            configuration_post_load()
-            BlokManager.load()
-            db_name = get_db_name()
+        if not self.enabled or self.registryLoaded:
+            return
 
-            registry = RegistryManager.get(db_name)
-            if registry:
-                installed_bloks = registry.System.Blok.list_by_state(
-                    "installed")
-                selected_bloks = return_list(
-                    Configuration.get('selected_bloks')) or installed_bloks
+        # Load the registry here not in configuration,
+        # because the configurations are not loaded in order of score
+        self.registryLoaded = True
+        load_init_function_from_entry_points(unittest=True)
+        Configuration.load_config_for_test()
+        Configuration.parse_options(self.AnyBlokOptions)
+        configuration_post_load()
+        BlokManager.load()
+        db_name = get_db_name()
 
-                unwanted_bloks = return_list(
-                    Configuration.get('unwanted_bloks')) or []
+        registry = RegistryManager.get(db_name)
+        if not registry:
+            return
 
-                authorized_bloks = set(
-                    b for b in BlokManager.list()
-                    if b in selected_bloks and b not in unwanted_bloks)
+        installed_bloks = registry.System.Blok.list_by_state("installed")
+        selected_bloks = return_list(
+            Configuration.get('selected_bloks')) or installed_bloks
 
-                self.authorized_blok_paths = set(map(BlokManager.getPath,
-                                                     authorized_bloks))
+        unwanted_bloks = return_list(Configuration.get('unwanted_bloks')) or []
 
-                test_dirs = self.authorized_blok_test_dirs = set()
-                for startpath in self.authorized_blok_paths:
-                    for root, dirs, _ in walk(startpath):
-                        if 'tests' in dirs:
-                            test_dirs.add(join(root, 'tests'))
+        self.authorized_blok_paths = set(
+            BlokManager.getPath(b) for b in BlokManager.list()
+            if b in selected_bloks and b not in unwanted_bloks)
 
-                registry.close()  # free the registry to force create it again
+        test_dirs = self.authorized_blok_test_dirs = set()
+        for startpath in self.authorized_blok_paths:
+            for root, dirs, _ in walk(startpath):
+                if 'tests' in dirs:
+                    test_dirs.add(join(root, 'tests'))
+
+        registry.close()  # free the registry to force create it again
 
     def file_from_authorized_blok_tests(self, file_path):
         return any(isindir(file_path, tp)
