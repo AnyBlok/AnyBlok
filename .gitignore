@@ -4,6 +4,8 @@ dist
 build
 doc/_build
 
+.coverage
+
 .installed.cfg
 *.egg-info
 *.swp
