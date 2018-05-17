@@ -51,8 +51,6 @@ class AnyBlokPlugin(Plugin):
 
     def __init__(self):
         super(AnyBlokPlugin, self).__init__()
-        self.authoried_bloks_test_files = []
-        self.bloks_path = []
         self.registryLoaded = False
         self.AnyBlokOptions = None
 
@@ -110,9 +108,6 @@ class AnyBlokPlugin(Plugin):
                 unwanted_bloks = return_list(
                     Configuration.get('unwanted_bloks')) or []
 
-                self.bloks_path = [BlokManager.getPath(x)
-                                   for x in BlokManager.ordered_bloks]
-
                 authorized_bloks = set(
                     b for b in BlokManager.list()
                     if b in selected_bloks and b not in unwanted_bloks)
@@ -120,48 +115,29 @@ class AnyBlokPlugin(Plugin):
                 self.authorized_blok_paths = set(map(BlokManager.getPath,
                                                      authorized_bloks))
 
-                self.authoried_bloks_test_files = []
-                for blok in installed_bloks:
-                    if blok not in selected_bloks or blok in unwanted_bloks:
-                        continue
-
-                    startpath = BlokManager.getPath(blok)
+                test_dirs = self.authorized_blok_test_dirs = set()
+                for startpath in self.authorized_blok_paths:
                     for root, dirs, _ in walk(startpath):
                         if 'tests' in dirs:
-                            self.authoried_bloks_test_files.append(
-                                join(root, 'tests'))
+                            test_dirs.add(join(root, 'tests'))
 
                 registry.close()  # free the registry to force create it again
 
-    def file_from_blok(self, file):
-        for blok_path in self.bloks_path:
-            if file.startswith(blok_path):
-                return True
-
-        return False
-
-    def file_from_authorized_bloks(self, file):
-        for testFile in self.authoried_bloks_test_files:
-            if file.startswith(testFile):
-                return True
-
-        return False
+    def file_from_authorized_blok_tests(self, file_path):
+        return any(isindir(file_path, tp)
+                   for tp in self.authorized_blok_test_dirs)
 
     def wantModule(self, module):
         self.load_registry()
         return True
 
-    def wantFile(self, file, package=None):
+    def wantFile(self, file_path, package=None):
         self.load_registry()
-        if self.enabled:
-            if file.endswith(".py"):
-                if self.file_from_blok(file):
-                    return self.file_from_authorized_bloks(file)
-
-        return None
+        return (self.enabled and
+                file_path.endswith(".py") and
+                self.file_from_authorized_blok_tests(file_path))
 
     def wantDirectory(self, path):
         self.load_registry()
-        if self.enabled:
-            return any(isindir(path, bp) for bp in self.authorized_blok_paths)
-        return False
+        return (self.enabled and
+                any(isindir(path, bp) for bp in self.authorized_blok_paths))
