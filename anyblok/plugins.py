@@ -14,7 +14,16 @@ from anyblok import (
 from anyblok.blok import BlokManager
 from anyblok.registry import RegistryManager, return_list
 from os.path import join
+from os.path import relpath
+from os.path import normpath
+from os import pardir
 from os import walk
+
+
+def isindir(path, dirpath):
+    # normpath simplifies stuff like a/../c but doesn't follow symlinks
+    # that's what we need. Nose will feed us absolute paths, btw
+    return not relpath(normpath(path), normpath(dirpath)).startswith(pardir)
 
 
 class Arg2OptOptions:
@@ -104,6 +113,13 @@ class AnyBlokPlugin(Plugin):
                 self.bloks_path = [BlokManager.getPath(x)
                                    for x in BlokManager.ordered_bloks]
 
+                authorized_bloks = set(
+                    b for b in BlokManager.list()
+                    if b in selected_bloks and b not in unwanted_bloks)
+
+                self.authorized_blok_paths = set(map(BlokManager.getPath,
+                                                     authorized_bloks))
+
                 self.authoried_bloks_test_files = []
                 for blok in installed_bloks:
                     if blok not in selected_bloks or blok in unwanted_bloks:
@@ -143,3 +159,9 @@ class AnyBlokPlugin(Plugin):
                     return self.file_from_authorized_bloks(file)
 
         return None
+
+    def wantDirectory(self, path):
+        self.load_registry()
+        if self.enabled:
+            return any(isindir(path, bp) for bp in self.authorized_blok_paths)
+        return False
