@@ -17,6 +17,9 @@ CHANGELOG
 -------------------------
 
 * Refactor of the nose's plugin by Georges Racinet
+* Add mixin **ConditionalForbidUpdate**, **ConditionalForbidDelete**,
+  **ConditionalReadOnly**, **BooleanForbidUpdate**, **BooleanForbidDelete**,
+  **BooleanReadOnly**, **StateReadOnly**
 
 0.17.4 (2018-05-16)
 -------------------

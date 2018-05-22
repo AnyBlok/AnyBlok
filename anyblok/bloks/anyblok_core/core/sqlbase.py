@@ -16,6 +16,7 @@ from sqlalchemy.orm import aliased, ColumnProperty
 from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
 from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
+from sqlalchemy.orm.session import object_state
 
 
 class uniquedict(dict):
@@ -401,6 +402,26 @@ def get_model_information(registry, registry_name):
 class SqlBase(SqlMixin):
     """ this class is inherited by all the SQL model
     """
+
+    def get_modified_fields(self):
+        """return the fields which have changed and their previous values"""
+        state = object_state(self)
+        modified_fields = {}
+        for attr in state.manager.attributes:
+            if not hasattr(attr.impl, 'get_history'):
+                continue
+
+            added, unmodified, deleted = attr.impl.get_history(
+                state, state.dict)
+
+            if added or deleted:
+                field = attr.key
+                if field.startswith(anyblok_column_prefix):
+                    field = field[len(anyblok_column_prefix):]
+
+                modified_fields[field] = deleted[0] if deleted else None
+
+        return modified_fields
 
     def update(self, **values):
         """ Hight livel method to update the session for the instance
