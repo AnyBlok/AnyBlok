@@ -14,7 +14,16 @@ from anyblok import (
 from anyblok.blok import BlokManager
 from anyblok.registry import RegistryManager, return_list
 from os.path import join
+from os.path import relpath
+from os.path import normpath
+from os import pardir
 from os import walk
+
+
+def isindir(path, dirpath):
+    # normpath simplifies stuff like a/../c but doesn't follow symlinks
+    # that's what we need. Nose will feed us absolute paths, btw
+    return not relpath(normpath(path), normpath(dirpath)).startswith(pardir)
 
 
 class Arg2OptOptions:
@@ -42,8 +51,6 @@ class AnyBlokPlugin(Plugin):
 
     def __init__(self):
         super(AnyBlokPlugin, self).__init__()
-        self.authoried_bloks_test_files = []
-        self.bloks_path = []
         self.registryLoaded = False
         self.AnyBlokOptions = None
 
@@ -80,66 +87,56 @@ class AnyBlokPlugin(Plugin):
             self.AnyBlokOptions = Arg2OptOptions(options)
 
     def load_registry(self):
-        if self.enabled and self.registryLoaded is False:
-            # Load the registry here not in configuration,
-            # because the configuration are not load in order of score
-            self.registryLoaded = True
-            load_init_function_from_entry_points(unittest=True)
-            Configuration.load_config_for_test()
-            Configuration.parse_options(self.AnyBlokOptions)
-            configuration_post_load()
-            BlokManager.load()
-            db_name = get_db_name()
+        if not self.enabled or self.registryLoaded:
+            return
 
-            registry = RegistryManager.get(db_name)
-            if registry:
-                installed_bloks = registry.System.Blok.list_by_state(
-                    "installed")
-                selected_bloks = return_list(
-                    Configuration.get('selected_bloks')) or installed_bloks
+        # Load the registry here not in configuration,
+        # because the configurations are not loaded in order of score
+        self.registryLoaded = True
+        load_init_function_from_entry_points(unittest=True)
+        Configuration.load_config_for_test()
+        Configuration.parse_options(self.AnyBlokOptions)
+        configuration_post_load()
+        BlokManager.load()
+        db_name = get_db_name()
 
-                unwanted_bloks = return_list(
-                    Configuration.get('unwanted_bloks')) or []
+        registry = RegistryManager.get(db_name)
+        if not registry:
+            return
 
-                self.bloks_path = [BlokManager.getPath(x)
-                                   for x in BlokManager.ordered_bloks]
+        installed_bloks = registry.System.Blok.list_by_state("installed")
+        selected_bloks = return_list(
+            Configuration.get('selected_bloks')) or installed_bloks
 
-                self.authoried_bloks_test_files = []
-                for blok in installed_bloks:
-                    if blok not in selected_bloks or blok in unwanted_bloks:
-                        continue
+        unwanted_bloks = return_list(Configuration.get('unwanted_bloks')) or []
 
-                    startpath = BlokManager.getPath(blok)
-                    for root, dirs, _ in walk(startpath):
-                        if 'tests' in dirs:
-                            self.authoried_bloks_test_files.append(
-                                join(root, 'tests'))
+        self.authorized_blok_paths = set(
+            BlokManager.getPath(b) for b in BlokManager.list()
+            if b in selected_bloks and b not in unwanted_bloks)
 
-                registry.close()  # free the registry to force create it again
+        test_dirs = self.authorized_blok_test_dirs = set()
+        for startpath in self.authorized_blok_paths:
+            for root, dirs, _ in walk(startpath):
+                if 'tests' in dirs:
+                    test_dirs.add(join(root, 'tests'))
 
-    def file_from_blok(self, file):
-        for blok_path in self.bloks_path:
-            if file.startswith(blok_path):
-                return True
+        registry.close()  # free the registry to force create it again
 
-        return False
-
-    def file_from_authorized_bloks(self, file):
-        for testFile in self.authoried_bloks_test_files:
-            if file.startswith(testFile):
-                return True
-
-        return False
+    def file_from_authorized_blok_tests(self, file_path):
+        return any(isindir(file_path, tp)
+                   for tp in self.authorized_blok_test_dirs)
 
     def wantModule(self, module):
         self.load_registry()
         return True
 
-    def wantFile(self, file, package=None):
+    def wantFile(self, file_path, package=None):
         self.load_registry()
-        if self.enabled:
-            if file.endswith(".py"):
-                if self.file_from_blok(file):
-                    return self.file_from_authorized_bloks(file)
+        return (self.enabled and
+                file_path.endswith(".py") and
+                self.file_from_authorized_blok_tests(file_path))
 
-        return None
+    def wantDirectory(self, path):
+        self.load_registry()
+        return (self.enabled and
+                any(isindir(path, bp) for bp in self.authorized_blok_paths))
