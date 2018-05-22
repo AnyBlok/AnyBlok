@@ -13,6 +13,11 @@
 CHANGELOG
 =========
 
+0.18.0 (not released yet)
+-------------------------
+
+* Refactor of the nose's plugin by Georges Racinet
+
 0.17.4 (2018-05-16)
 -------------------
 
