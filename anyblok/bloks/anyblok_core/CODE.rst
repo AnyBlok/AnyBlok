@@ -156,6 +156,34 @@ Mixins
     :members:
     :show-inheritance:
 
+.. autoanyblok-declaration:: ConditionalForbidUpdate
+    :members:
+    :show-inheritance:
+
+.. autoanyblok-declaration:: ConditionalForbidDelete
+    :members:
+    :show-inheritance:
+
+.. autoanyblok-declaration:: ConditionalReadOnly
+    :members:
+    :show-inheritance:
+
+.. autoanyblok-declaration:: BooleanForbidUpdate
+    :members:
+    :show-inheritance:
+
+.. autoanyblok-declaration:: BooleanForbidDelete
+    :members:
+    :show-inheritance:
+
+.. autoanyblok-declaration:: BooleanReadOnly
+    :members:
+    :show-inheritance:
+
+.. autoanyblok-declaration:: StateReadOnly
+    :members:
+    :show-inheritance:
+
 .. _blok_anyblok_core_exceptions:
 
 Exceptions

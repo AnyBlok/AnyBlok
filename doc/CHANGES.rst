@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.18.0 (not released yet)
--------------------------
+0.18.0 (2018-05-22)
+-------------------
 
 * Refactor of the nose's plugin by Georges Racinet
 * Add mixin **ConditionalForbidUpdate**, **ConditionalForbidDelete**,
