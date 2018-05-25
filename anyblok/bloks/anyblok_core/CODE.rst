@@ -142,7 +142,7 @@ Documentation Models
 Mixins
 ~~~~~~
 
-.. automodule:: anyblok.bloks.anyblok_core.mixins
+.. automodule:: anyblok.bloks.anyblok_core.mixins.readonly
 
 .. autoanyblok-declaration:: ForbidUpdate
     :members:
@@ -185,6 +185,12 @@ Mixins
     :show-inheritance:
 
 .. _blok_anyblok_core_exceptions:
+
+.. automodule:: anyblok.bloks.anyblok_core.mixins.workflow
+
+.. autoanyblok-declaration:: WorkFlow
+    :members:
+    :show-inheritance:
 
 Exceptions
 ~~~~~~~~~~

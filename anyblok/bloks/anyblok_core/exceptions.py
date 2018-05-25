@@ -34,3 +34,7 @@ class ForbidUpdateException(Exception):
 
 class ForbidDeleteException(Exception):
     """ Simple exception for Mixin.ForbiddenDelete """
+
+
+class WorkFlowException(Exception):
+    """ Simple exception for Mixin.ForbiddenDelete """
