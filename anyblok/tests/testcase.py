@@ -254,10 +254,19 @@ class DBTestCase(TestCase):
         :param kwargs: kwargs for the function
         :rtype: registry instance
         """
+        if bloks is None:
+            bloks = []
+
+        if isinstance(bloks, tuple):
+            bloks = list(bloks)
+
+        if 'anyblok-test' not in bloks:
+            bloks.append('anyblok-test')
+
         from copy import deepcopy
         loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
         if function is not None:
-            EnvironmentManager.set('current_blok', 'anyblok-core')
+            EnvironmentManager.set('current_blok', 'anyblok-test')
             try:
                 function(**kwargs)
             finally:

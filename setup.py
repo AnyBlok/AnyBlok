@@ -90,6 +90,7 @@ setup(
         ],
         'bloks': [
             'anyblok-core=anyblok.bloks.anyblok_core:AnyBlokCore',
+            'anyblok-test=anyblok.bloks.anyblok_test:AnyBlokTest',
             'model_authz='
             'anyblok.bloks.model_authz:ModelBasedAuthorizationBlok',
             'anyblok-io=anyblok.bloks.io:AnyBlokIO',
