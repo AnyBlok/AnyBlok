@@ -17,6 +17,8 @@ CHANGELOG
 ------
 
 * Remove All mixins, put them in another distribution **anyblok_mixins**
+* remove bloks **anyblok-io**, **anyblok-io-csv**, **anyblok-io-xml**, they
+  are put in another distribution **anyblok_io**
 
 0.18.0 (2018-05-22)
 -------------------

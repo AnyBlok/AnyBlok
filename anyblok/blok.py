@@ -46,7 +46,6 @@ class BlokManager:
     entry_points = None
     ordered_bloks = []
     auto_install = []
-    importers = {}
 
     @classmethod
     def list(cls):
@@ -224,34 +223,6 @@ class BlokManager:
         """
         blok = cls.get(blok)
         return dirname(modules[blok.__module__].__file__)
-
-    @classmethod
-    def add_importer(cls, key, cls_name):
-        """ Add a new importer
-
-        :param key: key of the importer
-        :param cls_name: name of the model to import
-        """
-        cls.importers[key] = cls_name
-
-    @classmethod
-    def has_importer(cls, key):
-        """ Check if an importer  """
-        return True if key in cls.importers else False
-
-    @classmethod
-    def get_importer(cls, key):
-        """ Get the importer class name
-
-        :param key: key of the importer
-        :rtype: name of the model to import
-        :exception: BlokManagerException
-        """
-        if not cls.has_importer(key):
-            raise BlokManagerException(
-                "No importer found for the key %r" % key)
-
-        return cls.importers[key]
 
 
 class Blok:

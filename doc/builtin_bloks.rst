@@ -37,47 +37,6 @@ Blok anyblok-core
 
 .. include:: ../anyblok/bloks/anyblok_core/CODE.rst
 
-.. _blok_io:
-
-Blok IO
--------
-
-.. automodule:: anyblok.bloks.io
-.. autoclass:: AnyBlokIO
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. include:: ../anyblok/bloks/io/README.rst
-.. include:: ../anyblok/bloks/io/CODE.rst
-
-.. _blok_io_csv:
-
-Blok IO CSV
------------
-
-.. automodule:: anyblok.bloks.io_csv
-.. autoclass:: AnyBlokIOCSV
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. include:: ../anyblok/bloks/io_csv/README.rst
-.. include:: ../anyblok/bloks/io_csv/CODE.rst
-
-.. _blok_io_xml:
-
-Blok IO XML
------------
-
-.. automodule:: anyblok.bloks.io_xml
-.. autoclass:: AnyBlokIOXML
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. include:: ../anyblok/bloks/io_xml/README.rst
-.. include:: ../anyblok/bloks/io_xml/CODE.rst
 
 .. _blok_model_authz:
 
@@ -92,3 +51,18 @@ Blok Model Authz
 
 .. include:: ../anyblok/bloks/model_authz/README.rst
 .. include:: ../anyblok/bloks/model_authz/CODE.rst
+
+.. _blok_anyblok_core:
+
+Blok anyblok-test
+-----------------
+
+.. automodule:: anyblok.bloks.anyblok_test
+.. autoclass:: AnyBlokTest
+    :show-inheritance:
+
+    .. autoattribute:: name
+    .. autoattribute:: version
+    .. autoattribute:: author
+    .. autoattribute:: autoinstall
+    .. autoattribute:: priority

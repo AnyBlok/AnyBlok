@@ -93,9 +93,6 @@ setup(
             'anyblok-test=anyblok.bloks.anyblok_test:AnyBlokTest',
             'model_authz='
             'anyblok.bloks.model_authz:ModelBasedAuthorizationBlok',
-            'anyblok-io=anyblok.bloks.io:AnyBlokIO',
-            'anyblok-io-csv=anyblok.bloks.io_csv:AnyBlokIOCSV',
-            'anyblok-io-xml=anyblok.bloks.io_xml:AnyBlokIOXML',
         ],
         'test_bloks': [
             'test-blok1=anyblok.test_bloks.test_blok1:TestBlok',
