@@ -113,5 +113,3 @@ class AnyBlokCore(Blok):
         reload(authorization)
         from . import documentation
         reload(documentation)
-        from . import mixins
-        reload(mixins)
