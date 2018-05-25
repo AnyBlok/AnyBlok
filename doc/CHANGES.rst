@@ -13,6 +13,11 @@
 CHANGELOG
 =========
 
+0.19.0
+------
+
+* Remove All mixins, put them in another distribution **anyblok_mixins**
+
 0.18.0 (2018-05-22)
 -------------------
 

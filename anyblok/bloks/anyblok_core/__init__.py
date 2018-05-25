@@ -102,7 +102,6 @@ class AnyBlokCore(Blok):
         from . import system  # noqa
         from . import authorization  # noqa
         from . import documentation  # noqa
-        from . import mixins  # noqa
 
     @classmethod
     def reload_declaration_module(cls, reload):

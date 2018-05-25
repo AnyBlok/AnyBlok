@@ -137,60 +137,8 @@ Documentation Models
 .. autoanyblok-declaration:: Field
     :members:
 
-.. _blok_anyblok_core_mixins:
-
-Mixins
-~~~~~~
-
-.. automodule:: anyblok.bloks.anyblok_core.mixins.readonly
-
-.. autoanyblok-declaration:: ForbidUpdate
-    :members:
-    :show-inheritance:
-
-.. autoanyblok-declaration:: ForbidDelete
-    :members:
-    :show-inheritance:
-
-.. autoanyblok-declaration:: ReadOnly
-    :members:
-    :show-inheritance:
-
-.. autoanyblok-declaration:: ConditionalForbidUpdate
-    :members:
-    :show-inheritance:
-
-.. autoanyblok-declaration:: ConditionalForbidDelete
-    :members:
-    :show-inheritance:
-
-.. autoanyblok-declaration:: ConditionalReadOnly
-    :members:
-    :show-inheritance:
-
-.. autoanyblok-declaration:: BooleanForbidUpdate
-    :members:
-    :show-inheritance:
-
-.. autoanyblok-declaration:: BooleanForbidDelete
-    :members:
-    :show-inheritance:
-
-.. autoanyblok-declaration:: BooleanReadOnly
-    :members:
-    :show-inheritance:
-
-.. autoanyblok-declaration:: StateReadOnly
-    :members:
-    :show-inheritance:
 
 .. _blok_anyblok_core_exceptions:
-
-.. automodule:: anyblok.bloks.anyblok_core.mixins.workflow
-
-.. autoanyblok-declaration:: WorkFlow
-    :members:
-    :show-inheritance:
 
 Exceptions
 ~~~~~~~~~~
@@ -214,13 +162,5 @@ Exceptions
     :show-inheritance:
 
 .. autoexception:: ParameterException
-    :members:
-    :show-inheritance:
-
-.. autoexception:: ForbidUpdateException
-    :members:
-    :show-inheritance:
-
-.. autoexception:: ForbidDeleteException
     :members:
     :show-inheritance:

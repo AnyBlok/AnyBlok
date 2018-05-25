@@ -26,15 +26,3 @@ class CacheException(Exception):
 
 class ParameterException(Exception):
     """ Simple exception for System.Parameter """
-
-
-class ForbidUpdateException(Exception):
-    """ Simple exception for Mixin.ForbiddenUpdate """
-
-
-class ForbidDeleteException(Exception):
-    """ Simple exception for Mixin.ForbiddenDelete """
-
-
-class WorkFlowException(Exception):
-    """ Simple exception for Mixin.ForbiddenDelete """
