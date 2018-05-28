@@ -441,6 +441,9 @@ class DateTime(Column):
     def autodoc_get_properties(self):
         res = super(Column, self).autodoc_get_properties()
         res['is auto updated'] = self.auto_update
+        if self.default_timezone:
+            res['default timezone'] = self.default_timezone
+
         return res
 
 
@@ -901,7 +904,7 @@ class Color(Column):
 
     """
     def __init__(self, *args, **kwargs):
-        max_length = kwargs.pop('size', 20)
+        self.max_length = max_length = kwargs.pop('size', 20)
 
         if 'type_' in kwargs:
             del kwargs['type_']
