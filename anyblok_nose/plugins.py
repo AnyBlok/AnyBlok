@@ -6,13 +6,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from nose.plugins import Plugin
-from anyblok.config import Configuration, get_db_name
-from anyblok import (
-    load_init_function_from_entry_points,
-    configuration_post_load,
-)
-from anyblok.blok import BlokManager
-from anyblok.registry import RegistryManager, return_list
 from os.path import join
 from os.path import relpath
 from os.path import normpath
@@ -89,6 +82,14 @@ class AnyBlokPlugin(Plugin):
     def load_registry(self):
         if not self.enabled or self.registryLoaded:
             return
+
+        from anyblok.config import Configuration, get_db_name
+        from anyblok import (
+            load_init_function_from_entry_points,
+            configuration_post_load,
+        )
+        from anyblok.blok import BlokManager
+        from anyblok.registry import RegistryManager, return_list
 
         # Load the registry here not in configuration,
         # because the configurations are not loaded in order of score
