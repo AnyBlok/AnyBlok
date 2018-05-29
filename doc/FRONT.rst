@@ -61,8 +61,8 @@ Installation will add the ``anyblok`` commands to the environment.
 Running Tests
 -------------
 
-.. seealso:: the :ref:`section about testing of AnyBlok applications
-             <basedoc_tests>`.
+.. .. seealso:: the :ref:`section about testing of AnyBlok applications
+..              <basedoc_tests>`.
 
 
 To run framework tests with ``nose``::
