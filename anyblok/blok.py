@@ -14,8 +14,6 @@ from time import sleep
 from sys import modules
 from os.path import dirname
 from logging import getLogger
-from os.path import join
-from datetime import datetime
 
 logger = getLogger(__name__)
 
@@ -287,38 +285,3 @@ class Blok:
     def load(self):
         """ Call at the launch of the application
         """
-
-    def import_file(self, importer_name, model, *file_path, **kwargs):
-        """ Import data file
-
-        :param importer_name: Name of the importer (need installation of the
-                              Blok which have the importer)
-        :param model: Model of the data to import
-        :param \*file_path: relative path of the path in this Blok
-        :param \*\*kwargs: Option for the importer
-        :rtype: return dict of result
-        """
-        blok_path = BlokManager.getPath(self.name)
-        _file = join(blok_path, *file_path)
-        logger.info("import %r file: %r", importer_name, _file)
-        Importer = self.registry.get(BlokManager.get_importer(importer_name))
-        file_to_import = None
-        with open(_file, 'rb') as fp:
-            file_to_import = fp.read()
-
-        importer = Importer.insert(
-            model=model, file_to_import=file_to_import, **kwargs)
-        started_at = datetime.now()
-        res = importer.run(self.name)
-        stoped_at = datetime.now()
-        dt = stoped_at - started_at
-        logger.info("Create %d entries, Update %d entries (%d.%d sec)",
-                    len(res['created_entries']), len(res['updated_entries']),
-                    dt.seconds, dt.microseconds)
-        if 'error_found' in res and res['error_found']:
-            for error in res['error_found']:
-                logger.error(error)
-        else:
-            importer.delete()
-
-        return res

@@ -13,6 +13,11 @@
 CHANGELOG
 =========
 
+0.19.1
+------
+
+* Remove useless method, because this was move on distribution **anyblok_io**
+
 0.19.0 (2018-05-29)
 -------------------
 
