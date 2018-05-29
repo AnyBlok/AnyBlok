@@ -13,12 +13,13 @@
 CHANGELOG
 =========
 
-0.19.0
-------
+0.19.0 (2018-05-29)
+-------------------
 
 * Remove All mixins, put them in another distribution **anyblok_mixins**
 * remove bloks **anyblok-io**, **anyblok-io-csv**, **anyblok-io-xml**, they
   are put in another distribution **anyblok_io**
+* improve unit test + coverage
 
 0.18.0 (2018-05-22)
 -------------------
