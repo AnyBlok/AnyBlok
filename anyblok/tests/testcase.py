@@ -281,6 +281,31 @@ class DBTestCase(TestCase):
 
         return registry
 
+    def reload_registry(self, registry, function, **kwargs):
+        """ call a function to filled the blok manager with new model and
+        before reload the registry
+
+        :param bloks: list of blok's names
+        :param function: function to call
+        :param kwargs: kwargs for the function
+        :rtype: registry instance
+        """
+        from copy import deepcopy
+        loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
+        if function is not None:
+            EnvironmentManager.set('current_blok', 'anyblok-test')
+            try:
+                function(**kwargs)
+            finally:
+                EnvironmentManager.set('current_blok', None)
+
+        try:
+            registry.reload()
+        finally:
+            RegistryManager.loaded_bloks = loaded_bloks
+
+        return registry
+
 
 class BlokTestCase(unittest.TestCase):
     """Base class for tests meant to run on a preinstalled database.

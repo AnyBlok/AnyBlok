@@ -864,9 +864,9 @@ class Many2Many(RelationShip):
             join_model_table = self.join_model.tablename(registry)
 
         if join_table is None and join_model_table is None:
-            join_table = 'join_%s_and_%s' % (
+            join_table = 'join_%s_and_%s_for_%s' % (
                 self.local_model.tablename(registry),
-                self.model.tablename(registry))
+                self.model.tablename(registry), fieldname)
 
         elif join_table and join_model_table and join_table != join_model_table:
             raise FieldException(

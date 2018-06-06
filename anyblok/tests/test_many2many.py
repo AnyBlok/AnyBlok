@@ -142,8 +142,9 @@ def reuse_many2many_table(**kwargs):
     class Address:
 
         id = Integer(primary_key=True)
-        persons = Many2Many(model=Model.Person,
-                            join_table='join_person_and_address')
+        persons = Many2Many(
+            model=Model.Person,
+            join_table='join_person_and_address_for_addresses')
 
 
 class TestMany2Many(DBTestCase):
@@ -197,7 +198,7 @@ class TestMany2Many(DBTestCase):
         self.assertTrue(m2m_tables_exist)
 
         jt = registry.declarativebase.metadata.tables
-        join_table_exist = 'join_person_and_address' in jt
+        join_table_exist = 'join_person_and_address_for_addresses' in jt
         self.assertEqual(join_table_exist, True)
 
         address = registry.Address.insert(
@@ -219,7 +220,7 @@ class TestMany2Many(DBTestCase):
         self.assertTrue(m2m_tables_exist)
 
         jt = registry.declarativebase.metadata.tables
-        join_table_exist = 'join_person_and_address' in jt
+        join_table_exist = 'join_person_and_address_for_addresses' in jt
         self.assertEqual(join_table_exist, True)
 
         address = registry.Address.insert(
@@ -255,7 +256,7 @@ class TestMany2Many(DBTestCase):
         self.assertTrue(m2m_tables_exist)
 
         jt = registry.declarativebase.metadata.tables
-        join_table_exist = 'join_person_and_address' in jt
+        join_table_exist = 'join_person_and_address_for_addresses' in jt
         self.assertEqual(join_table_exist, True)
 
         address = registry.Address.insert(
@@ -287,9 +288,9 @@ class TestMany2Many(DBTestCase):
         self.assertTrue(m2m_tables_exist)
 
         jt = registry.declarativebase.metadata.tables
-        join_table_exist = 'join_person_and_address' in jt
+        join_table_exist = 'join_person_and_address_for_addresses' in jt
         self.assertEqual(join_table_exist, True)
-        join_table_exist = 'join_person2_and_address' in jt
+        join_table_exist = 'join_person2_and_address_for_addresses' in jt
         self.assertEqual(join_table_exist, True)
 
     def test_comlet_with_multi_primary_keys_remote_and_local(self):
@@ -1033,3 +1034,31 @@ class TestMany2Many(DBTestCase):
         self.assertEqual(link.right_id, t1.id)
         self.assertTrue(link.create_at)
         self.assertEqual(link.foo, 'bar')
+
+    def test_with_twice_the_same_many2many(self):
+        def add_in_registry(**kwargs):
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                invoiced_addresses = Many2Many(model=Model.Address)
+                delivery_addresses = Many2Many(model=Model.Address)
+
+        registry = self.init_registry(add_in_registry)
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+
+        person.invoiced_addresses.append(address)
+
+        self.assertEqual(person.invoiced_addresses, [address])
+        self.assertEqual(person.delivery_addresses, [])
