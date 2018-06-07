@@ -18,6 +18,7 @@ CHANGELOG
 
 * Remove useless method, because this was move on distribution **anyblok_io**
 * In Many2Many the generated join table add fieldname to get two M2M with the same models
+* Fix ``load_namespace_first_step``, the bug merged properties between Mixin
 
 0.19.0 (2018-05-29)
 -------------------

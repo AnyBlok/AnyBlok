@@ -359,6 +359,7 @@ class Model:
 
                 ps = cls.load_namespace_first_step(registry,
                                                    b_ns.__registry_name__)
+                ps = ps.copy()
                 ps.update(properties)
                 properties.update(ps)
 
