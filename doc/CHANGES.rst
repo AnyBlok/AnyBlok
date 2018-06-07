@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.19.1
-------
+0.19.1 (2018-06-07)
+-------------------
 
 * Remove useless method, because this was move on distribution **anyblok_io**
 * In Many2Many the generated join table add fieldname to get two M2M with the same models
