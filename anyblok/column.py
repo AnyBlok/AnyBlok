@@ -1014,7 +1014,7 @@ class PhoneNumber(Column):
 
     def setter_format_value(self, value):
         if value and isinstance(value, str):
-            value = self.sqlalchemy_type.python_type(value)
+            value = self.sqlalchemy_type.python_type(value, self.region)
 
         return value
 
