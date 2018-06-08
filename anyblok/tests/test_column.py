@@ -1039,6 +1039,16 @@ class TestColumns(DBTestCase):
             registry.execute('Select col from test').fetchone()[0],
             '+120012301')
 
+    @skipIf(not has_phonenumbers, "phonenumbers is not installed")
+    def test_phonenumbers_obj_at_setter_with_empty_value(self):
+        registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
+        test = registry.Test.insert()
+        test.col = ""
+        self.assertEqual(test.col, '')
+        registry.flush()
+        self.assertEqual(
+            registry.execute('Select col from test').fetchone()[0], '')
+
     def test_email_at_insert(self):
         registry = self.init_registry(simple_column, ColumnType=Email)
         test = registry.Test.insert(col='John.Smith@foo.com')

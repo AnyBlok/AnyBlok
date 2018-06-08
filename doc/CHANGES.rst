@@ -13,6 +13,11 @@
 CHANGELOG
 =========
 
+0.19.2
+------
+
+* Fix phone number with an empty string value
+
 0.19.1 (2018-06-07)
 -------------------
 

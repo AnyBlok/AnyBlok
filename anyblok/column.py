@@ -1013,7 +1013,7 @@ class PhoneNumber(Column):
         super(PhoneNumber, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
-        if isinstance(value, str):
+        if value and isinstance(value, str):
             value = self.sqlalchemy_type.python_type(value)
 
         return value
