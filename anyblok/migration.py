@@ -5,7 +5,7 @@ from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from sqlalchemy import schema
 from contextlib import contextmanager
-from sqlalchemy import func, select, update, join, alias, and_
+from sqlalchemy import func, select, update, join, and_
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
 from logging import getLogger
@@ -491,21 +491,23 @@ class MigrationColumn:
             table.append_column(column)
             cname = getattr(table.c, column.name)
             if column.default.is_callable:
-                table2 = alias(select([table]).limit(1).where(cname.is_(None)))
                 Table = self.table.migration.metadata.tables['system_model']
                 Column = self.table.migration.metadata.tables['system_column']
                 j1 = join(Table, Column, Table.c.name == Column.c.model)
-                query = select([func.count()]).select_from(table)
-                nb_row = self.table.migration.conn.execute(query).fetchone()[0]
                 query = select([Column.c.name]).select_from(j1)
                 query = query.where(Column.c.primary_key.is_(True))
                 query = query.where(Table.c.table == self.table.name)
                 columns = [x[0] for x in execute(query).fetchall()]
-                where = and_(*[getattr(table.c, x) == getattr(table2.c, x)
-                               for x in columns])
+
+                query = select([func.count()]).select_from(table)
+                query = query.where(cname.is_(None))
+                nb_row = self.table.migration.conn.execute(query).fetchone()[0]
                 for offset in range(nb_row):
-                    # call for each row because the default value
-                    # could be a sequence or depend of other field
+                    query = select(columns).select_from(table)
+                    query = query.where(cname.is_(None)).limit(1)
+                    res = execute(query).fetchone()
+                    where = and_(
+                        *[getattr(table.c, x) == res[x] for x in columns])
                     query = update(table).where(where).values(
                         {cname: val(None)})
                     execute(query)
