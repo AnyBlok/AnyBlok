@@ -496,6 +496,8 @@ class Model:
         bases = TypeList(cls, registry, namespace, transformation_properties)
         ns = registry.loaded_registries[namespace]
         properties = ns['properties'].copy()
+        first_step = registry.loaded_namespaces_first_step[namespace]
+        properties['__depends__'] = first_step['__depends__']
 
         registry.call_plugins('initialisation_tranformation_properties',
                               properties, transformation_properties)

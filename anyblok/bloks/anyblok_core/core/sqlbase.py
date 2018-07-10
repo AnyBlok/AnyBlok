@@ -80,7 +80,7 @@ class SqlMixin:
 
     @classmethod
     def get_all_registry_names(cls):
-        models = [base.__registry_name__ for base in cls.__anyblok_bases__]
+        models = list(cls.__depends__)
         models.insert(0, cls.__registry_name__)
         return models
 
@@ -204,8 +204,8 @@ class SqlMixin:
         """ Return the information of the Field, Column, RelationShip """
         Field = cls.registry.System.Field
         res = {}
-        for base in cls.__anyblok_bases__:
-            query = Field.query().filter(Field.model == base.__registry_name__)
+        for registry_name in cls.__depends__:
+            query = Field.query().filter(Field.model == registry_name)
             res.update({x.name: x._description() for x in query.all()})
 
         query = Field.query().filter(Field.model == cls.__registry_name__)
