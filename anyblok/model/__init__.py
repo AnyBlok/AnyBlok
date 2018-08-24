@@ -600,10 +600,12 @@ class Model:
                 anyblok_field = properties[
                     anyblok_column_prefix + field].anyblok_field
                 kwargs = anyblok_field.kwargs.copy()
-                foreign_keys = kwargs['foreign_keys'][1:][:-1].split(', ')
-                foreign_keys = [getattr(view.c, x.split('.')[1])
-                                for x in foreign_keys]
-                kwargs['foreign_keys'] = foreign_keys
+                if 'foreign_keys' in kwargs:
+                    foreign_keys = kwargs['foreign_keys'][1:][:-1].split(', ')
+                    foreign_keys = [getattr(view.c, x.split('.')[1])
+                                    for x in foreign_keys]
+                    kwargs['foreign_keys'] = foreign_keys
+
                 mapper_properties[field] = relationship(
                     registry.get(anyblok_field.model.model_name), **kwargs)
 
