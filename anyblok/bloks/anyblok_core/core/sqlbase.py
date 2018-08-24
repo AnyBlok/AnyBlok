@@ -386,60 +386,6 @@ class SqlMixin:
         query = query.limit(1)
         return query.one().ftype
 
-
-def get_model_information(registry, registry_name):
-    model = registry.loaded_namespaces_first_step[registry_name]
-    for depend in model['__depends__']:
-        if depend != registry_name:
-            for x, y in get_model_information(registry, depend).items():
-                if x not in model:
-                    model[x] = y
-
-    return model
-
-
-@Declarations.register(Declarations.Core)
-class SqlBase(SqlMixin):
-    """ this class is inherited by all the SQL model
-    """
-
-    def get_modified_fields(self):
-        """return the fields which have changed and their previous values"""
-        state = object_state(self)
-        modified_fields = {}
-        for attr in state.manager.attributes:
-            if not hasattr(attr.impl, 'get_history'):
-                continue
-
-            added, unmodified, deleted = attr.impl.get_history(
-                state, state.dict)
-
-            if added or deleted:
-                field = attr.key
-                if field.startswith(anyblok_column_prefix):
-                    field = field[len(anyblok_column_prefix):]
-
-                modified_fields[field] = deleted[0] if deleted else None
-
-        return modified_fields
-
-    def update(self, **values):
-        """ Hight livel method to update the session for the instance
-        ::
-
-            self.update(val1=.., val2= ...)
-
-        ..warning::
-
-            the columns and values is passed as named arguments to show
-            a difference with Query.update meth
-
-        """
-        for x, v in values.items():
-            setattr(self, x, v)
-
-        return 1 if values else 0
-
     @classmethod_cache()
     def find_remote_attribute_to_expire(cls, *fields):
         res = uniquedict()
@@ -516,6 +462,60 @@ class SqlBase(SqlMixin):
                     _fields.append(mapper.attribute_name)
 
         return res
+
+
+def get_model_information(registry, registry_name):
+    model = registry.loaded_namespaces_first_step[registry_name]
+    for depend in model['__depends__']:
+        if depend != registry_name:
+            for x, y in get_model_information(registry, depend).items():
+                if x not in model:
+                    model[x] = y
+
+    return model
+
+
+@Declarations.register(Declarations.Core)
+class SqlBase(SqlMixin):
+    """ this class is inherited by all the SQL model
+    """
+
+    def get_modified_fields(self):
+        """return the fields which have changed and their previous values"""
+        state = object_state(self)
+        modified_fields = {}
+        for attr in state.manager.attributes:
+            if not hasattr(attr.impl, 'get_history'):
+                continue
+
+            added, unmodified, deleted = attr.impl.get_history(
+                state, state.dict)
+
+            if added or deleted:
+                field = attr.key
+                if field.startswith(anyblok_column_prefix):
+                    field = field[len(anyblok_column_prefix):]
+
+                modified_fields[field] = deleted[0] if deleted else None
+
+        return modified_fields
+
+    def update(self, **values):
+        """ Hight livel method to update the session for the instance
+        ::
+
+            self.update(val1=.., val2= ...)
+
+        ..warning::
+
+            the columns and values is passed as named arguments to show
+            a difference with Query.update meth
+
+        """
+        for x, v in values.items():
+            setattr(self, x, v)
+
+        return 1 if values else 0
 
     def expire_relationship_mapped(self, mappers):
         """ Expire the objects linked with this object, in function of
