@@ -86,8 +86,14 @@ class Column(System.Field):
         :param meta_column: instance of the SqlAlchemy column
         :param ftype: type of the AnyBlok Field
         """
-        c = meta_column.property.columns[0]
+        Model = cls.registry.get(column.model)
+        if hasattr(Model, anyblok_column_prefix + column.name):
+            c = getattr(Model, anyblok_column_prefix + column.name)
+        else:
+            c = meta_column.property.columns[0]
+
         autoincrement = c.autoincrement
+
         if autoincrement == 'auto':
             autoincrement = (True
                              if c.primary_key and ftype == 'Integer'
