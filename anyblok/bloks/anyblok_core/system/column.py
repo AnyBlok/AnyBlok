@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from anyblok.common import anyblok_column_prefix
 from anyblok.column import String, Boolean
 
 
@@ -52,8 +53,14 @@ class Column(System.Field):
         :param table: name of the table of the model
         :param ftype: type of the AnyBlok Field
         """
-        c = column.property.columns[0]
+        Model = cls.registry.get(model)
+        if hasattr(Model, anyblok_column_prefix + cname):
+            c = getattr(Model, anyblok_column_prefix + cname)
+        else:
+            c = column.property.columns[0]
+
         autoincrement = c.autoincrement
+
         if autoincrement == 'auto':
             autoincrement = (True
                              if c.primary_key and ftype == 'Integer'
