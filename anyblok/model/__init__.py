@@ -14,7 +14,8 @@ from anyblok.column import Column
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
-from sqlalchemy.orm import Query, mapper, synonym
+from sqlalchemy.orm import Query, mapper
+from sqlalchemy.orm import relationship
 from sqlalchemy import inspection
 from anyblok.common import TypeList
 from copy import deepcopy
@@ -526,7 +527,6 @@ class Model:
             cls.insert_in_bases(registry, namespace, bases,
                                 transformation_properties, properties)
             if properties['is_sql_view']:
-                cls.replace_properties_by_synonym(properties)
                 bases = [type(modelname, tuple(bases), properties)]
                 if properties['is_sql_view']:
                     cls.apply_view(namespace, tablename, bases[0], registry,
@@ -541,11 +541,6 @@ class Model:
                                   namespace, transformation_properties)
 
         return bases, properties
-
-    @classmethod
-    def replace_properties_by_synonym(cls, properties):
-        for field in properties['loaded_columns']:
-            properties[field] = synonym(anyblok_column_prefix + field)
 
     @classmethod
     def apply_view(cls, namespace, tablename, base, registry, properties):
@@ -587,15 +582,33 @@ class Model:
                 'before-drop', registry.declarativebase.metadata)
 
         pks = [col for col in properties['loaded_columns']
-               if getattr(base, anyblok_column_prefix + col).primary_key]
+               if getattr(getattr(base, anyblok_column_prefix + col),
+                          'primary_key', False)]
 
         if not pks:
             raise ViewException(
                 "%r have any primary key defined" % namespace)
 
         pks = [getattr(view.c, x) for x in pks]
-        mapper(base, view, primary_key=pks)
+
+        mapper_properties = {}
+        for field in properties['loaded_columns']:
+            if not hasattr(properties[anyblok_column_prefix + field],
+                           'anyblok_field'):
+                mapper_properties[field] = getattr(view.c, field)
+            else:
+                anyblok_field = properties[
+                    anyblok_column_prefix + field].anyblok_field
+                kwargs = anyblok_field.kwargs.copy()
+                foreign_keys = kwargs['foreign_keys'][1:][:-1].split(', ')
+                foreign_keys = [getattr(view.c, x.split('.')[1])
+                                for x in foreign_keys]
+                kwargs['foreign_keys'] = foreign_keys
+                mapper_properties[field] = relationship(
+                    registry.get(anyblok_field.model.model_name), **kwargs)
+
         setattr(base, '__view__', view)
+        mapper(base, view, primary_key=pks, properties=mapper_properties)
 
     @classmethod
     def assemble_callback(cls, registry):

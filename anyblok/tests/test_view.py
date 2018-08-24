@@ -11,6 +11,7 @@ from anyblok import Declarations
 from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError
 from anyblok.column import Integer, String
+from anyblok.relationship import Many2One
 
 register = Declarations.register
 Model = Declarations.Model
@@ -42,6 +43,44 @@ def simple_view():
             T2 = cls.registry.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
+                            T2.val.label('val2')])
+            return query.where(T1.code == T2.code)
+
+
+def view_with_relationship():
+
+    @register(Model)
+    class Rs:
+        id = Integer(primary_key=True)
+
+    @register(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+        rs_id = Integer(foreign_key=Model.Rs.use('id'))
+        rs = Many2One(model=Model.Rs, column_names='rs_id')
+
+    @register(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @register(Model, is_sql_view=True)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+        rs = Many2One(model=Model.Rs)
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            T1 = cls.registry.T1
+            T2 = cls.registry.T2
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T1.rs_id.label('rs_id'),
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
@@ -220,6 +259,24 @@ class TestView(DBTestCase):
         self.assertEqual(v1.val2, 2)
         self.assertEqual(v2.val1, 3)
         self.assertEqual(v2.val2, 4)
+
+    def test_viewi_with_relationship(self):
+        registry = self.init_registry(view_with_relationship)
+        rs1 = registry.Rs.insert()
+        rs2 = registry.Rs.insert()
+        registry.T1.insert(code='test1', val=1, rs=rs1)
+        registry.T2.insert(code='test1', val=2)
+        registry.T1.insert(code='test2', val=3, rs=rs2)
+        registry.T2.insert(code='test2', val=4)
+        TestView = registry.TestView
+        v1 = TestView.query().filter(TestView.code == 'test1').first()
+        v2 = TestView.query().filter(TestView.code == 'test2').first()
+        self.assertEqual(v1.val1, 1)
+        self.assertEqual(v1.val2, 2)
+        self.assertEqual(v1.rs.id, rs1.id)
+        self.assertEqual(v2.val1, 3)
+        self.assertEqual(v2.val2, 4)
+        self.assertEqual(v2.rs.id, rs2.id)
 
     def check_same_view(self, registry):
         registry.T1.insert(code='test1', val=1)

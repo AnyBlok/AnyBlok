@@ -18,6 +18,7 @@ CHANGELOG
 
 * Fix phone number with an empty string value
 * Fix migration with added more than one new required columns with default values
+* Fix Sql View can define Many2One relationship
 
 0.19.1 (2018-06-07)
 -------------------
