@@ -610,7 +610,9 @@ class Model:
                     registry.get(anyblok_field.model.model_name), **kwargs)
 
         setattr(base, '__view__', view)
-        mapper(base, view, primary_key=pks, properties=mapper_properties)
+        __mapper__ = mapper(
+            base, view, primary_key=pks, properties=mapper_properties)
+        setattr(base, '__mapper__', __mapper__)
 
     @classmethod
     def assemble_callback(cls, registry):

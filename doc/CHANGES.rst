@@ -19,6 +19,7 @@ CHANGELOG
 * Fix phone number with an empty string value
 * Fix migration with added more than one new required columns with default values
 * Fix Sql View can define Many2One relationship
+* Fix SQL View, The __mapper__ is put in the Model
 
 0.19.1 (2018-06-07)
 -------------------

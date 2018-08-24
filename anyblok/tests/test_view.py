@@ -246,6 +246,10 @@ def simple_view_without_view_declaration():
 
 class TestView(DBTestCase):
 
+    def test_view_has_a_mapper(self):
+        registry = self.init_registry(simple_view)
+        self.assertIsNotNone(registry.TestView.__mapper__)
+
     def test_simple_view(self):
         registry = self.init_registry(simple_view)
         registry.T1.insert(code='test1', val=1)
