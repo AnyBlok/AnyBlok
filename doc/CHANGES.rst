@@ -21,6 +21,8 @@ CHANGELOG
 * Fix Sql View can define Many2One relationship
 * Fix SQL View, The __mapper__ is put in the Model
 * FIX SQL View, For Sql view the mapping of the field must be find with anyblok prefix column
+* The build of the Model class come from plugin model, The objectif is to implement other than
+  Model or View
 
 0.19.1 (2018-06-07)
 -------------------

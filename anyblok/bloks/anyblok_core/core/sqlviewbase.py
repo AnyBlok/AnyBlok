@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-from anyblok.model import ViewException
+from anyblok.model.exceptions import ViewException
 from .sqlbase import SqlMixin
 
 

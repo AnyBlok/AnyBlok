@@ -6,7 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
-from anyblok.model import ViewException
+from anyblok.model.common import VIEW
+from anyblok.model.exceptions import ViewException
 from anyblok import Declarations
 from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError
@@ -31,7 +32,7 @@ def simple_view():
         code = String()
         val = Integer()
 
-    @register(Model, is_sql_view=True)
+    @register(Model, type=VIEW)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -67,7 +68,7 @@ def view_with_relationship():
         code = String()
         val = Integer()
 
-    @register(Model, is_sql_view=True)
+    @register(Model, type=VIEW)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -99,7 +100,7 @@ def simple_view_with_same_table_by_declaration_model():
         code = String()
         val = Integer()
 
-    @register(Model, is_sql_view=True)
+    @register(Model, type=VIEW)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -114,7 +115,7 @@ def simple_view_with_same_table_by_declaration_model():
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
-    @register(Model, is_sql_view=True, tablename=Model.TestView)
+    @register(Model, type=VIEW, tablename=Model.TestView)
     class TestView2:
         code = String(primary_key=True)
         val1 = Integer()
@@ -135,7 +136,7 @@ def simple_view_with_same_table_by_name():
         code = String()
         val = Integer()
 
-    @register(Model, is_sql_view=True)
+    @register(Model, type=VIEW)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -150,7 +151,7 @@ def simple_view_with_same_table_by_name():
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
-    @register(Model, is_sql_view=True, tablename='testview')
+    @register(Model, type=VIEW, tablename='testview')
     class TestView2:
         code = String(primary_key=True)
         val1 = Integer()
@@ -171,7 +172,7 @@ def simple_view_with_same_table_by_inherit():
         code = String()
         val = Integer()
 
-    @register(Model, is_sql_view=True)
+    @register(Model, type=VIEW)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -186,7 +187,7 @@ def simple_view_with_same_table_by_inherit():
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
-    @register(Model, is_sql_view=True)
+    @register(Model, type=VIEW)
     class TestView2(Model.TestView):
         code = String(primary_key=True)
         val1 = Integer()
@@ -207,7 +208,7 @@ def simple_view_without_primary_key():
         code = String()
         val = Integer()
 
-    @register(Model, is_sql_view=True)
+    @register(Model, type=VIEW)
     class TestView:
         code = String()
         val1 = Integer()
@@ -237,7 +238,7 @@ def simple_view_without_view_declaration():
         code = String()
         val = Integer()
 
-    @register(Model, is_sql_view=True)
+    @register(Model, type=VIEW)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()

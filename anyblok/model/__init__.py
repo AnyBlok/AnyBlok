@@ -2,6 +2,7 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -11,11 +12,6 @@ from anyblok import Declarations
 from anyblok.field import Field, FieldException
 from anyblok.relationship import RelationShip
 from anyblok.column import Column
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.schema import DDLElement
-from sqlalchemy.sql import table
-from sqlalchemy.orm import Query, mapper
-from sqlalchemy.orm import relationship
 from sqlalchemy import inspection
 from anyblok.common import TypeList
 from copy import deepcopy
@@ -24,48 +20,8 @@ from anyblok.mapper import ModelAttribute
 from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
 from .plugins import get_model_plugins
-from .exceptions import ModelException, ViewException
-
-
-class CreateView(DDLElement):
-    def __init__(self, name, selectable):
-        self.name = name
-        self.selectable = selectable
-
-
-class DropView(DDLElement):
-    def __init__(self, name):
-        self.name = name
-
-
-@compiles(CreateView)
-def compile_create_view(element, compiler, **kw):
-    return "CREATE VIEW %s AS %s" % (
-        element.name, compiler.sql_compiler.process(element.selectable))
-
-
-@compiles(DropView)
-def compile_drop_view(element, compiler, **kw):
-    return "DROP VIEW IF EXISTS %s" % (element.name)
-
-
-def has_sql_fields(bases):
-    """ Tells whether the model as field or not
-
-    :param bases: list of Model's Class
-    :rtype: boolean
-    """
-    for base in bases:
-        for p in base.__dict__.keys():
-            try:
-                if hasattr(getattr(base, p), '__class__'):
-                    if Field in getattr(base, p).__class__.__mro__:
-                        return True
-            except FieldException:
-                # field function case already computed
-                return True
-
-    return False
+from .exceptions import ModelException
+from .common import has_sql_fields
 
 
 def has_sqlalchemy_fields(base):
@@ -184,7 +140,9 @@ class Model:
             """call the method on each plugin"""
             for plugin in plugins:
                 if hasattr(plugin, method):
-                    getattr(plugin, method)(*args, **kwargs)
+                    res = getattr(plugin, method)(*args, **kwargs)
+                    if res:
+                        return res
 
         registry.call_plugins = call_plugins
 
@@ -421,16 +379,7 @@ class Model:
         properties['loaded_columns'] = []
         properties['hybrid_property_columns'] = []
         properties['loaded_fields'] = {}
-        if properties['is_sql_view']:
-            bases.extend([x for x in registry.loaded_cores['SqlViewBase']])
-        elif has_sql_fields(bases):
-            bases.extend([x for x in registry.loaded_cores['SqlBase']])
-            bases.append(registry.declarativebase)
-        else:
-            # remove tablename to inherit from a sqlmodel
-            del properties['__tablename__']
-
-        bases.extend([x for x in registry.loaded_cores['Base']])
+        registry.call_plugins('insert_core_bases', bases, properties)
 
     @classmethod
     def declare_all_fields(cls, registry, namespace, bases, properties,
@@ -503,9 +452,6 @@ class Model:
         registry.call_plugins('initialisation_tranformation_properties',
                               properties, transformation_properties)
 
-        if 'is_sql_view' not in properties:
-            properties['is_sql_view'] = False
-
         cls.apply_inheritance_base(registry, namespace, ns, bases,
                                    realregistryname, properties,
                                    transformation_properties)
@@ -526,13 +472,9 @@ class Model:
             bases.append(registry.registry_base)
             cls.insert_in_bases(registry, namespace, bases,
                                 transformation_properties, properties)
-            if properties['is_sql_view']:
-                bases = [type(modelname, tuple(bases), properties)]
-                if properties['is_sql_view']:
-                    cls.apply_view(namespace, tablename, bases[0], registry,
-                                   properties)
-            else:
-                bases = [type(modelname, tuple(bases), properties)]
+            bases = [
+                registry.call_plugins(
+                    'build_base', modelname, bases, properties)]
 
             properties = {}
             registry.add_in_registry(namespace, bases[0])
@@ -541,78 +483,6 @@ class Model:
                                   namespace, transformation_properties)
 
         return bases, properties
-
-    @classmethod
-    def apply_view(cls, namespace, tablename, base, registry, properties):
-        """ Transform the sqlmodel to view model
-
-        :param namespace: Namespace of the model
-        :param tablename: Name od the table of the model
-        :param base: Model cls
-        :param registry: current registry
-        :param properties: properties of the model
-        :exception: MigrationException
-        :exception: ViewException
-        """
-        if hasattr(base, '__view__'):
-            view = base.__view__
-        elif tablename in registry.loaded_views:
-            view = registry.loaded_views[tablename]
-        else:
-            if not hasattr(base, 'sqlalchemy_view_declaration'):
-                raise ViewException(
-                    "%r.'sqlalchemy_view_declaration' is required to "
-                    "define the query to apply of the view" % namespace)
-
-            view = table(tablename)
-            registry.loaded_views[tablename] = view
-            selectable = getattr(base, 'sqlalchemy_view_declaration')()
-
-            if isinstance(selectable, Query):
-                selectable = selectable.subquery()
-
-            for c in selectable.c:
-                c._make_proxy(view)
-
-            DropView(tablename).execute_at(
-                'before-create', registry.declarativebase.metadata)
-            CreateView(tablename, selectable).execute_at(
-                'after-create', registry.declarativebase.metadata)
-            DropView(tablename).execute_at(
-                'before-drop', registry.declarativebase.metadata)
-
-        pks = [col for col in properties['loaded_columns']
-               if getattr(getattr(base, anyblok_column_prefix + col),
-                          'primary_key', False)]
-
-        if not pks:
-            raise ViewException(
-                "%r have any primary key defined" % namespace)
-
-        pks = [getattr(view.c, x) for x in pks]
-
-        mapper_properties = {}
-        for field in properties['loaded_columns']:
-            if not hasattr(properties[anyblok_column_prefix + field],
-                           'anyblok_field'):
-                mapper_properties[field] = getattr(view.c, field)
-            else:
-                anyblok_field = properties[
-                    anyblok_column_prefix + field].anyblok_field
-                kwargs = anyblok_field.kwargs.copy()
-                if 'foreign_keys' in kwargs:
-                    foreign_keys = kwargs['foreign_keys'][1:][:-1].split(', ')
-                    foreign_keys = [getattr(view.c, x.split('.')[1])
-                                    for x in foreign_keys]
-                    kwargs['foreign_keys'] = foreign_keys
-
-                mapper_properties[field] = relationship(
-                    registry.get(anyblok_field.model.model_name), **kwargs)
-
-        setattr(base, '__view__', view)
-        __mapper__ = mapper(
-            base, view, primary_key=pks, properties=mapper_properties)
-        setattr(base, '__mapper__', __mapper__)
 
     @classmethod
     def assemble_callback(cls, registry):

@@ -115,6 +115,8 @@ setup(
         'anyblok.init': [],
         'anyblok_configuration.post_load': [],
         'anyblok.model.plugin': [
+            'model=anyblok.model.model:ModelPlugin',
+            'view=anyblok.model.view:ViewPlugin',
             'hybrid_method=anyblok.model.hybrid_method:HybridMethodPlugin',
             'table_mapper=anyblok.model.table_and_mapper:TableMapperPlugin',
             'event=anyblok.model.event:EventPlugin',
