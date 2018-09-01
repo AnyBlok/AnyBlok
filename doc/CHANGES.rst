@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.19.2
-------
+0.19.2 (2018-09-01)
+-------------------
 
 * Fix phone number with an empty string value
 * Fix migration with added more than one new required columns with default values
