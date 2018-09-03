@@ -45,6 +45,7 @@ install:
   - pip install pycountry
   - pip install coveralls
   - pip install -e git+https://github.com/hugovk/texttable.git#egg=texttable
+  - pip install PyYAML == 3.13
   - python setup.py develop
 
 env:
