@@ -11,7 +11,7 @@ from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.orm import Query, mapper, relationship
 from .exceptions import ViewException
-from .common import VIEW, MODEL
+from .common import VIEW
 from anyblok.common import anyblok_column_prefix
 
 
@@ -40,13 +40,13 @@ def compile_drop_view(element, compiler, **kw):
 class ViewPlugin(ModelPluginBase):
 
     def insert_core_bases(self, bases, properties):
-        if properties.get('type', MODEL) == VIEW:
+        if properties['__model_type__'] == VIEW:
             bases.extend(
                 [x for x in self.registry.loaded_cores['SqlViewBase']])
             bases.extend([x for x in self.registry.loaded_cores['Base']])
 
     def build_base(self, modelname, bases, properties):
-        if properties.get('type', MODEL) == VIEW:
+        if properties['__model_type__'] == VIEW:
             Model = type(modelname, tuple(bases), properties)
             self.apply_view(Model, properties)
             return Model

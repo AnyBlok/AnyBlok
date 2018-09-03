@@ -12,7 +12,7 @@ from .common import has_sql_fields, MODEL
 class ModelPlugin(ModelPluginBase):
 
     def insert_core_bases(self, bases, properties):
-        if properties.get('type', MODEL) == MODEL:
+        if properties['__model_type__'] == MODEL:
             if has_sql_fields(bases):
                 bases.extend(
                     [x for x in self.registry.loaded_cores['SqlBase']])
@@ -24,5 +24,5 @@ class ModelPlugin(ModelPluginBase):
             bases.extend([x for x in self.registry.loaded_cores['Base']])
 
     def build_base(self, modelname, bases, properties):
-        if properties.get('type', MODEL) == MODEL:
+        if properties['__model_type__'] == MODEL:
             return type(modelname, tuple(bases), properties)

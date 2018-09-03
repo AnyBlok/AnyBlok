@@ -21,7 +21,7 @@ from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
 from .plugins import get_model_plugins
 from .exceptions import ModelException
-from .common import has_sql_fields
+from .common import has_sql_fields, MODEL
 
 
 def has_sqlalchemy_fields(base):
@@ -183,6 +183,8 @@ class Model:
 
         kwargs['__registry_name__'] = _registryname
         kwargs['__tablename__'] = tablename
+        if 'type' in kwargs:
+            kwargs['__model_type__'] = kwargs.pop('type')
 
         RegistryManager.add_entry_in_register(
             'Model', _registryname, cls_, **kwargs)
@@ -451,6 +453,9 @@ class Model:
 
         registry.call_plugins('initialisation_tranformation_properties',
                               properties, transformation_properties)
+
+        if '__model_type__' not in properties:
+            properties['__model_type__'] = MODEL
 
         cls.apply_inheritance_base(registry, namespace, ns, bases,
                                    realregistryname, properties,

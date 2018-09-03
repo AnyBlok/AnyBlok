@@ -416,6 +416,18 @@ class TestModel2(DBTestCase):
         t.update(state='undefined')
         self.assertEqual(t.state, 'undefined')
 
+    def test_fix_issue_52(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+                type = String()
+
+        registry = self.init_registry(add_in_registry)
+        self.assertIsNotNone(registry.Test)
+
 
 class TestModelAssembling(TestCase):
 
