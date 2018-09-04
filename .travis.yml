@@ -8,16 +8,9 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.6-dev" # 3.6 development branch
-  - "3.7-dev" # 3.7 development branch
+  - "3.6-dev"
+  - "3.7-dev"
   - "nightly"
-
-matrix:
-  allow_failures:
-    - python: "3.3"
-    - python: "3.6-dev"
-    - python: "3.7-dev"
-    - python: "nightly"
 
 virtualenv:
   system_site_packages: false
@@ -41,12 +34,13 @@ install:
   - pip install colour
   - pip install passlib
   - pip install furl
-  - pip install cryptography
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.3 ]]; pip install cryptography; fi
   - pip install phonenumbers
   - pip install pycountry
   - pip install coveralls
-  - pip install -e git+https://github.com/hugovk/texttable.git#egg=texttable
-  - pip install PyYAML==3.13
+  - pip install texttable --no-binary
+  - pip install PyYAML --no-binary
+  - pip install python_editor --no-binary
   - python setup.py develop
 
 env:
