@@ -24,7 +24,11 @@ before_install:
 
 install:
   - pip install -U pip
+  # only eggs: do an erreur with wheel
   - pip install python_editor
+  - pip install texttable
+  - pip install PyYAML
+  # only wheel
   - pip install wheel
   - pip install psycopg2
   - pip install sqlalchemy
@@ -38,9 +42,6 @@ install:
   - pip install phonenumbers
   - pip install pycountry
   - pip install coveralls
-  - pip install texttable --no-binary
-  - pip install PyYAML --no-binary
-  - pip install python_editor --no-binary
   - python setup.py develop
 
 env:
