@@ -25,9 +25,8 @@ before_install:
 install:
   - pip install -U pip
   # only eggs: do an erreur with wheel
-  - pip install python_editor
-  - pip install texttable
-  - pip install PyYAML
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.7-dev' ]]; then pip install python_editor texttable PyYAML; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install python_editor texttable PyYAML; fi
   # only wheel
   - pip install wheel
   - pip install psycopg2
