@@ -34,7 +34,7 @@ install:
   - pip install colour
   - pip install passlib
   - pip install furl
-  - if [[ $TRAVIS_PYTHON_VERSION != '3.3' ]]; pip install cryptography; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != '3.3' ]]; then pip install cryptography; fi
   - pip install phonenumbers
   - pip install pycountry
   - pip install coveralls
