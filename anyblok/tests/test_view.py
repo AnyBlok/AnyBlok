@@ -10,7 +10,7 @@ from anyblok.model.factory import ViewFactory
 from anyblok.model.common import VIEW
 from anyblok.model.exceptions import ViewException
 from anyblok import Declarations
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, expression, union
 from sqlalchemy.exc import OperationalError
 from anyblok.column import Integer, String
 from anyblok.relationship import Many2One
@@ -145,6 +145,101 @@ def view_with_relationship():
                             T1.rs_id.label('rs_id'),
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
+
+
+def view_with_relationship_on_self():
+
+    @register(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+        parent = Many2One(model='Model.T1')
+
+    @register(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @register(Model, factory=ViewFactory)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+        parent = Many2One(model='Model.TestView')
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            T1 = cls.registry.T1
+            TP = cls.registry.T1.aliased()
+            T2 = cls.registry.T2
+            subquery = union(
+                select([
+                    T1.code.label('code'),
+                    TP.code.label('parent_code')]
+                ).where(T1.parent_id == TP.id),
+                select([
+                    T1.code.label('code'),
+                    expression.literal_column("null as parent_code")
+                ]).where(T1.parent_id.is_(None))
+            ).alias()
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T2.val.label('val2'),
+                            subquery.c.parent_code.label('parent_code')])
+            query = query.where(subquery.c.code == T1.code)
+            query = query.where(subquery.c.code == T2.code)
+            return query
+
+
+def view_with_relationship_on_self_2():
+
+    @register(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+        parent = Many2One(model='Model.T1')
+
+    @register(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @register(Model, factory=ViewFactory)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer(primary_key=True)
+        val2 = Integer()
+        parent = Many2One(model='Model.TestView')
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            T1 = cls.registry.T1
+            TP = cls.registry.T1.aliased()
+            T2 = cls.registry.T2
+            subquery = union(
+                select([
+                    T1.code.label('code'),
+                    TP.id.label('parent_val1'),
+                    TP.code.label('parent_code')
+                ]).where(T1.parent_id == TP.id),
+                select([
+                    T1.code.label('code'),
+                    expression.literal_column("null as parent_val1"),
+                    expression.literal_column("null as parent_code")
+                ]).where(T1.parent_id.is_(None))
+            ).alias()
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T2.val.label('val2'),
+                            subquery.c.parent_val1.label('parent_val1'),
+                            subquery.c.parent_code.label('parent_code')])
+            query = query.where(subquery.c.code == T1.code)
+            query = query.where(subquery.c.code == T2.code)
+            return query
 
 
 def simple_view_with_same_table_by_declaration_model():
@@ -354,7 +449,7 @@ class TestView(DBTestCase):
         self.assertEqual(v2.val1, 3)
         self.assertEqual(v2.val2, 4)
 
-    def test_viewi_with_relationship(self):
+    def test_view_with_relationship(self):
         registry = self.init_registry(view_with_relationship)
         rs1 = registry.Rs.insert()
         rs2 = registry.Rs.insert()
@@ -371,6 +466,38 @@ class TestView(DBTestCase):
         self.assertEqual(v2.val1, 3)
         self.assertEqual(v2.val2, 4)
         self.assertEqual(v2.rs.id, rs2.id)
+
+    def test_fix_issue_53_with_one_column(self):
+        registry = self.init_registry(view_with_relationship_on_self)
+        parent = registry.T1.insert(code='test1', val=1)
+        registry.T2.insert(code='test1', val=2)
+        registry.T1.insert(code='test2', val=3, parent=parent)
+        registry.T2.insert(code='test2', val=4)
+        TestView = registry.TestView
+        v1 = TestView.query().filter(TestView.code == 'test1').first()
+        v2 = TestView.query().filter(TestView.code == 'test2').first()
+        self.assertEqual(v1.val1, 1)
+        self.assertEqual(v1.val2, 2)
+        self.assertIsNone(v1.parent)
+        self.assertEqual(v2.val1, 3)
+        self.assertEqual(v2.val2, 4)
+        self.assertEqual(v2.parent.code, v1.code)
+
+    def test_fix_issue_53_with_two_column(self):
+        registry = self.init_registry(view_with_relationship_on_self_2)
+        parent = registry.T1.insert(code='test1', val=1)
+        registry.T2.insert(code='test1', val=2)
+        registry.T1.insert(code='test2', val=3, parent=parent)
+        registry.T2.insert(code='test2', val=4)
+        TestView = registry.TestView
+        v1 = TestView.query().filter(TestView.code == 'test1').first()
+        v2 = TestView.query().filter(TestView.code == 'test2').first()
+        self.assertEqual(v1.val1, 1)
+        self.assertEqual(v1.val2, 2)
+        self.assertIsNone(v1.parent)
+        self.assertEqual(v2.val1, 3)
+        self.assertEqual(v2.val2, 4)
+        self.assertEqual(v2.parent.code, v1.code)
 
     def check_same_view(self, registry):
         registry.T1.insert(code='test1', val=1)

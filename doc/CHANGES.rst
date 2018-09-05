@@ -60,6 +60,8 @@ CHANGELOG
             class MyModel:
               ...
 
+* Fix issue #53, add primary join when mapping relationship in the self view
+
 0.19.3 (2018-09-03)
 -------------------
 

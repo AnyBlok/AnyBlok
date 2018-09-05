@@ -6,3 +6,5 @@ omit =
     */tests/*
     # omit anything in a test_bloks directory anywhere
     anyblok/test_bloks/*
+    # omit anything in a sphinx directory anywhere
+    anyblok/sphinx/*

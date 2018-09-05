@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .exceptions import ModelFactoryException
 from anyblok.field import Field, FieldException
-from sqlalchemy.sql import table
+from sqlalchemy.sql import table, and_
 from sqlalchemy.orm import Query, mapper, relationship
 from .exceptions import ViewException
 from anyblok.common import anyblok_column_prefix
@@ -62,6 +62,16 @@ class ModelFactory(BaseFactory):
         return type(modelname, tuple(bases), properties)
 
 
+def get_columns(view, columns):
+    if not isinstance(columns, list):
+        if ', ' in columns:
+            columns = columns.split(', ')
+        else:
+            columns = [columns]
+
+    return [getattr(view.c, x.split(' => ')[1]) for x in columns]
+
+
 class ViewFactory(BaseFactory):
 
     def insert_core_bases(self, bases, properties):
@@ -94,6 +104,7 @@ class ViewFactory(BaseFactory):
                     "define the query to apply of the view" % base)
 
             view = table(tablename)
+
             self.registry.loaded_views[tablename] = view
             selectable = getattr(base, 'sqlalchemy_view_declaration')()
 
@@ -120,7 +131,14 @@ class ViewFactory(BaseFactory):
 
         pks = [getattr(view.c, x) for x in pks]
 
-        mapper_properties = {}
+        mapper_properties = self.get_mapper_properties(base, view, properties)
+        setattr(base, '__view__', view)
+        __mapper__ = mapper(
+            base, view, primary_key=pks, properties=mapper_properties)
+        setattr(base, '__mapper__', __mapper__)
+
+    def get_mapper_properties(self, base, view, properties):
+        mapper_properties = base.define_mapper_args()
         for field in properties['loaded_columns']:
             if not hasattr(properties[anyblok_column_prefix + field],
                            'anyblok_field'):
@@ -136,15 +154,28 @@ class ViewFactory(BaseFactory):
                                 for x in foreign_keys]
                 kwargs['foreign_keys'] = foreign_keys
 
-            Model = (
-                base
-                if anyblok_field.model.model_name == base.__registry_name__
-                else self.registry.get(anyblok_field.model.model_name)
-            )
+            if anyblok_field.model.model_name == base.__registry_name__:
+                remote_columns = get_columns(
+                    view, kwargs['info']['remote_columns'])
+                local_columns = get_columns(
+                    view, kwargs['info']['local_columns'])
+
+                assert len(remote_columns) == len(local_columns)
+                primaryjoin = []
+                for i in range(len(local_columns)):
+                    primaryjoin.append(remote_columns[i] == local_columns[i])
+
+                if len(primaryjoin) == 1:
+                    primaryjoin = primaryjoin[0]
+                else:
+                    primaryjoin = and_(*primaryjoin)
+
+                kwargs['remote_side'] = remote_columns
+                kwargs['primaryjoin'] = primaryjoin
+                Model = base
+            else:
+                Model = self.registry.get(anyblok_field.model.model_name)
 
             mapper_properties[field] = relationship(Model, **kwargs)
 
-        setattr(base, '__view__', view)
-        __mapper__ = mapper(
-            base, view, primary_key=pks, properties=mapper_properties)
-        setattr(base, '__mapper__', __mapper__)
+        return mapper_properties
