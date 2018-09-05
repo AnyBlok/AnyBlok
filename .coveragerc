@@ -1,4 +1,8 @@
 [run]
 omit =
     # omit scripts file
-    anyblok.scripts.py
+    anyblok/scripts.py
+    # omit anything in a tests directory anywhere
+    */tests/*
+    # omit anything in a test_bloks directory anywhere
+    anyblok/test_bloks/*
