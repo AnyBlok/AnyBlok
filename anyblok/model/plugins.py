@@ -25,79 +25,79 @@ class ModelPluginBase:
     def __init__(self, registry):
         self.registry = registry
 
-    def initialisation_tranformation_properties(self, properties,
-                                                transformation_properties):
-        """ Initialise the transform properties
+    # def initialisation_tranformation_properties(self, properties,
+    #                                             transformation_properties):
+    #     """ Initialise the transform properties
 
-        :param properties: the properties declared in the model
-        :param new_type_properties: param to add in a new base if need
-        """
+    #     :param properties: the properties declared in the model
+    #     :param new_type_properties: param to add in a new base if need
+    #     """
 
-    def declare_field(self, name, field, namespace, properties,
-                      transformation_properties):
-        """Declare a field in the model
+    # def declare_field(self, name, field, namespace, properties,
+    #                   transformation_properties):
+    #     """Declare a field in the model
 
-        :param name: field name
-        :param field: field instance
-        :param namespace: the namespace of the model
-        :param properties: the properties of the model
-        :param transformation_properties: the transformation properties
-        """
+    #     :param name: field name
+    #     :param field: field instance
+    #     :param namespace: the namespace of the model
+    #     :param properties: the properties of the model
+    #     :param transformation_properties: the transformation properties
+    #     """
 
-    def transform_base_attribute(self, attr, method, namespace, base,
-                                 transformation_properties,
-                                 new_type_properties):
-        """ transform the attribute for the final Model
+    # def transform_base_attribute(self, attr, method, namespace, base,
+    #                              transformation_properties,
+    #                              new_type_properties):
+    #     """ transform the attribute for the final Model
 
-        :param attr: attribute name
-        :param method: method pointer of the attribute
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param new_type_properties: param to add in a new base if need
-        """
+    #     :param attr: attribute name
+    #     :param method: method pointer of the attribute
+    #     :param namespace: the namespace of the model
+    #     :param base: One of the base of the model
+    #     :param transformation_properties: the properties of the model
+    #     :param new_type_properties: param to add in a new base if need
+    #     """
 
-    def transform_base(self, namespace, base,
-                       transformation_properties,
-                       new_type_properties):
-        """ transform the base for the final Model
+    # def transform_base(self, namespace, base,
+    #                    transformation_properties,
+    #                    new_type_properties):
+    #     """ transform the base for the final Model
 
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param new_type_properties: param to add in a new base if need
-        """
+    #     :param namespace: the namespace of the model
+    #     :param base: One of the base of the model
+    #     :param transformation_properties: the properties of the model
+    #     :param new_type_properties: param to add in a new base if need
+    #     """
 
-    def insert_in_bases(self, new_base, namespace, properties,
-                        transformation_properties):
-        """Insert in a base the overload
+    # def insert_in_bases(self, new_base, namespace, properties,
+    #                     transformation_properties):
+    #     """Insert in a base the overload
 
-        :param new_base: the base to be put on front of all bases
-        :param namespace: the namespace of the model
-        :param properties: the properties declared in the model
-        :param transformation_properties: the properties of the model
-        """
+    #     :param new_base: the base to be put on front of all bases
+    #     :param namespace: the namespace of the model
+    #     :param properties: the properties declared in the model
+    #     :param transformation_properties: the properties of the model
+    #     """
 
-    def insert_core_bases(self, bases, properties):
-        """Add in bases the core bases need in function of the type
+    # def insert_core_bases(self, bases, properties):
+    #     """Add in bases the core bases need in function of the type
 
-        :param bases: the current bases
-        :param properties: the properties declared in the model
-        """
+    #     :param bases: the current bases
+    #     :param properties: the properties declared in the model
+    #     """
 
-    def build_base(self, modelname, bases, properties):
-        """Return the model class else None
+    # def build_base(self, modelname, bases, properties):
+    #     """Return the model class else None
 
-        :param modelname: the name of the object class
-        :param bases: the current bases
-        :param properties: the properties declared in the model
-        """
+    #     :param modelname: the name of the object class
+    #     :param bases: the current bases
+    #     :param properties: the properties declared in the model
+    #     """
 
-    def after_model_construction(self, base, namespace,
-                                 transformation_properties):
-        """Do some action with the constructed Model
+    # def after_model_construction(self, base, namespace,
+    #                              transformation_properties):
+    #     """Do some action with the constructed Model
 
-        :param base: the Model class
-        :param namespace: the namespace of the model
-        :param transformation_properties: the properties of the model
-        """
+    #     :param base: the Model class
+    #     :param namespace: the namespace of the model
+    #     :param transformation_properties: the properties of the model
+    #     """
