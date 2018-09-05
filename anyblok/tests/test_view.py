@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
+from anyblok.model.factory import ViewFactory
 from anyblok.model.common import VIEW
 from anyblok.model.exceptions import ViewException
 from anyblok import Declarations
@@ -19,6 +20,66 @@ Model = Declarations.Model
 
 
 def simple_view():
+
+    @register(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @register(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @register(Model, factory=ViewFactory)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            T1 = cls.registry.T1
+            T2 = cls.registry.T2
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T2.val.label('val2')])
+            return query.where(T1.code == T2.code)
+
+
+def deprecated_view_before_0_19_2():
+
+    @register(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @register(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @register(Model, is_sql_view=True)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            T1 = cls.registry.T1
+            T2 = cls.registry.T2
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T2.val.label('val2')])
+            return query.where(T1.code == T2.code)
+
+
+def deprecated_view_before_0_19_4():
 
     @register(Model)
     class T1:
@@ -68,7 +129,7 @@ def view_with_relationship():
         code = String()
         val = Integer()
 
-    @register(Model, type=VIEW)
+    @register(Model, factory=ViewFactory)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -100,7 +161,7 @@ def simple_view_with_same_table_by_declaration_model():
         code = String()
         val = Integer()
 
-    @register(Model, type=VIEW)
+    @register(Model, factory=ViewFactory)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -115,7 +176,7 @@ def simple_view_with_same_table_by_declaration_model():
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
-    @register(Model, type=VIEW, tablename=Model.TestView)
+    @register(Model, factory=ViewFactory, tablename=Model.TestView)
     class TestView2:
         code = String(primary_key=True)
         val1 = Integer()
@@ -136,7 +197,7 @@ def simple_view_with_same_table_by_name():
         code = String()
         val = Integer()
 
-    @register(Model, type=VIEW)
+    @register(Model, factory=ViewFactory)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -151,7 +212,7 @@ def simple_view_with_same_table_by_name():
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
-    @register(Model, type=VIEW, tablename='testview')
+    @register(Model, factory=ViewFactory, tablename='testview')
     class TestView2:
         code = String(primary_key=True)
         val1 = Integer()
@@ -172,7 +233,7 @@ def simple_view_with_same_table_by_inherit():
         code = String()
         val = Integer()
 
-    @register(Model, type=VIEW)
+    @register(Model, factory=ViewFactory)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -187,7 +248,7 @@ def simple_view_with_same_table_by_inherit():
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
 
-    @register(Model, type=VIEW)
+    @register(Model, factory=ViewFactory)
     class TestView2(Model.TestView):
         code = String(primary_key=True)
         val1 = Integer()
@@ -208,7 +269,7 @@ def simple_view_without_primary_key():
         code = String()
         val = Integer()
 
-    @register(Model, type=VIEW)
+    @register(Model, factory=ViewFactory)
     class TestView:
         code = String()
         val1 = Integer()
@@ -238,7 +299,7 @@ def simple_view_without_view_declaration():
         code = String()
         val = Integer()
 
-    @register(Model, type=VIEW)
+    @register(Model, factory=ViewFactory)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -253,6 +314,34 @@ class TestView(DBTestCase):
 
     def test_simple_view(self):
         registry = self.init_registry(simple_view)
+        registry.T1.insert(code='test1', val=1)
+        registry.T2.insert(code='test1', val=2)
+        registry.T1.insert(code='test2', val=3)
+        registry.T2.insert(code='test2', val=4)
+        TestView = registry.TestView
+        v1 = TestView.query().filter(TestView.code == 'test1').first()
+        v2 = TestView.query().filter(TestView.code == 'test2').first()
+        self.assertEqual(v1.val1, 1)
+        self.assertEqual(v1.val2, 2)
+        self.assertEqual(v2.val1, 3)
+        self.assertEqual(v2.val2, 4)
+
+    def test_deprecated_view_1(self):
+        registry = self.init_registry(deprecated_view_before_0_19_2)
+        registry.T1.insert(code='test1', val=1)
+        registry.T2.insert(code='test1', val=2)
+        registry.T1.insert(code='test2', val=3)
+        registry.T2.insert(code='test2', val=4)
+        TestView = registry.TestView
+        v1 = TestView.query().filter(TestView.code == 'test1').first()
+        v2 = TestView.query().filter(TestView.code == 'test2').first()
+        self.assertEqual(v1.val1, 1)
+        self.assertEqual(v1.val2, 2)
+        self.assertEqual(v2.val1, 3)
+        self.assertEqual(v2.val2, 4)
+
+    def test_deprecated_view_2(self):
+        registry = self.init_registry(deprecated_view_before_0_19_4)
         registry.T1.insert(code='test1', val=1)
         registry.T2.insert(code='test1', val=2)
         registry.T1.insert(code='test2', val=3)

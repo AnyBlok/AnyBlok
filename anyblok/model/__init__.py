@@ -21,7 +21,8 @@ from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
 from .plugins import get_model_plugins
 from .exceptions import ModelException
-from .common import has_sql_fields, MODEL
+from .factory import has_sql_fields, ModelFactory, ViewFactory
+from .common import get_factory
 
 
 def has_sqlalchemy_fields(base):
@@ -87,6 +88,15 @@ def autodoc_fields(declaration_cls, model_cls):
     return table.draw() + '\n\n'
 
 
+def update_factory(kwargs):
+    if 'factory' in kwargs:
+        kwargs['__model_factory__'] = kwargs.pop('factory')
+    elif 'type' in kwargs:
+        kwargs['__model_factory__'] = get_factory(kwargs.pop('type'))
+    elif kwargs.get('is_sql_view'):
+        kwargs['__model_factory__'] = ViewFactory
+
+
 @Declarations.add_declaration_type(isAnEntry=True,
                                    pre_assemble='pre_assemble_callback',
                                    assemble='assemble_callback',
@@ -140,9 +150,7 @@ class Model:
             """call the method on each plugin"""
             for plugin in plugins:
                 if hasattr(plugin, method):
-                    res = getattr(plugin, method)(*args, **kwargs)
-                    if res:
-                        return res
+                    getattr(plugin, method)(*args, **kwargs)
 
         registry.call_plugins = call_plugins
 
@@ -183,8 +191,7 @@ class Model:
 
         kwargs['__registry_name__'] = _registryname
         kwargs['__tablename__'] = tablename
-        if 'type' in kwargs:
-            kwargs['__model_type__'] = kwargs.pop('type')
+        update_factory(kwargs)
 
         RegistryManager.add_entry_in_register(
             'Model', _registryname, cls_, **kwargs)
@@ -381,7 +388,7 @@ class Model:
         properties['loaded_columns'] = []
         properties['hybrid_property_columns'] = []
         properties['loaded_fields'] = {}
-        registry.call_plugins('insert_core_bases', bases, properties)
+        properties['__model_factory__'].insert_core_bases(bases, properties)
 
     @classmethod
     def declare_all_fields(cls, registry, namespace, bases, properties,
@@ -454,8 +461,8 @@ class Model:
         registry.call_plugins('initialisation_tranformation_properties',
                               properties, transformation_properties)
 
-        if '__model_type__' not in properties:
-            properties['__model_type__'] = MODEL
+        properties['__model_factory__'] = properties.get(
+            '__model_factory__', ModelFactory)(registry)
 
         cls.apply_inheritance_base(registry, namespace, ns, bases,
                                    realregistryname, properties,
@@ -478,8 +485,8 @@ class Model:
             cls.insert_in_bases(registry, namespace, bases,
                                 transformation_properties, properties)
             bases = [
-                registry.call_plugins(
-                    'build_base', modelname, bases, properties)]
+                properties['__model_factory__'].build_model(
+                    modelname, bases, properties)]
 
             properties = {}
             registry.add_in_registry(namespace, bases[0])

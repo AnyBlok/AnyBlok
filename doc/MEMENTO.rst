@@ -292,7 +292,10 @@ Here are the parameters of the ``register`` method for ``Model``:
 |             |                                                               |
 +-------------+---------------------------------------------------------------+
 | is_sql_view | Boolean flag, which indicateis if the model is based on a SQL |
-|             | view                                                          |
+|             | view. Deprecated use factory                                  |
++-------------+---------------------------------------------------------------+
+| factory     | Factory class to build the Model class.                       |
+|             | Default : ``anyblok.model.factory.ModelFactory``              |
 +-------------+---------------------------------------------------------------+
 | tablename   | Define the real name of the table. By default the table name  |
 |             | is the registry name without the declaration type, and with   |
@@ -396,11 +399,13 @@ View Model
 ~~~~~~~~~~
 
 A ``View Model`` as ``SQL Model``. Need the declaration of ``Column`` and / or
-``RelationShip``. In the ``register`` the param ``is_sql_view`` must be
-True and the ``View Model`` must define the ``sqlalchemy_view_declaration``
-classmethod.::
+``RelationShip``. In the ``register`` the param ``factory`` must be
+``anyblok.model.factory.ViewFactory`` and the ``View Model`` must define the 
+``sqlalchemy_view_declaration`` classmethod.::
 
-    @register(Model, is_sql_view=True)
+    from anyblok.model.factory import ViewFactory
+
+    @register(Model, factory=ViewFactory)
     class Foo:
 
         id = Integer(primary_key=True)
@@ -932,8 +937,10 @@ from the overload::
 SQL View
 --------
 
-An SQL view is a model, with the argument ``is_sql_view=True`` in the
+An SQL view is a model, with the argument ``factory=anyblok.model.factory.ViewFactory`` in the
 register. and the classmethod ``sqlalchemy_view_declaration``::
+
+    from anyblok.model.factory import ViewFactory
 
     @register(Model)
     class T1:
@@ -947,7 +954,7 @@ register. and the classmethod ``sqlalchemy_view_declaration``::
         code = String()
         val = Integer()
 
-    @register(Model, is_sql_view=True)
+    @register(Model, factory=ViewFactory)
     class TestView:
         code = String(primary_key=True)
         val1 = Integer()
@@ -1638,3 +1645,31 @@ Then, declare it in ``setup.py``::
         },
         ...
     )
+
+
+**anyblok.model.factory**
+-------------------------
+
+This factory is used to:
+
+* give the core classes need to build the model
+* build the model
+
+Start by implementing the factory (see
+:class:`BaseFactory <anyblok.model.tactory.BaseFactory>`)::
+
+    from anyblok.model.factory import BaseFactory
+
+    class MyFactory(BaseFactory):
+
+        def insert_core_bases(self, bases, properties):
+            ...
+
+        def build_model(self, modelname, bases, properties):
+            ...
+
+In your bloks you can use your factory::
+
+    @register(Model, factory=MyFactory)
+    class MyModel:
+        ...

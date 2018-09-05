@@ -13,3 +13,7 @@ class ModelException(Exception):
 
 class ViewException(ModelException):
     """Exception for View declaration"""
+
+
+class ModelFactoryException(Exception):
+    """Exception for Factory declaration"""

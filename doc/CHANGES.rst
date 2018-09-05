@@ -13,6 +13,53 @@
 CHANGELOG
 =========
 
+0.19.4
+------
+
+* Refactor plugins: The plugin class does not give all the method to speed up the build
+  of the Model
+* Update travis configuration to python 3.7
+* Refactor the plugins MODEL and VIEW to become factory, rename type attribute by factory 
+  attribute.
+
+  .. warning:: 
+
+      This version break does not break the compatibily with previous version, but are
+      deprecated.
+
+      The version 1.0.0 of AnyBlok will be removed it
+
+      * before version 0.19.2:
+        To define a sql view to have to replace::
+
+            @register(Model, is_sql_view=True)
+            class MyModel:
+                ...
+
+        by::
+            
+            from anyblok.model.factory import ViewFactory
+
+            @register(Model, factory=ViewFactory)
+            class MyModel:
+              ...
+
+      * after version 0.19.2:
+        To define a sql view to have to replace::
+            from anyblok.model.common import VIEW
+
+            @register(Model, type=VIEW)
+            class MyModel:
+                ...
+
+        by::
+            
+            from anyblok.model.factory import ViewFactory
+
+            @register(Model, factory=ViewFactory)
+            class MyModel:
+              ...
+
 0.19.3 (2018-09-03)
 -------------------
 

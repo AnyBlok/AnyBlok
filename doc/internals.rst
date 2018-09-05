@@ -106,6 +106,29 @@ Plugin: field datetime
     :show-inheritance:
 
 
+anyblok.model.factory module
+----------------------------
+
+.. automodule:: anyblok.model.factory
+
+.. autoclass:: BaseFactory
+    :members:
+
+ModelFactory
+~~~~~~~~~~~~
+
+.. autoclass:: ModelFactory
+    :members:
+    :show-inheritance:
+
+ViewFactory
+~~~~~~~~~~~
+
+.. autoclass:: ViewFactory
+    :members:
+    :show-inheritance:
+
+
 anyblok.mapper module
 ---------------------
 

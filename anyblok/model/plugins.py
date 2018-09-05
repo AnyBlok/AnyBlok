@@ -78,21 +78,6 @@ class ModelPluginBase:
     #     :param transformation_properties: the properties of the model
     #     """
 
-    # def insert_core_bases(self, bases, properties):
-    #     """Add in bases the core bases need in function of the type
-
-    #     :param bases: the current bases
-    #     :param properties: the properties declared in the model
-    #     """
-
-    # def build_base(self, modelname, bases, properties):
-    #     """Return the model class else None
-
-    #     :param modelname: the name of the object class
-    #     :param bases: the current bases
-    #     :param properties: the properties declared in the model
-    #     """
-
     # def after_model_construction(self, base, namespace,
     #                              transformation_properties):
     #     """Do some action with the constructed Model
