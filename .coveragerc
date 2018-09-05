@@ -1,0 +1,4 @@
+[run]
+omit =
+    # omit scripts file
+    anyblok.scripts.py
