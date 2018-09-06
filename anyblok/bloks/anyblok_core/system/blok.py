@@ -9,6 +9,7 @@ from anyblok.blok import BlokManager
 from anyblok.declarations import Declarations, listen, classmethod_cache
 from anyblok.column import String, Integer, Selection
 from anyblok.field import Function
+from pkg_resources import parse_version
 from logging import getLogger
 from os.path import join, isfile
 
@@ -210,7 +211,11 @@ class Blok:
         logger.info("Update the blok %r" % self.name)
         self.fire('Update installed blok')
         entry = self.registry.loaded_bloks[self.name]
-        entry.update(self.installed_version)
+        parsed_version = (
+            parse_version(self.installed_version)
+            if self.installed_version is not None
+            else None)
+        entry.update(parsed_version)
         self.state = 'installed'
         self.installed_version = self.version
 

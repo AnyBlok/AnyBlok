@@ -23,7 +23,7 @@ from .blok import BlokManager
 from .environment import EnvironmentManager
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
 from anyblok.common import anyblok_column_prefix, naming_convention
-from pkg_resources import iter_entry_points
+from pkg_resources import iter_entry_points, parse_version
 from .logging import log
 logger = getLogger(__name__)
 
@@ -1058,12 +1058,20 @@ class Registry:
         if res:
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
-                b.pre_migration(installed_version)
+                parsed_version = (
+                    parse_version(installed_version)
+                    if installed_version is not None
+                    else None)
+                b.pre_migration(parsed_version)
 
             self.migration.auto_upgrade_database()
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
-                b.post_migration(installed_version)
+                parsed_version = (
+                    parse_version(installed_version)
+                    if installed_version is not None
+                    else None)
+                b.post_migration(parsed_version)
 
         else:
             self.migration.auto_upgrade_database()

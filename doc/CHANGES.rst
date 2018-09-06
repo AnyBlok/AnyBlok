@@ -13,7 +13,7 @@
 CHANGELOG
 =========
 
-0.19.4
+0.20.0
 ------
 
 * Refactor plugins: The plugin class does not give all the method to speed up the build
@@ -61,6 +61,19 @@ CHANGELOG
               ...
 
 * Fix issue #53, add primary join when mapping relationship in the self view
+* Fix issue #54, on the blok the attribute latest_version in the methods 
+  **pre_migration**, **post_migration** and **update** are now an instance
+  of **pkg_resources.parse_version** or **None**
+
+  .. warning:: 
+    
+      This action Break the compatibily. To fix your code you must replace the line::
+
+          if latest_version < '1.2.3':
+
+      by::
+
+          if latest_version < pkg_resources.parse_version('1.2.3'):
 
 0.19.3 (2018-09-03)
 -------------------

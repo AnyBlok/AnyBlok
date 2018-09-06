@@ -86,6 +86,10 @@ And the methods that define blok behaviours:
 |                               | install or updated. This method has one     |
 |                               | argument ``latest_version`` (None for       |
 |                               | install)                                    |
+|                               |                                             |
+|                               | Since version **0.20.0** the                |
+|                               | ``latest_verison`` is an                    |
+|                               | **pkg_resources.parse_version**             |
 +-------------------------------+---------------------------------------------+
 | ``uninstall``                 | Action to do when the blok is being         |
 |                               | uninstalled                                 |
@@ -97,12 +101,20 @@ And the methods that define blok behaviours:
 |                               | migration, before auto migration.           |
 |                               | This method has one argument                |
 |                               | ``latest_version`` (None for install)       |
+|                               |                                             |
+|                               | Since version **0.20.0** the                |
+|                               | ``latest_verison`` is an                    |
+|                               | **pkg_resources.parse_version**             |
 +-------------------------------+---------------------------------------------+
 | ``post_migration``            | Action to do when the blok is being         |
 |                               | installed or updated to make some specific  |
 |                               | migration, after auto migration.            |
 |                               | This method has one argument                |
 |                               | ``latest_version`` (None for install)       |
+|                               |                                             |
+|                               | Since version **0.20.0** the                |
+|                               | ``latest_verison`` is an                    |
+|                               | **pkg_resources.parse_version**             |
 +-------------------------------+---------------------------------------------+
 
 And some facility:

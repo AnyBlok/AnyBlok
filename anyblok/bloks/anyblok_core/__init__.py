@@ -9,6 +9,7 @@
 from anyblok.blok import Blok
 from anyblok.release import version
 from logging import getLogger
+from pkg_resources import parse_version
 logger = getLogger(__name__)
 
 
@@ -52,7 +53,10 @@ class AnyBlokCore(Blok):
     logo = '../anyblok-logo_alpha_256.png'
 
     def pre_migration(self, latest_version):
-        if latest_version is not None and latest_version < '0.4.1':
+        if latest_version is None:
+            return
+
+        if latest_version < parse_version('0.4.1'):
             self.pre_migration_0_4_1_fields_become_polymorphic(latest_version)
 
     def pre_migration_0_4_1_fields_become_polymorphic(self, latest_version):
