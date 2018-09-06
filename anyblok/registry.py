@@ -1029,7 +1029,7 @@ class Registry:
         if self.loadwithoutmigration:
             return
 
-        if not self.withoutautomigration:
+        if not self.withoutautomigration and blok2install == 'anyblok-core':
             self.declarativebase.metadata.create_all(self.connection())
 
         self.migration = Configuration.get('Migration', Migration)(self)
