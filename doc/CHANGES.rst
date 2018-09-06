@@ -16,58 +16,52 @@ CHANGELOG
 0.20.0
 ------
 
-* Refactor plugins: The plugin class does not give all the method to speed up the build
-  of the Model
-* Update travis configuration to python 3.7
-* Refactor the plugins MODEL and VIEW to become factory, rename type attribute by factory 
+* Refactor the plugins MODEL and VIEW to become factory, rename type attribute by factory
   attribute.
 
-  .. warning:: 
+  .. warning::
 
-      This version break does not break the compatibily with previous version, but are
-      deprecated.
+      This new version does not break the compatibility, but
+      deprecates older ways of registering SQL View Models.
 
-      The version 1.0.0 of AnyBlok will be removed it
+      The version 1.0.0 of AnyBlok will remove these deprecated ways entirely.
 
-      * before version 0.19.2:
-        To define a sql view to have to replace::
+      The new way to register SQL View Model is as follows::
 
-            @register(Model, is_sql_view=True)
-            class MyModel:
-                ...
-
-        by::
-            
             from anyblok.model.factory import ViewFactory
 
             @register(Model, factory=ViewFactory)
             class MyModel:
               ...
 
-      * after version 0.19.2:
-        To define a sql view to have to replace::
+      whereas before version 0.19.2, it would have been::
+
+            @register(Model, is_sql_view=True)
+            class MyModel:
+                ...
+
+      and in version 0.19.3, it was::
+
             from anyblok.model.common import VIEW
 
             @register(Model, type=VIEW)
             class MyModel:
                 ...
 
-        by::
-            
-            from anyblok.model.factory import ViewFactory
+* issue #53: added primary join for mapping relationship of SQL views
+  to themselves
+* issue #54: on Blok methods
+  ``pre_migration()``, ``post_migration()`` and ``update()`` the
+  ``latest_version`` parameter is now instance
+  of ``pkg_resources`` ``Version`` class, or ``None``
 
-            @register(Model, factory=ViewFactory)
-            class MyModel:
-              ...
+  .. warning::
 
-* Fix issue #53, add primary join when mapping relationship in the self view
-* Fix issue #54, on the blok the attribute latest_version in the methods 
-  **pre_migration**, **post_migration** and **update** are now an instance
-  of **pkg_resources.parse_version** or **None**
+      This change breaks compatibility. In particular, now Blok
+      versions **must** be based on dotted numbers, as for a Python
+      distribution (see also PEP 440).
 
-  .. warning:: 
-    
-      This action Break the compatibily. To fix your code you must replace the line::
+      And, to fix your code, you must replace lines such as::
 
           if latest_version < '1.2.3':
 
@@ -75,7 +69,11 @@ CHANGELOG
 
           if latest_version < pkg_resources.parse_version('1.2.3'):
 
-* clean useless and to magic functionality
+* scripts: removed useless and too magic ``need_blok``
+* fixed Travis configuration for python 3.7
+* plugins sytem optimization: removed stub implementations for all
+  possible methods in base class (gives a substantial speedup in
+  Travis tests).
 
 0.19.3 (2018-09-03)
 -------------------
