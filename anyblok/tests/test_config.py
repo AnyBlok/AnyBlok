@@ -19,6 +19,8 @@ from anyblok.config import (
     add_schema,
     add_doc,
     add_unittest,
+    add_logging,
+    add_install_or_update_bloks,
     ConfigurationException,
     AnyBlokActionsContainer,
     ConfigOption,
@@ -412,7 +414,7 @@ class TestConfiguration(TestCase):
         Configuration.load('default', configuration_groups=['bad-groups'])
         self.assertConfig(MockArguments.vals)
 
-    def get_parer(self):
+    def get_parser(self):
 
         class Parser(AnyBlokActionsContainer, MockArgumentParser):
             pass
@@ -420,33 +422,68 @@ class TestConfiguration(TestCase):
         return Parser()
 
     def test_add_argument_str(self):
-        parser = self.get_parer()
+        parser = self.get_parser()
         parser.add_argument('--value', dest='value', default='1')
         self.assertEqual(Configuration.configuration['value'].type, str)
         self.assertEqual(Configuration.get('value'), '1')
 
     def test_add_argument_int(self):
-        parser = self.get_parer()
+        parser = self.get_parser()
         parser.add_argument('--value', dest='value', type=int, default=1)
         self.assertEqual(Configuration.configuration['value'].type, int)
         self.assertEqual(Configuration.get('value'), 1)
 
     def test_add_argument_float(self):
-        parser = self.get_parer()
+        parser = self.get_parser()
         parser.add_argument('--value', dest='value', type=float, default=1)
         self.assertEqual(Configuration.configuration['value'].type, float)
         self.assertEqual(Configuration.get('value'), 1.)
 
     def test_add_argument_list(self):
-        parser = self.get_parer()
+        parser = self.get_parser()
         parser.add_argument('--value', dest='value', nargs="+", default='1, 2')
         self.assertEqual(Configuration.get('value'), ['1', '2'])
 
     def test_default_str(self):
-        parser = self.get_parer()
+        parser = self.get_parser()
         parser.add_argument('--value', dest='value', default='1')
         parser.set_defaults(value='2')
         self.assertEqual(Configuration.get('value'), '2')
+
+    def test_add_application_properties(self):
+        self.assertIsNone(
+            Configuration.applications.get('test_add_application_properties'))
+        Configuration.add_application_properties(
+            'test_add_application_properties', ['logging'],
+            description='Just a test')
+        self.assertIsNotNone(
+            Configuration.applications.get('test_add_application_properties'))
+        self.assertEqual(
+            Configuration.applications['test_add_application_properties'],
+            {
+                'configuration_groups': ['config', 'database', 'logging'],
+                'description': 'Just a test'
+            })
+
+    def test_add_application_properties_and_load_it(self):
+        Configuration.add_application_properties(
+            'test_add_application_properties', ['logging'])
+        parser = MockArgumentParser()
+
+        # add twice to check doublon
+        Configuration.add('logging', function_=add_logging, label='Logging')
+        Configuration.add('logging', function_=add_logging, label='Logging')
+
+        Configuration.add('database', function_=add_database, label='Database')
+        Configuration.add('config', function_=add_configuration_file)
+        Configuration.add('install-bloks', function_=add_install_bloks)
+        Configuration._load(parser, ['config', 'database', 'logging'])
+
+    def test_initialize_logging(self):
+        Configuration.add('logging', function_=add_logging, label='Logging')
+        Configuration.set('logging_level', 'DEBUG')
+        Configuration.set('logging_level_qualnames', ['test'])
+        Configuration.initialize_logging()
 
 
 class TestConfigurationOption(TestCase):
@@ -468,6 +505,8 @@ class TestConfigurationOption(TestCase):
             'add_doc': add_doc,
             'add_unittest': add_unittest,
             'define_preload_option': define_preload_option,
+            'add_logging': add_logging,
+            'add_install_or_update_bloks': add_install_or_update_bloks,
         }
 
     def test_add_configuration_file(self):
@@ -502,3 +541,9 @@ class TestConfigurationOption(TestCase):
 
     def test_define_preload_option(self):
         self.function['define_preload_option'](self.parser)
+
+    def test_add_logging(self):
+        self.function['add_logging'](self.parser)
+
+    def test_add_install_or_update_bloks(self):
+        self.function['add_install_or_update_bloks'](self.parser)
