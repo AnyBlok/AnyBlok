@@ -8,3 +8,9 @@ omit =
     anyblok/test_bloks/*
     # omit anything in a sphinx directory anywhere
     anyblok/sphinx/*
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # unexecuting logger
+    logger\.
