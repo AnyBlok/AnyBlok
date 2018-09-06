@@ -75,6 +75,8 @@ CHANGELOG
 
           if latest_version < pkg_resources.parse_version('1.2.3'):
 
+* clean useless and to magic functionality
+
 0.19.3 (2018-09-03)
 -------------------
 
