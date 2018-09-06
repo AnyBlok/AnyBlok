@@ -50,6 +50,7 @@ script:
   - psql -c 'drop database travis_ci_test;' -U postgres
   - anyblok_createdb --install-all-bloks
   - nosetests anyblok/bloks --with-anyblok-bloks -v -s --with-coverage --cover-package=anyblok
+  - anyblok_nose -- -v -s --with-coverage --cover-package=anyblok  # test runner
   
 after_success:
   coveralls
