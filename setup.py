@@ -13,7 +13,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.20.0.dev0'
+from anyblok.release import version
 
 
 if sys.version_info < (3, 3):
