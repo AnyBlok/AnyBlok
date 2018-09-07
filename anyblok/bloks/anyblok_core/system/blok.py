@@ -9,7 +9,7 @@ from anyblok.blok import BlokManager
 from anyblok.declarations import Declarations, listen, classmethod_cache
 from anyblok.column import String, Integer, Selection
 from anyblok.field import Function
-from pkg_resources import parse_version
+from anyblok.version import parse_version
 from logging import getLogger
 from os.path import join, isfile
 
