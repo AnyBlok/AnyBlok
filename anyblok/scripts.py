@@ -13,6 +13,7 @@ from anyblok.config import Configuration, get_db_name
 from anyblok.registry import RegistryManager, return_list
 from anyblok._graphviz import ModelSchema, SQLSchema
 from nose import main
+import warnings
 import sys
 from os.path import join
 from os import walk
@@ -147,6 +148,7 @@ def anyblok_updatedb():
 def anyblok_nose():
     """Run nose unit test for the registry
     """
+    warnings.simplefilter('default')
     registry = anyblok.start('nose', useseparator=True, unittest=True)
 
     defaultTest = []
