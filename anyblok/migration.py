@@ -956,6 +956,7 @@ class Migration:
     def __init__(self, registry):
         self.withoutautomigration = registry.withoutautomigration
         self.conn = registry.session.connection()
+        self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
 
         opts = {

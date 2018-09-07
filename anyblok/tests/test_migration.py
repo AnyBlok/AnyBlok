@@ -320,15 +320,6 @@ class TestMigration(TestCase):
         with self.assertRaises(MigrationException):
             self.registry.migration.detect_changed()
 
-    def test_detect_table_added(self):
-        with self.cnx() as conn:
-            conn.execute("DROP TABLE test")
-        report = self.registry.migration.detect_changed()
-        self.assertTrue(report.log_has("Add table test"))
-        report.apply_change()
-        report = self.registry.migration.detect_changed()
-        self.assertFalse(report.log_has("Add table test"))
-
     def test_detect_column_added(self):
         # Remove a column on the table force the detection to found new column
         # which is existing in metadata but not in table
