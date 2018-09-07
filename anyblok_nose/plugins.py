@@ -11,6 +11,7 @@ from os.path import relpath
 from os.path import normpath
 from os import pardir
 from os import walk
+import warnings
 
 
 def isindir(path, dirpath):
@@ -77,6 +78,7 @@ class AnyBlokPlugin(Plugin):
     def configure(self, options, conf):
         super(AnyBlokPlugin, self).configure(options, conf)
         if self.enabled:
+            warnings.simplefilter('default')
             self.AnyBlokOptions = Arg2OptOptions(options)
 
     def load_registry(self):
