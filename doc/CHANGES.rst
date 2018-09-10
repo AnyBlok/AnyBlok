@@ -59,6 +59,8 @@ CHANGELOG
 * plugins sytem optimization: removed stub implementations for all
   possible methods in base class (gives a substantial speedup in
   Travis tests).
+* issue #55: the **auto migration** of the bloks was entirely done between
+  ``pre_migration()`` and ``post_migration()``.
 
 0.19.3 (2018-09-03)
 -------------------
