@@ -2,6 +2,7 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -9,7 +10,6 @@
 from anyblok.blok import Blok
 from anyblok.release import version
 from logging import getLogger
-from pkg_resources import parse_version
 logger = getLogger(__name__)
 
 
@@ -56,7 +56,7 @@ class AnyBlokCore(Blok):
         if latest_version is None:
             return
 
-        if latest_version < parse_version('0.4.1'):
+        if latest_version < '0.4.1':
             self.pre_migration_0_4_1_fields_become_polymorphic(latest_version)
 
     def pre_migration_0_4_1_fields_become_polymorphic(self, latest_version):

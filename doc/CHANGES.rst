@@ -54,21 +54,6 @@ CHANGELOG
   ``pre_migration()``, ``post_migration()`` and ``update()`` the
   ``latest_version`` parameter is now instance
   of ``pkg_resources`` ``Version`` class, or ``None``
-
-  .. warning::
-
-      This change breaks compatibility. In particular, now Blok
-      versions **must** be based on dotted numbers, as for a Python
-      distribution (see also PEP 440).
-
-      And, to fix your code, you must replace lines such as::
-
-          if latest_version < '1.2.3':
-
-      by::
-
-          if latest_version < pkg_resources.parse_version('1.2.3'):
-
 * scripts: removed useless and too magic ``need_blok``
 * fixed Travis configuration for python 3.7
 * plugins sytem optimization: removed stub implementations for all

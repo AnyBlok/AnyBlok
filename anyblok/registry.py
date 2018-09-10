@@ -23,7 +23,8 @@ from .blok import BlokManager
 from .environment import EnvironmentManager
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
 from anyblok.common import anyblok_column_prefix, naming_convention
-from pkg_resources import iter_entry_points, parse_version
+from pkg_resources import iter_entry_points
+from .version import parse_version
 from .logging import log
 logger = getLogger(__name__)
 
