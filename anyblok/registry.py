@@ -1030,8 +1030,10 @@ class Registry:
         if self.loadwithoutmigration:
             return
 
-        if not self.withoutautomigration:
-            self.declarativebase.metadata.create_all(self.connection())
+        if not self.withoutautomigration and blok2install == 'anyblok-core':
+            system_blok = self.declarativebase.metadata.tables['system_blok']
+            self.declarativebase.metadata.create_all(
+                bind=self.connection(), tables=[system_blok])
 
         self.migration = Configuration.get('Migration', Migration)(self)
         query = """
@@ -1050,7 +1052,11 @@ class Registry:
                     else None)
                 b.pre_migration(parsed_version)
 
+            if not self.withoutautomigration:
+                self.declarativebase.metadata.create_all(self.connection())
+
             self.migration.auto_upgrade_database()
+
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
                 parsed_version = (

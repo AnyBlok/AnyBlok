@@ -43,6 +43,18 @@ class MigrationReport:
                                      "different, or this difference is "
                                      "forbidden in 'no auto migration' mode")
 
+    def table_is_added(self, table):
+        for action in self.actions:
+            if action[0] == 'add_table' and action[1] is table:
+                    return True
+
+        return False
+
+    def init_add_table(self, diff):
+        self.raise_if_withoutautomigration()
+        _, table = diff
+        self.log_names.append('Add table %s' % table.name)
+
     def init_add_column(self, diff):
         self.raise_if_withoutautomigration()
         _, _, table, column = diff
@@ -110,6 +122,9 @@ class MigrationReport:
         self.raise_if_withoutautomigration()
         _, constraint = diff
         columns = [x.name for x in constraint.columns]
+        if self.table_is_added(constraint.table):
+            return True
+
         self.log_names.append('Add index constraint on %s (%s)' % (
             constraint.table.name, ', '.join(columns)))
 
@@ -250,6 +265,7 @@ class MigrationReport:
         self.diffs = diffs
         self.log_names = []
         mappers = {
+            'add_table': self.init_add_table,
             'add_column': self.init_add_column,
             'remove_constraint': self.init_remove_constraint,
             'add_index': self.init_add_index,
@@ -292,6 +308,10 @@ class MigrationReport:
         :param log: log sentence expected
         """
         return log in self.logs
+
+    def apply_change_add_table(self, action):
+        _, table = action
+        self.migration.table().add(table.name, table=table)
 
     def apply_change_add_column(self, action):
         _, _, table, column = action
@@ -378,6 +398,7 @@ class MigrationReport:
             logger.debug(log)
 
         mappers = {
+            'add_table': self.apply_change_add_table,
             'add_column': self.apply_change_add_column,
             'modify_nullable': self.apply_change_modify_nullable,
             'modify_type': self.apply_change_modify_type,
@@ -840,13 +861,20 @@ class MigrationTable:
                                                                        name):
                     raise MigrationException("No table %r found" % name)
 
-    def add(self, name):
+    def add(self, name, table=None):
         """ Add a new table
 
         :param name: name of the table
+        :param table: an existing instance of the table to create
         :rtype: MigrationTable instance
         """
-        self.migration.operation.create_table(name)
+        if table is not None:
+            self.migration.metadata.create_all(
+                bind=self.migration.conn,
+                tables=[table])
+        else:
+            self.migration.operation.create_table(name)
+
         return MigrationTable(self.migration, name)
 
     def column(self, name=None):
@@ -928,6 +956,7 @@ class Migration:
     def __init__(self, registry):
         self.withoutautomigration = registry.withoutautomigration
         self.conn = registry.session.connection()
+        self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
 
         opts = {
