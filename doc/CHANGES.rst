@@ -54,6 +54,8 @@ CHANGELOG
   ``pre_migration()``, ``post_migration()`` and ``update()`` the
   ``latest_version`` parameter is now instance
   of ``pkg_resources`` ``Version`` class, or ``None``
+* new tests base class: SharedDataTestCase, allowing to share costly
+  fixtures among tests of the same class
 * scripts: removed useless and too magic ``need_blok``
 * fixed Travis configuration for python 3.7
 * plugins sytem optimization: removed stub implementations for all

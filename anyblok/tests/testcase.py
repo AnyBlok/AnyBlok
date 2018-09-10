@@ -378,6 +378,10 @@ class BlokTestCase(unittest.TestCase):
 
         @event.listens_for(self.registry.session, "after_transaction_end")
         def restart_savepoint(session, transaction):
+            # TODO gracinet: while working on SharedDataTestCase
+            # I noticed that this could keep listening long after everything
+            # has been teared down. See SharedDataTestCase for unregistration
+            # example.
             if transaction.nested and not transaction._parent.nested:
                 session.expire_all()
                 session.begin_nested()
@@ -400,6 +404,58 @@ class BlokTestCase(unittest.TestCase):
             self.registry.rollback()
             self.registry.session.close()
 
+        self._transaction_case_teared_down = True
+
+
+class SharedDataTestCase(BlokTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(SharedDataTestCase, cls).setUpClass()
+        cls.pre_data_savepoint = cls.registry.begin_nested()
+        try:
+            cls.setUpSharedData()
+        except Exception as exc:
+            cls.tearDownClass()
+            raise
+
+    @classmethod
+    def setUpSharedData(cls):
+        """To be implemented by concrete test classes."""
+
+    @classmethod
+    def make_case_savepoint(cls, session=None):
+        if session is None:
+            session = cls.registry
+        cls.case_savepoint = session.begin_nested()
+
+    def setUp(self):
+        # we don't want to execute BlokTestCase.setUp(), only its parent's:
+        super(BlokTestCase, self).setUp()
+        # tearDown is not called in case of errors in setUp, but these are:
+        self.addCleanup(self.callCleanUp)
+        self.make_case_savepoint()
+
+        @event.listens_for(self.registry.session, "after_transaction_end")
+        def restart_savepoint(session, transaction):
+            session.expire_all()
+            if transaction is self.case_savepoint:
+                self.make_case_savepoint()
+
+        self.savepoint_restarter = restart_savepoint
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.pre_data_savepoint.rollback()
+        super(SharedDataTestCase, cls).tearDownClass()
+
+    def tearDown(self):
+        """Roll back the session """
+        super(BlokTestCase, self).tearDown()
+        self.case_savepoint.rollback()
+        self.registry.System.Cache.invalidate_all()
+        event.remove(self.registry.session, "after_transaction_end",
+                     self.savepoint_restarter)
         self._transaction_case_teared_down = True
 
 
