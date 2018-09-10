@@ -109,6 +109,7 @@ setup(
             'test-blok11=anyblok.test_bloks.test_blok11:TestBlok',
             'test-blok12=anyblok.test_bloks.test_blok12:TestBlok',
             'test-blok13=anyblok.test_bloks.test_blok13:TestBlok',
+            'test-blok14=anyblok.test_bloks.test_blok14:TestBlok',
         ],
         'nose.plugins.0.10': [
             'anyblok-bloks=anyblok_nose.plugins:AnyBlokPlugin',

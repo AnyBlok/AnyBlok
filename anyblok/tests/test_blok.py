@@ -780,6 +780,26 @@ class TestBlokModel(DBTestCase):
         registry.upgrade(uninstall=('test-blok8',))
         registry.Test2.query().delete()
 
+    def test_auto_migration_is_between_pre_and_post_migration_1(self):
+        registry = self.init_registry(None)
+        registry.upgrade(install=('test-blok14',))
+        blok = BlokManager.get('test-blok14')
+        self.assertFalse(blok.table_exist_before_automigration)
+        self.assertTrue(blok.table_exist_after_automigration)
+        registry.Test.insert()
+        self.assertEqual(registry.Test.query().count(), 1)
+
+    def test_auto_migration_is_between_pre_and_post_migration_2(self):
+        registry = self.init_registry(None)
+        registry.upgrade(install=('test-blok14',))
+        blok = BlokManager.get('test-blok14')
+        registry.Test.insert()
+        self.assertEqual(registry.Test.query().count(), 1)
+        registry.upgrade(update=('test-blok14',))
+        self.assertTrue(blok.table_exist_before_automigration)
+        self.assertTrue(blok.table_exist_after_automigration)
+        self.assertEqual(registry.Test.query().count(), 1)
+
 
 class TestBlokSession(DBTestCase):
 
