@@ -13,8 +13,8 @@
 CHANGELOG
 =========
 
-0.20.0
-------
+0.20.0 (2018-09-10)
+-------------------
 
 * Refactor the plugins MODEL and VIEW to become factory, rename type attribute by factory
   attribute.
