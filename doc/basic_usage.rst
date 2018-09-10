@@ -774,12 +774,35 @@ developers need for their daily workflow: a working registry is setup
 once for the whole test run, is exposed as a class attribute,
 and the tests are insulated by rollbacking the database transaction.
 
+Another interesting base class is :class:`SharedDataTestCase
+<anyblok.tests.testcase.SharedDataTestCase>`. It uses database
+savepoints to share a common fixture among tests of the same class.
+In concrete test subclasses, any data created by the ``setUpSharedData``
+classmethod will be available to all tests, and will be rollbacked
+once all of them have run. This can save a lot of time in the test runs.
+
+.. note:: it is advisable to delete the imported base class from the
+          test module, like so::
+
+            from anyblok.tests.testcase import SharedDataTestCase
+
+            class MyTest(SharedDataTestCase):
+
+               (...)
+
+            del SharedDataTestCase
+
+          in some cases, test launchers can be confused by the
+          presence of the base class in the module namespace,
+          resulting in some double launchings.
+
 We should also mention :class:`DBTestCase
 <anyblok.tests.testcase.DBTestCase>`, which is more suited for
 code that interacts at a deeper level with
 the framework (including the framework itself). It creates and drops
 the database for each test case, and therefore makes the whole run
 terribly slow, but that's sometimes a price worth paying.
+
 
 .. warning:: One must separate the launches of BlokTestCases
              and of DBTestCases in different runs.
