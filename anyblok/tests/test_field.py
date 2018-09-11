@@ -176,9 +176,42 @@ class TestField2(DBTestCase):
             properties = Json()
             name = JsonRelated(json_column='properties', keys=['sub', 'name'])
 
+    def test_field_json_related_with_missing_json_column(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                properties = Json()
+                name = JsonRelated(keys=['name'])
+
+        with self.assertRaises(FieldException):
+            self.init_registry(add_in_registry)
+
+    def test_field_json_related_with_missing_keys(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+
+                id = Integer(primary_key=True)
+                properties = Json()
+                name = JsonRelated(json_column='properties')
+
+        with self.assertRaises(FieldException):
+            self.init_registry(add_in_registry)
+
     def test_field_json_related_hasattr(self):
         registry = self.init_registry(self.define_field_json_related)
         registry.Test.name
+
+    def test_field_json_related_autodoc(self):
+        registry = self.init_registry(self.define_field_json_related)
+        registry.loaded_namespaces_first_step['Model.Test'][
+            'name'].autodoc_get_properties()
 
     def test_field_json_related_get_1(self):
         registry = self.init_registry(self.define_field_json_related)
@@ -200,6 +233,20 @@ class TestField2(DBTestCase):
         t = registry.Test.insert(
             properties={'sub': {'name': 'jssuzanne'}})
         self.assertEqual(t.name, 'jssuzanne')
+
+    def test_field_json_related_del_1(self):
+        registry = self.init_registry(self.define_field_json_related)
+        t = registry.Test.insert(properties={'name': 'jssuzanne'})
+        del t.name
+        self.assertIsNone(t.name)
+        self.assertEqual(t.properties, {'name': None})
+
+    def test_field_json_related_del_2(self):
+        registry = self.init_registry(self.define_field_json_related2)
+        t = registry.Test.insert()
+        del t.name
+        self.assertIsNone(t.name)
+        self.assertEqual(t.properties, {'sub': {'name': None}})
 
     def test_field_json_related_set_1(self):
         registry = self.init_registry(self.define_field_json_related)

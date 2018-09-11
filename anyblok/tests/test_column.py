@@ -88,6 +88,10 @@ def simple_column(ColumnType=None, **kwargs):
         id = Integer(primary_key=True)
         col = ColumnType(**kwargs)
 
+        @classmethod
+        def meth_secretkey(cls):
+            return 'secretkey'
+
 
 def column_with_foreign_key():
 
@@ -204,6 +208,17 @@ class TestColumns(DBTestCase):
     def test_string_with_encrypt_key(self):
         registry = self.init_registry(simple_column, ColumnType=String,
                                       encrypt_key='secretkey')
+        test = registry.Test.insert(col='col')
+        registry.session.commit()
+        self.assertEqual(test.col, 'col')
+        res = registry.execute('select col from test where id = %s' % test.id)
+        res = res.fetchall()[0][0]
+        self.assertNotEqual(res, 'col')
+
+    @skipIf(not has_cryptography, "cryptography is not installed")
+    def test_string_with_encrypt_key_defined_by_a_method(self):
+        registry = self.init_registry(simple_column, ColumnType=String,
+                                      encrypt_key='meth_secretkey')
         test = registry.Test.insert(col='col')
         registry.session.commit()
         self.assertEqual(test.col, 'col')
@@ -677,6 +692,17 @@ class TestColumns(DBTestCase):
         self.assertEqual(test.col.label, SELECTIONS[0][1])
         with self.assertRaises(FieldException):
             test.col = 'bad value'
+
+    def test_selection_autodoc(self):
+        SELECTIONS = [
+            ('admin', 'Admin'),
+            ('regular-user', 'Regular user')
+        ]
+
+        registry = self.init_registry(
+            simple_column, ColumnType=Selection, selections=SELECTIONS)
+        registry.loaded_namespaces_first_step['Model.Test'][
+            'col'].autodoc_get_properties()
 
     def test_selection_with_none_value(self):
         SELECTIONS = [
