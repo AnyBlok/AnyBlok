@@ -1032,29 +1032,6 @@ class One2Many(RelationShip):
         res['remote_columns'] = self.remote_columns
         return res
 
-    def find_foreign_key(self, registry, properties, tablename):
-        """ Return the primary key come from the first step property
-
-        :param registry: the registry which load the relationship
-        :param properties: first step properties for the model
-        :param tablename: the name of the table for the foreign key
-        :rtype: column name of the primary key
-        """
-        fks = []
-        for f, p in properties.items():
-            if f == '__tablename__':
-                continue
-
-            if not hasattr(p, 'foreign_key'):
-                continue
-
-            if p.foreign_key:
-                model = p.foreign_key.model_name
-                if self.get_tablename(registry, model=model) == tablename:
-                    fks.append(f)
-
-        return fks
-
     def add_expire_attributes(self, registry, namespace, fieldname):
         if self.kwargs.get('backref'):
             backref = self.kwargs['backref']

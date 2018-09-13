@@ -8,6 +8,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase, DBTestCase
+from anyblok.config import Configuration
 from sqlalchemy import Integer as SA_Integer, String as SA_String
 from sqlalchemy.exc import StatementError
 from anyblok import Declarations
@@ -225,6 +226,19 @@ class TestColumns(DBTestCase):
         res = registry.execute('select col from test where id = %s' % test.id)
         res = res.fetchall()[0][0]
         self.assertNotEqual(res, 'col')
+
+    @skipIf(not has_cryptography, "cryptography is not installed")
+    def test_string_with_encrypt_key_defined_by_configuration(self):
+        Configuration.set('default_encrypt_key', 'secretkey')
+        registry = self.init_registry(simple_column, ColumnType=String,
+                                      encrypt_key=True)
+        test = registry.Test.insert(col='col')
+        registry.session.commit()
+        self.assertEqual(test.col, 'col')
+        res = registry.execute('select col from test where id = %s' % test.id)
+        res = res.fetchall()[0][0]
+        self.assertNotEqual(res, 'col')
+        del Configuration.configuration['default_encrypt_key']
 
     @skipIf(not has_cryptography, "cryptography is not installed")
     def test_datetime_with_encrypt_key(self):
@@ -693,16 +707,48 @@ class TestColumns(DBTestCase):
         with self.assertRaises(FieldException):
             test.col = 'bad value'
 
-    def test_selection_autodoc(self):
+    def test_selection_with_only_one_value(self):
         SELECTIONS = [
             ('admin', 'Admin'),
-            ('regular-user', 'Regular user')
         ]
 
         registry = self.init_registry(
             simple_column, ColumnType=Selection, selections=SELECTIONS)
-        registry.loaded_namespaces_first_step['Model.Test'][
-            'col'].autodoc_get_properties()
+        test = registry.Test.insert(col=SELECTIONS[0][0])
+        self.assertEqual(test.col, SELECTIONS[0][0])
+        self.assertEqual(test.col.label, SELECTIONS[0][1])
+        test = registry.Test.query().first()
+        self.assertEqual(test.col, SELECTIONS[0][0])
+        self.assertEqual(test.col.label, SELECTIONS[0][1])
+        with self.assertRaises(FieldException):
+            test.col = 'bad value'
+
+    def test_selection_without_value(self):
+        self.init_registry(simple_column, ColumnType=Selection, selections=[])
+
+    def test_selection_autodoc(self):
+        SELECTIONS = [
+            ('admin', 'Admin'),
+        ]
+
+        registry = self.init_registry(
+            simple_column, ColumnType=Selection, selections=SELECTIONS)
+        column = registry.System.Column.query().filter_by(
+            model='Model.Test', name='col').one()
+        self.assertEqual(
+            column._description(),
+            {
+                'id': 'col',
+                'label': 'Col',
+                'model': None,
+                'nullable': True,
+                'primary_key': False,
+                'selections': [
+                    ('admin', 'Admin'),
+                ],
+                'type': 'Selection',
+            }
+        )
 
     def test_selection_with_none_value(self):
         SELECTIONS = [

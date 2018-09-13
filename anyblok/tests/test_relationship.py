@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.field import FieldException
-from anyblok.relationship import RelationShip
+from anyblok.relationship import RelationShip, RelationShipList
 from anyblok import Declarations
 from anyblok.column import Integer
 from anyblok.relationship import One2Many, Many2One
@@ -47,6 +47,58 @@ class TestRelationShip(TestCase):
             self.fail("No watchdog, the model must be required")
         except FieldException:
             pass
+
+
+class TestRelationShipList(TestCase):
+
+    @classmethod
+    def setupClass(cls):
+        cls.List = type(
+            'List', (RelationShipList, list),
+            {
+                'relationship_field_append_value': lambda *a, **kw: True,
+                'relationship_field_remove_value': lambda *a, **kw: True,
+            })
+
+    def setUp(self):
+        self.list = self.List()
+
+    def test_append(self):
+        self.assertEqual(self.list, [])
+        self.list.append(1)
+        self.assertEqual(self.list, [1])
+
+    def test_extend(self):
+        self.assertEqual(self.list, [])
+        self.list.extend([1, 2])
+        self.assertEqual(self.list, [1, 2])
+
+    def test_insert(self):
+        self.assertEqual(self.list, [])
+        self.list.insert(0, 1)
+        self.assertEqual(self.list, [1])
+        self.list.insert(0, 2)
+        self.assertEqual(self.list, [2, 1])
+
+    def test_pop(self):
+        self.list.extend([1, 2])
+        self.assertEqual(self.list, [1, 2])
+        self.list.pop(0)
+        self.assertEqual(self.list, [2])
+        self.list.pop(0)
+        self.assertEqual(self.list, [])
+
+    def test_remove(self):
+        self.list.extend([3, 2, 1])
+        self.assertEqual(self.list, [3, 2, 1])
+        self.list.remove(1)
+        self.assertEqual(self.list, [3, 2])
+
+    def test_clear(self):
+        self.list.extend([3, 2, 1])
+        self.assertEqual(self.list, [3, 2, 1])
+        self.list.clear()
+        self.assertEqual(self.list, [])
 
 
 class TestComplexeRelationShipCase(DBTestCase):

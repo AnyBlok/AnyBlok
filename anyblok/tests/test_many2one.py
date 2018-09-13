@@ -149,6 +149,11 @@ class TestMany2One(DBTestCase):
 
         self.assertEqual(address.persons, [person])
 
+    def test_many2one_autodoc(self):
+        registry = self.init_registry(_complete_many2one)
+        registry.loaded_namespaces_first_step['Model.Person'][
+            'address'].autodoc_get_properties()
+
     def test_complete_many2one_expire_field(self):
         registry = self.init_registry(_complete_many2one)
         self.assertIn(

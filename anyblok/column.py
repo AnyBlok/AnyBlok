@@ -516,9 +516,7 @@ class String(Column):
     """
     def __init__(self, *args, **kwargs):
         self.size = kwargs.pop('size', 64)
-        if 'type_' in kwargs:
-            del kwargs['type_']
-
+        kwargs.pop('type_', None)
         self.sqlalchemy_type = StringType(self.size)
         super(String, self).__init__(*args, **kwargs)
 
@@ -564,9 +562,7 @@ class Password(Column):
         size = kwargs.pop('size', 64)
         crypt_context = kwargs.pop('crypt_context', {})
         self.crypt_context = crypt_context
-
-        if 'type_' in kwargs:
-            del kwargs['type_']
+        kwargs.pop('type_', None)
 
         if 'foreign_key' in kwargs:
             raise FieldException("Column Password can not have a foreign key")
@@ -705,13 +701,10 @@ class Selection(Column):
     """
     def __init__(self, *args, **kwargs):
         self.selections = tuple()
-        self.size = 64
         if 'selections' in kwargs:
             self.selections = kwargs.pop('selections')
 
-        if 'size' in kwargs:
-            self.size = kwargs.pop('size')
-
+        self.size = kwargs.pop('size', 64)
         self.sqlalchemy_type = 'tmp value for assert'
 
         super(Selection, self).__init__(*args, **kwargs)
@@ -905,10 +898,7 @@ class Color(Column):
     """
     def __init__(self, *args, **kwargs):
         self.max_length = max_length = kwargs.pop('size', 20)
-
-        if 'type_' in kwargs:
-            del kwargs['type_']
-
+        kwargs.pop('type_', None)
         self.sqlalchemy_type = ColorType(max_length)
         super(Color, self).__init__(*args, **kwargs)
 
@@ -1005,8 +995,7 @@ class PhoneNumber(Column):
     def __init__(self, region='FR', max_length=20, *args, **kwargs):
         self.region = region
         self.max_length = max_length
-        if 'type_' in kwargs:
-            del kwargs['type_']
+        kwargs.pop('type_', None)
 
         self.sqlalchemy_type = PhoneNumberType(
             region=region, max_length=max_length)

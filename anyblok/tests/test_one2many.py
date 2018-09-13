@@ -143,6 +143,11 @@ class TestOne2Many(DBTestCase):
 
         self.assertEqual(person.address, address)
 
+    def test_one2many_autodoc(self):
+        registry = self.init_registry(_complete_one2many)
+        registry.loaded_namespaces_first_step['Model.Address'][
+            'persons'].autodoc_get_properties()
+
     def test_complete_one2many_expire_field(self):
         registry = self.init_registry(_complete_one2many)
         self.assertIn(

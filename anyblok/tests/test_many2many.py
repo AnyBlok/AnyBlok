@@ -179,6 +179,11 @@ class TestMany2Many(DBTestCase):
 
         self.assertEqual(address.persons, [person])
 
+    def test_many2many_autodoc(self):
+        registry = self.init_registry(_complete_many2many)
+        registry.loaded_namespaces_first_step['Model.Person'][
+            'addresses'].autodoc_get_properties()
+
     def test_complete_many2many_expire_field(self):
         registry = self.init_registry(_complete_many2many)
         self.assertIn(
