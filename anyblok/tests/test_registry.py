@@ -11,8 +11,16 @@ from anyblok.registry import RegistryManager
 from anyblok.config import Configuration
 from anyblok.blok import BlokManager, Blok
 from anyblok.column import Integer
+from anyblok import start
 from threading import Thread
 from logging import ERROR
+import sys
+
+try:
+    # python 3.4+ should use builtin unittest.mock not mock package
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 
 class Test:
@@ -117,6 +125,18 @@ class TestRegistry(DBTestCase):
         registry.add_in_registry('Declarations.Test.Test', TestTest)
         registry.add_in_registry('Declarations.Test.Test.Test', TestTestTest)
         self.check_added_in_regisry(registry)
+
+    def test_start_function(self):
+        BlokManager.unload()
+        db_name = Configuration.get('db_name') or 'test_anyblok'
+        db_driver_name = Configuration.get('db_driver_name') or 'postgresql'
+
+        testargs = ['default', '--db-name', db_name, '--db-driver-name',
+                    db_driver_name]
+        with patch.object(sys, 'argv', testargs):
+            registry = start('default')
+
+        self.assertIsNotNone(registry)
 
     def test_add_in_registry_2(self):
         registry = self.init_registry(None)

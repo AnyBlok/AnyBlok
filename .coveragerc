@@ -14,3 +14,5 @@ omit =
 exclude_lines =
     # unexecuting logger
     logger\.
+    # exclude all import error of unloaded module
+    except ImportError:
