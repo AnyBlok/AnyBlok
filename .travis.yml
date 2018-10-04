@@ -45,7 +45,7 @@ env:
 
 script:
   - flake8 anyblok
-  - py.test --cov=anyblok anyblok/
+  - py.test --cov-report= --cov=anyblok anyblok/
   
 after_success:
-  coveralls
+  coveralls --data_file=.coverage --config_file=.coveragerc
