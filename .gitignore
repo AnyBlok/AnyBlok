@@ -19,6 +19,7 @@ doc/_build
 parts/
 bin/
 etc/
+venv/
 develop-eggs/
 
 gmon.out

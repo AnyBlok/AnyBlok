@@ -31,7 +31,7 @@ install:
   # only wheel
   - pip install wheel
   - pip install psycopg2 sqlalchemy  # for unittesting anyblok with postgres
-  - pip install flake8 coverage nose
+  - pip install flake8 coverage pytest pytest-cov pytest-xdist
   - pip install colour passlib furl phonenumbers pycountry  # special columns
   - if [[ $TRAVIS_PYTHON_VERSION != '3.3' ]]; then pip install cryptography; fi
   - pip install coveralls
@@ -45,12 +45,7 @@ env:
 
 script:
   - flake8 anyblok
-  - psql -c 'create database travis_ci_test;' -U postgres
-  - nosetests anyblok/tests -v -s --with-coverage --cover-package=anyblok
-  - psql -c 'drop database travis_ci_test;' -U postgres
-  - anyblok_createdb --install-all-bloks
-  - nosetests anyblok/bloks --with-anyblok-bloks -v -s --with-coverage --cover-package=anyblok
-  - anyblok_nose -- -v -s --with-coverage --cover-package=anyblok  # test runner
+  - py.test --cov=anyblok anyblok/
   
 after_success:
   coveralls
