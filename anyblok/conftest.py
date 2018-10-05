@@ -1,3 +1,10 @@
+# This file is a part of the AnyBlok project
+#
+#    Copyright (C) 2018 Denis VIVIÈS <dvivies@geoblink.com>
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file,You can
+# obtain one at http://mozilla.org/MPL/2.0/.
+
 from logging import getLogger
 
 import pytest
@@ -30,7 +37,7 @@ def init_session(request):
             session.expire_all()
             session.begin_nested()
 
-    print('-- create registry')
+    logger.info('Creating registry')
     yield registry
 
     request.addfinalizer(registry.session.close)
@@ -44,7 +51,7 @@ def rollback_registry(request, init_session):
 
     def clean_up():
         try:
-            logger.debug('-- invalidating all cache')
+            logger.debug('Invalidating all cache')
             registry.System.Cache.invalidate_all()
         except sqlalchemy.exc.InvalidRequestError:
             logger.warning('Invalid request Error: while invalidating all caches after {}'
