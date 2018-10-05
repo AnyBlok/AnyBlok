@@ -71,7 +71,6 @@ class TestCoreSqlBase:
     def test_fields_description(self, rollback_registry):
         registry = rollback_registry
         Model = registry.System.Model
-        self.maxDiff = None
         res = {'description': {'id': 'description',
                                'label': 'Description',
                                'model': None,
@@ -101,7 +100,6 @@ class TestCoreSqlBase:
     def test_fields_description_limited_field(self, rollback_registry):
         registry = rollback_registry
         Model = registry.System.Model
-        self.maxDiff = None
         res = {'table': {'id': 'table',
                          'label': 'Table',
                          'model': None,
@@ -114,7 +112,6 @@ class TestCoreSqlBase:
         registry = rollback_registry
         Model = registry.System.Model
         Column = registry.System.Column
-        self.maxDiff = None
         res = {'table': {'id': 'table',
                          'label': 'Table',
                          'model': None,
