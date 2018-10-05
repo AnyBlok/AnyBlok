@@ -19,7 +19,7 @@ logger = getLogger(__name__)
 
 
 class BlokManagerException(LookupError):
-    """ Simple exception to BlokManager """
+    """ Simple exception class for BlokManager """
 
     def __init__(self, *args, **kwargs):
         EnvironmentManager.set('current_blok', None)
@@ -120,16 +120,21 @@ class BlokManager:
         RegistryManager.unload()
 
     @classmethod
-    def get_need_blok_linked_bloks(cls, blok):
+    def get_needed_blok_dependencies(cls, blok):
+        """
+        Get all dependencies for the blok given
+        :param blok:
+        :return:
+        """
         for required in cls.bloks[blok].required:
-            if not cls.get_need_blok(required):
+            if not cls.get_needed_blok(required):
                 raise BlokManagerException(
-                    "Not %s required bloks found" % required)
+                    "%s not found in required bloks" % required)
 
             cls.bloks[required].required_by.append(blok)
 
         for optional in cls.bloks[blok].optional:
-            if cls.get_need_blok(optional):
+            if cls.get_needed_blok(optional):
                 cls.bloks[optional].optional_by.append(blok)
 
         for conditional in cls.bloks[blok].conditional:
@@ -139,19 +144,24 @@ class BlokManager:
             cls.bloks[conflicting].conflicting_by.append(blok)
 
     @classmethod
-    def get_need_blok(cls, blok):
+    def get_needed_blok(cls, blok):
+        """
+        Get and import/load the blok given with dependencies
+        :param blok:
+        :return:
+        """
         if cls.has(blok):
             return True
 
         if blok not in cls.bloks:
             return False
 
-        cls.get_need_blok_linked_bloks(blok)
+        cls.get_needed_blok_dependencies(blok)
         cls.ordered_bloks.append(blok)
         EnvironmentManager.set('current_blok', blok)
 
         if not ImportManager.has(blok):
-            # Import only if not exist don't reload here
+            # Import only if the blok doesn't exists, do not reload here
             mod = ImportManager.add(blok)
             mod.imports()
         else:
@@ -168,7 +178,7 @@ class BlokManager:
     def load(cls, entry_points=('bloks',)):
         """ Load all the bloks and import them
 
-        :param entry_points: Use by ``iter_entry_points`` to get the blok
+        :param entry_points: Used by ``iter_entry_points`` to get the blok
         :exception: BlokManagerException
         """
         if not entry_points:
@@ -207,7 +217,7 @@ class BlokManager:
         try:
             while bloks:
                 blok = bloks.pop(0)[1]
-                cls.get_need_blok(blok)
+                cls.get_needed_blok(blok)
 
         finally:
             EnvironmentManager.set('current_blok', None)
@@ -229,7 +239,7 @@ class Blok:
     define the default value for:
 
     * priority: order to load the blok
-    * required: list of the bloks needed to install this blok
+    * required: list of the bloks required to install this blok
     * optional: list of the bloks to be installed if present in the blok list
     * conditional: if all the bloks of this list are installed then install
       this blok
@@ -241,7 +251,7 @@ class Blok:
     optional = []
     conditional = []
     conflicting = []
-    name = None  # filled by the BlokManager
+    name = None  # set by the BlokManager
     author = ''
     logo = ''
 
@@ -254,34 +264,34 @@ class Blok:
         """
 
     def update(self, latest_version):
-        """ Call at the installation or update
+        """ Called on install or update
 
-        :param latest_version: latest version installed, if the blok have not
-                               been installing the latest_version will be None
+        :param latest_version: latest version installed, if the blok has never
+                               been installed, latest_version is None
         """
 
     def pre_migration(self, latest_version):
-        """Call at update, before the automigration
+        """Called on update, before the auto migration
 
         .. warning::
 
             You can not use the ORM
 
-        :param latest_version: latest version installed, if the blok have not
-                               been installing the latest_version will be None
+        :param latest_version: latest version installed, if the blok has never
+                               been installed, latest_version is None
         """
 
     def post_migration(self, latest_version):
-        """Call at update, after the automigration
+        """Called on update, after the auto migration
 
-        :param latest_version: latest version installed, if the blok have not
-                               been installing the latest_version will be None
+        :param latest_version: latest version installed, if the blok has never
+                               been installed, latest_version is None
         """
 
     def uninstall(self):
-        """ Call at the uninstallation
+        """ Called on uninstall
         """
 
     def load(self):
-        """ Call at the launch of the application
+        """ Called on start / launch
         """

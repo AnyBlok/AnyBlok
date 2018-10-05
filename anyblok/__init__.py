@@ -15,15 +15,16 @@ logger = getLogger(__name__)
 
 
 def load_init_function_from_entry_points(unittest=False):
-    """Call all the entry point ``anyblok_pyramid.init`` to update
+    """
+    Call all the entry points ``anyblok_pyramid.init`` to update
     the argument setting
 
-    the callable need to have one parametter, it is a dict::
+    The callable needs a dict of entry points as parameter::
 
         def init_function(unittest=False):
             ...
 
-    We add the entry point by the setup file::
+    Entry points are defined in the setup.py file::
 
         setup(
             ...,
@@ -44,15 +45,16 @@ def load_init_function_from_entry_points(unittest=False):
 
 
 def configuration_post_load(unittest=False):
-    """Call all the entry point ``anyblok_configuration.post_load`` to
-    initialize some service in function of the configuration
+    """
+    Call all the entry points defined as ``anyblok_configuration.post_load``
+    to initialize some services depending on the configuration
 
-    the callable need to have one parametter, it is a dict::
+    The callable needs a dict of entry points as parameter::
 
         def post_load_function(unittest=False):
             ...
 
-    We add the entry point by the setup file::
+    Entry points are defined in the setup.py file::
 
         setup(
             ...,
@@ -75,7 +77,7 @@ def configuration_post_load(unittest=False):
 def start(processName, entry_points=None,
           useseparator=False, loadwithoutmigration=False, config=None,
           **kwargs):
-    """ Function which initialize the application
+    """ Function used to initialize the application
 
     ::
 
@@ -83,12 +85,11 @@ def start(processName, entry_points=None,
                          entry_points=['AnyBlok'])
 
     :param processName: Name of the application
-    :param version: Version of the application
-    :param prompt: Prompt message for the help
     :param entry_points: entry point where load blok
     :param useseparator: boolean, indicate if configuration option are split
         betwwen two application
     :param loadwithoutmigration: if True, any migration operation will do
+    :param config: dict of configuration parameters
     :rtype: registry if the database name is in the configuration
     """
     from .blok import BlokManager

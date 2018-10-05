@@ -46,8 +46,18 @@ logger = getLogger(__name__)
 
 
 def wrap_default(registry, namespace, default_val):
-
+    """
+    Return default wrapper
+    :param registry:
+    :param namespace:
+    :param default_val:
+    :return: default wrapper
+    """
     def wrapper():
+        """
+        Return wrapper
+        :return: default val
+        """
         Model = registry.get(namespace)
         if hasattr(Model, default_val):
             func = getattr(Model, default_val)
@@ -57,19 +67,19 @@ def wrap_default(registry, namespace, default_val):
                         return func()
                     else:
                         logger.warning(
-                            "On a Model %r the attribute %r is "
-                            "declared as a default value, a field "
-                            "with the same name exist" % (namespace,
-                                                          default_val))
+                            "The attribute %r is already declared as a default "
+                            "value on the Model %r, a field with the same name "
+                            "already exists" % (default_val, namespace))
                 else:
-                    logger.warning("On a Model %r the attribute %r is "
-                                   "declared as a default value, a column "
-                                   "with the same name exist" % (namespace,
-                                                                 default_val))
+                    logger.warning(
+                        "The attribute %r is already declared as a default "
+                        "value on the Model %r, a column with the same name "
+                        "already exists" % (default_val, namespace))
             else:
-                logger.warning("On a Model %r the attribute %r is declared as "
-                               "a default value, a instance method with the "
-                               "same name exist" % (namespace, default_val))
+                logger.warning(
+                    "The attribute %r is already declared as a default "
+                    "value on the Model %r, an instance method with the same "
+                    "name already exists" % (default_val, namespace))
 
         return default_val
 
@@ -82,6 +92,14 @@ class ColumnDefaultValue:
         self.callable = callable
 
     def get_default_callable(self, registry, namespace, fieldname, properties):
+        """
+        Get default callable
+        :param registry:
+        :param namespace:
+        :param fieldname:
+        :param properties:
+        :return: default callable
+        """
         return self.callable(registry, namespace, fieldname, properties)
 
 
@@ -92,7 +110,7 @@ class NoDefaultValue:
 class Column(Field):
     """ Column class
 
-    This class can't be instanciated
+    This class can't be instantiated
     """
 
     use_hybrid_property = True
@@ -131,6 +149,10 @@ class Column(Field):
         super(Column, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """
+        Return properties list for autodoc
+        :return: autodoc properties
+        """
         res = super(Column, self).autodoc_get_properties()
         res['foreign_key'] = self.foreign_key
         res['DB column name'] = self.db_column_name
@@ -146,10 +168,19 @@ class Column(Field):
     ))
 
     def native_type(cls):
-        """ Return the native SqlAlchemy type """
+        """ Return the native SqlAlchemy type
+        :rtype: sqlalchemy native type
+        """
         return cls.sqlalchemy_type
 
     def format_foreign_key(self, registry, args, kwargs):
+        """
+        Format a foreign key
+        :param registry:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         if self.foreign_key:
             args = args + (self.foreign_key.get_fk(registry),)
             kwargs['info'].update({
@@ -202,15 +233,25 @@ class Column(Field):
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
 
     def format_encrypt_key(self, registry, namespace):
+        """
+        Format and return the encyption key
+        :param registry:
+        :param namespace:
+        :return: encrypt key
+        """
         encrypt_key = self.encrypt_key
         if encrypt_key is True:
             encrypt_key = Configuration.get('default_encrypt_key')
 
         if not encrypt_key:
-            raise FieldException("No encrypt_key define in the "
+            raise FieldException("No encrypt_key defined in the "
                                  "configuration")
 
         def wrapper():
+            """
+            Return encrypt_key wrapper
+            :return:
+            """
             Model = registry.get(namespace)
             if hasattr(Model, encrypt_key):
                 func = getattr(Model, encrypt_key)
@@ -329,6 +370,11 @@ class Decimal(Column):
     sqlalchemy_type = types.DECIMAL
 
     def setter_format_value(self, value):
+        """
+        Format the given value to decimal if needed
+        :param value:
+        :return: decimal value
+        """
         if value is not None:
             if not isinstance(value, decimal.Decimal):
                 value = decimal.Decimal(value)
@@ -356,6 +402,11 @@ class Date(Column):
 
 
 def convert_string_to_datetime(value):
+    """
+    Convert a given value to datetime
+    :param value:
+    :return: datetime value
+    """
     if value is None:
         return None
     elif isinstance(value, datetime):
@@ -369,6 +420,12 @@ def convert_string_to_datetime(value):
 
 
 def add_timezone_on_datetime(dt, default_timezone):
+    """
+    Convert a datetime considering the default timezone
+    :param dt:
+    :param default_timezone:
+    :return:
+    """
     if dt is not None:
         if dt.tzinfo is None:
             dt = default_timezone.localize(dt)
@@ -437,10 +494,19 @@ class DateTime(Column):
         super(DateTime, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """
+        Return converted and formatted value
+        :param value:
+        :return:
+        """
         value = convert_string_to_datetime(value)
         return add_timezone_on_datetime(value, self.default_timezone)
 
     def autodoc_get_properties(self):
+        """
+        Return properties for autodoc
+        :return: autodoc properties
+        """
         res = super(Column, self).autodoc_get_properties()
         res['is auto updated'] = self.auto_update
         if self.default_timezone:
@@ -523,6 +589,10 @@ class String(Column):
         super(String, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """
+        Return properties for autodoc
+        :return: autodoc properties
+        """
         res = super(String, self).autodoc_get_properties()
         res['size'] = self.size
         return res
@@ -573,11 +643,20 @@ class Password(Column):
         super(Password, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """
+        Return formatted value
+        :param value:
+        :return:
+        """
         value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
 
     def autodoc_get_properties(self):
+        """
+        Return properties for autodoc
+        :return: autodoc properties
+        """
         res = super(Password, self).autodoc_get_properties()
         res['Crypt context'] = self.crypt_context
         return res
@@ -622,6 +701,10 @@ class StrSelection(str):
     namespace = None
 
     def get_selections(self):
+        """
+        Return a dict of selections
+        :return: selections dict
+        """
         if isinstance(self.selections, dict):
             return self.selections
         if isinstance(self.selections, str):
@@ -629,11 +712,19 @@ class StrSelection(str):
             return dict(getattr(m, self.selections)())
 
     def validate(self):
+        """
+        validate if the key is in the selections
+        :return: True or False
+        """
         a = super(StrSelection, self).__str__()
         return a in self.get_selections().keys()
 
     @property
     def label(self):
+        """
+        Return the label corresponding to the selection key
+        :return:
+        """
         a = super(StrSelection, self).__str__()
         return self.get_selections()[a]
 
@@ -712,18 +803,33 @@ class Selection(Column):
         super(Selection, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """
+        Return properties for autodoc
+        :return: autodoc properties
+        """
         res = super(Selection, self).autodoc_get_properties()
         res['selections'] = self.selections
         res['size'] = self.size
         return res
 
     def getter_format_value(self, value):
+        """
+        Return formatted value
+        :param value:
+        :return:
+        """
         if value is None:
             return None
 
         return self.sqlalchemy_type.python_type(value)
 
     def setter_format_value(self, value):
+        """
+        Return value or raise exception if the given value is invalid
+        :param value:
+        :exception FieldException
+        :return:
+        """
         if value is not None:
             val = self.sqlalchemy_type.python_type(value)
             if not val.validate():
@@ -734,21 +840,37 @@ class Selection(Column):
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
+        """
+        Return sqlalchmy mapping
+        :param registry:
+        :param namespace:
+        :param fieldname:
+        :param properties:
+        :return: instance of the real field
+        """
         self.sqlalchemy_type = SelectionType(
             self.selections, self.size, registry=registry, namespace=namespace)
         return super(Selection, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
 
     def update_description(self, registry, model, res):
+        """
+        Update model description
+        :param registry:
+        :param model:
+        :param res:
+        """
         super(Selection, self).update_description(registry, model, res)
         sqlalchemy_type = SelectionType(
             self.selections, self.size, registry=registry, namespace=model)
         values = sqlalchemy_type._StrSelection().get_selections()
         res['selections'] = [(k, v) for k, v in values.items()]
 
-    def must_be_duplicate_before_added(self):
-        """ Return True because the field selection in a mixin must be copied
-        else the selection method can be wrond
+    def must_be_copied_before_declaration(self):
+        """
+        Return True if selections is an instance of str.
+        In the case of the field selection is a mixin, it must be copied or the
+        selection method can fail
         """
         if isinstance(self.selections, str):
             return True
@@ -756,13 +878,23 @@ class Selection(Column):
             return False
 
     def update_properties(self, registry, namespace, fieldname, properties):
+        """
+        update column properties
+        :param registry:
+        :param namespace:
+        :param fieldname:
+        :param properties:
+        """
         super(Selection, self).update_properties(registry, namespace,
                                                  fieldname, properties)
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
 
     def update_table_args(self, Model):
-        """return check constraint to limit the value"""
+        """return check constraints to limit the value
+        :param Model:
+        :return: list of checkConstraint
+        """
         selections = self.sqlalchemy_type.selections
         if isinstance(selections, dict):
             enum = selections.keys()
@@ -862,11 +994,22 @@ class Sequence(String):
         super(Sequence, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """
+        Return properties for autodoc
+        :return: autodoc properties
+        """
         res = super(Sequence, self).autodoc_get_properties()
         res['formater'] = self.formater
         return res
 
-    def wrap_default(self, registry, namespace, fieldname, properties):
+    def wrap_default(self, registry, namespace, fieldname):
+        """
+        Return default wrapper
+        :param registry:
+        :param namespace:
+        :param fieldname:
+        :return:
+        """
         if not hasattr(registry, '_need_sequence_to_create_if_not_exist'):
             registry._need_sequence_to_create_if_not_exist = []
         elif registry._need_sequence_to_create_if_not_exist is None:
@@ -877,6 +1020,10 @@ class Sequence(String):
             {'code': code, 'formater': self.formater})
 
         def default_value():
+            """
+            Return next sequence value
+            :return:
+            """
             return registry.System.Sequence.nextvalBy(code=code)
 
         return default_value
@@ -884,7 +1031,7 @@ class Sequence(String):
 
 class Color(Column):
     """Color column.
-    `See coulour pakage <https://pypi.python.org/pypi/colour/>`_
+    `See colour package on pypi <https://pypi.python.org/pypi/colour/>`_
 
     ::
 
@@ -905,12 +1052,21 @@ class Color(Column):
         super(Color, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """
+        Format the given value
+        :param value:
+        :return:
+        """
         if isinstance(value, str):
             value = self.sqlalchemy_type.python_type(value)
 
         return value
 
     def autodoc_get_properties(self):
+        """
+        Return properties for autodoc
+        :return: autodoc properties
+        """
         res = super(Color, self).autodoc_get_properties()
         res['size'] = self.max_length
         return res
@@ -943,6 +1099,10 @@ class UUID(Column):
         super(UUID, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """
+        Return properties for autodoc
+        :return: autodoc properties
+        """
         res = super(UUID, self).autodoc_get_properties()
         res['binary'] = self.binary
         res['native'] = self.native
@@ -967,6 +1127,11 @@ class URL(Column):
     sqlalchemy_type = URLType
 
     def setter_format_value(self, value):
+        """
+        Return formatted url value
+        :param value:
+        :return:
+        """
         from furl import furl
 
         if value is not None:
@@ -1004,12 +1169,21 @@ class PhoneNumber(Column):
         super(PhoneNumber, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """
+        Return formatted phone number value
+        :param value:
+        :return:
+        """
         if value and isinstance(value, str):
             value = self.sqlalchemy_type.python_type(value, self.region)
 
         return value
 
     def autodoc_get_properties(self):
+        """
+        Return properties for autodoc
+        :return: autodoc properties
+        """
         res = super(PhoneNumber, self).autodoc_get_properties()
         res['region'] = self.region
         res['max_length'] = self.max_length
@@ -1040,6 +1214,11 @@ class Email(Column):
     sqlalchemy_type = EmailType
 
     def setter_format_value(self, value):
+        """
+        Return formatted email value
+        :param value:
+        :return:
+        """
         if value is not None:
             return value.lower()
         return value
@@ -1099,6 +1278,11 @@ class Country(Column):
         super(Country, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """
+        Return formatted country value
+        :param value:
+        :return:
+        """
         if value and not isinstance(value, self.sqlalchemy_type.python_type):
             value = pycountry.countries.get(
                 **{
@@ -1109,19 +1293,32 @@ class Country(Column):
         return value
 
     def autodoc_get_properties(self):
+        """
+        Return properties for autodoc
+        :return: autodoc properties
+        """
         res = super(Country, self).autodoc_get_properties()
         res['mode'] = self.mode
         res['choices'] = self.choices
         return res
 
     def update_properties(self, registry, namespace, fieldname, properties):
+        """
+        Update column properties
+        :param registry:
+        :param namespace:
+        :param fieldname:
+        :param properties:
+        """
         super(Country, self).update_properties(registry, namespace,
                                                fieldname, properties)
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
 
-    def update_table_args(self, Model):
-        """return check constraint to limit the value"""
+    def update_table_args(self):
+        """return check constraints to limit the value
+        :return: list of checkConstraint
+        """
         enum = [country.alpha_3 for country in pycountry.countries]
         constraint = """"%s" in ('%s')""" % (self.fieldname, "', '".join(enum))
         enum.sort()
