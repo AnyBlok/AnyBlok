@@ -42,14 +42,13 @@ def get_db_name():
         if url.database:
             return url.database
 
-    raise ConfigurationException("No database's name defined")
+    raise ConfigurationException("No database name defined")
 
 
 def get_url(db_name=None):
     """ Return an sqlalchemy URL for database
 
-    Get the options of the database, the only option which can be
-    overloaded is the name of the database::
+    Return database options, only the database name db_name can be overloaded::
 
         url = get_url(db_name='Mydb')
 
@@ -72,7 +71,7 @@ def get_url(db_name=None):
             get_url(db_name='Mydb')
             ==> 'postgresql://jssuzanne:secret@/Mydb'
 
-    :param db_name: Name of the database
+    :param db_name: database name
     :rtype: SqlAlchemy URL
     :exception: ConfigurationException
     """
@@ -99,7 +98,7 @@ def get_url(db_name=None):
         return url
 
     if drivername is None:
-        raise ConfigurationException('No Drivername defined')
+        raise ConfigurationException('No driver name defined')
 
     return URL(drivername, username=username, password=password, host=host,
                port=port, database=database)
@@ -109,10 +108,10 @@ class ConfigurationException(LookupError):
     """ Simple Exception for Configuration"""
 
 
-def is_none(type, value):
-    """Check if the value is a *NoneValue* in function of the type
+def is_none(type_, value):
+    """Check if the value is a *NoneValue* depending on the type
 
-    :param type: type of value
+    :param type_: type of value
     :param value: value to check
     :rtype: *bool*, True if it is a *NoneValue*
     """
@@ -120,7 +119,7 @@ def is_none(type, value):
         return True
     if isinstance(value, str) and value.upper() == 'NONE':
         return True
-    if value == '' and type is not str:
+    if value == '' and type_ is not str:
         return True
 
     return False
@@ -147,8 +146,20 @@ def cast_value(cast, value):
 
 
 def nargs_type(key, nargs, cast):
-
+    """
+    Return nargs type
+    :param key:
+    :param nargs:
+    :param cast: final type of data wanted
+    :return:
+    """
     def wrap(val):
+        """
+        Return list of casted values
+        :param val:
+        :return:
+        :exception ConfigurationException
+        """
         if isinstance(val, str):
             sep = ' '
             if '\n' in val:
@@ -159,7 +170,7 @@ def nargs_type(key, nargs, cast):
 
         if not isinstance(val, list):
             raise ConfigurationException("Waiting list not %r for %r "
-                                         "get : %r" % (type(val), key, val))
+                                         "get: %r" % (type(val), key, val))
 
         limit = len(val)
         if nargs not in ('?', '+', '*', REMAINDER):
@@ -173,7 +184,11 @@ def nargs_type(key, nargs, cast):
 class AnyBlokActionsContainer:
 
     def add_argument(self, *args, **kwargs):
-        """Overload the method to add the entry in the configuration dict"""
+        """Overload the method to add the entry in the configuration dict
+        :param args:
+        :param kwargs:
+        :return:
+        """
         default = kwargs.pop('default', None)
         nargs = kwargs.get('nargs', None)
         type = kwargs.get('type')
@@ -195,15 +210,23 @@ class AnyBlokActionsContainer:
         return arg
 
     def set_defaults(self, **kwargs):
-        """Overload the method to update the entry in the configuration dict"""
+        """Overload the method to update the entry in the configuration dict
+        :param kwargs:
+        """
         super(AnyBlokActionsContainer, self).set_defaults(**kwargs)
         for dest, default in kwargs.items():
             if not Configuration.has(dest):
-                raise KeyError('Unexisting option %s' % dest)
+                raise KeyError('Option %s does not exist' % dest)
 
             Configuration.set(dest, default)
 
     def add_argument_group(self, *args, **kwargs):
+        """
+        Add argument group
+        :param args:
+        :param kwargs:
+        :return:
+        """
         group = AnyBlokArgumentGroup(self, *args, **kwargs)
         self._action_groups.append(group)
         return group
@@ -251,16 +274,24 @@ class ConfigOption:
         self.set(value)
 
     def get(self):
+        """
+        Get configuration option value
+        :return:
+        """
         return self.value
 
     def set(self, value):
+        """
+        Set configuration option value
+        :param value:
+        """
         self.value = cast_value(self.type, value)
 
 
 def getParser(**kwargs):
     """ Return a parser
 
-    :param description: label of the configuration help
+    :param description: configuration help description
     :rtype: ``ArgumentParser`` instance
     """
     return AnyBlokArgumentParser(**kwargs)
@@ -274,7 +305,7 @@ class Configuration:
     This class stores three attributes:
 
     * groups: lists of options indexed
-    * labels: if a group has got a label then all the options in group are
+    * labels: if a group has a label then all the options in group are
       gathered in a parser group
     * configuration: result of the ``Configuration`` after loading
 
@@ -303,7 +334,7 @@ class Configuration:
 
         :param application: the name of the application
         :param new_groups: list of the configuration groups
-        :param add_default_group: if True the default groups will be add
+        :param add_default_group: if True the default groups will be added
         :params kwargs: other properties to change
         """
         if application not in cls.applications:
@@ -329,12 +360,13 @@ class Configuration:
             must_be_loaded_by_unittest=False):
         """ Add a function in a group.
 
-        The function must have two arguments:
+        The ``function_`` must have two arguments:
 
         * ``parser``: the parser instance of argparse
         * ``default``: A dict with the default value
 
-        This function is called to know what the options of this must do.
+        This ``function_`` defines what the option given in first argument
+        to ``add`` method must do.
         You can declare this group:
 
         * either by calling the ``add`` method as a function::
@@ -361,8 +393,8 @@ class Configuration:
         :param label: If the group has a label then all the functions in the
             group are put in group parser
         :param function_: function to add
-        :param must_be_loaded_by_unittest: unittest call this function to init
-            configuration of AnyBlok for run unittest"
+        :param must_be_loaded_by_unittest: unittest calls this function to init
+            configuration of AnyBlok to run unittest"
         """
         if group not in cls.groups:
             cls.groups[group] = []
@@ -388,13 +420,13 @@ class Configuration:
 
     @classmethod
     def has(cls, option):
-        """ Check if the option exist in the configuration dict
+        """ Check if an option exists in the configuration dict
 
         Return True if the option is in the configuration dict and the
-        value is not None. A None value is diferent that a ConfigOption with
+        value is not None. A None value is different that a ConfigOption with
         None value
 
-        :param opt: option key to check
+        :param option: option key to check
         :rtype: boolean True is exist
         """
         if option in cls.configuration and cls.configuration[option]:
@@ -404,9 +436,10 @@ class Configuration:
 
     @classmethod
     def get(cls, opt, default=None):
-        """ Get a value from the configuration dict after loading
+        """
+        Get a value from the configuration dict after loading the application
 
-        After the loading of the application, all the options are saved in the
+        When the application is loaded, all the options are saved in the
         Configuration. And all the applications have free access to
         these options::
 
@@ -441,18 +474,25 @@ class Configuration:
             else:
                 cls.add_argument(opt, value, type(value))
         except Exception as e:
-            logger.exception("Error durring set the value %r on the option "
+            logger.exception("Error while setting the value %r to the option "
                              "%r" % (value, opt))
             raise e
 
     @classmethod
     def update(cls, *args, **kwargs):
+        """
+        update option values
+        :param args:
+        :param kwargs:
+        :exception ConigurationException
+        """
         if args:
             if len(args) > 1:
-                raise ConfigurationException("Waiting only one dict")
+                raise ConfigurationException("Too many args. "
+                                             "Only one expected")
 
             if not isinstance(args[0], dict):
-                raise ConfigurationException("Waiting a dict")
+                raise ConfigurationException("Wrong args type. Dict expected")
 
             for k, v in args[0].items():
                 cls.set(k, v)
@@ -461,14 +501,20 @@ class Configuration:
             cls.set(k, v)
 
     @classmethod
-    def add_argument(cls, key, value, type=str):
-        cls.configuration[key] = ConfigOption(value, type)
+    def add_argument(cls, key, value, type_=str):
+        """
+        Add a configuration option
+        :param key:
+        :param value:
+        :param type:
+        """
+        cls.configuration[key] = ConfigOption(value, type_)
 
     @classmethod
     def remove_label(cls, group):
         """ Remove an existing label
 
-        The goal of this function is to remove an existing label of a specific
+        The purpose of this function is to remove an existing label from a specific
         group::
 
             @Configuration.add('create-db', label="Name of the group")
@@ -505,7 +551,7 @@ class Configuration:
     @classmethod
     @log(logger)
     def load_config_for_test(cls):
-        """Load the argparse configuration need for the unittest"""
+        """Load the argparse configuration needed for the unittest"""
         if not cls.configuration:
             parser = getParser()
             for group in cls.groups.keys():
@@ -574,7 +620,6 @@ class Configuration:
     def _load(cls, parser, configuration_groups):
         """ Load the argparse definition and parse them
 
-        :param description: description of configuration
         :param configuration_groups: list configuration groupe to load
         :param useseparator: boolean(default False)
         """
@@ -591,11 +636,14 @@ class Configuration:
             else:
                 g = parser
 
-            for function in cls.groups[group]:
-                function(g)
+            for function_ in cls.groups[group]:
+                function_(g)
 
     @classmethod
     def initialize_logging(cls):
+        """
+        Initialize logger and configure
+        """
         level = {
             'NOTSET': NOTSET,
             'DEBUG': DEBUG,
@@ -635,6 +683,12 @@ class Configuration:
 
     @classmethod
     def parse_configfile(cls, configfile, required):
+        """
+        Parse the configuration file
+        :param configfile:
+        :param required:
+        :return:
+        """
         cur_cwd = os.getcwd()
         configfile = os.path.abspath(configfile)
         print('Loading config file %r' % configfile)
@@ -673,6 +727,10 @@ class Configuration:
 
     @classmethod
     def parse_options(cls, arguments):
+        """
+        Parse options
+        :param arguments:
+        """
         if arguments._get_args():
             raise ConfigurationException(
                 'Positional arguments are forbidden')
@@ -699,6 +757,10 @@ class Configuration:
 @Configuration.add('plugins', label='Plugins',
                    must_be_loaded_by_unittest=True)
 def add_plugins(group):
+    """
+    add arguments to 'plugins' configuration group
+    :param group:
+    """
     group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPlugin,
                        default='anyblok.registry:Registry',
                        help="Registry class to use")
@@ -714,6 +776,10 @@ def add_plugins(group):
 
 @Configuration.add('config', must_be_loaded_by_unittest=True)
 def add_configuration_file(parser):
+    """
+    add arguments to 'config' configuration group
+    :param parser:
+    """
     parser.add_argument('-c', dest='configfile',
                         default=os.environ.get('ANYBLOK_CONFIG_FILE'),
                         help="Relative path of the config file")
@@ -733,6 +799,10 @@ def add_configuration_file(parser):
 @Configuration.add('database', label="Database",
                    must_be_loaded_by_unittest=True)
 def add_database(group):
+    """
+    add arguments to 'database' configuration group
+    :param parser:
+    """
     group.add_argument('--db-name',
                        default=os.environ.get('ANYBLOK_DATABASE_NAME'),
                        help="Name of the database")
@@ -770,6 +840,10 @@ def add_database(group):
 
 @Configuration.add('create_db', must_be_loaded_by_unittest=True)
 def add_create_database(group):
+    """
+    add arguments to 'create_db' configuration group
+    :param parser:
+    """
     group.add_argument(
         '--db-template-name',
         default=os.environ.get('ANYBLOK_DATABASE_TEMPLATE_NAME'),
@@ -778,6 +852,10 @@ def add_create_database(group):
 
 @Configuration.add('install-bloks')
 def add_install_bloks(parser):
+    """
+    add arguments to 'install-bloks' configuration group
+    :param parser:
+    """
     parser.add_argument('--install-bloks', nargs="+", help="blok to install")
     parser.add_argument('--install-all-bloks', action='store_true')
     parser.add_argument('--test-blok-at-install', action='store_true')
@@ -785,18 +863,30 @@ def add_install_bloks(parser):
 
 @Configuration.add('uninstall-bloks')
 def add_uninstall_bloks(parser):
+    """
+    add arguments to 'uninstall-bloks' configuration group
+    :param parser:
+    """
     parser.add_argument('--uninstall-bloks', nargs="+",
                         help="bloks to uninstall")
 
 
 @Configuration.add('install-or-update-bloks')
 def add_install_or_update_bloks(parser):
+    """
+    add arguments to 'install-or-update-bloks' configuration group
+    :param parser:
+    """
     parser.add_argument('--install-or-update-bloks', nargs="+",
                         help="bloks to install or update")
 
 
 @Configuration.add('update-bloks', label='Update database')
 def add_update_bloks(parser):
+    """
+    add arguments to 'update-bloks' configuration group
+    :param parser:
+    """
     parser.add_argument('--update-bloks', nargs="+", help="bloks to update")
     parser.add_argument('--update-all-bloks', action='store_true')
     parser.add_argument('--reinit-all', action='store_true')
@@ -808,12 +898,20 @@ def add_update_bloks(parser):
 
 @Configuration.add('interpreter')
 def add_interpreter(parser):
+    """
+    add arguments to 'interpreter' configuration group
+    :param parser:
+    """
     parser.add_argument('--script', dest='python_script',
                         help="Python script to execute")
 
 
 @Configuration.add('schema', label="Schema options")
 def add_schema(group):
+    """
+    add arguments to 'schema' configuration group
+    :param group:
+    """
     try:
         from graphviz.files import FORMATS
     except ImportError:
@@ -825,6 +923,10 @@ def add_schema(group):
 
 @Configuration.add('doc', label="Doc options")
 def add_doc(group):
+    """
+    add arguments to 'doc' configuration group
+    :param group:
+    """
     group.add_argument('--doc-format',
                        default='RST', choices=('RST', 'UML', 'SQL'))
     group.add_argument('--doc-output',
@@ -837,6 +939,10 @@ def add_doc(group):
 
 @Configuration.add('logging', label="Logging")
 def add_logging(group):
+    """
+    add arguments to 'logging' configuration group
+    :param group:
+    """
     group.add_argument('--logging-level', dest='logging_level',
                        choices=['NOTSET', 'DEBUG', 'INFO', 'WARNING',
                                 'ERROR', 'CRITICAL'])
@@ -857,5 +963,9 @@ def add_logging(group):
 
 @Configuration.add('preload', label="Preload")
 def define_preload_option(group):
+    """
+    add arguments to 'preload' configuration group
+    :param group:
+    """
     group.add_argument('--databases', dest='db_names', nargs="+",
                        help='List of the database allow to be load')
