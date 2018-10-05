@@ -57,7 +57,7 @@ class BlokManager:
     def has(cls, blok):
         """ Return True if the blok is loaded
 
-        :param blok: blok name
+        :param blok: the name of the blok
         :rtype: bool
         """
         return blok and blok in cls.ordered_bloks or False
@@ -66,7 +66,7 @@ class BlokManager:
     def get(cls, blok):
         """ Return the loaded blok
 
-        :param blok: blok name
+        :param blok: the name of the blok
         :rtype: blok instance
         :exception: BlokManagerException
         """
@@ -79,7 +79,7 @@ class BlokManager:
     def set(cls, blokname, blok):
         """ Add a new blok
 
-        :param blokname: blok name
+        :param blokname: the name of the blok
         :param blok: blok instance
         :exception: BlokManagerException
         """

@@ -1315,7 +1315,7 @@ class Country(Column):
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
 
-    def update_table_args(self):
+    def update_table_args(self, Model):
         """return check constraints to limit the value
         :return: list of checkConstraint
         """

@@ -12,20 +12,26 @@ from sqlalchemy.sql.naming import ConventionDict
 from sqlalchemy.exc import InvalidRequestError
 
 
-"""Define the prefixe for the mapper attribute for the column"""
+"""Define the prefix for the mapper attribute of the column"""
 anyblok_column_prefix = '__anyblok_field_'
 
 
-def all_column_name(constraint, table):
-    """Define the convention for merge the column"""
+def all_column_name(constraint):
+    """Define the convention to merge the column keys
+    :param constraint:
+    :return:
+    """
     if isinstance(constraint, ForeignKeyConstraint):
         return '_'.join(constraint.column_keys)
     else:
         return '_'.join(constraint.columns.keys())
 
 
-def model_name(constraint, table):
-    """return a shortest table name"""
+def model_name(table):
+    """Return a shortest table name
+    :param table:
+    :return:
+    """
     name = table.name.split('_')
     if len(name) == 1:
         return name[0]
@@ -59,20 +65,34 @@ naming_convention = {
 
 
 def add_autodocs(meth, autodoc):
+    """
+    Add autodocs entries
+    :param meth:
+    :param autodoc:
+    """
     if not hasattr(meth, 'autodocs'):
         meth.autodocs = []
 
     meth.autodocs.append(autodoc)
 
 
-def function_name(function):
+def function_name(function_):
+    """
+    Return the name of the function
+    :param function_:
+    :return:
+    """
     if sys.version_info < (3, 3):
-        return function.__name__
+        return function_.__name__
     else:
-        return function.__qualname__
+        return function_.__qualname__
 
 
 def python_version():
+    """
+    Return Python version tuple
+    :return:
+    """
     vi = sys.version_info
     return (vi.major, vi.minor)
 
@@ -88,6 +108,12 @@ class TypeList(list):
         self.transformation_properties = transformation_properties
 
     def transform_base(self, base, namespace=None):
+        """ Detect specific declaration which must define by registry
+
+        :param namespace: the namespace of the model
+        :param base: One of the base of the model
+        :rtype: new base
+        """
         if base in self.registry.removed:
             return None
 
@@ -99,11 +125,21 @@ class TypeList(list):
         return newbase
 
     def append(self, base, **kwargs):
+        """
+        Add base
+        :param base:
+        :param kwargs:
+        """
         bases = self.transform_base(base, **kwargs) or []
         for newbase in bases:
             super(TypeList, self).append(newbase)
 
     def extend(self, bases, **kwargs):
+        """
+        Extend bases
+        :param bases:
+        :param kwargs:
+        """
         newbases = []
         for base in bases:
             _bases = self.transform_base(base, **kwargs)
@@ -119,10 +155,8 @@ def apply_cache(attr, method, registry, namespace, base, properties):
 
     :param attr: name of the attribute
     :param method: method pointer
-    :param registry: the current  registry
+    :param registry: the current registry
     :param namespace: the namespace of the model
-    :param base: One of the base of the model
-    :param properties: the properties of the model
     :rtype: new base
     """
     if hasattr(method, 'is_cache_method') and method.is_cache_method is True:

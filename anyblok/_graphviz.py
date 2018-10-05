@@ -25,9 +25,9 @@ class BaseSchema:
 
             dot.add_edge(node1, node2)
 
-        :param cls_1: node (string or object) - edge's start
-        :param cls_2: node (string or object) - edge's end
-        :param attr: edge's attributes
+        :param cls_1: node (string or object) - from
+        :param cls_2: node (string or object) - to
+        :param attr: attribute of the edge
         """
         cls_1 = cls_1 if isinstance(cls_1, str) else cls_1.name
         cls_2 = cls_2 if isinstance(cls_2, str) else cls_2.name
@@ -79,8 +79,8 @@ class TableSchema:
     def add_column(self, name, type_, primary_key=False):
         """Add a new column to the table
 
-        :param name: column name
-        :param type_: column type
+        :param name: the name of the column
+        :param type_: the type of the column
         :param primary_key: if True, 'PK' argument will be added
         """
         self.column.append("%s%s (%s)" % (
@@ -115,7 +115,7 @@ class SQLSchema(BaseSchema):
     def add_table(self, name):
         """ Add a new node TableSchema with columns
 
-        :param name: table name
+        :param name: the name of the table
         :rtype: returns an instance of TableSchema
         """
         tmp = TableSchema(name, self)
@@ -125,7 +125,7 @@ class SQLSchema(BaseSchema):
     def add_label(self, name):
         """ Add a new node TableSchema without column
 
-        :param name: table name
+        :param name: the name of the table
         :rtype: returns an instance of TableSchema
         """
         tmp = TableSchema(name, self, islabel=True)
@@ -135,7 +135,7 @@ class SQLSchema(BaseSchema):
     def get_table(self, name):
         """ Return the instance of TableSchema linked to the table name given
 
-        :param name: table name
+        :param name: the name of the table
         :rtype: return an instance of TableSchema
         """
         return self._nodes.get(name)
@@ -174,9 +174,9 @@ class ClassSchema:
         """ add an edge with strong aggregate shape to the node
 
         :param node: node (string or object)
-        :param label_from: attribute name
+        :param label_from: the name of the attribute
         :param multiplicity_from: multiplicity of the attribute
-        :param label_to: attribute name
+        :param label_to: the name of the attribute
         :param multiplicity_to: multiplicity of the attribute
         """
         self.parent.add_strong_aggregation(self, node, label_from,
@@ -189,9 +189,9 @@ class ClassSchema:
         """ add an edge with aggregate shape to the node
 
         :param node: node (string or object)
-        :param label_from: attribute name
+        :param label_from: the name of the attribute
         :param multiplicity_from: multiplicity of the attribute
-        :param label_to: attribute name
+        :param label_to: the name of the attribute
         :param multiplicity_to: multiplicity of the attribute
         """
         self.parent.add_aggregation(self, node, label_from, multiplicity_from,
@@ -203,9 +203,9 @@ class ClassSchema:
         """ add an edge with associate shape to the node
 
         :param node: node (string or object)
-        :param label_from: attribute name
+        :param label_from: the name of the attribute
         :param multiplicity_from: multiplicity of the attribute
-        :param label_to: attribute name
+        :param label_to: the name of the attribute
         :param multiplicity_to: multiplicity of the attribute
         """
         self.parent.add_association(self, node, label_from, multiplicity_from,
@@ -214,21 +214,21 @@ class ClassSchema:
     def add_property(self, name):
         """ add a property to the class
 
-        :param name: property name
+        :param name: the name of the property
         """
         self.properties.append(name)
 
     def add_column(self, name):
         """ add a column to the class
 
-        :param name: column name
+        :param name: the name of the column
         """
         self.column.append(name)
 
     def add_method(self, name):
         """ add a method to the class
 
-        :param name: method name
+        :param name: the name of the method
         """
         self.method.append(name)
 
@@ -261,7 +261,7 @@ class ModelSchema(BaseSchema):
     def add_class(self, name):
         """ Add a new node ClassSchema with column
 
-        :param name: class name
+        :param name: the name of the class
         :rtype: return an instance of ClassSchema
         """
         tmp = ClassSchema(name, self)
@@ -271,7 +271,7 @@ class ModelSchema(BaseSchema):
     def add_label(self, name):
         """ Return an instance of ClassSchema linked to the class name given
 
-        :param name: class name
+        :param name: the name of the class
         :rtype: return an instance of ClassSchema
         """
         tmp = ClassSchema(name, self, islabel=True)
@@ -281,17 +281,17 @@ class ModelSchema(BaseSchema):
     def get_class(self, name):
         """ Add a new node ClassSchema without column
 
-        :param name: class name
+        :param name: the name of the class
         :rtype: return an instance of ClassSchema
         """
         return self._nodes.get(name)
 
     def add_extend(self, cls_1, cls_2):
         """
-        TODO: add a quick description
+        add edge to extend
 
-        :param cls_1: class name
-        :param cls_2: class name
+        :param cls_1: the name of the class 1
+        :param cls_2: the name of the class 2
         """
         self.add_edge(cls_1, cls_2, attr={
             'dir': 'back',
@@ -302,10 +302,10 @@ class ModelSchema(BaseSchema):
                         label_from=None, multiplicity_from=None,
                         label_to=None, multiplicity_to=None):
         """
-        TODO: add a quick description
+        Add edge for aggregation
 
-        :param cls_1: class name
-        :param cls_2: class name
+        :param cls_1: the name of the class 1
+        :param cls_2: the name of the class 2
         :param label_from: attribute name
         :param multiplicity_from: multiplicity of the attribute
         :param label_to: attribute name
