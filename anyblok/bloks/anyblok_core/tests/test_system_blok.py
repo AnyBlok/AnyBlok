@@ -9,6 +9,7 @@
 import pytest
 
 
+@pytest.mark.usefixtures('rollback_registry')
 class TestSystemBlok:
     def test_list_by_state_installed(self, rollback_registry):
         registry = rollback_registry
@@ -18,4 +19,4 @@ class TestSystemBlok:
 
     def test_list_by_state_without_state(self, rollback_registry):
         registry = rollback_registry
-        assert registry.System.Blok.list_by_state()is None
+        assert registry.System.Blok.list_by_state() is None
