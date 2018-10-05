@@ -29,7 +29,6 @@ requires = [
     'argparse',
     'alembic',
     'graphviz',
-    'nose',  # for unittest during the blok install
     'lxml',
     'six',
     'PyYAML',
@@ -68,7 +67,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=requires,
-    tests_require=requires + ['nose'],
+    tests_require=requires + ['pytest'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -86,7 +85,6 @@ setup(
         'console_scripts': [
             'anyblok_createdb=anyblok.scripts:anyblok_createdb',
             'anyblok_updatedb=anyblok.scripts:anyblok_updatedb',
-            'anyblok_nose=anyblok.scripts:anyblok_nose',
             'anyblok_interpreter=anyblok.scripts:anyblok_interpreter',
             'anyblok_doc=anyblok.scripts:anyblok2doc',
         ],

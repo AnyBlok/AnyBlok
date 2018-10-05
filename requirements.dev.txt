@@ -1,0 +1,8 @@
+flake8
+coverage
+WebTest
+pytest
+ipdb
+ipdbplugin
+ipython
+pysqlite3

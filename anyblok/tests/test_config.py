@@ -18,7 +18,6 @@ from anyblok.config import (
     add_interpreter,
     add_schema,
     add_doc,
-    add_unittest,
     add_logging,
     add_install_or_update_bloks,
     ConfigurationException,
@@ -503,7 +502,6 @@ class TestConfigurationOption(TestCase):
             'add_interpreter': add_interpreter,
             'add_schema': add_schema,
             'add_doc': add_doc,
-            'add_unittest': add_unittest,
             'define_preload_option': define_preload_option,
             'add_logging': add_logging,
             'add_install_or_update_bloks': add_install_or_update_bloks,
@@ -535,9 +533,6 @@ class TestConfigurationOption(TestCase):
 
     def test_add_doc(self):
         self.function['add_doc'](self.group)
-
-    def test_add_unittest(self):
-        self.function['add_unittest'](self.group)
 
     def test_define_preload_option(self):
         self.function['define_preload_option'](self.parser)
