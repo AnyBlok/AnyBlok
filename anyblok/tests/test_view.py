@@ -50,50 +50,6 @@ def simple_view():
             return query.where(T1.code == T2.code)
 
 
-@pytest.fixture(scope="class")
-def registry_simple_view(request, bloks_loaded):
-    registry = init_registry_with_bloks([], simple_view)
-    registry.T1.insert(code='test1', val=1)
-    registry.T2.insert(code='test1', val=2)
-    registry.T1.insert(code='test2', val=3)
-    registry.T2.insert(code='test2', val=4)
-    yield registry
-    registry.close_all()
-
-
-class TestSimpleView:
-
-    @pytest.fixture(autouse=True)
-    def transact(self, request, registry_simple_view):
-        transaction = registry_simple_view.begin_nested()
-        request.addfinalizer(transaction.rollback)
-        return
-
-    def test_has_a_mapper(self, registry_simple_view):
-        registry = registry_simple_view
-        assert registry.TestView.__mapper__ is not None
-
-    def test_ok(self, registry_simple_view):
-        registry = registry_simple_view
-        TestView = registry.TestView
-        v1 = TestView.query().filter(TestView.code == 'test1').first()
-        v2 = TestView.query().filter(TestView.code == 'test2').first()
-        assert v1.val1 == 1
-        assert v1.val2 == 2
-        assert v2.val1 == 3
-        assert v2.val2 == 4
-
-    def test_view_update_method(self, registry_simple_view):
-        registry = registry_simple_view
-        with pytest.raises(OperationalError):
-            registry.TestView.query().update({'val2': 3})
-
-    def test_view_delete_method(self, registry_simple_view):
-        registry = registry_simple_view
-        with pytest.raises(OperationalError):
-            registry.TestView.query().delete()
-
-
 def deprecated_view_before_0_19_2():
 
     @register(Model)
@@ -154,6 +110,58 @@ def deprecated_view_before_0_19_4():
             return query.where(T1.code == T2.code)
 
 
+@pytest.fixture(
+    scope="class",
+    params=[
+        simple_view,
+        deprecated_view_before_0_19_2,
+        deprecated_view_before_0_19_4,
+    ]
+)
+def registry_simple_view(request, bloks_loaded):
+    registry = init_registry_with_bloks(
+        [], request.param)
+    registry.T1.insert(code='test1', val=1)
+    registry.T2.insert(code='test1', val=2)
+    registry.T1.insert(code='test2', val=3)
+    registry.T2.insert(code='test2', val=4)
+    yield registry
+    registry.close_all()
+
+
+class TestSimpleView:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_simple_view):
+        transaction = registry_simple_view.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_has_a_mapper(self, registry_simple_view):
+        registry = registry_simple_view
+        assert registry.TestView.__mapper__ is not None
+
+    def test_ok(self, registry_simple_view):
+        registry = registry_simple_view
+        TestView = registry.TestView
+        v1 = TestView.query().filter(TestView.code == 'test1').first()
+        v2 = TestView.query().filter(TestView.code == 'test2').first()
+        assert v1.val1 == 1
+        assert v1.val2 == 2
+        assert v2.val1 == 3
+        assert v2.val2 == 4
+
+    def test_view_update_method(self, registry_simple_view):
+        registry = registry_simple_view
+        with pytest.raises(OperationalError):
+            registry.TestView.query().update({'val2': 3})
+
+    def test_view_delete_method(self, registry_simple_view):
+        registry = registry_simple_view
+        with pytest.raises(OperationalError):
+            registry.TestView.query().delete()
+
+
 def view_with_relationship():
 
     @register(Model)
@@ -190,6 +198,41 @@ def view_with_relationship():
                             T1.rs_id.label('rs_id'),
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
+
+
+@pytest.fixture(scope="class")
+def registry_view_with_relationship(request, bloks_loaded):
+    registry = init_registry_with_bloks(
+        [], view_with_relationship)
+    rs1 = registry.Rs.insert(id=1)
+    rs2 = registry.Rs.insert(id=2)
+    registry.T1.insert(code='test1', val=1, rs=rs1)
+    registry.T2.insert(code='test1', val=2)
+    registry.T1.insert(code='test2', val=3, rs=rs2)
+    registry.T2.insert(code='test2', val=4)
+    yield registry
+    registry.close_all()
+
+
+class TestViewWithRelationShip:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_view_with_relationship):
+        transaction = registry_view_with_relationship.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_ok(self, registry_view_with_relationship):
+        registry = registry_view_with_relationship
+        TestView = registry.TestView
+        v1 = TestView.query().filter(TestView.code == 'test1').first()
+        v2 = TestView.query().filter(TestView.code == 'test2').first()
+        assert v1.val1 == 1
+        assert v1.val2 == 2
+        assert v1.rs.id == 1
+        assert v2.val1 == 3
+        assert v2.val2 == 4
+        assert v2.rs.id == 2
 
 
 def view_with_relationship_on_self():
