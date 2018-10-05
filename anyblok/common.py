@@ -16,7 +16,7 @@ from sqlalchemy.exc import InvalidRequestError
 anyblok_column_prefix = '__anyblok_field_'
 
 
-def all_column_name(constraint):
+def all_column_name(constraint, table):
     """Define the convention to merge the column keys
     :param constraint:
     :return:
@@ -27,7 +27,7 @@ def all_column_name(constraint):
         return '_'.join(constraint.columns.keys())
 
 
-def model_name(table):
+def model_name(constraint, table):
     """Return a shortest table name
     :param table:
     :return:
