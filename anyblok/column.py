@@ -48,8 +48,8 @@ logger = getLogger(__name__)
 def wrap_default(registry, namespace, default_val):
     """
     Return default wrapper
-    :param registry:
-    :param namespace:
+    :param registry: the current registry
+    :param namespace: the namespace of the model
     :param default_val:
     :return: default wrapper
     """
@@ -94,10 +94,10 @@ class ColumnDefaultValue:
     def get_default_callable(self, registry, namespace, fieldname, properties):
         """
         Get default callable
-        :param registry:
-        :param namespace:
-        :param fieldname:
-        :param properties:
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
         :return: default callable
         """
         return self.callable(registry, namespace, fieldname, properties)
@@ -168,7 +168,7 @@ class Column(Field):
     ))
 
     def native_type(cls):
-        """ Return the native SqlAlchemy type
+        """Return the native SqlAlchemy type
         :rtype: sqlalchemy native type
         """
         return cls.sqlalchemy_type
@@ -176,7 +176,7 @@ class Column(Field):
     def format_foreign_key(self, registry, args, kwargs):
         """
         Format a foreign key
-        :param registry:
+        :param registry: the current registry
         :param args:
         :param kwargs:
         :return:
@@ -235,8 +235,8 @@ class Column(Field):
     def format_encrypt_key(self, registry, namespace):
         """
         Format and return the encyption key
-        :param registry:
-        :param namespace:
+        :param registry: the current registry
+        :param namespace: the namespace of the model
         :return: encrypt key
         """
         encrypt_key = self.encrypt_key
@@ -842,10 +842,10 @@ class Selection(Column):
                                properties):
         """
         Return sqlalchmy mapping
-        :param registry:
-        :param namespace:
-        :param fieldname:
-        :param properties:
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
         :return: instance of the real field
         """
         self.sqlalchemy_type = SelectionType(
@@ -856,7 +856,7 @@ class Selection(Column):
     def update_description(self, registry, model, res):
         """
         Update model description
-        :param registry:
+        :param registry: the current registry
         :param model:
         :param res:
         """
@@ -880,10 +880,10 @@ class Selection(Column):
     def update_properties(self, registry, namespace, fieldname, properties):
         """
         update column properties
-        :param registry:
-        :param namespace:
-        :param fieldname:
-        :param properties:
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
         """
         super(Selection, self).update_properties(registry, namespace,
                                                  fieldname, properties)
@@ -1005,9 +1005,9 @@ class Sequence(String):
     def wrap_default(self, registry, namespace, fieldname):
         """
         Return default wrapper
-        :param registry:
-        :param namespace:
-        :param fieldname:
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
         :return:
         """
         if not hasattr(registry, '_need_sequence_to_create_if_not_exist'):
@@ -1305,10 +1305,10 @@ class Country(Column):
     def update_properties(self, registry, namespace, fieldname, properties):
         """
         Update column properties
-        :param registry:
-        :param namespace:
-        :param fieldname:
-        :param properties:
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
         """
         super(Country, self).update_properties(registry, namespace,
                                                fieldname, properties)
