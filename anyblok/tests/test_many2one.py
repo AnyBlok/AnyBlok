@@ -7,6 +7,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import pytest
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
@@ -17,6 +18,7 @@ from anyblok.column import (
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.engine.reflection import Inspector
+from .conftest import init_registry_with_bloks
 
 
 register = Declarations.register
@@ -43,6 +45,142 @@ def _complete_many2one(**kwargs):
                            one2many="persons", nullable=False)
 
 
+def _minimum_many2one(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address)
+
+
+def _many2one_with_str_model(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model='Model.Address')
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        (_complete_many2one, 'id_of_address', True),
+        (_minimum_many2one, 'address_id', False),
+        (_many2one_with_str_model, 'address_id', False),
+    ]
+)
+def registry_many2one(request, bloks_loaded):
+    registry = init_registry_with_bloks(
+        [], request.param[0])
+    request.addfinalizer(registry.close_all)
+    return registry, request.param[1], request.param[2]
+
+
+class TestMany2One:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_many2one):
+        transaction = registry_many2one[0].begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_ok(self, request, registry_many2one):
+        registry, column_name, has_one2many = registry_many2one
+        address_exist = hasattr(registry.Person, 'address')
+        assert address_exist
+        column_name_exist = hasattr(registry.Person, column_name)
+        assert column_name_exist
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(
+            name="Jean-sébastien SUZANNE", address=address)
+
+        if has_one2many:
+            assert address.persons == [person]
+
+    def test_autodoc(self, registry_many2one):
+        registry, _, _ = registry_many2one
+        registry.loaded_namespaces_first_step['Model.Person'][
+            'address'].autodoc_get_properties()
+
+    def test_expire_field(self, registry_many2one):
+        registry, column_name, _ = registry_many2one
+        id_of_address = registry.expire_attributes['Model.Person'][
+            column_name]
+        assert ('address',) in id_of_address
+
+
+def _auto_detect_type(ColumnType=None, **kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = ColumnType(primary_key=True, **kwargs)
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address)
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        (Integer, {}),
+        (BigInteger, {}),
+        (Float, {}),
+        (Decimal, {}),
+        (String, {}),
+        (Boolean, {}),
+        (DateTime, {}),
+        (Date, {}),
+        (Time, {}),
+    ]
+)
+def registry_many2one_auto_detect(request, bloks_loaded):
+    registry = init_registry_with_bloks(
+        [], _auto_detect_type, ColumnType=request.param[0], **request.param[1])
+    request.addfinalizer(registry.close_all)
+    return registry
+
+
+class TestMany2OneAutoDetectColumn:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_many2one_auto_detect):
+        transaction = registry_many2one_auto_detect.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_check_autodetect_type(self, registry_many2one_auto_detect):
+        registry = registry_many2one_auto_detect
+        assert(
+            str(registry.Address.id.property.columns[0].type) ==
+            str(registry.Person.address_id.property.columns[0].type)
+        )
+
+
 def _many2one_with_same_name_for_column_names(**kwargs):
 
     @register(Model)
@@ -61,34 +199,6 @@ def _many2one_with_same_name_for_column_names(**kwargs):
                            column_names="address")
 
 
-def _minimum_many2one(**kwargs):
-
-    @register(Model)
-    class Address:
-
-        id = Integer(primary_key=True)
-
-    @register(Model)
-    class Person:
-
-        name = String(primary_key=True)
-        address = Many2One(model=Model.Address)
-
-
-def _many2one_with_str_model(**kwargs):
-
-    @register(Model)
-    class Address:
-
-        id = Integer(primary_key=True)
-
-    @register(Model)
-    class Person:
-
-        name = String(primary_key=True)
-        address = Many2One(model='Model.Address')
-
-
 def _minimum_many2one_without_model(**kwargs):
 
     @register(Model)
@@ -101,20 +211,6 @@ def _minimum_many2one_without_model(**kwargs):
 
         name = String(primary_key=True)
         address = Many2One()
-
-
-def _auto_detect_type(ColumnType=None, **kwargs):
-
-    @register(Model)
-    class Address:
-
-        id = ColumnType(primary_key=True, **kwargs)
-
-    @register(Model)
-    class Person:
-
-        name = String(primary_key=True)
-        address = Many2One(model=Model.Address)
 
 
 def _two_remote_primary_keys(**kwargs):
@@ -132,48 +228,11 @@ def _two_remote_primary_keys(**kwargs):
         test = Many2One(model=Model.Test)
 
 
-class TestMany2One(DBTestCase):
-
-    def test_complete_many2one(self):
-        registry = self.init_registry(_complete_many2one)
-        address_exist = hasattr(registry.Person, 'address')
-        self.assertTrue(address_exist)
-        id_of_address_exist = hasattr(registry.Person, 'id_of_address')
-        self.assertTrue(id_of_address_exist)
-
-        address = registry.Address.insert(
-            street='14-16 rue soleillet', zip='75020', city='Paris')
-
-        person = registry.Person.insert(
-            name="Jean-sébastien SUZANNE", address=address)
-
-        self.assertEqual(address.persons, [person])
-
-    def test_many2one_autodoc(self):
-        registry = self.init_registry(_complete_many2one)
-        registry.loaded_namespaces_first_step['Model.Person'][
-            'address'].autodoc_get_properties()
-
-    def test_complete_many2one_expire_field(self):
-        registry = self.init_registry(_complete_many2one)
-        self.assertIn(
-            ('address',),
-            registry.expire_attributes['Model.Person']['id_of_address'])
+class TestMany2OneOld(DBTestCase):
 
     def test_2_many2one(self):
         with self.assertRaises(FieldException):
             self.init_registry(_many2one_with_same_name_for_column_names)
-
-    def test_minimum_many2one(self):
-        registry = self.init_registry(_minimum_many2one)
-        address_exist = hasattr(registry.Person, 'address')
-        self.assertTrue(address_exist)
-        address_id_exist = hasattr(registry.Person, 'address_id')
-        self.assertTrue(address_id_exist)
-        address = registry.Address.insert()
-        person = registry.Person.insert(
-            name="Jean-sébastien SUZANNE", address=address)
-        self.assertEqual(person.address, address)
 
     def test_minimum_many2one_on_sequence(self):
 
@@ -195,59 +254,9 @@ class TestMany2One(DBTestCase):
         test2 = registry.Test2.insert(test=test)
         self.assertIs(test, test2.test)
 
-    def test_minimum_many2one_expire_field(self):
-        registry = self.init_registry(_minimum_many2one)
-        self.assertEqual(
-            registry.expire_attributes['Model.Person']['address_id'],
-            {('address',)})
-
-    def test_many2one_with_str_model(self):
-        registry = self.init_registry(_many2one_with_str_model)
-        address_exist = hasattr(registry.Person, 'address')
-        self.assertTrue(address_exist)
-        address_id_exist = hasattr(registry.Person, 'address_id')
-        self.assertTrue(address_id_exist)
-        address = registry.Address.insert()
-        person = registry.Person.insert(
-            name="Jean-sébastien SUZANNE", address=address)
-        self.assertIs(person.address, address)
-
     def test_minimum_many2one_without_model(self):
         with self.assertRaises(FieldException):
             self.init_registry(_minimum_many2one_without_model)
-
-    def check_autodetect_type(self, ColumnType):
-        registry = self.init_registry(_auto_detect_type, ColumnType=ColumnType)
-        self.assertEqual(
-            str(registry.Address.id.property.columns[0].type),
-            str(registry.Person.address_id.property.columns[0].type))
-
-    def test_autodetect_type_integer(self):
-        self.check_autodetect_type(Integer)
-
-    def test_autodetect_type_big_integer(self):
-        self.check_autodetect_type(BigInteger)
-
-    def test_autodetect_type_float(self):
-        self.check_autodetect_type(Float)
-
-    def test_autodetect_type_decimal(self):
-        self.check_autodetect_type(Decimal)
-
-    def test_autodetect_type_string(self):
-        self.check_autodetect_type(String)
-
-    def test_autodetect_type_boolean(self):
-        self.check_autodetect_type(Boolean)
-
-    def test_autodetect_type_datetime(self):
-        self.check_autodetect_type(DateTime)
-
-    def test_autodetect_type_date(self):
-        self.check_autodetect_type(Date)
-
-    def test_autodetect_type_time(self):
-        self.check_autodetect_type(Time)
 
     def test_same_model(self):
         def add_in_registry():

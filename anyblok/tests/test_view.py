@@ -121,12 +121,12 @@ def deprecated_view_before_0_19_4():
 def registry_simple_view(request, bloks_loaded):
     registry = init_registry_with_bloks(
         [], request.param)
+    request.addfinalizer(registry.close_all)
     registry.T1.insert(code='test1', val=1)
     registry.T2.insert(code='test1', val=2)
     registry.T1.insert(code='test2', val=3)
     registry.T2.insert(code='test2', val=4)
-    yield registry
-    registry.close_all()
+    return registry
 
 
 class TestSimpleView:
@@ -587,6 +587,6 @@ class TestViewWithException:
         request.addfinalizer(transaction.rollback)
         return
 
-    @pytest.mark.xfail(raises=[ViewException])
+    @pytest.mark.xfail(raises=ViewException)
     def test_ok(self, registry_view_with_exception):
         pass

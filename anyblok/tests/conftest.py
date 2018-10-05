@@ -60,5 +60,8 @@ def init_registry_with_bloks(bloks, function, **kwargs):
 @pytest.fixture(scope="module")
 def bloks_loaded():
     BlokManager.load()
+    registry = init_registry_with_bloks([], None)
+    registry.commit()
+    registry.close_all()
     yield
     BlokManager.unload()
