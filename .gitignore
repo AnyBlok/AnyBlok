@@ -21,6 +21,7 @@ bin/
 etc/
 venv/
 develop-eggs/
+htmlcov/
 
 gmon.out
 .idea
