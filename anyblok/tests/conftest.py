@@ -45,12 +45,9 @@ def init_registry_with_bloks(bloks, function, **kwargs):
 
         # update required blok
         registry_bloks = registry.get_bloks_by_states('installed', 'toinstall')
-        if bloks:
-            for blok_to_install in bloks:
-                if blok_to_install not in registry_bloks:
-                    registry.upgrade(install=[blok_to_install])
-                else:
-                    registry.upgrade(update=[blok_to_install])
+        toinstall = [x for x in bloks if x not in registry_bloks]
+        toupdate = [x for x in bloks if x in registry_bloks]
+        registry.upgrade(install=toinstall, update=toupdate)
     finally:
         RegistryManager.loaded_bloks = loaded_bloks
 
