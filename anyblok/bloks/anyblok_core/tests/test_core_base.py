@@ -32,30 +32,27 @@ class TestCoreBase(BlokTestCase):
         self.assertEqual(M, M2)
 
 
-# @pytest.mark.usefixtures('rollback_registry')
-# class TestCoreBaseScope:
-def test_to_primary_keys(rollback_registry):
-    registry = rollback_registry
-    with pytest.raises(CoreBaseException) as ex:
-        raise KeyError()
-        test = registry.System()
-        test.to_primary_keys()
+@pytest.mark.usefixtures('rollback_registry')
+class TestCoreBaseScope:
+    def test_to_primary_keys(self, rollback_registry):
+        registry = rollback_registry
+        with pytest.raises(CoreBaseException) as ex:
+            test = registry.System()
+            test.to_primary_keys()
 
+    def test_from_primary_keys(self, rollback_registry):
+        registry = rollback_registry
+        with pytest.raises(CoreBaseException) as ex:
+            registry.System.from_primary_keys()
 
-def test_from_primary_keys(rollback_registry):
-    registry = rollback_registry
-    with pytest.raises(CoreBaseException) as ex:
-        raise KeyError()
-        registry.System.from_primary_keys()
+    def test_get_primary_keys(self, rollback_registry):
+        registry = rollback_registry
+        with pytest.raises(CoreBaseException) as ex:
+            registry.System.get_primary_keys()
 
-# def test_get_primary_keys(self):
-#     registry = rollback_registry
-#     with pytest.raises(CoreBaseException) as ex:
-#         registry.System.get_primary_keys()
-#
-# def test_get_model(self):
-#     registry = rollback_registry
-#     m = registry.System.Model
-#     m2 = registry.System.get_model('Model.System.Model')
-#     assert m == m2
-#
+    def test_get_model(self, rollback_registry):
+        registry = rollback_registry
+        m = registry.System.Model
+        m2 = registry.System.get_model('Model.System.Model')
+        assert m == m2
+

@@ -40,11 +40,11 @@ def init_session(request):
 def rollback_registry(request, init_session):
     registry = init_session
 
-    print('-- inside rollback registry')
     yield registry
 
     def clean_up():
         try:
+            logger.debug('-- invalidating all cache')
             registry.System.Cache.invalidate_all()
         except sqlalchemy.exc.InvalidRequestError:
             logger.warning('Invalid request Error: while invalidating all caches after {}'
