@@ -121,7 +121,7 @@ def deprecated_view_before_0_19_4():
 def registry_simple_view(request, bloks_loaded):
     registry = init_registry_with_bloks(
         [], request.param)
-    request.addfinalizer(registry.close_all)
+    request.addfinalizer(registry.close)
     registry.T1.insert(code='test1', val=1)
     registry.T2.insert(code='test1', val=2)
     registry.T1.insert(code='test2', val=3)
@@ -211,7 +211,7 @@ def registry_view_with_relationship(request, bloks_loaded):
     registry.T1.insert(code='test2', val=3, rs=rs2)
     registry.T2.insert(code='test2', val=4)
     yield registry
-    registry.close_all()
+    registry.close()
 
 
 class TestViewWithRelationShip:
@@ -340,7 +340,7 @@ def view_with_relationship_on_self_2():
 def registry_view_with_relationship_on_self(request, bloks_loaded):
     registry = init_registry_with_bloks(
         [], request.param)
-    request.addfinalizer(registry.close_all)
+    request.addfinalizer(registry.close)
     parent = registry.T1.insert(code='test1', val=1)
     registry.T2.insert(code='test1', val=2)
     registry.T1.insert(code='test2', val=3, parent=parent)
@@ -488,7 +488,7 @@ def simple_view_with_same_table_by_inherit():
 def registry_view_with_inheritance(request, bloks_loaded):
     registry = init_registry_with_bloks(
         [], request.param)
-    request.addfinalizer(registry.close_all)
+    request.addfinalizer(registry.close)
     registry.T1.insert(code='test1', val=1)
     registry.T2.insert(code='test1', val=2)
     registry.T1.insert(code='test2', val=3)
@@ -575,7 +575,7 @@ def simple_view_without_view_declaration():
 )
 def registry_view_with_exception(request, bloks_loaded):
     registry = init_registry_with_bloks([], request.param)
-    request.addfinalizer(registry.close_all)
+    request.addfinalizer(registry.close)
     return registry
 
 

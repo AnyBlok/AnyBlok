@@ -90,7 +90,7 @@ def _many2one_with_str_model(**kwargs):
 def registry_many2one(request, bloks_loaded):
     registry = init_registry_with_bloks(
         [], request.param[0])
-    request.addfinalizer(registry.close_all)
+    request.addfinalizer(registry.close)
     return registry, request.param[1], request.param[2]
 
 
@@ -161,7 +161,7 @@ def _auto_detect_type(ColumnType=None, **kwargs):
 def registry_many2one_auto_detect(request, bloks_loaded):
     registry = init_registry_with_bloks(
         [], _auto_detect_type, ColumnType=request.param[0], **request.param[1])
-    request.addfinalizer(registry.close_all)
+    request.addfinalizer(registry.close)
     return registry
 
 

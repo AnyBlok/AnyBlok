@@ -55,10 +55,22 @@ def init_registry_with_bloks(bloks, function, **kwargs):
 
 
 @pytest.fixture(scope="module")
-def bloks_loaded():
+def bloks_loaded(request):
+    request.addfinalizer(BlokManager.unload)
     BlokManager.load()
     registry = init_registry_with_bloks([], None)
     registry.commit()
-    registry.close_all()
-    yield
-    BlokManager.unload()
+    registry.close()
+
+
+@pytest.fixture(scope="module")
+def testbloks_loaded(request):
+    request.addfinalizer(BlokManager.unload)
+    BlokManager.load(entry_points=('bloks', 'test_bloks'))
+
+
+@pytest.fixture(scope="class")
+def registry_testblok(request, testbloks_loaded):
+    registry = init_registry_with_bloks([], None)
+    request.addfinalizer(registry.close)
+    return registry

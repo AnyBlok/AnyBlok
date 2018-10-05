@@ -145,7 +145,7 @@ def multi_parallel_foreign_key_auto_detect():
 def registry_relationship_multiple_foreign_keys(request, bloks_loaded):
     registry = init_registry_with_bloks(
         [], request.param)
-    request.addfinalizer(registry.close_all)
+    request.addfinalizer(registry.close)
     return registry
 
 
