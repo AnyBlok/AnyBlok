@@ -108,7 +108,7 @@ class ConfigurationException(LookupError):
     """ Simple Exception for Configuration"""
 
 
-def is_none(type_, value):
+def is_none(type, value):
     """Check if the value is a *NoneValue* depending on the type
 
     :param type_: type of value
@@ -119,7 +119,7 @@ def is_none(type_, value):
         return True
     if isinstance(value, str) and value.upper() == 'NONE':
         return True
-    if value == '' and type_ is not str:
+    if value == '' and type is not str:
         return True
 
     return False
@@ -501,14 +501,14 @@ class Configuration:
             cls.set(k, v)
 
     @classmethod
-    def add_argument(cls, key, value, type_=str):
+    def add_argument(cls, key, value, type=str):
         """
         Add a configuration option
         :param key:
         :param value:
         :param type:
         """
-        cls.configuration[key] = ConfigOption(value, type_)
+        cls.configuration[key] = ConfigOption(value, type)
 
     @classmethod
     def remove_label(cls, group):
@@ -636,8 +636,8 @@ class Configuration:
             else:
                 g = parser
 
-            for function_ in cls.groups[group]:
-                function_(g)
+            for function in cls.groups[group]:
+                function(g)
 
     @classmethod
     def initialize_logging(cls):
@@ -801,7 +801,7 @@ def add_configuration_file(parser):
 def add_database(group):
     """
     add arguments to 'database' configuration group
-    :param parser:
+    :param group:
     """
     group.add_argument('--db-name',
                        default=os.environ.get('ANYBLOK_DATABASE_NAME'),
@@ -842,7 +842,7 @@ def add_database(group):
 def add_create_database(group):
     """
     add arguments to 'create_db' configuration group
-    :param parser:
+    :param group:
     """
     group.add_argument(
         '--db-template-name',
