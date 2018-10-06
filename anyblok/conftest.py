@@ -54,7 +54,8 @@ def rollback_registry(request, init_session):
             logger.debug('Invalidating all cache')
             registry.System.Cache.invalidate_all()
         except sqlalchemy.exc.InvalidRequestError:
-            logger.warning('Invalid request Error: while invalidating all caches after {}'
+            logger.warning('Invalid request Error: while invalidating all '
+                           'caches after {}'
                            .format(request.function.__name__))
         finally:
             registry.rollback()

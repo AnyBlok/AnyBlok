@@ -20,7 +20,9 @@ class TestSystemSequence:
         assert seq.nextval() == str(number + 2)
         assert seq.nextval() == str(number + 3)
 
-    def test_nextval_without_prefix_without_suffix_two_time(self, rollback_registry):
+    def test_nextval_without_prefix_without_suffix_two_time(
+        self, rollback_registry
+    ):
         registry = rollback_registry
         Sequence = registry.System.Sequence
         Sequence.insert(code='test.sequence')

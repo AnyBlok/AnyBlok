@@ -23,7 +23,7 @@ class TestSystemParameter:
         Parameter.set('test.parameter', True)
         assert query.count() == 1
         assert query.first().value == {'value': True}
-        assert query.first().multi == False
+        assert query.first().multi is False
 
     def test_set_with_multi(self, rollback_registry):
         registry = rollback_registry
@@ -35,13 +35,13 @@ class TestSystemParameter:
         Parameter.set('test.parameter', {'test': True})
         assert query.count() == 1
         assert query.first().value == {'test': True}
-        assert query.first().multi == True
+        assert query.first().multi is True
 
     def test_get(self, rollback_registry):
         registry = rollback_registry
         Parameter = registry.System.Parameter
         Parameter.set('test.parameter', True)
-        assert Parameter.get('test.parameter') == True
+        assert Parameter.get('test.parameter') is True
 
     def test_get_with_multi(self, rollback_registry):
         registry = rollback_registry
@@ -58,9 +58,9 @@ class TestSystemParameter:
     def test_count(self, rollback_registry):
         registry = rollback_registry
         Parameter = registry.System.Parameter
-        assert Parameter.is_exist('test.parameter') == False
+        assert Parameter.is_exist('test.parameter') is False
         Parameter.set('test.parameter', True)
-        assert Parameter.is_exist('test.parameter') == True
+        assert Parameter.is_exist('test.parameter') is True
 
     def test_set_existing_key(self, rollback_registry):
         registry = rollback_registry
@@ -69,7 +69,7 @@ class TestSystemParameter:
         assert query.count() == 0
         Parameter.set('test.parameter', True)
         assert query.count() == 1
-        assert Parameter.get('test.parameter') == True
+        assert Parameter.get('test.parameter') is True
         Parameter.set('test.parameter', False)
         assert query.count() == 1
-        assert Parameter.get('test.parameter') == False
+        assert Parameter.get('test.parameter') is False

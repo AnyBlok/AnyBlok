@@ -56,8 +56,8 @@ class TestCoreSqlBase:
         pks = registry.System.Column.get_primary_keys()
         model_in_pks = 'model' in pks
         name_in_pks = 'name' in pks
-        assert model_in_pks == True
-        assert name_in_pks == True
+        assert model_in_pks is True
+        assert name_in_pks is True
 
     def test_to_primary_key(self, rollback_registry):
         registry = rollback_registry
@@ -67,7 +67,8 @@ class TestCoreSqlBase:
     def test_to_primary_keys(self, rollback_registry):
         registry = rollback_registry
         column = registry.System.Column.query().first()
-        assert column.to_primary_keys() == {'model': column.model, 'name': column.name}
+        assert column.to_primary_keys() == {
+            'model': column.model, 'name': column.name}
 
     def test_fields_description(self, rollback_registry):
         registry = rollback_registry

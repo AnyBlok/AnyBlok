@@ -15,18 +15,18 @@ from ..exceptions import CoreBaseException
 class TestCoreBaseScope:
     def test_to_primary_keys(self, rollback_registry):
         registry = rollback_registry
-        with pytest.raises(CoreBaseException) as ex:
+        with pytest.raises(CoreBaseException):
             test = registry.System()
             test.to_primary_keys()
 
     def test_from_primary_keys(self, rollback_registry):
         registry = rollback_registry
-        with pytest.raises(CoreBaseException) as ex:
+        with pytest.raises(CoreBaseException):
             registry.System.from_primary_keys()
 
     def test_get_primary_keys(self, rollback_registry):
         registry = rollback_registry
-        with pytest.raises(CoreBaseException) as ex:
+        with pytest.raises(CoreBaseException):
             registry.System.get_primary_keys()
 
     def test_get_model(self, rollback_registry):
@@ -34,4 +34,3 @@ class TestCoreBaseScope:
         m = registry.System.Model
         m2 = registry.System.get_model('Model.System.Model')
         assert m == m2
-
