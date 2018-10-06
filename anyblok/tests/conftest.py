@@ -41,7 +41,7 @@ def init_registry_with_bloks(bloks, function, **kwargs):
     try:
         registry = RegistryManager.get(
             Configuration.get('db_manager'),
-            unittest=False)
+            unittest=True)
 
         # update required blok
         registry_bloks = registry.get_bloks_by_states('installed', 'toinstall')
@@ -71,6 +71,13 @@ def testbloks_loaded(request):
 
 @pytest.fixture(scope="class")
 def registry_testblok(request, testbloks_loaded):
+    registry = init_registry_with_bloks([], None)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+@pytest.fixture(scope="function")
+def registry_testblok_func(request, testbloks_loaded):
     registry = init_registry_with_bloks([], None)
     request.addfinalizer(registry.close)
     return registry
