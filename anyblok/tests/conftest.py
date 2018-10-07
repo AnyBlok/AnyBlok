@@ -8,9 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 from copy import deepcopy
-
 import pytest
-
 from anyblok.blok import BlokManager
 from anyblok.config import Configuration
 from anyblok.environment import EnvironmentManager
