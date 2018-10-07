@@ -15,8 +15,7 @@ logger = getLogger(__name__)
 
 
 def load_init_function_from_entry_points(unittest=False):
-    """
-    Call all the entry points ``anyblok_pyramid.init`` to update
+    """Call all the entry points ``anyblok_pyramid.init`` to update
     the argument setting
 
     The callable needs a dict of entry points as parameter::
@@ -45,8 +44,7 @@ def load_init_function_from_entry_points(unittest=False):
 
 
 def configuration_post_load(unittest=False):
-    """
-    Call all the entry points defined as ``anyblok_configuration.post_load``
+    """Call all the entry points defined as ``anyblok_configuration.post_load``
     to initialize some services depending on the configuration
 
     The callable needs a dict of entry points as parameter::
@@ -77,7 +75,7 @@ def configuration_post_load(unittest=False):
 def start(processName, entry_points=None,
           useseparator=False, loadwithoutmigration=False, config=None,
           **kwargs):
-    """ Function used to initialize the application
+    """Function used to initialize the application
 
     ::
 

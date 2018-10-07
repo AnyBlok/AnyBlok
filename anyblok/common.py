@@ -18,6 +18,7 @@ anyblok_column_prefix = '__anyblok_field_'
 
 def all_column_name(constraint, table):
     """Define the convention to merge the column keys
+
     :param constraint:
     :return:
     """
@@ -29,6 +30,7 @@ def all_column_name(constraint, table):
 
 def model_name(constraint, table):
     """Return a shortest table name
+
     :param table:
     :return:
     """
@@ -65,8 +67,8 @@ naming_convention = {
 
 
 def add_autodocs(meth, autodoc):
-    """
-    Add autodocs entries
+    """Add autodocs entries
+
     :param meth:
     :param autodoc:
     """
@@ -77,8 +79,8 @@ def add_autodocs(meth, autodoc):
 
 
 def function_name(function_):
-    """
-    Return the name of the function
+    """Return the name of the function
+
     :param function_:
     :return:
     """
@@ -89,8 +91,8 @@ def function_name(function_):
 
 
 def python_version():
-    """
-    Return Python version tuple
+    """Return Python version tuple
+
     :return:
     """
     vi = sys.version_info
@@ -108,7 +110,7 @@ class TypeList(list):
         self.transformation_properties = transformation_properties
 
     def transform_base(self, base, namespace=None):
-        """ Detect specific declaration which must define by registry
+        """Detect specific declaration which must define by registry
 
         :param namespace: the namespace of the model
         :param base: One of the base of the model
@@ -125,8 +127,8 @@ class TypeList(list):
         return newbase
 
     def append(self, base, **kwargs):
-        """
-        Add base
+        """Add base
+
         :param base:
         :param kwargs:
         """
@@ -135,8 +137,8 @@ class TypeList(list):
             super(TypeList, self).append(newbase)
 
     def extend(self, bases, **kwargs):
-        """
-        Extend bases
+        """Extend bases
+
         :param bases:
         :param kwargs:
         """

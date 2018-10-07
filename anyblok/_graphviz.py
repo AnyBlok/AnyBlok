@@ -9,7 +9,7 @@ from graphviz.dot import Digraph
 
 
 class BaseSchema:
-    """ Common class extended by the type of schema"""
+    """Common class extended by the type of schema"""
 
     def __init__(self, name, format='png'):
         self.name = name
@@ -19,7 +19,7 @@ class BaseSchema:
         self.count = 0
 
     def add_edge(self, cls_1, cls_2, attr=None):
-        """ Add a new edge between two nodes
+        """Add a new edge between two nodes
 
         ::
 
@@ -52,13 +52,13 @@ class BaseSchema:
                           _attributes=edge['attr'])
 
     def save(self):
-        """ render and create the output file """
+        """Render and create the output file """
         self.render()
         self.dot.render(self.name)
 
 
 class TableSchema:
-    """ Describe one table """
+    """Describe one table """
 
     def __init__(self, name, parent, islabel=False):
         self.name = name
@@ -87,7 +87,7 @@ class TableSchema:
             'PK ' if primary_key else '', name, type_))
 
     def add_foreign_key(self, node, label=None, nullable=True):
-        """ Add a new foreign key
+        """Add a new foreign key
 
         :param node: node (string or object) of the table attached
         :param label: name of the column to add the foreign key to
@@ -98,7 +98,7 @@ class TableSchema:
 
 
 class SQLSchema(BaseSchema):
-    """ Create a schema to display the table model
+    """Create a schema to display the table model
 
     ::
 
@@ -113,7 +113,7 @@ class SQLSchema(BaseSchema):
     """
 
     def add_table(self, name):
-        """ Add a new node TableSchema with columns
+        """Add a new node TableSchema with columns
 
         :param name: the name of the table
         :rtype: returns an instance of TableSchema
@@ -123,7 +123,7 @@ class SQLSchema(BaseSchema):
         return tmp
 
     def add_label(self, name):
-        """ Add a new node TableSchema without column
+        """Add a new node TableSchema without column
 
         :param name: the name of the table
         :rtype: returns an instance of TableSchema
@@ -133,7 +133,7 @@ class SQLSchema(BaseSchema):
         return tmp
 
     def get_table(self, name):
-        """ Return the instance of TableSchema linked to the table name given
+        """Return the instance of TableSchema linked to the table name given
 
         :param name: the name of the table
         :rtype: return an instance of TableSchema
@@ -151,7 +151,7 @@ class SQLSchema(BaseSchema):
 
 
 class ClassSchema:
-    """ Used to display a class """
+    """Used to display a class """
 
     def __init__(self, name, parent, islabel=False):
         self.name = name
@@ -162,7 +162,7 @@ class ClassSchema:
         self.method = []
 
     def extend(self, node):
-        """ add an edge with extended shape to the node
+        """Add an edge with extended shape to the node
 
         :param node: node (string or object)
         """
@@ -171,7 +171,7 @@ class ClassSchema:
     def strong_aggregate(self, node,
                          label_from=None, multiplicity_from=None,
                          label_to=None, multiplicity_to=None):
-        """ add an edge with strong aggregate shape to the node
+        """Add an edge with strong aggregate shape to the node
 
         :param node: node (string or object)
         :param label_from: the name of the attribute
@@ -186,7 +186,7 @@ class ClassSchema:
     def aggregate(self, node,
                   label_from=None, multiplicity_from=None,
                   label_to=None, multiplicity_to=None):
-        """ add an edge with aggregate shape to the node
+        """Add an edge with aggregate shape to the node
 
         :param node: node (string or object)
         :param label_from: the name of the attribute
@@ -200,7 +200,7 @@ class ClassSchema:
     def associate(self, node,
                   label_from=None, multiplicity_from=None,
                   label_to=None, multiplicity_to=None):
-        """ add an edge with associate shape to the node
+        """Add an edge with associate shape to the node
 
         :param node: node (string or object)
         :param label_from: the name of the attribute
@@ -212,21 +212,21 @@ class ClassSchema:
                                     label_to, multiplicity_to)
 
     def add_property(self, name):
-        """ add a property to the class
+        """Add a property to the class
 
         :param name: the name of the property
         """
         self.properties.append(name)
 
     def add_column(self, name):
-        """ add a column to the class
+        """Add a column to the class
 
         :param name: the name of the column
         """
         self.column.append(name)
 
     def add_method(self, name):
-        """ add a method to the class
+        """Add a method to the class
 
         :param name: the name of the method
         """
@@ -246,7 +246,7 @@ class ClassSchema:
 
 
 class ModelSchema(BaseSchema):
-    """ Create a schema to display the UML model
+    """Create a schema to display the UML model
 
     ::
 
@@ -259,7 +259,7 @@ class ModelSchema(BaseSchema):
     """
 
     def add_class(self, name):
-        """ Add a new node ClassSchema with column
+        """Add a new node ClassSchema with column
 
         :param name: the name of the class
         :rtype: return an instance of ClassSchema
@@ -269,7 +269,7 @@ class ModelSchema(BaseSchema):
         return tmp
 
     def add_label(self, name):
-        """ Return an instance of ClassSchema linked to the class name given
+        """Return an instance of ClassSchema linked to the class name given
 
         :param name: the name of the class
         :rtype: return an instance of ClassSchema
@@ -279,7 +279,7 @@ class ModelSchema(BaseSchema):
         return tmp
 
     def get_class(self, name):
-        """ Add a new node ClassSchema without column
+        """Add a new node ClassSchema without column
 
         :param name: the name of the class
         :rtype: return an instance of ClassSchema
@@ -287,8 +287,7 @@ class ModelSchema(BaseSchema):
         return self._nodes.get(name)
 
     def add_extend(self, cls_1, cls_2):
-        """
-        add edge to extend
+        """Add edge to extend
 
         :param cls_1: the name of the class 1
         :param cls_2: the name of the class 2
@@ -301,8 +300,7 @@ class ModelSchema(BaseSchema):
     def add_aggregation(self, cls_1, cls_2,
                         label_from=None, multiplicity_from=None,
                         label_to=None, multiplicity_to=None):
-        """
-        Add edge for aggregation
+        """Add edge for aggregation
 
         :param cls_1: the name of the class 1
         :param cls_2: the name of the class 2
@@ -328,7 +326,7 @@ class ModelSchema(BaseSchema):
     def add_strong_aggregation(self, cls_1, cls_2,
                                label_from=None, multiplicity_from=None,
                                label_to=None, multiplicity_to=None):
-        """
+        """Add edge for strong aggregation
 
         :param cls_1:
         :param cls_2:

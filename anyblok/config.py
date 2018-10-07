@@ -21,11 +21,13 @@ from os.path import join, isfile
 from sqlalchemy.engine.url import URL, make_url
 from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
                      CRITICAL, basicConfig, Logger)
+
 logger = getLogger(__name__)
 
 
 def get_db_name():
-    """ Return an sqlalchemy name of the database from configuration
+    """Return an sqlalchemy name of the database from configuration
+
     db_name or db_url
 
     :rtype: name of the database
@@ -46,7 +48,7 @@ def get_db_name():
 
 
 def get_url(db_name=None):
-    """ Return an sqlalchemy URL for database
+    """Return an sqlalchemy URL for database
 
     Return database options, only the database name db_name can be overloaded::
 
@@ -105,7 +107,7 @@ def get_url(db_name=None):
 
 
 class ConfigurationException(LookupError):
-    """ Simple Exception for Configuration"""
+    """Simple Exception for Configuration"""
 
 
 def is_none(type, value):
@@ -146,16 +148,17 @@ def cast_value(cast, value):
 
 
 def nargs_type(key, nargs, cast):
-    """
-    Return nargs type
+    """Return nargs type
+
     :param key:
     :param nargs:
     :param cast: final type of data wanted
     :return:
     """
+
     def wrap(val):
-        """
-        Return list of casted values
+        """Return list of casted values
+
         :param val:
         :return:
         :exception ConfigurationException
@@ -185,6 +188,7 @@ class AnyBlokActionsContainer:
 
     def add_argument(self, *args, **kwargs):
         """Overload the method to add the entry in the configuration dict
+
         :param args:
         :param kwargs:
         :return:
@@ -211,6 +215,7 @@ class AnyBlokActionsContainer:
 
     def set_defaults(self, **kwargs):
         """Overload the method to update the entry in the configuration dict
+
         :param kwargs:
         """
         super(AnyBlokActionsContainer, self).set_defaults(**kwargs)
@@ -221,8 +226,8 @@ class AnyBlokActionsContainer:
             Configuration.set(dest, default)
 
     def add_argument_group(self, *args, **kwargs):
-        """
-        Add argument group
+        """Add argument group
+
         :param args:
         :param kwargs:
         :return:
@@ -274,22 +279,22 @@ class ConfigOption:
         self.set(value)
 
     def get(self):
-        """
-        Get configuration option value
+        """Get configuration option value
+
         :return:
         """
         return self.value
 
     def set(self, value):
-        """
-        Set configuration option value
+        """Set configuration option value
+
         :param value:
         """
         self.value = cast_value(self.type, value)
 
 
 def getParser(**kwargs):
-    """ Return a parser
+    """Return a parser
 
     :param description: configuration help description
     :rtype: ``ArgumentParser`` instance
@@ -298,7 +303,7 @@ def getParser(**kwargs):
 
 
 class Configuration:
-    """ ``Configuration`` is used to define the options of the real argparse
+    """``Configuration`` is used to define the options of the real argparse
     and its default values. Each application or blok can declare needed
     options here.
 
@@ -358,7 +363,7 @@ class Configuration:
     @classmethod
     def add(cls, group, label=None, function_=None,
             must_be_loaded_by_unittest=False):
-        """ Add a function in a group.
+        """Add a function in a group.
 
         The ``function_`` must have two arguments:
 
@@ -420,7 +425,7 @@ class Configuration:
 
     @classmethod
     def has(cls, option):
-        """ Check if an option exists in the configuration dict
+        """Check if an option exists in the configuration dict
 
         Return True if the option is in the configuration dict and the
         value is not None. A None value is different that a ConfigOption with
@@ -436,8 +441,7 @@ class Configuration:
 
     @classmethod
     def get(cls, opt, default=None):
-        """
-        Get a value from the configuration dict after loading the application
+        """Get a value from the configuration dict after loading the application
 
         When the application is loaded, all the options are saved in the
         Configuration. And all the applications have free access to
@@ -462,7 +466,7 @@ class Configuration:
 
     @classmethod
     def set(cls, opt, value):
-        """ Set a value to the configuration dict
+        """Set a value to the configuration dict
 
         :param opt: name of the option
         :param value: value to set
@@ -480,8 +484,8 @@ class Configuration:
 
     @classmethod
     def update(cls, *args, **kwargs):
-        """
-        update option values
+        """Update option values
+
         :param args:
         :param kwargs:
         :exception ConigurationException
@@ -502,8 +506,8 @@ class Configuration:
 
     @classmethod
     def add_argument(cls, key, value, type=str):
-        """
-        Add a configuration option
+        """Add a configuration option
+
         :param key:
         :param value:
         :param type:
@@ -512,7 +516,7 @@ class Configuration:
 
     @classmethod
     def remove_label(cls, group):
-        """ Remove an existing label
+        """Remove an existing label
 
         The purpose of this function is to remove an existing label from a specific
         group::
@@ -530,7 +534,7 @@ class Configuration:
 
     @classmethod
     def remove(cls, group, function_):
-        """ Remove an existing function
+        """Remove an existing function
 
         If your application inherits some unwanted options from a specific
         function, you can unlink this function::
@@ -557,8 +561,8 @@ class Configuration:
             for group in cls.groups.keys():
                 for fnct in cls.groups[group]:
                     if (
-                        fnct.must_be_loaded_by_unittest or
-                        group in ('plugins',)
+                            fnct.must_be_loaded_by_unittest or
+                            group in ('plugins',)
                     ):
                         fnct(parser)
 
@@ -576,7 +580,7 @@ class Configuration:
     @classmethod
     @log(logger, level='debug')
     def load(cls, application, useseparator=False, **kwargs):
-        """ Load the argparse definition and parse them
+        """Load the argparse definition and parse them
 
         :param application: name of the application
         :param useseparator: boolean(default False)
@@ -612,13 +616,13 @@ class Configuration:
         cls._load(parser, configuration_groups)
         args = parser.parse_args(our_argv)
         if sep is not None:
-            del sys.argv[1:sep+1]
+            del sys.argv[1:sep + 1]
 
         cls.parse_options(args)
 
     @classmethod
     def _load(cls, parser, configuration_groups):
-        """ Load the argparse definition and parse them
+        """Load the argparse definition and parse them
 
         :param configuration_groups: list configuration groupe to load
         :param useseparator: boolean(default False)
@@ -641,8 +645,7 @@ class Configuration:
 
     @classmethod
     def initialize_logging(cls):
-        """
-        Initialize logger and configure
+        """Initialize logger and configure
         """
         level = {
             'NOTSET': NOTSET,
@@ -683,8 +686,8 @@ class Configuration:
 
     @classmethod
     def parse_configfile(cls, configfile, required):
-        """
-        Parse the configuration file
+        """Parse the configuration file
+
         :param configfile:
         :param required:
         :return:
@@ -727,8 +730,8 @@ class Configuration:
 
     @classmethod
     def parse_options(cls, arguments):
-        """
-        Parse options
+        """Parse options
+
         :param arguments:
         """
         if arguments._get_args():
@@ -757,8 +760,8 @@ class Configuration:
 @Configuration.add('plugins', label='Plugins',
                    must_be_loaded_by_unittest=True)
 def add_plugins(group):
-    """
-    add arguments to 'plugins' configuration group
+    """Add arguments to 'plugins' configuration group
+
     :param group:
     """
     group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPlugin,
@@ -776,8 +779,8 @@ def add_plugins(group):
 
 @Configuration.add('config', must_be_loaded_by_unittest=True)
 def add_configuration_file(parser):
-    """
-    add arguments to 'config' configuration group
+    """Add arguments to 'config' configuration group
+
     :param parser:
     """
     parser.add_argument('-c', dest='configfile',
@@ -799,8 +802,8 @@ def add_configuration_file(parser):
 @Configuration.add('database', label="Database",
                    must_be_loaded_by_unittest=True)
 def add_database(group):
-    """
-    add arguments to 'database' configuration group
+    """Add arguments to 'database' configuration group
+
     :param group:
     """
     group.add_argument('--db-name',
@@ -840,8 +843,8 @@ def add_database(group):
 
 @Configuration.add('create_db', must_be_loaded_by_unittest=True)
 def add_create_database(group):
-    """
-    add arguments to 'create_db' configuration group
+    """Add arguments to 'create_db' configuration group
+
     :param group:
     """
     group.add_argument(
@@ -852,8 +855,8 @@ def add_create_database(group):
 
 @Configuration.add('install-bloks')
 def add_install_bloks(parser):
-    """
-    add arguments to 'install-bloks' configuration group
+    """Add arguments to 'install-bloks' configuration group
+
     :param parser:
     """
     parser.add_argument('--install-bloks', nargs="+", help="blok to install")
@@ -863,8 +866,8 @@ def add_install_bloks(parser):
 
 @Configuration.add('uninstall-bloks')
 def add_uninstall_bloks(parser):
-    """
-    add arguments to 'uninstall-bloks' configuration group
+    """Add arguments to 'uninstall-bloks' configuration group
+
     :param parser:
     """
     parser.add_argument('--uninstall-bloks', nargs="+",
@@ -873,8 +876,8 @@ def add_uninstall_bloks(parser):
 
 @Configuration.add('install-or-update-bloks')
 def add_install_or_update_bloks(parser):
-    """
-    add arguments to 'install-or-update-bloks' configuration group
+    """Add arguments to 'install-or-update-bloks' configuration group
+
     :param parser:
     """
     parser.add_argument('--install-or-update-bloks', nargs="+",
@@ -883,8 +886,8 @@ def add_install_or_update_bloks(parser):
 
 @Configuration.add('update-bloks', label='Update database')
 def add_update_bloks(parser):
-    """
-    add arguments to 'update-bloks' configuration group
+    """Add arguments to 'update-bloks' configuration group
+
     :param parser:
     """
     parser.add_argument('--update-bloks', nargs="+", help="bloks to update")
@@ -898,8 +901,8 @@ def add_update_bloks(parser):
 
 @Configuration.add('interpreter')
 def add_interpreter(parser):
-    """
-    add arguments to 'interpreter' configuration group
+    """Add arguments to 'interpreter' configuration group
+
     :param parser:
     """
     parser.add_argument('--script', dest='python_script',
@@ -908,8 +911,8 @@ def add_interpreter(parser):
 
 @Configuration.add('schema', label="Schema options")
 def add_schema(group):
-    """
-    add arguments to 'schema' configuration group
+    """Add arguments to 'schema' configuration group
+
     :param group:
     """
     try:
@@ -923,8 +926,8 @@ def add_schema(group):
 
 @Configuration.add('doc', label="Doc options")
 def add_doc(group):
-    """
-    add arguments to 'doc' configuration group
+    """Add arguments to 'doc' configuration group
+
     :param group:
     """
     group.add_argument('--doc-format',
@@ -939,8 +942,8 @@ def add_doc(group):
 
 @Configuration.add('logging', label="Logging")
 def add_logging(group):
-    """
-    add arguments to 'logging' configuration group
+    """Add arguments to 'logging' configuration group
+
     :param group:
     """
     group.add_argument('--logging-level', dest='logging_level',
@@ -963,8 +966,8 @@ def add_logging(group):
 
 @Configuration.add('preload', label="Preload")
 def define_preload_option(group):
-    """
-    add arguments to 'preload' configuration group
+    """Add arguments to 'preload' configuration group
+
     :param group:
     """
     group.add_argument('--databases', dest='db_names', nargs="+",

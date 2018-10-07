@@ -19,7 +19,7 @@ logger = getLogger(__name__)
 
 
 class BlokManagerException(LookupError):
-    """ Simple exception class for BlokManager """
+    """Simple exception class for BlokManager """
 
     def __init__(self, *args, **kwargs):
         EnvironmentManager.set('current_blok', None)
@@ -27,7 +27,7 @@ class BlokManagerException(LookupError):
 
 
 class BlokManager:
-    """ Manage the bloks for one process
+    """Manage the bloks for one process
 
     A blok has a `setuptools` entrypoint, this entry point is defined
     by the ``entry_points`` attribute in the first load
@@ -47,7 +47,7 @@ class BlokManager:
 
     @classmethod
     def list(cls):
-        """ Return the ordered bloks
+        """Return the ordered bloks
 
         :rtype: list of blok name ordered by loading
         """
@@ -55,7 +55,7 @@ class BlokManager:
 
     @classmethod
     def has(cls, blok):
-        """ Return True if the blok is loaded
+        """Return True if the blok is loaded
 
         :param blok: the name of the blok
         :rtype: bool
@@ -64,7 +64,7 @@ class BlokManager:
 
     @classmethod
     def get(cls, blok):
-        """ Return the loaded blok
+        """Return the loaded blok
 
         :param blok: the name of the blok
         :rtype: blok instance
@@ -77,7 +77,7 @@ class BlokManager:
 
     @classmethod
     def set(cls, blokname, blok):
-        """ Add a new blok
+        """Add a new blok
 
         :param blokname: the name of the blok
         :param blok: blok instance
@@ -92,7 +92,7 @@ class BlokManager:
     @classmethod
     @log(logger, level='debug')
     def reload(cls):
-        """ Reload the entry points
+        """Reload the entry points
 
         Empty the ``bloks`` dict and use the ``entry_points`` attribute to
         load bloks
@@ -111,7 +111,7 @@ class BlokManager:
     @classmethod
     @log(logger, level='debug')
     def unload(cls):
-        """ Unload all the bloks but not the registry """
+        """Unload all the bloks but not the registry """
         cls.bloks = {}
         cls.ordered_bloks = []
         cls.entry_points = None
@@ -121,8 +121,8 @@ class BlokManager:
 
     @classmethod
     def get_needed_blok_dependencies(cls, blok):
-        """
-        Get all dependencies for the blok given
+        """Get all dependencies for the blok given
+
         :param blok:
         :return:
         """
@@ -145,8 +145,8 @@ class BlokManager:
 
     @classmethod
     def get_needed_blok(cls, blok):
-        """
-        Get and import/load the blok given with dependencies
+        """Get and import/load the blok given with dependencies
+
         :param blok:
         :return:
         """
@@ -176,7 +176,7 @@ class BlokManager:
     @classmethod
     @log(logger, level='debug')
     def load(cls, entry_points=('bloks',)):
-        """ Load all the bloks and import them
+        """Load all the bloks and import them
 
         :param entry_points: Used by ``iter_entry_points`` to get the blok
         :exception: BlokManagerException
@@ -224,7 +224,7 @@ class BlokManager:
 
     @classmethod
     def getPath(cls, blok):
-        """ Return the path of the blok
+        """Return the path of the blok
 
         :param blok: blok name in ``ordered_bloks``
         :rtype: absolute path
@@ -234,7 +234,7 @@ class BlokManager:
 
 
 class Blok:
-    """ Super class for all the bloks
+    """Super class for all the bloks
 
     define the default value for:
 
@@ -260,11 +260,11 @@ class Blok:
 
     @classmethod
     def import_declaration_module(cls):
-        """ Do the python import for the Declaration of the model or other
+        """Do the python import for the Declaration of the model or other
         """
 
     def update(self, latest_version):
-        """ Called on install or update
+        """Called on install or update
 
         :param latest_version: latest version installed, if the blok has never
                                been installed, latest_version is None
@@ -289,9 +289,9 @@ class Blok:
         """
 
     def uninstall(self):
-        """ Called on uninstall
+        """Called on uninstall
         """
 
     def load(self):
-        """ Called on start / launch
+        """Called on start / launch
         """
