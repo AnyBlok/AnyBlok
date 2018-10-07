@@ -518,8 +518,8 @@ class Configuration:
     def remove_label(cls, group):
         """Remove an existing label
 
-        The purpose of this function is to remove an existing label from a specific
-        group::
+        The purpose of this function is to remove an existing label
+        from a specific group::
 
             @Configuration.add('create-db', label="Name of the group")
             def bar(parser, defaul):
