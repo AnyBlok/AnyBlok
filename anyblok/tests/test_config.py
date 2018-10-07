@@ -5,6 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import pytest
 from os.path import join
 from anyblok import config
 from anyblok.config import (
@@ -122,39 +123,38 @@ class MockArgumentParser:
         pass
 
 
-class TestConfiguration(TestCase):
+@pytest.fixture(scope="class")
+def protect_configuration(request):
+    def getParser(*args, **kwargs):
+        return MockArgumentParser()
 
-    @classmethod
-    def setUpClass(cls):
-        super(TestConfiguration, cls).setUpClass()
+    config.getParser = getParser
+    old_configuration = Configuration.configuration.copy()
+    old_groups = Configuration.groups.copy()
+    old_labels = Configuration.labels.copy()
 
-        def getParser(*args, **kwargs):
-            return MockArgumentParser()
-
-        config.getParser = getParser
-        cls.old_configuration = Configuration.configuration.copy()
-        cls.old_groups = Configuration.groups.copy()
-        cls.old_labels = Configuration.labels.copy()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(TestConfiguration, cls).tearDownClass()
+    def reset():
         config.getParser = old_getParser
-        Configuration.configuration = cls.old_configuration
-        Configuration.groups = cls.old_groups
-        Configuration.labels = cls.old_labels
+        Configuration.configuration = old_configuration
+        Configuration.groups = old_groups
+        Configuration.labels = old_labels
 
-    def setUp(self):
-        super(TestConfiguration, self).setUp()
+    request.addfinalizer(reset)
+
+
+class TestConfiguration:
+
+    @pytest.fixture(autouse=True)
+    def reset_conf(self, protect_configuration):
         Configuration.groups = {}
         Configuration.labels = {}
         Configuration.configuration = {}
 
     def assertAdded(self, group, label=None, function_=None):
-        self.assertEqual(Configuration.groups[group], [function_])
+        assert Configuration.groups[group] == [function_]
 
         if label:
-            self.assertEqual(Configuration.labels[group], label)
+            assert Configuration.labels[group] == label
 
     def test_add(self):
         Configuration.add('new-group', function_=fnct_configuration)
@@ -175,87 +175,84 @@ class TestConfiguration(TestCase):
         self.assertAdded('new-group', function_=fnct)
 
     def test_has(self):
-        self.assertFalse(Configuration.has('option'))
+        assert Configuration.has('option') is False
         Configuration.configuration['option'] = ConfigOption('option', str)
-        self.assertTrue(Configuration.has('option'))
+        assert Configuration.has('option') is True
 
     def test_get(self):
         option = 'My option'
         Configuration.configuration['option'] = ConfigOption(option, str)
         res = Configuration.get('option')
-        self.assertEqual(option, res)
+        assert option == res
 
     def test_fnct_plugins_config(self):
         option = 'anyblok.tests.test_config:MockPluginFnct'
         Configuration.configuration['option'] = ConfigOption(
             option, AnyBlokPlugin)
         res = Configuration.get('option')
-        self.assertIs(MockPluginFnct, res)
+        assert MockPluginFnct is res
 
     def test_class_plugins_config(self):
         option = 'anyblok.tests.test_config:MockPluginClass'
         Configuration.configuration['option'] = ConfigOption(
             option, AnyBlokPlugin)
         res = Configuration.get('option')
-        self.assertIs(MockPluginClass, res)
+        assert MockPluginClass is res
 
     def test_wrong_plugins_config(self):
         option = 'anyblok.tests.test_config:MockPluginWrong'
-        with self.assertRaises(ImportError):
+        with pytest.raises(ImportError):
             Configuration.configuration['option'] = ConfigOption(
                 option, AnyBlokPlugin)
 
     def test_update(self):
         Configuration.update(one_option=1)
-        self.assertEqual(Configuration.get('one_option'), 1)
+        assert Configuration.get('one_option') == 1
 
     def test_update2(self):
         Configuration.update(dict(one_option=1))
-        self.assertEqual(Configuration.get('one_option'), 1)
+        assert Configuration.get('one_option') == 1
 
     def test_set_str(self):
         Configuration.set('value', '1')
-        self.assertEqual(Configuration.configuration['value'].type, str)
-        self.assertEqual(Configuration.get('value'), '1')
+        assert Configuration.configuration['value'].type == str
+        assert Configuration.get('value') == '1'
 
     def test_set_int(self):
         Configuration.set('value', 1)
-        self.assertEqual(Configuration.configuration['value'].type, int)
-        self.assertEqual(Configuration.get('value'), 1)
+        assert Configuration.configuration['value'].type == int
+        assert Configuration.get('value') == 1
 
     def test_set_float(self):
         Configuration.set('value', 1.)
-        self.assertEqual(Configuration.configuration['value'].type, float)
-        self.assertEqual(Configuration.get('value'), 1.)
+        assert Configuration.configuration['value'].type == float
+        assert Configuration.get('value') == 1.
 
     def test_set_list(self):
         Configuration.set('value', [1])
-        self.assertEqual(Configuration.configuration['value'].type, list)
-        self.assertEqual(Configuration.get('value'), [1])
+        assert Configuration.configuration['value'].type == list
+        assert Configuration.get('value') == [1]
 
     def test_set_tuple(self):
         Configuration.set('value', (1,))
-        self.assertEqual(Configuration.configuration['value'].type, tuple)
-        self.assertEqual(Configuration.get('value'), (1,))
+        assert Configuration.configuration['value'].type == tuple
+        assert Configuration.get('value') == (1,)
 
     def test_set_dict(self):
         Configuration.set('value', {'a': 1})
-        self.assertEqual(Configuration.configuration['value'].type, dict)
-        self.assertEqual(Configuration.get('value'), {'a': 1})
+        assert Configuration.configuration['value'].type == dict
+        assert Configuration.get('value') == {'a': 1}
 
     def test_get_use_default_value(self):
         option = 'My option by default'
         res = Configuration.get('option', option)
-        self.assertEqual(option, res)
+        assert option == res
 
     def check_url(self, url, wanted_url):
         wanted_url = make_url(wanted_url)
         for x in ('drivername', 'host', 'port', 'username', 'password',
                   'database'):
-            self.assertEqual(
-                getattr(url, x), getattr(wanted_url, x),
-                "check url(%s) == url(%s) on attribute %r" % (url, wanted_url,
-                                                              x))
+            assert getattr(url, x) == getattr(wanted_url, x)
 
     def test_get_url(self):
         with TestCase.Configuration(db_name='anyblok',
@@ -317,39 +314,38 @@ class TestConfiguration(TestCase):
                                     db_user_name=None,
                                     db_password=None,
                                     db_port=None):
-            with self.assertRaises(ConfigurationException):
+            with pytest.raises(ConfigurationException):
                 get_url()
 
     def test_remove(self):
         Configuration.add('new-group', function_=fnct_configuration)
         Configuration.remove('new-group', function_=fnct_configuration)
-        self.assertEqual(Configuration.groups['new-group'], [])
+        assert Configuration.groups['new-group'] == []
 
     def test_remove_more_function(self):
         Configuration.add('new-group', function_=fnct_configuration)
         Configuration.add('new-group', function_=fnct_other_configuration)
         Configuration.remove('new-group', function_=fnct_configuration)
-        self.assertEqual(Configuration.groups['new-group'],
-                         [fnct_other_configuration])
+        assert Configuration.groups['new-group'] == [fnct_other_configuration]
 
     def test_remove_label(self):
         Configuration.add(
             'new-group', label="One label", function_=fnct_configuration)
         Configuration.remove_label('new-group')
-        with self.assertRaises(KeyError):
+        with pytest.raises(KeyError):
             Configuration.labels['AnyBlok']['new-group']
 
     def test_load_without_configuration_groupes(self):
-        self.assertEqual(Configuration.load('default'), None)
+        assert Configuration.load('default') is None
 
     def test_empty_parse_option(self):
         args = MockArgParseArguments()
         Configuration.parse_options(args)
-        self.assertEqual(Configuration.configuration, {})
+        assert Configuration.configuration == {}
 
     def assertConfig(self, kwargs):
         config = {x: y.get() for x, y in Configuration.configuration.items()}
-        self.assertEqual(config, kwargs)
+        assert config == kwargs
 
     def test_parse_option(self):
         kwargs = {'test': 'value'}
@@ -402,7 +398,7 @@ class TestConfiguration(TestCase):
     def test_parse_option_args(self):
         args = ('test',)
         args = MockArgParseArguments(args=args)
-        with self.assertRaises(ConfigurationException):
+        with pytest.raises(ConfigurationException):
             Configuration.parse_options(args)
 
     def test_load_with_configuration_groupes(self):
@@ -423,44 +419,45 @@ class TestConfiguration(TestCase):
     def test_add_argument_str(self):
         parser = self.get_parser()
         parser.add_argument('--value', dest='value', default='1')
-        self.assertEqual(Configuration.configuration['value'].type, str)
-        self.assertEqual(Configuration.get('value'), '1')
+        assert Configuration.configuration['value'].type == str
+        assert Configuration.get('value') == '1'
 
     def test_add_argument_int(self):
         parser = self.get_parser()
         parser.add_argument('--value', dest='value', type=int, default=1)
-        self.assertEqual(Configuration.configuration['value'].type, int)
-        self.assertEqual(Configuration.get('value'), 1)
+        assert Configuration.configuration['value'].type == int
+        assert Configuration.get('value') == 1
 
     def test_add_argument_float(self):
         parser = self.get_parser()
         parser.add_argument('--value', dest='value', type=float, default=1)
-        self.assertEqual(Configuration.configuration['value'].type, float)
-        self.assertEqual(Configuration.get('value'), 1.)
+        assert Configuration.configuration['value'].type == float
+        assert Configuration.get('value') == 1.
 
     def test_add_argument_list(self):
         parser = self.get_parser()
         parser.add_argument('--value', dest='value', nargs="+", default='1, 2')
-        self.assertEqual(Configuration.get('value'), ['1', '2'])
+        assert Configuration.get('value') == ['1', '2']
 
     def test_default_str(self):
         parser = self.get_parser()
         parser.add_argument('--value', dest='value', default='1')
         parser.set_defaults(value='2')
-        self.assertEqual(Configuration.get('value'), '2')
+        assert Configuration.get('value') == '2'
 
     def test_add_application_properties(self):
-        self.assertIsNone(
-            Configuration.applications.get('test_add_application_properties'))
+        assert Configuration.applications.get(
+            'test_add_application_properties') is None
         Configuration.add_application_properties(
             'test_add_application_properties', ['logging'],
             description='Just a test')
-        self.assertIsNotNone(
-            Configuration.applications.get('test_add_application_properties'))
-        self.assertEqual(
-            Configuration.applications['test_add_application_properties'],
+        assert Configuration.applications.get(
+            'test_add_application_properties') is not None
+        assert (
+            Configuration.applications['test_add_application_properties'] ==
             {
-                'configuration_groups': ['config', 'database', 'logging'],
+                'configuration_groups': [
+                    'config', 'database', 'plugins', 'logging'],
                 'description': 'Just a test'
             })
 
@@ -485,60 +482,64 @@ class TestConfiguration(TestCase):
         Configuration.initialize_logging()
 
 
-class TestConfigurationOption(TestCase):
+@pytest.fixture(scope="function")
+def parser():
+    return MockArgumentParser()
 
-    @classmethod
-    def setUpClass(cls):
-        super(TestConfigurationOption, cls).setUpClass()
-        cls.parser = MockArgumentParser()
-        cls.group = cls.parser.add_argument_group('label')
-        cls.function = {
-            'add_configuration_file': add_configuration_file,
-            'add_plugins': add_plugins,
-            'add_database': add_database,
-            'add_install_bloks': add_install_bloks,
-            'add_uninstall_bloks': add_uninstall_bloks,
-            'add_update_bloks': add_update_bloks,
-            'add_interpreter': add_interpreter,
-            'add_schema': add_schema,
-            'add_doc': add_doc,
-            'define_preload_option': define_preload_option,
-            'add_logging': add_logging,
-            'add_install_or_update_bloks': add_install_or_update_bloks,
-        }
 
-    def test_add_configuration_file(self):
-        self.function['add_configuration_file'](self.parser)
+@pytest.fixture(scope="function")
+def group(parser):
+    return parser.add_argument_group('label')
 
-    def test_add_plugins(self):
-        self.function['add_plugins'](self.group)
 
-    def test_add_database(self):
-        self.function['add_database'](self.group)
+class TestConfigurationOption:
+    function = {
+        'add_configuration_file': add_configuration_file,
+        'add_plugins': add_plugins,
+        'add_database': add_database,
+        'add_install_bloks': add_install_bloks,
+        'add_uninstall_bloks': add_uninstall_bloks,
+        'add_update_bloks': add_update_bloks,
+        'add_interpreter': add_interpreter,
+        'add_schema': add_schema,
+        'add_doc': add_doc,
+        'define_preload_option': define_preload_option,
+        'add_logging': add_logging,
+        'add_install_or_update_bloks': add_install_or_update_bloks,
+    }
 
-    def test_add_install_bloks(self):
-        self.function['add_install_bloks'](self.parser)
+    def test_add_configuration_file(self, parser):
+        self.function['add_configuration_file'](parser)
 
-    def test_add_uninstall_bloks(self):
-        self.function['add_uninstall_bloks'](self.parser)
+    def test_add_plugins(self, group):
+        self.function['add_plugins'](group)
 
-    def test_add_update_bloks(self):
-        self.function['add_update_bloks'](self.parser)
+    def test_add_database(self, group):
+        self.function['add_database'](group)
 
-    def test_add_interpreter(self):
-        self.function['add_interpreter'](self.parser)
+    def test_add_install_bloks(self, parser):
+        self.function['add_install_bloks'](parser)
 
-    def test_add_schema(self):
-        self.function['add_schema'](self.group)
+    def test_add_uninstall_bloks(self, parser):
+        self.function['add_uninstall_bloks'](parser)
 
-    def test_add_doc(self):
-        self.function['add_doc'](self.group)
+    def test_add_update_bloks(self, parser):
+        self.function['add_update_bloks'](parser)
 
-    def test_define_preload_option(self):
-        self.function['define_preload_option'](self.parser)
+    def test_add_interpreter(self, parser):
+        self.function['add_interpreter'](parser)
 
-    def test_add_logging(self):
-        self.function['add_logging'](self.parser)
+    def test_add_schema(self, group):
+        self.function['add_schema'](group)
 
-    def test_add_install_or_update_bloks(self):
-        self.function['add_install_or_update_bloks'](self.parser)
+    def test_add_doc(self, group):
+        self.function['add_doc'](group)
+
+    def test_define_preload_option(self, parser):
+        self.function['define_preload_option'](parser)
+
+    def test_add_logging(self, parser):
+        self.function['add_logging'](parser)
+
+    def test_add_install_or_update_bloks(self, parser):
+        self.function['add_install_or_update_bloks'](parser)
