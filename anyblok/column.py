@@ -1002,7 +1002,7 @@ class Sequence(String):
         res['formater'] = self.formater
         return res
 
-    def wrap_default(self, registry, namespace, fieldname):
+    def wrap_default(self, registry, namespace, fieldname, properties):
         """
         Return default wrapper
         :param registry: the current registry
