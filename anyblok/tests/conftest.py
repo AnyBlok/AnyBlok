@@ -56,17 +56,23 @@ def init_registry(function, **kwargs):
     return init_registry_with_bloks([], function, **kwargs)
 
 
-@pytest.fixture(scope="module")
-def bloks_loaded(request):
-    request.addfinalizer(BlokManager.unload)
+@pytest.fixture(scope="session")
+def base_loaded(request):
     BlokManager.load()
     registry = init_registry_with_bloks([], None)
     registry.commit()
     registry.close()
+    BlokManager.unload()
 
 
 @pytest.fixture(scope="module")
-def testbloks_loaded(request):
+def bloks_loaded(request, base_loaded):
+    request.addfinalizer(BlokManager.unload)
+    BlokManager.load()
+
+
+@pytest.fixture(scope="module")
+def testbloks_loaded(request, base_loaded):
     request.addfinalizer(BlokManager.unload)
     BlokManager.load(entry_points=('bloks', 'test_bloks'))
 
