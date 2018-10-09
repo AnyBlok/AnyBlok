@@ -5,9 +5,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase
+import pytest
 from anyblok.declarations import Declarations, hybrid_method
 from anyblok.column import Integer
+from .conftest import init_registry
 
 register = Declarations.register
 Model = Declarations.Model
@@ -15,21 +16,34 @@ Mixin = Declarations.Mixin
 Core = Declarations.Core
 
 
-class TestHybridMethod(DBTestCase):
+class TestHybridMethod:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def check_hybrid_method(self, Test):
         t1 = Test.insert(val=1)
         t2 = Test.insert(val=2)
-        self.assertEqual(t1.val_is(1), True)
-        self.assertEqual(t1.val_is(2), False)
-        self.assertEqual(t2.val_is(1), False)
-        self.assertEqual(t2.val_is(2), True)
+        assert t1.val_is(1) is True
+        assert t1.val_is(2) is False
+        assert t2.val_is(1) is False
+        assert t2.val_is(2) is True
         query = Test.query().filter(Test.val_is(1))
-        self.assertEqual(query.count(), 1)
-        self.assertEqual(query.first(), t1)
+        assert query.count() == 1
+        assert query.first() is t1
         query = Test.query().filter(Test.val_is(2))
-        self.assertEqual(query.count(), 1)
-        self.assertEqual(query.first(), t2)
+        assert query.count() == 1
+        assert query.first() is t2
 
     def test_hybrid_method_model(self):
 
