@@ -78,6 +78,13 @@ def testbloks_loaded(request, base_loaded):
 
 
 @pytest.fixture(scope="class")
+def registry_blok(request, bloks_loaded):
+    registry = init_registry_with_bloks([], None)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+@pytest.fixture(scope="class")
 def registry_testblok(request, testbloks_loaded):
     registry = init_registry_with_bloks([], None)
     request.addfinalizer(registry.close)
