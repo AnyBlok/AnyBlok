@@ -5,6 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import pytest
 from anyblok.tests.testcase import TestCase
 from anyblok.environment import (EnvironmentManager,
                                  ThreadEnvironment,
@@ -28,20 +29,21 @@ class MockEnvironment:
         return cls.values.get(key, default)
 
 
-class TestEnvironment(TestCase):
+class TestEnvironment:
 
-    def setUp(self):
-        super(TestEnvironment, self).setUp()
+    @pytest.fixture(autouse=True)
+    def wrapper(self, request):
+
+        def reset():
+            EnvironmentManager.define_environment_cls(ThreadEnvironment)
+
+        request.addfinalizer(reset)
         EnvironmentManager.define_environment_cls(MockEnvironment)
-
-    def tearDown(self):
-        super(TestEnvironment, self).tearDown()
-        EnvironmentManager.define_environment_cls(ThreadEnvironment)
 
     def test_set_and_get_variable(self):
         db_name = 'test db name'
         EnvironmentManager.set('db_name', db_name)
-        self.assertEqual(EnvironmentManager.get('db_name'), db_name)
+        assert EnvironmentManager.get('db_name') == db_name
 
     def test_without_environment_for_set(self):
         # don't use define_environment_cls, because she must be verify
@@ -62,8 +64,9 @@ class TestEnvironment(TestCase):
             pass
 
     def test_scoped_function_session(self):
-        self.assertEqual(EnvironmentManager.scoped_function_for_session(),
-                         MockEnvironment.scoped_function_for_session)
+        getted = EnvironmentManager.scoped_function_for_session()
+        wanted = MockEnvironment.scoped_function_for_session
+        assert getted == wanted
 
     def check_bad_define_environment(self, env):
         try:
@@ -159,8 +162,7 @@ class TestThreadEnvironment(TestCase):
     def test_set_and_get_variable(self):
         db_name = 'test db name'
         EnvironmentManager.set('db_name', db_name)
-        self.assertEqual(EnvironmentManager.get('db_name'), db_name)
+        assert EnvironmentManager.get('db_name') == db_name
 
     def test_scoped_function_session(self):
-        self.assertEqual(EnvironmentManager.scoped_function_for_session(),
-                         None)
+        assert EnvironmentManager.scoped_function_for_session() is None
