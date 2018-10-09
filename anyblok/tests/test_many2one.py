@@ -8,7 +8,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
@@ -18,7 +17,7 @@ from anyblok.column import (
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.engine.reflection import Inspector
-from .conftest import init_registry_with_bloks
+from .conftest import init_registry_with_bloks, init_registry
 
 
 register = Declarations.register
@@ -228,10 +227,23 @@ def _two_remote_primary_keys(**kwargs):
         test = Many2One(model=Model.Test)
 
 
-class TestMany2OneOld(DBTestCase):
+class TestMany2OneOld:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def test_2_many2one(self):
-        with self.assertRaises(FieldException):
+        with pytest.raises(FieldException):
             self.init_registry(_many2one_with_same_name_for_column_names)
 
     def test_minimum_many2one_on_sequence(self):
@@ -252,10 +264,10 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         test = registry.Test.insert()
         test2 = registry.Test2.insert(test=test)
-        self.assertIs(test, test2.test)
+        assert test is test2.test
 
     def test_minimum_many2one_without_model(self):
-        with self.assertRaises(FieldException):
+        with pytest.raises(FieldException):
             self.init_registry(_minimum_many2one_without_model)
 
     def test_same_model(self):
@@ -270,8 +282,8 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         t1 = registry.Test.insert()
         t2 = registry.Test.insert(parent=t1)
-        self.assertEqual(t2.parent, t1)
-        self.assertEqual(t1.children[0], t2)
+        assert t2.parent is t1
+        assert t1.children[0] is t2
 
     def test_same_model_pk_by_inherit(self):
         def add_in_registry():
@@ -289,8 +301,8 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         t1 = registry.Test.insert()
         t2 = registry.Test.insert(parent=t1)
-        self.assertEqual(t2.parent, t1)
-        self.assertEqual(t1.children[0], t2)
+        assert t2.parent is t1
+        assert t1.children[0] is t2
 
     def test_same_model_pk_by_mixin(self):
         def add_in_registry():
@@ -308,8 +320,8 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         t1 = registry.Test.insert()
         t2 = registry.Test.insert(parent=t1)
-        self.assertEqual(t2.parent, t1)
-        self.assertEqual(t1.children[0], t2)
+        assert t2.parent is t1
+        assert t1.children[0] is t2
 
     def test_add_unique_constraint(self):
         def add_in_registry():
@@ -330,7 +342,7 @@ class TestMany2OneOld(DBTestCase):
         registry.Person.insert(
             name="Jean-sébastien SUZANNE", address=address)
 
-        with self.assertRaises(IntegrityError):
+        with pytest.raises(IntegrityError):
             registry.Person.insert(name="Other", address=address)
 
     def test_add_index_constraint(self):
@@ -350,7 +362,7 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         inspector = Inspector(registry.session.connection())
         indexes = inspector.get_indexes(registry.Person.__tablename__)
-        self.assertEqual(len(indexes), 1)
+        assert len(indexes) == 1
 
     def test_add_primary_keys_constraint(self):
         def add_in_registry():
@@ -369,7 +381,7 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         inspector = Inspector(registry.session.connection())
         pks = inspector.get_primary_keys(registry.Person.__tablename__)
-        self.assertIn('address_id', pks)
+        assert 'address_id'in pks
 
     def test_complet_with_multi_foreign_key(self):
 
@@ -402,8 +414,8 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         test = registry.Test.insert(id2="10")
         test2 = registry.Test2.insert(test=test)
-        self.assertEqual(test.id, test2.test_id)
-        self.assertEqual(test.id2, test2.test_id2)
+        assert test.id == test2.test_id
+        assert test.id2 is test2.test_id2
 
     def test_complet_with_multi_foreign_key_without_constraint(self):
 
@@ -430,8 +442,8 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         test = registry.Test.insert(id2="10")
         test2 = registry.Test2.insert(test=test)
-        self.assertEqual(test.id, test2.test_id)
-        self.assertEqual(test.id2, test2.test_id2)
+        assert test.id == test2.test_id
+        assert test.id2 is test2.test_id2
 
     def test_with_multi_foreign_key_on_existing_column(self):
 
@@ -456,8 +468,8 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         test = registry.Test.insert(id2="10")
         test2 = registry.Test2.insert(test=test)
-        self.assertEqual(test.id, test2.test_id)
-        self.assertEqual(test.id2, test2.test_id2)
+        assert test.id == test2.test_id
+        assert test.id2 is test2.test_id2
 
     def test_with_multi_foreign_key_on_existing_column2(self):
 
@@ -482,24 +494,21 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         test = registry.Test.insert(id2="10")
         test2 = registry.Test2.insert(test=test)
-        self.assertEqual(test.id, test2.other_test_id)
-        self.assertEqual(test.id2, test2.other_test_id2)
+        assert test.id == test2.other_test_id
+        assert test.id2 is test2.other_test_id2
 
     def test_with_multi_foreign_key_on_unexisting_column(self):
         registry = self.init_registry(_two_remote_primary_keys)
         test = registry.Test.insert(id2="10")
         test2 = registry.Test2.insert(test=test)
-        self.assertEqual(test.id, test2.test_id)
-        self.assertEqual(test.id2, test2.test_id2)
+        assert test.id == test2.test_id
+        assert test.id2 is test2.test_id2
 
     def test_many2one_with_multi_fk_expire_field(self):
         registry = self.init_registry(_two_remote_primary_keys)
-        self.assertIn(
-            ('test',),
-            registry.expire_attributes['Model.Test2']['test_id'])
-        self.assertIn(
-            ('test',),
-            registry.expire_attributes['Model.Test2']['test_id2'])
+        assert('test',) in registry.expire_attributes['Model.Test2']['test_id']
+        assert ('test',) in registry.expire_attributes[
+            'Model.Test2']['test_id2']
 
     def test_with_multi_foreign_key_on_unexisting_named_column(self):
 
@@ -521,8 +530,8 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         test = registry.Test.insert(id2="10")
         test2 = registry.Test2.insert(test=test)
-        self.assertEqual(test.id, test2.test_id)
-        self.assertEqual(test.id2, test2.test_id2)
+        assert test.id == test2.test_id
+        assert test.id2 is test2.test_id2
 
     def test_with_multi_foreign_key_on_unexisting_named_column2(self):
 
@@ -541,7 +550,7 @@ class TestMany2OneOld(DBTestCase):
                 test = Many2One(model=Model.Test, column_names=(
                     'other_test_id', 'other_test_id2'))
 
-        with self.assertRaises(FieldException):
+        with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
     def test_m2o_in_mixin(self):
@@ -572,7 +581,7 @@ class TestMany2OneOld(DBTestCase):
         test = registry.Test.insert()
         test1 = registry.Test1.insert(test=test)
         test2 = registry.Test2.insert(test=test)
-        self.assertEqual(test1.test_id, test2.test_id)
+        assert test1.test_id == test2.test_id
 
     def test_delete_m2o_without_fk_options_on_delete_cascade(self):
 
@@ -592,8 +601,8 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         test = registry.Test.insert()
         testM2O = registry.TestM2O.insert(test=test)
-        self.assertIs(testM2O.test, test)
-        with self.assertRaises(IntegrityError):
+        assert testM2O.test is test
+        with pytest.raises(IntegrityError):
             test.delete()
 
     def test_delete_m2o_with_fk_options_on_delete_cascade(self):
@@ -615,9 +624,9 @@ class TestMany2OneOld(DBTestCase):
         registry = self.init_registry(add_in_registry)
         test = registry.Test.insert()
         testM2O = registry.TestM2O.insert(test=test)
-        self.assertIs(testM2O.test, test)
+        assert testM2O.test is test
         test.delete()
-        self.assertFalse(registry.TestM2O.query().count())
+        assert not (registry.TestM2O.query().count())
 
     def test_2_simple_many2one_on_the_same_model(self):
 
@@ -640,6 +649,6 @@ class TestMany2OneOld(DBTestCase):
         address_2 = registry.Address.insert()
         person = registry.Person.insert(
             name='test', address_1=address_1, address_2=address_2)
-        self.assertIs(person.address_1, address_1)
-        self.assertIs(person.address_2, address_2)
-        self.assertIsNot(person.address_1, person.address_2)
+        assert person.address_1 is address_1
+        assert person.address_2 is address_2
+        assert person.address_1 is not person.address_2
