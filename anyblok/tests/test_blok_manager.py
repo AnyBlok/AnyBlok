@@ -46,17 +46,17 @@ class TestBlokManager:
         with pytest.raises(BlokManagerException):
             BlokManager.reload()
 
-    def test_get_invalid_blok(self, registry_testblok):
+    def test_get_invalid_blok(self):
         BlokManager.load()
         with pytest.raises(BlokManagerException):
             BlokManager.get('invalid blok')
 
-    def test_set(self, registry_testblok):
+    def test_set(self):
         blok_name = 'ABlok'
         BlokManager.set(blok_name, Blok)
         assert BlokManager.has(blok_name)
 
-    def test_set_two_time(self, registry_testblok):
+    def test_set_two_time(self):
         blok_name = 'ABlok'
         BlokManager.set(blok_name, Blok)
         with pytest.raises(BlokManagerException):
