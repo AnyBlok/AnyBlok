@@ -7,10 +7,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase
+import pytest
 from anyblok import Declarations
 from anyblok.column import Integer, String
 from anyblok.relationship import One2Many
+from .conftest import init_registry
 
 
 register = Declarations.register
@@ -42,6 +43,100 @@ def _complete_one2many(**kwargs):
                            remote_columns="address_id",
                            primaryjoin=primaryjoin,
                            many2one="address")
+
+
+@pytest.fixture(scope="class")
+def registry_complete_one2many(request, bloks_loaded):
+    registry = init_registry(_complete_one2many)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+class TestCompleteOne2Many:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_complete_one2many):
+        transaction = registry_complete_one2many.begin_nested()
+        request.addfinalizer(transaction.rollback)
+
+    def test_complete_one2many(self, registry_complete_one2many):
+        registry = registry_complete_one2many
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        address.persons.append(person)
+
+        assert person.address is address
+
+    def test_one2many_autodoc(self, registry_complete_one2many):
+        registry = registry_complete_one2many
+        registry.loaded_namespaces_first_step['Model.Address'][
+            'persons'].autodoc_get_properties()
+
+    def test_complete_one2many_expire_field(self, registry_complete_one2many):
+        registry = registry_complete_one2many
+        assert ('address',) in registry.expire_attributes[
+            'Model.Person']['address_id']
+        assert ('address', 'persons') in registry.expire_attributes[
+            'Model.Person']['address_id']
+
+
+def _multi_fk_one2many():
+
+    @register(Model)
+    class Test:
+
+        id = Integer(primary_key=True, unique=True)
+        id2 = String(primary_key=True, unique=True)
+
+    @register(Model)
+    class Test2:
+
+        id = Integer(primary_key=True)
+        test_id = Integer(foreign_key=Model.Test.use('id'))
+        test_id2 = String(foreign_key=Model.Test.use('id2'))
+
+    @register(Model)  # noqa
+    class Test:
+
+        test2 = One2Many(model=Model.Test2, many2one="test")
+
+
+@pytest.fixture(scope="class")
+def registry_multi_fk_one2many(request, bloks_loaded):
+    registry = init_registry(_multi_fk_one2many)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+class TestMultiFkOne2Many:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_multi_fk_one2many):
+        transaction = registry_multi_fk_one2many.begin_nested()
+        request.addfinalizer(transaction.rollback)
+
+    def test_with_multi_foreign_key(self, registry_multi_fk_one2many):
+        registry = registry_multi_fk_one2many
+        t1 = registry.Test.insert(id2="test")
+        t2 = registry.Test2.insert(test=t1)
+        assert len(t1.test2) == 1
+        assert t1.test2[0] is t2
+
+    def test_with_multi_foreign_key_expire_field(
+        self, registry_multi_fk_one2many
+    ):
+        registry = registry_multi_fk_one2many
+        assert ('test',) in registry.expire_attributes[
+            'Model.Test2']['test_id']
+        assert ('test', 'test2') in registry.expire_attributes[
+            'Model.Test2']['test_id']
+        assert ('test',) in registry.expire_attributes[
+            'Model.Test2']['test_id2']
+        assert ('test', 'test2') in registry.expire_attributes[
+            'Model.Test2']['test_id2']
 
 
 def _minimum_one2many(**kwargs):
@@ -109,53 +204,20 @@ def _one2many_with_str_model(**kwargs):
         persons = One2Many(model='Model.Person')
 
 
-def _multi_fk_one2many():
+class TestOne2Many:
 
-    @register(Model)
-    class Test:
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
 
-        id = Integer(primary_key=True, unique=True)
-        id2 = String(primary_key=True, unique=True)
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
 
-    @register(Model)
-    class Test2:
+        request.addfinalizer(close)
 
-        id = Integer(primary_key=True)
-        test_id = Integer(foreign_key=Model.Test.use('id'))
-        test_id2 = String(foreign_key=Model.Test.use('id2'))
-
-    @register(Model)  # noqa
-    class Test:
-
-        test2 = One2Many(model=Model.Test2, many2one="test")
-
-
-class TestOne2Many(DBTestCase):
-
-    def test_complete_one2many(self):
-        registry = self.init_registry(_complete_one2many)
-
-        address = registry.Address.insert(
-            street='14-16 rue soleillet', zip='75020', city='Paris')
-
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
-        address.persons.append(person)
-
-        self.assertEqual(person.address, address)
-
-    def test_one2many_autodoc(self):
-        registry = self.init_registry(_complete_one2many)
-        registry.loaded_namespaces_first_step['Model.Address'][
-            'persons'].autodoc_get_properties()
-
-    def test_complete_one2many_expire_field(self):
-        registry = self.init_registry(_complete_one2many)
-        self.assertIn(
-            ('address',),
-            registry.expire_attributes['Model.Person']['address_id'])
-        self.assertIn(
-            ('address', 'persons'),
-            registry.expire_attributes['Model.Person']['address_id'])
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def test_minimum_one2many(self):
         registry = self.init_registry(_minimum_one2many)
@@ -167,7 +229,7 @@ class TestOne2Many(DBTestCase):
         address.persons.append(person)
 
     def test_minimum_one2many_remote_field_in_mixin(self):
-        registry = self.init_registry(_minimum_one2many)
+        registry = self.init_registry(_minimum_one2many_remote_field_in_mixin)
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
@@ -198,8 +260,8 @@ class TestOne2Many(DBTestCase):
         registry = self.init_registry(add_in_registry)
         t1 = registry.Test.insert()
         t2 = registry.Test.insert(parent=t1)
-        self.assertIs(t1.children[0], t2)
-        self.assertIs(t2.parent, t1)
+        assert t1.children[0] is t2
+        assert t2.parent is t1
 
     def test_complet_with_multi_foreign_key(self):
 
@@ -231,30 +293,8 @@ class TestOne2Many(DBTestCase):
         registry = self.init_registry(add_in_registry)
         t1 = registry.Test.insert(id2="test")
         t2 = registry.Test2.insert(test=t1)
-        self.assertEqual(len(t1.test2), 1)
-        self.assertIs(t1.test2[0], t2)
-
-    def test_with_multi_foreign_key(self):
-        registry = self.init_registry(_multi_fk_one2many)
-        t1 = registry.Test.insert(id2="test")
-        t2 = registry.Test2.insert(test=t1)
-        self.assertEqual(len(t1.test2), 1)
-        self.assertIs(t1.test2[0], t2)
-
-    def test_with_multi_foreign_key_expire_field(self):
-        registry = self.init_registry(_multi_fk_one2many)
-        self.assertIn(
-            ('test',),
-            registry.expire_attributes['Model.Test2']['test_id'])
-        self.assertIn(
-            ('test', 'test2'),
-            registry.expire_attributes['Model.Test2']['test_id'])
-        self.assertIn(
-            ('test',),
-            registry.expire_attributes['Model.Test2']['test_id2'])
-        self.assertIn(
-            ('test', 'test2'),
-            registry.expire_attributes['Model.Test2']['test_id2'])
+        assert len(t1.test2) == 1
+        assert t1.test2[0] is t2
 
     def test_with_multi_parallel_foreign_key_auto_detect(self):
 
@@ -285,8 +325,8 @@ class TestOne2Many(DBTestCase):
         address_2 = registry.Address.insert()
         person = registry.Person.insert(
             name='test', address_1_id=address_1.id, address_2_id=address_2.id)
-        self.assertEqual(address_1.persons, [person])
-        self.assertEqual(address_2.persons, [person])
+        assert address_1.persons == [person]
+        assert address_2.persons == [person]
 
     def test_with_multi_parallel_foreign_key_with_specific_primaryjoin(self):
 
@@ -324,5 +364,5 @@ class TestOne2Many(DBTestCase):
         address_2 = registry.Address.insert()
         person = registry.Person.insert(
             name='test', address_1_id=address_1.id, address_2_id=address_2.id)
-        self.assertEqual(address_1.persons, [person])
-        self.assertEqual(address_2.persons, [person])
+        assert address_1.persons == [person]
+        assert address_2.persons == [person]

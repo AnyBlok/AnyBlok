@@ -72,7 +72,6 @@ class TestFieldFunction:
     def transact(self, request, registry_field_function):
         transaction = registry_field_function.begin_nested()
         request.addfinalizer(transaction.rollback)
-        return
 
     def test_field_function_fget(self, registry_field_function):
         registry = registry_field_function
