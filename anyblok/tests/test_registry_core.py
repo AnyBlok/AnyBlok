@@ -6,38 +6,41 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase
+import pytest
 from anyblok.registry import RegistryManager
 from anyblok.environment import EnvironmentManager
 
 
-class TestRegistryCore(TestCase):
+class TestRegistryCore:
 
-    @classmethod
-    def setUpClass(cls):
-        super(TestRegistryCore, cls).setUpClass()
+    @pytest.fixture(scope="class", autouse=True)
+    def init_env(self, request):
+
+        def revert():
+            EnvironmentManager.set('current_blok', None)
+            del RegistryManager.loaded_bloks['testCore']
+            RegistryManager.undeclare_core('test')
+
+        request.addfinalizer(revert)
         RegistryManager.declare_core('test')
         RegistryManager.init_blok('testCore')
         EnvironmentManager.set('current_blok', 'testCore')
 
-    @classmethod
-    def tearDownClass(cls):
-        super(TestRegistryCore, cls).tearDownClass()
-        EnvironmentManager.set('current_blok', None)
-        del RegistryManager.loaded_bloks['testCore']
-        RegistryManager.undeclare_core('test')
+    @pytest.fixture(autouse=True)
+    def init_registry(self, request):
 
-    def tearDown(self):
-        super(TestRegistryCore, self).tearDown()
-        RegistryManager.loaded_bloks['testCore']['Core']['test'] = []
+        def revert():
+            RegistryManager.loaded_bloks['testCore']['Core']['test'] = []
+
+        request.addfinalizer(revert)
 
     def assertInCore(self, *args):
         blokname = 'testCore'
         blok = RegistryManager.loaded_bloks[blokname]
-        self.assertEqual(len(blok['Core']['test']), len(args))
+        assert len(blok['Core']['test']) == len(args)
         for cls_ in args:
             hasCls = cls_ in blok['Core']['test']
-            self.assertEqual(hasCls, True)
+            assert hasCls
 
     def test_add_core(self):
         class test:
@@ -45,9 +48,7 @@ class TestRegistryCore(TestCase):
 
         RegistryManager.add_core_in_register('test', test)
         self.assertInCore(test)
-        self.assertEqual(
-            RegistryManager.has_core_in_register('testCore', 'test'),
-            True)
+        assert RegistryManager.has_core_in_register('testCore', 'test')
 
     def test_remove_core(self):
         class test:
@@ -62,6 +63,6 @@ class TestRegistryCore(TestCase):
 
         RegistryManager.add_core_in_register('test', test)
         self.assertInCore(test)
-        self.assertEqual(has_test_in_removed(), False)
+        assert not has_test_in_removed()
         RegistryManager.remove_in_register(test)
-        self.assertEqual(has_test_in_removed(), True)
+        assert has_test_in_removed()
