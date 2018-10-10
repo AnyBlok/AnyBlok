@@ -15,8 +15,19 @@ from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT, CheckConstraint
 from anyblok import Declarations
 from sqlalchemy.exc import InternalError, IntegrityError
-from sqlalchemy.orm import clear_mappers
-from .conftest import init_registry
+from anyblok.config import Configuration
+from .conftest import init_registry, drop_database, create_database
+
+
+@pytest.fixture(scope="module")
+def clean_db(request):
+    def clean():
+        url = Configuration.get('get_url')()
+        drop_database(url)
+        db_template_name = Configuration.get('db_template_name', None)
+        create_database(url, template=db_template_name)
+
+    request.addfinalizer(clean)
 
 
 @contextmanager
@@ -105,28 +116,26 @@ def add_in_registry():
 
 
 @pytest.fixture()
-def registry(request, bloks_loaded):
+def registry(request, clean_db, bloks_loaded):
     registry = init_registry(add_in_registry)
-    request.addfinalizer(registry.close)
 
     def rollback():
-        for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget',
-                      'testunique', 'reltab', 'testm2m1', 'testm2m2',
-                      'testfk2', 'testcheck', 'testchecklongconstraintname',
-                      'testindex'):
+        for table in ('reltable', 'test', 'test2', 'othername', 'testfk',
+                      'testunique', 'reltab', 'testm2m1',
+                      'testm2m2', 'testfk2', 'testfktarget',  'testcheck',
+                      'testchecklongconstraintname', 'testindex'):
             try:
                 registry.migration.table(table).drop()
-            except Exception:
+            except MigrationException:
                 pass
 
-        # clear_mappers()
         registry.close()
 
     request.addfinalizer(rollback)
     return registry
 
 
-class TestMigrationAutoDetect:
+class TestMigration:
 
     def test_add_table(self, registry):
         registry.migration.table().add('test2')

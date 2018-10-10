@@ -9,6 +9,7 @@ python:
   - "3.6"
   - "3.6-dev"
   - "3.7-dev"
+  - "3.8-dev"
   - "nightly"
 
 virtualenv:
@@ -44,7 +45,6 @@ env:
 
 script:
   - flake8 anyblok
-  - psql -c 'create database travis_ci_test;' -U postgres
   - py.test --cov-report= --cov=anyblok anyblok/tests
   - psql -c 'drop database travis_ci_test;' -U postgres
   - anyblok_createdb --install-all-bloks

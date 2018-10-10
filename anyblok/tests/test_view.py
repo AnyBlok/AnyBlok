@@ -135,7 +135,6 @@ class TestSimpleView:
     def transact(self, request, registry_simple_view):
         transaction = registry_simple_view.begin_nested()
         request.addfinalizer(transaction.rollback)
-        return
 
     def test_has_a_mapper(self, registry_simple_view):
         registry = registry_simple_view
