@@ -149,16 +149,14 @@ def multi_table_poly_mixins():
             return mapper_args
 
 
-def multi_table_poly_mixins_datetime():
-    @register(Mixin)
-    class MyMixins:
-        last_write = DateTime(auto_update=True)
+def multi_table_poly_auto_update_datetime():
 
     @register(Model)
-    class Employee(MyMixins):
+    class Employee:
         id = Integer(primary_key=True)
         name = String()
         type_entity = String()
+        last_write = DateTime(auto_update=True)
 
         @classmethod
         def define_mapper_args(cls):
@@ -402,8 +400,8 @@ class TestPolymorphic(DBTestCase):
         self.assertEqual(registry.Manager.getFieldType('birthday'),
                          'Date')
 
-    def test_multi_table_poly_mixins_datetime_auto_update(self):
-        registry = self.init_registry(multi_table_poly_mixins_datetime)
+    def test_multi_table_poly_auto_update_datetime(self):
+        registry = self.init_registry(multi_table_poly_auto_update_datetime)
         employee = registry.Employee.insert(
             name='test employee'
         )
