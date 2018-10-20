@@ -8,7 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-from anyblok.column import Integer, String, Date
+from anyblok.column import Integer, String, Date, DateTime
 from anyblok.relationship import Many2One
 from anyblok.field import Function
 from datetime import date
@@ -145,6 +145,40 @@ def multi_table_poly_mixins():
             mapper_args = super(Manager, cls).define_mapper_args()
             mapper_args.update({
                 'polymorphic_identity': 'manager',
+            })
+            return mapper_args
+
+
+def multi_table_poly_mixins_datetime():
+    @register(Mixin)
+    class MyMixins:
+        last_write = DateTime(auto_update=True)
+
+    @register(Model)
+    class Employee(MyMixins):
+        id = Integer(primary_key=True)
+        name = String()
+        type_entity = String()
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Employee, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_identity': 'employee',
+                'polymorphic_on': cls.type_entity,
+            })
+            return mapper_args
+
+    @register(Model.Employee)
+    class Engineer(Model.Employee):
+        id = Integer(primary_key=True, foreign_key=Model.Employee.use('id'))
+        engineer_name = String()
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Engineer, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_identity': 'engineer',
             })
             return mapper_args
 
@@ -367,6 +401,20 @@ class TestPolymorphic(DBTestCase):
                          'String')
         self.assertEqual(registry.Manager.getFieldType('birthday'),
                          'Date')
+
+    def test_multi_table_poly_mixins_datetime_auto_update(self):
+        registry = self.init_registry(multi_table_poly_mixins_datetime)
+        employee = registry.Employee.insert(
+            name='test employee'
+        )
+        engineer = registry.Employee.Engineer.insert(
+            name='test engineer', engineer_name='test engineer'
+        )
+        employee.name = 'renamed employee'
+        engineer.name = 'renamed engineer'
+        registry.flush()
+        self.assertIsNotNone(employee.last_write)
+        self.assertIsNotNone(engineer.last_write)
 
     def test_getFieldType_with_relationship(self):
         registry = self.init_registry(multi_table_foreign_key)
