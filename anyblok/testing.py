@@ -14,9 +14,6 @@ itself, in so-called "framework tests".
 
 import unittest
 import os
-
-import pytest
-
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
@@ -411,40 +408,6 @@ class BlokTestCase(unittest.TestCase):
             self.registry.session.close()
 
         self._transaction_case_teared_down = True
-
-
-@pytest.fixture(scope='session')
-def blok_test_case(request, config):
-    # Init registry
-    additional_setting = {'unittest': True}
-
-    if len(BlokManager.list()) == 0:
-        BlokManager.load()
-    registry = RegistryManager.get(config.get('db_name'),
-                                   **additional_setting)
-    registry.commit()
-    # Add savepoint
-    registry.begin_nested()
-
-    @event.listens_for(registry.session, 'after_transaction_end')
-    def restart_savepoint(session, transaction):
-        if transaction.nested and not transaction._parent.nested:
-            session.expire_all()
-            session.begin_nested()
-
-    yield registry
-
-    # Clean up
-    def clean_up():
-        try:
-            registry.System.Cache.invalidate_all()
-        except sqlalchemy.exc.InvalidRequestError:
-            pass
-        finally:
-            registry.rollback()
-            registry.session.close()
-
-    request.add_finalizer(clean_up)
 
 
 class SharedDataTestCase(BlokTestCase):
