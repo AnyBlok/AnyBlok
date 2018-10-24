@@ -42,7 +42,7 @@ def init_registry_with_bloks(bloks, function, **kwargs):
             EnvironmentManager.set('current_blok', None)
     try:
         registry = RegistryManager.get(
-            Configuration.get('db_manager'),
+            Configuration.get('db_name'),
             unittest=True)
 
         # update required blok

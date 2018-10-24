@@ -2,11 +2,14 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase, DBTestCase, LogCapture
+import pytest
+from .conftest import init_registry
+from anyblok.testing import TestCase, LogCapture
 from anyblok.registry import RegistryManager
 from anyblok.config import Configuration
 from anyblok.blok import BlokManager, Blok
@@ -35,23 +38,36 @@ class TestTestTest:
     pass
 
 
-class TestRegistry(DBTestCase):
+class TestRegistry:
 
-    def tearDown(self):
-        super(TestRegistry, self).tearDown()
-        for cls in (Test, TestTest):
-            if hasattr(cls, 'Test'):
-                delattr(cls, 'Test')
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
+
+            for cls in (Test, TestTest):
+                if hasattr(cls, 'Test'):
+                    delattr(cls, 'Test')
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def test_get_model(self):
         registry = self.init_registry(None)
         System = registry.get('Model.System')
-        self.assertEqual(registry.System, System)
+        assert registry.System is System
 
     def test_get_the_same_registry(self):
         registry = self.init_registry(None)
-        registry2 = self.getRegistry()
-        self.assertEqual(registry, registry2)
+        registry2 = RegistryManager.get(
+            Configuration.get('db_name'),
+            unittest=True)
+        assert registry is registry2
 
     def test_reload(self):
         registry = self.init_registry(None)
@@ -60,12 +76,12 @@ class TestRegistry(DBTestCase):
         registry.reload()
         bloks_after_reload = registry.System.Blok.query('name').filter(
             registry.System.Blok.state == 'installed').all()
-        self.assertEqual(bloks_before_reload, bloks_after_reload)
+        assert bloks_before_reload == bloks_after_reload
 
     def test_get_bloks_to_load(self):
         registry = self.init_registry(None)
         bloks = registry.get_bloks_to_load()
-        self.assertIn('anyblok-core', bloks)
+        assert 'anyblok-core' in bloks
 
     def test_load_entry(self):
         registry = self.init_registry(None)
@@ -78,9 +94,10 @@ class TestRegistry(DBTestCase):
             },
         }
         registry.load_entry('blok', 'entry')
-        self.assertEqual(registry.loaded_registries['key'],
-                         {'properties': {'property': True},
-                          'bases': [TestCase]})
+        assert registry.loaded_registries['key'] == {
+            'properties': {'property': True},
+            'bases': [TestCase]
+        }
 
     def test_load_core(self):
         RegistryManager.loaded_bloks['blok'] = {
@@ -88,7 +105,7 @@ class TestRegistry(DBTestCase):
         }
         registry = self.init_registry(None)
         registry.load_core('blok', 'Session')
-        self.assertIn(TestCase, registry.loaded_cores['Session'])
+        assert TestCase in registry.loaded_cores['Session']
 
     def test_load_blok(self):
 
@@ -112,12 +129,12 @@ class TestRegistry(DBTestCase):
                 'registry_names': []}
 
         registry.load_blok('blok', False, [])
-        self.assertIn(TestCase, registry.loaded_cores['Session'])
+        assert TestCase in registry.loaded_cores['Session']
 
     def check_added_in_regisry(self, registry):
-        self.assertEqual(registry.Test, Test)
-        self.assertEqual(registry.Test.Test, TestTest)
-        self.assertEqual(registry.Test.Test.Test, TestTestTest)
+        assert registry.Test is Test
+        assert registry.Test.Test is TestTest
+        assert registry.Test.Test.Test is TestTestTest
 
     def test_add_in_registry_1(self):
         registry = self.init_registry(None)
@@ -136,7 +153,7 @@ class TestRegistry(DBTestCase):
         with patch.object(sys, 'argv', testargs):
             registry = start('default')
 
-        self.assertIsNotNone(registry)
+        assert registry is not None
 
     def test_add_in_registry_2(self):
         registry = self.init_registry(None)
@@ -174,15 +191,32 @@ class TestRegistry(DBTestCase):
         self.check_added_in_regisry(registry)
 
     def test_registry_db_exist(self):
-        self.assertTrue(Configuration.get('Registry').db_exists(
-            db_name=Configuration.get('db_name')))
+        assert Configuration.get('Registry').db_exists(
+            db_name=Configuration.get('db_name'))
 
     def test_registry_db_unexist(self):
-        self.assertFalse(Configuration.get('Registry').db_exists(
+        assert not (Configuration.get('Registry').db_exists(
             db_name='wrong_db_name'))
 
 
-class TestRegistry2(DBTestCase):
+class TestRegistry2:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
+
+            for cls in (Test, TestTest):
+                if hasattr(cls, 'Test'):
+                    delattr(cls, 'Test')
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def add_model(self):
 
@@ -215,29 +249,29 @@ class TestRegistry2(DBTestCase):
         t1.add_precommit_hook()
         t2 = registry.Test.insert()
         t2.add_precommit_hook()
-        self.assertEqual(t1.val, 0)
-        self.assertEqual(t2.val, 0)
+        assert t1.val == 0
+        assert t2.val == 0
         registry.commit()
-        self.assertEqual(t1.val, t1.id)
-        self.assertEqual(t2.val, t2.id)
+        assert t1.val == t1.id
+        assert t2.val == t2.id
         registry.commit()
-        self.assertEqual(t1.val, t1.id)
-        self.assertEqual(t2.val, t2.id)
+        assert t1.val == t1.id
+        assert t2.val == t2.id
         registry.Test.add_cl_precommit_hook()
-        self.assertEqual(t1.val, t1.id)
-        self.assertEqual(t2.val, t2.id)
+        assert t1.val == t1.id
+        assert t2.val == t2.id
         registry.commit()
-        self.assertEqual(t1.val, 2 * t1.id)
-        self.assertEqual(t2.val, 2 * t2.id)
+        assert t1.val == 2 * t1.id
+        assert t2.val == 2 * t2.id
         registry.commit()
-        self.assertEqual(t1.val, 2 * t1.id)
-        self.assertEqual(t2.val, 2 * t2.id)
+        assert t1.val == 2 * t1.id
+        assert t2.val == 2 * t2.id
         t1.add_precommit_hook()
-        self.assertEqual(t1.val, 2 * t1.id)
-        self.assertEqual(t2.val, 2 * t2.id)
+        assert t1.val == 2 * t1.id
+        assert t2.val == 2 * t2.id
         registry.commit()
-        self.assertEqual(t1.val, 3 * t1.id)
-        self.assertEqual(t2.val, 3 * t2.id)
+        assert t1.val == 3 * t1.id
+        assert t2.val == 3 * t2.id
 
     def test_precommit_hook_in_thread(self):
         registry = self.init_registry(self.add_model)
@@ -245,8 +279,8 @@ class TestRegistry2(DBTestCase):
         t1.add_precommit_hook()
         t2 = registry.Test.insert()
         t2.add_precommit_hook()
-        self.assertEqual(t1.val, 0)
-        self.assertEqual(t2.val, 0)
+        assert t1.val == 0
+        assert t2.val == 0
 
         def target():
             registry.commit()
@@ -255,11 +289,11 @@ class TestRegistry2(DBTestCase):
         t.start()
         t.join()
 
-        self.assertEqual(t1.val, 0)
-        self.assertEqual(t2.val, 0)
+        assert t1.val == 0
+        assert t2.val == 0
         registry.commit()
-        self.assertEqual(t1.val, t1.id)
-        self.assertEqual(t2.val, t2.id)
+        assert t1.val == t1.id
+        assert t2.val == t2.id
 
     def test_precommit_hook_in_thread_2(self):
         do_somthing = 0
@@ -277,7 +311,7 @@ class TestRegistry2(DBTestCase):
                     do_somthing += 1
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
 
         def target():
             registry.Test.precommit_hook('_precommit_hook')
@@ -288,7 +322,7 @@ class TestRegistry2(DBTestCase):
         t.join()
 
         registry.commit()
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
 
     def define_cls(self, typename='Model', name='Test', val=1, usesuper=False,
                    inherit=None):
@@ -320,7 +354,7 @@ class TestRegistry2(DBTestCase):
             self.define_cls()
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 1)
+        assert registry.Test.foo() == 1
 
     def test_check_define_cls_with_inherit(self):
 
@@ -329,7 +363,7 @@ class TestRegistry2(DBTestCase):
             self.define_cls(val=2, usesuper=True)
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 2)
+        assert registry.Test.foo() == 2
 
     def test_check_define_cls_with_inherit_core(self):
 
@@ -338,7 +372,7 @@ class TestRegistry2(DBTestCase):
             self.define_cls(val=2, usesuper=True)
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 4)
+        assert registry.Test.foo() == 4
 
     def test_check_define_cls_with_inherit_mixin(self):
 
@@ -347,7 +381,7 @@ class TestRegistry2(DBTestCase):
             self.define_cls(val=3, usesuper=True, inherit='MTest')
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 9)
+        assert registry.Test.foo() == 9
 
     def test_check_define_cls_with_inherit2(self):
 
@@ -357,7 +391,7 @@ class TestRegistry2(DBTestCase):
             self.define_cls(val=2, usesuper=True)
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 4)
+        assert registry.Test.foo() == 4
 
     def test_check_define_cls_with_inherit_core2(self):
 
@@ -367,7 +401,7 @@ class TestRegistry2(DBTestCase):
             self.define_cls(val=2, usesuper=True)
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 8)
+        assert registry.Test.foo() == 8
 
     def test_check_define_cls_with_inherit_mixin2(self):
 
@@ -378,7 +412,7 @@ class TestRegistry2(DBTestCase):
             self.define_cls(val=3, usesuper=True, inherit='MTest')
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 27)
+        assert registry.Test.foo() == 27
 
     def test_remove(self):
 
@@ -390,7 +424,7 @@ class TestRegistry2(DBTestCase):
             Declarations.unregister(Declarations.Model.Test, cls_)
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 2)
+        assert registry.Test.foo() == 2
 
     def test_remove_core(self):
 
@@ -403,7 +437,7 @@ class TestRegistry2(DBTestCase):
             Declarations.unregister(Declarations.Core.Base, cls_)
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 4)
+        assert registry.Test.foo() == 4
 
     def test_remove_mixin(self):
 
@@ -416,7 +450,7 @@ class TestRegistry2(DBTestCase):
             Declarations.unregister(Declarations.Mixin.MTest, cls_)
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(registry.Test.foo(), 9)
+        assert registry.Test.foo() == 9
 
     def test_postcommit_hook(self):
         do_somthing = 0
@@ -445,21 +479,21 @@ class TestRegistry2(DBTestCase):
         registry = self.init_registry(add_in_registry)
         t = registry.Test.insert()
         t.add_precommit_hook()
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
         registry.commit()
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
         registry.commit()
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
         registry.Test.add_cl_precommit_hook()
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
         registry.commit()
-        self.assertEqual(do_somthing, 2)
+        assert do_somthing == 2
         registry.commit()
-        self.assertEqual(do_somthing, 2)
+        assert do_somthing == 2
         t.add_precommit_hook()
-        self.assertEqual(do_somthing, 2)
+        assert do_somthing == 2
         registry.commit()
-        self.assertEqual(do_somthing, 3)
+        assert do_somthing == 3
 
     def test_postcommit_hook_in_thread(self):
         do_somthing = 0
@@ -478,7 +512,7 @@ class TestRegistry2(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         registry.Test.postcommit_hook('_postcommit_hook')
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
 
         def target():
             registry.commit()
@@ -487,9 +521,9 @@ class TestRegistry2(DBTestCase):
         t.start()
         t.join()
 
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
         registry.commit()
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
 
     def test_postcommit_hook_in_thread_2(self):
         do_somthing = 0
@@ -507,7 +541,7 @@ class TestRegistry2(DBTestCase):
                     do_somthing += 1
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
 
         def target():
             registry.Test.postcommit_hook('_postcommit_hook')
@@ -517,7 +551,7 @@ class TestRegistry2(DBTestCase):
         t.start()
         t.join()
 
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
 
     def test_postcommit_hook_call_only_if_commited(self):
         do_somthing = 0
@@ -540,15 +574,15 @@ class TestRegistry2(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         registry.Test.postcommit_hook('_postcommit_hook')
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
         registry.commit()
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
         registry.Test.precommit_hook('_precommit_hook')
         registry.Test.postcommit_hook('_postcommit_hook')
-        with self.assertRaises(Exception):
+        with pytest.raises(Exception):
             registry.commit()
 
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
 
     def test_postcommit_hook_call_only_if_raised(self):
         do_somthing = 0
@@ -572,16 +606,16 @@ class TestRegistry2(DBTestCase):
         registry = self.init_registry(add_in_registry)
         registry.Test.postcommit_hook(
             '_postcommit_hook', call_only_if='raised')
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
         registry.commit()
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
         registry.Test.precommit_hook('_precommit_hook')
         registry.Test.postcommit_hook(
             '_postcommit_hook', call_only_if='raised')
-        with self.assertRaises(Exception):
+        with pytest.raises(Exception):
             registry.commit()
 
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
 
     def test_postcommit_hook_call_only_if_always(self):
         do_somthing = 0
@@ -605,16 +639,16 @@ class TestRegistry2(DBTestCase):
         registry = self.init_registry(add_in_registry)
         registry.Test.postcommit_hook(
             '_postcommit_hook', call_only_if='always')
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
         registry.commit()
-        self.assertEqual(do_somthing, 1)
+        assert do_somthing == 1
         registry.Test.precommit_hook('_precommit_hook')
         registry.Test.postcommit_hook(
             '_postcommit_hook', call_only_if='always')
-        with self.assertRaises(Exception):
+        with pytest.raises(Exception):
             registry.commit()
 
-        self.assertEqual(do_somthing, 2)
+        assert do_somthing == 2
 
     def test_postcommit_hook_with_rollback(self):
         do_somthing = 0
@@ -634,10 +668,10 @@ class TestRegistry2(DBTestCase):
         registry = self.init_registry(add_in_registry)
         registry.Test.postcommit_hook(
             '_postcommit_hook')
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
         registry.rollback()
         registry.commit()
-        self.assertEqual(do_somthing, 0)
+        assert do_somthing == 0
 
     def test_postcommit_hook_with_exception(self):
 
@@ -659,4 +693,4 @@ class TestRegistry2(DBTestCase):
             registry.commit()
             messages = logs.get_error_messages()
             message = messages[0]
-            self.assertIn('Here one exception', message)
+            assert 'Here one exception' in message
