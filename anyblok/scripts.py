@@ -176,3 +176,11 @@ def anyblok2doc():
             dot = SQLSchema(name_, format=format_)
             doc.toSQL(dot)
             dot.save()
+
+
+def anyblok_nose():
+    raise Exception(
+        "This script have been removed, because the nose test of the "
+        "framework was remplaced by pytest and this action was become "
+        "incompatible. If you need to run your test with nose, use the nose "
+        "pluging.")
