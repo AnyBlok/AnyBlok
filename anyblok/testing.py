@@ -58,7 +58,7 @@ def tmp_configuration(**values):
         with TestCase.Configuration(db_name='a db name'):
             self.assertEqual(Configuration.get('db_name'), 'a db name')
 
-    :param \**values: values to update
+    :param **values: values to update
     """
     try:
         old_configuration = Configuration.configuration.copy()
@@ -418,7 +418,7 @@ class SharedDataTestCase(BlokTestCase):
         cls.pre_data_savepoint = cls.registry.begin_nested()
         try:
             cls.setUpSharedData()
-        except Exception as exc:
+        except Exception:
             cls.tearDownClass()
             raise
 
@@ -472,7 +472,7 @@ class LogCapture(LC):
             with LogCapture() as logs:
                 messages = logs.get_messages(INFO, WARNING)
 
-        :param \*levels: list of logging.level
+        :param *levels: list of logging.level
         :rtype: list of formated message
         """
         return [

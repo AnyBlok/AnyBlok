@@ -522,7 +522,7 @@ class Configuration:
 
         :param application: name of the application
         :param useseparator: boolean(default False)
-        :param \**kwargs: ArgumentParser named arguments
+        :param **kwargs: ArgumentParser named arguments
         """
 
         sep = len(sys.argv)

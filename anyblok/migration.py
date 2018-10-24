@@ -691,7 +691,7 @@ class MigrationConstraintUnique:
     def add(self, *columns):
         """ Add the constraint
 
-        :param \*column: list of column name
+        :param *columns: list of column name
         :rtype: MigrationConstraintUnique instance
         :exception: MigrationException
         """
@@ -743,7 +743,7 @@ class MigrationConstraintPrimaryKey:
     def add(self, *columns):
         """ Add the constraint
 
-        :param \*column: list of column name
+        :param *columns: list of column name
         :rtype: MigrationConstraintPrimaryKey instance
         :exception: MigrationException
         """
@@ -810,7 +810,8 @@ class MigrationIndex:
     def add(self, *columns, **kwargs):
         """ Add the constraint
 
-        :param \*column: list of column name
+        :param *columns: list of column name
+        :param **kwargs: other attribute fir l __init__
         :rtype: MigrationIndex instance
         :exception: MigrationException
         """
@@ -892,7 +893,7 @@ class MigrationTable:
     def index(self, *columns, **kwargs):
         """ Get index
 
-        :param \*columns: List of the column's name
+        :param *columns: List of the column's name
         :rtype: MigrationIndex instance
         """
         return MigrationIndex(self, *columns, **kwargs)
@@ -900,7 +901,7 @@ class MigrationTable:
     def unique(self, name):
         """ Get unique
 
-        :param \*columns: List of the column's name
+        :param name: str name of the unique constraint
         :rtype: MigrationConstraintUnique instance
         """
         return MigrationConstraintUnique(self, name)
@@ -908,7 +909,7 @@ class MigrationTable:
     def check(self, name=None):
         """ Get check
 
-        :param \*columns: List of the column's name
+        :param name: str name of the check constraint
         :rtype: MigrationConstraintCheck instance
         """
         return MigrationConstraintCheck(self, name)
@@ -916,7 +917,6 @@ class MigrationTable:
     def primarykey(self):
         """ Get primary key
 
-        :param \*columns: List of the column's name
         :rtype: MigrationConstraintPrimaryKey instance
         """
         return MigrationConstraintPrimaryKey(self)
