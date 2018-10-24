@@ -8,8 +8,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from anyblok.tests.testcase import TestCase, DBTestCase
 from anyblok.config import Configuration
+from anyblok.testing import tmp_configuration
 from sqlalchemy import Integer as SA_Integer, String as SA_String
 from sqlalchemy.exc import StatementError
 from anyblok import Declarations
@@ -666,7 +666,7 @@ class TestColumns:
 
         timezone = pytz.timezone('Asia/Tokyo')
         now = datetime.datetime.now()
-        with DBTestCase.Configuration(default_timezone='Asia/Tokyo'):
+        with tmp_configuration(default_timezone='Asia/Tokyo'):
             registry = self.init_registry(simple_column, ColumnType=DateTime)
 
         field = registry.loaded_namespaces_first_step['Model.Test']['col']
@@ -1229,7 +1229,7 @@ class TestColumns:
             registry.execute("insert into test (col) values ('WG2')")
 
 
-class TestColumnsAutoDoc(TestCase):
+class TestColumnsAutoDoc:
 
     def call_autodoc(self, column, **kwargs):
         col = column(**kwargs)

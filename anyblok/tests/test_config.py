@@ -27,7 +27,7 @@ from anyblok.config import (
     AnyBlokPlugin,
     define_preload_option,
 )
-from anyblok.tests.testcase import TestCase
+from anyblok.testing import tmp_configuration
 from sqlalchemy.engine.url import make_url
 from anyblok.config import get_url
 
@@ -255,65 +255,65 @@ class TestConfiguration:
             assert getattr(url, x) == getattr(wanted_url, x)
 
     def test_get_url(self):
-        with TestCase.Configuration(db_name='anyblok',
-                                    db_driver_name='postgres',
-                                    db_host='localhost',
-                                    db_user_name=None,
-                                    db_password=None,
-                                    db_port=None):
+        with tmp_configuration(db_name='anyblok',
+                               db_driver_name='postgres',
+                               db_host='localhost',
+                               db_user_name=None,
+                               db_password=None,
+                               db_port=None):
             url = get_url()
             self.check_url(url, 'postgres://localhost/anyblok')
 
     def test_get_url2(self):
-        with TestCase.Configuration(db_name='anyblok',
-                                    db_driver_name='postgres',
-                                    db_host='localhost',
-                                    db_user_name=None,
-                                    db_password=None,
-                                    db_port=None):
+        with tmp_configuration(db_name='anyblok',
+                               db_driver_name='postgres',
+                               db_host='localhost',
+                               db_user_name=None,
+                               db_password=None,
+                               db_port=None):
             url = get_url(db_name='anyblok2')
             self.check_url(url, 'postgres://localhost/anyblok2')
 
     def test_get_url3(self):
-        with TestCase.Configuration(db_url='postgres:///anyblok',
-                                    db_name=None,
-                                    db_driver_name=None,
-                                    db_host=None,
-                                    db_user_name=None,
-                                    db_password=None,
-                                    db_port=None):
+        with tmp_configuration(db_url='postgres:///anyblok',
+                               db_name=None,
+                               db_driver_name=None,
+                               db_host=None,
+                               db_user_name=None,
+                               db_password=None,
+                               db_port=None):
             url = get_url()
             self.check_url(url, 'postgres:///anyblok')
 
     def test_get_url4(self):
-        with TestCase.Configuration(db_url='postgres:///anyblok',
-                                    db_name='anyblok2',
-                                    db_driver_name=None,
-                                    db_host=None,
-                                    db_user_name='jssuzanne',
-                                    db_password='secret',
-                                    db_port=None):
+        with tmp_configuration(db_url='postgres:///anyblok',
+                               db_name='anyblok2',
+                               db_driver_name=None,
+                               db_host=None,
+                               db_user_name='jssuzanne',
+                               db_password='secret',
+                               db_port=None):
             url = get_url()
             self.check_url(url, 'postgres://jssuzanne:secret@/anyblok2')
 
     def test_get_url5(self):
-        with TestCase.Configuration(db_url='postgres:///anyblok',
-                                    db_name='anyblok2',
-                                    db_driver_name=None,
-                                    db_host=None,
-                                    db_user_name='jssuzanne',
-                                    db_password='secret',
-                                    db_port=None):
+        with tmp_configuration(db_url='postgres:///anyblok',
+                               db_name='anyblok2',
+                               db_driver_name=None,
+                               db_host=None,
+                               db_user_name='jssuzanne',
+                               db_password='secret',
+                               db_port=None):
             url = get_url(db_name='anyblok3')
             self.check_url(url, 'postgres://jssuzanne:secret@/anyblok3')
 
     def test_get_url_without_drivername(self):
-        with TestCase.Configuration(db_name=None,
-                                    db_driver_name=None,
-                                    db_host=None,
-                                    db_user_name=None,
-                                    db_password=None,
-                                    db_port=None):
+        with tmp_configuration(db_name=None,
+                               db_driver_name=None,
+                               db_host=None,
+                               db_user_name=None,
+                               db_password=None,
+                               db_port=None):
             with pytest.raises(ConfigurationException):
                 get_url()
 

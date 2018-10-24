@@ -6,7 +6,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from anyblok.tests.testcase import TestCase
 from anyblok.environment import (EnvironmentManager,
                                  ThreadEnvironment,
                                  EnvironmentException)
@@ -157,7 +156,7 @@ class TestEnvironment:
         self.check_bad_define_environment(Env)
 
 
-class TestThreadEnvironment(TestCase):
+class TestThreadEnvironment:
 
     def test_set_and_get_variable(self):
         db_name = 'test db name'
