@@ -1524,6 +1524,8 @@ directly in the Model::
 
     .. warning:: The first arg is already passed by AnyBlok
 
+    .. warning:: Only this method give the registry into the alias, don't import **sqlalchemy.orm.aliased**
+
 Get the registry
 ~~~~~~~~~~~~~~~~
 

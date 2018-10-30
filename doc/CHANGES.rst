@@ -13,6 +13,12 @@
 CHANGELOG
 =========
 
+1.0.0
+-----
+
+* Fixed alias. The ``Model.aliased`` method link the registry into alias. The goal is 
+  to use **hybrid_method** with alias in AnyBlok.
+
 0.20.0 (2018-09-10)
 -------------------
 
