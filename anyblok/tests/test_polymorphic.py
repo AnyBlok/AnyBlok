@@ -8,7 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.tests.testcase import DBTestCase
 from anyblok import Declarations
-from anyblok.column import Integer, String, Date
+from anyblok.column import Integer, String, Date, DateTime
 from anyblok.relationship import Many2One
 from anyblok.field import Function
 from datetime import date
@@ -402,3 +402,49 @@ class TestPolymorphic(DBTestCase):
         employee_pks = registry.Employee.get_primary_keys()
         engineer_pks = registry.Engineer.get_primary_keys()
         self.assertEqual(employee_pks, engineer_pks)
+
+    def test_datetime_with_auto_update_on_single_table(self):
+
+        def single_table_with_datetime_auto_update():
+            single_table_poly()
+
+            @register(Model)
+            class Employee:
+                update_at = DateTime(auto_update=True)
+
+        registry = self.init_registry(single_table_with_datetime_auto_update)
+        self.check_registry(registry.Employee)
+        engineer = self.check_registry(
+            registry.Engineer, engineer_name='An engineer')
+        self.assertIsNone(engineer.update_at)
+        manager = self.check_registry(
+            registry.Manager, manager_name='An manager')
+        self.assertIsNone(manager.update_at)
+        engineer.engineer_name = 'Other'
+        manager.manager_name = 'Other'
+        registry.flush()
+        self.assertIsNotNone(engineer.update_at)
+        self.assertIsNotNone(manager.update_at)
+
+    def test_datetime_with_auto_update_on_multi_table(self):
+
+        def multi_table_with_datetime_auto_update():
+            multi_table_poly()
+
+            @register(Model)
+            class Employee:
+                update_at = DateTime(auto_update=True)
+
+        registry = self.init_registry(multi_table_with_datetime_auto_update)
+        self.check_registry(registry.Employee)
+        engineer = self.check_registry(
+            registry.Engineer, engineer_name='An engineer')
+        self.assertIsNone(engineer.update_at)
+        manager = self.check_registry(
+            registry.Manager, manager_name='An manager')
+        self.assertIsNone(manager.update_at)
+        engineer.engineer_name = 'Other'
+        manager.manager_name = 'Other'
+        registry.flush()
+        self.assertIsNotNone(engineer.update_at)
+        self.assertIsNotNone(manager.update_at)
