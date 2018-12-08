@@ -133,7 +133,7 @@ class ModelAttribute:
     def options(self, **kwargs):
         """Add foreign key options to create the sqlalchemy ForeignKey
 
-        :param \**kwargs: options
+        :param **kwargs: options
         :rtype: the instance of the ModelAttribute
         """
         self._options.update(kwargs)

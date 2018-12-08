@@ -20,6 +20,7 @@ CHANGELOG
   The goal is to use `hybrid_method <https://docs.sqlalchemy.org/en/latest/orm/extensions/hybrid.html#sqlalchemy.ext.hybrid.hybrid_method>`_ 
   decorator with alias in AnyBlok.
 * Fixed #60: Now DateTime plugins verify also the DateTime columns of the dependencies of the Model
+* Removed **Python 3.3** compatibility
 
 0.20.0 (2018-09-10)
 -------------------

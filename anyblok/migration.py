@@ -691,7 +691,7 @@ class MigrationConstraintUnique:
     def add(self, *columns):
         """ Add the constraint
 
-        :param \*column: list of column name
+        :param *column: list of column
         :rtype: MigrationConstraintUnique instance
         :exception: MigrationException
         """
@@ -743,7 +743,7 @@ class MigrationConstraintPrimaryKey:
     def add(self, *columns):
         """ Add the constraint
 
-        :param \*column: list of column name
+        :param *column: list of column
         :rtype: MigrationConstraintPrimaryKey instance
         :exception: MigrationException
         """
@@ -810,7 +810,7 @@ class MigrationIndex:
     def add(self, *columns, **kwargs):
         """ Add the constraint
 
-        :param \*column: list of column name
+        :param *column: list of column
         :rtype: MigrationIndex instance
         :exception: MigrationException
         """
@@ -892,7 +892,7 @@ class MigrationTable:
     def index(self, *columns, **kwargs):
         """ Get index
 
-        :param \*columns: List of the column's name
+        :param *columns: List of the column's name
         :rtype: MigrationIndex instance
         """
         return MigrationIndex(self, *columns, **kwargs)
@@ -900,7 +900,7 @@ class MigrationTable:
     def unique(self, name):
         """ Get unique
 
-        :param \*columns: List of the column's name
+        :param name: unique constraint's name
         :rtype: MigrationConstraintUnique instance
         """
         return MigrationConstraintUnique(self, name)
@@ -908,7 +908,7 @@ class MigrationTable:
     def check(self, name=None):
         """ Get check
 
-        :param \*columns: List of the column's name
+        :param name: check constraint's name
         :rtype: MigrationConstraintCheck instance
         """
         return MigrationConstraintCheck(self, name)
@@ -916,7 +916,6 @@ class MigrationTable:
     def primarykey(self):
         """ Get primary key
 
-        :param \*columns: List of the column's name
         :rtype: MigrationConstraintPrimaryKey instance
         """
         return MigrationConstraintPrimaryKey(self)
