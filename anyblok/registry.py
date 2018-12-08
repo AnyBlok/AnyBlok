@@ -365,7 +365,7 @@ class RegistryManager:
     def has_blok_property(cls, property_):
         """ Return True if the property exists in blok
 
-        :param property\_: name of the property
+        :param property_: name of the property
         """
         blok = EnvironmentManager.get('current_blok')
 
@@ -378,7 +378,7 @@ class RegistryManager:
     def add_or_replace_blok_property(cls, property_, value):
         """ Save the value in the properties
 
-        :param property\_: name of the property
+        :param property_: name of the property
         :param value: the value to save, the type is not important
         """
         blok = EnvironmentManager.get('current_blok')
@@ -388,7 +388,7 @@ class RegistryManager:
     def get_blok_property(cls, property_, default=None):
         """ Return the value in the properties
 
-        :param property\_: name of the property
+        :param property_: name of the property
         :param default: return default If not entry in the property
         """
         blok = EnvironmentManager.get('current_blok')
@@ -398,7 +398,7 @@ class RegistryManager:
     def remove_blok_property(cls, property_):
         """ Remove the property if exist
 
-        :param property\_: name of the property
+        :param property_: name of the property
         """
         blok = EnvironmentManager.get('current_blok')
         if cls.has_blok_property(property_):

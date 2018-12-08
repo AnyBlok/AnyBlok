@@ -31,7 +31,7 @@ class TableMapperPlugin(ModelPluginBase):
         """Test if define_table/mapper_args are in the base, and call them
         save the value in the properties
 
-        if  __table/mapper_args\_\_ are in the base then raise ModelException
+        if  __table/mapper_args__ are in the base then raise ModelException
 
         :param namespace: the namespace of the model
         :param base: One of the base of the model
