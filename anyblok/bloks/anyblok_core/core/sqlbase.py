@@ -125,7 +125,9 @@ class SqlMixin:
 
         :rtype: SqlAlchemy aliased of the model
         """
-        return aliased(cls, *args, **kwargs)
+        alias = aliased(cls, *args, **kwargs)
+        alias.registry = alias._aliased_insp._target.registry
+        return alias
 
     @classmethod
     def get_where_clause_from_primary_keys(cls, **pks):
