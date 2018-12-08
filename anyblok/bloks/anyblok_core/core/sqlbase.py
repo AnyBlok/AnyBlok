@@ -131,7 +131,7 @@ class SqlMixin:
     def get_where_clause_from_primary_keys(cls, **pks):
         """ return the where clause to find object from pks
 
-        :param \*\*pks: dict {primary_key: value, ...}
+        :param **pks: dict {primary_key: value, ...}
         :rtype: where clause
         :exception: SqlBaseException
         """
@@ -147,7 +147,7 @@ class SqlMixin:
     def from_primary_keys(cls, **pks):
         """ return the instance of the model from the primary keys
 
-        :param \*\*pks: dict {primary_key: value, ...}
+        :param **pks: dict {primary_key: value, ...}
         :rtype: instance of the model
         """
         where_clause = cls.get_where_clause_from_primary_keys(**pks)
@@ -161,7 +161,7 @@ class SqlMixin:
     def from_multi_primary_keys(cls, *pks):
         """ return the instances of the model from the primary keys
 
-        :param \*pks: list of dict [{primary_key: value, ...}]
+        :param *pks: list of dict [{primary_key: value, ...}]
         :rtype: instances of the model
         """
         where_clause = []
@@ -432,7 +432,7 @@ class SqlMixin:
         """ Find column and relation ship link with the column or relationship
         passed in fields.
 
-        :param \*fields: lists of the attribute name
+        :param *fields: lists of the attribute name
         :rtype: list of the attribute name of the attribute and relation ship
         """
         res = []
