@@ -11,6 +11,7 @@ from anyblok.column import Integer, String, Selection
 from anyblok.relationship import Many2One, One2One, Many2Many, One2Many
 from anyblok.declarations import Declarations
 from anyblok.bloks.anyblok_core.exceptions import SqlBaseException
+from sqlalchemy.orm.exc import NoResultFound
 
 
 Model = Declarations.Model
@@ -32,6 +33,24 @@ class TestCoreSQLBase(DBTestCase):
         registry = self.init_registry(self.declare_model)
         t1 = registry.Test.insert(id2=1)
         self.assertEqual(registry.Test.query().first(), t1)
+
+    def test_query_one_is_more_explicite(self):
+        registry = self.init_registry(self.declare_model)
+        with self.assertRaises(NoResultFound) as exc:
+            registry.Test.query().one()
+
+        self.assertEqual(
+            str(exc.exception),
+            "On Model 'Model.Test': No row was found for one()")
+
+    def test_query_dictone_is_more_explicite(self):
+        registry = self.init_registry(self.declare_model)
+        with self.assertRaises(NoResultFound) as exc:
+            registry.Test.query().dictone()
+
+        self.assertEqual(
+            str(exc.exception),
+            "On Model 'Model.Test': No row was found for dictone()")
 
     def test_multi_insert(self):
         registry = self.init_registry(self.declare_model)

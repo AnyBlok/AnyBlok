@@ -8,12 +8,36 @@
 from anyblok import Declarations
 from anyblok.common import anyblok_column_prefix
 from sqlalchemy.orm import query
+from sqlalchemy.orm.exc import NoResultFound
+from logging import getLogger
+
+
+logger = getLogger(__name__)
 
 
 @Declarations.register(Declarations.Core)
 class Query(query.Query):
     """ Overload the SqlAlchemy Query
     """
+    def set_Model(self, Model):
+        self.Model = Model.__registry_name__
+
+    def one(self):
+        """OverWrite one method only to improve message
+
+        If the query know the Model the the registry name of the Model is added
+        in the exception message
+        """
+        try:
+            return super(Query, self).one()
+        except NoResultFound as exc:
+            logger.debug('On Model %r: exc %s: query %s', self.Model, str(exc),
+                         str(self))
+            if self.Model:
+                raise exc.__class__(
+                    'On Model %r: %s' % (self.Model, str(exc)))
+
+            raise
 
     def all(self):
         """ Return an instrumented list of the result of the query
@@ -45,7 +69,12 @@ class Query(query.Query):
         return field2get
 
     def dictone(self):
-        val = self.one()
+        try:
+            val = self.one()
+        except NoResultFound as exc:
+            msg = str(exc).replace('one()', 'dictone()')
+            raise exc.__class__(msg)
+
         field2get = self.get_field_nams_in_column_description()
         if field2get:
             return {x: getattr(val, y) for x, y in field2get}
