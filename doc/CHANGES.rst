@@ -18,6 +18,9 @@ CHANGELOG
 
 * Fixed alias. The ``Model.aliased`` method link the registry into alias. The goal is 
   to use **hybrid_method** with alias in AnyBlok.
+* Fixed Column.Country, The latest version of pycountry does not raise a lookup exception
+  When the countries does not exist. Now AnyBlok adapt this change to raises the exception
+  and keep the main behaviour
 
 0.20.0 (2018-09-10)
 -------------------
