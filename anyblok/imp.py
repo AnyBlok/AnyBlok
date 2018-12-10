@@ -6,37 +6,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from .common import python_version
-
-issix = False
-try:
-    from importlib import reload as reload_module
-except ImportError:
-    issix = True
-    from six.moves import reload_module
-
-
-def reload_wraper(module):
-    if issix:
-        module2reload = module
-
-    elif python_version() == (3, 3):
-        module2reload = module.__name__
-    elif python_version() >= (3, 4):
-        module2reload = module
-    else:
-        raise ImportManagerException(
-            "Unknow action to do to reload module %r" %
-            module.__name__)
-
-    reload_module(module2reload)
+from importlib import reload as reload_module
 
 
 def reload_module_if_blok_is_reloading(module):
     from anyblok.environment import EnvironmentManager
 
     if EnvironmentManager.get('reload', default=False):
-        reload_wraper(module)
+        reload_module(module)
 
 
 class ImportManagerException(AttributeError):
@@ -130,6 +107,6 @@ class Loader:
         try:
             EnvironmentManager.set('reload', True)
             RegistryManager.init_blok(self.blok)
-            b.reload_declaration_module(reload_wraper)
+            b.reload_declaration_module(reload_module)
         finally:
             EnvironmentManager.set('reload', False)
