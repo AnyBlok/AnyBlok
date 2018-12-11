@@ -23,10 +23,9 @@ class Query(query.Query):
         self.Model = Model.__registry_name__
 
     def one(self):
-        """OverWrite one method only to improve message
+        """Overwrite sqlalchemy one() method to improve exception message
 
-        If the query know the Model the the registry name of the Model is added
-        in the exception message
+        Add model name to query exception message
         """
         try:
             return super(Query, self).one()
