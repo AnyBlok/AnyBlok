@@ -22,7 +22,7 @@ CHANGELOG
 * Fixed #60: Now DateTime plugins verify also the DateTime columns of the dependencies of the Model
 * Removed **Python 3.3** compatibility
 * Improved the NoResultFound Exception for query.one and query.dictone. Now the registry name of the model
-  isadded in the exception's message
+  is added to the exception's message
 
 0.20.0 (2018-09-10)
 -------------------
