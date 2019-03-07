@@ -2,15 +2,12 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from os.path import join
-from os import walk
 from logging import getLogger
-import nose
-
 from sqlalchemy import create_engine, event, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -945,24 +942,10 @@ class Registry:
             self.close()
             raise e
 
-        test_blok = blok2install and Configuration.get(
-            'test_blok_at_install')
-        selected_bloks = return_list(Configuration.get('selected_bloks'))
-        in_selected_bloks = blok2install in (selected_bloks or [blok2install])
-        unwanted_bloks = return_list(Configuration.get('unwanted_bloks'))
-        not_in_unwanted_bloks = blok2install not in (unwanted_bloks or [])
-
-        if test_blok and in_selected_bloks and not_in_unwanted_bloks:
-            self.System.Blok.load_all()
-            self.run_test(blok2install)
-            if len(toinstall) > 1 or mustreload:
-                self.reload()
-
+        if len(toinstall) > 1 or mustreload:
+            self.reload()
         else:
-            if len(toinstall) > 1 or mustreload:
-                self.reload()
-            else:
-                self.System.Blok.load_all()
+            self.System.Blok.load_all()
 
         self.loadwithoutmigration = False
 
@@ -981,31 +964,6 @@ class Registry:
         for funct in self.additional_setting.get('anyblok.session.event', []):
             logger.info('Update session event %r' % funct)
             funct(self.session)
-
-    def run_test(registry, blok2install):
-        startpath = BlokManager.getPath(blok2install)
-
-        class ContextSuite(nose.suite.ContextSuite):
-
-            def __init__(self, *args, **kwargs):
-                super(ContextSuite, self).__init__(*args, **kwargs)
-                if self.context is not None:
-                    self.context.registry = registry
-
-        class ContextSuiteFactory(nose.suite.ContextSuiteFactory):
-            suiteClass = ContextSuite
-
-        class TestLoader(nose.loader.TestLoader):
-
-            def __init__(self, *args, **kwargs):
-                super(TestLoader, self).__init__(*args, **kwargs)
-                self.suiteClass = ContextSuiteFactory(config=self.config)
-
-        for root, dirs, _ in walk(startpath):
-            if 'tests' in dirs:
-                nose.run(defaultTest=[join(root, 'tests')],
-                         testLoader=TestLoader(),
-                         argv=['-v', '-s'])
 
     def assemble_entries(self):
         for entry in RegistryManager.declared_entries:

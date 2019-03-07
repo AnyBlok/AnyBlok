@@ -16,7 +16,6 @@ CHANGELOG
 1.0.0
 -----
 
-
 * Fixed alias. The ``Model.aliased`` method now binds the registry to the alias. The goal is 
   to use **hybrid_method** with alias in AnyBlok.
 * Fixed Column.Country, The latest version of pycountry does not raise a lookup exception
@@ -29,6 +28,13 @@ CHANGELOG
 * Removed **Python 3.3** compatibility
 * Improved the NoResultFound Exception for query.one and query.dictone. Now the registry name of the model
   is added to the exception's message
+* Replaced the **nose test** by **pytest**. All the test was converted. 
+* Moved and renamed ``anyblok.tests.testcase.py`` to ``anyblok.testing.py``. 
+  The file ``anyblok.tests.testcase.py`` import only the TestCase class to
+  continue to maintain the compatibility with older tests.
+* the console script ``anyblok_nose`` raise an exception. Because this runner
+  can't execute pytest tests. The goal is to use the nose plugin.
+* Removed the behviour ``test-bloks-at-install``
 
 0.20.0 (2018-09-10)
 -------------------

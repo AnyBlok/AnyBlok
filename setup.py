@@ -29,7 +29,6 @@ requires = [
     'argparse',
     'alembic',
     'graphviz',
-    'nose',  # for unittest during the blok install
     'lxml',
     'six',
     'PyYAML',
@@ -68,7 +67,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=requires,
-    tests_require=requires + ['nose'],
+    tests_require=requires + ['pytest'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

@@ -5,9 +5,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase
+import pytest
 from anyblok import Declarations
-from anyblok.declarations import DeclarationsException  # FIXME USE Declaration
+from anyblok.declarations import DeclarationsException
 
 
 class OneType:
@@ -21,17 +21,21 @@ class OneType:
         pass
 
 
-class TestDeclaration(TestCase):
+class TestDeclaration:
 
-    def tearDown(self):
-        super(TestDeclaration, self).tearDown()
-        for type_ in ['OneType', 'MyOneType']:
-            if type_ in Declarations.declaration_types:
-                del Declarations.declaration_types[type_]
+    @pytest.fixture(autouse=True)
+    def tearDown(self, request):
+
+        def reset():
+            for type_ in ['OneType', 'MyOneType']:
+                if type_ in Declarations.declaration_types:
+                    del Declarations.declaration_types[type_]
+
+        request.addfinalizer(reset)
 
     def test_add(self):
         Declarations.add_declaration_type(cls_=OneType)
-        self.assertEqual(Declarations.declaration_types['OneType'], OneType)
+        assert Declarations.declaration_types['OneType'] == OneType
 
         class SubType:
             pass
@@ -53,8 +57,7 @@ class TestDeclaration(TestCase):
         class MyOneType(OneType):
             pass
 
-        self.assertEqual(Declarations.declaration_types['MyOneType'],
-                         MyOneType)
+        assert Declarations.declaration_types['MyOneType'] == MyOneType
 
         @Declarations.register(Declarations.MyOneType)
         class SubType:

@@ -822,14 +822,6 @@ def add_doc(group):
                        help='No detail these models')
 
 
-@Configuration.add('unittest', label="Unittest")
-def add_unittest(group):
-    group.add_argument('--selected-bloks', nargs='+',
-                       help="Name of the bloks to test")
-    group.add_argument('--unwanted-bloks', nargs='+',
-                       help="Name of the bloks to no test")
-
-
 @Configuration.add('logging', label="Logging")
 def add_logging(group):
     group.add_argument('--logging-level', dest='logging_level',

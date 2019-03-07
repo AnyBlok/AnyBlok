@@ -46,7 +46,7 @@ class MigrationReport:
     def table_is_added(self, table):
         for action in self.actions:
             if action[0] == 'add_table' and action[1] is table:
-                    return True
+                return True
 
         return False
 
@@ -691,7 +691,7 @@ class MigrationConstraintUnique:
     def add(self, *columns):
         """ Add the constraint
 
-        :param *column: list of column
+        :param *columns: list of column name
         :rtype: MigrationConstraintUnique instance
         :exception: MigrationException
         """
@@ -743,7 +743,7 @@ class MigrationConstraintPrimaryKey:
     def add(self, *columns):
         """ Add the constraint
 
-        :param *column: list of column
+        :param *columns: list of column name
         :rtype: MigrationConstraintPrimaryKey instance
         :exception: MigrationException
         """
@@ -810,7 +810,8 @@ class MigrationIndex:
     def add(self, *columns, **kwargs):
         """ Add the constraint
 
-        :param *column: list of column
+        :param *columns: list of column name
+        :param **kwargs: other attribute fir l __init__
         :rtype: MigrationIndex instance
         :exception: MigrationException
         """
@@ -900,7 +901,7 @@ class MigrationTable:
     def unique(self, name):
         """ Get unique
 
-        :param name: unique constraint's name
+        :param name: str name of the unique constraint
         :rtype: MigrationConstraintUnique instance
         """
         return MigrationConstraintUnique(self, name)
@@ -908,7 +909,7 @@ class MigrationTable:
     def check(self, name=None):
         """ Get check
 
-        :param name: check constraint's name
+        :param name: str name of the check constraint
         :rtype: MigrationConstraintCheck instance
         """
         return MigrationConstraintCheck(self, name)

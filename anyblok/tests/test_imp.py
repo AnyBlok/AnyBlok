@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase
+import pytest
 from anyblok.blok import BlokManager
 from sys import modules
 from anyblok.imp import ImportManager, ImportManagerException
@@ -23,31 +23,31 @@ def python_version():
     return '%d.%d' % (sys.version_info.major, sys.version_info.minor)
 
 
-class TestImportManager(TestCase):
+class TestImportManager:
 
-    def setUp(self):
-        super(TestImportManager, self).setUp()
+    @pytest.fixture(autouse=True)
+    def reset(self, request):
+        def close():
+            if '.mockblok.' in modules:
+                mod_2_del = []
+                for mod in modules.keys():
+                    if '.mockblok.' in mod:
+                        mod_2_del.append(mod)
+
+                for mod in mod_2_del:
+                    del modules[mod]
+
+            del BlokManager.bloks['mockblok']
+            BlokManager.ordered_bloks.remove('mockblok')
+
+        request.addfinalizer(close)
         BlokManager.bloks['mockblok'] = mockblok
         BlokManager.ordered_bloks.append('mockblok')
 
-    def tearDown(self):
-        super(TestImportManager, self).tearDown()
-        if '.mockblok.' in modules:
-            mod_2_del = []
-            for mod in modules.keys():
-                if '.mockblok.' in mod:
-                    mod_2_del.append(mod)
-
-            for mod in mod_2_del:
-                del modules[mod]
-
-        del BlokManager.bloks['mockblok']
-        BlokManager.ordered_bloks.remove('mockblok')
-
     def test_has_blok(self):
         ImportManager.add('mockblok')
-        self.assertEqual(ImportManager.has('mockblok'), True)
-        self.assertEqual(ImportManager.has('mockblok2'), False)
+        assert ImportManager.has('mockblok') is True
+        assert ImportManager.has('mockblok2') is False
 
     def test_get_blok(self):
         ImportManager.add('mockblok')
@@ -59,6 +59,18 @@ class TestImportManager(TestCase):
             self.fail('No watchdog for inexisting blok module')
         except ImportManagerException:
             pass
+
+    def test_imports(self):
+        blok = ImportManager.add('mockblok')
+        blok.imports()
+        from .mockblok.mockpackage import mockfile1, mockfile2
+        from .mockblok.mockpackage import submockpackage
+        from .mockblok import mockfile
+        assert mockfile1.foo == 'bar'
+        assert mockfile2.foo == 'bar'
+        assert submockpackage.mockfile1.foo == 'bar'
+        assert submockpackage.mockfile2.foo == 'bar'
+        assert mockfile.foo == 'bar'
 
     def test_reload(self):
         blok = ImportManager.add('mockblok')
@@ -78,17 +90,17 @@ class TestImportManager(TestCase):
             fp.write("""foo = 'reload'""")
 
         try:
-            self.assertEqual(mockfile1.foo, 'bar')
-            self.assertEqual(mockfile2.foo, 'bar')
-            self.assertEqual(submockpackage.mockfile1.foo, 'bar')
-            self.assertEqual(submockpackage.mockfile2.foo, 'bar')
-            self.assertEqual(mockfile.foo, 'bar')
+            assert mockfile1.foo == 'bar'
+            assert mockfile2.foo == 'bar'
+            assert submockpackage.mockfile1.foo == 'bar'
+            assert submockpackage.mockfile2.foo == 'bar'
+            assert mockfile.foo == 'bar'
             blok.reload()
-            self.assertEqual(mockfile1.foo, 'reload')
-            self.assertEqual(mockfile2.foo, 'bar')
-            self.assertEqual(submockpackage.mockfile1.foo, 'bar')
-            self.assertEqual(submockpackage.mockfile2.foo, 'reload')
-            self.assertEqual(mockfile.foo, 'reload')
+            assert mockfile1.foo == 'reload'
+            assert mockfile2.foo == 'bar'
+            assert submockpackage.mockfile1.foo == 'bar'
+            assert submockpackage.mockfile2.foo == 'reload'
+            assert mockfile.foo == 'reload'
         finally:
             with open(join(tests_path, 'mockfile.py'), 'w') as fp:
                 fp.write(initial_file)
@@ -100,15 +112,3 @@ class TestImportManager(TestCase):
             with open(join(tests_path, 'mockpackage', 'submockpackage',
                            'mockfile2.py'), 'w') as fp:
                 fp.write(initial_file)
-
-    def test_imports(self):
-        blok = ImportManager.add('mockblok')
-        blok.imports()
-        from .mockblok.mockpackage import mockfile1, mockfile2
-        from .mockblok.mockpackage import submockpackage
-        from .mockblok import mockfile
-        self.assertEqual(mockfile1.foo, 'bar')
-        self.assertEqual(mockfile2.foo, 'bar')
-        self.assertEqual(submockpackage.mockfile1.foo, 'bar')
-        self.assertEqual(submockpackage.mockfile2.foo, 'bar')
-        self.assertEqual(mockfile.foo, 'bar')
