@@ -54,20 +54,20 @@ class TestCoreSQLBase:
 
     def test_query_one_is_more_explicite(self, registry_declare_model):
         registry = registry_declare_model
-        with self.assertRaises(NoResultFound) as exc:
+        with pytest.raises(NoResultFound) as exc:
             registry.Test.query().one()
 
-        self.assertEqual(
-            str(exc.exception),
+        assert (
+            str(exc._excinfo[1]) ==
             "On Model 'Model.Test': No row was found for one()")
 
     def test_query_dictone_is_more_explicite(self, registry_declare_model):
         registry = registry_declare_model
-        with self.assertRaises(NoResultFound) as exc:
+        with pytest.raises(NoResultFound) as exc:
             registry.Test.query().dictone()
 
-        self.assertEqual(
-            str(exc.exception),
+        assert (
+            str(exc._excinfo[1]) ==
             "On Model 'Model.Test': No row was found for dictone()")
 
     def test_multi_insert(self, registry_declare_model):
