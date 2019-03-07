@@ -134,9 +134,9 @@ class TestHybridMethod:
         self.check_hybrid_method(registry.Test)
         Test = registry.Test.aliased()
         query = Test.query().filter(Test.val_is(1))
-        self.assertEqual(query.count(), 1)
+        assert query.count() == 1
         query = Test.query().filter(Test.val_is(2))
-        self.assertEqual(query.count(), 1)
+        assert query.count() == 1
 
     def add_inherited_hybrid_method(self, withcore=False, withmixin=False,
                                     withmodel=False):
