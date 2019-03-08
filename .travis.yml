@@ -26,12 +26,9 @@ before_install:
 
 install:
   - pip install -U pip
-  # only eggs: do an erreur with wheel
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.8-dev' ]]; then pip install python_editor texttable PyYAML psycopg2; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install python_editor texttable PyYAML psycopg2; fi
   # only wheel
   - pip install wheel
-  - pip install psycopg2 sqlalchemy  # for unittesting anyblok with postgres
+  - pip install psycopg2-binary sqlalchemy  # for unittesting anyblok with postgres
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install -U colour passlib furl phonenumbers pycountry  # special columns
   - pip install -U cryptography
