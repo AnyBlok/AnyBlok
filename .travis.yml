@@ -27,12 +27,12 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION == '3.7-dev' ]]; then pip install python_editor texttable PyYAML; fi
   - if [[ $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install python_editor texttable PyYAML; fi
   # only wheel
-  - pip install flake8 coverage pytest pytest-cov
   - pip install wheel
   - pip install psycopg2 sqlalchemy  # for unittesting anyblok with postgres
-  - pip install colour passlib furl phonenumbers pycountry  # special columns
-  - pip install cryptography
-  - pip install coveralls
+  - pip install -U flake8 coverage pytest pytest-cov
+  - pip install -U colour passlib furl phonenumbers pycountry  # special columns
+  - pip install -U cryptography
+  - pip install -U coveralls
   - python setup.py develop
 
 env:
