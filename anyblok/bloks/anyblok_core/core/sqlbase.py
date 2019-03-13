@@ -106,9 +106,12 @@ class SqlMixin:
                 res.append(f)
 
         if res:
-            return cls.registry.query(*res)
+            query = cls.registry.query(*res)
+        else:
+            query = cls.registry.query(cls)
 
-        return cls.registry.query(cls)
+        query.set_Model(cls)
+        return query
 
     is_sql = True
 
@@ -125,7 +128,9 @@ class SqlMixin:
 
         :rtype: SqlAlchemy aliased of the model
         """
-        return aliased(cls, *args, **kwargs)
+        alias = aliased(cls, *args, **kwargs)
+        alias.registry = alias._aliased_insp._target.registry
+        return alias
 
     @classmethod
     def get_where_clause_from_primary_keys(cls, **pks):

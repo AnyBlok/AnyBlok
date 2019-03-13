@@ -117,6 +117,27 @@ class TestHybridMethod:
         registry = self.init_registry(add_in_registry)
         self.check_hybrid_method(registry.Test)
 
+    def test_hybrid_with_alias(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+                val = Integer(nullable=False)
+
+                @hybrid_method
+                def val_is(self, val):
+                    return self.val == val
+
+        registry = self.init_registry(add_in_registry)
+        self.check_hybrid_method(registry.Test)
+        Test = registry.Test.aliased()
+        query = Test.query().filter(Test.val_is(1))
+        assert query.count() == 1
+        query = Test.query().filter(Test.val_is(2))
+        assert query.count() == 1
+
     def add_inherited_hybrid_method(self, withcore=False, withmixin=False,
                                     withmodel=False):
 

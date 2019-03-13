@@ -13,31 +13,6 @@ from datetime import datetime
 
 class AutoUpdatePlugin(ModelPluginBase):
 
-    def initialisation_tranformation_properties(self, properties,
-                                                transformation_properties):
-        """ Initialise the transform properties: auto_update_field_datetime
-
-        :param properties: the properties declared in the model
-        :param new_type_properties: param to add in a new base if need
-        """
-        if 'auto_update_field_datetime' not in transformation_properties:
-            transformation_properties['auto_update_field_datetime'] = []
-
-    def declare_field(self, name, field, namespace, properties,
-                      transformation_properties):
-        """Detect if the field is a DateTime with auto_update = True
-
-        :param name: field name
-        :param field: field instance
-        :param namespace: the namespace of the model
-        :param properties: the properties of the model
-        :param transformation_properties: the transformation properties
-        """
-        f = self.registry.loaded_namespaces_first_step[namespace].get(name)
-        if f and isinstance(f, DateTime) and f.auto_update:
-            transformation_properties['auto_update_field_datetime'].append(
-                name)
-
     def after_model_construction(self, base, namespace,
                                  transformation_properties):
         """Add the sqlalchemy event
@@ -46,9 +21,17 @@ class AutoUpdatePlugin(ModelPluginBase):
         :param namespace: the namespace of the model
         :param transformation_properties: the properties of the model
         """
-        if transformation_properties['auto_update_field_datetime']:
+        namespaces = [namespace]
+        namespaces.extend(list(base.__depends__))
+        fields = []
+        for ns in namespaces:
+            for c in self.registry.get(ns).loaded_columns:
+                f = self.registry.loaded_namespaces_first_step[namespace].get(c)
+                if isinstance(f, DateTime) and f.auto_update:
+                    fields.append(c)
+
+        if fields:
             e = ModelMapper(namespace, 'after_update')
-            fields = transformation_properties['auto_update_field_datetime']
 
             def auto_update_listen(mapper, connection, target):
                 now = datetime.now()

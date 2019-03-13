@@ -16,6 +16,18 @@ CHANGELOG
 1.0.0
 -----
 
+* Fixed alias. The ``Model.aliased`` method now binds the registry to the alias. The goal is 
+  to use **hybrid_method** with alias in AnyBlok.
+* Fixed Column.Country, The latest version of pycountry does not raise a lookup exception
+  When the countries does not exist. Now AnyBlok takes this change into consideration to raise the exception
+  and keep the main behaviour
+* Fixed alias. Now the ``Model.aliased`` method links the registry instance into the aliased model.
+  The goal is to use `hybrid_method <https://docs.sqlalchemy.org/en/latest/orm/extensions/hybrid.html#sqlalchemy.ext.hybrid.hybrid_method>`_ 
+  decorator with alias in AnyBlok.
+* Fixed #60: Now DateTime plugins verify also the DateTime columns of the dependencies of the Model
+* Removed **Python 3.3** compatibility
+* Improved the NoResultFound Exception for query.one and query.dictone. Now the registry name of the model
+  is added to the exception's message
 * Replaced the **nose test** by **pytest**. All the test was converted. 
 * Moved and renamed ``anyblok.tests.testcase.py`` to ``anyblok.testing.py``. 
   The file ``anyblok.tests.testcase.py`` import only the TestCase class to

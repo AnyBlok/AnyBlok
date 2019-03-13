@@ -108,7 +108,7 @@ def anyblok_updatedb():
     required_update_bloks = []
     for blok in (Configuration.get('install_or_update_bloks') or []):
         if blok in installed_bloks:
-                required_update_bloks.append(blok)
+            required_update_bloks.append(blok)
         elif blok not in toupdate_bloks:
             required_install_bloks.append(blok)
 

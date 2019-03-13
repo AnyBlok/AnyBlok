@@ -8,7 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
 from anyblok import Declarations
-from anyblok.column import Integer, String, Date
+from anyblok.column import Integer, String, Date, DateTime
 from anyblok.relationship import Many2One
 from anyblok.field import Function
 from datetime import date
@@ -451,5 +451,124 @@ class TestPolymorphic:
             multi_table_foreign_key_with_one_define_mapper_args)
         room = registry.Room.insert()
         check_registry(registry.Employee, room=room)
-        check_registry(registry.Engineer,
-                       engineer_name='An engineer', room=room)
+        check_registry(registry.Engineer, engineer_name='An engineer',
+                       room=room)
+
+    def test_query_with_polymorphic(self):
+        registry = self.init_registry(multi_table_poly)
+        registry.Employee.insert(name='employee')
+        registry.Engineer.insert(name='engineer', engineer_name='john')
+        registry.Manager.insert(name='manager', manager_name='doe')
+        assert registry.Employee.query().count() == 3
+        for mapper in (registry.Engineer,
+                       [registry.Engineer, registry.Manager], '*'):
+            query = registry.Employee.query().with_polymorphic(mapper)
+            query = query.filter(
+                registry.Engineer.engineer_name == 'john')
+            employee = query.one()
+            assert isinstance(employee, registry.Engineer)
+
+    def test_getFieldType(self):
+        registry = self.init_registry(multi_table_poly)
+        assert registry.Employee.getFieldType('id') == 'Integer'
+        assert registry.Employee.getFieldType('name') == 'String'
+        assert registry.Employee.getFieldType('type_entity') == 'String'
+        assert registry.Engineer.getFieldType('id') == 'Integer'
+        assert registry.Engineer.getFieldType('name') == 'String'
+        assert registry.Engineer.getFieldType('type_entity') == 'String'
+        assert registry.Engineer.getFieldType('engineer_name') == 'String'
+        assert registry.Manager.getFieldType('id') == 'Integer'
+        assert registry.Manager.getFieldType('name') == 'String'
+        assert registry.Manager.getFieldType('type_entity') == 'String'
+        assert registry.Manager.getFieldType('manager_name') == 'String'
+
+    def test_getFieldType_with_mixin(self):
+        registry = self.init_registry(multi_table_poly_mixins)
+        assert registry.Employee.getFieldType('id') == 'Integer'
+        assert registry.Employee.getFieldType('name') == 'String'
+        assert registry.Employee.getFieldType('type_entity') == 'String'
+        assert registry.Engineer.getFieldType('id') == 'Integer'
+        assert registry.Engineer.getFieldType('name') == 'String'
+        assert registry.Engineer.getFieldType('type_entity') == 'String'
+        assert registry.Engineer.getFieldType('engineer_name') == 'String'
+        assert registry.Manager.getFieldType('id') == 'Integer'
+        assert registry.Manager.getFieldType('name') == 'String'
+        assert registry.Manager.getFieldType('type_entity') == 'String'
+        assert registry.Manager.getFieldType('manager_name') == 'String'
+        assert registry.Manager.getFieldType('birthday') == 'Date'
+
+    def test_getFieldType_with_relationship(self):
+        registry = self.init_registry(multi_table_foreign_key)
+        assert registry.Employee.getFieldType('id') == 'Integer'
+        assert registry.Employee.getFieldType('name') == 'String'
+        assert registry.Employee.getFieldType('type_entity') == 'String'
+        assert registry.Employee.getFieldType('room') == 'Many2One'
+        assert registry.Engineer.getFieldType('id') == 'Integer'
+        assert registry.Engineer.getFieldType('name') == 'String'
+        assert registry.Engineer.getFieldType('type_entity') == 'String'
+        assert registry.Engineer.getFieldType('engineer_name') == 'String'
+        assert registry.Engineer.getFieldType('room') == 'Many2One'
+
+    def test_field_description(self):
+        registry = self.init_registry(multi_table_poly)
+        fd_employee = list(registry.Employee.fields_description().keys())
+        fd_employee.sort()
+        fd_engineer = list(registry.Engineer.fields_description().keys())
+        fd_engineer.sort()
+        fd_manager = list(registry.Manager.fields_description().keys())
+        fd_manager.sort()
+        assert fd_employee == ['id', 'name', 'type_entity']
+        assert fd_engineer == ['engineer_name', 'id', 'name', 'type_entity']
+        assert fd_manager == ['id', 'manager_name', 'name', 'type_entity']
+
+    def test_get_primary_keys_on_single_table(self):
+        registry = self.init_registry(single_table_poly)
+        employee_pks = registry.Employee.get_primary_keys()
+        engineer_pks = registry.Engineer.get_primary_keys()
+        assert employee_pks == engineer_pks
+
+    def test_datetime_with_auto_update_on_single_table(self):
+
+        def single_table_with_datetime_auto_update():
+            single_table_poly()
+
+            @register(Model)
+            class Employee:
+                update_at = DateTime(auto_update=True)
+
+        registry = self.init_registry(single_table_with_datetime_auto_update)
+        check_registry(registry.Employee)
+        engineer = check_registry(
+            registry.Engineer, engineer_name='An engineer')
+        assert engineer.update_at is None
+        manager = check_registry(
+            registry.Manager, manager_name='An manager')
+        assert manager.update_at is None
+        engineer.engineer_name = 'Other'
+        manager.manager_name = 'Other'
+        registry.flush()
+        assert engineer.update_at is not None
+        assert manager.update_at is not None
+
+    def test_datetime_with_auto_update_on_multi_table(self):
+
+        def multi_table_with_datetime_auto_update():
+            multi_table_poly()
+
+            @register(Model)
+            class Employee:
+                update_at = DateTime(auto_update=True)
+
+        registry = self.init_registry(multi_table_with_datetime_auto_update)
+        check_registry(registry.Employee)
+        engineer = check_registry(
+            registry.Engineer, engineer_name='An engineer')
+        assert engineer.update_at is None
+        manager = check_registry(
+            registry.Manager, manager_name='An manager')
+        assert manager.update_at is None
+        engineer.engineer_name = 'Other'
+        manager.manager_name = 'Other'
+        registry.flush()
+        assert engineer.update_at is not None
+        assert manager.update_at is not None

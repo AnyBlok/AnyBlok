@@ -1,6 +1,9 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Georges RACINET <gracinet@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -500,3 +503,36 @@ class LogCapture(LC):
     def get_critical_messages(self):
         """Return only the logging.CRITICAL messages"""
         return self.get_messages(CRITICAL)
+
+
+def skip_unless_bloks_installed(*bloks):
+    """A decorator to skip a test if some Bloks aren't installed.
+
+    In cases of soft dependency between Bloks (i.e., the dependent Blok
+    has some of its features behaving differently if another Blok is installed
+    without actually requiring it), it's useful to write tests that will
+    be executed only if some Bloks are installed.
+
+    Here's an example taken from Anyblok / Wms Base,
+    where the ``wms-inventory`` Blok wants to take Reservation
+    into account if it's installed yet doesn't
+    want to introduce a hard requirement onto ``wms-reservation``
+
+        @skip_unless_bloks_installed('wms-reservation')
+        def test_choose_affected_with_reserved(self):
+            # this test can now safely assume that wms-reservation is installed
+
+    """
+    def bloks_decorator(testmethod):
+        def wrapped(self):
+            Blok = self.registry.System.Blok
+            for blok_name in bloks:
+                blok = Blok.query().get(blok_name)
+                if blok.state != 'installed':
+                    raise unittest.SkipTest(
+                        "Blok %r is not installed" % blok_name)
+            return testmethod(self)
+        # necessary not to be ignored by test runner
+        wrapped.__name__ = testmethod.__name__
+        return wrapped
+    return bloks_decorator

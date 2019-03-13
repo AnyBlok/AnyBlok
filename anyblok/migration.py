@@ -46,7 +46,7 @@ class MigrationReport:
     def table_is_added(self, table):
         for action in self.actions:
             if action[0] == 'add_table' and action[1] is table:
-                    return True
+                return True
 
         return False
 
@@ -1001,6 +1001,32 @@ class Migration:
         diff.extend(self.detect_pk_constraint_changed(inspector))
         return diff
 
+    def check_constraint_is_same(self, reflected_constraint, constraint):
+        same_name = False
+        if constraint.name.startswith(reflected_constraint['name']):
+            same_name = True
+        else:
+            constraint_name = constraint.name.split('__')
+            reflected_constraint_name = reflected_constraint['name'].split('__')
+            if (
+                constraint_name[0] == reflected_constraint_name[0] and
+                constraint_name[1].startswith(reflected_constraint_name[1])
+            ):
+                same_name = True
+
+        if not same_name:
+            return False
+
+        if constraint.sqltext.text == reflected_constraint['sqltext']:
+            return True
+        elif (
+            constraint.sqltext.text ==
+            reflected_constraint['sqltext'].replace('"', '')
+        ):
+            return True
+
+        return False
+
     def detect_check_constraint_changed(self, inspector):
         diff = []
         for table in inspector.get_table_names():
@@ -1025,7 +1051,9 @@ class Migration:
                 todrop_ = todrop.copy()
                 for x in todrop_:
                     for y in toadd:
-                        if y.startswith(x):
+                        if self.check_constraint_is_same(
+                            reflected_constraints[x], constraints[y]
+                        ):
                             toadd.remove(y)
                             todrop.remove(x)
                             break
