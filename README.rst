@@ -9,6 +9,10 @@
 .. image:: https://img.shields.io/pypi/pyversions/anyblok.svg?longCache=True
     :alt: Python versions
 
+.. image:: https://img.shields.io/pypi/v/AnyBlok.svg
+   :target: https://pypi.python.org/pypi/AnyBlok/
+   :alt: Version status
+
 .. image:: https://travis-ci.org/AnyBlok/AnyBlok.svg?branch=master
     :target: https://travis-ci.org/AnyBlok/AnyBlok
     :alt: Build status
@@ -16,10 +20,6 @@
 .. image:: https://coveralls.io/repos/github/AnyBlok/AnyBlok/badge.svg?branch=master
     :target: https://coveralls.io/github/AnyBlok/AnyBlok?branch=master
     :alt: Coverage
-
-.. image:: https://img.shields.io/pypi/v/AnyBlok.svg
-   :target: https://pypi.python.org/pypi/AnyBlok/
-   :alt: Version status
    
 .. image:: https://readthedocs.org/projects/anyblok/badge/?version=latest
     :alt: Documentation Status
