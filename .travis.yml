@@ -1,4 +1,5 @@
 language: python
+dist: xenial
 sudo: true
 addons:
     postgresql: "9.6"
@@ -7,9 +8,11 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.6-dev"
+  - "3.7"
   - "3.7-dev"
+  - "3.8-dev"
   - "nightly"
+  - "pypy3.5"
 
 virtualenv:
   system_site_packages: false
@@ -23,16 +26,13 @@ before_install:
 
 install:
   - pip install -U pip
-  # only eggs: do an erreur with wheel
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.7-dev' ]]; then pip install python_editor texttable PyYAML; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install python_editor texttable PyYAML; fi
   # only wheel
-  - pip install wheel
-  - pip install psycopg2 sqlalchemy  # for unittesting anyblok with postgres
-  - pip install flake8 coverage nose
-  - pip install colour passlib furl phonenumbers pycountry  # special columns
-  - pip install cryptography
-  - pip install coveralls
+  - pip install -U wheel
+  - pip install -U psycopg2 sqlalchemy  # for unittesting anyblok with postgres
+  - pip install -U flake8 coverage nose
+  - pip install -U colour passlib furl phonenumbers pycountry  # special columns
+  - pip install -U cryptography
+  - pip install -U coveralls
   - python setup.py develop
 
 env:
