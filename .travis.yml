@@ -45,7 +45,7 @@ install:
 env:
   global:
     - ANYBLOK_DATABASE_NAME=travis_ci_test
-    - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi; else ANYBLOK_DATABASE_DRIVER=postgresql; fi
+    - ANYBLOK_DATABASE_DRIVER=postgresql
     - ANYBLOK_DATABASE_USER=postgres
 
 script:
