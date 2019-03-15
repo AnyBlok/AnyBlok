@@ -1000,6 +1000,43 @@ class Migration:
         diff.extend(self.detect_pk_constraint_changed(inspector))
         return diff
 
+    def check_constraint_is_same(self, reflected_constraint, constraint):
+        """the goal is to detect if contrainst changed when the name is long
+
+        SQLAlchemy trunkated the name if function of database type (
+        postgres 63 characters)
+
+        this method check if the truncated name is the same that no truncated
+        name and if the constraint text is the same: return True else False
+        """
+        same_name = False
+        if constraint.name.startswith(reflected_constraint['name']):
+            # case SQLAlchemy < 1.3
+            same_name = True
+        else:
+            # case SQLAlchemy >= 1.3
+            constraint_name = constraint.name.split('__')
+            reflected_constraint_name = reflected_constraint['name'].split('__')
+            if (
+                constraint_name[0] == reflected_constraint_name[0] and
+                constraint_name[1].startswith(reflected_constraint_name[1])
+            ):
+                same_name = True
+
+        if not same_name:
+            return False
+
+        if constraint.sqltext.text == reflected_constraint['sqltext']:
+            return True
+        elif (
+            constraint.sqltext.text ==
+            reflected_constraint['sqltext'].replace('"', '')
+        ):
+            # Some DB type add '"' around column name
+            return True
+
+        return False
+
     def detect_check_constraint_changed(self, inspector):
         diff = []
         for table in inspector.get_table_names():
@@ -1024,7 +1061,9 @@ class Migration:
                 todrop_ = todrop.copy()
                 for x in todrop_:
                     for y in toadd:
-                        if y.startswith(x):
+                        if self.check_constraint_is_same(
+                            reflected_constraints[x], constraints[y]
+                        ):
                             toadd.remove(y)
                             todrop.remove(x)
                             break
