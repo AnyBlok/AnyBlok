@@ -46,7 +46,7 @@ class MigrationReport:
     def table_is_added(self, table):
         for action in self.actions:
             if action[0] == 'add_table' and action[1] is table:
-                    return True
+                return True
 
         return False
 
