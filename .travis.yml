@@ -14,6 +14,12 @@ python:
   - "nightly"
   - "pypy3.5"
 
+
+matrix:
+  allow_failures:
+      - python: "3.8-dev"
+      - python: "nightly"
+
 virtualenv:
   system_site_packages: false
 
@@ -28,7 +34,8 @@ install:
   - pip install -U pip
   # only wheel
   - pip install -U wheel
-  - pip install -U psycopg2 sqlalchemy  # for unittesting anyblok with postgres
+  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then pip install psycopg2cffi; else psycopg2; fi
+  - pip install -U sqlalchemy  # for unittesting anyblok with postgres
   - pip install -U flake8 coverage nose
   - pip install -U colour passlib furl phonenumbers pycountry  # special columns
   - pip install -U cryptography
