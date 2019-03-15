@@ -5,6 +5,7 @@
 ..    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -13,9 +14,8 @@
 CHANGELOG
 =========
 
-1.0.0
------
-
+0.21.0 (2019-03-15)
+-------------------
 
 * Fixed alias. The ``Model.aliased`` method now binds the registry to the alias. The goal is 
   to use **hybrid_method** with alias in AnyBlok.
@@ -29,6 +29,7 @@ CHANGELOG
 * Removed **Python 3.3** compatibility
 * Improved the NoResultFound Exception for query.one and query.dictone. Now the registry name of the model
   is added to the exception's message
+* Fixed compatitibility with **SQLAlchemy > 1.3**
 
 0.20.0 (2018-09-10)
 -------------------
