@@ -34,7 +34,7 @@ install:
   - pip install -U pip
   # only wheel
   - pip install -U wheel
-  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then pip install psycopg2cffi; else psycopg2; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then pip install psycopg2cffi; else pip install psycopg2; fi
   - pip install -U sqlalchemy  # for unittesting anyblok with postgres
   - pip install -U flake8 coverage nose
   - pip install -U colour passlib furl phonenumbers pycountry  # special columns
@@ -45,7 +45,7 @@ install:
 env:
   global:
     - ANYBLOK_DATABASE_NAME=travis_ci_test
-    - ANYBLOK_DATABASE_DRIVER=postgresql
+    - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi; else ANYBLOK_DATABASE_DRIVER=postgresql; fi
     - ANYBLOK_DATABASE_USER=postgres
 
 script:
