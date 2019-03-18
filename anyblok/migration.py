@@ -1026,16 +1026,7 @@ class Migration:
         if not same_name:
             return False
 
-        if constraint.sqltext.text == reflected_constraint['sqltext']:
-            return True
-        elif (
-            constraint.sqltext.text ==
-            reflected_constraint['sqltext'].replace('"', '')
-        ):
-            # Some DB type add '"' around column name
-            return True
-
-        return False
+        return True
 
     def detect_check_constraint_changed(self, inspector):
         diff = []

@@ -14,6 +14,11 @@
 CHANGELOG
 =========
 
+0.21.2 (2019-03-18)
+-------------------
+
+* Fixed truncated constraint, the sqltext is different in function of the DB type
+
 0.21.1 (2019-03-18)
 -------------------
 
