@@ -14,7 +14,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.21.0'
+version = '0.21.1'
 
 
 if sys.version_info < (3, 4):
@@ -79,9 +79,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: Implementation :: PyPy',
-        'Framework :: AnyBlok',
         'Topic :: Software Development',
-        'Topic :: Software Development :: Libraries :: Application Frameworks ',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
     ],
