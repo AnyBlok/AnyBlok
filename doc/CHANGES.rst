@@ -14,6 +14,11 @@
 CHANGELOG
 =========
 
+0.21.3 (2019-03-19)
+-------------------
+
+* Fixed issue #83, the name of constraint create by anyblok is truncated to check if the name is the same as the reflected name
+
 0.21.2 (2019-03-18)
 -------------------
 

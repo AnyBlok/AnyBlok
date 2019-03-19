@@ -957,6 +957,8 @@ class Migration:
         self.conn = registry.session.connection()
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
+        self.ddl_compiler = self.conn.dialect.ddl_compiler(
+            self.conn.dialect, None)
 
         opts = {
             'compare_server_default': True,
@@ -1009,24 +1011,17 @@ class Migration:
         this method check if the truncated name is the same that no truncated
         name and if the constraint text is the same: return True else False
         """
-        same_name = False
         if constraint.name.startswith(reflected_constraint['name']):
             # case SQLAlchemy < 1.3
-            same_name = True
+            return True
         else:
             # case SQLAlchemy >= 1.3
-            constraint_name = constraint.name.split('__')
-            reflected_constraint_name = reflected_constraint['name'].split('__')
-            if (
-                constraint_name[0] == reflected_constraint_name[0] and
-                constraint_name[1].startswith(reflected_constraint_name[1])
-            ):
-                same_name = True
+            truncated_name = self.ddl_compiler.preparer.format_constraint(
+                constraint)
+            if truncated_name == reflected_constraint['name']:
+                return True
 
-        if not same_name:
-            return False
-
-        return True
+        return False
 
     def detect_check_constraint_changed(self, inspector):
         diff = []
