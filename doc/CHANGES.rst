@@ -5,6 +5,7 @@
 ..    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -13,11 +14,37 @@
 CHANGELOG
 =========
 
-1.0.0
------
+0.21.3 (2019-03-19)
+-------------------
 
-* Fixed alias. The ``Model.aliased`` method link the registry into alias. The goal is 
+* Fixed issue #83, the name of constraint create by anyblok is truncated to check if the name is the same as the reflected name
+
+0.21.2 (2019-03-18)
+-------------------
+
+* Fixed truncated constraint, the sqltext is different in function of the DB type
+
+0.21.1 (2019-03-18)
+-------------------
+
+* Fixed pypi upload
+
+0.21.0 (2019-03-15)
+-------------------
+
+* Fixed alias. The ``Model.aliased`` method now binds the registry to the alias. The goal is 
   to use **hybrid_method** with alias in AnyBlok.
+* Fixed Column.Country, The latest version of pycountry does not raise a lookup exception
+  When the countries does not exist. Now AnyBlok takes this change into consideration to raise the exception
+  and keep the main behaviour
+* Fixed alias. Now the ``Model.aliased`` method links the registry instance into the aliased model.
+  The goal is to use `hybrid_method <https://docs.sqlalchemy.org/en/latest/orm/extensions/hybrid.html#sqlalchemy.ext.hybrid.hybrid_method>`_ 
+  decorator with alias in AnyBlok.
+* Fixed #60: Now DateTime plugins verify also the DateTime columns of the dependencies of the Model
+* Removed **Python 3.3** compatibility
+* Improved the NoResultFound Exception for query.one and query.dictone. Now the registry name of the model
+  is added to the exception's message
+* Fixed compatitibility with **SQLAlchemy > 1.3**
 
 0.20.0 (2018-09-10)
 -------------------

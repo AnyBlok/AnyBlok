@@ -704,7 +704,7 @@ class Many2Many(RelationShip):
                                      many2many="themodels")
 
     if the join_table is not defined, then the table join is
-        "join\_'local table'_and\_'remote table'"
+        "join_'local table'_and_'remote table'"
 
     .. warning::
 

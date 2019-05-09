@@ -12,6 +12,14 @@ python:
   - "3.7-dev"
   - "3.8-dev"
   - "nightly"
+  - "pypy3.5"
+
+
+matrix:
+  allow_failures:
+      - python: "3.8-dev"
+      - python: "nightly"
+      - python: "pypy3.5"
 
 env:
     global:
@@ -34,14 +42,18 @@ before_install:
 install:
   - pip install -U pip
   - pip install wheel
-  - pip install psycopg2 sqlalchemy  # for unittesting anyblok with postgres
+  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then pip install psycopg2cffi; else pip install psycopg2; fi
+  - pip install qlalchemy  # for unittesting anyblok with postgres
   - pip install flake8 coverage nose
   - pip install colour passlib furl phonenumbers pycountry  # special columns
   - pip install coveralls
-  - python setup.py develop
+  - pip install -U cryptography
+  - pip install -U coveralls
+  - pip install .
 
 script:
   - flake8 anyblok
+  - python3 update_env.py
   - psql -c 'create database travis_ci_test;' -U postgres
   - nosetests anyblok/tests -v -s --with-coverage --cover-package=anyblok
   - psql -c 'drop database travis_ci_test;' -U postgres

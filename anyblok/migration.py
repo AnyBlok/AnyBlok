@@ -46,7 +46,7 @@ class MigrationReport:
     def table_is_added(self, table):
         for action in self.actions:
             if action[0] == 'add_table' and action[1] is table:
-                    return True
+                return True
 
         return False
 
@@ -691,7 +691,7 @@ class MigrationConstraintUnique:
     def add(self, *columns):
         """ Add the constraint
 
-        :param \*column: list of column name
+        :param *column: list of column
         :rtype: MigrationConstraintUnique instance
         :exception: MigrationException
         """
@@ -743,7 +743,7 @@ class MigrationConstraintPrimaryKey:
     def add(self, *columns):
         """ Add the constraint
 
-        :param \*column: list of column name
+        :param *column: list of column
         :rtype: MigrationConstraintPrimaryKey instance
         :exception: MigrationException
         """
@@ -810,7 +810,7 @@ class MigrationIndex:
     def add(self, *columns, **kwargs):
         """ Add the constraint
 
-        :param \*column: list of column name
+        :param *column: list of column
         :rtype: MigrationIndex instance
         :exception: MigrationException
         """
@@ -892,7 +892,7 @@ class MigrationTable:
     def index(self, *columns, **kwargs):
         """ Get index
 
-        :param \*columns: List of the column's name
+        :param *columns: List of the column's name
         :rtype: MigrationIndex instance
         """
         return MigrationIndex(self, *columns, **kwargs)
@@ -900,7 +900,7 @@ class MigrationTable:
     def unique(self, name):
         """ Get unique
 
-        :param \*columns: List of the column's name
+        :param name: unique constraint's name
         :rtype: MigrationConstraintUnique instance
         """
         return MigrationConstraintUnique(self, name)
@@ -908,7 +908,7 @@ class MigrationTable:
     def check(self, name=None):
         """ Get check
 
-        :param \*columns: List of the column's name
+        :param name: check constraint's name
         :rtype: MigrationConstraintCheck instance
         """
         return MigrationConstraintCheck(self, name)
@@ -916,7 +916,6 @@ class MigrationTable:
     def primarykey(self):
         """ Get primary key
 
-        :param \*columns: List of the column's name
         :rtype: MigrationConstraintPrimaryKey instance
         """
         return MigrationConstraintPrimaryKey(self)
@@ -958,6 +957,8 @@ class Migration:
         self.conn = registry.session.connection()
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
+        self.ddl_compiler = self.conn.dialect.ddl_compiler(
+            self.conn.dialect, None)
 
         opts = {
             'compare_server_default': True,
@@ -1001,6 +1002,27 @@ class Migration:
         diff.extend(self.detect_pk_constraint_changed(inspector))
         return diff
 
+    def check_constraint_is_same(self, reflected_constraint, constraint):
+        """the goal is to detect if contrainst changed when the name is long
+
+        SQLAlchemy trunkated the name if function of database type (
+        postgres 63 characters)
+
+        this method check if the truncated name is the same that no truncated
+        name and if the constraint text is the same: return True else False
+        """
+        if constraint.name.startswith(reflected_constraint['name']):
+            # case SQLAlchemy < 1.3
+            return True
+        else:
+            # case SQLAlchemy >= 1.3
+            truncated_name = self.ddl_compiler.preparer.format_constraint(
+                constraint)
+            if truncated_name == reflected_constraint['name']:
+                return True
+
+        return False
+
     def detect_check_constraint_changed(self, inspector):
         diff = []
         for table in inspector.get_table_names():
@@ -1025,7 +1047,9 @@ class Migration:
                 todrop_ = todrop.copy()
                 for x in todrop_:
                     for y in toadd:
-                        if y.startswith(x):
+                        if self.check_constraint_is_same(
+                            reflected_constraints[x], constraints[y]
+                        ):
                             toadd.remove(y)
                             todrop.remove(x)
                             break

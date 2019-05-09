@@ -1091,10 +1091,11 @@ class Country(Column):
 
     def setter_format_value(self, value):
         if value and not isinstance(value, self.sqlalchemy_type.python_type):
-            try:
-                value = pycountry.countries.get(**{self.mode: value})
-            except LookupError:
-                value = pycountry.countries.lookup(value)
+            value = pycountry.countries.get(
+                **{
+                    self.mode: value,
+                    'default': pycountry.countries.lookup(value)
+                })
 
         return value
 
