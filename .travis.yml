@@ -16,7 +16,7 @@ python:
 matrix:
   include:
       - python: "pypy3.5"
-        env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres
+        env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
 
 env:
     global:
