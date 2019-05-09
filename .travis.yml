@@ -22,8 +22,8 @@ env:
     global:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
     matrix:
-        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres
-        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis
+        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
+        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
 
 virtualenv:
   system_site_packages: false
@@ -51,9 +51,9 @@ install:
 script:
   - flake8 anyblok
   - python3 update_env.py
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'postgresql' ]]; then psql -c 'create database travis_ci_test;' -U postgres; else mysql -e 'CREATE DATABASE IF NOT EXISTS travis_ci_test;'; fi
+  - $SQLSERVER 'create database travis_ci_test;'
   - nosetests anyblok/tests -v -s --with-coverage --cover-package=anyblok
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'postgresql' ]]; then psql -c 'drop database travis_ci_test;' -U postgres; else mysql -e 'drop DATABASE travis_ci_test;'; fi
+  - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks
   - nosetests anyblok/bloks --with-anyblok-bloks -v -s --with-coverage --cover-package=anyblok
   - anyblok_nose -- -v -s --with-coverage --cover-package=anyblok  # test runner
