@@ -1,22 +1,31 @@
 language: python
+dist: xenial
 sudo: true
 addons:
     postgresql: "9.6"
 
 python:
-  - "3.3"
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.6-dev"
+  - "3.7"
   - "3.7-dev"
+  - "3.8-dev"
   - "nightly"
+
+env:
+    global:
+        - ANYBLOK_DATABASE_NAME=travis_ci_test
+    matrix:
+        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres
+        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis
 
 virtualenv:
   system_site_packages: false
 
 services:
   - postgresql
+  - mysql
 
 before_install:
   - sudo apt-get update
@@ -24,24 +33,12 @@ before_install:
 
 install:
   - pip install -U pip
-  # only eggs: do an erreur with wheel
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.3' ]]; then pip install testfixtures; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.7-dev' ]]; then pip install python_editor texttable PyYAML; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install python_editor texttable PyYAML; fi
-  # only wheel
   - pip install wheel
   - pip install psycopg2 sqlalchemy  # for unittesting anyblok with postgres
   - pip install flake8 coverage nose
   - pip install colour passlib furl phonenumbers pycountry  # special columns
-  - if [[ $TRAVIS_PYTHON_VERSION != '3.3' ]]; then pip install cryptography; fi
   - pip install coveralls
   - python setup.py develop
-
-env:
-  global:
-    - ANYBLOK_DATABASE_NAME=travis_ci_test
-    - ANYBLOK_DATABASE_DRIVER=postgresql
-    - ANYBLOK_DATABASE_USER=postgres
 
 script:
   - flake8 anyblok
