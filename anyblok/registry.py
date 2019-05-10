@@ -466,8 +466,8 @@ class Registry:
             ),
             listeners=[]
         )
-        # if url.drivername.startswith('mysql'):
-        #     options['listeners'].append(DontBeSilly())
+        if url.drivername.startswith('mysql'):
+            options['listeners'].append(DontBeSilly())
 
         return options
 
