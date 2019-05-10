@@ -26,6 +26,8 @@ from anyblok.common import anyblok_column_prefix, naming_convention
 from pkg_resources import iter_entry_points
 from .version import parse_version
 from .logging import log
+import sqlalchemy.interfaces
+
 logger = getLogger(__name__)
 
 
@@ -46,6 +48,15 @@ def return_list(entry):
         entry = [entry]
 
     return entry
+
+
+class DontBeSilly(sqlalchemy.interfaces.PoolListener):
+    def connect(self, dbapi_con, connection_record):
+        cur = dbapi_con.cursor()
+        cur.execute("SET autocommit = 0;")
+        cur.execute("SET SESSION sql_mode='TRADITIONAL';")
+        cur.execute("START TRANSACTION;")
+        cur = None
 
 
 class RegistryManager:
@@ -442,9 +453,9 @@ class Registry:
             self.bind = self.engine
             self.unittest_transaction = None
 
-    def init_engine_options(self):
+    def init_engine_options(self, url):
         """Define the options to initialize the engine"""
-        return dict(
+        options = dict(
             echo=Configuration.get('db_echo') or False,
             max_overflow=Configuration.get('db_max_overflow') or 10,
             echo_pool=Configuration.get('db_echo_pool') or False,
@@ -453,15 +464,20 @@ class Registry:
                 'isolation_level',
                 Configuration.get('isolation_level', 'READ_UNCOMMITTED')
             ),
+            listeners=[]
         )
+        # if url.drivername.startswith('mysql'):
+        #     options['listeners'].append(DontBeSilly())
+
+        return options
 
     def init_engine(self, db_name=None):
         """Define the engine
 
         :param db_name: name of the database to link
         """
-        kwargs = self.init_engine_options()
         url = Configuration.get('get_url', get_url)(db_name=db_name)
+        kwargs = self.init_engine_options(url)
         self.rw_engine = create_engine(url, **kwargs)
 
     @property

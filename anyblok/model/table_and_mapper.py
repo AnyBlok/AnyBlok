@@ -22,6 +22,7 @@ class TableMapperPlugin(ModelPluginBase):
         properties['add_in_table_args'] = []
         if 'table_args' not in transformation_properties:
             transformation_properties['table_args'] = False
+            transformation_properties['table_kwargs'] = False
         if 'mapper_args' not in transformation_properties:
             transformation_properties['mapper_args'] = False
 
@@ -54,6 +55,9 @@ class TableMapperPlugin(ModelPluginBase):
 
         if hasattr(base, 'define_table_args'):
             transformation_properties['table_args'] = True
+
+        if hasattr(base, 'define_table_kwargs'):
+            transformation_properties['table_kwargs'] = True
 
         if hasattr(base, 'define_mapper_args'):
             transformation_properties['mapper_args'] = True
@@ -95,6 +99,23 @@ class TableMapperPlugin(ModelPluginBase):
             new_base.define_table_args = classmethod(define_table_args)
             transformation_properties['table_args'] = True
 
+        if self.registry.engine.url.drivername.startswith('mysql'):
+            def define_table_kwargs(cls_):
+                res = {}
+                if cls_.__registry_name__ == namespace:
+                    res = super(new_base, cls_).define_table_kwargs()
+
+                res.update(dict(
+                    mysql_engine='InnoDB',
+                    mysql_charset='utf8mb4',
+                    mysql_key_block_size="1024"
+                ))
+
+                return res
+
+            new_base.define_table_kwargs = classmethod(define_table_kwargs)
+            transformation_properties['table_kwargs'] = True
+
         self.insert_in_bases_table_args(new_base, transformation_properties)
         self.insert_in_bases_mapper_args(new_base, transformation_properties)
 
@@ -104,10 +125,26 @@ class TableMapperPlugin(ModelPluginBase):
         :param new_base: the base to be put on front of all bases
         :param transformation_properties: the properties of the model
         """
-        if transformation_properties['table_args']:
+        if (
+            transformation_properties['table_args'] and
+            transformation_properties['table_kwargs']
+        ):
+
+            def __table_args__(cls_):
+                res = cls_.define_table_args() + (cls_.define_table_kwargs(),)
+                return res
+
+            new_base.__table_args__ = declared_attr(__table_args__)
+        elif transformation_properties['table_args']:
 
             def __table_args__(cls_):
                 return cls_.define_table_args()
+
+            new_base.__table_args__ = declared_attr(__table_args__)
+        elif transformation_properties['table_kwargs']:
+
+            def __table_args__(cls_):
+                return cls_.define_table_kwargs()
 
             new_base.__table_args__ = declared_attr(__table_args__)
 
