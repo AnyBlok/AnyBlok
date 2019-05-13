@@ -7,7 +7,7 @@ addons:
 python:
     #   - "3.4"
     #   - "3.5"
-  - "3.6"
+    #   - "3.6"
   - "3.7"
     #   - "3.7-dev"
     #   - "3.8-dev"
@@ -22,7 +22,7 @@ env:
     global:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
     matrix:
-        # - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
+        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
         - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
 
 virtualenv:
