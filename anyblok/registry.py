@@ -53,9 +53,8 @@ def return_list(entry):
 class DontBeSilly(sqlalchemy.interfaces.PoolListener):
     def connect(self, dbapi_con, connection_record):
         cur = dbapi_con.cursor()
-        cur.execute("SET autocommit = 0;")
+        cur.execute("SET autocommit=0;")
         cur.execute("SET SESSION sql_mode='TRADITIONAL';")
-        cur.execute("START TRANSACTION;")
         cur = None
 
 
@@ -466,8 +465,8 @@ class Registry:
             ),
             listeners=[]
         )
-        # if url.drivername.startswith('mysql'):
-        #     options['listeners'].append(DontBeSilly())
+        if url.drivername.startswith('mysql'):
+            options['listeners'].append(DontBeSilly())
 
         return options
 
@@ -900,6 +899,7 @@ class Registry:
             self.Session = scoped_session(
                 sessionmaker(bind=bind, class_=Session, extension=extension),
                 EnvironmentManager.scoped_function_for_session())
+
             self.nb_query_bases = len(self.loaded_cores['Query'])
             self.nb_session_bases = len(self.loaded_cores['Session'])
             self.apply_session_events()

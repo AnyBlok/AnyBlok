@@ -8,6 +8,8 @@ from contextlib import contextmanager
 from sqlalchemy import func, select, update, join, and_
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.dialects.mysql.types import TINYINT
+from sqlalchemy.sql.sqltypes import Boolean
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -252,6 +254,16 @@ class MigrationReport:
         else:
             return True
 
+    def init_modify_type(self, diff):
+        if self.migration.conn.engine.url.drivername.startswith('mysql'):
+            if isinstance(diff[5], TINYINT) and isinstance(diff[6], Boolean):
+                # Boolean are TINYINT in MySQL DataBase
+                return True
+
+        self.log_names.append("Modify column type %s.%s : %s => %s" % (
+            diff[2], diff[3], diff[5], diff[6]))
+        return False
+
     def __init__(self, migration, diffs):
         """ Initializer
 
@@ -278,6 +290,7 @@ class MigrationReport:
             'remove_column': self.init_remove_column,
             'remove_table': self.init_remove_table,
             'change_pk': self.init_change_pk,
+            'modify_type': self.init_modify_type,
         }
         for diff in diffs:
             if isinstance(diff, list):
@@ -285,6 +298,13 @@ class MigrationReport:
                 for change in diff:
                     _, _, table, column, _, _, _ = change
                     self.log_names.append('Alter %s.%s' % (table, column))
+                    fnct = mappers.get(change[0])
+                    if fnct:
+                        if fnct(change):
+                            continue
+                    else:
+                        logger.warn('Unknow diff: %r', change)
+
                     self.actions.append(change)
             else:
                 fnct = mappers.get(diff[0])
@@ -414,7 +434,6 @@ class MigrationReport:
             'remove_table': self.apply_remove_table,
             'remove_column': self.apply_remove_column,
         }
-
         for action in self.actions:
             fnct = mappers.get(action[0])
             if fnct:
@@ -954,7 +973,7 @@ class Migration:
 
     def __init__(self, registry):
         self.withoutautomigration = registry.withoutautomigration
-        self.conn = registry.session.connection()
+        self.conn = registry.connection()
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
         self.ddl_compiler = self.conn.dialect.ddl_compiler(
