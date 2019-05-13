@@ -27,7 +27,7 @@ class Model:
 
         return self.name
 
-    name = String(size=190, primary_key=True)
+    name = String(size=256, primary_key=True)
     table = String(size=256)
     is_sql_model = Boolean(label="Is a SQL model")
     description = Function(fget='get_model_doc_string')
