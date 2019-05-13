@@ -230,6 +230,9 @@ class DBTestCase(TestCase):
         """
         if self.registry:
             self.registry.close()
+            if self.registry.engine.url.drivername.startswith('mysql'):
+                self.createdb()
+
 
         RegistryManager.clear()
         BlokManager.unload()
