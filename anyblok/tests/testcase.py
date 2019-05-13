@@ -233,7 +233,6 @@ class DBTestCase(TestCase):
             if self.registry.engine.url.drivername.startswith('mysql'):
                 self.createdb()
 
-
         RegistryManager.clear()
         BlokManager.unload()
         clear_mappers()
