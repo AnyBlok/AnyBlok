@@ -5,18 +5,18 @@ addons:
     postgresql: "9.6"
 
 python:
-    #   - "3.4"
-    #   - "3.5"
-    #   - "3.6"
-  - "3.7"
-    #   - "3.7-dev"
-    #   - "3.8-dev"
-    #   - "nightly"
+    - "3.4"
+    - "3.5"
+    - "3.6"
+    - "3.7"
+    - "3.7-dev"
+    - "3.8-dev"
+    - "nightly"
 
-    # matrix:
-    #   include:
-    #       - python: "pypy3.5"
-    #         env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
+    matrix:
+      include:
+          - python: "pypy3.5"
+            env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
 
 env:
     global:
