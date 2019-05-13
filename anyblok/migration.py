@@ -1043,6 +1043,10 @@ class Migration:
         return False
 
     def detect_check_constraint_changed(self, inspector):
+        if self.conn.engine.url.drivername.startswith('mysql'):
+            # MySQL don t return the reflected constraint
+            return []
+
         diff = []
         for table in inspector.get_table_names():
             if table not in self.metadata.tables:
@@ -1060,10 +1064,6 @@ class Migration:
             }
             todrop = set(reflected_constraints.keys()) - set(constraints.keys())
             toadd = set(constraints.keys()) - set(reflected_constraints.keys())
-            if (reflected_constraints.keys() or constraints.keys()):
-                import ipdb
-                ipdb.set_trace()
-                pass
 
             if toadd and todrop:
                 # check a constraint have not been truncated
@@ -1083,8 +1083,6 @@ class Migration:
             for ck in toadd:
                 diff.append(('add_ck', table, constraints[ck]))
 
-        import ipdb
-        ipdb.set_trace()
         return diff
 
     def detect_pk_constraint_changed(self, inspector):

@@ -105,7 +105,7 @@ def anyblok_createdb():
         bloks = list(set(install_bloks + iou_bloks))
 
     registry.upgrade(install=bloks)
-    # registry.commit()
+    registry.commit()
     registry.close()
 
 
