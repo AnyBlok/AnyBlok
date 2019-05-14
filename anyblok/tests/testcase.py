@@ -538,6 +538,9 @@ def sgdb_in(databases):
     engine = create_engine(get_url(db_name=''))
     for database in databases:
         if engine.url.drivername.startswith('mysql'):
+            if database == 'MySQL':
+                return True
+
             res = engine.execute("""
                 show variables like 'version'
             """).fetchone()

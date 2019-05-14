@@ -451,6 +451,7 @@ class TestColumns(DBTestCase):
         registry.Test.query().update(dict(col=None))
         self.assertIsNone(test.col)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_1_by_query(self):
         import datetime
         import time
@@ -465,6 +466,7 @@ class TestColumns(DBTestCase):
         registry.expire(test, ['col'])
         self.assertEqual(test.col, now)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_2_by_query(self):
         import datetime
         import time
@@ -479,6 +481,7 @@ class TestColumns(DBTestCase):
         registry.expire(test, ['col'])
         self.assertEqual(test.col, now)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_3_by_query(self):
         import datetime
         import time
@@ -493,6 +496,7 @@ class TestColumns(DBTestCase):
         registry.expire(test, ['col'])
         self.assertEqual(test.col, now)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_4_by_query(self):
         import datetime
         import time
@@ -507,6 +511,7 @@ class TestColumns(DBTestCase):
         registry.expire(test, ['col'])
         self.assertEqual(test.col, now.replace(microsecond=0))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_by_query_filter(self):
         import datetime
         import time
@@ -519,6 +524,7 @@ class TestColumns(DBTestCase):
         Test = registry.Test
         self.assertIs(Test.query().filter(Test.col == now).one(), test)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_1_by_query_filter(self):
         import datetime
         import time
@@ -534,6 +540,7 @@ class TestColumns(DBTestCase):
                 Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%z')).one(),
             test)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_2_by_query_filter(self):
         import datetime
         import time
@@ -549,6 +556,7 @@ class TestColumns(DBTestCase):
                 Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')).one(),
             test)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_3_by_query_filter(self):
         import datetime
         import time
