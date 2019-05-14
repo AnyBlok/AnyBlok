@@ -78,10 +78,10 @@ class TableMapperPlugin(ModelPluginBase):
                 new_base, namespace, table_args)
             transformation_properties['table_args'] = True
 
-        if self.registry.engine.url.drivername.startswith('mysql'):
-            new_base.define_table_kwargs = self.define_table_kwargs(
-                new_base, namespace)
-            transformation_properties['table_kwargs'] = True
+        if transformation_properties['table_kwargs'] is True:
+            if self.registry.engine.url.drivername.startswith('mysql'):
+                new_base.define_table_kwargs = self.define_table_kwargs(
+                    new_base, namespace)
 
         self.insert_in_bases_table_args(new_base, transformation_properties)
         self.insert_in_bases_mapper_args(new_base, transformation_properties)
