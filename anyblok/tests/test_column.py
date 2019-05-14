@@ -517,8 +517,6 @@ class TestColumns(DBTestCase):
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert(col=now)
         Test = registry.Test
-        import ipdb
-        ipdb.set_trace()
         self.assertIs(Test.query().filter(Test.col == now).one(), test)
 
     def test_datetime_str_conversion_1_by_query_filter(self):
