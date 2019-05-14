@@ -539,15 +539,18 @@ def sgdb_in(databases):
     for database in databases:
         if engine.url.drivername.startswith('mysql'):
             if database == 'MariaDB':
-                res = engine.execute("""
-                    select count(*)
-                    from INFORMATION_SCHEMA.SYSTEM_VARIABLES
-                    where
-                        VARIABLE_NAME='version'
-                        and (SESSION_VALUE like '%%MariaDB%%'
-                             or GLOBAL_VALUE like '%%MariaDB%%');
-                """).fetchone()
-                if res and res[0]:
-                    return True
+                try:
+                    res = engine.execute("""
+                        select count(*)
+                        from INFORMATION_SCHEMA.SYSTEM_VARIABLES
+                        where
+                            VARIABLE_NAME='version'
+                            and (SESSION_VALUE like '%%MariaDB%%'
+                                 or GLOBAL_VALUE like '%%MariaDB%%');
+                    """).fetchone()
+                    if res and res[0]:
+                        return True
+                except Exception:
+                    pass
 
     return False
