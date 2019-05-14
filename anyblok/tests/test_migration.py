@@ -123,6 +123,9 @@ class TestMigration(TestCase):
 
     def tearDown(self):
         super(TestMigration, self).tearDown()
+        if not hasattr(self, 'registry'):
+            return
+
         for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget',
                       'testunique', 'reltab', 'testm2m1', 'testm2m2',
                       'testfk2', 'testcheck', 'testchecklongconstraintname',
