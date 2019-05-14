@@ -769,6 +769,7 @@ class TestColumns(DBTestCase):
         t = registry.Test.insert()
         self.assertIsNone(t.col)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #90')
     def test_selection_change_by_query(self):
         SELECTIONS = [
             ('admin', 'Admin'),
@@ -1239,6 +1240,7 @@ class TestColumns(DBTestCase):
             registry.Test.insert(col='WG')
 
     @skipIf(not has_pycountry, "pycountry is not installed")
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #90')
     def test_pycoundtry_query_insert_by_wrong_query(self):
         registry = self.init_registry(simple_column, ColumnType=Country)
         with self.assertRaises(Exception):
