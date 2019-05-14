@@ -692,7 +692,7 @@ class TestColumns(DBTestCase):
     def test_large_binary(self):
         from os import urandom
 
-        blob = urandom(100000)
+        blob = urandom(10000)
         registry = self.init_registry(simple_column, ColumnType=LargeBinary)
 
         test = registry.Test.insert(col=blob)
