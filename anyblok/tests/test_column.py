@@ -7,7 +7,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase, DBTestCase
+from anyblok.tests.testcase import TestCase, DBTestCase, sgdb_in
 from anyblok.config import Configuration
 from sqlalchemy import Integer as SA_Integer, String as SA_String
 from sqlalchemy.exc import StatementError
@@ -831,18 +831,21 @@ class TestColumns(DBTestCase):
         registry.Test.query().filter(
             registry.Test.col.in_(['admin', 'regular-user'])).first()
 
+    @skipIf(sgdb_in(['MariaDB']), 'JSON is not existing in this SGDB')
     def test_json(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         val = {'a': 'Test'}
         test = registry.Test.insert(col=val)
         self.assertEqual(test.col, val)
 
+    @skipIf(sgdb_in(['MariaDB']), 'JSON is not existing in this SGDB')
     def test_json_update(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         test = registry.Test.insert(col={'a': 'test'})
         test.col['b'] = 'test'
         self.assertEqual(test.col, {'a': 'test', 'b': 'test'})
 
+    @skipIf(sgdb_in(['MariaDB']), 'JSON is not existing in this SGDB')
     def test_json_simple_filter(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test
@@ -854,6 +857,7 @@ class TestColumns(DBTestCase):
                 Test.col['a'].cast(SA_String) == '"test"').count(),
             2)
 
+    @skipIf(sgdb_in(['MariaDB']), 'JSON is not existing in this SGDB')
     def test_json_null(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test

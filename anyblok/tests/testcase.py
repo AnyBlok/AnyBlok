@@ -14,13 +14,13 @@ itself, in so-called "framework tests".
 
 import unittest
 import os
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_url
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
 import sqlalchemy
 from sqlalchemy.orm import clear_mappers
-from sqlalchemy import event
+from sqlalchemy import event, create_engine
 from sqlalchemy_utils.functions import database_exists, create_database, orm
 from copy import copy
 from testfixtures import LogCapture as LC
@@ -532,3 +532,22 @@ def skip_unless_bloks_installed(*bloks):
         wrapped.__name__ = testmethod.__name__
         return wrapped
     return bloks_decorator
+
+
+def sgdb_in(databases):
+    engine = create_engine(get_url(db_name=''))
+    for database in databases:
+        if engine.url.drivername.startswith('mysql'):
+            if database == 'MariaDB':
+                res = engine.execute("""
+                    select count(*)
+                    from INFORMATION_SCHEMA.SYSTEM_VARIABLES
+                    where
+                        VARIABLE_NAME='version'
+                        and (SESSION_VALUE like '%%MariaDB%%'
+                             or GLOBAL_VALUE like '%%MariaDB%%');
+                """).fetchone()
+                if res and res[0]:
+                    return True
+
+    return False
