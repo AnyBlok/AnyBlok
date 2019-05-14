@@ -955,6 +955,7 @@ class TestColumns(DBTestCase):
         t = registry.Test.insert()
         self.assertEqual(t.val, 'val')
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89')
     def test_sequence(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence)
         self.assertEqual(registry.Test.insert().col, "1")
@@ -965,12 +966,14 @@ class TestColumns(DBTestCase):
         self.assertEqual(
             Seq.query().filter(Seq.code == 'Model.Test=>col').count(), 1)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89')
     def test_sequence_with_primary_key(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       primary_key=True)
         self.assertEqual(registry.Test.insert().col, "1")
         self.assertEqual(registry.Test.insert().col, "2")
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89')
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       code="SO", formater="{code}-{seq:06d}")
