@@ -13,17 +13,17 @@ python:
     - "3.8-dev"
     - "nightly"
 
-matrix:
-  include:
-      - python: "pypy3.5"
-        env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
-
 env:
     global:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
     matrix:
         - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
         - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
+
+matrix:
+  include:
+      - python: "pypy3.5"
+        env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
 
 virtualenv:
   system_site_packages: false
