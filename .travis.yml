@@ -26,6 +26,8 @@ matrix:
       - python: "3.8-dev"
       - python: "nightly"
       - python: "pypy3.5"
+    include:
+      - python: "pypy3.5"
         env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
     exclude:
       - python: "3.4"
