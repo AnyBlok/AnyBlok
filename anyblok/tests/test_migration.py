@@ -7,10 +7,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase
+from anyblok.tests.testcase import TestCase, sgdb_in
+from unittest import skipIf
 from anyblok.registry import Registry, RegistryManager
 from anyblok.blok import BlokManager
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_url
 from anyblok.environment import EnvironmentManager
 from anyblok.column import Integer as Int, String as Str
 from anyblok.migration import MigrationException
@@ -18,7 +19,7 @@ from anyblok.relationship import Many2Many
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT, CheckConstraint
 from anyblok import Declarations
-from sqlalchemy.exc import InternalError, IntegrityError
+from sqlalchemy.exc import InternalError, IntegrityError, OperationalError
 from copy import deepcopy
 from sqlalchemy.orm import clear_mappers
 
@@ -37,6 +38,8 @@ class TestMigration(TestCase):
 
         cls.loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
         EnvironmentManager.set('current_blok', 'anyblok-core')
+        url = get_url()
+        is_not_mysql = not url.drivername.startswith('mysql')
 
         @register(Model)
         class Test:
@@ -53,28 +56,29 @@ class TestMigration(TestCase):
             integer = Int(primary_key=True)
             other = Str(index=True)
 
-        @register(Model)
-        class TestCheck:
-            integer = Int(primary_key=True)
+        if is_not_mysql:
+            @register(Model)
+            class TestCheck:
+                integer = Int(primary_key=True)
 
-            @classmethod
-            def define_table_args(cls):
-                table_args = super(TestCheck, cls).define_table_args()
-                return table_args + (
-                    CheckConstraint('integer > 0', name='test'),)
+                @classmethod
+                def define_table_args(cls):
+                    table_args = super(TestCheck, cls).define_table_args()
+                    return table_args + (
+                        CheckConstraint('integer > 0', name='test'),)
 
-        @register(Model)
-        class TestCheckLongConstraintName:
-            integer = Int(primary_key=True)
+            @register(Model)
+            class TestCheckLongConstraintName:
+                integer = Int(primary_key=True)
 
-            @classmethod
-            def define_table_args(cls):
-                table_args = super(TestCheckLongConstraintName,
-                                   cls).define_table_args()
-                return table_args + (
-                    CheckConstraint('integer > 0', name=(
-                        'long_long_long_long_long_long_long_long_long_long_'
-                        'long_long_long_long_long_long_long_long_test')),)
+                @classmethod
+                def define_table_args(cls):
+                    table_args = super(TestCheckLongConstraintName,
+                                       cls).define_table_args()
+                    return table_args + (
+                        CheckConstraint('integer > 0', name=(
+                            'long_long_long_long_long_long_long_long_long_long_'
+                            'long_long_long_long_long_long_long_long_test')),)
 
         @register(Model)
         class TestFKTarget:
@@ -123,21 +127,23 @@ class TestMigration(TestCase):
 
     def tearDown(self):
         super(TestMigration, self).tearDown()
-        if not hasattr(self, 'registry'):
-            return
+        if hasattr(self, 'registry'):
+            for table in ('test', 'test2', 'othername', 'testfk',
+                          'testfktarget', 'testunique', 'reltab', 'testm2m1',
+                          'testm2m2', 'testfk2', 'testcheck',
+                          'testchecklongconstraintname', 'testindex'):
+                try:
+                    self.registry.migration.table(table).drop()
+                except Exception:
+                    pass
 
-        for table in ('test', 'test2', 'othername', 'testfk', 'testfktarget',
-                      'testunique', 'reltab', 'testm2m1', 'testm2m2',
-                      'testfk2', 'testcheck', 'testchecklongconstraintname',
-                      'testindex'):
-            try:
-                self.registry.migration.table(table).drop()
-            except Exception:
-                pass
+            self.registry.migration.conn.close()
+            clear_mappers()
+            self.registry.close()
 
-        self.registry.migration.conn.close()
-        clear_mappers()
-        self.registry.close()
+        url = get_url()
+        if url.drivername.startswith('mysql'):
+            self.createdb()
 
     @contextmanager
     def cnx(self):
@@ -148,6 +154,7 @@ class TestMigration(TestCase):
             cnx.execute("rollback")
             raise
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Can't create empty table")
     def test_add_table(self):
         self.registry.migration.table().add('test2')
         self.registry.migration.table('test2')
@@ -250,7 +257,7 @@ class TestMigration(TestCase):
     def test_alter_column_nullable(self):
         t = self.registry.migration.table('test')
         c = t.column('other').alter(nullable=False)
-        self.assertFalse(c.nullable())
+        self.assertFalse(c.nullable)
 
     def test_alter_column_nullable_in_filled_table(self):
         t = self.registry.migration.table('test')
@@ -258,12 +265,13 @@ class TestMigration(TestCase):
         self.fill_test_table()
         c = t.column('new_column').alter(nullable=False)
         # the column doesn't change of nullable to not lock the migration
-        self.assertTrue(c.nullable())
+        self.assertTrue(c.nullable)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for postgres")
     def test_alter_column_default(self):
         t = self.registry.migration.table('test')
         c = t.column('other').alter(server_default='test')
-        self.assertEqual(c.server_default(), "'test'::character varying")
+        self.assertEqual(c.server_default, "'test'::character varying")
 
     def test_index(self):
         t = self.registry.migration.table('test')
@@ -273,7 +281,7 @@ class TestMigration(TestCase):
     def test_alter_column_type(self):
         t = self.registry.migration.table('test')
         c = t.column('other').alter(type_=TEXT)
-        self.assertEqual(c.type().__class__, TEXT)
+        self.assertEqual(c.type.__class__.__name__, TEXT.__name__)
 
     def test_alter_column_primary_key(self):
         t = self.registry.migration.table('test')
@@ -902,5 +910,5 @@ class TestMigration(TestCase):
     def test_savepoint_without_rollback(self):
         self.registry.migration.savepoint('test')
         self.registry.migration.release_savepoint('test')
-        with self.assertRaises(InternalError):
+        with self.assertRaises((InternalError, OperationalError)):
             self.registry.migration.rollback_savepoint('test')

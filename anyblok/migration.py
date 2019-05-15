@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
@@ -566,21 +566,20 @@ class MigrationColumn:
         :param column: sqlalchemy column
         :rtype: MigrationColumn instance
         """
+        migration = self.table.migration
         nullable = column.nullable
         if not nullable:
             column.nullable = True
 
-        self.table.migration.operation.impl.add_column(self.table.name, column)
+        migration.operation.impl.add_column(self.table.name, column)
         self.apply_default_value(column)
 
         if not nullable:
             c = MigrationColumn(self.table, column.name)
-            c.alter(existing_type=column.type,
-                    existing_server_default=column.server_default,
-                    existing_autoincrement=column.autoincrement,
-                    existing_nullable=True, nullable=False)
+            c.alter(nullable=False, )
 
-        self.table.migration.metadata.tables[self.table.name]
+        # check the table exist
+        migration.metadata.tables[self.table.name]
         return MigrationColumn(self.table, column.name)
 
     def alter(self, **kwargs):
@@ -595,22 +594,26 @@ class MigrationColumn:
 
         :param new_column_name: New name for the column
         :param type_: New sqlalchemy type
-        :param existing_type: Old sqlalchemy type
         :param server_default: The default value in database server
-        :param existing_server_default: Old default value
         :param nullable: New nullable value
-        :param existing_nullable: Old nullable value
-        :param autoincrement: New auto increment use for Integer whith primary
-            key only
-        :param existing_autoincrement: Old auto increment
+        :param comment: New comment value
         :rtype: MigrationColumn instance
         """
         vals = {}
         name = self.name
+        vals.update({
+            'existing_type': self.type if 'type_' not in kwargs else None,
+            'existing_server_default': (
+                self.server_default
+                if 'server_default' not in kwargs
+                else None),
+            'existing_autoincrement': (
+                self.autoincrement if 'autoincrement' not in kwargs else None),
+            'existing_comment': (
+                self.comment if 'comment' not in kwargs else None)
+        })
 
-        for k in ('existing_type', 'existing_server_default',
-                  'existing_nullable', 'existing_autoincrement',
-                  'autoincrement', 'server_default', 'type_'):
+        for k in ('autoincrement', 'server_default', 'type_'):
             if k in kwargs:
                 vals[k] = kwargs[k]
 
@@ -624,13 +627,20 @@ class MigrationColumn:
 
         if 'nullable' in kwargs:
             nullable = kwargs['nullable']
+            vals['existing_nullable'] = (
+                self.nullable if 'nullable' in kwargs else None),
             savepoint = '%s_not_null' % name
             try:
                 self.table.migration.savepoint(savepoint)
                 self.table.migration.operation.alter_column(
                     self.table.name, self.name, nullable=nullable, **vals)
             except IntegrityError as e:
+                # POSTGRES
                 self.table.migration.rollback_savepoint(savepoint)
+                logger.warn(str(e))
+            except OperationalError as e:
+                # MariaDB, MySQL
+                # No save point, because already rollbacked
                 logger.warn(str(e))
 
         return MigrationColumn(self.table, name)
@@ -639,17 +649,45 @@ class MigrationColumn:
         """ Drop the column """
         self.table.migration.operation.drop_column(self.table.name, self.name)
 
+    @property
     def nullable(self):
         """ Use for unittest return if the column is nullable """
         return self.info['nullable']
 
+    @property
     def type(self):
         """ Use for unittest: return the column type """
         return self.info['type']
 
+    @property
     def server_default(self):
         """ Use for unittest: return the default database value """
-        return self.info['default']
+        sdefault = self.info['default']
+        if self.table.migration.conn.engine.url.drivername.startswith(
+            'mysql'
+        ):
+            if sdefault:
+                if not isinstance(sdefault, str):
+                    return sdefault.arg
+                else:
+                    return eval(sdefault, {}, {})
+
+        return sdefault
+
+    @property
+    def comment(self):
+        """ Use for unittest: return the default database value """
+        return self.info['comment']
+
+    @property
+    def autoincrement(self):
+        """ Use for unittest: return the default database value """
+        table = self.table.migration.metadata.tables[self.table.name]
+        primary_keys = [x.name for x in table.primary_key.columns]
+        if self.name in primary_keys:
+            return False
+
+        return self.info.get('autoincrement')
 
 
 class MigrationConstraintCheck:
@@ -724,8 +762,12 @@ class MigrationConstraintUnique:
             self.table.migration.savepoint(savepoint)
             self.table.migration.operation.create_unique_constraint(
                 self.name, self.table.name, columns_name)
-        except IntegrityError as e:
-            self.table.migration.rollback_savepoint(savepoint)
+        except (IntegrityError, OperationalError) as e:
+            if not self.table.migration.conn.engine.url.drivername.startswith(
+                'mysql'
+            ):
+                self.table.migration.rollback_savepoint(savepoint)
+
             logger.warn("Error during the add of new unique constraint %r on "
                         "table %r and columns %r : %r " % (self.name,
                                                            self.table.name,
