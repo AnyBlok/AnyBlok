@@ -29,7 +29,7 @@ class Parameter:
     """
 
     key = String(primary_key=True)
-    # value = Json(nullable=False)
+    value = Json(nullable=False)
     multi = Boolean(default=False)
 
     @classmethod
