@@ -21,12 +21,16 @@ env:
         - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
 
 matrix:
-  include:
+    allow_failures:
+      - python: "3.7-dev"
+      - python: "3.8-dev"
+      - python: "nightly"
       - python: "pypy3.5"
         env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
-  exclude:
+    exclude:
       - python: "3.4"
         env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
+
 
 virtualenv:
   system_site_packages: false
