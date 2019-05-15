@@ -283,6 +283,7 @@ class TestMigration(TestCase):
         c = t.column('other').alter(type_=TEXT)
         self.assertEqual(c.type.__class__.__name__, TEXT.__name__)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Can't drop primary key issue #92")
     def test_alter_column_primary_key(self):
         t = self.registry.migration.table('test')
         t.primarykey().drop().add(t.column('other'))
@@ -298,6 +299,8 @@ class TestMigration(TestCase):
         t.unique(name='test_unique_constraint').add(t.column('other'))
         t.unique(name='test_unique_constraint').drop()
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']),
+            "Can't drop check constraint issue #93")
     def test_constraint_check(self):
         t = self.registry.migration.table('test')
         Test = self.registry.Test
@@ -305,6 +308,7 @@ class TestMigration(TestCase):
         # particuliar case of check constraint
         t.check('anyblok_ck_test__test').drop()
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_under_noautocommit_flag(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -318,6 +322,7 @@ class TestMigration(TestCase):
         with self.assertRaises(MigrationException):
             self.registry.migration.detect_changed()
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_column_added(self):
         # Remove a column on the table force the detection to found new column
         # which is existing in metadata but not in table
@@ -331,6 +336,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Add test.other"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_table_removed(self):
         with self.cnx() as conn:
             conn.execute(
@@ -346,6 +352,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has("Drop Table test2"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_table_removed_with_reinit_column(self):
         with self.cnx() as conn:
             conn.execute(
@@ -362,6 +369,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Drop Table test2"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_table_removed_with_reinit_all(self):
         with self.cnx() as conn:
             conn.execute(
@@ -378,6 +386,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Drop Table test2"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_column_removed(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -393,6 +402,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has("Drop Column test.other2"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_column_removed_with_reinit_column(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -409,6 +419,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Drop Column test.other2"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_column_removed_with_reinit_all(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -425,6 +436,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Drop Column test.other2"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_not_nullable_column_removed(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -442,6 +454,7 @@ class TestMigration(TestCase):
         self.assertTrue(report.log_has("Drop Column test.other2"))
         self.assertFalse(report.log_has("Drop Column test.other2 (not null)"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_nullable(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -470,6 +483,7 @@ class TestMigration(TestCase):
         with self.assertRaises(MigrationException):
             self.registry.migration.detect_changed()
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_server_default(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -484,12 +498,13 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_add_index_constrainte(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE testindex")
             conn.execute(
                 """CREATE TABLE testindex(
-                    integer INT  PRIMARY KEY NOT NULL,
+                    integer INT PRIMARY KEY NOT NULL,
                     other CHAR(64)
                 );""")
         report = self.registry.migration.detect_changed()
@@ -500,12 +515,13 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Add index constraint on testindex (other)"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_add_column_with_index_constrainte(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE testindex")
             conn.execute(
                 """CREATE TABLE testindex(
-                    integer INT  PRIMARY KEY NOT NULL
+                    integer INT PRIMARY KEY NOT NULL
                 );""")
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has("Add testindex.other"))
@@ -558,6 +574,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Drop index other_idx on test"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_type(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -572,6 +589,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertFalse(report.log_has("Alter test.other"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_primary_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -584,6 +602,7 @@ class TestMigration(TestCase):
         with self.assertRaises(MigrationException):
             self.registry.migration.detect_changed()
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_add_foreign_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE testfk")
@@ -600,12 +619,13 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_foreign_key_options_changed(self):
         with self.cnx() as conn:
             conn.execute("drop table testfk2")
             conn.execute(
                 """create table testfk2(
-                    integer int primary key not null,
+                    integer INT PRIMARY KEY NOT NULL,
                     other int
                         CONSTRAINT anyblok_fk_testfk2__other
                         references testfktarget(integer)
@@ -616,6 +636,7 @@ class TestMigration(TestCase):
         self.assertTrue(report.log_has(
             "Add Foreign keys on (testfk2.other) => (testfktarget.integer)"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_foreign_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -632,6 +653,7 @@ class TestMigration(TestCase):
         self.assertTrue(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_anyblok_foreign_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -650,6 +672,7 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_foreign_key_with_reinit_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -667,6 +690,7 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_foreign_key_with_reinit_all(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -684,6 +708,7 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_column_with_foreign_key(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -703,12 +728,13 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Drop Foreign keys on test.other2 => system_blok.name"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_add_unique_constrainte(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE testunique")
             conn.execute(
                 """CREATE TABLE testunique(
-                    integer INT  PRIMARY KEY NOT NULL,
+                    integer INT PRIMARY KEY NOT NULL,
                     other CHAR(64)
                 );""")
         report = self.registry.migration.detect_changed()
@@ -719,12 +745,13 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Add unique constraint on testunique (other)"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_add_column_with_unique_constrainte(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE testunique")
             conn.execute(
                 """CREATE TABLE testunique(
-                    integer INT  PRIMARY KEY NOT NULL
+                    integer INT PRIMARY KEY NOT NULL
                 );""")
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has(
@@ -734,6 +761,7 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Add unique constraint on testunique (other)"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_unique_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -748,6 +776,7 @@ class TestMigration(TestCase):
         report = self.registry.migration.detect_changed()
         self.assertTrue(report.log_has("Drop constraint unique_other on test"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_unique_anyblok_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -764,6 +793,7 @@ class TestMigration(TestCase):
         self.assertFalse(
             report.log_has("Drop constraint anyblok_uq_test__other on test"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_unique_constraint_with_reinit_constraints(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -781,6 +811,7 @@ class TestMigration(TestCase):
         self.assertFalse(
             report.log_has("Drop constraint unique_other on test"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_unique_constraint_with_reinit_all(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -798,6 +829,7 @@ class TestMigration(TestCase):
         self.assertFalse(
             report.log_has("Drop constraint unique_other on test"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "No CheckConstraint works #90")
     def test_no_detect_drop_and_add_check_constraint_with_long_name(self):
         report = self.registry.migration.detect_changed()
         self.assertFalse(
@@ -815,6 +847,7 @@ class TestMigration(TestCase):
             )
         )
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_add_check_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE testcheck")
@@ -830,6 +863,7 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Add check constraint anyblok_ck_testcheck__test on testcheck"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_check_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -846,6 +880,7 @@ class TestMigration(TestCase):
         self.assertTrue(
             report.log_has("Drop check constraint ck_other on test"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_check_anyblok_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -863,6 +898,7 @@ class TestMigration(TestCase):
         self.assertFalse(report.log_has(
             "Drop check constraint anyblok_ck__test__check on test"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_check_constraint_with_reinit_constraint(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
@@ -880,6 +916,7 @@ class TestMigration(TestCase):
         self.assertFalse(
             report.log_has("Drop check constraint ck_other on test"))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "Test for Postgres only")
     def test_detect_drop_check_constraint_with_reinit_all(self):
         with self.cnx() as conn:
             conn.execute("DROP TABLE test")
