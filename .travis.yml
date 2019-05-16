@@ -32,6 +32,8 @@ matrix:
     exclude:
       - python: "3.4"
         env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
+      - python: "3.5"
+        env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
 
 
 virtualenv:
