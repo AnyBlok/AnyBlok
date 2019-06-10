@@ -14,6 +14,7 @@ from sqlalchemy import event
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
+from anyblok import load_init_function_from_entry_points
 
 logger = getLogger(__name__)
 
@@ -21,6 +22,8 @@ logger = getLogger(__name__)
 @pytest.fixture(scope='session')
 def init_session(request):
     # Init registry
+    load_init_function_from_entry_points(unittest=True)
+    Configuration.load_config_for_test()
     additional_setting = {'unittest': True}
 
     if len(BlokManager.list()) == 0:
