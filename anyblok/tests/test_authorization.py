@@ -16,8 +16,7 @@ class TestAuthorizationDeclaration:
 
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
-        transaction = registry_testblok.begin_nested()
-        request.addfinalizer(transaction.rollback)
+        request.addfinalizer(registry_testblok.rollback)
         return
 
     def test_association(self, registry_testblok):
