@@ -137,6 +137,8 @@ def registry(request, clean_db, bloks_loaded):
     return registry
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason="Osbcure reason")
 class TestMigration:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),

@@ -15,7 +15,7 @@ from sqlalchemy import Integer as SA_Integer, String as SA_String
 from sqlalchemy.exc import StatementError
 from anyblok import Declarations
 from anyblok.field import FieldException
-from .conftest import init_registry
+from .conftest import init_registry, reset_db
 from anyblok.column import (
     Column, Boolean, Json, String, BigInteger, Text, Selection, Date, DateTime,
     Time, Interval, Decimal, Float, LargeBinary, Integer, Sequence, Color,
@@ -119,6 +119,7 @@ class TestColumns:
         request.addfinalizer(close)
 
     def init_registry(self, *args, **kwargs):
+        reset_db()
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 

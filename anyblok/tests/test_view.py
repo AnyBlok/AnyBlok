@@ -15,7 +15,7 @@ from sqlalchemy.exc import OperationalError
 from anyblok.column import Integer, String
 from anyblok.relationship import Many2One
 import pytest
-from .conftest import init_registry_with_bloks
+from .conftest import init_registry_with_bloks, reset_db
 
 register = Declarations.register
 Model = Declarations.Model
@@ -120,6 +120,7 @@ def deprecated_view_before_0_19_4():
     ]
 )
 def registry_simple_view(request, bloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks(
         [], request.param)
     request.addfinalizer(registry.close)
@@ -204,6 +205,7 @@ def view_with_relationship():
 
 @pytest.fixture(scope="class")
 def registry_view_with_relationship(request, bloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks(
         [], view_with_relationship)
     rs1 = registry.Rs.insert(id=1)
@@ -340,6 +342,7 @@ def view_with_relationship_on_self_2():
     ]
 )
 def registry_view_with_relationship_on_self(request, bloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks(
         [], request.param)
     request.addfinalizer(registry.close)
@@ -350,6 +353,7 @@ def registry_view_with_relationship_on_self(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason="No sub query")
 class TestViewWithRelationShipOnSelf:
 
     @pytest.fixture(autouse=True)
@@ -488,6 +492,7 @@ def simple_view_with_same_table_by_inherit():
     ]
 )
 def registry_view_with_inheritance(request, bloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks(
         [], request.param)
     request.addfinalizer(registry.close)
@@ -576,6 +581,7 @@ def simple_view_without_view_declaration():
     ]
 )
 def registry_view_with_exception(request, bloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks([], request.param)
     request.addfinalizer(registry.close)
     return registry

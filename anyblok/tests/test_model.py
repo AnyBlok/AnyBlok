@@ -16,7 +16,7 @@ from anyblok.model import (has_sql_fields, get_fields, ModelException,
                            has_sqlalchemy_fields)
 from anyblok import Declarations
 from anyblok.column import Integer, String
-from .conftest import init_registry
+from .conftest import init_registry, reset_db
 
 register = Declarations.register
 unregister = Declarations.unregister
@@ -209,6 +209,7 @@ class TestModel2:
         request.addfinalizer(close)
 
     def init_registry(self, *args, **kwargs):
+        reset_db()
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 

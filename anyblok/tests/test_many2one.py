@@ -146,28 +146,28 @@ def _auto_detect_type(ColumnType=None, **kwargs):
         address = Many2One(model=Model.Address)
 
 
-@pytest.fixture(
-    scope="class",
-    params=[
-        (Integer, {}),
-        (BigInteger, {}),
-        (Float, {}),
-        (Decimal, {}),
-        (String, {}),
-        (Boolean, {}),
-        (DateTime, {}),
-        (Date, {}),
-        (Time, {}),
-    ]
-)
+params = [
+    (Integer, {}),
+    (BigInteger, {}),
+    (Float, {}),
+    (Decimal, {}),
+    (String, {}),
+    (Boolean, {}),
+    (Date, {}),
+    (Time, {}),
+]
+
+if not sgdb_in(['MySQL', 'MariaDB']):
+    params.append((DateTime, {}))
+
+
+@pytest.fixture(scope="class", params=params)
 def registry_many2one_auto_detect(request, bloks_loaded):
     reset_db()
     registry = init_registry_with_bloks(
         [], _auto_detect_type, ColumnType=request.param[0], **request.param[1])
     request.addfinalizer(registry.close)
     return registry
-
-# @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89') autodetect on datetime
 
 
 class TestMany2OneAutoDetectColumn:
