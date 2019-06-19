@@ -65,7 +65,7 @@ script:
   - py.test --cov-report= --cov=anyblok anyblok/tests
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks
-    py.test --cov-report= --cov=anyblok anyblok/bloks; fi
+  - py.test --cov-report= --cov=anyblok anyblok/bloks
   
 after_success:
   coveralls --data_file=.coverage --config_file=.coveragerc
