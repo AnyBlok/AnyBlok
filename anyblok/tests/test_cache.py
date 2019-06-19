@@ -11,7 +11,7 @@ from anyblok.declarations import Declarations, cache, classmethod_cache
 from anyblok.bloks.anyblok_core.exceptions import CacheException
 from anyblok.column import Integer
 import pytest
-from .conftest import init_registry
+from .conftest import init_registry, reset_db
 
 register = Declarations.register
 Model = Declarations.Model
@@ -52,6 +52,7 @@ def add_model_with_method_cached():
 
 @pytest.fixture(scope="class")
 def registry_method_cached(request, bloks_loaded):
+    reset_db()
     registry = init_registry(add_model_with_method_cached)
     request.addfinalizer(registry.close)
     return registry

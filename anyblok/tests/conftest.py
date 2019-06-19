@@ -83,6 +83,9 @@ def drop_database(url):
 
 @pytest.fixture(scope="session")
 def base_loaded(request):
+    if sgdb_in(['MySQL', 'MariaDB']):
+        return
+
     url = Configuration.get('get_url')()
     if not database_exists(url):
         db_template_name = Configuration.get('db_template_name', None)

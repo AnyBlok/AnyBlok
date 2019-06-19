@@ -6,7 +6,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from anyblok.testing import sgdb_in
 from ..authorization.rule.base import deny_all
 from ..authorization.rule.base import RuleNotForModelClasses
 from anyblok.test_bloks.authorization import TestRuleOne
@@ -15,17 +14,8 @@ from anyblok.test_bloks.authorization import TestRuleTwo
 
 class TestAuthorizationDeclaration:
 
-    @pytest.fixture(autouse=True)
-    def transact(self, request, registry_testblok):
-        if sgdb_in(['MySQL', 'MariaDB']):
-            request.addfinalizer(registry_testblok.rollback)
-        else:
-            transaction = registry_testblok.begin_nested()
-            request.addfinalizer(transaction.rollback)
-        return
-
-    def test_association(self, registry_testblok):
-        registry = registry_testblok
+    def test_association(self, registry_testblok_func):
+        registry = registry_testblok_func
         registry.upgrade(install=('test-blok7',))
         record = registry.Test(id=23, label='Hop')
         assert isinstance(registry.lookup_policy(record, 'Read'),
@@ -36,9 +26,9 @@ class TestAuthorizationDeclaration:
         record = registry.Test2(id=2, label='Hop')
         assert registry.lookup_policy(record, 'Read') is deny_all
 
-    def test_override(self, registry_testblok):
+    def test_override(self, registry_testblok_func):
         # test-blok8 depends on test-blok7
-        registry = registry_testblok
+        registry = registry_testblok_func
         registry.upgrade(install=('test-blok8',))
         # lookup can be made on model itself
         model = registry.Test
@@ -49,14 +39,14 @@ class TestAuthorizationDeclaration:
         assert isinstance(registry.lookup_policy(model, 'Write'),
                           TestRuleTwo)
 
-    def test_model_based_policy(self, registry_testblok):
+    def test_model_based_policy(self, registry_testblok_func):
         """Test the model based policy using the default Grant model.
 
         The policy is defined in the ``model_authz`` blok
         The supporting default model is installed by the same blok.
         #TODO move this test to the 'model_authz' blok
         """
-        registry = registry_testblok
+        registry = registry_testblok_func
         registry.upgrade(install=('test-blok9',))
         model = registry.Test2
         Grant = registry.Authorization.ModelPermissionGrant
@@ -106,7 +96,7 @@ class TestAuthorizationDeclaration:
         assert filtered.first() is None
         assert len(filtered.all()) == 0
 
-    def test_attr_based_policy(self, registry_testblok):
+    def test_attr_based_policy(self, registry_testblok_func):
         """Test the attribute based policy, in conjunction with the model one.
 
         The policy is defined in the ``attr_authz`` blok
@@ -114,7 +104,7 @@ class TestAuthorizationDeclaration:
         TODO move this test to the 'attr_authz' blok, or put the policy in the
         main code body.
         """
-        registry = registry_testblok
+        registry = registry_testblok_func
         registry.upgrade(install=('test-blok10',))
         model = registry.Test2
         Grant = registry.Authorization.ModelPermissionGrant
