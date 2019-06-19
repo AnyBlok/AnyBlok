@@ -35,7 +35,6 @@ matrix:
       - python: "3.5"
         env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
 
-
 virtualenv:
   system_site_packages: false
 
@@ -50,9 +49,9 @@ before_install:
 install:
   - pip install -U pip
   - pip install wheel
-  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then pip install psycopg2cffi; else pip install psycopg2; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then pip install psycopg2cffi; else pip install psycopg2-binary; fi
   - pip install sqlalchemy mysqlclient
-  - pip install flake8 coverage nose
+  - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
   - pip install coveralls
   - pip install -U cryptography
@@ -63,11 +62,10 @@ script:
   - flake8 anyblok --exclude=*/tests/*
   - python3 update_env.py
   - $SQLSERVER 'create database travis_ci_test;'
-  - nosetests anyblok/tests -v -s --with-coverage --cover-package=anyblok
+  - py.test --cov-report= --cov=anyblok anyblok/tests
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'postgresql' ]]; then nosetests anyblok/bloks --with-anyblok-bloks -v -s --with-coverage --cover-package=anyblok; fi
-  - anyblok_nose -- -v -s --with-coverage --cover-package=anyblok  # test runner
+    py.test --cov-report= --cov=anyblok anyblok/bloks; fi
   
 after_success:
-  coveralls
+  coveralls --data_file=.coverage --config_file=.coveragerc

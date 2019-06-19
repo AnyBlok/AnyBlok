@@ -5,30 +5,52 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase
+import pytest
 from anyblok.column import Integer
 from anyblok.relationship import Many2Many, One2Many, Many2One
+from .conftest import init_registry
 
 
-class TestInstrumentedList(DBTestCase):
+class TestInstrumentedListStdCase:
 
-    def test_all_method_on_query_return_InstrumentedList(self):
-        registry = self.init_registry(None)
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_blok):
+        transaction = registry_blok.begin_nested()
+        request.addfinalizer(transaction.rollback)
+
+    def test_all_method_on_query_return_InstrumentedList(self, registry_blok):
+        registry = registry_blok
         check = isinstance(registry.System.Blok.query().all(),
                            registry.InstrumentedList)
-        self.assertTrue(check)
+        assert check
 
-    def test_emulates(self):
-        registry = self.init_registry(None)
-        self.assertFalse(hasattr(registry.InstrumentedList, '__emulates'))
+    def test_emulates(self, registry_blok):
+        registry = registry_blok
+        assert not (hasattr(registry.InstrumentedList, '__emulates'))
 
-    def test_empty_result_on_query_return_InstrumentedList(self):
-        registry = self.init_registry(None)
+    def test_empty_result_on_query_return_InstrumentedList(self, registry_blok):
+        registry = registry_blok
         Blok = registry.System.Blok
         bloks = Blok.query().filter(Blok.name == 'Unexisting blok').all()
         check = isinstance(bloks, registry.InstrumentedList)
-        self.assertTrue(check)
-        self.assertEqual(bloks.name, [])
+        assert check
+        assert bloks.name == []
+
+
+class TestInstrumentedList:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def test_M2M_with_InstrumentedList(self):
 
@@ -51,11 +73,11 @@ class TestInstrumentedList(DBTestCase):
         t = registry.Test.insert()
         t2 = registry.Test2.insert()
         t.tests2.append(t2)
-        self.assertEqual(t2.tests, [t])
+        assert t2.tests == [t]
         check = isinstance(t.tests2, registry.InstrumentedList)
-        self.assertTrue(check)
+        assert check
         check = isinstance(t2.tests, registry.InstrumentedList)
-        self.assertTrue(check)
+        assert check
 
     def test_O2M_is_InstrumentedList(self):
 
@@ -83,7 +105,7 @@ class TestInstrumentedList(DBTestCase):
         t2 = registry.Test2.insert()
         t2.tests.append(t)
         check = isinstance(t2.tests, registry.InstrumentedList)
-        self.assertTrue(check)
+        assert check
 
     def test_O2M_linked_is_InstrumentedList(self):
 
@@ -107,7 +129,7 @@ class TestInstrumentedList(DBTestCase):
         t2 = registry.Test2.insert()
         t.tests2.append(t2)
         check = isinstance(t.tests2, registry.InstrumentedList)
-        self.assertTrue(check)
+        assert check
 
     def test_call_column(self):
 
@@ -123,7 +145,7 @@ class TestInstrumentedList(DBTestCase):
         registry = self.init_registry(call_column)
 
         t = registry.Test.insert()
-        self.assertEqual(registry.Test.query().all().id, [t.id])
+        assert registry.Test.query().all().id == [t.id]
 
     def test_call_method(self):
 
@@ -142,7 +164,7 @@ class TestInstrumentedList(DBTestCase):
         registry = self.init_registry(call_method)
 
         t = registry.Test.insert()
-        self.assertEqual(registry.Test.query().all().foo(), [t.id])
+        assert registry.Test.query().all().foo() == [t.id]
 
     def test_inherit(self):
 
@@ -158,4 +180,4 @@ class TestInstrumentedList(DBTestCase):
                     return True
 
         registry = self.init_registry(inherit)
-        self.assertTrue(registry.System.Blok.query().all().foo())
+        assert registry.System.Blok.query().all().foo()

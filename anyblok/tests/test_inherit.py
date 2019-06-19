@@ -5,10 +5,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase
+import pytest
 from anyblok import Declarations
 from anyblok.column import Integer, String
 from anyblok.relationship import Many2One
+from .conftest import init_registry
 
 register = Declarations.register
 Model = Declarations.Model
@@ -407,12 +408,25 @@ def inherit_sql_base_on_sql_model():
         id = Integer(primary_key=True)
 
 
-class TestInherit(DBTestCase):
+class TestInherit:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def check_registry(self, Model):
         t = Model.insert(name="test", other="other")
         t2 = Model.query().first()
-        self.assertEqual(t2, t)
+        assert t2 is t
 
     def test_simple_subclass_model(self):
         registry = self.init_registry(simple_subclass_model)
@@ -420,8 +434,6 @@ class TestInherit(DBTestCase):
 
     def test_inherit_multi_mixins(self):
         def add_in_registry():
-            Integer = Declarations.Column.Integer
-            String = Declarations.Column.String
 
             @register(Mixin)
             class MixinName:
@@ -438,13 +450,11 @@ class TestInherit(DBTestCase):
 
                 id = Integer(primary_key=True)
 
-        registry = self.init_registry(simple_subclass_model)
+        registry = self.init_registry(add_in_registry)
         self.check_registry(registry.Test)
 
     def test_inherit_cascade_mixins(self):
         def add_in_registry():
-            Integer = Declarations.Column.Integer
-            String = Declarations.Column.String
 
             @register(Mixin)
             class MixinName:
@@ -465,26 +475,26 @@ class TestInherit(DBTestCase):
 
                 id = Integer(primary_key=True)
 
-        registry = self.init_registry(simple_subclass_model)
+        registry = self.init_registry(add_in_registry)
         self.check_registry(registry.Test)
 
     def test_simple_subclass_Core_Base(self):
         registry = self.init_registry(simple_subclass_Core_Base)
         m = registry.Test()
-        self.assertEqual(m.mymethod(), 10)
+        assert m.mymethod() == 10
 
     def test_simple_subclass_Core_SqlBase(self):
         registry = self.init_registry(simple_subclass_Core_SqlBase)
         m = registry.Test()
-        self.assertEqual(m.mymethod(), 10)
+        assert m.mymethod() == 10
 
     def test_simple_subclass_model_change_type(self):
         registry = self.init_registry(simple_subclass_model_change_type)
 
         t = registry.Test.insert(name=1)
         t2 = registry.Test.query().first()
-        self.assertEqual(t2, t)
-        self.assertEqual(t.name, 1)
+        assert t2 is t
+        assert t.name == 1
 
     def test_simple_subclass_model_change_type_and_subclass_add_field(self):
         registry = self.init_registry(
@@ -492,8 +502,8 @@ class TestInherit(DBTestCase):
 
         t = registry.Test.insert(name=1, other='other')
         t2 = registry.Test.query().first()
-        self.assertEqual(t2, t)
-        self.assertEqual(t.name, 1)
+        assert t2 is t
+        assert t.name == 1
 
     def test_mixin_one_model(self):
         registry = self.init_registry(mixin_one_model)
@@ -519,7 +529,7 @@ class TestInherit(DBTestCase):
         registry.TestFk.insert(name=val)
         t = registry.Test.insert(name=val)
         t2 = registry.Test.query().first()
-        self.assertEqual(t2, t)
+        assert t2 is t
 
     def test_mixin_with_foreign_key_two_model(self):
         registry = self.init_registry(mixin_with_foreign_key_two_model)
@@ -529,11 +539,11 @@ class TestInherit(DBTestCase):
 
         t = registry.Test.insert(name='test')
         t2 = registry.Test.query().first()
-        self.assertEqual(t2, t)
+        assert t2 is t
 
         t3 = registry.Test2.insert(name='test2')
         t4 = registry.Test2.query().first()
-        self.assertEqual(t3, t4)
+        assert t3 is t4
 
     def test_mixin_one_model_by_subclass_and_with(self):
         registry = self.init_registry(mixin_one_model_by_subclass_and_with)
@@ -561,7 +571,7 @@ class TestInherit(DBTestCase):
     def check_inherit_base(self, function, value):
         registry = self.init_registry(function)
         test = registry.Test()
-        self.assertEqual(test.method_from_base(2), value)
+        assert test.method_from_base(2) == value
 
     def test_inherit_base_and_add_method(self):
         self.check_inherit_base(inherit_base_and_add_method, 4)
@@ -580,7 +590,7 @@ class TestInherit(DBTestCase):
     def check_inherit_sql_base(self, function, value):
         registry = self.init_registry(function)
         test = registry.Test()
-        self.assertEqual(test.is_sql_base(), value)
+        assert test.is_sql_base() == value
 
     def test_inherit_sql_base_on_simple_model(self):
         self.check_inherit_sql_base(inherit_sql_base_on_simple_model, False)
@@ -610,8 +620,8 @@ class TestInherit(DBTestCase):
         t = registry.Test.insert()
         t3 = registry.Test3.insert(test=t)
         t2 = registry.Test2.query().one()
-        self.assertEqual(t3.test2, t2.id)
-        self.assertEqual(t2.test, t)
+        assert t3.test2 == t2.id
+        assert t2.test is t
 
     def test_inherit_model_with_relation_ship(self):
 
@@ -636,5 +646,5 @@ class TestInherit(DBTestCase):
         t = registry.Test.insert()
         t3 = registry.Test3.insert(test=t)
         t2 = registry.Test2.query().one()
-        self.assertEqual(t3.test2, t2.id)
-        self.assertEqual(t2.test, t)
+        assert t3.test2 == t2.id
+        assert t2.test is t

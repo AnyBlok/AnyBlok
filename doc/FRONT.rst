@@ -67,16 +67,13 @@ Running Tests
 
 To run framework tests with ``nose``::
 
-    pip install nose
-    nosetests anyblok/tests
+    pip install pytest
+    ANYBLOK_DATABASE_DRIVER postgresql ANYBLOK_DATABASE_NAME test_anyblok py.test anyblok/tests
 
 To run tests of all installed bloks::
 
-    anyblok_nose -c config.file.cfg
-
-To run Blok tests during their installation::
-
-    anyblok_updatedb -c config.file.cfg --install_bloks myblok --test-blok-at-install
+    anyblok_createdb --db-name test_anyblok --db-driver-name postgresql --install-all-bloks
+    ANYBLOK_DATABASE_DRIVER postgresql ANYBLOK_DATABASE_NAME test_anyblok py.test anyblok/bloks
 
 AnyBlok is tested continuously using `Travis CI
 <https://travis-ci.org/AnyBlok/AnyBlok>`_
@@ -111,16 +108,17 @@ Contributors
 `Anybox <http://anybox.fr>`_ team:
 
 * Georges Racinet
-* Christophe Combelles
-* Jean-Sébastien Suzanne
-* Florent Jouatte
-* Simon André
 * Pierre Verkest
+* Jean-Sébastien Suzanne
+* Simon André
+* Florent Jouatte
+* Christophe Combelles
 
 other:
 
 * Sébastien Chazallet
 * Franck Bret
+* Denis Viviès
 
 Bugs
 ----

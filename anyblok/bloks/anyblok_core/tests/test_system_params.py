@@ -1,66 +1,75 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2018 Denis VIVIÈS <dvivies@geoblink.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import BlokTestCase
-from ..exceptions import ParameterException
+import pytest
+from anyblok.bloks.anyblok_core.exceptions import ParameterException
 
 
-class TestSystemParameter(BlokTestCase):
+@pytest.mark.usefixtures('rollback_registry')
+class TestSystemParameter:
 
-    def test_set(self):
-        Parameter = self.registry.System.Parameter
+    def test_set(self, rollback_registry):
+        registry = rollback_registry
+        Parameter = registry.System.Parameter
         query = Parameter.query().filter(Parameter.key == 'test.parameter')
         if query.count():
-            self.fail('key for test already existing')
+            pytest.fail('key for test already existing')
 
         Parameter.set('test.parameter', True)
-        self.assertEqual(query.count(), 1)
-        self.assertEqual(query.first().value, {'value': True})
-        self.assertEqual(query.first().multi, False)
+        assert query.count() == 1
+        assert query.first().value == {'value': True}
+        assert query.first().multi is False
 
-    def test_set_with_multi(self):
-        Parameter = self.registry.System.Parameter
+    def test_set_with_multi(self, rollback_registry):
+        registry = rollback_registry
+        Parameter = registry.System.Parameter
         query = Parameter.query().filter(Parameter.key == 'test.parameter')
         if query.count():
-            self.fail('key for test already existing')
+            pytest.fail('key for test already existing')
 
         Parameter.set('test.parameter', {'test': True})
-        self.assertEqual(query.count(), 1)
-        self.assertEqual(query.first().value, {'test': True})
-        self.assertEqual(query.first().multi, True)
+        assert query.count() == 1
+        assert query.first().value == {'test': True}
+        assert query.first().multi is True
 
-    def test_get(self):
-        Parameter = self.registry.System.Parameter
+    def test_get(self, rollback_registry):
+        registry = rollback_registry
+        Parameter = registry.System.Parameter
         Parameter.set('test.parameter', True)
-        self.assertEqual(Parameter.get('test.parameter'), True)
+        assert Parameter.get('test.parameter') is True
 
-    def test_get_with_multi(self):
-        Parameter = self.registry.System.Parameter
+    def test_get_with_multi(self, rollback_registry):
+        registry = rollback_registry
+        Parameter = registry.System.Parameter
         Parameter.set('test.parameter', {'test': True})
-        self.assertEqual(Parameter.get('test.parameter'), {'test': True})
+        assert Parameter.get('test.parameter') == {'test': True}
 
-    def test_unexisting_get(self):
-        Parameter = self.registry.System.Parameter
-        with self.assertRaises(ParameterException):
+    def test_unexisting_get(self, rollback_registry):
+        registry = rollback_registry
+        Parameter = registry.System.Parameter
+        with pytest.raises(ParameterException):
             Parameter.get('test.parameter')
 
-    def test_count(self):
-        Parameter = self.registry.System.Parameter
-        self.assertEqual(Parameter.is_exist('test.parameter'), False)
+    def test_count(self, rollback_registry):
+        registry = rollback_registry
+        Parameter = registry.System.Parameter
+        assert Parameter.is_exist('test.parameter') is False
         Parameter.set('test.parameter', True)
-        self.assertEqual(Parameter.is_exist('test.parameter'), True)
+        assert Parameter.is_exist('test.parameter') is True
 
-    def test_set_existing_key(self):
-        Parameter = self.registry.System.Parameter
+    def test_set_existing_key(self, rollback_registry):
+        registry = rollback_registry
+        Parameter = registry.System.Parameter
         query = Parameter.query().filter(Parameter.key == 'test.parameter')
-        self.assertEqual(query.count(), 0)
+        assert query.count() == 0
         Parameter.set('test.parameter', True)
-        self.assertEqual(query.count(), 1)
-        self.assertEqual(Parameter.get('test.parameter'), True)
+        assert query.count() == 1
+        assert Parameter.get('test.parameter') is True
         Parameter.set('test.parameter', False)
-        self.assertEqual(query.count(), 1)
-        self.assertEqual(Parameter.get('test.parameter'), False)
+        assert query.count() == 1
+        assert Parameter.get('test.parameter') is False

@@ -6,94 +6,93 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase
+import pytest
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.model import Model
 from anyblok.environment import EnvironmentManager
 
 
-class TestRegistryManager(TestCase):
+class TestRegistryManager:
 
-    @classmethod
-    def tearDownClass(cls):
-        super(TestRegistryManager, cls).tearDownClass()
-        RegistryManager.undeclare_entry('Other')
+    @pytest.fixture(autouse=True)
+    def revert_registry_manager(self, request):
+        def revert():
+            RegistryManager.undeclare_entry('Other')
+
+        request.addfinalizer(revert)
 
     def test_declared_entries(self):
         hasModel = 'Model' in RegistryManager.declared_entries
         hasMixin = 'Mixin' in RegistryManager.declared_entries
-        self.assertEqual(hasModel, True)
-        self.assertEqual(hasMixin, True)
+        assert hasModel
+        assert hasMixin
 
     def test_init_blok(self):
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
-        self.assertEqual(is_exist, True)
+        assert is_exist
         for core in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
                      'InstrumentedList'):
-            self.assertIn(
-                core, RegistryManager.loaded_bloks['newblok']['Core'].keys())
-            self.assertEqual(
-                RegistryManager.loaded_bloks['newblok']['Core'][core], [])
+            assert core in RegistryManager.loaded_bloks[
+                'newblok']['Core'].keys()
+            assert RegistryManager.loaded_bloks['newblok']['Core'][core] == []
 
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Model'],
-                         {'registry_names': []})
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Mixin'],
-                         {'registry_names': []})
+        assert RegistryManager.loaded_bloks['newblok']['Model'] == {
+            'registry_names': []}
+        assert RegistryManager.loaded_bloks['newblok']['Mixin'] == {
+            'registry_names': []}
 
     def test_init_blok_with_other_entry(self):
         RegistryManager.declare_entry('Other')
         hasOther = 'Other' in RegistryManager.declared_entries
-        self.assertEqual(hasOther, True)
+        assert hasOther
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
-        self.assertEqual(is_exist, True)
+        assert is_exist
         for core in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
                      'InstrumentedList'):
-            self.assertIn(
-                core, RegistryManager.loaded_bloks['newblok']['Core'].keys())
-            self.assertEqual(
-                RegistryManager.loaded_bloks['newblok']['Core'][core], [])
+            assert core in RegistryManager.loaded_bloks[
+                'newblok']['Core'].keys()
+            assert RegistryManager.loaded_bloks['newblok']['Core'][core] == []
 
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Model'],
-                         {'registry_names': []})
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Mixin'],
-                         {'registry_names': []})
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Other'],
-                         {'registry_names': []})
+        assert RegistryManager.loaded_bloks['newblok']['Model'] == {
+            'registry_names': []}
+        assert RegistryManager.loaded_bloks['newblok']['Mixin'] == {
+            'registry_names': []}
+        assert RegistryManager.loaded_bloks['newblok']['Other'] == {
+            'registry_names': []}
 
     def test_anyblok_core_loaded(self):
         BlokManager.load()
         is_exist = 'anyblok-core' in RegistryManager.loaded_bloks
-        self.assertEqual(is_exist, True)
+        assert is_exist
         anyblokcore = RegistryManager.loaded_bloks['anyblok-core']
-        self.assertEqual(len(anyblokcore['Core']['Base']), 1)
-        self.assertEqual(len(anyblokcore['Core']['SqlBase']), 1)
-        self.assertEqual(len(anyblokcore['Core']['SqlViewBase']), 1)
-        self.assertEqual(len(anyblokcore['Core']['Session']), 1)
-        self.assertEqual(len(anyblokcore['Core']['Query']), 1)
-        self.assertEqual(len(anyblokcore['Core']['InstrumentedList']), 1)
+        assert len(anyblokcore['Core']['Base']) == 1
+        assert len(anyblokcore['Core']['SqlBase']) == 1
+        assert len(anyblokcore['Core']['SqlViewBase']) == 1
+        assert len(anyblokcore['Core']['Session']) == 1
+        assert len(anyblokcore['Core']['Query']) == 1
+        assert len(anyblokcore['Core']['InstrumentedList']) == 1
         is_exist = 'Model.System' in anyblokcore['Model']
-        self.assertEqual(is_exist, True)
+        assert is_exist
         BlokManager.unload()
 
     def test_add_entry(self):
         RegistryManager.declare_entry('Other')
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
-        self.assertEqual(is_exist, True)
+        assert is_exist
         for entry in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
                       'InstrumentedList'):
-            self.assertEqual(
-                RegistryManager.loaded_bloks['newblok']['Core'][entry], [])
+            assert RegistryManager.loaded_bloks['newblok']['Core'][entry] == []
 
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Model'],
-                         {'registry_names': []})
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Mixin'],
-                         {'registry_names': []})
-        self.assertEqual(RegistryManager.loaded_bloks['newblok']['Other'],
-                         {'registry_names': []})
+        assert RegistryManager.loaded_bloks['newblok']['Model'] == {
+            'registry_names': []}
+        assert RegistryManager.loaded_bloks['newblok']['Mixin'] == {
+            'registry_names': []}
+        assert RegistryManager.loaded_bloks['newblok']['Other'] == {
+            'registry_names': []}
 
     def test_add_callback(self):
 
@@ -105,35 +104,35 @@ class TestRegistryManager(TestCase):
         hasModel = 'Model' in RegistryManager.declared_entries
         hasMixin = 'Mixin' in RegistryManager.declared_entries
         hasOther = 'Other' in RegistryManager.declared_entries
-        self.assertEqual(hasModel, True)
-        self.assertEqual(hasMixin, True)
-        self.assertEqual(hasOther, True)
+        assert hasModel
+        assert hasMixin
+        assert hasOther
 
         cb = Model.assemble_callback
         hasModelCb = cb == RegistryManager.callback_assemble_entries['Model']
         cb = callback
         hasOtherCb = cb == RegistryManager.callback_assemble_entries['Other']
-        self.assertEqual(hasModelCb, True)
-        self.assertEqual(hasOtherCb, True)
+        assert hasModelCb
+        assert hasOtherCb
 
         cb = Model.initialize_callback
         hasModelCb = cb == RegistryManager.callback_initialize_entries['Model']
         cb = callback
         hasOtherCb = cb == RegistryManager.callback_initialize_entries['Other']
-        self.assertEqual(hasModelCb, True)
-        self.assertEqual(hasOtherCb, True)
+        assert hasModelCb
+        assert hasOtherCb
 
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
-        self.assertEqual(is_exist, True)
+        assert is_exist
         hasCore = 'Core' in RegistryManager.loaded_bloks['newblok']
         hasModel = 'Model' in RegistryManager.loaded_bloks['newblok']
         hasMixin = 'Mixin' in RegistryManager.loaded_bloks['newblok']
         hasOther = 'Other' in RegistryManager.loaded_bloks['newblok']
-        self.assertEqual(hasCore, True)
-        self.assertEqual(hasModel, True)
-        self.assertEqual(hasMixin, True)
-        self.assertEqual(hasOther, True)
+        assert hasCore
+        assert hasModel
+        assert hasMixin
+        assert hasOther
 
     def test_reload_blok(self):
         BlokManager.load()
@@ -149,18 +148,13 @@ class TestRegistryManager(TestCase):
         try:
             oldblok = EnvironmentManager.get('current_blok')
             EnvironmentManager.set('current_blok', blok)
-            self.assertEqual(RegistryManager.has_blok_property('myproperty'),
-                             False)
+            assert not RegistryManager.has_blok_property('myproperty')
             RegistryManager.add_or_replace_blok_property('myproperty', 2)
-            self.assertEqual(
-                RegistryManager.has_blok_property('myproperty'), True)
-            self.assertEqual(
-                RegistryManager.get_blok_property('myproperty'), 2)
+            assert RegistryManager.has_blok_property('myproperty')
+            assert RegistryManager.get_blok_property('myproperty') == 2
             RegistryManager.add_or_replace_blok_property('myproperty', 3)
-            self.assertEqual(
-                RegistryManager.get_blok_property('myproperty'), 3)
+            assert RegistryManager.get_blok_property('myproperty') == 3
             RegistryManager.remove_blok_property('myproperty')
-            self.assertEqual(RegistryManager.has_blok_property('myproperty'),
-                             False)
+            assert not RegistryManager.has_blok_property('myproperty')
         finally:
             EnvironmentManager.set('current_blok', oldblok)

@@ -720,8 +720,6 @@ Anyblok provides some helper generic console scripts out of the box:
 
       if IPython is in the sys.modules then the interpreter is an IPython interpreter
 
-* anyblok_nose (nose test)
-
 TODO: I know it's not a setuptools documentation but it could be kind to show
 a complete minimalist exampe of `setup.py` with requires (to anyblok).
 We could also display the full tree from root
@@ -759,9 +757,7 @@ find its use for some applications or middleware).
           tests, perhaps for subroutines that don't interact with the
           database at all.
 
-To address these challenges, AnyBlok ships with helper base classes
-(see below), and provides two different ways to lauch the tests, both based
-on `nose <https://pypi.python.org/pypi/nose/1.3.7>`_.
+To address these challenges, AnyBlok ships with helper pytest fixture
 
 .. _basedoc_testcases:
 
