@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
+from anyblok.testing import sgdb_in
 from ..authorization.rule.base import deny_all
 from ..authorization.rule.base import RuleNotForModelClasses
 from anyblok.test_bloks.authorization import TestRuleOne
@@ -16,7 +17,11 @@ class TestAuthorizationDeclaration:
 
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
-        request.addfinalizer(registry_testblok.unittest_transaction.rollback)
+        if sgdb_in(['MySQL', 'MariaDB']):
+            request.addfinalizer(registry_testblok.rollback)
+        else:
+            transaction = registry_testblok.begin_nested()
+            request.addfinalizer(transaction.rollback)
         return
 
     def test_association(self, registry_testblok):
