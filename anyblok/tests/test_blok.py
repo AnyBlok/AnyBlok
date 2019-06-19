@@ -83,6 +83,8 @@ class TestBlok:
             registry.upgrade(update=('test-blok1',))
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokRequired:
 
     @pytest.fixture(autouse=True)
@@ -196,6 +198,8 @@ class TestBlokRequired:
         assert testblok2.installed_version == '2.0.0'
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokRequired2:
 
     @pytest.fixture(autouse=True)
@@ -395,6 +399,8 @@ class TestBlokRequired2:
         assert testblok3.installed_version == '2.0.0'
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokConditionnal:
 
     @pytest.fixture(autouse=True)
@@ -511,6 +517,8 @@ class TestBlokConditionnal:
         assert testblok5.installed_version == '2.0.0'
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokOptional:
 
     @pytest.fixture(autouse=True)
@@ -611,6 +619,8 @@ class TestBlokOptional:
         assert testblok6.installed_version == '2.0.0'
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokConflicting:
 
     @pytest.fixture(autouse=True)
@@ -666,6 +676,8 @@ class TestBlokConflicting:
         assert testblok13.state == 'installed'
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokOrder:
 
     @pytest.fixture(autouse=True)
@@ -721,6 +733,8 @@ class TestBlokOrder:
             'anyblok-core', 'test-blok1', 'test-blok2', 'test-blok3'])
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokModel:
 
     @pytest.fixture(autouse=True)
@@ -767,6 +781,8 @@ class TestBlokModel:
         assert registry.Test.query().count() == 1
 
 
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokSession:
 
     @pytest.fixture(autouse=True)
