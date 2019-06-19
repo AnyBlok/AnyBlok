@@ -247,7 +247,7 @@ class TestMigration:
     def test_alter_column_nullable(self, registry):
         t = registry.migration.table('test')
         c = t.column('other').alter(nullable=False)
-        assert not(c.nullable())
+        assert not c.nullable
 
     def test_alter_column_nullable_in_filled_table(self, registry):
         t = registry.migration.table('test')
@@ -255,14 +255,14 @@ class TestMigration:
         self.fill_test_table(registry)
         c = t.column('new_column').alter(nullable=False)
         # the column doesn't change of nullable to not lock the migration
-        assert c.nullable()
+        assert c.nullable
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="Test for postgres")
     def test_alter_column_default(self, registry):
         t = registry.migration.table('test')
         c = t.column('other').alter(server_default='test')
-        assert c.server_default() == "'test'::character varying"
+        assert c.server_default == "'test'::character varying"
 
     def test_index(self, registry):
         t = registry.migration.table('test')
@@ -272,7 +272,7 @@ class TestMigration:
     def test_alter_column_type(self, registry):
         t = registry.migration.table('test')
         c = t.column('other').alter(type_=TEXT)
-        assert c.type().__class__ is TEXT
+        assert c.type.__class__ is TEXT
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="Can't drop primary key issue #92")

@@ -15,7 +15,7 @@ from anyblok.mapper import (ModelAttribute, ModelAttributeException,
                             MapperException)
 from anyblok import Declarations
 from anyblok.column import String, Integer
-from .conftest import init_registry
+from .conftest import init_registry, reset_db
 
 register = Declarations.register
 unregister = Declarations.unregister
@@ -274,6 +274,7 @@ class TestMapperOther:
         request.addfinalizer(close)
 
     def init_registry(self, *args, **kwargs):
+        reset_db()
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 
