@@ -9,6 +9,7 @@
 import logging
 from copy import deepcopy
 import pytest
+from anyblok.testing import sgdb_in
 from anyblok.blok import BlokManager
 from anyblok.config import Configuration
 from anyblok.environment import EnvironmentManager
@@ -106,8 +107,19 @@ def testbloks_loaded(request, base_loaded):
     BlokManager.load(entry_points=('bloks', 'test_bloks'))
 
 
+def reset_db():
+    if sgdb_in(['MySQL', 'MariaDB']):
+        url = Configuration.get('get_url')()
+        if database_exists(url):
+            drop_database(url)
+
+        db_template_name = Configuration.get('db_template_name', None)
+        create_database(url, template=db_template_name)
+
+
 @pytest.fixture(scope="class")
 def registry_blok(request, bloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks([], None)
     request.addfinalizer(registry.close)
     return registry
@@ -115,6 +127,7 @@ def registry_blok(request, bloks_loaded):
 
 @pytest.fixture(scope="class")
 def registry_testblok(request, testbloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks([], None)
     request.addfinalizer(registry.close)
     return registry
@@ -122,6 +135,7 @@ def registry_testblok(request, testbloks_loaded):
 
 @pytest.fixture(scope="function")
 def registry_testblok_func(request, testbloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks([], None)
     request.addfinalizer(registry.close)
     return registry
