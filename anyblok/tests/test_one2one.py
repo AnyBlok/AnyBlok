@@ -13,7 +13,7 @@ from anyblok.field import FieldException
 from anyblok.column import Integer, String
 from anyblok.relationship import One2One
 from sqlalchemy import ForeignKeyConstraint
-from .conftest import init_registry
+from .conftest import init_registry, reset_db
 
 register = Declarations.register
 Model = Declarations.Model
@@ -52,6 +52,7 @@ def _one2one_with_str_method(**kwargs):
     _one2one_with_str_method
 ])
 def registry_minimum_one2one(request, bloks_loaded):
+    reset_db()
     registry = init_registry(request.param)
     request.addfinalizer(registry.close)
     return registry
@@ -111,6 +112,7 @@ def _multi_fk_one2one():
 
 @pytest.fixture(scope="class")
 def registry_multi_fk_one2one(request, bloks_loaded):
+    reset_db()
     registry = init_registry(_multi_fk_one2one)
     request.addfinalizer(registry.close)
     return registry
@@ -206,6 +208,7 @@ class TestOne2One:
         request.addfinalizer(close)
 
     def init_registry(self, *args, **kwargs):
+        reset_db()
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 

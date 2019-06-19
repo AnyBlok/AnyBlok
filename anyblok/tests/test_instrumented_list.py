@@ -8,7 +8,7 @@
 import pytest
 from anyblok.column import Integer
 from anyblok.relationship import Many2Many, One2Many, Many2One
-from .conftest import init_registry
+from .conftest import init_registry, reset_db
 
 
 class TestInstrumentedListStdCase:
@@ -49,6 +49,7 @@ class TestInstrumentedList:
         request.addfinalizer(close)
 
     def init_registry(self, *args, **kwargs):
+        reset_db()
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 

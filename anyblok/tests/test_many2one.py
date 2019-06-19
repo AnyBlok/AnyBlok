@@ -19,7 +19,7 @@ from anyblok.column import (
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.engine.reflection import Inspector
-from .conftest import init_registry_with_bloks, init_registry
+from .conftest import init_registry_with_bloks, init_registry, reset_db
 
 
 register = Declarations.register
@@ -89,6 +89,7 @@ def _many2one_with_str_model(**kwargs):
     ]
 )
 def registry_many2one(request, bloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks(
         [], request.param[0])
     request.addfinalizer(registry.close)
@@ -160,6 +161,7 @@ def _auto_detect_type(ColumnType=None, **kwargs):
     ]
 )
 def registry_many2one_auto_detect(request, bloks_loaded):
+    reset_db()
     registry = init_registry_with_bloks(
         [], _auto_detect_type, ColumnType=request.param[0], **request.param[1])
     request.addfinalizer(registry.close)
@@ -243,6 +245,7 @@ class TestMany2OneOld:
         request.addfinalizer(close)
 
     def init_registry(self, *args, **kwargs):
+        reset_db()
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 

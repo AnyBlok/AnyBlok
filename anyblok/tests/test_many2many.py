@@ -16,7 +16,7 @@ from anyblok.column import Integer, String, DateTime
 from anyblok.relationship import Many2Many, Many2One
 from anyblok.field import FieldException
 from datetime import datetime
-from .conftest import init_registry
+from .conftest import init_registry, reset_db
 
 register = Declarations.register
 Model = Declarations.Model
@@ -47,6 +47,7 @@ def _complete_many2many(**kwargs):
 
 @pytest.fixture(scope="class")
 def registry_many2many(request, bloks_loaded):
+    reset_db()
     registry = init_registry(_complete_many2many)
     request.addfinalizer(registry.close)
     return registry
@@ -218,6 +219,7 @@ class TestMany2Many:
         request.addfinalizer(close)
 
     def init_registry(self, *args, **kwargs):
+        reset_db()
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 

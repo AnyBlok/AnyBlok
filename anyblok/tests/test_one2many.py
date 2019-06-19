@@ -11,7 +11,7 @@ import pytest
 from anyblok import Declarations
 from anyblok.column import Integer, String
 from anyblok.relationship import One2Many
-from .conftest import init_registry
+from .conftest import init_registry, reset_db
 
 
 register = Declarations.register
@@ -47,6 +47,7 @@ def _complete_one2many(**kwargs):
 
 @pytest.fixture(scope="class")
 def registry_complete_one2many(request, bloks_loaded):
+    reset_db()
     registry = init_registry(_complete_one2many)
     request.addfinalizer(registry.close)
     return registry
@@ -106,6 +107,7 @@ def _multi_fk_one2many():
 
 @pytest.fixture(scope="class")
 def registry_multi_fk_one2many(request, bloks_loaded):
+    reset_db()
     registry = init_registry(_multi_fk_one2many)
     request.addfinalizer(registry.close)
     return registry
@@ -216,6 +218,7 @@ class TestOne2Many:
         request.addfinalizer(close)
 
     def init_registry(self, *args, **kwargs):
+        reset_db()
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 
