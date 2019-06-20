@@ -16,7 +16,7 @@ from anyblok.relationship import Many2Many
 from contextlib import contextmanager
 from sqlalchemy import Column, Integer, TEXT, CheckConstraint
 from anyblok import Declarations
-from sqlalchemy.exc import InternalError, IntegrityError
+from sqlalchemy.exc import InternalError, IntegrityError, OperationalError
 from anyblok.config import Configuration
 from .conftest import init_registry, drop_database, create_database
 
@@ -61,28 +61,29 @@ def add_in_registry():
         integer = Int(primary_key=True)
         other = Str(index=True)
 
-    @register(Model)
-    class TestCheck:
-        integer = Int(primary_key=True)
+    if not sgdb_in(['MySQL', 'MariaDB']):
+        @register(Model)
+        class TestCheck:
+            integer = Int(primary_key=True)
 
-        @classmethod
-        def define_table_args(cls):
-            table_args = super(TestCheck, cls).define_table_args()
-            return table_args + (
-                CheckConstraint('integer > 0', name='test'),)
+            @classmethod
+            def define_table_args(cls):
+                table_args = super(TestCheck, cls).define_table_args()
+                return table_args + (
+                    CheckConstraint('integer > 0', name='test'),)
 
-    @register(Model)
-    class TestCheckLongConstraintName:
-        integer = Int(primary_key=True)
+        @register(Model)
+        class TestCheckLongConstraintName:
+            integer = Int(primary_key=True)
 
-        @classmethod
-        def define_table_args(cls):
-            table_args = super(TestCheckLongConstraintName,
-                               cls).define_table_args()
-            return table_args + (
-                CheckConstraint('integer > 0', name=(
-                    'long_long_long_long_long_long_long_long_long_long_'
-                    'long_long_long_long_long_long_long_long_test')),)
+            @classmethod
+            def define_table_args(cls):
+                table_args = super(TestCheckLongConstraintName,
+                                   cls).define_table_args()
+                return table_args + (
+                    CheckConstraint('integer > 0', name=(
+                        'long_long_long_long_long_long_long_long_long_long_'
+                        'long_long_long_long_long_long_long_long_test')),)
 
     @register(Model)
     class TestFKTarget:
@@ -137,8 +138,6 @@ def registry(request, clean_db, bloks_loaded):
     return registry
 
 
-@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                    reason="Osbcure reason")
 class TestMigration:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
@@ -272,7 +271,7 @@ class TestMigration:
     def test_alter_column_type(self, registry):
         t = registry.migration.table('test')
         c = t.column('other').alter(type_=TEXT)
-        assert c.type.__class__ is TEXT
+        assert isinstance(c.type, TEXT)
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="Can't drop primary key issue #92")
@@ -969,5 +968,5 @@ class TestMigration:
     def test_savepoint_without_rollback(self, registry):
         registry.migration.savepoint('test')
         registry.migration.release_savepoint('test')
-        with pytest.raises(InternalError):
+        with pytest.raises((InternalError, OperationalError)):
             registry.migration.rollback_savepoint('test')
