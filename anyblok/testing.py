@@ -29,8 +29,27 @@ from copy import copy
 from testfixtures import LogCapture as LC
 from contextlib import contextmanager
 from logging import getLogger, DEBUG, INFO, WARNING, ERROR, CRITICAL
+from anyblok import (
+    load_init_function_from_entry_points,
+    configuration_post_load,
+)
 
 logger = getLogger(__name__)
+
+
+class MockParser:
+
+    def _get_kwargs(self):
+        return []
+
+    def _get_args(self):
+        return False
+
+
+load_init_function_from_entry_points(unittest=True)
+Configuration.load_config_for_test()
+Configuration.parse_options(MockParser())
+configuration_post_load(unittest=True)
 
 
 def drop_database(url):
@@ -59,7 +78,7 @@ def tmp_configuration(**values):
     ::
 
         with TestCase.Configuration(db_name='a db name'):
-            self.assertEqual(Configuration.get('db_name'), 'a db name')
+            assert Configuration.get('db_name') == 'a db name'
 
     :param **values: values to update
     """
@@ -85,7 +104,6 @@ class TestCase(unittest.TestCase):
 
             For the moment we not use the environ variable juste constante
 
-        :param prefix: prefix the database name
         :param env: add another dict to merge with environ variable
         """
         db_name = Configuration.get('db_name') or 'test_anyblok'

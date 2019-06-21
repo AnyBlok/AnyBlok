@@ -1,6 +1,8 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2018 Denis VIVIÈS <dvivies@geoblink.com>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
@@ -14,7 +16,6 @@ from sqlalchemy import event
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
-from anyblok import load_init_function_from_entry_points
 
 logger = getLogger(__name__)
 
@@ -22,8 +23,6 @@ logger = getLogger(__name__)
 @pytest.fixture(scope='session')
 def init_session(request):
     # Init registry
-    load_init_function_from_entry_points(unittest=True)
-    Configuration.load_config_for_test()
     additional_setting = {'unittest': True}
 
     if len(BlokManager.list()) == 0:
