@@ -703,6 +703,7 @@ def add_plugins(group):
 @Configuration.add('config')
 def add_configuration_file(parser):
     parser.add_argument('-c', dest='configfile',
+                        default=os.environ.get('ANYBLOK_CONFIG_FILE'),
                         help="Relative path of the config file")
     parser.add_argument('--without-auto-migration', dest='withoutautomigration',
                         action='store_true')
