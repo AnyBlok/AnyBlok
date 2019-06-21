@@ -4,6 +4,7 @@
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -515,6 +516,17 @@ class Configuration:
                     ):
                         fnct(parser)
 
+            ad = AppDirs('AnyBlok')
+            # load the global configuration file
+            cls.parse_configfile(
+                join(ad.site_config_dir, 'conf.cfg'), False)
+            # load the user configuration file
+            cls.parse_configfile(
+                join(ad.user_config_dir, 'conf.cfg'), False)
+            configfile = cls.get('configfile')
+            if configfile:
+                cls.parse_configfile(configfile, True)
+
     @classmethod
     @log(logger, level='debug')
     def load(cls, application, useseparator=False, **kwargs):
@@ -700,7 +712,7 @@ def add_plugins(group):
                        help="get_url function to use")
 
 
-@Configuration.add('config')
+@Configuration.add('config', must_be_loaded_by_unittest=True)
 def add_configuration_file(parser):
     parser.add_argument('-c', dest='configfile',
                         default=os.environ.get('ANYBLOK_CONFIG_FILE'),
