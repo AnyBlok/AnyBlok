@@ -556,18 +556,28 @@ def skip_unless_bloks_installed(*bloks):
     return bloks_decorator
 
 
+DATABASES_CACHED = {}
+
+
 def sgdb_in(databases):
     url = Configuration.get('get_url')(db_name='')
     engine = sqlalchemy.create_engine(url)
     for database in databases:
-        if engine.url.drivername.startswith('mysql'):
-            if database == 'MySQL':
-                return True
+        if database not in DATABASES_CACHED:
+            if engine.url.drivername.startswith('mysql'):
+                if database == 'MySQL':
+                    DATABASES_CACHED['MySQL'] = True
 
-            res = engine.execute("""
-                show variables like 'version'
-            """).fetchone()
-            if res and database in res[1]:
-                return True
+                res = engine.execute("""
+                    show variables like 'version'
+                """).fetchone()
+                if res and database in res[1]:
+                    DATABASES_CACHED['MariaDB'] = True
+
+            else:
+                DATABASES_CACHED[database] = False
+
+        if DATABASES_CACHED[database]:
+            return True
 
     return False
