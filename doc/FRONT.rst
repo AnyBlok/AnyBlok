@@ -65,7 +65,7 @@ Running Tests
 ..              <basedoc_tests>`.
 
 
-To run framework tests with ``nose``::
+To run framework tests with ``pytest``::
 
     pip install pytest
     ANYBLOK_DATABASE_DRIVER postgresql ANYBLOK_DATABASE_NAME test_anyblok py.test anyblok/tests

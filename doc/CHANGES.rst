@@ -6,6 +6,7 @@
 ..    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -14,8 +15,8 @@
 CHANGELOG
 =========
 
-1.0.0
------
+0.22.0 (2019-06-21)
+-------------------
 
 * Replaced the **nose test** by **pytest**. All the test was converted. 
 * Moved and renamed ``anyblok.tests.testcase.py`` to ``anyblok.testing.py``. 
@@ -27,6 +28,10 @@ CHANGELOG
 * Removed the behviour ``test-bloks-at-install``
 * Added compatibility with `MySQL <https://www.mysql.com/>`_ and 
   `MariaDB <https://mariadb.org/>`_. PR `#85 <https://github.com/AnyBlok/AnyBlok/pull/85>`_
+
+.. warning::
+
+    this version can break unittest if the console script **anyblok_nose** is used
 
 0.21.3 (2019-03-19)
 -------------------
