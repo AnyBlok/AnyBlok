@@ -564,6 +564,7 @@ def sgdb_in(databases):
     engine = sqlalchemy.create_engine(url)
     for database in databases:
         if database not in DATABASES_CACHED:
+            DATABASES_CACHED[database] = False
             if engine.url.drivername.startswith('mysql'):
                 if database == 'MySQL':
                     DATABASES_CACHED['MySQL'] = True
@@ -574,9 +575,6 @@ def sgdb_in(databases):
                 if res and database in res[1]:
                     # MariaDB
                     DATABASES_CACHED[database] = True
-
-            else:
-                DATABASES_CACHED[database] = False
 
         if DATABASES_CACHED[database]:
             return True
