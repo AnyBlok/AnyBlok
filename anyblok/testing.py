@@ -572,7 +572,8 @@ def sgdb_in(databases):
                     show variables like 'version'
                 """).fetchone()
                 if res and database in res[1]:
-                    DATABASES_CACHED['MariaDB'] = True
+                    # MariaDB
+                    DATABASES_CACHED[database] = True
 
             else:
                 DATABASES_CACHED[database] = False
