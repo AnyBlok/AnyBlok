@@ -75,6 +75,10 @@ class SqlMixin:
         return ()
 
     @classmethod
+    def define_table_kwargs(cls):
+        return {}
+
+    @classmethod
     def define_mapper_args(cls):
         return {}
 

@@ -5,27 +5,43 @@ addons:
     postgresql: "9.6"
 
 python:
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7"
-  - "3.7-dev"
-  - "3.8-dev"
-  - "nightly"
-  - "pypy3.5"
+    - "3.4"
+    - "3.5"
+    - "3.6"
+    - "3.7"
+    - "3.7-dev"
+    - "3.8-dev"
+    - "nightly"
 
+env:
+    global:
+        - ANYBLOK_DATABASE_NAME=travis_ci_test
+    matrix:
+        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
+        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
 
 matrix:
-  allow_failures:
+    allow_failures:
+      - python: "3.7-dev"
       - python: "3.8-dev"
       - python: "nightly"
       - python: "pypy3.5"
+    include:
+      - python: "pypy3.5"
+        env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
+    exclude:
+      - python: "3.4"
+        env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
+      - python: "3.5"
+        env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
+
 
 virtualenv:
   system_site_packages: false
 
 services:
   - postgresql
+  - mysql
 
 before_install:
   - sudo apt-get update
@@ -33,30 +49,24 @@ before_install:
 
 install:
   - pip install -U pip
-  # only wheel
-  - pip install -U wheel
+  - pip install wheel
   - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then pip install psycopg2cffi; else pip install psycopg2; fi
-  - pip install -U sqlalchemy  # for unittesting anyblok with postgres
-  - pip install -U flake8 coverage nose
-  - pip install -U colour passlib furl phonenumbers pycountry  # special columns
+  - pip install sqlalchemy mysqlclient
+  - pip install flake8 coverage nose
+  - pip install colour passlib furl phonenumbers pycountry  # special columns
+  - pip install coveralls
   - pip install -U cryptography
   - pip install -U coveralls
-  - python setup.py develop
-
-env:
-  global:
-    - ANYBLOK_DATABASE_NAME=travis_ci_test
-    - ANYBLOK_DATABASE_DRIVER=postgresql
-    - ANYBLOK_DATABASE_USER=postgres
+  - pip install .
 
 script:
-  - flake8 anyblok
+  - flake8 anyblok --exclude=*/tests/*
   - python3 update_env.py
-  - psql -c 'create database travis_ci_test;' -U postgres
+  - $SQLSERVER 'create database travis_ci_test;'
   - nosetests anyblok/tests -v -s --with-coverage --cover-package=anyblok
-  - psql -c 'drop database travis_ci_test;' -U postgres
+  - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks
-  - nosetests anyblok/bloks --with-anyblok-bloks -v -s --with-coverage --cover-package=anyblok
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'postgresql' ]]; then nosetests anyblok/bloks --with-anyblok-bloks -v -s --with-coverage --cover-package=anyblok; fi
   - anyblok_nose -- -v -s --with-coverage --cover-package=anyblok  # test runner
   
 after_success:

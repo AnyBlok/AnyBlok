@@ -24,11 +24,17 @@ class TestBlok(Blok):
         reload(test)
 
     def is_table_exist(self):
-        return bool(self.registry.execute("""
-            select count(*)
-            from pg_catalog.pg_tables
-            where tablename = 'test';
-        """).fetchone()[0])
+        drivername = self.registry.engine.url.drivername
+        if drivername.startswith('postgres'):
+            return bool(self.registry.execute("""
+                select count(*)
+                from pg_catalog.pg_tables
+                where tablename = 'test';
+            """).fetchone()[0])
+        elif drivername.startswith('mysql'):
+            return bool(self.registry.execute("""
+                show tables like 'test';
+            """).fetchall())
 
     def pre_migration(self, latest_version):
         self.__class__.table_exist_before_automigration = self.is_table_exist()

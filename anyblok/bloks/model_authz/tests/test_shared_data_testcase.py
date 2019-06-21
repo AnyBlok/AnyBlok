@@ -13,7 +13,7 @@ Blok and a very simple, non structural model, to exert the tests base
 classes.
 """
 import unittest
-from anyblok.tests.testcase import SharedDataTestCase
+from anyblok.tests.testcase import SharedDataTestCase, sgdb_in
 from anyblok.tests.testcase import BlokTestCase
 
 
@@ -109,6 +109,8 @@ class TestSharedDataTestCaseException(unittest.TestCase):
         self.assertFalse(result.failures)
         self.assertFalse(result.errors)
 
+    @unittest.skipIf(sgdb_in(['MySQL', 'MariaDB']),
+                     "ShareDataTestCase doesn't work, issue #96")
     def test_setup_error(self):
         """Test rollback of test case and class with error in setUp"""
 

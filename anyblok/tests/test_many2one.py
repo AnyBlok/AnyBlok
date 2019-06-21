@@ -7,7 +7,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase
+from anyblok.tests.testcase import DBTestCase, sgdb_in
+from unittest import skipIf
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
@@ -175,6 +176,7 @@ class TestMany2One(DBTestCase):
             name="Jean-sébastien SUZANNE", address=address)
         self.assertEqual(person.address, address)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89')
     def test_minimum_many2one_on_sequence(self):
 
         def add_in_registry():
@@ -240,6 +242,7 @@ class TestMany2One(DBTestCase):
     def test_autodetect_type_boolean(self):
         self.check_autodetect_type(Boolean)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89')
     def test_autodetect_type_datetime(self):
         self.check_autodetect_type(DateTime)
 

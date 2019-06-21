@@ -5,7 +5,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase
+from anyblok.tests.testcase import DBTestCase, sgdb_in
+from unittest import skipIf
 from anyblok.model.factory import ViewFactory
 from anyblok.model.common import VIEW
 from anyblok.model.exceptions import ViewException
@@ -526,6 +527,7 @@ class TestView(DBTestCase):
         registry = self.init_registry(simple_view_with_same_table_by_inherit)
         self.check_same_view(registry)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), "View must be in RO issue #95")
     def test_view_update_method(self):
         registry = self.init_registry(simple_view)
         registry.T1.insert(code='test1', val=1)

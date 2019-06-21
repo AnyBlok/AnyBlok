@@ -7,7 +7,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase, DBTestCase
+from anyblok.tests.testcase import TestCase, DBTestCase, sgdb_in
 from anyblok.config import Configuration
 from sqlalchemy import Integer as SA_Integer, String as SA_String
 from sqlalchemy.exc import StatementError
@@ -451,6 +451,7 @@ class TestColumns(DBTestCase):
         registry.Test.query().update(dict(col=None))
         self.assertIsNone(test.col)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_1_by_query(self):
         import datetime
         import time
@@ -465,6 +466,7 @@ class TestColumns(DBTestCase):
         registry.expire(test, ['col'])
         self.assertEqual(test.col, now)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_2_by_query(self):
         import datetime
         import time
@@ -479,6 +481,7 @@ class TestColumns(DBTestCase):
         registry.expire(test, ['col'])
         self.assertEqual(test.col, now)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_3_by_query(self):
         import datetime
         import time
@@ -493,6 +496,7 @@ class TestColumns(DBTestCase):
         registry.expire(test, ['col'])
         self.assertEqual(test.col, now)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_4_by_query(self):
         import datetime
         import time
@@ -507,6 +511,7 @@ class TestColumns(DBTestCase):
         registry.expire(test, ['col'])
         self.assertEqual(test.col, now.replace(microsecond=0))
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_by_query_filter(self):
         import datetime
         import time
@@ -519,6 +524,7 @@ class TestColumns(DBTestCase):
         Test = registry.Test
         self.assertIs(Test.query().filter(Test.col == now).one(), test)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_1_by_query_filter(self):
         import datetime
         import time
@@ -534,6 +540,7 @@ class TestColumns(DBTestCase):
                 Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%z')).one(),
             test)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_2_by_query_filter(self):
         import datetime
         import time
@@ -549,6 +556,7 @@ class TestColumns(DBTestCase):
                 Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')).one(),
             test)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #87')
     def test_datetime_str_conversion_3_by_query_filter(self):
         import datetime
         import time
@@ -684,7 +692,7 @@ class TestColumns(DBTestCase):
     def test_large_binary(self):
         from os import urandom
 
-        blob = urandom(100000)
+        blob = urandom(10000)
         registry = self.init_registry(simple_column, ColumnType=LargeBinary)
 
         test = registry.Test.insert(col=blob)
@@ -761,6 +769,7 @@ class TestColumns(DBTestCase):
         t = registry.Test.insert()
         self.assertIsNone(t.col)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #90')
     def test_selection_change_by_query(self):
         SELECTIONS = [
             ('admin', 'Admin'),
@@ -831,18 +840,21 @@ class TestColumns(DBTestCase):
         registry.Test.query().filter(
             registry.Test.col.in_(['admin', 'regular-user'])).first()
 
+    @skipIf(sgdb_in(['MariaDB']), 'JSON is not existing in this SGDB')
     def test_json(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         val = {'a': 'Test'}
         test = registry.Test.insert(col=val)
         self.assertEqual(test.col, val)
 
+    @skipIf(sgdb_in(['MariaDB']), 'JSON is not existing in this SGDB')
     def test_json_update(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         test = registry.Test.insert(col={'a': 'test'})
         test.col['b'] = 'test'
         self.assertEqual(test.col, {'a': 'test', 'b': 'test'})
 
+    @skipIf(sgdb_in(['MariaDB']), 'JSON is not existing in this SGDB')
     def test_json_simple_filter(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test
@@ -854,6 +866,7 @@ class TestColumns(DBTestCase):
                 Test.col['a'].cast(SA_String) == '"test"').count(),
             2)
 
+    @skipIf(sgdb_in(['MariaDB']), 'JSON is not existing in this SGDB')
     def test_json_null(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test
@@ -943,6 +956,7 @@ class TestColumns(DBTestCase):
         t = registry.Test.insert()
         self.assertEqual(t.val, 'val')
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89')
     def test_sequence(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence)
         self.assertEqual(registry.Test.insert().col, "1")
@@ -953,12 +967,14 @@ class TestColumns(DBTestCase):
         self.assertEqual(
             Seq.query().filter(Seq.code == 'Model.Test=>col').count(), 1)
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89')
     def test_sequence_with_primary_key(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       primary_key=True)
         self.assertEqual(registry.Test.insert().col, "1")
         self.assertEqual(registry.Test.insert().col, "2")
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89')
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       code="SO", formater="{code}-{seq:06d}")
@@ -1224,6 +1240,7 @@ class TestColumns(DBTestCase):
             registry.Test.insert(col='WG')
 
     @skipIf(not has_pycountry, "pycountry is not installed")
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #90')
     def test_pycoundtry_query_insert_by_wrong_query(self):
         registry = self.init_registry(simple_column, ColumnType=Country)
         with self.assertRaises(Exception):

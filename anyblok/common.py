@@ -8,6 +8,8 @@
 import sys
 from functools import lru_cache
 from sqlalchemy.schema import ForeignKeyConstraint
+from sqlalchemy.sql.naming import ConventionDict
+from sqlalchemy.exc import InvalidRequestError
 
 
 """Define the prefixe for the mapper attribute for the column"""
@@ -31,10 +33,23 @@ def model_name(constraint, table):
     return ''.join(x[0] for x in name[:-1]) + '_' + name[-1]
 
 
+def constraint_name(constraint, table):
+    """return a shortest table name"""
+    conv = ConventionDict(constraint, table, naming_convention)
+    try:
+        return conv._key_constraint_name()
+    except InvalidRequestError:
+        if constraint._pending_colargs:
+            return '_'.join([x.name for x in constraint._pending_colargs])
+
+        raise
+
+
 """table convention for constraint"""
 naming_convention = {
     "all_column_name": all_column_name,
     "model_name": model_name,
+    "constraint_name": constraint_name,
     "ix": "anyblok_ix_%(model_name)s__%(all_column_name)s",
     "uq": "anyblok_uq_%(model_name)s__%(all_column_name)s",
     "ck": "anyblok_ck_%(model_name)s__%(constraint_name)s",

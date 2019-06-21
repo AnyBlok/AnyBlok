@@ -7,13 +7,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase
+from anyblok.tests.testcase import DBTestCase, sgdb_in
 from anyblok import Declarations
 from anyblok.mapper import ModelAttributeException
 from anyblok.column import Integer, String, DateTime
 from anyblok.relationship import Many2Many, Many2One
 from anyblok.field import FieldException
 from datetime import datetime
+from unittest import skipIf
 
 register = Declarations.register
 Model = Declarations.Model
@@ -273,6 +274,7 @@ class TestMany2Many(DBTestCase):
 
         self.assertEqual(person.addresses, [address])
 
+    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #90')
     def test_declared_in_mixin_inherit_by_two_models(self):
         def add_in_registry():
             _minimum_many2many_by_mixin()

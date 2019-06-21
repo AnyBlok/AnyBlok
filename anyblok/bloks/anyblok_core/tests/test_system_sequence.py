@@ -5,9 +5,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import BlokTestCase
+from anyblok.tests.testcase import BlokTestCase, sgdb_in
+from unittest import skipIf
 
 
+@skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #89')
 class TestSystemSequence(BlokTestCase):
 
     def test_nextval_without_prefix_without_suffix(self):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
@@ -8,6 +8,8 @@ from contextlib import contextmanager
 from sqlalchemy import func, select, update, join, and_
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.dialects.mysql.types import TINYINT
+from sqlalchemy.sql.sqltypes import Boolean
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -252,6 +254,16 @@ class MigrationReport:
         else:
             return True
 
+    def init_modify_type(self, diff):
+        if self.migration.conn.engine.url.drivername.startswith('mysql'):
+            if isinstance(diff[5], TINYINT) and isinstance(diff[6], Boolean):
+                # Boolean are TINYINT in MySQL DataBase
+                return True
+
+        self.log_names.append("Modify column type %s.%s : %s => %s" % (
+            diff[2], diff[3], diff[5], diff[6]))
+        return False
+
     def __init__(self, migration, diffs):
         """ Initializer
 
@@ -278,6 +290,7 @@ class MigrationReport:
             'remove_column': self.init_remove_column,
             'remove_table': self.init_remove_table,
             'change_pk': self.init_change_pk,
+            'modify_type': self.init_modify_type,
         }
         for diff in diffs:
             if isinstance(diff, list):
@@ -285,6 +298,13 @@ class MigrationReport:
                 for change in diff:
                     _, _, table, column, _, _, _ = change
                     self.log_names.append('Alter %s.%s' % (table, column))
+                    fnct = mappers.get(change[0])
+                    if fnct:
+                        if fnct(change):
+                            continue
+                    else:
+                        logger.warn('Unknow diff: %r', change)
+
                     self.actions.append(change)
             else:
                 fnct = mappers.get(diff[0])
@@ -414,7 +434,6 @@ class MigrationReport:
             'remove_table': self.apply_remove_table,
             'remove_column': self.apply_remove_column,
         }
-
         for action in self.actions:
             fnct = mappers.get(action[0])
             if fnct:
@@ -547,21 +566,20 @@ class MigrationColumn:
         :param column: sqlalchemy column
         :rtype: MigrationColumn instance
         """
+        migration = self.table.migration
         nullable = column.nullable
         if not nullable:
             column.nullable = True
 
-        self.table.migration.operation.impl.add_column(self.table.name, column)
+        migration.operation.impl.add_column(self.table.name, column)
         self.apply_default_value(column)
 
         if not nullable:
             c = MigrationColumn(self.table, column.name)
-            c.alter(existing_type=column.type,
-                    existing_server_default=column.server_default,
-                    existing_autoincrement=column.autoincrement,
-                    existing_nullable=True, nullable=False)
+            c.alter(nullable=False, )
 
-        self.table.migration.metadata.tables[self.table.name]
+        # check the table exist
+        migration.metadata.tables[self.table.name]
         return MigrationColumn(self.table, column.name)
 
     def alter(self, **kwargs):
@@ -576,22 +594,26 @@ class MigrationColumn:
 
         :param new_column_name: New name for the column
         :param type_: New sqlalchemy type
-        :param existing_type: Old sqlalchemy type
         :param server_default: The default value in database server
-        :param existing_server_default: Old default value
         :param nullable: New nullable value
-        :param existing_nullable: Old nullable value
-        :param autoincrement: New auto increment use for Integer whith primary
-            key only
-        :param existing_autoincrement: Old auto increment
+        :param comment: New comment value
         :rtype: MigrationColumn instance
         """
         vals = {}
         name = self.name
+        vals.update({
+            'existing_type': self.type if 'type_' not in kwargs else None,
+            'existing_server_default': (
+                self.server_default
+                if 'server_default' not in kwargs
+                else None),
+            'existing_autoincrement': (
+                self.autoincrement if 'autoincrement' not in kwargs else None),
+            'existing_comment': (
+                self.comment if 'comment' not in kwargs else None)
+        })
 
-        for k in ('existing_type', 'existing_server_default',
-                  'existing_nullable', 'existing_autoincrement',
-                  'autoincrement', 'server_default', 'type_'):
+        for k in ('autoincrement', 'server_default', 'type_'):
             if k in kwargs:
                 vals[k] = kwargs[k]
 
@@ -605,13 +627,20 @@ class MigrationColumn:
 
         if 'nullable' in kwargs:
             nullable = kwargs['nullable']
+            vals['existing_nullable'] = (
+                self.nullable if 'nullable' in kwargs else None),
             savepoint = '%s_not_null' % name
             try:
                 self.table.migration.savepoint(savepoint)
                 self.table.migration.operation.alter_column(
                     self.table.name, self.name, nullable=nullable, **vals)
             except IntegrityError as e:
+                # POSTGRES
                 self.table.migration.rollback_savepoint(savepoint)
+                logger.warn(str(e))
+            except OperationalError as e:
+                # MariaDB, MySQL
+                # No save point, because already rollbacked
                 logger.warn(str(e))
 
         return MigrationColumn(self.table, name)
@@ -620,17 +649,45 @@ class MigrationColumn:
         """ Drop the column """
         self.table.migration.operation.drop_column(self.table.name, self.name)
 
+    @property
     def nullable(self):
         """ Use for unittest return if the column is nullable """
         return self.info['nullable']
 
+    @property
     def type(self):
         """ Use for unittest: return the column type """
         return self.info['type']
 
+    @property
     def server_default(self):
         """ Use for unittest: return the default database value """
-        return self.info['default']
+        sdefault = self.info['default']
+        if self.table.migration.conn.engine.url.drivername.startswith(
+            'mysql'
+        ):
+            if sdefault:
+                if not isinstance(sdefault, str):
+                    return sdefault.arg
+                else:
+                    return eval(sdefault, {}, {})
+
+        return sdefault
+
+    @property
+    def comment(self):
+        """ Use for unittest: return the default database value """
+        return self.info['comment']
+
+    @property
+    def autoincrement(self):
+        """ Use for unittest: return the default database value """
+        table = self.table.migration.metadata.tables[self.table.name]
+        primary_keys = [x.name for x in table.primary_key.columns]
+        if self.name in primary_keys:
+            return False
+
+        return self.info.get('autoincrement')
 
 
 class MigrationConstraintCheck:
@@ -705,8 +762,12 @@ class MigrationConstraintUnique:
             self.table.migration.savepoint(savepoint)
             self.table.migration.operation.create_unique_constraint(
                 self.name, self.table.name, columns_name)
-        except IntegrityError as e:
-            self.table.migration.rollback_savepoint(savepoint)
+        except (IntegrityError, OperationalError) as e:
+            if not self.table.migration.conn.engine.url.drivername.startswith(
+                'mysql'
+            ):
+                self.table.migration.rollback_savepoint(savepoint)
+
             logger.warn("Error during the add of new unique constraint %r on "
                         "table %r and columns %r : %r " % (self.name,
                                                            self.table.name,
@@ -954,7 +1015,7 @@ class Migration:
 
     def __init__(self, registry):
         self.withoutautomigration = registry.withoutautomigration
-        self.conn = registry.session.connection()
+        self.conn = registry.connection()
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
         self.ddl_compiler = self.conn.dialect.ddl_compiler(
@@ -1024,6 +1085,10 @@ class Migration:
         return False
 
     def detect_check_constraint_changed(self, inspector):
+        if self.conn.engine.url.drivername.startswith('mysql'):
+            # MySQL don t return the reflected constraint
+            return []
+
         diff = []
         for table in inspector.get_table_names():
             if table not in self.metadata.tables:
