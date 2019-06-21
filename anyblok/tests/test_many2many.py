@@ -3,18 +3,20 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2015 Pierre Verkest <pverkest@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase, sgdb_in
+from anyblok.testing import sgdb_in
+import pytest
 from anyblok import Declarations
 from anyblok.mapper import ModelAttributeException
 from anyblok.column import Integer, String, DateTime
 from anyblok.relationship import Many2Many, Many2One
 from anyblok.field import FieldException
 from datetime import datetime
-from unittest import skipIf
+from .conftest import init_registry, reset_db
 
 register = Declarations.register
 Model = Declarations.Model
@@ -41,6 +43,63 @@ def _complete_many2many(**kwargs):
                               m2m_remote_columns='a_id',
                               m2m_local_columns='p_name',
                               many2many="persons")
+
+
+@pytest.fixture(scope="class")
+def registry_many2many(request, bloks_loaded):
+    reset_db()
+    registry = init_registry(_complete_many2many)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+class TestMany2ManyComplete:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_many2many):
+        transaction = registry_many2many.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_complete_many2many(self, registry_many2many):
+        registry = registry_many2many
+
+        address_exist = hasattr(registry.Person, 'addresses')
+        assert address_exist
+
+        m2m_tables_exist = hasattr(registry, 'many2many_tables')
+        assert m2m_tables_exist
+
+        jt = registry.declarativebase.metadata.tables
+        join_table_exist = 'join_addresses_by_persons' in jt
+        assert join_table_exist
+
+        assert len(jt['join_addresses_by_persons'].primary_key.columns) == 2
+        assert 'a_id' in jt[
+            'join_addresses_by_persons'].primary_key.columns
+        assert 'p_name' in jt[
+            'join_addresses_by_persons'].primary_key.columns
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+
+        person.addresses.append(address)
+
+        assert address.persons == [person]
+
+    def test_many2many_autodoc(self, registry_many2many):
+        registry = registry_many2many
+        registry.loaded_namespaces_first_step['Model.Person'][
+            'addresses'].autodoc_get_properties()
+
+    def test_complete_many2many_expire_field(self, registry_many2many):
+        registry = registry_many2many
+        assert ('x2m', 'addresses', 'persons') in registry.expire_attributes[
+            'Model.Person']['addresses']
+        assert ('x2m', 'persons', 'addresses') in registry.expire_attributes[
+            'Model.Address']['persons']
 
 
 def _minimum_many2many(**kwargs):
@@ -148,64 +207,34 @@ def reuse_many2many_table(**kwargs):
             join_table='join_person_and_address_for_addresses')
 
 
-class TestMany2Many(DBTestCase):
+class TestMany2Many:
 
-    def test_complete_many2many(self):
-        registry = self.init_registry(_complete_many2many)
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
 
-        address_exist = hasattr(registry.Person, 'addresses')
-        self.assertTrue(address_exist)
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
 
-        m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertTrue(m2m_tables_exist)
+        request.addfinalizer(close)
 
-        jt = registry.declarativebase.metadata.tables
-        join_table_exist = 'join_addresses_by_persons' in jt
-        self.assertEqual(join_table_exist, True)
-
-        self.assertEqual(
-            len(jt['join_addresses_by_persons'].primary_key.columns),
-            2)
-        self.assertTrue('a_id' in jt[
-            'join_addresses_by_persons'].primary_key.columns)
-        self.assertTrue('p_name' in jt[
-            'join_addresses_by_persons'].primary_key.columns)
-
-        address = registry.Address.insert(
-            street='14-16 rue soleillet', zip='75020', city='Paris')
-
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
-
-        person.addresses.append(address)
-
-        self.assertEqual(address.persons, [person])
-
-    def test_many2many_autodoc(self):
-        registry = self.init_registry(_complete_many2many)
-        registry.loaded_namespaces_first_step['Model.Person'][
-            'addresses'].autodoc_get_properties()
-
-    def test_complete_many2many_expire_field(self):
-        registry = self.init_registry(_complete_many2many)
-        self.assertIn(
-            ('x2m', 'addresses', 'persons'),
-            registry.expire_attributes['Model.Person']['addresses'])
-        self.assertIn(
-            ('x2m', 'persons', 'addresses'),
-            registry.expire_attributes['Model.Address']['persons'])
+    def init_registry(self, *args, **kwargs):
+        reset_db()
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def test_minimum_many2many(self):
         registry = self.init_registry(_minimum_many2many)
 
         address_exist = hasattr(registry.Person, 'addresses')
-        self.assertTrue(address_exist)
+        assert address_exist
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertTrue(m2m_tables_exist)
+        assert m2m_tables_exist
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_person_and_address_for_addresses' in jt
-        self.assertEqual(join_table_exist, True)
+        assert join_table_exist
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
@@ -214,20 +243,20 @@ class TestMany2Many(DBTestCase):
 
         person.addresses.append(address)
 
-        self.assertEqual(person.addresses, [address])
+        assert person.addresses == [address]
 
     def test_many2many_with_str_model(self):
         registry = self.init_registry(_many2many_with_str_model)
 
         address_exist = hasattr(registry.Person, 'addresses')
-        self.assertTrue(address_exist)
+        assert address_exist
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertTrue(m2m_tables_exist)
+        assert m2m_tables_exist
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_person_and_address_for_addresses' in jt
-        self.assertEqual(join_table_exist, True)
+        assert join_table_exist
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
@@ -236,10 +265,10 @@ class TestMany2Many(DBTestCase):
 
         person.addresses.append(address)
 
-        self.assertEqual(person.addresses, [address])
+        assert person.addresses == [address]
 
     def test_unexisting_remote_columns(self):
-        with self.assertRaises(ModelAttributeException):
+        with pytest.raises(ModelAttributeException):
             self.init_registry(unexisting_remote_columns)
 
     def test_reuse_many2many_table(self):
@@ -250,20 +279,20 @@ class TestMany2Many(DBTestCase):
 
         person.addresses.append(address)
 
-        self.assertEqual(address.persons, [person])
+        assert address.persons == [person]
 
     def test_declared_in_mixin(self):
         registry = self.init_registry(_minimum_many2many_by_mixin)
 
         address_exist = hasattr(registry.Person, 'addresses')
-        self.assertTrue(address_exist)
+        assert address_exist
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertTrue(m2m_tables_exist)
+        assert m2m_tables_exist
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_person_and_address_for_addresses' in jt
-        self.assertEqual(join_table_exist, True)
+        assert join_table_exist
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
@@ -272,9 +301,9 @@ class TestMany2Many(DBTestCase):
 
         person.addresses.append(address)
 
-        self.assertEqual(person.addresses, [address])
+        assert person.addresses == [address]
 
-    @skipIf(sgdb_in(['MySQL', 'MariaDB']), 'ISSUE #90')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #90')
     def test_declared_in_mixin_inherit_by_two_models(self):
         def add_in_registry():
             _minimum_many2many_by_mixin()
@@ -287,18 +316,18 @@ class TestMany2Many(DBTestCase):
         registry = self.init_registry(add_in_registry)
 
         address_exist = hasattr(registry.Person, 'addresses')
-        self.assertTrue(address_exist)
+        assert address_exist
         address_exist = hasattr(registry.Person2, 'addresses')
-        self.assertTrue(address_exist)
+        assert address_exist
 
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
-        self.assertTrue(m2m_tables_exist)
+        assert m2m_tables_exist
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = 'join_person_and_address_for_addresses' in jt
-        self.assertEqual(join_table_exist, True)
+        assert join_table_exist
         join_table_exist = 'join_person2_and_address_for_addresses' in jt
-        self.assertEqual(join_table_exist, True)
+        assert join_table_exist
 
     def test_comlet_with_multi_primary_keys_remote_and_local(self):
 
@@ -325,20 +354,18 @@ class TestMany2Many(DBTestCase):
         t1 = registry.Test.insert(id2="test1")
         t2 = registry.Test2.insert(id2="test2")
         t2.test.append(t1)
-        self.assertIs(t1.test2[0], t2)
+        assert t1.test2[0] is t2
 
         jt = registry.declarativebase.metadata.tables
-        self.assertEqual(
-            len(jt['join_test_and_test2'].primary_key.columns),
-            4)
-        self.assertTrue('t1_id' in jt[
-            'join_test_and_test2'].primary_key.columns)
-        self.assertTrue('t1_id2' in jt[
-            'join_test_and_test2'].primary_key.columns)
-        self.assertTrue('t2_id' in jt[
-            'join_test_and_test2'].primary_key.columns)
-        self.assertTrue('t2_id2' in jt[
-            'join_test_and_test2'].primary_key.columns)
+        assert len(jt['join_test_and_test2'].primary_key.columns) == 4
+        assert 't1_id' in jt[
+            'join_test_and_test2'].primary_key.columns
+        assert 't1_id2' in jt[
+            'join_test_and_test2'].primary_key.columns
+        assert 't2_id' in jt[
+            'join_test_and_test2'].primary_key.columns
+        assert 't2_id2' in jt[
+            'join_test_and_test2'].primary_key.columns
 
     def test_comlet_with_multi_primary_keys_remote(self):
 
@@ -364,7 +391,7 @@ class TestMany2Many(DBTestCase):
         t1 = registry.Test.insert(id2="test1")
         t2 = registry.Test2.insert()
         t2.test.append(t1)
-        self.assertIs(t1.test2[0], t2)
+        assert t1.test2[0] is t2
 
     def test_comlet_with_multi_primary_keys_local(self):
 
@@ -390,7 +417,7 @@ class TestMany2Many(DBTestCase):
         t1 = registry.Test.insert()
         t2 = registry.Test2.insert(id2='test2')
         t2.test.append(t1)
-        self.assertIs(t1.test2[0], t2)
+        assert t1.test2[0] is t2
 
     def test_minimum_with_multi_primary_keys_remote_and_local(self):
 
@@ -411,7 +438,7 @@ class TestMany2Many(DBTestCase):
         t1 = registry.Test.insert(id2="test1")
         t2 = registry.Test2.insert(id2="test2")
         t2.test.append(t1)
-        self.assertIs(t1.test2[0], t2)
+        assert t1.test2[0] is t2
 
     def test_minimum_with_multi_primary_keys_remote(self):
 
@@ -431,7 +458,7 @@ class TestMany2Many(DBTestCase):
         t1 = registry.Test.insert(id2="test1")
         t2 = registry.Test2.insert()
         t2.test.append(t1)
-        self.assertIs(t1.test2[0], t2)
+        assert t1.test2[0] is t2
 
     def test_minimum_with_multi_primary_keys_local(self):
 
@@ -451,7 +478,7 @@ class TestMany2Many(DBTestCase):
         t1 = registry.Test.insert()
         t2 = registry.Test2.insert(id2="test2")
         t2.test.append(t1)
-        self.assertIs(t1.test2[0], t2)
+        assert t1.test2[0] is t2
 
     def test_many2many_on_self(self):
 
@@ -471,7 +498,7 @@ class TestMany2Many(DBTestCase):
         t1 = registry.Test.insert()
         t2 = registry.Test.insert()
         t1.childs.append(t2)
-        self.assertIn(t1, t2.parents)
+        assert t1 in t2.parents
 
     def test_many2many_on_self_auto_column(self):
 
@@ -490,7 +517,7 @@ class TestMany2Many(DBTestCase):
         t1 = registry.Test2.insert()
         t2 = registry.Test2.insert()
         t1.childs.append(t2)
-        self.assertIn(t1, t2.parents)
+        assert t1 in t2.parents
 
     def test_many2many_on_multi_fk_miss_on_m2m_column(self):
 
@@ -510,7 +537,7 @@ class TestMany2Many(DBTestCase):
                     m2m_remote_columns=['test_id'],
                     model=Model.Address)
 
-        with self.assertRaises(FieldException):
+        with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
     def test_rich_many2many_complete_config(self):
@@ -552,11 +579,11 @@ class TestMany2Many(DBTestCase):
             street='somewhere', zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
-        self.assertEqual(personaddress.a_id, address.id)
-        self.assertEqual(personaddress.p_name, person.name)
-        self.assertTrue(personaddress.id)
-        self.assertTrue(personaddress.create_at)
-        self.assertEqual(personaddress.foo, 'bar')
+        assert personaddress.a_id == address.id
+        assert personaddress.p_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
 
     def test_rich_many2many_minimum_config(self):
 
@@ -594,11 +621,11 @@ class TestMany2Many(DBTestCase):
             street='somewhere', zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
-        self.assertEqual(personaddress.a_id, address.id)
-        self.assertEqual(personaddress.p_name, person.name)
-        self.assertTrue(personaddress.id)
-        self.assertTrue(personaddress.create_at)
-        self.assertEqual(personaddress.foo, 'bar')
+        assert personaddress.a_id == address.id
+        assert personaddress.p_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
 
     def test_rich_many2many_minimum_config_on_join_model(self):
 
@@ -636,11 +663,11 @@ class TestMany2Many(DBTestCase):
             street='somewhere', zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
-        self.assertEqual(personaddress.a_id, address.id)
-        self.assertEqual(personaddress.p_name, person.name)
-        self.assertTrue(personaddress.id)
-        self.assertTrue(personaddress.create_at)
-        self.assertEqual(personaddress.foo, 'bar')
+        assert personaddress.a_id == address.id
+        assert personaddress.p_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
 
     def test_rich_many2many_minimum_config_with_many2one(self):
 
@@ -680,11 +707,11 @@ class TestMany2Many(DBTestCase):
             street='somewhere', zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
-        self.assertEqual(personaddress.address_id, address.id)
-        self.assertEqual(personaddress.person_name, person.name)
-        self.assertTrue(personaddress.id)
-        self.assertTrue(personaddress.create_at)
-        self.assertEqual(personaddress.foo, 'bar')
+        assert personaddress.address_id == address.id
+        assert personaddress.person_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
 
     def test_rich_many2many_minimum_config_with_pk_many2one(self):
 
@@ -725,10 +752,10 @@ class TestMany2Many(DBTestCase):
             street='somewhere', zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
-        self.assertEqual(personaddress.address_id, address.id)
-        self.assertEqual(personaddress.person_name, person.name)
-        self.assertTrue(personaddress.create_at)
-        self.assertEqual(personaddress.foo, 'bar')
+        assert personaddress.address_id == address.id
+        assert personaddress.person_name == person.name
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
 
     def test_rich_many2many_minimum_config_on_join_model_and_join_table_1(self):
 
@@ -766,11 +793,11 @@ class TestMany2Many(DBTestCase):
             street='somewhere', zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
-        self.assertEqual(personaddress.a_id, address.id)
-        self.assertEqual(personaddress.p_name, person.name)
-        self.assertTrue(personaddress.id)
-        self.assertTrue(personaddress.create_at)
-        self.assertEqual(personaddress.foo, 'bar')
+        assert personaddress.a_id == address.id
+        assert personaddress.p_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
 
     def test_rich_many2many_minimum_config_on_join_model_and_join_table_2(self):
 
@@ -803,7 +830,7 @@ class TestMany2Many(DBTestCase):
                                       join_model=Model.PersonAddress,
                                       many2many="persons")
 
-        with self.assertRaises(FieldException):
+        with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
     def test_rich_many2many_complete_config_on_self(self):
@@ -836,11 +863,11 @@ class TestMany2Many(DBTestCase):
         t2 = registry.Test.insert()
         t1.parents.append(t2)
         link = registry.TestLink.query().one()
-        self.assertEqual(link.t_left, t2.id)
-        self.assertEqual(link.t_right, t1.id)
-        self.assertTrue(link.id)
-        self.assertTrue(link.create_at)
-        self.assertEqual(link.foo, 'bar')
+        assert link.t_left == t2.id
+        assert link.t_right == t1.id
+        assert link.id
+        assert link.create_at
+        assert link.foo == 'bar'
 
     def test_rich_many2many_minimum_config_on_self(self):
 
@@ -871,11 +898,11 @@ class TestMany2Many(DBTestCase):
         t2 = registry.Test.insert()
         t1.parents.append(t2)
         link = registry.TestLink.query().one()
-        self.assertEqual(link.t_left, t2.id)
-        self.assertEqual(link.t_right, t1.id)
-        self.assertTrue(link.id)
-        self.assertTrue(link.create_at)
-        self.assertEqual(link.foo, 'bar')
+        assert link.t_left == t2.id
+        assert link.t_right == t1.id
+        assert link.id
+        assert link.create_at
+        assert link.foo == 'bar'
 
     def test_rich_many2many_minimum_config_on_self_without_columns_1(self):
 
@@ -900,7 +927,7 @@ class TestMany2Many(DBTestCase):
                     m2m_local_columns='t_left',
                 )
 
-        with self.assertRaises(FieldException):
+        with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
     def test_rich_many2many_minimum_config_on_self_without_columns_2(self):
@@ -926,7 +953,7 @@ class TestMany2Many(DBTestCase):
                     m2m_remote_columns='t_right',
                 )
 
-        with self.assertRaises(FieldException):
+        with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
     def test_rich_many2many_minimum_config_on_self_with_join_model(self):
@@ -958,11 +985,11 @@ class TestMany2Many(DBTestCase):
         t2 = registry.Test.insert()
         t1.parents.append(t2)
         link = registry.TestLink.query().one()
-        self.assertEqual(link.t_left, t2.id)
-        self.assertEqual(link.t_right, t1.id)
-        self.assertTrue(link.id)
-        self.assertTrue(link.create_at)
-        self.assertEqual(link.foo, 'bar')
+        assert link.t_left == t2.id
+        assert link.t_right == t1.id
+        assert link.id
+        assert link.create_at
+        assert link.foo == 'bar'
 
     def test_rich_many2many_minimum_config_on_self_with_many2one(self):
 
@@ -997,11 +1024,11 @@ class TestMany2Many(DBTestCase):
         t2 = registry.Test.insert()
         t1.parents.append(t2)
         link = registry.TestLink.query().one()
-        self.assertEqual(link.left_id, t2.id)
-        self.assertEqual(link.right_id, t1.id)
-        self.assertTrue(link.id)
-        self.assertTrue(link.create_at)
-        self.assertEqual(link.foo, 'bar')
+        assert link.left_id == t2.id
+        assert link.right_id == t1.id
+        assert link.id
+        assert link.create_at
+        assert link.foo == 'bar'
 
     def test_rich_many2many_minimum_config_on_self_with_pk_many2one_2(self):
 
@@ -1037,10 +1064,10 @@ class TestMany2Many(DBTestCase):
         t2 = registry.Test.insert()
         t1.parents.append(t2)
         link = registry.TestLink.query().one()
-        self.assertEqual(link.left_id, t2.id)
-        self.assertEqual(link.right_id, t1.id)
-        self.assertTrue(link.create_at)
-        self.assertEqual(link.foo, 'bar')
+        assert link.left_id == t2.id
+        assert link.right_id == t1.id
+        assert link.create_at
+        assert link.foo == 'bar'
 
     def test_with_twice_the_same_many2many(self):
         def add_in_registry(**kwargs):
@@ -1067,5 +1094,5 @@ class TestMany2Many(DBTestCase):
 
         person.invoiced_addresses.append(address)
 
-        self.assertEqual(person.invoiced_addresses, [address])
-        self.assertEqual(person.delivery_addresses, [])
+        assert person.invoiced_addresses == [address]
+        assert person.delivery_addresses == []

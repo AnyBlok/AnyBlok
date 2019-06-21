@@ -10,13 +10,8 @@ import anyblok
 from anyblok.release import version
 from anyblok.blok import BlokManager
 from anyblok.config import Configuration, get_db_name
-from anyblok.registry import RegistryManager, return_list
+from anyblok.registry import RegistryManager
 from anyblok._graphviz import ModelSchema, SQLSchema
-from nose import main
-import warnings
-import sys
-from os.path import join
-from os import walk
 from argparse import RawDescriptionHelpFormatter
 from textwrap import dedent
 from sqlalchemy_utils.functions import create_database
@@ -50,12 +45,6 @@ Configuration.add_application_properties(
     ],
     prog='AnyBlok update database, version %r' % version,
     description="Update a database: install, upgrade or uninstall the bloks "
-)
-
-Configuration.add_application_properties(
-    'nose', ['logging', 'unittest'],
-    prog='AnyBlok nose, version %r' % version,
-    description="Run fonctionnal nosetest of the installed bloks"
 )
 
 Configuration.add_application_properties(
@@ -145,36 +134,6 @@ def anyblok_updatedb():
         registry.close()
 
 
-def anyblok_nose():
-    """Run nose unit test for the registry
-    """
-    warnings.simplefilter('default')
-    registry = anyblok.start('nose', useseparator=True, unittest=True)
-
-    defaultTest = []
-    if registry:
-        installed_bloks = registry.System.Blok.list_by_state("installed")
-        selected_bloks = return_list(
-            Configuration.get('selected_bloks')) or installed_bloks
-
-        unwanted_bloks = return_list(
-            Configuration.get('unwanted_bloks')) or []
-
-        defaultTest = []
-        for blok in installed_bloks:
-            if blok not in selected_bloks or blok in unwanted_bloks:
-                continue
-
-            startpath = BlokManager.getPath(blok)
-            for root, dirs, _ in walk(startpath):
-                if 'tests' in dirs:
-                    defaultTest.append(join(root, 'tests'))
-
-        registry.close()  # free the registry to force create it again
-
-    sys.exit(main(defaultTest=defaultTest))
-
-
 def anyblok_interpreter():
     """Execute a script or open an interpreter
     """
@@ -217,3 +176,11 @@ def anyblok2doc():
             dot = SQLSchema(name_, format=format_)
             doc.toSQL(dot)
             dot.save()
+
+
+def anyblok_nose():
+    raise Exception(
+        "This script have been removed, because the nose test of the "
+        "framework was remplaced by pytest and this action was become "
+        "incompatible. If you need to run your test with nose, use the nose "
+        "pluging.")

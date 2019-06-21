@@ -703,6 +703,7 @@ def add_plugins(group):
 @Configuration.add('config')
 def add_configuration_file(parser):
     parser.add_argument('-c', dest='configfile',
+                        default=os.environ.get('ANYBLOK_CONFIG_FILE'),
                         help="Relative path of the config file")
     parser.add_argument('--without-auto-migration', dest='withoutautomigration',
                         action='store_true')
@@ -820,14 +821,6 @@ def add_doc(group):
                        help='Detail only these models')
     group.add_argument('--doc-unwanted-models', nargs='+',
                        help='No detail these models')
-
-
-@Configuration.add('unittest', label="Unittest")
-def add_unittest(group):
-    group.add_argument('--selected-bloks', nargs='+',
-                       help="Name of the bloks to test")
-    group.add_argument('--unwanted-bloks', nargs='+',
-                       help="Name of the bloks to no test")
 
 
 @Configuration.add('logging', label="Logging")

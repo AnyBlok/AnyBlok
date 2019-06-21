@@ -6,10 +6,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import DBTestCase
+import pytest
 from anyblok.declarations import Declarations, listen
 from anyblok.column import Integer, Boolean, String
 from anyblok.model.event import ORMEventException
+from .conftest import init_registry
 
 
 register = Declarations.register
@@ -18,16 +19,29 @@ Mixin = Declarations.Mixin
 Core = Declarations.Core
 
 
-class TestEvent(DBTestCase):
+class TestEvent:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def check_event(self, registry):
-        self.assertEqual(registry.Test.x, 0)
+        assert registry.Test.x == 0
         registry.Event.fire('fireevent')
-        self.assertEqual(registry.Test.x, 1)
+        assert registry.Test.x == 1
         registry.Event.fire('fireevent', a=2, b=2)
-        self.assertEqual(registry.Test.x, 4)
+        assert registry.Test.x == 4
         registry.Event.fire('fireevent')
-        self.assertEqual(registry.Test.x, 1)
+        assert registry.Test.x == 1
 
     def test_simple_event_from_model(self):
 
@@ -67,8 +81,7 @@ class TestEvent(DBTestCase):
                     cls.x = a * b
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(len(registry.events['Model.Event']['fireevent']),
-                         1)
+        assert len(registry.events['Model.Event']['fireevent']) == 1
         self.check_event(registry)
 
     def test_simple_event_from_mixin(self):
@@ -93,8 +106,7 @@ class TestEvent(DBTestCase):
                 pass
 
         registry = self.init_registry(add_in_registry)
-        self.assertEqual(len(registry.events['Model.Event']['fireevent']),
-                         1)
+        assert len(registry.events['Model.Event']['fireevent']) == 1
         self.check_event(registry)
 
     def test_simple_event_from_core(self):
@@ -160,13 +172,13 @@ class TestEvent(DBTestCase):
 
     def test_inherited_without_event(self):
         registry = self.init_registry(self.add_in_registry_inherited)
-        self.assertEqual(registry.Test.x, 0)
+        assert registry.Test.x == 0
         registry.Event.fire('fireevent')
-        self.assertEqual(registry.Test.x, 0)
+        assert registry.Test.x == 0
         registry.Event.fire('fireevent', a=2, b=2)
-        self.assertEqual(registry.Test.x, 0)
+        assert registry.Test.x == 0
         registry.Event.fire('fireevent')
-        self.assertEqual(registry.Test.x, 0)
+        assert registry.Test.x == 0
 
     def test_inherited_with_event_on_core(self):
         registry = self.init_registry(self.add_in_registry_inherited,
@@ -176,8 +188,7 @@ class TestEvent(DBTestCase):
     def test_inherited_with_event_on_mixin(self):
         registry = self.init_registry(self.add_in_registry_inherited,
                                       withmixin=True)
-        self.assertEqual(
-            len(registry.events['Model.Event']['fireevent']), 1)
+        assert len(registry.events['Model.Event']['fireevent']) == 1
         self.check_event(registry)
 
     def test_inherited_with_event_on_core_and_mixin(self):
@@ -188,7 +199,7 @@ class TestEvent(DBTestCase):
     def test_inherited_with_event_on_mixin_and_model(self):
         registry = self.init_registry(self.add_in_registry_inherited,
                                       withmodel=True, withmixin=True)
-        self.assertEqual(len(registry.events['Model.Event']['fireevent']), 1)
+        assert len(registry.events['Model.Event']['fireevent']) == 1
         self.check_event(registry)
 
     def test_sqlalchemy_listen_on_model(self):
@@ -207,7 +218,7 @@ class TestEvent(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         t = registry.Test.insert()
-        self.assertTrue(t.val)
+        assert t.val
 
     def test_sqlalchemy_listen_on_column(self):
 
@@ -225,13 +236,26 @@ class TestEvent(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         t = registry.Test.insert()
-        self.assertIsNone(t.val)
+        assert t.val is None
         t.val = 'test'
         registry.flush()
-        self.assertEqual(t.val, 'test_test')
+        assert t.val == 'test_test'
 
 
-class TestAutoORMEvent(DBTestCase):
+class TestAutoORMEvent:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def test_before_insert_orm_event(self):
 
@@ -252,11 +276,11 @@ class TestAutoORMEvent(DBTestCase):
                     id_value = target.id
 
         registry = self.init_registry(add_in_registry)
-        self.assertFalse(listen_called)
-        self.assertEqual(id_value, 0)
+        assert not (listen_called)
+        assert id_value == 0
         registry.Test.insert()
-        self.assertTrue(listen_called)
-        self.assertIsNone(id_value)
+        assert listen_called
+        assert id_value is None
 
     def test_before_insert_orm_event_on_mixin(self):
 
@@ -280,11 +304,11 @@ class TestAutoORMEvent(DBTestCase):
                 id = Integer(primary_key=True)
 
         registry = self.init_registry(add_in_registry)
-        self.assertFalse(listen_called)
-        self.assertEqual(id_value, 0)
+        assert not (listen_called)
+        assert id_value == 0
         registry.Test.insert()
-        self.assertTrue(listen_called)
-        self.assertIsNone(id_value)
+        assert listen_called
+        assert id_value is None
 
     def test_before_insert_orm_event_on_core(self):
 
@@ -305,9 +329,9 @@ class TestAutoORMEvent(DBTestCase):
 
         registry = self.init_registry(add_in_registry)
         listen_called = False
-        self.assertFalse(listen_called)
+        assert not (listen_called)
         registry.Test.insert()
-        self.assertTrue(listen_called)
+        assert listen_called
 
     def test_before_insert_orm_event_is_not_metaclass(self):
 
@@ -321,7 +345,7 @@ class TestAutoORMEvent(DBTestCase):
                 def before_insert_orm_event(cls, mapper, connection, target):
                     pass
 
-        with self.assertRaises(ORMEventException):
+        with pytest.raises(ORMEventException):
             self.init_registry(add_in_registry)
 
     def test_after_insert_orm_event(self):
@@ -343,11 +367,11 @@ class TestAutoORMEvent(DBTestCase):
                     id_value = target.id
 
         registry = self.init_registry(add_in_registry)
-        self.assertFalse(listen_called)
-        self.assertEqual(id_value, 0)
+        assert not (listen_called)
+        assert id_value == 0
         t = registry.Test.insert()
-        self.assertTrue(listen_called)
-        self.assertEqual(id_value, t.id)
+        assert listen_called
+        assert id_value == t.id
 
     def test_before_update_orm_event(self):
 
@@ -367,12 +391,12 @@ class TestAutoORMEvent(DBTestCase):
                     listen_called = True
 
         registry = self.init_registry(add_in_registry)
-        self.assertFalse(listen_called)
+        assert not (listen_called)
         t = registry.Test.insert()
-        self.assertFalse(listen_called)
+        assert not (listen_called)
         t.name = 'test'
         registry.flush()
-        self.assertTrue(listen_called)
+        assert listen_called
 
     def test_after_update_orm_event(self):
 
@@ -392,12 +416,12 @@ class TestAutoORMEvent(DBTestCase):
                     listen_called = True
 
         registry = self.init_registry(add_in_registry)
-        self.assertFalse(listen_called)
+        assert not (listen_called)
         t = registry.Test.insert()
-        self.assertFalse(listen_called)
+        assert not (listen_called)
         t.name = 'test'
         registry.flush()
-        self.assertTrue(listen_called)
+        assert listen_called
 
     def test_before_delete_orm_event(self):
 
@@ -416,11 +440,11 @@ class TestAutoORMEvent(DBTestCase):
                     listen_called = True
 
         registry = self.init_registry(add_in_registry)
-        self.assertFalse(listen_called)
+        assert not (listen_called)
         t = registry.Test.insert()
-        self.assertFalse(listen_called)
+        assert not (listen_called)
         t.delete()
-        self.assertTrue(listen_called)
+        assert listen_called
 
     def test_after_delete_orm_event(self):
 
@@ -439,8 +463,8 @@ class TestAutoORMEvent(DBTestCase):
                     listen_called = True
 
         registry = self.init_registry(add_in_registry)
-        self.assertFalse(listen_called)
+        assert not (listen_called)
         t = registry.Test.insert()
-        self.assertFalse(listen_called)
+        assert not (listen_called)
         t.delete()
-        self.assertTrue(listen_called)
+        assert listen_called

@@ -7,10 +7,12 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from random import random
-from anyblok.tests.testcase import DBTestCase
 from anyblok.declarations import Declarations, cache, classmethod_cache
 from anyblok.bloks.anyblok_core.exceptions import CacheException
 from anyblok.column import Integer
+import pytest
+from .conftest import init_registry, reset_db
+
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
@@ -35,65 +37,91 @@ def wrap_cls_cache(condition):
     return classmethod
 
 
-class TestCache(DBTestCase):
+def add_model_with_method_cached():
 
-    def add_model_with_method_cached(self):
+    @register(Model)
+    class Test:
 
-        @register(Model)
-        class Test:
+        x = 0
 
-            x = 0
+        @cache()
+        def method_cached(self):
+            self.x += 1
+            return self.x
 
-            @cache()
-            def method_cached(self):
-                self.x += 1
-                return self.x
 
-    def test_cache_invalidation(self):
-        registry = self.init_registry(self.add_model_with_method_cached)
+@pytest.fixture(scope="class")
+def registry_method_cached(request, bloks_loaded):
+    reset_db()
+    registry = init_registry(add_model_with_method_cached)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+class TestCache:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_method_cached):
+        transaction = registry_method_cached.begin_nested()
+        request.addfinalizer(transaction.rollback)
+
+    def test_cache_invalidation(self, registry_method_cached):
+        registry = registry_method_cached
         Cache = registry.System.Cache
         nb_invalidation = Cache.query().count()
         Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(Cache.query().count(), nb_invalidation + 1)
+        assert Cache.query().count() == nb_invalidation + 1
 
-    def test_invalid_cache_invalidation(self):
-        registry = self.init_registry(self.add_model_with_method_cached)
+    def test_invalid_cache_invalidation(self, registry_method_cached):
+        registry = registry_method_cached
         Cache = registry.System.Cache
-        with self.assertRaises(CacheException):
+        with pytest.raises(CacheException):
             Cache.invalidate('Model.Test2', 'method_cached')
 
-    def test_detect_cache_invalidation(self):
-        registry = self.init_registry(self.add_model_with_method_cached)
+    def test_detect_cache_invalidation(self, registry_method_cached):
+        registry = registry_method_cached
         Cache = registry.System.Cache
-        self.assertEqual(Cache.detect_invalidation(), False)
+        assert not Cache.detect_invalidation()
         Cache.insert(registry_name="Model.Test", method="method_cached")
-        self.assertEqual(Cache.detect_invalidation(), True)
+        assert Cache.detect_invalidation()
 
-    def test_get_invalidation(self):
-        registry = self.init_registry(self.add_model_with_method_cached)
+    def test_get_invalidation(self, registry_method_cached):
+        registry = registry_method_cached
         Cache = registry.System.Cache
         Cache.insert(registry_name="Model.Test", method="method_cached")
         caches = Cache.get_invalidation()
-        self.assertEqual(len(caches), 1)
+        assert len(caches) == 1
         cache = caches[0]
-        self.assertEqual(cache.indentify, ('Model.Test', 'method_cached'))
+        assert cache.indentify == ('Model.Test', 'method_cached')
 
 
-class TestSimpleCache(DBTestCase):
+class TestSimpleCache:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def check_method_cached(self, Model, registry_name, value=1):
         m = Model()
-        self.assertEqual(m.method_cached(), value)
-        self.assertEqual(m.method_cached(), value)
+        assert m.method_cached() == value
+        assert m.method_cached() == value
         Model.registry.System.Cache.invalidate(registry_name, 'method_cached')
-        self.assertEqual(m.method_cached(), 2 * value)
+        assert m.method_cached() == 2 * value
 
     def check_method_cached_invalidate_all(self, Model, value=1):
         m = Model()
-        self.assertEqual(m.method_cached(), value)
-        self.assertEqual(m.method_cached(), value)
+        assert m.method_cached() == value
+        assert m.method_cached() == value
         Model.registry.System.Cache.invalidate_all()
-        self.assertEqual(m.method_cached(), 2 * value)
+        assert m.method_cached() == 2 * value
 
     def add_model_with_method_cached(self):
 
@@ -238,48 +266,48 @@ class TestSimpleCache(DBTestCase):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core)
         m = registry.Test()
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 12)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 12
 
     def test_model_mixin_core_only_core(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
             withcore=True)
         m = registry.Test()
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 11)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 11
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 17)
+        assert m.method_cached() == 17
 
     def test_model_mixin_core_only_mixin(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
             withmixin=True)
         m = registry.Test()
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 9)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 9
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 15)
+        assert m.method_cached() == 15
 
     def test_model_mixin_core_only_model(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
             withmodel=True)
         m = registry.Test()
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 6)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 6
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 12)
+        assert m.method_cached() == 12
 
     def test_model_mixin_core_only_core_and_mixin(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
             withmixin=True, withcore=True)
         m = registry.Test()
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 9)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 9
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 15)
+        assert m.method_cached() == 15
 
     def test_invalidate_all_check_model(self):
         registry = self.init_registry(self.add_model_with_method_cached)
@@ -328,24 +356,36 @@ class TestSimpleCache(DBTestCase):
             self.add_model_with_method_core_cached_with_two_model)
         t = registry.Test()
         t2 = registry.Test2()
-        self.assertEqual(t.method_cached(), 4)
-        self.assertEqual(t2.method_cached(), 4)
-        self.assertEqual(t.method_cached(), 7)
-        self.assertEqual(t2.method_cached(), 7)
+        assert t.method_cached() == 4
+        assert t2.method_cached() == 4
+        assert t.method_cached() == 7
+        assert t2.method_cached() == 7
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(t.method_cached(), 11)
-        self.assertEqual(t2.method_cached(), 10)
+        assert t.method_cached() == 11
+        assert t2.method_cached() == 10
 
 
-class TestClassMethodCache(DBTestCase):
+class TestClassMethodCache:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def check_method_cached(self, Model, registry_name):
         m = Model
         value = m.method_cached()
-        self.assertEqual(m.method_cached(), value)
-        self.assertEqual(m.method_cached(), value)
+        assert m.method_cached() == value
+        assert m.method_cached() == value
         Model.registry.System.Cache.invalidate(registry_name, 'method_cached')
-        self.assertNotEqual(m.method_cached(), value)
+        assert m.method_cached() != value
 
     def add_model_with_method_cached(self):
 
@@ -492,48 +532,48 @@ class TestClassMethodCache(DBTestCase):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core)
         m = registry.Test
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 12)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 12
 
     def test_model_mixin_core_only_core(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
             withcore=True)
         m = registry.Test
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 11)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 11
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 17)
+        assert m.method_cached() == 17
 
     def test_model_mixin_core_only_mixin(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
             withmixin=True)
         m = registry.Test
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 9)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 9
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 15)
+        assert m.method_cached() == 15
 
     def test_model_mixin_core_only_model(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
             withmodel=True)
         m = registry.Test
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 6)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 6
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 12)
+        assert m.method_cached() == 12
 
     def test_model_mixin_core_only_core_and_mixin(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
             withmixin=True, withcore=True)
         m = registry.Test
-        self.assertEqual(m.method_cached(), 6)
-        self.assertEqual(m.method_cached(), 9)
+        assert m.method_cached() == 6
+        assert m.method_cached() == 9
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 15)
+        assert m.method_cached() == 15
 
     def add_model_with_method_core_cached_with_two_model(self):
 
@@ -570,30 +610,42 @@ class TestClassMethodCache(DBTestCase):
     def test_2_model_with_core_catched(self):
         registry = self.init_registry(
             self.add_model_with_method_core_cached_with_two_model)
-        self.assertEqual(registry.Test.method_cached(), 4)
-        self.assertEqual(registry.Test2.method_cached(), 4)
-        self.assertEqual(registry.Test.method_cached(), 7)
-        self.assertEqual(registry.Test2.method_cached(), 7)
+        assert registry.Test.method_cached() == 4
+        assert registry.Test2.method_cached() == 4
+        assert registry.Test.method_cached() == 7
+        assert registry.Test2.method_cached() == 7
         registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(registry.Test.method_cached(), 11)
-        self.assertEqual(registry.Test2.method_cached(), 10)
+        assert registry.Test.method_cached() == 11
+        assert registry.Test2.method_cached() == 10
 
 
-class TestInheritedCache(DBTestCase):
+class TestInheritedCache:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def check_method_cached(self, Model):
         m = Model()
-        self.assertEqual(m.method_cached(), 3)
-        self.assertEqual(m.method_cached(), 5)
+        assert m.method_cached() == 3
+        assert m.method_cached() == 5
         Model.registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 8)
+        assert m.method_cached() == 8
 
     def check_inherited_method_cached(self, Model):
         m = Model()
-        self.assertEqual(m.method_cached(), 3)
-        self.assertEqual(m.method_cached(), 3)
+        assert m.method_cached() == 3
+        assert m.method_cached() == 3
         Model.registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(m.method_cached(), 6)
+        assert m.method_cached() == 6
 
     def add_model_with_method_cached(self, inheritcache=False):
 
@@ -713,19 +765,31 @@ class TestInheritedCache(DBTestCase):
         self.check_inherited_method_cached(registry.Test)
 
 
-class TestInheritedClassMethodCache(DBTestCase):
+class TestInheritedClassMethodCache:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def check_method_cached(self, Model):
-        self.assertEqual(Model.method_cached(), 3)
-        self.assertEqual(Model.method_cached(), 5)
+        assert Model.method_cached() == 3
+        assert Model.method_cached() == 5
         Model.registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(Model.method_cached(), 8)
+        assert Model.method_cached() == 8
 
     def check_inherited_method_cached(self, Model):
-        self.assertEqual(Model.method_cached(), 3)
-        self.assertEqual(Model.method_cached(), 3)
+        assert Model.method_cached() == 3
+        assert Model.method_cached() == 3
         Model.registry.System.Cache.invalidate('Model.Test', 'method_cached')
-        self.assertEqual(Model.method_cached(), 6)
+        assert Model.method_cached() == 6
 
     def add_model_with_method_cached(self, inheritcache=False):
 
@@ -848,14 +912,26 @@ class TestInheritedClassMethodCache(DBTestCase):
         self.check_inherited_method_cached(registry.Test)
 
 
-class TestComparatorInterModel(DBTestCase):
+class TestComparatorInterModel:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
 
     def check_comparator(self, registry):
         Test = registry.Test
         Test2 = registry.Test2
-        self.assertEqual(Test.method_cached(), Test.method_cached())
-        self.assertEqual(Test2.method_cached(), Test2.method_cached())
-        self.assertNotEqual(Test.method_cached(), Test2.method_cached())
+        assert Test.method_cached() == Test.method_cached()
+        assert Test2.method_cached() == Test2.method_cached()
+        assert Test.method_cached() != Test2.method_cached()
 
     def test_model(self):
 
@@ -925,41 +1001,54 @@ class TestComparatorInterModel(DBTestCase):
         self.check_comparator(registry)
 
 
-class TestSQLModelCache(DBTestCase):
+def add_sql_model_cache():
 
-    def add_in_registry(self):
+    @register(Model)
+    class Test:
 
-        @register(Model)
-        class Test:
+        id = Integer(primary_key=True)
+        id2 = Integer()
 
-            id = Integer(primary_key=True)
-            id2 = Integer()
+        @cache()
+        def get_id2(self):
+            return self.id2
 
-            @cache()
-            def get_id2(self):
-                return self.id2
+        @classmethod_cache()
+        def count(cls):
+            return cls.query().count()
 
-            @classmethod_cache()
-            def count(cls):
-                return cls.query().count()
 
-    def test_query_and_classmethod_cached(self):
-        registry = self.init_registry(self.add_in_registry)
+@pytest.fixture(scope="class")
+def registry_sql_model_cached(request, bloks_loaded):
+    registry = init_registry(add_sql_model_cache)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+class TestSQLModelCache:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_sql_model_cached):
+        transaction = registry_sql_model_cached.begin_nested()
+        request.addfinalizer(transaction.rollback)
+
+    def test_query_and_classmethod_cached(self, registry_sql_model_cached):
+        registry = registry_sql_model_cached
         registry.Test.insert()
         registry.Test.insert()
-        self.assertEqual(registry.Test.count(), 2)
+        assert registry.Test.count() == 2
         registry.Test.insert()
-        self.assertEqual(registry.Test.count(), 2)
+        assert registry.Test.count() == 2
         Cache = registry.System.Cache
         Cache.invalidate('Model.Test', 'count')
-        self.assertEqual(registry.Test.count(), 3)
+        assert registry.Test.count() == 3
 
-    def test_query_and_method_cached(self):
-        registry = self.init_registry(self.add_in_registry)
+    def test_query_and_method_cached(self, registry_sql_model_cached):
+        registry = registry_sql_model_cached
         t = registry.Test.insert(id2=1)
-        self.assertEqual(t.get_id2(), 1)
+        assert t.get_id2() == 1
         t.id2 = 2
-        self.assertEqual(t.get_id2(), 1)
+        assert t.get_id2() == 1
         Cache = registry.System.Cache
         Cache.invalidate('Model.Test', 'get_id2')
-        self.assertEqual(t.get_id2(), 2)
+        assert t.get_id2() == 2

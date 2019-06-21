@@ -5,12 +5,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase, DBTestCase
+import pytest
 from anyblok.field import FieldException
 from anyblok.relationship import RelationShip, RelationShipList
 from anyblok import Declarations
 from anyblok.column import Integer
 from anyblok.relationship import One2Many, Many2One
+from .conftest import init_registry_with_bloks
 
 
 register = Declarations.register
@@ -31,132 +32,139 @@ class MockRegistry:
     InstrumentedList = []
 
 
-class TestRelationShip(TestCase):
+class TestRelationShip:
 
     def test_forbid_instance(self):
-        try:
+        with pytest.raises(FieldException):
             RelationShip(model=OneModel)
-            self.fail("RelationShip mustn't be instanciated")
-        except FieldException:
-            pass
 
     def test_must_have_a_model(self):
         OneRelationShip(model=OneModel)
-        try:
+        with pytest.raises(FieldException):
             OneRelationShip()
-            self.fail("No watchdog, the model must be required")
-        except FieldException:
-            pass
 
 
-class TestRelationShipList(TestCase):
+class List(RelationShipList, list):
+    def relationship_field_append_value(*a, **kw):
+        return True
 
-    @classmethod
-    def setupClass(cls):
-        cls.List = type(
-            'List', (RelationShipList, list),
-            {
-                'relationship_field_append_value': lambda *a, **kw: True,
-                'relationship_field_remove_value': lambda *a, **kw: True,
-            })
+    def relationship_field_remove_value(*a, **kw):
+        return True
 
-    def setUp(self):
-        self.list = self.List()
+
+class TestRelationShipList:
 
     def test_append(self):
-        self.assertEqual(self.list, [])
-        self.list.append(1)
-        self.assertEqual(self.list, [1])
+        list_ = List()
+        list_.append(1)
+        assert list_ == [1]
 
     def test_extend(self):
-        self.assertEqual(self.list, [])
-        self.list.extend([1, 2])
-        self.assertEqual(self.list, [1, 2])
+        list_ = List()
+        list_.extend([1, 2])
+        assert list_ == [1, 2]
 
     def test_insert(self):
-        self.assertEqual(self.list, [])
-        self.list.insert(0, 1)
-        self.assertEqual(self.list, [1])
-        self.list.insert(0, 2)
-        self.assertEqual(self.list, [2, 1])
+        list_ = List()
+        list_.insert(0, 1)
+        assert list_ == [1]
+        list_.insert(0, 2)
+        assert list_ == [2, 1]
 
     def test_pop(self):
-        self.list.extend([1, 2])
-        self.assertEqual(self.list, [1, 2])
-        self.list.pop(0)
-        self.assertEqual(self.list, [2])
-        self.list.pop(0)
-        self.assertEqual(self.list, [])
+        list_ = List()
+        list_.extend([1, 2])
+        assert list_ == [1, 2]
+        list_.pop(0)
+        assert list_ == [2]
+        list_.pop(0)
+        assert list_ == []
 
     def test_remove(self):
-        self.list.extend([3, 2, 1])
-        self.assertEqual(self.list, [3, 2, 1])
-        self.list.remove(1)
-        self.assertEqual(self.list, [3, 2])
+        list_ = List()
+        list_.extend([3, 2, 1])
+        assert list_ == [3, 2, 1]
+        list_.remove(1)
+        assert list_ == [3, 2]
 
     def test_clear(self):
-        self.list.extend([3, 2, 1])
-        self.assertEqual(self.list, [3, 2, 1])
-        self.list.clear()
-        self.assertEqual(self.list, [])
+        list_ = List()
+        list_.extend([3, 2, 1])
+        assert list_ == [3, 2, 1]
+        list_.clear()
+        assert list_ == []
 
 
-class TestComplexeRelationShipCase(DBTestCase):
+def multi_parallel_foreign_key_with_definition():
 
-    def test_with_multi_parallel_foreign_key_with_definition(self):
+    @register(Model)
+    class Address:
 
-        def add_in_registry():
+        id = Integer(primary_key=True)
 
-            @register(Model)
-            class Address:
+    @register(Model)
+    class Person:
 
-                id = Integer(primary_key=True)
+        id = Integer(primary_key=True)
+        address_1_id = Integer(foreign_key=Model.Address.use('id'))
+        address_2_id = Integer(foreign_key=Model.Address.use('id'))
+        address_1 = Many2One(model=Model.Address,
+                             column_names=['address_1_id'])
+        address_2 = Many2One(model=Model.Address,
+                             column_names=['address_2_id'])
 
-            @register(Model)
-            class Person:
+    @register(Model)  # noqa
+    class Address:
 
-                id = Integer(primary_key=True)
-                address_1_id = Integer(foreign_key=Model.Address.use('id'))
-                address_2_id = Integer(foreign_key=Model.Address.use('id'))
-                address_1 = Many2One(model=Model.Address,
-                                     column_names=['address_1_id'])
-                address_2 = Many2One(model=Model.Address,
-                                     column_names=['address_2_id'])
+        persons = One2Many(model=Model.Person)
 
-            @register(Model)  # noqa
-            class Address:
 
-                persons = One2Many(model=Model.Person)
+def multi_parallel_foreign_key_auto_detect():
 
-        registry = self.init_registry(add_in_registry)
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        persons = One2Many(model='Model.Person')
+
+    @register(Model)
+    class Person:
+
+        id = Integer(primary_key=True)
+        address_1 = Many2One(model=Model.Address)
+        address_2 = Many2One(model=Model.Address)
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        multi_parallel_foreign_key_with_definition,
+        multi_parallel_foreign_key_auto_detect,
+    ]
+)
+def registry_relationship_multiple_foreign_keys(request, bloks_loaded):
+    registry = init_registry_with_bloks(
+        [], request.param)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+class TestComplexeRelationShipCase:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_relationship_multiple_foreign_keys):
+        transaction = registry_relationship_multiple_foreign_keys.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_with_multi_parallel_foreign_key_with_definition(
+        self, registry_relationship_multiple_foreign_keys
+    ):
+
+        registry = registry_relationship_multiple_foreign_keys
         address_1 = registry.Address.insert()
         address_2 = registry.Address.insert()
         person = registry.Person.insert(
             address_1=address_1, address_2=address_2)
-        self.assertEqual(address_1.persons, [person])
-        self.assertEqual(address_2.persons, [person])
-
-    def test_with_multi_parallel_foreign_key_auto_detect(self):
-
-        def add_in_registry():
-
-            @register(Model)
-            class Address:
-
-                id = Integer(primary_key=True)
-                persons = One2Many(model='Model.Person')
-
-            @register(Model)
-            class Person:
-
-                id = Integer(primary_key=True)
-                address_1 = Many2One(model=Model.Address)
-                address_2 = Many2One(model=Model.Address)
-
-        registry = self.init_registry(add_in_registry)
-        address_1 = registry.Address.insert()
-        address_2 = registry.Address.insert()
-        person = registry.Person.insert(
-            address_1=address_1, address_2=address_2)
-        self.assertEqual(address_1.persons, [person])
-        self.assertEqual(address_2.persons, [person])
+        assert address_1.persons == [person]
+        assert address_2.persons == [person]

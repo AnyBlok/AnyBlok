@@ -6,11 +6,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.tests.testcase import TestCase
 from anyblok._graphviz import ModelSchema, SQLSchema
 
 
-class TestSQLSchema(TestCase):
+class TestSQLSchema:
 
     def test_one_table(self):
         dot = SQLSchema('My table model')
@@ -47,15 +46,15 @@ class TestSQLSchema(TestCase):
     def test_get_table(self):
         dot = SQLSchema('My UML model')
         table = dot.add_table('My table')
-        self.assertEqual(dot.get_table('My table'), table)
+        assert dot.get_table('My table') == table
 
     def test_get_table_with_label(self):
         dot = SQLSchema('My UML model')
         table = dot.add_label('My table')
-        self.assertEqual(dot.get_table('My table'), table)
+        assert dot.get_table('My table') == table
 
 
-class TestModelSchema(TestCase):
+class TestModelSchema:
 
     def test_one_model_with_label(self):
         dot = ModelSchema('My UML model')
@@ -100,9 +99,9 @@ class TestModelSchema(TestCase):
     def test_get_class(self):
         dot = ModelSchema('My UML model')
         cls = dot.add_class('My class')
-        self.assertEqual(dot.get_class('My class'), cls)
+        assert dot.get_class('My class') == cls
 
     def test_get_class_with_label(self):
         dot = ModelSchema('My UML model')
         cls = dot.add_label('My class')
-        self.assertEqual(dot.get_class('My class'), cls)
+        assert dot.get_class('My class') == cls

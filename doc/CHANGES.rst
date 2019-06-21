@@ -14,6 +14,20 @@
 CHANGELOG
 =========
 
+1.0.0
+-----
+
+* Replaced the **nose test** by **pytest**. All the test was converted. 
+* Moved and renamed ``anyblok.tests.testcase.py`` to ``anyblok.testing.py``. 
+  The file ``anyblok.tests.testcase.py`` import only the TestCase class to
+  continue to maintain the compatibility with older tests. PR
+  `#67 <https://github.com/AnyBlok/AnyBlok/pull/67>`_
+* the console script ``anyblok_nose`` raise an exception. Because this runner
+  can't execute pytest tests. The goal is to use the nose plugin.
+* Removed the behviour ``test-bloks-at-install``
+* Added compatibility with `MySQL <https://www.mysql.com/>`_ and 
+  `MariaDB <https://mariadb.org/>`_. PR `#85 <https://github.com/AnyBlok/AnyBlok/pull/85>`_
+
 0.21.3 (2019-03-19)
 -------------------
 

@@ -19,7 +19,9 @@ doc/_build
 parts/
 bin/
 etc/
+venv/
 develop-eggs/
+htmlcov/
 
 gmon.out
 .idea
