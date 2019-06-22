@@ -15,8 +15,8 @@
 CHANGELOG
 =========
 
-0.22.1
-------
+0.22.1 (2019-06-22)
+-------------------
 
 * Fixed configfile with pytest
 
