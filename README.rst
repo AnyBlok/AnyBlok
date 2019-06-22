@@ -1,6 +1,7 @@
 .. This file is a part of the AnyBlok project
 ..
 ..    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+..    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -25,6 +26,10 @@
     :alt: Documentation Status
     :scale: 100%
     :target: https://doc.anyblok.org/en/latest/?badge=latest
+   
+.. image:: https://badges.gitter.im/AnyBlok/community.svg
+    :alt: gitter
+    :target: https://gitter.im/AnyBlok/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
 
 AnyBlok
 =======
