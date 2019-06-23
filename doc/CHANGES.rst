@@ -15,6 +15,11 @@
 CHANGELOG
 =========
 
+0.22.2 (2019-06-23)
+-------------------
+
+* Fixed configfile with pytest with blok tests
+
 0.22.1 (2019-06-22)
 -------------------
 
