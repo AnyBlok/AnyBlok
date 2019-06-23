@@ -82,7 +82,7 @@ def drop_database(url):
 
 
 @pytest.fixture(scope="session")
-def base_loaded(request):
+def base_loaded(request, configuration_loaded):
     if sgdb_in(['MySQL', 'MariaDB']):
         return
 

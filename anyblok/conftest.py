@@ -16,12 +16,18 @@ from sqlalchemy import event
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
+from anyblok.testing import load_configuration
 
 logger = getLogger(__name__)
 
 
 @pytest.fixture(scope='session')
-def init_session(request):
+def configuration_loaded(request):
+    load_configuration()
+
+
+@pytest.fixture(scope='session')
+def init_session(request, configuration_loaded):
     # Init registry
     additional_setting = {'unittest': True}
 

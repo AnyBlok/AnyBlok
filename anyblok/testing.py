@@ -46,10 +46,11 @@ class MockParser:
         return False
 
 
-load_init_function_from_entry_points(unittest=True)
-Configuration.load_config_for_test()
-Configuration.parse_options(MockParser())
-configuration_post_load(unittest=True)
+def load_configuration():
+    load_init_function_from_entry_points(unittest=True)
+    Configuration.load_config_for_test()
+    Configuration.parse_options(MockParser())
+    configuration_post_load(unittest=True)
 
 
 def drop_database(url):
@@ -560,6 +561,9 @@ DATABASES_CACHED = {}
 
 
 def sgdb_in(databases):
+    if not DATABASES_CACHED:
+        load_configuration()
+
     url = Configuration.get('get_url')(db_name='')
     engine = sqlalchemy.create_engine(url)
     for database in databases:
