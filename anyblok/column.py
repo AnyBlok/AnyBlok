@@ -56,18 +56,20 @@ def wrap_default(registry, namespace, default_val):
                     if default_val not in Model.loaded_fields:
                         return func()
                     else:
-                        logger.warn("On a Model %r the attribute %r is "
-                                    "declared as a default value, a field "
-                                    "with the same name exist" % (namespace,
-                                                                  default_val))
+                        logger.warning(
+                            "On a Model %r the attribute %r is "
+                            "declared as a default value, a field "
+                            "with the same name exist" % (namespace,
+                                                          default_val))
                 else:
-                    logger.warn("On a Model %r the attribute %r is declared "
-                                "as a default value, a column with the same "
-                                "name exist" % (namespace, default_val))
+                    logger.warning("On a Model %r the attribute %r is "
+                                   "declared as a default value, a column "
+                                   "with the same name exist" % (namespace,
+                                                                 default_val))
             else:
-                logger.warn("On a Model %r the attribute %r is declared as a "
-                            "default value, a instance method with the same "
-                            "name exist" % (namespace, default_val))
+                logger.warning("On a Model %r the attribute %r is declared as "
+                               "a default value, a instance method with the "
+                               "same name exist" % (namespace, default_val))
 
         return default_val
 
