@@ -15,11 +15,12 @@
 CHANGELOG
 =========
 
-0.22.4 (2019-06-24)
+0.22.5 (2019-06-24)
 -------------------
 
 * Reverted console script **anyblok_nose**: to keep compatibility
 * Fixed minimum version of **SQLalchemy >= 1.3** in package dependencies
+* Removed some deprecation warning
 
 0.22.2 (2019-06-23)
 -------------------
