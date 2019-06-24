@@ -15,7 +15,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.22.2'
+version = '0.22.4'
 
 
 if sys.version_info < (3, 4):
@@ -136,5 +136,4 @@ setup(
             'field_datetime=anyblok.model.field_datetime:AutoUpdatePlugin',
         ],
     },
-    extras_require={},
 )
