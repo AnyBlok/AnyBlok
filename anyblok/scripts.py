@@ -2,6 +2,7 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -10,15 +11,22 @@ import anyblok
 from anyblok.release import version
 from anyblok.blok import BlokManager
 from anyblok.config import Configuration, get_db_name
-from anyblok.registry import RegistryManager
+from anyblok.registry import RegistryManager, return_list
 from anyblok._graphviz import ModelSchema, SQLSchema
 from argparse import RawDescriptionHelpFormatter
 from textwrap import dedent
 from sqlalchemy_utils.functions import create_database
+import warnings
+import sys
+from os.path import join
+from loffing import getLogger
+from os import walk
 from anyblok import (
     load_init_function_from_entry_points,
     configuration_post_load,
 )
+
+logger = getLogger(__name__)
 
 Configuration.add_application_properties(
     'createdb',
@@ -68,6 +76,13 @@ Configuration.add_application_properties(
 Configuration.add_application_properties(
     'autodoc', ['logging', 'doc', 'schema'],
     prog='AnyBlok auto documentation, version %r' % version,
+)
+
+
+Configuration.add_application_properties(
+    'nose', ['logging', 'unittest'],
+    prog='AnyBlok nose, version %r' % version,
+    description="Run fonctionnal nosetest of the installed bloks"
 )
 
 
@@ -179,8 +194,42 @@ def anyblok2doc():
 
 
 def anyblok_nose():
-    raise Exception(
-        "This script have been removed, because the nose test of the "
-        "framework was remplaced by pytest and this action was become "
-        "incompatible. If you need to run your test with nose, use the nose "
-        "pluging.")
+    """Run nose unit test for the registry
+    """
+    warnings.simplefilter('default')
+    warnings.warn(
+        "This script will be removed, because the nose test of the "
+        "framework was remplaced by pytest and some test was become "
+        "incompatible with nosetest. If you need to run your test with nose, "
+        " use the nose pluging.",
+        DeprecationWarning, stacklevel=2)
+
+    try:
+        from nose import main
+    except ImportError:
+        logger.error('"Nosetest" is not installed: pip install nose')
+
+    registry = anyblok.start('nose', useseparator=True, unittest=True)
+
+    if registry:
+        installed_bloks = registry.System.Blok.list_by_state("installed")
+        selected_bloks = return_list(
+            Configuration.get('selected_bloks')) or installed_bloks
+
+        unwanted_bloks = return_list(
+            Configuration.get('unwanted_bloks')) or []
+        unwanted_bloks.extend(['anyblok-core', 'anyblok-test', 'model_authz'])
+
+        defaultTest = []
+        for blok in installed_bloks:
+            if blok not in selected_bloks or blok in unwanted_bloks:
+                continue
+
+            startpath = BlokManager.getPath(blok)
+            for root, dirs, _ in walk(startpath):
+                if 'tests' in dirs:
+                    defaultTest.append(join(root, 'tests'))
+
+        registry.close()  # free the registry to force create it again
+
+    sys.exit(main(defaultTest=defaultTest))
