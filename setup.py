@@ -56,6 +56,12 @@ with open(
 ) as front:
     FRONT = front.read()
 
+
+extra_dependencies = {
+    'nose': ['nose']
+}
+
+
 setup(
     name="AnyBlok",
     version=version,
@@ -69,6 +75,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=requires,
+    extras_require=extra_dependencies,
     tests_require=requires + ['pytest'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

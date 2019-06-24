@@ -15,6 +15,11 @@
 CHANGELOG
 =========
 
+0.22.3
+------
+
+* Reverted console script **anyblok_nose**: to keep compatibility
+
 0.22.2 (2019-06-23)
 -------------------
 
