@@ -136,5 +136,4 @@ setup(
             'field_datetime=anyblok.model.field_datetime:AutoUpdatePlugin',
         ],
     },
-    extras_require={},
 )
