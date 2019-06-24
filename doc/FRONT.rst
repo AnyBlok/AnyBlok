@@ -87,7 +87,7 @@ ensure that `SQLAlchemy <http://www.sqlalchemy.org>`_,
 `SQLAlchemy-Utils <http://sqlalchemy-utils.readthedocs.org/>`_ are installed, 
 in addition to other dependencies.
 
-AnyBlok works with SQLAlchemy from version **1.0.11**,
+AnyBlok works with SQLAlchemy from version **1.3** and newer,
 Alembic from version **0.8.4** and SQLAlchemy-Utils from version **0.31.4**.
 The latest version of them is strongly recommended.
 
