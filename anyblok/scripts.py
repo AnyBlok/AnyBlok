@@ -19,7 +19,7 @@ from sqlalchemy_utils.functions import create_database
 import warnings
 import sys
 from os.path import join
-from loffing import getLogger
+from logging import getLogger
 from os import walk
 from anyblok import (
     load_init_function_from_entry_points,
