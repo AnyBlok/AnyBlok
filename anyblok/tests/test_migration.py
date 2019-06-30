@@ -256,12 +256,13 @@ class TestMigration:
         # the column doesn't change of nullable to not lock the migration
         assert c.nullable
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for postgres")
     def test_alter_column_default(self, registry):
         t = registry.migration.table('test')
         c = t.column('other').alter(server_default='test')
-        assert c.server_default == "'test'::character varying"
+        if sgdb_in(['PostgreSQL']):
+            assert c.server_default == "'test'::character varying"
+        else:
+            assert c.server_default == "test"
 
     def test_index(self, registry):
         t = registry.migration.table('test')
