@@ -348,16 +348,14 @@ class TestMigration:
         report = registry.migration.detect_changed()
         assert report.log_has("Drop Table test2")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_table_removed_with_reinit_column(self, registry):
         with cnx(registry) as conn:
-            conn.execute(
-                """CREATE TABLE test2(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64),
-                    other2 CHAR(64)
-                );""")
+            Table(
+                'test2', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                Column('other2', String(64)),
+            ).create(bind=conn)
 
         registry.migration.reinit_tables = True
         report = registry.migration.detect_changed()
@@ -366,16 +364,14 @@ class TestMigration:
         report = registry.migration.detect_changed()
         assert not(report.log_has("Drop Table test2"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_table_removed_with_reinit_all(self, registry):
         with cnx(registry) as conn:
-            conn.execute(
-                """CREATE TABLE test2(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64),
-                    other2 CHAR(64)
-                );""")
+            Table(
+                'test2', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                Column('other2', String(64)),
+            ).create(bind=conn)
 
         registry.migration.reinit_all = True
         report = registry.migration.detect_changed()
@@ -384,17 +380,17 @@ class TestMigration:
         report = registry.migration.detect_changed()
         assert not(report.log_has("Drop Table test2"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_column_removed(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64),
-                    other2 CHAR(64)
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                Column('other2', String(64)),
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has("Drop Column test.other2")
         report.apply_change()
