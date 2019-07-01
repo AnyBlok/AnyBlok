@@ -311,21 +311,22 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        print("====> plop")
         registry.migration.detect_changed()
         registry.migration.withoutautomigration = True
         with pytest.raises(MigrationException):
             registry.migration.detect_changed()
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_column_added(self, registry):
         # Remove a column on the table force the detection to found new column
         # which is existing in metadata but not in table
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(integer INT PRIMARY KEY NOT NULL);""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True)
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has("Add test.other")
         report.apply_change()
