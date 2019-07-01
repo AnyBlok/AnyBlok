@@ -14,7 +14,8 @@ from anyblok.column import Integer as Int, String as Str
 from anyblok.migration import MigrationException
 from anyblok.relationship import Many2Many
 from contextlib import contextmanager
-from sqlalchemy import Column, Integer, TEXT, CheckConstraint
+from sqlalchemy import (
+    MetaData, Table, Column, Integer, String, TEXT, CheckConstraint)
 from anyblok import Declarations
 from sqlalchemy.exc import InternalError, IntegrityError, OperationalError
 from anyblok.config import Configuration
@@ -300,16 +301,17 @@ class TestMigration:
         # particuliar case of check constraint
         t.check('anyblok_ck_test__test').drop()
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_under_noautocommit_flag(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) NOT NULL
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), nullable=False),
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        print("====> plop")
         registry.migration.detect_changed()
         registry.migration.withoutautomigration = True
         with pytest.raises(MigrationException):
