@@ -15,11 +15,13 @@ from anyblok.migration import MigrationException
 from anyblok.relationship import Many2Many
 from contextlib import contextmanager
 from sqlalchemy import (
-    MetaData, Table, Column, Integer, String, TEXT, CheckConstraint)
+    MetaData, Table, Column, Integer, String, TEXT, CheckConstraint,
+    ForeignKey)
 from anyblok import Declarations
 from sqlalchemy.exc import InternalError, IntegrityError, OperationalError
 from anyblok.config import Configuration
 from .conftest import init_registry, drop_database, create_database
+from anyblok.common import naming_convention
 
 
 @pytest.fixture(scope="module")
@@ -498,16 +500,16 @@ class TestMigration:
         report = registry.migration.detect_changed()
         assert not(report.log_has("Alter test.other"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
-    def test_detect_add_index_constrainte(self, registry):
+    def test_detect_add_index_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE testindex")
-            conn.execute(
-                """CREATE TABLE testindex(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64)
-                );""")
+            registry.TestIndex.__table__.drop(bind=conn)
+            registry.TestIndex.__table__ = Table(
+                'testindex', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+            )
+            registry.TestIndex.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has("Add index constraint on testindex (other)")
         report.apply_change()
@@ -515,15 +517,15 @@ class TestMigration:
         assert not(report.log_has(
             "Add index constraint on testindex (other)"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
-    def test_detect_add_column_with_index_constrainte(self, registry):
+    def test_detect_add_column_with_index_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE testindex")
-            conn.execute(
-                """CREATE TABLE testindex(
-                    integer INT PRIMARY KEY NOT NULL
-                );""")
+            registry.TestIndex.__table__.drop(bind=conn)
+            registry.TestIndex.__table__ = Table(
+                'testindex', MetaData(),
+                Column('integer', Integer, primary_key=True),
+            )
+            registry.TestIndex.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has("Add testindex.other")
         assert report.log_has("Add index constraint on testindex (other)")
@@ -573,46 +575,45 @@ class TestMigration:
         report = registry.migration.detect_changed()
         assert not(report.log_has("Drop index other_idx on test"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_type(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other INT
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', Integer),
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has("Alter test.other")
         report.apply_change()
         report = registry.migration.detect_changed()
         assert not(report.log_has("Alter test.other"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_primary_key(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT NOT NULL,
-                    other CHAR(64) PRIMARY KEY NOT NULL
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, nullable=False),
+                Column('other', String(64), primary_key=True),
+            )
+            registry.Test.__table__.create(bind=conn)
 
         with pytest.raises(MigrationException):
             registry.migration.detect_changed()
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_add_foreign_key(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE testfk")
-            conn.execute(
-                """CREATE TABLE testfk(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other INT
-                );""")
+            registry.TestFK.__table__.drop(bind=conn)
+            registry.TestFK.__table__ = Table(
+                'testfk', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', Integer),
+            )
+            registry.TestFK.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)")
@@ -621,34 +622,38 @@ class TestMigration:
         assert not(report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_foreign_key_options_changed(self, registry):
         with cnx(registry) as conn:
-            conn.execute("drop table testfk2")
-            conn.execute(
-                """create table testfk2(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other int
-                        CONSTRAINT anyblok_fk_testfk2__other
-                        references testfktarget(integer)
-                );""")
+            registry.TestFK2.__table__.drop(bind=conn)
+            meta = MetaData()
+            meta._add_table(
+                'testfktarget', None, registry.TestFKTarget.__table__)
+            registry.TestFK2.__table__ = Table(
+                'testfk2', meta,
+                Column('integer', Integer, primary_key=True),
+                Column('other', Integer, ForeignKey('testfktarget.integer')),
+            )
+            registry.TestFK2.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has(
             "Drop Foreign keys on testfk2.other => testfktarget.integer")
         assert report.log_has(
             "Add Foreign keys on (testfk2.other) => (testfktarget.integer)")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_drop_foreign_key(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) references system_blok(name)
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            meta = MetaData()
+            meta._add_table(
+                'system_blok', None, registry.System.Blok.__table__)
+            registry.Test.__table__ = Table(
+                'test', meta,
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), ForeignKey('system_blok.name')),
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
@@ -657,18 +662,20 @@ class TestMigration:
         assert report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_drop_anyblok_foreign_key(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64)
-                        CONSTRAINT anyblok_fk_test__other_on_system_blok__name
-                        references system_blok(name)
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            meta = MetaData(naming_convention=naming_convention)
+            meta._add_table(
+                'system_blok', None, registry.System.Blok.__table__)
+            registry.Test.__table__ = Table(
+                'test', meta,
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), ForeignKey('system_blok.name')),
+            )
+            registry.Test.__table__.create(bind=conn)
+            # anyblok_fk_test__other_on_system_blok__name
+
         report = registry.migration.detect_changed()
         assert report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
@@ -677,16 +684,19 @@ class TestMigration:
         assert not(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_drop_foreign_key_with_reinit_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) references system_blok(name)
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            meta = MetaData()
+            meta._add_table(
+                'system_blok', None, registry.System.Blok.__table__)
+            registry.Test.__table__ = Table(
+                'test', meta,
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), ForeignKey('system_blok.name')),
+            )
+            registry.Test.__table__.create(bind=conn)
+
         registry.migration.reinit_constraints = True
         report = registry.migration.detect_changed()
         assert report.log_has(
@@ -696,16 +706,19 @@ class TestMigration:
         assert not(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_drop_foreign_key_with_reinit_all(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) references system_blok(name)
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            meta = MetaData()
+            meta._add_table(
+                'system_blok', None, registry.System.Blok.__table__)
+            registry.Test.__table__ = Table(
+                'test', meta,
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), ForeignKey('system_blok.name')),
+            )
+            registry.Test.__table__.create(bind=conn)
+
         registry.migration.reinit_all = True
         report = registry.migration.detect_changed()
         assert report.log_has(
@@ -715,19 +728,20 @@ class TestMigration:
         assert not(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
     def test_detect_drop_column_with_foreign_key(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64),
-                    other2 CHAR(64)
-                    CONSTRAINT anyblok_fk_test__other2_on_system_blok__name
-                    references system_blok(name)
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            meta = MetaData(naming_convention=naming_convention)
+            meta._add_table(
+                'system_blok', None, registry.System.Blok.__table__)
+            registry.Test.__table__ = Table(
+                'test', meta,
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                Column('other2', String(64), ForeignKey('system_blok.name')),
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has(
             "Drop Foreign keys on test.other2 => system_blok.name")
@@ -736,16 +750,32 @@ class TestMigration:
         assert not(report.log_has(
             "Drop Foreign keys on test.other2 => system_blok.name"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
-    def test_detect_add_unique_constrainte(self, registry):
+    def test_detect_add_unique_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE testunique")
-            conn.execute(
-                """CREATE TABLE testunique(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64)
-                );""")
+            registry.TestUnique.__table__.drop(bind=conn)
+            registry.TestUnique.__table__ = Table(
+                'testunique', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+            )
+            registry.TestUnique.__table__.create(bind=conn)
+
+        report = registry.migration.detect_changed()
+        assert report.log_has("Add unique constraint on testunique (other)")
+        report.apply_change()
+        report = registry.migration.detect_changed()
+        assert not(report.log_has(
+            "Add unique constraint on testunique (other)"))
+
+    def test_detect_add_column_with_unique_constraint(self, registry):
+        with cnx(registry) as conn:
+            registry.TestUnique.__table__.drop(bind=conn)
+            registry.TestUnique.__table__ = Table(
+                'testunique', MetaData(),
+                Column('integer', Integer, primary_key=True),
+            )
+            registry.TestUnique.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has("Add unique constraint on testunique (other)")
         report.apply_change()
@@ -754,47 +784,35 @@ class TestMigration:
             "Add unique constraint on testunique (other)"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
-    def test_detect_add_column_with_unique_constrainte(self, registry):
-        with cnx(registry) as conn:
-            conn.execute("DROP TABLE testunique")
-            conn.execute(
-                """CREATE TABLE testunique(
-                    integer INT PRIMARY KEY NOT NULL
-                );""")
-        report = registry.migration.detect_changed()
-        assert report.log_has("Add unique constraint on testunique (other)")
-        report.apply_change()
-        report = registry.migration.detect_changed()
-        assert not(report.log_has(
-            "Add unique constraint on testunique (other)"))
-
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
+                        reason="MySQL transform unique constraint on index")
     def test_detect_drop_unique_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT unique_other UNIQUE
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), unique=True),
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
-        assert report.log_has("Drop constraint unique_other on test")
+        assert report.log_has("Drop constraint test_other_key on test")
         report.apply_change()
         report = registry.migration.detect_changed()
-        assert report.log_has("Drop constraint unique_other on test")
+        assert report.log_has("Drop constraint test_other_key on test")
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
+                        reason="MySQL transform unique constraint on index")
     def test_detect_drop_unique_anyblok_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT anyblok_uq_test__other UNIQUE
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(naming_convention=naming_convention),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), unique=True),
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has("Drop constraint anyblok_uq_test__other on test")
         report.apply_change()
@@ -803,44 +821,46 @@ class TestMigration:
             report.log_has("Drop constraint anyblok_uq_test__other on test"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
+                        reason="MySQL transform unique constraint on index")
     def test_detect_drop_unique_constraint_with_reinit_constraints(
         self, registry
     ):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT unique_other UNIQUE
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), unique=True),
+            )
+            registry.Test.__table__.create(bind=conn)
 
         registry.migration.reinit_constraints = True
         report = registry.migration.detect_changed()
-        assert report.log_has("Drop constraint unique_other on test")
+        assert report.log_has("Drop constraint test_other_key on test")
         report.apply_change()
         report = registry.migration.detect_changed()
         assert not(
-            report.log_has("Drop constraint unique_other on test"))
+            report.log_has("Drop constraint test_other_key on test"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="Test for Postgres only")
     def test_detect_drop_unique_constraint_with_reinit_all(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT unique_other UNIQUE
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), unique=True),
+            )
+            registry.Test.__table__.create(bind=conn)
 
         registry.migration.reinit_all = True
         report = registry.migration.detect_changed()
-        assert report.log_has("Drop constraint unique_other on test")
+        assert report.log_has("Drop constraint test_other_key on test")
         report.apply_change()
         report = registry.migration.detect_changed()
         assert not(
-            report.log_has("Drop constraint unique_other on test"))
+            report.log_has("Drop constraint test_other_key on test"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="No CheckConstraint works #90")
@@ -864,7 +884,7 @@ class TestMigration:
         )
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
+                        reason="No CheckConstraint works #90")
     def test_detect_add_check_constraint(self, registry):
         with cnx(registry) as conn:
             conn.execute("DROP TABLE testcheck")
@@ -881,7 +901,7 @@ class TestMigration:
             "Add check constraint anyblok_ck_testcheck__test on testcheck"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
+                        reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint(self, registry):
         with cnx(registry) as conn:
             conn.execute("DROP TABLE test")
@@ -897,7 +917,7 @@ class TestMigration:
         assert report.log_has("Drop check constraint ck_other on test")
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
+                        reason="No CheckConstraint works #90")
     def test_detect_drop_check_anyblok_constraint(self, registry):
         with cnx(registry) as conn:
             conn.execute("DROP TABLE test")
@@ -916,7 +936,7 @@ class TestMigration:
             "Drop check constraint anyblok_ck__test__check on test"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
+                        reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint_with_reinit_constraint(
         self, registry
     ):
@@ -936,7 +956,7 @@ class TestMigration:
             report.log_has("Drop check constraint ck_other on test"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
+                        reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint_with_reinit_all(self, registry):
         with cnx(registry) as conn:
             conn.execute("DROP TABLE test")
