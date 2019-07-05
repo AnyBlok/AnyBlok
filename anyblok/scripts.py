@@ -82,7 +82,7 @@ Configuration.add_application_properties(
 Configuration.add_application_properties(
     'nose', ['logging', 'unittest'],
     prog='AnyBlok nose, version %r' % version,
-    description="Run fonctionnal nosetest of the installed bloks"
+    description="Run functional nosetest against installed bloks."
 )
 
 
@@ -194,7 +194,7 @@ def anyblok2doc():
 
 
 def anyblok_nose():
-    """Run nose unit test for the registry
+    """Run nose unit test after giving it the registry
     """
     warnings.simplefilter('default')
     warnings.warn(
