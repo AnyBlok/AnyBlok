@@ -198,16 +198,16 @@ def anyblok_nose():
     """
     warnings.simplefilter('default')
     warnings.warn(
-        "This script will be removed, because the nose test of the "
-        "framework was remplaced by pytest and some test was become "
-        "incompatible with nosetest. If you need to run your test with nose, "
-        " use the nose pluging.",
+        "This script is deprecated and will be removed soon. "
+        "The Nose test machinery has been removed from the framework in order "
+        "to be replaced with Pytest. "
+        "If you need to run your tests with nose, install the Nose package.",
         DeprecationWarning, stacklevel=2)
 
     try:
         from nose import main
     except ImportError:
-        logger.error('"Nosetest" is not installed: pip install nose')
+        logger.error('"Nosetest" is not installed, try: pip install nose')
 
     registry = anyblok.start('nose', useseparator=True, unittest=True)
 
