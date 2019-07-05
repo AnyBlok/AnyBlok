@@ -57,7 +57,7 @@ Configuration.add_application_properties(
 
 Configuration.add_application_properties(
     'interpreter', ['logging', 'interpreter'],
-    prog='AnyBlok interpretor, version %r' % version,
+    prog='AnyBlok interpreter, version %r' % version,
     description="Run an interpreter on the registry",
     formatter_class=RawDescriptionHelpFormatter,
     epilog=dedent("Example\n"
@@ -65,12 +65,12 @@ Configuration.add_application_properties(
                   "  $ anyblok_interpreter [anyblok arguments] \n"
                   "  $ => registry \n"
                   "  ... <registry> \n\n"
-                  "  The interpretor add in the local the registry of "
-                  "the selected database \n\n"
+                  "  The interpreter gives you a python console with the "
+                  "registry of the selected database \n\n"
                   "Note\n"
                   "----\n"
-                  "  if the ipython is in the python path, then "
-                  "the interpretor will be an ipyton interpretor")
+                  "  If 'ipython' is installed, then the interpreter will be "
+                  "an interactive ipython one.")
 )
 
 Configuration.add_application_properties(
@@ -82,7 +82,7 @@ Configuration.add_application_properties(
 Configuration.add_application_properties(
     'nose', ['logging', 'unittest'],
     prog='AnyBlok nose, version %r' % version,
-    description="Run fonctionnal nosetest of the installed bloks"
+    description="Run functional nosetest against installed bloks."
 )
 
 
@@ -194,20 +194,20 @@ def anyblok2doc():
 
 
 def anyblok_nose():
-    """Run nose unit test for the registry
+    """Run nose unit test after giving it the registry
     """
     warnings.simplefilter('default')
     warnings.warn(
-        "This script will be removed, because the nose test of the "
-        "framework was remplaced by pytest and some test was become "
-        "incompatible with nosetest. If you need to run your test with nose, "
-        " use the nose pluging.",
+        "This script is deprecated and will be removed soon. "
+        "The Nose test machinery has been removed from the framework in order "
+        "to be replaced with Pytest. "
+        "If you need to run your tests with nose, install the Nose package.",
         DeprecationWarning, stacklevel=2)
 
     try:
         from nose import main
     except ImportError:
-        logger.error('"Nosetest" is not installed: pip install nose')
+        logger.error('"Nosetest" is not installed, try: pip install nose')
 
     registry = anyblok.start('nose', useseparator=True, unittest=True)
 
