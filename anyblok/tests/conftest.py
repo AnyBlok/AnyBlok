@@ -64,7 +64,7 @@ def init_registry(function, **kwargs):
 def drop_database(url):
     url = copy(sqlalchemy.engine.url.make_url(url))
     database = url.database
-    if url.drivername.startswith('postgresql'):
+    if url.drivername.startswith('postgres'):
         url.database = 'postgres'
     elif not url.drivername.startswith('sqlite'):
         url.database = None

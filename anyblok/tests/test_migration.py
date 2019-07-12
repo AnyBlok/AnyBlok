@@ -25,7 +25,7 @@ from anyblok.common import naming_convention
 
 
 @pytest.fixture(scope="module")
-def clean_db(request):
+def clean_db(request, configuration_loaded):
     def clean():
         url = Configuration.get('get_url')()
         drop_database(url)
@@ -843,7 +843,7 @@ class TestMigration:
             report.log_has("Drop constraint test_other_key on test"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Test for Postgres only")
+                        reason="MySQL transform unique constraint on index")
     def test_detect_drop_unique_constraint_with_reinit_all(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
@@ -887,11 +887,13 @@ class TestMigration:
                         reason="No CheckConstraint works #90")
     def test_detect_add_check_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE testcheck")
-            conn.execute(
-                """CREATE TABLE testcheck(
-                    integer INT PRIMARY KEY NOT NULL
-                );""")
+            registry.TestCheck.__table__.drop(bind=conn)
+            registry.TestCheck.__table__ = Table(
+                'testcheck', MetaData(naming_convention=naming_convention),
+                Column('integer', Integer, primary_key=True),
+            )
+            registry.TestCheck.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has(
             "Add check constraint anyblok_ck_testcheck__test on testcheck")

@@ -3,16 +3,50 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
-from sqlalchemy import schema
 from contextlib import contextmanager
 from sqlalchemy import func, select, update, join, and_
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.dialects.mysql.types import TINYINT
 from sqlalchemy.sql.sqltypes import Boolean
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.schema import (
+    DDLElement, PrimaryKeyConstraint, CheckConstraint, UniqueConstraint)
 from logging import getLogger
 
 logger = getLogger(__name__)
+
+
+class CreateSchema(DDLElement):
+    def __init__(self, name):
+        self.name = name
+
+
+class AlterSchema(DDLElement):
+    def __init__(self, oldname, newname):
+        self.oldname = oldname
+        self.newname = newname
+
+
+class DropSchema(DDLElement):
+    def __init__(self, name):
+        self.name = name
+
+
+@compiles(CreateSchema)
+def compile_create_schema(element, compiler, **kw):
+    return "CREATE SCHEMA %s" % element.name
+
+
+@compiles(AlterSchema)
+def compile_alter_schema(element, compiler, **kw):
+    return "ALTER SCHEMA %s RENAME TO %s" % (
+        element.oldname, element.newname)
+
+
+@compiles(DropSchema)
+def compile_drop_schema(element, compiler, **kw):
+    return "DROP SCHEMA IF EXISTS %s" % element.name
 
 
 @contextmanager
@@ -51,6 +85,11 @@ class MigrationReport:
                 return True
 
         return False
+
+    def init_add_schema(self, diff):
+        self.raise_if_withoutautomigration()
+        _, schema = diff
+        self.log_names.append('Add schema %s' % schema)
 
     def init_add_table(self, diff):
         self.raise_if_withoutautomigration()
@@ -167,11 +206,17 @@ class MigrationReport:
     def init_add_ck(self, diff):
         self.raise_if_withoutautomigration()
         _, table, ck = diff
+        if ck.table.schema:
+            table = ck.table.schema + '.' + table
+
         self.log_names.append('Add check constraint %s on %s' % (
             ck.name, table))
 
     def init_remove_ck(self, diff):
         _, table, ck = diff
+        if ck['schema']:
+            table = ck['schema'] + '.' + table
+
         self.log_names.append('Drop check constraint %s on %s' % (
             ck['name'], table))
 
@@ -277,6 +322,7 @@ class MigrationReport:
         self.diffs = diffs
         self.log_names = []
         mappers = {
+            'add_schema': self.init_add_schema,
             'add_table': self.init_add_table,
             'add_column': self.init_add_column,
             'remove_constraint': self.init_remove_constraint,
@@ -329,45 +375,76 @@ class MigrationReport:
         """
         return log in self.logs
 
+    def apply_change_add_schema(self, action):
+        _, schema = action
+        self.migration.schema().add(schema)
+
     def apply_change_add_table(self, action):
         _, table = action
-        self.migration.table().add(table.name, table=table)
+        if table.schema:
+            t = self.migration.schema(table.schema).table()
+        else:
+            t = self.migration.table()
+
+        t.add(table.name, table=table)
+
+    def get_migration_table(self, table):
+        if table.schema:
+            return self.migration.schema(table.schema).table(table.name)
+        else:
+            return self.migration.table(table.name)
 
     def apply_change_add_column(self, action):
         _, _, table, column = action
-        self.migration.table(table).column().add(column)
+        t = self.get_migration_table(column.table)
+        t.column().add(column)
 
     def apply_change_modify_nullable(self, action):
-        _, _, table, column, kwargs, oldvalue, newvalue = action
-        self.migration.table(table).column(column).alter(
+        _, schema, table, column, kwargs, oldvalue, newvalue = action
+        if schema:
+            t = self.migration.schema(schema).table(table)
+        else:
+            t = self.migration.table(table)
+
+        t.column(column).alter(
             nullable=newvalue, existing_nullable=oldvalue, **kwargs)
 
     def apply_change_modify_type(self, action):
-        _, _, table, column, kwargs, oldvalue, newvalue = action
-        self.migration.table(table).column(column).alter(
+        _, schema, table, column, kwargs, oldvalue, newvalue = action
+        if schema:
+            t = self.migration.schema(schema).table(table)
+        else:
+            t = self.migration.table(table)
+
+        t.column(column).alter(
             type_=newvalue, existing_type=oldvalue, **kwargs)
 
     def apply_change_modify_default(self, action):
-        _, _, table, column, kwargs, oldvalue, newvalue = action
-        self.migration.table(table).column(column).alter(
+        _, schema, table, column, kwargs, oldvalue, newvalue = action
+        if schema:
+            t = self.migration.schema(schema).table(table)
+        else:
+            t = self.migration.table(table)
+
+        t.column(column).alter(
             server_default=newvalue, existing_server_default=oldvalue,
             **kwargs)
 
     def apply_change_remove_constraint(self, action):
         _, constraint = action
-        if constraint.__class__ is schema.UniqueConstraint:
-            table = self.migration.table(constraint.table)
+        if constraint.__class__ is UniqueConstraint:
+            table = self.get_migration_table(constraint.table)
             table.unique(name=constraint.name).drop()
 
     def apply_change_remove_index(self, action):
         _, index = action
         if not index.unique:
-            table = self.migration.table(index.table.name)
+            table = self.get_migration_table(index.table)
             table.index(name=index.name).drop()
 
     def apply_change_add_fk(self, action):
         _, fk = action
-        t = self.migration.table(fk.table.name)
+        t = self.get_migration_table(fk.table)
         from_ = []
         to_ = []
         for column in fk.columns:
@@ -379,34 +456,40 @@ class MigrationReport:
 
     def apply_change_add_ck(self, action):
         _, table, ck = action
-        t = self.migration.table(table)
+        t = self.get_migration_table(ck.table)
         t.check(ck.name).add(str(ck.sqltext))
 
     def apply_change_remove_fk(self, action):
         _, fk = action
-        t = self.migration.table(fk.table.name)
+        t = self.get_migration_table(fk.table)
         t.foreign_key(fk.name).drop()
 
     def apply_change_remove_ck(self, action):
         _, table, ck = action
-        t = self.migration.table(table)
+        if ck['schema']:
+            t = self.migration.schema(ck['schema']).table(table)
+        else:
+            t = self.migration.table(table)
+
         t.foreign_key(ck['name']).drop()
 
     def apply_change_add_constraint(self, action):
         _, constraint = action
-        table = self.migration.table(constraint.table.name)
+        table = self.get_migration_table(constraint.table)
         table.unique(name=constraint.name).add(*constraint.columns)
 
     def apply_change_add_index(self, action):
         _, constraint = action
-        table = self.migration.table(constraint.table.name)
+        table = self.get_migration_table(constraint.table)
         table.index().add(*constraint.columns, name=constraint.name)
 
     def apply_remove_table(self, action):
-        self.migration.table(action[1].name).drop()
+        table = self.get_migration_table(action[1])
+        table.drop()
 
     def apply_remove_column(self, action):
-        self.migration.table(action[2]).column(action[3].name).drop()
+        table = self.get_migration_table(action[2])
+        table.column(action[3].name).drop()
 
     def apply_change(self):
         """ Apply the migration
@@ -418,6 +501,7 @@ class MigrationReport:
             logger.debug(log)
 
         mappers = {
+            'add_schema': self.apply_change_add_schema,
             'add_table': self.apply_change_add_table,
             'add_column': self.apply_change_add_column,
             'modify_nullable': self.apply_change_modify_nullable,
@@ -472,16 +556,20 @@ class MigrationConstraintForeignKey:
                                      "(%s)" % ', '.join(remote_table))
 
         remote_table = remote_table.pop()
-        remote_columns = [x.name for x in remote_columns]
+        remote_columns_names = [x.name for x in remote_columns]
         self.table.migration.operation.create_foreign_key(
             self.name, self.table.name, remote_table,
-            local_columns, remote_columns, **kwargs)
+            local_columns, remote_columns_names,
+            source_schema=self.table.schema,
+            referent_schema=remote_columns[0].table.schema,
+            **kwargs)
         return self
 
     def drop(self):
         """ Drop the foreign key """
         self.table.migration.operation.drop_constraint(
-            self.name, self.table.name, type_='foreignkey')
+            self.name, self.table.name, type_='foreignkey',
+            schema=self.table.schema)
         return self
 
 
@@ -513,7 +601,7 @@ class MigrationColumn:
             op = self.table.migration.operation
             with cnx(self.table.migration) as conn:
                 columns = op.impl.dialect.get_columns(
-                    conn, self.table.name)
+                    conn, self.table.name, schema=table.schema)
 
             for c in columns:
                 if c['name'] == name:
@@ -571,15 +659,20 @@ class MigrationColumn:
         if not nullable:
             column.nullable = True
 
-        migration.operation.impl.add_column(self.table.name, column)
+        migration.operation.impl.add_column(self.table.name, column,
+                                            schema=self.table.schema)
         self.apply_default_value(column)
 
         if not nullable:
             c = MigrationColumn(self.table, column.name)
-            c.alter(nullable=False, )
+            c.alter(nullable=False)
 
         # check the table exist
-        migration.metadata.tables[self.table.name]
+        table = (
+            "%s.%s" % (self.table.schema, self.table.name)
+            if self.table.schema
+            else self.table.name)
+        migration.metadata.tables[table]
         return MigrationColumn(self.table, column.name)
 
     def alter(self, **kwargs):
@@ -623,7 +716,8 @@ class MigrationColumn:
 
         if vals:
             self.table.migration.operation.alter_column(
-                self.table.name, self.name, **vals)
+                self.table.name, self.name,
+                schema=self.table.schema, **vals)
 
         if 'nullable' in kwargs:
             nullable = kwargs['nullable']
@@ -633,7 +727,8 @@ class MigrationColumn:
             try:
                 self.table.migration.savepoint(savepoint)
                 self.table.migration.operation.alter_column(
-                    self.table.name, self.name, nullable=nullable, **vals)
+                    self.table.name, self.name, nullable=nullable,
+                    schema=self.table.schema, **vals)
             except IntegrityError as e:
                 # POSTGRES
                 self.table.migration.rollback_savepoint(savepoint)
@@ -647,7 +742,8 @@ class MigrationColumn:
 
     def drop(self):
         """ Drop the column """
-        self.table.migration.operation.drop_column(self.table.name, self.name)
+        self.table.migration.operation.drop_column(
+                self.table.name, self.name, schema=self.table.schema)
 
     @property
     def nullable(self):
@@ -682,7 +778,10 @@ class MigrationColumn:
     @property
     def autoincrement(self):
         """ Use for unittest: return the default database value """
-        table = self.table.migration.metadata.tables[self.table.name]
+        table_name = (
+            "%s.%s" % (self.table.schema, self.table.name)
+            if self.table.schema else self.table.name)
+        table = self.table.migration.metadata.tables[table_name]
         primary_keys = [x.name for x in table.primary_key.columns]
         if self.name in primary_keys:
             return False
@@ -714,14 +813,16 @@ class MigrationConstraintCheck:
         :rtype: MigrationConstraintCheck instance
         """
         self.table.migration.operation.create_check_constraint(
-            self.name, self.table.name, condition)
+            self.name, self.table.name, condition,
+            schema=self.table.schema)
 
         return self
 
     def drop(self):
         """ Drop the constraint """
         self.table.migration.operation.drop_constraint(
-            self.name, self.table.name, type_='check')
+            self.name, self.table.name, type_='check',
+            schema=self.table.schema)
 
 
 class MigrationConstraintUnique:
@@ -761,7 +862,8 @@ class MigrationConstraintUnique:
         try:
             self.table.migration.savepoint(savepoint)
             self.table.migration.operation.create_unique_constraint(
-                self.name, self.table.name, columns_name)
+                self.name, self.table.name, columns_name,
+                schema=self.table.schema)
         except (IntegrityError, OperationalError) as e:
             if not self.table.migration.conn.engine.url.drivername.startswith(
                 'mysql'
@@ -779,7 +881,8 @@ class MigrationConstraintUnique:
     def drop(self):
         """ Drop the constraint """
         self.table.migration.operation.drop_constraint(
-            self.name, self.table.name, type_='unique')
+            self.name, self.table.name, type_='unique',
+            schema=self.table.schema)
 
 
 class MigrationConstraintPrimaryKey:
@@ -849,7 +952,7 @@ class MigrationIndex:
             op = self.table.migration.operation
             with cnx(self.table.migration) as conn:
                 indexes = op.impl.dialect.get_indexes(
-                    conn, self.table.name, None)
+                    conn, self.table.name, schema=self.table.schema)
 
             for i in indexes:
                 if i['name'] == self.name:
@@ -883,14 +986,16 @@ class MigrationIndex:
         index_name = kwargs.get('name', self.format_name(*columns))
         columns_name = [x.name for x in columns]
         self.table.migration.operation.create_index(
-            index_name, self.table.name, columns_name)
+            index_name, self.table.name, columns_name,
+            schema=self.table.schema)
 
         return MigrationIndex(self.table, *columns, **kwargs)
 
     def drop(self):
         """ Drop the constraint """
         self.table.migration.operation.drop_index(
-            self.name, table_name=self.table.name)
+            self.name, table_name=self.table.name,
+            schema=self.table.schema)
 
 
 class MigrationTable:
@@ -913,14 +1018,15 @@ class MigrationTable:
         t.drop()
     """
 
-    def __init__(self, migration, name):
+    def __init__(self, migration, name, schema=None):
         self.name = name
         self.migration = migration
+        self.schema = schema
 
         if name is not None:
             with cnx(self.migration) as conn:
-                if not self.migration.operation.impl.dialect.has_table(conn,
-                                                                       name):
+                has_table = migration.operation.impl.dialect.has_table
+                if not has_table(conn, name, schema=schema):
                     raise MigrationException("No table %r found" % name)
 
     def add(self, name, table=None):
@@ -931,13 +1037,19 @@ class MigrationTable:
         :rtype: MigrationTable instance
         """
         if table is not None:
+            if table.schema != self.schema:
+                raise MigrationException(
+                    "The schema of the table (%r.%r) and the MigrationTable %r"
+                    "instance are not the same" % (
+                        table.schema, table.name, self.schema))
+
             self.migration.metadata.create_all(
                 bind=self.migration.conn,
                 tables=[table])
         else:
-            self.migration.operation.create_table(name)
+            self.migration.operation.create_table(name, schema=self.schema)
 
-        return MigrationTable(self.migration, name)
+        return MigrationTable(self.migration, name, self.schema)
 
     def column(self, name=None):
         """ Get Column
@@ -949,7 +1061,7 @@ class MigrationTable:
 
     def drop(self):
         """ Drop the table """
-        self.migration.operation.drop_table(self.name)
+        self.migration.operation.drop_table(self.name, schema=self.schema)
 
     def index(self, *columns, **kwargs):
         """ Get index
@@ -993,8 +1105,9 @@ class MigrationTable:
             raise MigrationException("Table can only alter name")
 
         name = kwargs['name']
-        self.migration.operation.rename_table(self.name, name)
-        return MigrationTable(self.migration, name)
+        self.migration.operation.rename_table(
+            self.name, name, schema=self.schema)
+        return MigrationTable(self.migration, name, schema=self.schema)
 
     def foreign_key(self, name):
         """ Get a foreign key
@@ -1002,6 +1115,71 @@ class MigrationTable:
         :rtype: MigrationConstraintForeignKey instance
         """
         return MigrationConstraintForeignKey(self, name)
+
+
+class MigrationSchema:
+    """ Use to manipulate tables
+
+    Add a Schema::
+
+        schema().add('New schema')
+
+    Get an existing schema::
+
+        s = schema('My table schema')
+
+    Alter the schema::
+
+        s.alter(name='Another schema name')
+
+    Drop the schema::
+
+        s.drop()
+    """
+
+    def __init__(self, migration, name):
+        self.name = name
+        self.migration = migration
+
+        if name is not None:
+            with cnx(migration) as conn:
+                if not migration.operation.impl.dialect.has_schema(conn, name):
+                    raise MigrationException("No schema %r found" % name)
+
+    def add(self, name):
+        """ Add a new schema
+
+        :param name: name of the schema
+        :rtype: MigrationSchema instance
+        """
+        with cnx(self.migration) as conn:
+            conn.execute(CreateSchema(name))
+
+        return MigrationSchema(self.migration, name)
+
+    def table(self, name=None):
+        """ Get a table
+
+        :rtype: MigrationTable instance
+        """
+        return MigrationTable(self.migration, name, schema=self.name)
+
+    def alter(self, name=None):
+        """ Atler the current table
+
+        :param name: New schema name
+        :rtype: MigrationSchema instance
+        :exception: MigrationException
+        """
+        with cnx(self.migration) as conn:
+            conn.execute(AlterSchema(self.name, name))
+
+        return MigrationSchema(self.migration, name)
+
+    def drop(self):
+        """ Drop the schema """
+        with cnx(self.migration) as conn:
+            conn.execute(DropSchema(self.name))
 
 
 class Migration:
@@ -1023,6 +1201,7 @@ class Migration:
             self.conn.dialect, None)
 
         opts = {
+            'include_schemas': True,
             'compare_server_default': True,
             'render_item': self.render_item,
             'compare_type': self.compare_type,
@@ -1036,27 +1215,52 @@ class Migration:
         self.reinit_constraints = Configuration.get(
             'reinit_constraints', False)
 
-    def table(self, name=None):
+    def table(self, name=None, schema=None):
         """ Get a table
+
+        :param name: default None, name of the table
+        :param schema: default None, name of the schema
 
         :rtype: MigrationTable instance
         """
-        return MigrationTable(self, name)
+        return MigrationTable(self, name=name, schema=schema)
 
-    def auto_upgrade_database(self):
+    def schema(self, name=None):
+        """ Get a table
+
+        :rtype: MigrationSchema instance
+        """
+        return MigrationSchema(self, name)
+
+    def auto_upgrade_database(self, schema_only=False):
         """ Upgrade the database automaticly """
-        report = self.detect_changed()
+        report = self.detect_changed(schema_only=schema_only)
         report.apply_change()
 
-    def detect_changed(self):
+    def detect_changed(self, schema_only=False):
         """ Detect the difference between the metadata and the database
 
         :rtype: MigrationReport instance
         """
-        diff = compare_metadata(self.context, self.metadata)
         inspector = Inspector(self.conn)
-        diff.extend(self.detect_undetected_constraint_from_alembic(inspector))
+        if schema_only:
+            diff = self.detect_added_new_schema(inspector)
+        else:
+            diff = compare_metadata(self.context, self.metadata)
+            diff.extend(
+                self.detect_undetected_constraint_from_alembic(inspector))
+
         return MigrationReport(self, diff)
+
+    def detect_added_new_schema(self, inspector):
+        diff = []
+        schemas = self.metadata._schemas
+        reflected_schemas = set(inspector.get_schema_names())
+        added_schemas = schemas - reflected_schemas
+        for schema in added_schemas:
+            diff.append(('add_schema', schema))
+
+        return diff
 
     def detect_undetected_constraint_from_alembic(self, inspector):
         diff = []
@@ -1091,24 +1295,30 @@ class Migration:
             return []
 
         diff = []
-        for table in inspector.get_table_names():
-            if table not in self.metadata.tables:
-                continue
+        schemas = list(self.metadata._schemas)
+        schemas.append(None)
+        for schema in schemas:
+            for table in inspector.get_table_names(schema=schema):
+                table_ = "%s.%s" % (schema, table) if schema else table
+                if table_ not in self.metadata.tables:
+                    continue
 
-            reflected_constraints = {
-                ck['name']: ck
-                for ck in inspector.get_check_constraints(table)
-            }
-            constraints = {
-                ck.name: ck
-                for ck in self.metadata.tables[table].constraints
-                if isinstance(ck, schema.CheckConstraint)
-                if ck.name != '_unnamed_'
-            }
-            todrop = set(reflected_constraints.keys()) - set(constraints.keys())
-            toadd = set(constraints.keys()) - set(reflected_constraints.keys())
+                reflected_constraints = {
+                    ck['name']: ck
+                    for ck in inspector.get_check_constraints(
+                        table, schema=schema)
+                }
+                constraints = {
+                    ck.name: ck
+                    for ck in self.metadata.tables[table_].constraints
+                    if isinstance(ck, CheckConstraint)
+                    if ck.name != '_unnamed_'
+                }
+                todrop = set(reflected_constraints.keys()) - set(
+                    constraints.keys())
+                toadd = set(constraints.keys()) - set(
+                    reflected_constraints.keys())
 
-            if toadd and todrop:
                 # check a constraint have not been truncated
                 todrop_ = todrop.copy()
                 for x in todrop_:
@@ -1120,31 +1330,38 @@ class Migration:
                             todrop.remove(x)
                             break
 
-            for ck in todrop:
-                diff.append(('remove_ck', table, reflected_constraints[ck]))
+                for ck in todrop:
+                    ck_ = reflected_constraints[ck]
+                    ck_['schema'] = schema
+                    diff.append(('remove_ck', table, ck_))
 
-            for ck in toadd:
-                diff.append(('add_ck', table, constraints[ck]))
+                for ck in toadd:
+                    diff.append(('add_ck', table, constraints[ck]))
 
         return diff
 
     def detect_pk_constraint_changed(self, inspector):
         diff = []
-        for table in inspector.get_table_names():
-            if table not in self.metadata.tables:
-                continue
+        schemas = list(self.metadata._schemas)
+        schemas.append(None)
+        for schema in schemas:
+            for table in inspector.get_table_names(schema=schema):
+                table_ = "%s.%s" % (schema, table) if schema else table
+                if table_ not in self.metadata.tables:
+                    continue
 
-            reflected_constraint = inspector.get_pk_constraint(table)
-            constraint = [
-                pk
-                for pk in self.metadata.tables[table].constraints
-                if isinstance(pk, schema.PrimaryKeyConstraint)
-            ][0]
-            reflected_columns = set(
-                reflected_constraint['constrained_columns'])
-            columns = set(x.name for x in constraint.columns)
-            if columns != reflected_columns:
-                diff.append(('change_pk', table, constraint))
+                reflected_constraint = inspector.get_pk_constraint(
+                    table, schema=schema)
+                constraint = [
+                    pk
+                    for pk in self.metadata.tables[table_].constraints
+                    if isinstance(pk, PrimaryKeyConstraint)
+                ][0]
+                reflected_columns = set(
+                    reflected_constraint['constrained_columns'])
+                columns = set(x.name for x in constraint.columns)
+                if columns != reflected_columns:
+                    diff.append(('change_pk', table, constraint))
 
         return diff
 

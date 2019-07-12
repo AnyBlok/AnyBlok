@@ -338,6 +338,9 @@ class Model:
                 if p not in properties:
                     properties[p] = f
 
+            if hasattr(b, '__db_schema__'):
+                properties['__db_schema__'] = b.__db_schema__
+
         if '__tablename__' in ns['properties']:
             properties['__tablename__'] = ns['properties']['__tablename__']
 

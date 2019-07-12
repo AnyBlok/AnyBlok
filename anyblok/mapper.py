@@ -155,6 +155,9 @@ class ModelAttribute:
         if Model[self.attribute_name].db_column_name:
             column_name = Model[self.attribute_name].db_column_name
 
+        if Model.get('__db_schema__'):
+            return Model['__db_schema__'] + '.' + tablename + '.' + column_name
+
         return tablename + '.' + column_name
 
     def get_complete_name(self, registry):
