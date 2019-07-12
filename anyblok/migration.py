@@ -1142,9 +1142,21 @@ class MigrationSchema:
         self.migration = migration
 
         if name is not None:
-            with cnx(migration) as conn:
-                if not migration.operation.impl.dialect.has_schema(conn, name):
-                    raise MigrationException("No schema %r found" % name)
+            if not self.has_schema():
+                raise MigrationException("No schema %r found" % self.name)
+
+    def has_schema(self):
+        with cnx(self.migration) as conn:
+            if conn.engine.url.drivername.startswith('mysql'):
+                query = """
+                    SELECT count(*)
+                    FROM INFORMATION_SCHEMA.SCHEMATA
+                    WHERE SCHEMA_name='%s'
+                """ % self.name
+                return conn.execute(query).fetchone()[0]
+            else:
+                return self.migration.operation.impl.dialect.has_schema(
+                    conn, self.name)
 
     def add(self, name):
         """ Add a new schema
