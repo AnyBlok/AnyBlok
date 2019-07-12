@@ -114,10 +114,6 @@ def registry(request, clean_db, bloks_loaded):
             except MigrationException:
                 pass
 
-        try:
-            registry.migration.schema('other_schema').drop()
-        except MigrationException:
-            pass
         registry.close()
 
     request.addfinalizer(rollback)
@@ -129,22 +125,22 @@ class TestMigrationDbSchema:
     def test_add_schema(self, registry):
         registry.migration.schema().add('other_schema')
         registry.migration.schema('other_schema')
+        registry.migration.schema('other_schema').drop()
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="Can't create empty table")
     def test_add_table_from_schema(self, registry):
-        schema = registry.migration.schema().add('other_schema')
+        schema = registry.migration.schema('test_db_schema')
         schema.table().add('test2')
         table = schema.table('test2')
-        assert table.schema == 'other_schema'
+        assert table.schema == 'test_db_schema'
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="Can't create empty table")
     def test_add_table(self, registry):
-        registry.migration.schema().add('other_schema')
-        registry.migration.table(schema='other_schema').add('test2')
-        table = registry.migration.table('test2', schema='other_schema')
-        assert table.schema == 'other_schema'
+        registry.migration.table(schema='test_db_schema').add('test2')
+        table = registry.migration.table('test2', schema='test_db_schema')
+        assert table.schema == 'test_db_schema'
 
     def test_add_column(self, registry):
         t = registry.migration.table('test', schema='test_db_schema')
@@ -461,8 +457,6 @@ class TestMigrationDbSchema:
             "Add Foreign keys on (testfk2.other) => "
             "(test_db_schema.testfktarget.integer)")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="FIXME")
     def test_detect_drop_anyblok_foreign_key(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
@@ -486,8 +480,6 @@ class TestMigrationDbSchema:
         assert not(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="FIXME")
     def test_detect_drop_column_with_foreign_key(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
