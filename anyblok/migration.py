@@ -488,7 +488,7 @@ class MigrationReport:
         table.drop()
 
     def apply_remove_column(self, action):
-        table = self.get_migration_table(action[2])
+        table = self.get_migration_table(action[3].table)
         table.column(action[3].name).drop()
 
     def apply_change(self):

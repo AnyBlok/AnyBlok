@@ -8,12 +8,12 @@
 import pytest
 from anyblok.testing import sgdb_in
 from anyblok.column import Integer as Int, String as Str
-from anyblok.migration import MigrationException, CreateSchema, DropSchema
+from anyblok.migration import MigrationException, DropSchema
 from contextlib import contextmanager
 from sqlalchemy import (
-    MetaData, Table, Column, Integer, String, TEXT, CheckConstraint, ForeignKey)
+    MetaData, Table, Column, Integer, String, CheckConstraint, ForeignKey)
 from anyblok import Declarations
-from sqlalchemy.exc import InternalError, IntegrityError, OperationalError
+from sqlalchemy.exc import IntegrityError
 from anyblok.config import Configuration
 from .conftest import init_registry, drop_database, create_database
 from anyblok.common import naming_convention
@@ -108,7 +108,7 @@ def registry(request, clean_db, bloks_loaded):
 
     def rollback():
         for table in ('test', 'testfk', 'testunique', 'testfk2',
-                      'testfktarget', 'testindex'):
+                      'testfktarget', 'testindex', 'testcheck'):
             try:
                 registry.migration.table(table, schema='test_db_schema').drop()
             except MigrationException:
@@ -157,6 +157,14 @@ class TestMigrationDbSchema:
     def test_drop_schema(self, registry):
         schema = registry.migration.schema('test_db_schema')
         schema.table('test').drop()
+        schema.table('testfk').drop()
+        schema.table('testunique').drop()
+        schema.table('testfk2').drop()
+        schema.table('testfktarget').drop()
+        schema.table('testindex').drop()
+        if not sgdb_in(['MySQL', 'MariaDB']):
+            schema.table('testcheck').drop()
+
         schema.drop()
         with pytest.raises(MigrationException):
             registry.migration.schema('test_db_schema')
@@ -173,7 +181,7 @@ class TestMigrationDbSchema:
             t.column('other')
 
     def test_alter_schema_name(self, registry):
-        t = registry.migration.schema('test_db_schema').alter(name='test_db_other')
+        registry.migration.schema('test_db_schema').alter(name='test_db_other')
         with pytest.raises(MigrationException):
             registry.migration.schema('test_db_schema')
 
@@ -222,6 +230,14 @@ class TestMigrationDbSchema:
     def test_detect_schema_added(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
+            registry.TestFK.__table__.drop(bind=conn)
+            registry.TestUnique.__table__.drop(bind=conn)
+            registry.TestFK2.__table__.drop(bind=conn)
+            registry.TestFKTarget.__table__.drop(bind=conn)
+            registry.TestIndex.__table__.drop(bind=conn)
+            if not sgdb_in(['MySQL', 'MariaDB']):
+                registry.TestCheck.__table__.drop(bind=conn)
+
             conn.execute(DropSchema('test_db_schema'))
 
         report = registry.migration.detect_changed(schema_only=True)
