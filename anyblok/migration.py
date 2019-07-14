@@ -267,7 +267,7 @@ class MigrationReport:
             msg += " (not null)"
             self.log_names.append(msg)
             self.actions.append(
-                ('modify_nullable', None, column.table.name,
+                ('modify_nullable', column.table.schema, column.table.name,
                  column.name, {}, False, True))
             return True
 
