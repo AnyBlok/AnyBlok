@@ -19,6 +19,7 @@ from sqlalchemy_utils.types.url import URLType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.scalar_coercible import ScalarCoercible
+from sqlalchemy_utils import JSONType
 from datetime import datetime, date
 from dateutil.parser import parse
 from inspect import ismethod
@@ -811,7 +812,7 @@ class Json(Column):
             x = Json()
 
     """
-    sqlalchemy_type = types.JSON(none_as_null=True)
+    sqlalchemy_type = JSONType
 
 
 class LargeBinary(Column):

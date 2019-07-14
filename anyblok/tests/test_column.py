@@ -849,16 +849,12 @@ class TestColumns:
         registry.Test.query().filter(
             registry.Test.col.in_(['admin', 'regular-user'])).first()
 
-    @pytest.mark.skipif(sgdb_in(['MariaDB']),
-                        reason='JSON is not existing in this SGDB')
     def test_json(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         val = {'a': 'Test'}
         test = registry.Test.insert(col=val)
         assert test.col == val
 
-    @pytest.mark.skipif(sgdb_in(['MariaDB']),
-                        reason='JSON is not existing in this SGDB')
     def test_json_update(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         test = registry.Test.insert(col={'a': 'test'})
@@ -876,8 +872,6 @@ class TestColumns:
         assert Test.query().filter(
             Test.col['a'].cast(SA_String) == '"test"').count() == 2
 
-    @pytest.mark.skipif(sgdb_in(['MariaDB']),
-                        reason='JSON is not existing in this SGDB')
     def test_json_null(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test
