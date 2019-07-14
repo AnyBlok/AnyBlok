@@ -273,7 +273,11 @@ class MigrationReport:
         self.log_names.append(msg)
         return True
 
-    def can_remove_table(self):
+    def can_remove_table(self, schema):
+        schemas = self.migration.metadata._schemas
+        if schema and schema not in schemas:
+            return False
+
         if self.migration.reinit_tables:
             return True
 
@@ -294,7 +298,7 @@ class MigrationReport:
 
     def init_remove_table(self, diff):
         self.log_names.append("Drop Table %s" % diff[1].name)
-        if self.can_remove_table():
+        if self.can_remove_table(diff[1].schema):
             self.raise_if_withoutautomigration()
         else:
             return True
