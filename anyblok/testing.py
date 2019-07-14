@@ -29,6 +29,7 @@ from copy import copy
 from testfixtures import LogCapture as LC
 from contextlib import contextmanager
 from logging import getLogger, DEBUG, INFO, WARNING, ERROR, CRITICAL
+from .common import sgdb_in as sgdb_in_, DATABASES_CACHED
 from anyblok import (
     load_init_function_from_entry_points,
     configuration_post_load,
@@ -557,33 +558,10 @@ def skip_unless_bloks_installed(*bloks):
     return bloks_decorator
 
 
-DATABASES_CACHED = {}
-
-
 def sgdb_in(databases):
     if not DATABASES_CACHED:
         load_configuration()
 
     url = Configuration.get('get_url')(db_name='')
     engine = sqlalchemy.create_engine(url)
-    for database in databases:
-        if database not in DATABASES_CACHED:
-            DATABASES_CACHED[database] = False
-            if engine.url.drivername.startswith('mysql'):
-                if database == 'MySQL':
-                    DATABASES_CACHED['MySQL'] = True
-
-                res = engine.execute("""
-                    show variables like 'version'
-                """).fetchone()
-                if res and database in res[1]:
-                    # MariaDB
-                    DATABASES_CACHED[database] = True
-            if engine.url.drivername.startswith('postgres'):
-                if database == 'PostgreSQL':
-                    DATABASES_CACHED['PostgreSQL'] = True
-
-        if DATABASES_CACHED[database]:
-            return True
-
-    return False
+    return sgdb_in_(engine, databases)

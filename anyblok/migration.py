@@ -10,6 +10,7 @@ from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.dialects.mysql.types import TINYINT
 from sqlalchemy.sql.sqltypes import Boolean
 from sqlalchemy.ext.compiler import compiles
+from .common import sgdb_in
 from sqlalchemy.schema import (
     DDLElement, PrimaryKeyConstraint, CheckConstraint, UniqueConstraint)
 from logging import getLogger
@@ -304,7 +305,7 @@ class MigrationReport:
             return True
 
     def init_modify_type(self, diff):
-        if self.migration.conn.engine.url.drivername.startswith('mysql'):
+        if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
             if isinstance(diff[5], TINYINT) and isinstance(diff[6], Boolean):
                 # Boolean are TINYINT in MySQL DataBase
                 return True
@@ -763,9 +764,7 @@ class MigrationColumn:
     def server_default(self):
         """ Use for unittest: return the default database value """
         sdefault = self.info['default']
-        if self.table.migration.conn.engine.url.drivername.startswith(
-            'mysql'
-        ):
+        if sgdb_in(self.table.migration.conn.engine, ['MySQL', 'MariaDB']):
             if sdefault:
                 if not isinstance(sdefault, str):
                     return sdefault.arg
@@ -869,9 +868,8 @@ class MigrationConstraintUnique:
                 self.name, self.table.name, columns_name,
                 schema=self.table.schema)
         except (IntegrityError, OperationalError) as e:
-            if not self.table.migration.conn.engine.url.drivername.startswith(
-                'mysql'
-            ):
+            if not sgdb_in(self.table.migration.conn.engine,
+                           ['MySQL', 'MariaDB']):
                 self.table.migration.rollback_savepoint(savepoint)
 
             logger.warning(
@@ -1151,7 +1149,7 @@ class MigrationSchema:
 
     def has_schema(self):
         with cnx(self.migration) as conn:
-            if conn.engine.url.drivername.startswith('mysql'):
+            if sgdb_in(conn.engine, ['MySQL', 'MariaDB']):
                 query = """
                     SELECT count(*)
                     FROM INFORMATION_SCHEMA.SCHEMATA
@@ -1306,7 +1304,7 @@ class Migration:
         return False
 
     def detect_check_constraint_changed(self, inspector):
-        if self.conn.engine.url.drivername.startswith('mysql'):
+        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
             # MySQL don t return the reflected constraint
             return []
 

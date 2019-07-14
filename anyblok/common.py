@@ -143,3 +143,30 @@ def apply_cache(attr, method, registry, namespace, base, properties):
             return {attr: wrapper}
 
     return {}
+
+
+DATABASES_CACHED = {}
+
+
+def sgdb_in(engine, databases):
+    for database in databases:
+        if database not in DATABASES_CACHED:
+            DATABASES_CACHED[database] = False
+            if engine.url.drivername.startswith('mysql'):
+                if database == 'MySQL':
+                    DATABASES_CACHED['MySQL'] = True
+
+                res = engine.execute("""
+                    show variables like 'version'
+                """).fetchone()
+                if res and database in res[1]:
+                    # MariaDB
+                    DATABASES_CACHED[database] = True
+            if engine.url.drivername.startswith('postgres'):
+                if database == 'PostgreSQL':
+                    DATABASES_CACHED['PostgreSQL'] = True
+
+        if DATABASES_CACHED[database]:
+            return True
+
+    return False

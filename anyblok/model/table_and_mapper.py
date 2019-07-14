@@ -9,6 +9,7 @@ from .plugins import ModelPluginBase
 from .exceptions import ModelException
 from sqlalchemy import ForeignKeyConstraint, CheckConstraint
 from sqlalchemy.ext.declarative import declared_attr
+from ..common import sgdb_in
 
 
 class TableMapperPlugin(ModelPluginBase):
@@ -79,7 +80,7 @@ class TableMapperPlugin(ModelPluginBase):
             transformation_properties['table_args'] = True
 
         if transformation_properties['table_kwargs'] is True:
-            if self.registry.engine.url.drivername.startswith('mysql'):
+            if sgdb_in(self.registry.engine, ['MySQL', 'MariaDB']):
                 new_base.define_table_kwargs = self.define_table_kwargs(
                     new_base, namespace)
 
@@ -100,7 +101,8 @@ class TableMapperPlugin(ModelPluginBase):
 
                 t_args = []
                 for field in table_args:
-                    for constraint in field.update_table_args(cls_):
+                    for constraint in field.update_table_args(self.registry,
+                                                              cls_):
                         if (
                             not isinstance(constraint,
                                            ForeignKeyConstraint) or
