@@ -84,7 +84,10 @@ class SqlMixin:
             prefix = Configuration.get(
                 'prefix_db_schema.%s' % cls.__registry_name__,
                 Configuration.get('prefix_db_schema', ''))
-            res.update({'schema': prefix + cls.__db_schema__})
+            suffix = Configuration.get(
+                'suffix_db_schema.%s' % cls.__registry_name__,
+                Configuration.get('suffix_db_schema', ''))
+            res.update({'schema': prefix + cls.__db_schema__ + suffix})
 
         return res
 
