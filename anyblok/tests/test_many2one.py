@@ -50,7 +50,7 @@ def _complete_many2one_with_schema(**kwargs):
 
     @register(Model)
     class Address:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2o_schema'
 
         id = Integer(primary_key=True)
         street = String()
@@ -59,7 +59,7 @@ def _complete_many2one_with_schema(**kwargs):
 
     @register(Model)
     class Person:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2o_schema'
 
         name = String(primary_key=True)
         address = Many2One(model=Model.Address,
@@ -71,7 +71,7 @@ def _complete_many2one_with_different_schema1(**kwargs):
 
     @register(Model)
     class Address:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2o_schema'
 
         id = Integer(primary_key=True)
         street = String()
@@ -80,7 +80,7 @@ def _complete_many2one_with_different_schema1(**kwargs):
 
     @register(Model)
     class Person:
-        __db_schema__ = 'test_db_other_schema'
+        __db_schema__ = 'test_db_other_m2o_schema'
 
         name = String(primary_key=True)
         address = Many2One(model=Model.Address,
@@ -92,7 +92,7 @@ def _complete_many2one_with_different_schema2(**kwargs):
 
     @register(Model)
     class Address:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2o_schema'
 
         id = Integer(primary_key=True)
         street = String()
@@ -129,7 +129,7 @@ def _minimum_many2one_with_schema(**kwargs):
 
     @register(Model)
     class Address:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2o_schema'
 
         id = Integer(primary_key=True)
         street = String()
@@ -138,7 +138,7 @@ def _minimum_many2one_with_schema(**kwargs):
 
     @register(Model)
     class Person:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2o_schema'
 
         name = String(primary_key=True)
         address = Many2One(model=Model.Address)

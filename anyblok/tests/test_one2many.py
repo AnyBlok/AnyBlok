@@ -50,7 +50,7 @@ def _complete_one2many_with_schema(**kwargs):
 
     @register(Model)
     class Address:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2m_schema'
 
         id = Integer(primary_key=True)
         street = String()
@@ -59,14 +59,14 @@ def _complete_one2many_with_schema(**kwargs):
 
     @register(Model)
     class Person:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2m_schema'
 
         name = String(primary_key=True)
         address_id = Integer(foreign_key=Model.Address.use('id'))
 
     @register(Model)  # noqa
     class Address:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2m_schema'
 
         persons = One2Many(model=Model.Person,
                            remote_columns="address_id",
@@ -88,7 +88,7 @@ def _complete_one2many_with_diferent_schema1(**kwargs):
 
     @register(Model)
     class Person:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2m_schema'
 
         name = String(primary_key=True)
         address_id = Integer(foreign_key=Model.Address.use('id'))
@@ -257,7 +257,7 @@ def _minimum_one2many_with_schema(**kwargs):
 
     @register(Model)
     class Address:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2m_schema'
 
         id = Integer(primary_key=True)
         street = String()
@@ -267,7 +267,7 @@ def _minimum_one2many_with_schema(**kwargs):
 
     @register(Model)
     class Person:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = 'test_db_m2m_schema'
 
         name = String(primary_key=True)
         address_id = Integer(foreign_key=Model.Address.use('id'))
