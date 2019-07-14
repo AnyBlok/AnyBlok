@@ -297,6 +297,9 @@ class ModelRepr:
         :rtype: string
         """
         Model = self.check_model(registry)
+        if Model.get('__db_schema__'):
+            return Model['__db_schema__'] + '.' + Model['__tablename__']
+
         return Model['__tablename__']
 
     def modelname(self, registry):
