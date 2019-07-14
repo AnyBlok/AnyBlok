@@ -26,6 +26,7 @@ from anyblok.common import naming_convention
 
 @pytest.fixture(scope="module")
 def clean_db(request, configuration_loaded):
+
     def clean():
         url = Configuration.get('get_url')()
         drop_database(url)
