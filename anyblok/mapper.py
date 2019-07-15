@@ -139,7 +139,7 @@ class ModelAttribute:
         self._options.update(kwargs)
         return self
 
-    def get_fk_name(self, registry):
+    def get_fk_name(self, registry, with_schema=True):
         """Return the name of the foreign key
 
         the need of foreign key may be before the creation of the model in
@@ -155,7 +155,7 @@ class ModelAttribute:
         if Model[self.attribute_name].db_column_name:
             column_name = Model[self.attribute_name].db_column_name
 
-        if Model.get('__db_schema__'):
+        if with_schema and Model.get('__db_schema__'):
             return Model['__db_schema__'] + '.' + tablename + '.' + column_name
 
         return tablename + '.' + column_name
@@ -290,14 +290,14 @@ class ModelRepr:
 
         return registry.loaded_namespaces_first_step[self.model_name]
 
-    def tablename(self, registry):
+    def tablename(self, registry, with_schema=True):
         """Return the  real tablename of the Model
 
         :param registry: instance of the registry
         :rtype: string
         """
         Model = self.check_model(registry)
-        if Model.get('__db_schema__'):
+        if with_schema and Model.get('__db_schema__'):
             return Model['__db_schema__'] + '.' + Model['__tablename__']
 
         return Model['__tablename__']

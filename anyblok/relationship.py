@@ -778,7 +778,8 @@ class Many2Many(RelationShip):
                         suffix=""):
         if m2m_columns is None:
             m2m_columns = [
-                x.get_fk_name(registry).replace('.', '_') + suffix
+                x.get_fk_name(
+                    registry, with_schema=False).replace('.', '_') + suffix
                 for x in columns]
         elif self.join_model:
             m2m_columns_ = []
@@ -865,8 +866,8 @@ class Many2Many(RelationShip):
 
         if join_table is None and join_model_table is None:
             join_table = ('join_%s_and_%s_for_%s' % (
-                self.local_model.tablename(registry).replace('.', '_'),
-                self.model.tablename(registry).replace('.', '_'),
+                self.local_model.tablename(registry, with_schema=False),
+                self.model.tablename(registry, with_schema=False),
                 fieldname))[:63]
 
         elif join_table and join_model_table and join_table != join_model_table:

@@ -107,6 +107,53 @@ def column_with_foreign_key():
         test = String(foreign_key=Model.Test.use('name'))
 
 
+def column_with_foreign_key_with_schema():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_fk_schema'
+
+        name = String(primary_key=True)
+
+    @register(Model)
+    class Test2:
+        __db_schema__ = 'test_db_fk_schema'
+
+        id = Integer(primary_key=True)
+        test = String(foreign_key=Model.Test.use('name'))
+
+
+def column_with_foreign_key_with_diff_schema1():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_fk_schema'
+
+        name = String(primary_key=True)
+
+    @register(Model)
+    class Test2:
+        __db_schema__ = 'test_db_fk_schema2'
+
+        id = Integer(primary_key=True)
+        test = String(foreign_key=Model.Test.use('name'))
+
+
+def column_with_foreign_key_with_diff_schema2():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_fk_schema'
+
+        name = String(primary_key=True)
+
+    @register(Model)
+    class Test2:
+
+        id = Integer(primary_key=True)
+        test = String(foreign_key=Model.Test.use('name'))
+
+
 class TestColumns:
 
     @pytest.fixture(autouse=True)
@@ -137,6 +184,21 @@ class TestColumns:
 
     def test_column_with_foreign_key(self):
         registry = self.init_registry(column_with_foreign_key)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
+
+    def test_column_with_foreign_key_with_schema(self):
+        registry = self.init_registry(column_with_foreign_key_with_schema)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
+
+    def test_column_with_foreign_key_with_diff_schema1(self):
+        registry = self.init_registry(column_with_foreign_key_with_diff_schema1)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
+
+    def test_column_with_foreign_key_with_diff_schema2(self):
+        registry = self.init_registry(column_with_foreign_key_with_diff_schema2)
         registry.Test.insert(name='test')
         registry.Test2.insert(test='test')
 
