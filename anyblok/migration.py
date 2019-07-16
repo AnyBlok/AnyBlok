@@ -10,12 +10,46 @@ from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.dialects.mysql.types import TINYINT
 from sqlalchemy.sql.sqltypes import Boolean
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.compiler import FK_ON_DELETE, FK_ON_UPDATE
 from .common import sgdb_in
 from sqlalchemy.schema import (
     DDLElement, PrimaryKeyConstraint, CheckConstraint, UniqueConstraint)
 from logging import getLogger
+from sqlalchemy.schema import ForeignKeyConstraint
 
 logger = getLogger(__name__)
+
+
+@compiles(ForeignKeyConstraint, "mysql")
+def process_foreign_key_constraint(constraint, compiler, **kw):
+    preparer = compiler.dialect.identifier_preparer
+    text = ""
+    if constraint.name is not None:
+        formatted_name = preparer.format_constraint(constraint)
+        if formatted_name is not None:
+            text += "CONSTRAINT %s " % formatted_name
+    remote_table = list(constraint.elements)[0].column.table
+    text += "FOREIGN KEY(%s) REFERENCES `%s` (%s)" % (
+        ", ".join(
+            preparer.quote(f.parent.name) for f in constraint.elements
+        ),
+        preparer.format_table(remote_table),
+
+        ", ".join(
+            preparer.quote(f.column.name) for f in constraint.elements
+        ),
+    )
+    if constraint.ondelete is not None:
+        text += " ON DELETE %s" % preparer.validate_sql_phrase(
+            constraint.ondelete, FK_ON_DELETE
+        )
+    if constraint.onupdate is not None:
+        text += " ON UPDATE %s" % preparer.validate_sql_phrase(
+            constraint.onupdate, FK_ON_UPDATE
+        )
+
+    print(' ==> ', text)
+    return text
 
 
 class CreateSchema(DDLElement):

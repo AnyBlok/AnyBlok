@@ -63,7 +63,7 @@ class ModelAttribute:
 
         self.model_name = model_name
         self.attribute_name = attribute_name
-        self._options = {'use_alter': True}
+        self._options = {}
 
     def get_attribute(self, registry, usehybrid=True):
         """Return the assembled attribute, the model need to be assembled
@@ -156,7 +156,8 @@ class ModelAttribute:
             column_name = Model[self.attribute_name].db_column_name
 
         if with_schema and Model.get('__db_schema__'):
-            return Model['__db_schema__'] + '.' + tablename + '.' + column_name
+            return '%s.%s.%s' % (
+                Model['__db_schema__'], tablename, column_name)
 
         return tablename + '.' + column_name
 
