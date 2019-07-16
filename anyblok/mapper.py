@@ -63,7 +63,7 @@ class ModelAttribute:
 
         self.model_name = model_name
         self.attribute_name = attribute_name
-        self._options = {}
+        self._options = {'use_alter': True}
 
     def get_attribute(self, registry, usehybrid=True):
         """Return the assembled attribute, the model need to be assembled
