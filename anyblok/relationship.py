@@ -768,6 +768,9 @@ class Many2Many(RelationShip):
         if self.join_model:
             res['join model'] = self.join_model.model_name
 
+        if self.schema:
+            res['schema'] = self.schema
+
         res['remote_columns'] = self.remote_columns
         res['m2m_remote_columns'] = self.m2m_remote_columns
         res['local_columns'] = self.local_columns
@@ -890,6 +893,8 @@ class Many2Many(RelationShip):
         tables = registry.declarativebase.metadata.tables
         if '.' in join_table:
             has_join_table = join_table in tables
+        elif self.join_model:
+            has_join_table = join_table in tables
         elif self.schema:
             schema = self.schema
             has_join_table = self.schema + '.' + join_table in tables
@@ -942,7 +947,8 @@ class Many2Many(RelationShip):
                 self.kwargs['secondaryjoin'] = secondaryjoin
 
         elif namespace == self.model.model_name or self.compute_join:
-            table = registry.declarativebase.metadata.tables[join_table]
+            table = registry.declarativebase.metadata.tables[
+                '%s.%s' % (schema, join_table) if schema else join_table]
             cls = get_class_by_table(registry.declarativebase, table)
             modelname = ModelRepr(cls.__registry_name__).modelname(registry)
             if (

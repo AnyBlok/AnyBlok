@@ -357,7 +357,8 @@ class TestMany2Many:
         assert m2m_tables_exist
 
         jt = registry.declarativebase.metadata.tables
-        join_table_exist = 'join_person_and_address_for_addresses' in jt
+        join_table_exist = (
+            'test_db_m2m_schema.join_person_and_address_for_addresses' in jt)
         assert join_table_exist
 
         address = registry.Address.insert(
@@ -624,12 +625,53 @@ class TestMany2Many:
         t1.childs.append(t2)
         assert t1 in t2.parents
 
+    def test_many2many_on_self_with_schema(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    m2m_remote_columns='id2',
+                    many2many='parents'
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert()
+        t1.childs.append(t2)
+        assert t1 in t2.parents
+
     def test_many2many_on_self_auto_column(self):
 
         def add_in_registry():
 
             @register(Model)
             class Test2:
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test2',
+                    many2many='parents'
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test2.insert()
+        t2 = registry.Test2.insert()
+        t1.childs.append(t2)
+        assert t1 in t2.parents
+
+    def test_many2many_on_self_auto_column_with_schema(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test2:
+                __db_schema__ = 'test_db_m2m_schema'
 
                 id = Integer(primary_key=True)
                 childs = Many2Many(
@@ -1176,6 +1218,45 @@ class TestMany2Many:
         with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
+    def test_rich_many2many_complete_config_on_self_with_schema(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class TestLink:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                t_left = Integer(foreign_key='Model.Test=>id', nullable=False)
+                t_right = Integer(foreign_key='Model.Test=>id', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Test:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    many2many='parents',
+                    join_table="testlink",
+                    remote_columns="id", local_columns="id",
+                    m2m_local_columns='t_left',
+                    m2m_remote_columns='t_right',
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert()
+        t1.parents.append(t2)
+        link = registry.TestLink.query().one()
+        assert link.t_left == t2.id
+        assert link.t_right == t1.id
+        assert link.id
+        assert link.create_at
+        assert link.foo == 'bar'
+
     def test_rich_many2many_complete_config_on_self(self):
 
         def add_in_registry():
@@ -1226,6 +1307,44 @@ class TestMany2Many:
 
             @register(Model)
             class Test:
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    many2many='parents',
+                    join_table="testlink",
+                    m2m_local_columns='t_left',
+                    m2m_remote_columns='t_right',
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert()
+        t1.parents.append(t2)
+        link = registry.TestLink.query().one()
+        assert link.t_left == t2.id
+        assert link.t_right == t1.id
+        assert link.id
+        assert link.create_at
+        assert link.foo == 'bar'
+
+    def test_rich_many2many_minimum_config_on_self_with_schema(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class TestLink:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                t_left = Integer(foreign_key='Model.Test=>id', nullable=False)
+                t_right = Integer(foreign_key='Model.Test=>id', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Test:
+                __db_schema__ = 'test_db_m2m_schema'
 
                 id = Integer(primary_key=True)
                 childs = Many2Many(
