@@ -460,6 +460,7 @@ class Model:
         properties = ns['properties'].copy()
         first_step = registry.loaded_namespaces_first_step[namespace]
         properties['__depends__'] = first_step['__depends__']
+        properties['__db_schema__'] = first_step.get('__db_schema__', None)
 
         registry.call_plugins('initialisation_tranformation_properties',
                               properties, transformation_properties)

@@ -758,6 +758,7 @@ class Many2Many(RelationShip):
         self.compute_join = self.kwargs.pop('compute_join', False)
         self.kwargs['backref'] = self.kwargs.pop('many2many', None)
         self.kwargs['info']['remote_name'] = self.kwargs['backref']
+        self.schema = self.kwargs.pop('schema', None)
 
     def autodoc_get_properties(self):
         res = super(Many2Many, self).autodoc_get_properties()
@@ -883,6 +884,24 @@ class Many2Many(RelationShip):
 
         return join_table or join_model_table
 
+    def has_join_table_for_schema(self, registry, properties, join_table):
+        has_join_table = False
+        schema = None
+        tables = registry.declarativebase.metadata.tables
+        if '.' in join_table:
+            has_join_table = join_table in tables
+        elif self.schema:
+            schema = self.schema
+            has_join_table = self.schema + '.' + join_table in tables
+        elif properties.get('__db_schema__'):
+            schema = properties['__db_schema__']
+            has_join_table = (
+                properties['__db_schema__'] + '.' + join_table in tables)
+        elif join_table in tables:
+            has_join_table = True
+
+        return has_join_table, schema
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Create the relationship
@@ -898,7 +917,9 @@ class Many2Many(RelationShip):
         local_columns, remote_columns = self.get_local_and_remote_columns(
             registry)
         join_table = self.get_join_table(registry, namespace, fieldname)
-        if join_table not in registry.declarativebase.metadata.tables:
+        has_join_table, schema = self.has_join_table_for_schema(
+            registry, properties, join_table)
+        if not has_join_table:
             modelname = ''.join(x.capitalize() for x in join_table.split('_'))
             remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(
                 registry, remote_columns, self.m2m_remote_columns, modelname,
@@ -910,7 +931,8 @@ class Many2Many(RelationShip):
             )
 
             Node = Table(join_table, registry.declarativebase.metadata, *(
-                local_columns + remote_columns + [local_fk, remote_fk]))
+                local_columns + remote_columns + [local_fk, remote_fk]),
+                schema=schema)
 
             if namespace == self.model.model_name:
                 type(modelname, (registry.declarativebase,), {
@@ -953,7 +975,8 @@ class Many2Many(RelationShip):
             self.kwargs['primaryjoin'] = primaryjoin
             self.kwargs['secondaryjoin'] = secondaryjoin
 
-        self.kwargs['secondary'] = join_table
+        self.kwargs['secondary'] = (
+            '%s.%s' % (schema, join_table) if schema else join_table)
         # definition of expiration
         if self.kwargs.get('backref'):
             self.init_expire_attributes(registry, namespace, fieldname)

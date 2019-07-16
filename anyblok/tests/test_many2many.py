@@ -63,6 +63,7 @@ def _complete_many2many_with_schema(**kwargs):
         name = String(primary_key=True)
         addresses = Many2Many(model=Model.Address,
                               join_table="join_addresses_by_persons",
+                              schema="test_db_m2m_schema",
                               remote_columns="id", local_columns="name",
                               m2m_remote_columns='a_id',
                               m2m_local_columns='p_name',
@@ -150,14 +151,17 @@ class TestMany2ManyComplete:
         assert m2m_tables_exist
 
         jt = registry.declarativebase.metadata.tables
-        join_table_exist = 'join_addresses_by_persons' in jt
-        assert join_table_exist
+        if 'join_addresses_by_persons' in jt:
+            join_table = 'join_addresses_by_persons'
+        if 'test_db_m2m_schema.join_addresses_by_persons' in jt:
+            join_table = 'test_db_m2m_schema.join_addresses_by_persons'
+        if 'test_db_m2m_other_schema.join_addresses_by_persons' in jt:
+            join_table = 'test_db_m2m_other_schema.join_addresses_by_persons'
+        assert join_table
 
-        assert len(jt['join_addresses_by_persons'].primary_key.columns) == 2
-        assert 'a_id' in jt[
-            'join_addresses_by_persons'].primary_key.columns
-        assert 'p_name' in jt[
-            'join_addresses_by_persons'].primary_key.columns
+        assert len(jt[join_table].primary_key.columns) == 2
+        assert 'a_id' in jt[join_table].primary_key.columns
+        assert 'p_name' in jt[join_table].primary_key.columns
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
