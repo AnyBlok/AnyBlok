@@ -95,7 +95,10 @@ class MigrationReport:
     def init_add_table(self, diff):
         self.raise_if_withoutautomigration()
         _, table = diff
-        self.log_names.append('Add table %s' % table.name)
+        table_name = (
+            '%s.%s' % (table.schema, table.name)
+            if table.schema else table.name)
+        self.log_names.append('Add table %s' % table_name)
 
     def init_add_column(self, diff):
         self.raise_if_withoutautomigration()
@@ -298,7 +301,11 @@ class MigrationReport:
             ) % (name, table, ', '.join([x.name for x in constraint.columns])))
 
     def init_remove_table(self, diff):
-        self.log_names.append("Drop Table %s" % diff[1].name)
+        table = diff[1]
+        table_name = (
+            '%s.%s' % (table.schema, table.name)
+            if table.schema else table.name)
+        self.log_names.append("Drop Table %s" % table_name)
         if self.can_remove_table(diff[1].schema):
             self.raise_if_withoutautomigration()
         else:
@@ -727,7 +734,7 @@ class MigrationColumn:
         if 'nullable' in kwargs:
             nullable = kwargs['nullable']
             vals['existing_nullable'] = (
-                self.nullable if 'nullable' in kwargs else None),
+                self.nullable if 'nullable' in kwargs else None)
             savepoint = '%s_not_null' % name
             try:
                 self.table.migration.savepoint(savepoint)

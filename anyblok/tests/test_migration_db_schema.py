@@ -258,10 +258,10 @@ class TestMigrationDbSchema:
             registry.Test.__table__.drop(bind=conn)
 
         report = registry.migration.detect_changed()
-        assert report.log_has("Add table test")
+        assert report.log_has("Add table test_db_schema.test")
         report.apply_change()
         report = registry.migration.detect_changed()
-        assert not report.log_has("Add table test")
+        assert not report.log_has("Add table test_db_schema.test")
 
     def test_detect_column_added(self, registry):
         # Remove a column on the table force the detection to found new column
@@ -292,10 +292,10 @@ class TestMigrationDbSchema:
             ).create(bind=conn)
 
         report = registry.migration.detect_changed()
-        assert report.log_has("Drop Table test2")
+        assert report.log_has("Drop Table test_db_schema.test2")
         report.apply_change()
         report = registry.migration.detect_changed()
-        assert report.log_has("Drop Table test2")
+        assert report.log_has("Drop Table test_db_schema.test2")
 
     def test_detect_column_removed(self, registry):
         with cnx(registry) as conn:
