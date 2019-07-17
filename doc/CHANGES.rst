@@ -15,6 +15,16 @@
 CHANGELOG
 =========
 
+1.0.0
+-----
+
+* It is now possible to place a "Model" in another schema on the SGDB
+  ::
+
+      @registry(...)
+      class MyModelInOtherSchema:
+          __db_schema__ = 'my_schema'
+
 0.22.5 (2019-06-24)
 -------------------
 
