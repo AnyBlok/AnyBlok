@@ -217,6 +217,8 @@ def registry_json_related2(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.skipif(sgdb_in(['MariaDB']),
+                    reason='JSON is not existing in this SGDB')
 class TestJsonRelated2:
 
     @pytest.fixture(autouse=True)

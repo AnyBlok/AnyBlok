@@ -10,51 +10,13 @@ from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.dialects.mysql.types import TINYINT
 from sqlalchemy.sql.sqltypes import Boolean
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.compiler import FK_ON_DELETE, FK_ON_UPDATE
+from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 from .common import sgdb_in
 from sqlalchemy.schema import (
     DDLElement, PrimaryKeyConstraint, CheckConstraint, UniqueConstraint)
 from logging import getLogger
-from sqlalchemy.schema import ForeignKeyConstraint
 
 logger = getLogger(__name__)
-
-
-@compiles(ForeignKeyConstraint, "mysql")
-def process_foreign_key_constraint(constraint, compiler, **kw):
-    preparer = compiler.dialect.identifier_preparer
-    text = ""
-    if constraint.name is not None:
-        formatted_name = preparer.format_constraint(constraint)
-        if formatted_name is not None:
-            text += "CONSTRAINT %s " % formatted_name
-    remote_table = list(constraint.elements)[0].column.table
-    text += "FOREIGN KEY(%s) REFERENCES `%s` (%s)" % (
-        ", ".join(
-            preparer.quote(f.parent.name) for f in constraint.elements
-        ),
-        preparer.format_table(remote_table),
-
-        ", ".join(
-            preparer.quote(f.column.name) for f in constraint.elements
-        ),
-    )
-    if constraint.ondelete is not None:
-        text += " ON DELETE %s" % preparer.validate_sql_phrase(
-            constraint.ondelete, FK_ON_DELETE
-        )
-    if constraint.onupdate is not None:
-        text += " ON UPDATE %s" % preparer.validate_sql_phrase(
-            constraint.onupdate, FK_ON_UPDATE
-        )
-
-    print(' ==> ', text)
-    return text
-
-
-class CreateSchema(DDLElement):
-    def __init__(self, name):
-        self.name = name
 
 
 class AlterSchema(DDLElement):
@@ -63,25 +25,17 @@ class AlterSchema(DDLElement):
         self.newname = newname
 
 
-class DropSchema(DDLElement):
-    def __init__(self, name):
-        self.name = name
-
-
-@compiles(CreateSchema)
+@compiles(CreateSchema, "mysql")
 def compile_create_schema(element, compiler, **kw):
-    return "CREATE SCHEMA %s" % element.name
+    schema = compiler.preparer.format_schema(element.element)
+    return "CREATE SCHEMA %s CHARSET UTF8" % schema
 
 
 @compiles(AlterSchema)
 def compile_alter_schema(element, compiler, **kw):
-    return "ALTER SCHEMA %s RENAME TO %s" % (
-        element.oldname, element.newname)
-
-
-@compiles(DropSchema)
-def compile_drop_schema(element, compiler, **kw):
-    return "DROP SCHEMA IF EXISTS %s" % element.name
+    old_schema_name = compiler.preparer.format_schema(element.oldname)
+    new_schema_name = compiler.preparer.format_schema(element.newname)
+    return "ALTER SCHEMA %s RENAME TO %s" % (old_schema_name, new_schema_name)
 
 
 @contextmanager
@@ -1231,10 +1185,10 @@ class MigrationSchema:
 
         return MigrationSchema(self.migration, name)
 
-    def drop(self):
+    def drop(self, cascade=False):
         """ Drop the schema """
         with cnx(self.migration) as conn:
-            conn.execute(DropSchema(self.name))
+            conn.execute(DropSchema(self.name, cascade=cascade))
 
 
 class Migration:

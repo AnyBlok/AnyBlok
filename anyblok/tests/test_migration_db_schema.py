@@ -212,8 +212,6 @@ class TestMigrationDbSchema:
         t.index().add(t.column('integer'))
         t.index(t.column('integer')).drop()
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="FIXME")
     def test_alter_column_foreign_key(self, registry):
         t = registry.migration.table('test', schema='test_db_schema')
         t.foreign_key('my_fk').add(
@@ -457,8 +455,6 @@ class TestMigrationDbSchema:
             "Add Foreign keys on (testfk2.other) => "
             "(test_db_schema.testfktarget.integer)")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="FIXME Can't create foreign key")
     def test_detect_drop_anyblok_foreign_key(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
@@ -482,8 +478,6 @@ class TestMigrationDbSchema:
         assert not(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="FIXME Can't create foreign key")
     def test_detect_drop_column_with_foreign_key(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)

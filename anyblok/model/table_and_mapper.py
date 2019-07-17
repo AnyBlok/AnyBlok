@@ -129,7 +129,7 @@ class TableMapperPlugin(ModelPluginBase):
             if cls_.__registry_name__ == namespace:
                 res = super(new_base, cls_).define_table_kwargs()
 
-            res.update(dict(mysql_engine='InnoDB'))
+            res.update(dict(mysql_engine='InnoDB', mysql_charset='utf8'))
             return res
 
         return classmethod(fnct)
