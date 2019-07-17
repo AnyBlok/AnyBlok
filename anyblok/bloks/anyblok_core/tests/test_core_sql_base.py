@@ -96,7 +96,13 @@ class TestCoreSqlBase:
                          'model': None,
                          'nullable': True,
                          'primary_key': False,
-                         'type': 'String'}}
+                         'type': 'String'},
+               'schema': {'id': 'schema',
+                          'label': 'Schema',
+                          'model': None,
+                          'nullable': True,
+                          'primary_key': False,
+                          'type': 'String'}}
         assert Model.fields_description() == res
 
     def test_fields_description_limited_field(self, rollback_registry):
@@ -135,6 +141,7 @@ class TestCoreSqlBase:
         assert model.to_dict() == {
             'name': model.name,
             'table': model.table,
+            'schema': model.schema,
             'is_sql_model': model.is_sql_model,
             'description': model.description,
         }
