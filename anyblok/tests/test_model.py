@@ -116,6 +116,16 @@ def simple_model():
         name = String()
 
 
+def simple_model_with_schema():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_schema'
+
+        id = Integer(primary_key=True)
+        name = String()
+
+
 def simple_model_with_tablename():
 
     @register(Model, tablename='othername')
@@ -238,6 +248,16 @@ class TestModel2:
     def test_simple_model(self):
         registry = self.init_registry(simple_model)
         self.check_registry(registry.Test)
+        model = registry.System.Model.query().get('Model.Test')
+        assert model.table == 'test'
+        assert model.schema is None
+
+    def test_simple_model_with_schema(self):
+        registry = self.init_registry(simple_model_with_schema)
+        self.check_registry(registry.Test)
+        model = registry.System.Model.query().get('Model.Test')
+        assert model.table == 'test'
+        assert model.schema == 'test_db_schema'
 
     def test_simple_model_with_tablename(self):
         registry = self.init_registry(simple_model_with_tablename)

@@ -29,6 +29,7 @@ class Model:
 
     name = String(size=256, primary_key=True)
     table = String(size=256)
+    schema = String()
     is_sql_model = Boolean(label="Is a SQL model")
     description = Function(fget='get_model_doc_string')
 
@@ -114,7 +115,7 @@ class Model:
         fsp = cls.registry.loaded_namespaces_first_step
         m = cls.registry.get(model)
         is_sql_model = len(m.loaded_columns) > 0
-        cls.insert(name=model, table=table,
+        cls.insert(name=model, table=table, schema=m.__db_schema__,
                    is_sql_model=is_sql_model)
         for cname in m.loaded_columns:
             field, Field = cls.get_field(m, cname)
