@@ -85,6 +85,12 @@ def add_in_registry():
         integer = Int(primary_key=True)
 
     @register(Model)
+    class TestFKTarget2:
+        __db_schema__ = 'test_db_schema'
+
+        name = String(primary_key=True)
+
+    @register(Model)
     class TestFK:
         __db_schema__ = 'test_db_schema'
 
@@ -108,7 +114,8 @@ def registry(request, clean_db, bloks_loaded):
 
     def rollback():
         for table in ('test', 'testfk', 'testunique', 'testfk2',
-                      'testfktarget', 'testindex', 'testcheck'):
+                      'testfktarget', 'testindex', 'testcheck',
+                      'testfktarget2'):
             try:
                 registry.migration.table(table, schema='test_db_schema').drop()
             except MigrationException:
@@ -215,7 +222,7 @@ class TestMigrationDbSchema:
     def test_alter_column_foreign_key(self, registry):
         t = registry.migration.table('test', schema='test_db_schema')
         t.foreign_key('my_fk').add(
-            ['other'], [registry.System.Blok.name])
+            ['other'], [registry.TestFKTarget2.name])
         t.foreign_key('my_fk').drop()
 
     def test_constraint_unique(self, registry):
@@ -464,7 +471,7 @@ class TestMigrationDbSchema:
             registry.Test.__table__ = Table(
                 'test', meta,
                 Column('integer', Integer, primary_key=True),
-                Column('other', String(64), ForeignKey('system_blok.name')),
+                Column('other', String(64), ForeignKey('testfktarget2.name')),
                 schema='test_db_schema'
             )
             registry.Test.__table__.create(bind=conn)
@@ -472,11 +479,11 @@ class TestMigrationDbSchema:
 
         report = registry.migration.detect_changed()
         assert report.log_has(
-            "Drop Foreign keys on test.other => system_blok.name")
+            "Drop Foreign keys on test.other => testfktarget2.name")
         report.apply_change()
         report = registry.migration.detect_changed()
         assert not(report.log_has(
-            "Drop Foreign keys on test.other => system_blok.name"))
+            "Drop Foreign keys on test.other => testfktarget2.name"))
 
     def test_detect_drop_column_with_foreign_key(self, registry):
         with cnx(registry) as conn:
@@ -488,18 +495,18 @@ class TestMigrationDbSchema:
                 'test', meta,
                 Column('integer', Integer, primary_key=True),
                 Column('other', String(64)),
-                Column('other2', String(64), ForeignKey('system_blok.name')),
+                Column('other2', String(64), ForeignKey('testfktarget2.name')),
                 schema='test_db_schema'
             )
             registry.Test.__table__.create(bind=conn)
 
         report = registry.migration.detect_changed()
         assert report.log_has(
-            "Drop Foreign keys on test.other2 => system_blok.name")
+            "Drop Foreign keys on test.other2 => testfktarget2.name")
         report.apply_change()
         report = registry.migration.detect_changed()
         assert not(report.log_has(
-            "Drop Foreign keys on test.other2 => system_blok.name"))
+            "Drop Foreign keys on test.other2 => testfktarget2.name"))
 
     def test_detect_add_unique_constraint(self, registry):
         with cnx(registry) as conn:
