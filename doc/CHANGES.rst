@@ -15,6 +15,11 @@
 CHANGELOG
 =========
 
+1.0.0
+-----
+
+* Nom the Email field can be crypted
+
 0.22.5 (2019-06-24)
 -------------------
 
