@@ -1264,6 +1264,28 @@ class TestColumns:
         with pytest.raises(Exception):
             registry.execute("insert into test (col) values ('WG2')")
 
+    def test_foreign_key_on_mapper_issue_112(self):
+
+        def add_in_registry():
+
+            @Declarations.register(Declarations.Model)
+            class Template:
+                code = String(primary_key=True, db_column_name='ProductId')
+
+            @Declarations.register(Declarations.Model)
+            class Item:
+                id = Integer(primary_key=True, db_column_name='ProductDetailId')
+                template_code = String(
+                    db_column_name='ProductId',
+                    foreign_key=Model.Template.use('code'))
+
+        registry = self.init_registry(add_in_registry)
+        registry.Template.insert(code='test')
+        registry.Item.insert(template_code='test')
+
+        with pytest.raises(Exception):
+            registry.Item.insert(template_code='other')
+
 
 class TestColumnsAutoDoc:
 
