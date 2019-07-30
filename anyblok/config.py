@@ -19,9 +19,24 @@ import yaml
 from appdirs import AppDirs
 from os.path import join, isfile
 from sqlalchemy.engine.url import URL, make_url
+from .environment import EnvironmentManager
 from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
-                     CRITICAL, basicConfig, Logger)
+                     CRITICAL, basicConfig, Logger, setLoggerClass)
 logger = getLogger(__name__)
+
+
+class AnyBlokLogger(Logger):
+    """The goal is to removed encrypt key in the model"""
+
+    def _log(self, *args, **kwargs):
+        try:
+            EnvironmentManager.set('logger', True)
+            super(AnyBlokLogger, self)._log(*args, **kwargs)
+        finally:
+            EnvironmentManager.set('logger', False)
+
+
+setLoggerClass(AnyBlokLogger)
 
 
 def get_db_name():

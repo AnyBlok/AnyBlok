@@ -17,6 +17,7 @@ from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
 from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
 from sqlalchemy.orm.session import object_state
+from anyblok.environment import EnvironmentManager
 
 
 class uniquedict(dict):
@@ -36,9 +37,16 @@ class SqlMixin:
         state = inspect(self)
         field_reprs = []
         fields_description = self.fields_description()
+        lnfs = self.registry.loaded_namespaces_first_step[
+            self.__registry_name__]
         keys = list(fields_description.keys())
         keys.sort()
         for key in keys:
+            if EnvironmentManager.get('logger', default=False):
+                if lnfs[key].encrypt_key:
+                    # In the case of logger, we don't display the encrypt key
+                    continue
+
             type_ = fields_description[key]['type']
             if key in state.attrs:
                 value = state.attrs.get(key).loaded_value
