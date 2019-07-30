@@ -18,8 +18,8 @@ from setuptools import setup, find_packages
 version = '0.22.5'
 
 
-if sys.version_info < (3, 4):
-    sys.stderr.write("This package requires Python 3.4 or newer. "
+if sys.version_info < (3, 5):
+    sys.stderr.write("This package requires Python 3.5 or newer. "
                      "Yours is " + sys.version + os.linesep)
     sys.exit(1)
 
@@ -35,7 +35,6 @@ requires = [
     'six',
     'PyYAML',
     'appdirs',
-    'sqlalchemy-utils',
     'pytz',
     'python-dateutil',
     'texttable',
@@ -80,7 +79,6 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
