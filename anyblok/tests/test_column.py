@@ -1348,6 +1348,32 @@ class TestColumns:
         with pytest.raises(Exception):
             registry.Item.insert(template_code='other')
 
+    def test_foreign_key_on_mapper_issue_112_with_schema(self):
+
+        def add_in_registry():
+
+            @Declarations.register(Declarations.Model)
+            class Template:
+                __db_schema__ = 'test_db_column_schema'
+
+                code = String(primary_key=True, db_column_name='ProductId')
+
+            @Declarations.register(Declarations.Model)
+            class Item:
+                __db_schema__ = 'test_db_column_schema'
+
+                id = Integer(primary_key=True, db_column_name='ProductDetailId')
+                template_code = String(
+                    db_column_name='ProductId',
+                    foreign_key=Model.Template.use('code'))
+
+        registry = self.init_registry(add_in_registry)
+        registry.Template.insert(code='test')
+        registry.Item.insert(template_code='test')
+
+        with pytest.raises(Exception):
+            registry.Item.insert(template_code='other')
+
 
 class TestColumnsAutoDoc:
 
