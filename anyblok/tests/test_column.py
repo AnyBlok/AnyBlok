@@ -1166,6 +1166,18 @@ class TestColumns:
         assert registry.Test.query().filter_by(
             col='John.Smith@foo.com').count() == 1
 
+    @pytest.mark.skipif(not has_cryptography,
+                        reason="cryptography is not installed")
+    def test_email_with_encrypt_key(self):
+        registry = self.init_registry(simple_column, ColumnType=Email,
+                                      encrypt_key='secretkey')
+        test = registry.Test.insert(col='John.Smith@foo.com')
+        registry.session.commit()
+        assert test.col == 'john.smith@foo.com'
+        res = registry.execute('select col from test where id = %s' % test.id)
+        res = res.fetchall()[0][0]
+        assert res != test.col
+
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert(self):
         registry = self.init_registry(simple_column, ColumnType=Country)
