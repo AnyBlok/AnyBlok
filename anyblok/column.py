@@ -1020,6 +1020,13 @@ class PhoneNumber(Column):
         return res
 
 
+"""
+    Added *process_result_value* at the class *EmailType*, because
+    this method is necessary for encrypt the column
+"""
+EmailType.process_result_value = lambda self, value, dialect: value
+
+
 class Email(Column):
     """ Email column
 

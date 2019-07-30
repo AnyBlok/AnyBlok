@@ -3,6 +3,7 @@
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -1227,6 +1228,18 @@ class TestColumns:
         assert registry.Test.query().filter_by(
             col='John.Smith@foo.com').count() == 1
 
+    @pytest.mark.skipif(not has_cryptography,
+                        reason="cryptography is not installed")
+    def test_email_with_encrypt_key(self):
+        registry = self.init_registry(simple_column, ColumnType=Email,
+                                      encrypt_key='secretkey')
+        test = registry.Test.insert(col='John.Smith@foo.com')
+        registry.session.commit()
+        assert test.col == 'john.smith@foo.com'
+        res = registry.execute('select col from test where id = %s' % test.id)
+        res = res.fetchall()[0][0]
+        assert res != test.col
+
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert(self):
         registry = self.init_registry(simple_column, ColumnType=Country)
@@ -1312,6 +1325,28 @@ class TestColumns:
         registry = self.init_registry(simple_column, ColumnType=Country)
         with pytest.raises(Exception):
             registry.execute("insert into test (col) values ('WG2')")
+
+    def test_foreign_key_on_mapper_issue_112(self):
+
+        def add_in_registry():
+
+            @Declarations.register(Declarations.Model)
+            class Template:
+                code = String(primary_key=True, db_column_name='ProductId')
+
+            @Declarations.register(Declarations.Model)
+            class Item:
+                id = Integer(primary_key=True, db_column_name='ProductDetailId')
+                template_code = String(
+                    db_column_name='ProductId',
+                    foreign_key=Model.Template.use('code'))
+
+        registry = self.init_registry(add_in_registry)
+        registry.Template.insert(code='test')
+        registry.Item.insert(template_code='test')
+
+        with pytest.raises(Exception):
+            registry.Item.insert(template_code='other')
 
 
 class TestColumnsAutoDoc:
