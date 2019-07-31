@@ -42,9 +42,11 @@ COLUMNS = [
     (Time, datetime.time(), {}),
     (Float, 1., {}),
     (Integer, 1, {}),
-    (UUID, uuid1(), {}),
     (Email, 'jhon@doe.com', {}),
 ]
+
+if not sgdb_in(['MySQL', 'MariaDB']):
+    COLUMNS.append((UUID, uuid1(), {}))
 
 try:
     import cryptography  # noqa
