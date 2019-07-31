@@ -792,6 +792,13 @@ class Selection(Column):
         return []
 
 
+"""
+    Added *process_result_value* at the class *JSON*, because
+    this method is necessary for encrypt the column
+"""
+types.JSON.process_result_value = lambda self, value, dialect: value
+
+
 class Json(Column):
     """ JSON column
 
