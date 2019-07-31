@@ -261,7 +261,6 @@ params = [
     (Time, {}),
     (Email, {}),
     (UUID, {}),
-    (Country, {}),
     (Color, {}),
     (PhoneNumber, {}),
     (Selection, {}),
@@ -269,12 +268,14 @@ params = [
 
 if not sgdb_in(['MySQL', 'MariaDB']):
     params.append((URL, {}))
+    params.append((Country, {})),
     params.append((DateTime, {}))
 
 
 @pytest.fixture(scope="class", params=params)
 def registry_many2one_auto_detect(request, bloks_loaded):
     reset_db()
+    print("=>", request.param)
     registry = init_registry_with_bloks(
         [], _auto_detect_type, ColumnType=request.param[0], **request.param[1])
     request.addfinalizer(registry.close)
