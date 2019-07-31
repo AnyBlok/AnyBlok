@@ -262,13 +262,13 @@ params = [
     (Email, {}),
     (UUID, {}),
     (Color, {}),
+    (Country, {}),
     (PhoneNumber, {}),
     (Selection, {}),
 ]
 
 if not sgdb_in(['MySQL', 'MariaDB']):
     params.append((URL, {}))
-    params.append((Country, {})),
     params.append((DateTime, {}))
 
 
