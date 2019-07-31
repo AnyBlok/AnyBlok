@@ -65,6 +65,24 @@ Model = Declarations.Model
 register = Declarations.register
 
 
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
+
+
 class OneColumn(Column):
     sqlalchemy_type = SA_Integer
 
@@ -188,17 +206,17 @@ class TestColumns:
         registry.Test.insert(name='test')
         registry.Test2.insert(test='test')
 
-    def test_column_with_foreign_key_with_schema(self):
+    def test_column_with_foreign_key_with_schema(self, db_schema):
         registry = self.init_registry(column_with_foreign_key_with_schema)
         registry.Test.insert(name='test')
         registry.Test2.insert(test='test')
 
-    def test_column_with_foreign_key_with_diff_schema1(self):
+    def test_column_with_foreign_key_with_diff_schema1(self, db_schema):
         registry = self.init_registry(column_with_foreign_key_with_diff_schema1)
         registry.Test.insert(name='test')
         registry.Test2.insert(test='test')
 
-    def test_column_with_foreign_key_with_diff_schema2(self):
+    def test_column_with_foreign_key_with_diff_schema2(self, db_schema):
         registry = self.init_registry(column_with_foreign_key_with_diff_schema2)
         registry.Test.insert(name='test')
         registry.Test2.insert(test='test')
@@ -1348,7 +1366,7 @@ class TestColumns:
         with pytest.raises(Exception):
             registry.Item.insert(template_code='other')
 
-    def test_foreign_key_on_mapper_issue_112_with_schema(self):
+    def test_foreign_key_on_mapper_issue_112_with_schema(self, db_schema):
 
         def add_in_registry():
 

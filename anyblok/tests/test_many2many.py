@@ -11,6 +11,7 @@
 from anyblok.testing import sgdb_in
 import pytest
 from anyblok import Declarations
+from anyblok.config import Configuration
 from anyblok.mapper import ModelAttributeException
 from anyblok.column import Integer, String, DateTime
 from anyblok.relationship import Many2Many, Many2One
@@ -21,6 +22,24 @@ from .conftest import init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_many2many(**kwargs):
@@ -126,7 +145,7 @@ def _complete_many2many_with_diferent_schema2(**kwargs):
         _complete_many2many_with_diferent_schema2,
     ]
 )
-def registry_many2many(request, bloks_loaded):
+def registry_many2many(request, bloks_loaded, db_schema):
     reset_db()
     registry = init_registry(request.param)
     request.addfinalizer(registry.close)
@@ -151,13 +170,10 @@ class TestMany2ManyComplete:
         assert m2m_tables_exist
 
         jt = registry.declarativebase.metadata.tables
-        if 'join_addresses_by_persons' in jt:
-            join_table = 'join_addresses_by_persons'
-        if 'test_db_m2m_schema.join_addresses_by_persons' in jt:
-            join_table = 'test_db_m2m_schema.join_addresses_by_persons'
-        if 'test_db_m2m_other_schema.join_addresses_by_persons' in jt:
-            join_table = 'test_db_m2m_other_schema.join_addresses_by_persons'
-        assert join_table
+        join_table = 'join_addresses_by_persons'
+        if registry.Person.__db_schema__:
+            join_table = '%s.%s' % (registry.Person.__db_schema__, join_table)
+        assert join_table in jt
 
         assert len(jt[join_table].primary_key.columns) == 2
         assert 'a_id' in jt[join_table].primary_key.columns
@@ -264,7 +280,7 @@ def auto_detect_two_primary_keys(**kwargs):
     class Address:
 
         id = Integer(primary_key=True)
-        id2 = Integer(primary_key=True)
+        id2 = Integer(primary_key=True, autoincrement=False)
 
     @register(Model)
     class Person:
@@ -347,7 +363,7 @@ class TestMany2Many:
 
         assert person.addresses == [address]
 
-    def test_minimum_many2many_with_schema(self):
+    def test_minimum_many2many_with_schema(self, db_schema):
         registry = self.init_registry(_minimum_many2many_with_schema)
 
         address_exist = hasattr(registry.Person, 'addresses')
@@ -358,7 +374,9 @@ class TestMany2Many:
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = (
-            'test_db_m2m_schema.join_person_and_address_for_addresses' in jt)
+            '%s.join_person_and_address_for_addresses' % (
+                registry.Person.__db_schema__
+            ) in jt)
         assert join_table_exist
 
         address = registry.Address.insert(
@@ -388,6 +406,15 @@ class TestMany2Many:
 
         person = registry.Person.insert(name="Jean-sébastien SUZANNE")
 
+        person.addresses.append(address)
+
+        assert person.addresses == [address]
+
+    def test_many2many_with_two_primary_key(self):
+        registry = self.init_registry(auto_detect_two_primary_keys)
+
+        address = registry.Address.insert(id2=1)
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
         person.addresses.append(address)
 
         assert person.addresses == [address]
@@ -625,7 +652,7 @@ class TestMany2Many:
         t1.childs.append(t2)
         assert t1 in t2.parents
 
-    def test_many2many_on_self_with_schema(self):
+    def test_many2many_on_self_with_schema(self, db_schema):
 
         def add_in_registry():
 
@@ -665,7 +692,7 @@ class TestMany2Many:
         t1.childs.append(t2)
         assert t1 in t2.parents
 
-    def test_many2many_on_self_auto_column_with_schema(self):
+    def test_many2many_on_self_auto_column_with_schema(self, db_schema):
 
         def add_in_registry():
 
@@ -753,7 +780,7 @@ class TestMany2Many:
         registry = self.init_registry(add_in_registry)
         self.assert_rich_many2many_complete_config(registry)
 
-    def test_rich_many2many_complete_config_with_schema(self):
+    def test_rich_many2many_complete_config_with_schema(self, db_schema):
         def add_in_registry():
 
             @register(Model)
@@ -793,7 +820,8 @@ class TestMany2Many:
         registry = self.init_registry(add_in_registry)
         self.assert_rich_many2many_complete_config(registry)
 
-    def test_rich_many2many_complete_config_with_different_schema(self):
+    def test_rich_many2many_complete_config_with_different_schema(self,
+                                                                  db_schema):
         def add_in_registry():
 
             @register(Model)
@@ -917,7 +945,8 @@ class TestMany2Many:
         assert personaddress.create_at
         assert personaddress.foo == 'bar'
 
-    def test_rich_many2many_minimum_config_on_join_model_with_schema(self):
+    def test_rich_many2many_minimum_config_on_join_model_with_schema(self,
+                                                                     db_schema):
 
         def add_in_registry():
 
@@ -963,7 +992,9 @@ class TestMany2Many:
         assert personaddress.create_at
         assert personaddress.foo == 'bar'
 
-    def test_rich_many2many_minimum_config_on_join_model_with_dif_schema(self):
+    def test_rich_many2many_minimum_config_on_join_model_with_dif_schema(
+        self, db_schema
+    ):
 
         def add_in_registry():
 
@@ -1009,7 +1040,9 @@ class TestMany2Many:
         assert personaddress.create_at
         assert personaddress.foo == 'bar'
 
-    def test_rich_many2many_minimum_config_on_join_model_with_di_schema2(self):
+    def test_rich_many2many_minimum_config_on_join_model_with_di_schema2(
+        self, db_schema
+    ):
 
         def add_in_registry():
 
@@ -1218,7 +1251,8 @@ class TestMany2Many:
         with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
-    def test_rich_many2many_complete_config_on_self_with_schema(self):
+    def test_rich_many2many_complete_config_on_self_with_schema(self,
+                                                                db_schema):
 
         def add_in_registry():
 
@@ -1328,7 +1362,7 @@ class TestMany2Many:
         assert link.create_at
         assert link.foo == 'bar'
 
-    def test_rich_many2many_minimum_config_on_self_with_schema(self):
+    def test_rich_many2many_minimum_config_on_self_with_schema(self, db_schema):
 
         def add_in_registry():
 

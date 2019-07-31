@@ -11,11 +11,12 @@
 import pytest
 from anyblok.testing import sgdb_in
 from anyblok import Declarations
+from anyblok.config import Configuration
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
 from anyblok.column import (
     Integer, String, BigInteger, Float, Decimal, Boolean, DateTime, Date, Time,
-    Sequence)
+    Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection)
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.engine.reflection import Inspector
@@ -25,6 +26,24 @@ from .conftest import init_registry_with_bloks, init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_many2one(**kwargs):
@@ -173,7 +192,7 @@ def _many2one_with_str_model(**kwargs):
         (_many2one_with_str_model, 'address_id', False),
     ]
 )
-def registry_many2one(request, bloks_loaded):
+def registry_many2one(request, bloks_loaded, db_schema):
     reset_db()
     registry = init_registry_with_bloks(
         [], request.param[0])
@@ -240,6 +259,13 @@ params = [
     (Boolean, {}),
     (Date, {}),
     (Time, {}),
+    (Email, {}),
+    (UUID, {}),
+    (URL, {}),
+    (Country, {}),
+    (Color, {}),
+    (PhoneNumber, {}),
+    (Selection, {}),
 ]
 
 if not sgdb_in(['MySQL', 'MariaDB']):

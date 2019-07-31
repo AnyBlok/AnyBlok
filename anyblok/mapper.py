@@ -1,12 +1,28 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.schema import ForeignKey
 from anyblok.common import anyblok_column_prefix
+from .config import Configuration
+
+
+def format_schema(schema, registry_name):
+    if schema is not None:
+        prefix = Configuration.get(
+            'prefix_db_schema.%s' % registry_name,
+            Configuration.get('prefix_db_schema', ''))
+        suffix = Configuration.get(
+            'suffix_db_schema.%s' % registry_name,
+            Configuration.get('suffix_db_schema', ''))
+
+        return prefix + schema + suffix
+
+    return schema
 
 
 class ModelReprException(Exception):

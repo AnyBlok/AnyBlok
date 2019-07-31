@@ -9,6 +9,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
 from anyblok import Declarations
+from anyblok.config import Configuration
 from anyblok.field import FieldException
 from anyblok.column import Integer, String
 from anyblok.relationship import One2One
@@ -17,6 +18,24 @@ from .conftest import init_registry, reset_db
 
 register = Declarations.register
 Model = Declarations.Model
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _minimum_one2one(**kwargs):
@@ -101,7 +120,7 @@ def _one2one_with_str_method(**kwargs):
     _minimum_one2one_with_diferent_schema2,
     _one2one_with_str_method
 ])
-def registry_minimum_one2one(request, bloks_loaded):
+def registry_minimum_one2one(request, bloks_loaded, db_schema):
     reset_db()
     registry = init_registry(request.param)
     request.addfinalizer(registry.close)
@@ -294,7 +313,7 @@ class TestOne2One:
 
         assert address.person is person
 
-    def test_complete_one2one_with_schema(self):
+    def test_complete_one2one_with_schema(self, db_schema):
         registry = self.init_registry(_complete_one2one_with_schema)
         assert hasattr(registry.Person, 'address')
         assert hasattr(registry.Person, 'id_of_address')

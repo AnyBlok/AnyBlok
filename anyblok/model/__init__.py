@@ -3,6 +3,7 @@
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -16,7 +17,7 @@ from sqlalchemy import inspection
 from anyblok.common import TypeList
 from copy import deepcopy
 from sqlalchemy.ext.declarative import declared_attr
-from anyblok.mapper import ModelAttribute
+from anyblok.mapper import ModelAttribute, format_schema
 from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
 from .plugins import get_model_plugins
@@ -339,7 +340,8 @@ class Model:
                     properties[p] = f
 
             if hasattr(b, '__db_schema__'):
-                properties['__db_schema__'] = b.__db_schema__
+                properties['__db_schema__'] = format_schema(
+                    b.__db_schema__, namespace)
 
         if '__tablename__' in ns['properties']:
             properties['__tablename__'] = ns['properties']['__tablename__']

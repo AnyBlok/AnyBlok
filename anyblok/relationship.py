@@ -15,7 +15,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import exc as sa_exc, util
 from sqlalchemy_utils.functions import get_class_by_table
 from .field import Field, FieldException
-from .mapper import ModelAdapter, ModelAttribute, ModelRepr
+from .mapper import ModelAdapter, ModelAttribute, ModelRepr, format_schema
 from anyblok.common import anyblok_column_prefix
 from logging import getLogger
 
@@ -868,6 +868,11 @@ class Many2Many(RelationShip):
         if self.join_model:
             join_model_table = self.join_model.tablename(registry)
 
+        if join_table and '.' in join_table:
+            schema, table = join_table.split('.')
+            schema = format_schema(schema, namespace)
+            join_table = '%s.%s' % (schema, table)
+
         if join_table is None and join_model_table is None:
             join_table = ('join_%s_and_%s_for_%s' % (
                 self.local_model.tablename(registry, with_schema=False),
@@ -887,7 +892,8 @@ class Many2Many(RelationShip):
 
         return join_table or join_model_table
 
-    def has_join_table_for_schema(self, registry, properties, join_table):
+    def has_join_table_for_schema(self, registry, namespace, properties,
+                                  join_table):
         has_join_table = False
         schema = None
         tables = registry.declarativebase.metadata.tables
@@ -896,7 +902,7 @@ class Many2Many(RelationShip):
         elif self.join_model:
             has_join_table = join_table in tables
         elif self.schema:
-            schema = self.schema
+            schema = format_schema(self.schema, namespace)
             has_join_table = self.schema + '.' + join_table in tables
         elif properties.get('__db_schema__'):
             schema = properties['__db_schema__']
@@ -923,7 +929,7 @@ class Many2Many(RelationShip):
             registry)
         join_table = self.get_join_table(registry, namespace, fieldname)
         has_join_table, schema = self.has_join_table_for_schema(
-            registry, properties, join_table)
+            registry, namespace, properties, join_table)
         if not has_join_table:
             modelname = ''.join(x.capitalize() for x in join_table.split('_'))
             remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(
