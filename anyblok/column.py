@@ -763,6 +763,11 @@ class Selection(Column):
 
     def update_table_args(self, Model):
         """return check constraint to limit the value"""
+        if self.encrypt_key:
+            # dont add constraint because the state is crypted and nobody
+            # can add new entry
+            return []
+
         selections = self.sqlalchemy_type.selections
         if isinstance(selections, dict):
             enum = selections.keys()
@@ -1129,6 +1134,11 @@ class Country(Column):
 
     def update_table_args(self, Model):
         """return check constraint to limit the value"""
+        if self.encrypt_key:
+            # dont add constraint because the state is crypted and nobody
+            # can add new entry
+            return []
+
         enum = [country.alpha_3 for country in pycountry.countries]
         constraint = """"%s" in ('%s')""" % (self.fieldname, "', '".join(enum))
         enum.sort()

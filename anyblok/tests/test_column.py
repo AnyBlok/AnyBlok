@@ -30,6 +30,7 @@ from anyblok.column import (
 
 
 COLUMNS = [
+    (Selection, 'test', {'selections': {'test': 'test'}}),
     (Boolean, True, {}),
     (Boolean, False, {}),
     (String, 'test', {}),
@@ -83,6 +84,8 @@ except Exception:
 try:
     import pycountry  # noqa
     has_pycountry = True
+    COLUMNS.append(
+        (Country, pycountry.countries.get(alpha_2='FR'), {}))
 except Exception:
     has_pycountry = False
 
@@ -92,8 +95,6 @@ register = Declarations.register
 
 
 # FIXME (Json, {'name': 'test'}, {}),
-# FIXME (Selection, 'test', {'selections': {'test': 'test'}}),
-# FIXME (Country, 'FR', {})
 # FIXME (Interval, datetime.timedelta(days=6), {}),
 # FIXME (Decimal, D('1'), {}),
 # FIXME (LargeBinary, urandom(100), {}),

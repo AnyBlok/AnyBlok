@@ -18,7 +18,7 @@ CHANGELOG
 1.0.0
 -----
 
-* Now the Email field can be crypted
+* Now the Email, Selection, Country fields can be crypted
 * Removed compatibility with **Python 3.4**, because this version is
   deprecated
 
