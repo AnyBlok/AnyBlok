@@ -261,7 +261,6 @@ params = [
     (Time, {}),
     (Email, {}),
     (UUID, {}),
-    (URL, {}),
     (Country, {}),
     (Color, {}),
     (PhoneNumber, {}),
@@ -269,6 +268,7 @@ params = [
 ]
 
 if not sgdb_in(['MySQL', 'MariaDB']):
+    params.append((URL, {}))
     params.append((DateTime, {}))
 
 
