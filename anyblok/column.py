@@ -19,6 +19,7 @@ from sqlalchemy_utils.types.url import URLType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.scalar_coercible import ScalarCoercible
+from sqlalchemy_utils import JSONType
 from datetime import datetime, date
 from dateutil.parser import parse
 from inspect import ismethod
@@ -146,9 +147,9 @@ class Column(Field):
         ('is crypted', False),
     ))
 
-    def native_type(cls):
+    def native_type(self, registry):
         """ Return the native SqlAlchemy type """
-        return cls.sqlalchemy_type
+        return self.sqlalchemy_type
 
     def format_foreign_key(self, registry, args, kwargs):
         if self.foreign_key:
@@ -195,7 +196,7 @@ class Column(Field):
             else:
                 kwargs['default'] = self.default_val
 
-        sqlalchemy_type = self.sqlalchemy_type
+        sqlalchemy_type = self.native_type(registry)
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
             sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
@@ -824,6 +825,13 @@ class Json(Column):
 
     """
     sqlalchemy_type = types.JSON(none_as_null=True)
+
+    def native_type(self, registry):
+        """ Return the native SqlAlchemy type """
+        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
+            return JSONType
+
+        return self.sqlalchemy_type
 
 
 class LargeBinary(Column):

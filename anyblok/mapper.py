@@ -276,7 +276,7 @@ class ModelAttribute:
     def native_type(self, registry):
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
-        return Model[column_name].native_type()
+        return Model[column_name].native_type(registry)
 
 
 class ModelRepr:
