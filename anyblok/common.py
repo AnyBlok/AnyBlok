@@ -162,12 +162,16 @@ def sgdb_in(engine, databases):
                 if res and database in res[1]:
                     # MariaDB
                     DATABASES_CACHED[database] = True
-            if engine.url.drivername.startswith('postgres'):
-                if database == 'PostgreSQL':
-                    DATABASES_CACHED['PostgreSQL'] = True
-            if engine.url.drivername.startswith('mssql'):
-                if database == 'MsSQL':
-                    DATABASES_CACHED['MsSQL'] = True
+            if (
+                engine.url.drivername.startswith('postgres') and
+                database == 'PostgreSQL'
+            ):
+                DATABASES_CACHED['PostgreSQL'] = True
+            if (
+                engine.url.drivername.startswith('mssql') and
+                database == 'MsSQL'
+            ):
+                DATABASES_CACHED['MsSQL'] = True
 
         if DATABASES_CACHED[database]:
             return True
