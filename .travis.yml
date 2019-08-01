@@ -51,13 +51,13 @@ services:
 before_install:
   - sudo apt-get update
   - sudo apt-get install graphviz
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; sudo apt-get install unixodbc unixodbc-dev; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server; fi
 
 install:
   - pip install -U pip
-  - pip install $SQLPYCLIENT
   - pip install wheel
-  - pip install sqlalchemy
+  - pip install sqlalchemy $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
   - pip install coveralls
