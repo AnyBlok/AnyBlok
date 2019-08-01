@@ -1299,7 +1299,7 @@ class Migration:
         return False
 
     def detect_check_constraint_changed(self, inspector):
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
             # MySQL don t return the reflected constraint
             return []
 

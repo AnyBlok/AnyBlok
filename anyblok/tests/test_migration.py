@@ -65,7 +65,7 @@ def add_in_registry():
         integer = Int(primary_key=True)
         other = Str(index=True)
 
-    if not sgdb_in(['MySQL', 'MariaDB']):
+    if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
         @register(Model)
         class TestCheck:
             integer = Int(primary_key=True)
@@ -863,7 +863,7 @@ class TestMigration:
         assert not(
             report.log_has("Drop constraint test_other_key on test"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_no_detect_drop_and_add_check_constraint_with_long_name(
         self, registry
@@ -884,7 +884,7 @@ class TestMigration:
             )
         )
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_detect_add_check_constraint(self, registry):
         with cnx(registry) as conn:
@@ -903,7 +903,7 @@ class TestMigration:
         assert not(report.log_has(
             "Add check constraint anyblok_ck_testcheck__test on testcheck"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint(self, registry):
         with cnx(registry) as conn:
@@ -919,7 +919,7 @@ class TestMigration:
         report = registry.migration.detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_anyblok_constraint(self, registry):
         with cnx(registry) as conn:
@@ -938,7 +938,7 @@ class TestMigration:
         assert not(report.log_has(
             "Drop check constraint anyblok_ck__test__check on test"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint_with_reinit_constraint(
         self, registry
@@ -958,7 +958,7 @@ class TestMigration:
         assert not(
             report.log_has("Drop check constraint ck_other on test"))
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint_with_reinit_all(self, registry):
         with cnx(registry) as conn:

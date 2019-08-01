@@ -768,7 +768,7 @@ class Selection(Column):
             # dont add constraint because the state is crypted and nobody
             # can add new entry
             return []
-        if sgdb_in(registry.engine, ['MariaDB']):
+        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
             # No check constraint in MariaDB
             return []
 
@@ -1143,7 +1143,7 @@ class Country(Column):
             # can add new entry
             return []
 
-        if sgdb_in(registry.engine, ['MariaDB']):
+        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
             # No Check constraint in MariaDB
             return []
 

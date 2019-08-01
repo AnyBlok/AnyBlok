@@ -165,6 +165,9 @@ def sgdb_in(engine, databases):
             if engine.url.drivername.startswith('postgres'):
                 if database == 'PostgreSQL':
                     DATABASES_CACHED['PostgreSQL'] = True
+            if engine.url.drivername.startswith('mssql'):
+                if database == 'MsSQL':
+                    DATABASES_CACHED['MsSQL'] = True
 
         if DATABASES_CACHED[database]:
             return True
