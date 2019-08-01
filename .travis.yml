@@ -21,11 +21,11 @@ env:
         - |-
             ANYBLOK_DATABASE_HOST=localhost \
             ANYBLOK_DATABASE_PORT=1433 \
-            ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+            ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
             ANYBLOK_DATABASE_USER=sa \
             ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
             SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
-            SQLPYCLIENT='pymssql'
+            SQLPYCLIENT='pyodbc'
 
 matrix:
     allow_failures:

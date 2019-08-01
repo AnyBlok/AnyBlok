@@ -8,6 +8,7 @@ from sqlalchemy import func, select, update, join, and_
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.dialects.mysql.types import TINYINT
+from sqlalchemy.dialects.mssql.base import BIT
 from sqlalchemy.sql.sqltypes import Boolean
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
@@ -302,6 +303,10 @@ class MigrationReport:
     def init_modify_type(self, diff):
         if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
             if isinstance(diff[5], TINYINT) and isinstance(diff[6], Boolean):
+                # Boolean are TINYINT in MySQL DataBase
+                return True
+        if sgdb_in(self.migration.conn.engine, ['MsSQL']):
+            if isinstance(diff[5], BIT) and isinstance(diff[6], Boolean):
                 # Boolean are TINYINT in MySQL DataBase
                 return True
 
