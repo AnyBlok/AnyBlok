@@ -1151,7 +1151,7 @@ class MigrationSchema:
 
     def has_schema(self):
         with cnx(self.migration) as conn:
-            if sgdb_in(conn.engine, ['MySQL', 'MariaDB']):
+            if sgdb_in(conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
                 query = """
                     SELECT count(*)
                     FROM INFORMATION_SCHEMA.SCHEMATA
