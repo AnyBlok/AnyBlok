@@ -748,21 +748,23 @@ class MigrationColumn:
     @property
     def nullable(self):
         """ Use for unittest return if the column is nullable """
-        return self.info['nullable']
+        return self.info.get('nullable', None)
 
     @property
     def type(self):
         """ Use for unittest: return the column type """
-        return self.info['type']
+        return self.info.get('type', None)
 
     @property
     def server_default(self):
         """ Use for unittest: return the default database value """
-        sdefault = self.info['default']
+        sdefault = self.info.get('default', None)
         if sgdb_in(self.table.migration.conn.engine, ['MySQL', 'MariaDB']):
             if sdefault:
                 if not isinstance(sdefault, str):
                     return sdefault.arg
+                elif sdefault is None:
+                    return None
                 else:
                     return eval(sdefault, {}, {})
 
@@ -771,7 +773,7 @@ class MigrationColumn:
     @property
     def comment(self):
         """ Use for unittest: return the default database value """
-        return self.info['comment']
+        return self.info.get('comment', None)
 
     @property
     def autoincrement(self):
@@ -784,7 +786,7 @@ class MigrationColumn:
         if self.name in primary_keys:
             return False
 
-        return self.info.get('autoincrement')
+        return self.info.get('autoincrement', None)
 
 
 class MigrationConstraintCheck:
