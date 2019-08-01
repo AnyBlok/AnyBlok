@@ -80,7 +80,7 @@ class Field:
         elif self.field.entity_type == 'Model.System.RelationShip':
             self.toUML_relationship(dot)
         else:
-            logger.warn("Unknown entity type %r" % self.field.entity_type)
+            logger.warning("Unknown entity type %r" % self.field.entity_type)
 
     def toUML_field(self, dot):
         model = dot.get_class(self.field.model)
@@ -124,7 +124,7 @@ class Field:
         elif self.field.entity_type == 'Model.System.RelationShip':
             self.toSQL_relationship(dot)
         else:
-            logger.warn("Unknown entity type %r" % self.field.entity_type)
+            logger.warning("Unknown entity type %r" % self.field.entity_type)
 
     def toSQL_field(self, dot):
         # DO NOTHING

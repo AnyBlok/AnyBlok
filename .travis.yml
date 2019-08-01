@@ -5,7 +5,6 @@ addons:
     postgresql: "9.6"
 
 python:
-    - "3.4"
     - "3.5"
     - "3.6"
     - "3.7"
@@ -38,8 +37,6 @@ matrix:
       - python: "pypy3.5"
         env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
     exclude:
-      - python: "3.4"
-        env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
       - python: "3.5"
         env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
 
@@ -71,7 +68,7 @@ script:
   - flake8 anyblok --exclude=*/tests/*
   - python3 update_env.py
   - $SQLSERVER 'create database travis_ci_test;'
-  - py.test --cov-report= --cov=anyblok anyblok/tests
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]]; then py.test --cov-report= --cov=anyblok anyblok/tests; fi
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks
   - py.test --cov-report= --cov=anyblok anyblok/bloks

@@ -10,4 +10,7 @@
 
 from ..testing import (  # noqa
     TestCase, DBTestCase, BlokTestCase, SharedDataTestCase, LogCapture,
-    skip_unless_bloks_installed, sgdb_in)
+    skip_unless_bloks_installed, sgdb_in, load_configuration)
+
+
+load_configuration()

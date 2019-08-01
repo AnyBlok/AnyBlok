@@ -56,7 +56,7 @@ Installation via source distribution is via the ``setup.py`` script::
 
 Installation will add the ``anyblok`` commands to the environment.
 
-.. note:: AnyBlok use Python version >= 3.4
+.. note:: AnyBlok use Python version >= 3.5
 
 Running Tests
 -------------
@@ -81,13 +81,13 @@ AnyBlok is tested continuously using `Travis CI
 Dependencies
 ------------
 
-AnyBlok works with **Python 3.4** and later. The install process will 
+AnyBlok works with **Python 3.5** and later. The install process will 
 ensure that `SQLAlchemy <http://www.sqlalchemy.org>`_, 
 `Alembic <http://alembic.readthedocs.org/>`_,
 `SQLAlchemy-Utils <http://sqlalchemy-utils.readthedocs.org/>`_ are installed, 
 in addition to other dependencies.
 
-AnyBlok works with SQLAlchemy from version **1.0.11**,
+AnyBlok works with SQLAlchemy from version **1.3** and newer,
 Alembic from version **0.8.4** and SQLAlchemy-Utils from version **0.31.4**.
 The latest version of them is strongly recommended.
 

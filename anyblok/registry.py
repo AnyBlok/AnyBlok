@@ -24,6 +24,7 @@ from pkg_resources import iter_entry_points
 from .version import parse_version
 from .logging import log
 import sqlalchemy.interfaces
+from sqlalchemy.orm.session import close_all_sessions
 
 logger = getLogger(__name__)
 
@@ -1128,7 +1129,7 @@ class Registry:
             session = self.Session()
             session.rollback()
             session.expunge_all()
-            session.close_all()
+            close_all_sessions()
 
         if self.unittest_transaction:
             self.unittest_transaction.close()

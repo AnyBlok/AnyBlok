@@ -15,16 +15,16 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.22.2'
+version = '0.22.5'
 
 
-if sys.version_info < (3, 4):
-    sys.stderr.write("This package requires Python 3.4 or newer. "
+if sys.version_info < (3, 5):
+    sys.stderr.write("This package requires Python 3.5 or newer. "
                      "Yours is " + sys.version + os.linesep)
     sys.exit(1)
 
 requires = [
-    'sqlalchemy',
+    'sqlalchemy >= 1.3',
     'sqlalchemy-utils >= 0.33.0',
     'packaging',
     'setuptools',
@@ -35,7 +35,6 @@ requires = [
     'six',
     'PyYAML',
     'appdirs',
-    'sqlalchemy-utils',
     'pytz',
     'python-dateutil',
     'texttable',
@@ -56,6 +55,12 @@ with open(
 ) as front:
     FRONT = front.read()
 
+
+extra_dependencies = {
+    'nose': ['nose']
+}
+
+
 setup(
     name="AnyBlok",
     version=version,
@@ -69,11 +74,11 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=requires,
+    extras_require=extra_dependencies,
     tests_require=requires + ['pytest'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -129,5 +134,4 @@ setup(
             'field_datetime=anyblok.model.field_datetime:AutoUpdatePlugin',
         ],
     },
-    extras_require={},
 )

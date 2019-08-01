@@ -56,18 +56,20 @@ def wrap_default(registry, namespace, default_val):
                     if default_val not in Model.loaded_fields:
                         return func()
                     else:
-                        logger.warn("On a Model %r the attribute %r is "
-                                    "declared as a default value, a field "
-                                    "with the same name exist" % (namespace,
-                                                                  default_val))
+                        logger.warning(
+                            "On a Model %r the attribute %r is "
+                            "declared as a default value, a field "
+                            "with the same name exist" % (namespace,
+                                                          default_val))
                 else:
-                    logger.warn("On a Model %r the attribute %r is declared "
-                                "as a default value, a column with the same "
-                                "name exist" % (namespace, default_val))
+                    logger.warning("On a Model %r the attribute %r is "
+                                   "declared as a default value, a column "
+                                   "with the same name exist" % (namespace,
+                                                                 default_val))
             else:
-                logger.warn("On a Model %r the attribute %r is declared as a "
-                            "default value, a instance method with the same "
-                            "name exist" % (namespace, default_val))
+                logger.warning("On a Model %r the attribute %r is declared as "
+                               "a default value, a instance method with the "
+                               "same name exist" % (namespace, default_val))
 
         return default_val
 
@@ -1012,6 +1014,13 @@ class PhoneNumber(Column):
         res['region'] = self.region
         res['max_length'] = self.max_length
         return res
+
+
+"""
+    Added *process_result_value* at the class *EmailType*, because
+    this method is necessary for encrypt the column
+"""
+EmailType.process_result_value = lambda self, value, dialect: value
 
 
 class Email(Column):

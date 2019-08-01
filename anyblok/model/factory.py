@@ -7,6 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .exceptions import ModelFactoryException
 from anyblok.field import Field, FieldException
+from sqlalchemy import event
 from sqlalchemy.sql import table, and_
 from sqlalchemy.orm import Query, mapper, relationship
 from .exceptions import ViewException
@@ -114,12 +115,12 @@ class ViewFactory(BaseFactory):
             for c in selectable.c:
                 c._make_proxy(view)
 
-            DropView(tablename).execute_at(
-                'before-create', self.registry.declarativebase.metadata)
-            CreateView(tablename, selectable).execute_at(
-                'after-create', self.registry.declarativebase.metadata)
-            DropView(tablename).execute_at(
-                'before-drop', self.registry.declarativebase.metadata)
+            event.listen(self.registry.declarativebase.metadata,
+                         'before_create', DropView(tablename))
+            event.listen(self.registry.declarativebase.metadata,
+                         'after_create', CreateView(tablename, selectable))
+            event.listen(self.registry.declarativebase.metadata,
+                         'before_drop', DropView(tablename))
 
         pks = [col for col in properties['loaded_columns']
                if getattr(getattr(base, anyblok_column_prefix + col),

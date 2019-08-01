@@ -303,7 +303,7 @@ class MigrationReport:
                         if fnct(change):
                             continue
                     else:
-                        logger.warn('Unknow diff: %r', change)
+                        logger.warning('Unknow diff: %r', change)
 
                     self.actions.append(change)
             else:
@@ -312,7 +312,7 @@ class MigrationReport:
                     if fnct(diff):
                         continue
                 else:
-                    logger.warn('Unknow diff: %r', diff)
+                    logger.warning('Unknow diff: %r', diff)
 
                 self.actions.append(diff)
 
@@ -637,11 +637,11 @@ class MigrationColumn:
             except IntegrityError as e:
                 # POSTGRES
                 self.table.migration.rollback_savepoint(savepoint)
-                logger.warn(str(e))
+                logger.warning(str(e))
             except OperationalError as e:
                 # MariaDB, MySQL
                 # No save point, because already rollbacked
-                logger.warn(str(e))
+                logger.warning(str(e))
 
         return MigrationColumn(self.table, name)
 
@@ -768,11 +768,11 @@ class MigrationConstraintUnique:
             ):
                 self.table.migration.rollback_savepoint(savepoint)
 
-            logger.warn("Error during the add of new unique constraint %r on "
-                        "table %r and columns %r : %r " % (self.name,
-                                                           self.table.name,
-                                                           columns_name,
-                                                           str(e)))
+            logger.warning(
+                "Error during the add of new unique constraint %r "
+                "on table %r and columns %r : %r " % (self.name,
+                                                      self.table.name,
+                                                      columns_name, str(e)))
 
         return self
 
