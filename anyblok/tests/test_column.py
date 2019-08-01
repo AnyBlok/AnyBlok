@@ -10,6 +10,12 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.testing import sgdb_in
 import pytest
+import datetime
+import time
+import pytz
+from uuid import uuid1
+from os import urandom
+from decimal import Decimal as D
 from anyblok.config import Configuration
 from anyblok.testing import tmp_configuration
 from sqlalchemy import Integer as SA_Integer, String as SA_String
@@ -21,6 +27,26 @@ from anyblok.column import (
     Column, Boolean, Json, String, BigInteger, Text, Selection, Date, DateTime,
     Time, Interval, Decimal, Float, LargeBinary, Integer, Sequence, Color,
     Password, UUID, URL, PhoneNumber, Email, Country)
+
+
+COLUMNS = [
+    (Selection, 'test', {'selections': {'test': 'test'}}),
+    (Boolean, True, {}),
+    (Boolean, False, {}),
+    (String, 'test', {}),
+    (BigInteger, 1, {}),
+    (Text, 'Test', {}),
+    (Date, datetime.date.today(), {}),
+    (DateTime, datetime.datetime.now().replace(
+        tzinfo=pytz.timezone(time.tzname[0])), {}),
+    (Time, datetime.time(), {}),
+    (Float, 1., {}),
+    (Integer, 1, {}),
+    (Email, 'jhon@doe.com', {}),
+]
+
+if not sgdb_in(['MySQL', 'MariaDB']):
+    COLUMNS.append((UUID, uuid1(), {}))
 
 try:
     import cryptography  # noqa
@@ -35,14 +61,16 @@ except Exception:
     has_passlib = False
 
 try:
-    import colour  # noqa
+    import colour
     has_colour = True
+    COLUMNS.append((Color, colour.Color('#123456'), {}))
 except Exception:
     has_colour = False
 
 try:
     import furl  # noqa
     has_furl = True
+    COLUMNS.append((URL, furl.furl('http://doc.anyblok.org'), {}))
 except Exception:
     has_furl = False
 
@@ -50,19 +78,31 @@ except Exception:
 try:
     import phonenumbers  # noqa
     has_phonenumbers = True
+    from sqlalchemy_utils import PhoneNumber as PN
+    COLUMNS.append((PhoneNumber, PN("+120012301", None), {}))
 except Exception:
     has_phonenumbers = False
 
 try:
     import pycountry  # noqa
     has_pycountry = True
-    from sqlalchemy_utils import PhoneNumber as PN
+    COLUMNS.append(
+        (Country, pycountry.countries.get(alpha_2='FR'), {}))
 except Exception:
     has_pycountry = False
 
 
 Model = Declarations.Model
 register = Declarations.register
+
+
+# FIXME (Json, {'name': 'test'}, {}),
+# FIXME (Interval, datetime.timedelta(days=6), {}),
+# FIXME (Decimal, D('1'), {}),
+# FIXME (LargeBinary, urandom(100), {}),
+@pytest.fixture(params=COLUMNS)
+def column_definition(request, bloks_loaded):
+    return request.param
 
 
 class OneColumn(Column):
@@ -124,6 +164,15 @@ class TestColumns:
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 
+    @pytest.mark.skipif(not has_cryptography,
+                        reason="cryptography is not installed")
+    def test_insert_columns(self, column_definition):
+        column, value, kwargs = column_definition
+        registry = self.init_registry(simple_column, ColumnType=column,
+                                      **kwargs)
+        test = registry.Test.insert(col=value)
+        assert test.col == value
+
     def test_column_with_type_in_kwargs(self):
         self.init_registry(
             simple_column, ColumnType=Integer, type_=Integer)
@@ -164,15 +213,11 @@ class TestColumns:
         assert test.col == 1.0
 
     def test_decimal(self):
-        from decimal import Decimal as D
-
         registry = self.init_registry(simple_column, ColumnType=Decimal)
         test = registry.Test.insert(col=D('1.0'))
         assert test.col == D('1.0')
 
     def test_setter_decimal(self):
-        from decimal import Decimal as D
-
         registry = self.init_registry(simple_column, ColumnType=Decimal)
         test = registry.Test.insert()
         test.col = '1.0'
@@ -221,18 +266,6 @@ class TestColumns:
 
     @pytest.mark.skipif(not has_cryptography,
                         reason="cryptography is not installed")
-    def test_string_with_encrypt_key(self):
-        registry = self.init_registry(simple_column, ColumnType=String,
-                                      encrypt_key='secretkey')
-        test = registry.Test.insert(col='col')
-        registry.session.commit()
-        assert test.col == 'col'
-        res = registry.execute('select col from test where id = %s' % test.id)
-        res = res.fetchall()[0][0]
-        assert res != 'col'
-
-    @pytest.mark.skipif(not has_cryptography,
-                        reason="cryptography is not installed")
     def test_string_with_encrypt_key_defined_by_a_method(self):
         registry = self.init_registry(simple_column, ColumnType=String,
                                       encrypt_key='meth_secretkey')
@@ -256,21 +289,6 @@ class TestColumns:
         res = res.fetchall()[0][0]
         assert res != 'col'
         del Configuration.configuration['default_encrypt_key']
-
-    @pytest.mark.skipif(not has_cryptography,
-                        reason="cryptography is not installed")
-    def test_datetime_with_encrypt_key(self):
-        import datetime
-        import time
-        import pytz
-
-        timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=DateTime,
-                                      encrypt_key='secretkey')
-        test = registry.Test.insert(col=now)
-        registry.session.commit()
-        assert test.col == now
 
     def test_string_with_size(self):
         registry = self.init_registry(
@@ -703,8 +721,6 @@ class TestColumns:
         assert test.col == now
 
     def test_large_binary(self):
-        from os import urandom
-
         blob = urandom(10000)
         registry = self.init_registry(simple_column, ColumnType=LargeBinary)
 
@@ -1024,7 +1040,6 @@ class TestColumns:
         assert test.col.hex == colour.Color(color).hex
 
     def test_uuid_binary_1(self):
-        from uuid import uuid1
         uuid = uuid1()
         registry = self.init_registry(simple_column, ColumnType=UUID)
         test = registry.Test.insert(col=uuid)
@@ -1052,7 +1067,6 @@ class TestColumns:
         assert test.col is uuid
 
     def test_uuid_char32(self):
-        from uuid import uuid1
         uuid = uuid1()
         registry = self.init_registry(simple_column, ColumnType=UUID,
                                       binary=False)
@@ -1263,6 +1277,19 @@ class TestColumns:
         registry = self.init_registry(simple_column, ColumnType=Country)
         with pytest.raises(Exception):
             registry.execute("insert into test (col) values ('WG2')")
+
+    @pytest.mark.skipif(not has_cryptography,
+                        reason="cryptography is not installed")
+    def test_insert_encrypt_key_columns(self, column_definition):
+        column, value, kwargs = column_definition
+        registry = self.init_registry(simple_column, ColumnType=column,
+                                      encrypt_key='secretkey', **kwargs)
+        test = registry.Test.insert(col=value)
+        registry.session.commit()
+        assert test.col == value
+        res = registry.execute('select col from test where id = %s' % test.id)
+        res = res.fetchall()[0][0]
+        assert res != test.col
 
     def test_foreign_key_on_mapper_issue_112(self):
 

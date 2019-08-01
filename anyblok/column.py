@@ -763,6 +763,11 @@ class Selection(Column):
 
     def update_table_args(self, Model):
         """return check constraint to limit the value"""
+        if self.encrypt_key:
+            # dont add constraint because the state is crypted and nobody
+            # can add new entry
+            return []
+
         selections = self.sqlalchemy_type.selections
         if isinstance(selections, dict):
             enum = selections.keys()
@@ -790,6 +795,13 @@ class Selection(Column):
             return [CheckConstraint(constraint, name=name)]
 
         return []
+
+
+"""
+    Added *process_result_value* at the class *JSON*, because
+    this method is necessary for encrypt the column
+"""
+types.JSON.process_result_value = lambda self, value, dialect: value
 
 
 class Json(Column):
@@ -1122,6 +1134,11 @@ class Country(Column):
 
     def update_table_args(self, Model):
         """return check constraint to limit the value"""
+        if self.encrypt_key:
+            # dont add constraint because the state is crypted and nobody
+            # can add new entry
+            return []
+
         enum = [country.alpha_3 for country in pycountry.countries]
         constraint = """"%s" in ('%s')""" % (self.fieldname, "', '".join(enum))
         enum.sort()
