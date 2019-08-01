@@ -9,10 +9,10 @@
 import pytest
 from anyblok.field import Field, FieldException, Function, JsonRelated
 from anyblok.column import Integer, String, Json
+from anyblok.testing import sgdb_in
 from anyblok import Declarations
 from sqlalchemy import func, types
 from .conftest import init_registry
-from anyblok.testing import sgdb_in
 
 
 Model = Declarations.Model
@@ -116,8 +116,6 @@ def registry_json_related(request, bloks_loaded):
     return registry
 
 
-@pytest.mark.skipif(sgdb_in(['MariaDB']),
-                    reason='JSON is not existing in this SGDB')
 class TestJsonRelated:
 
     @pytest.fixture(autouse=True)
@@ -126,6 +124,8 @@ class TestJsonRelated:
         request.addfinalizer(transaction.rollback)
         return
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_hasattr(self, registry_json_related):
         registry = registry_json_related
         registry.Test.name
@@ -175,6 +175,8 @@ class TestJsonRelated:
         t.name = 'jssuzanne'
         assert t.properties == {'name': 'jssuzanne'}
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_exp_1(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
@@ -183,6 +185,8 @@ class TestJsonRelated:
             Test.name.cast(types.String) == '"jssuzanne"')
         assert not (query.count())
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_exp_2(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
@@ -191,6 +195,8 @@ class TestJsonRelated:
             Test.name.cast(types.String) == '"jssuzanne"')
         assert not (query.count())
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_exp_3(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
@@ -217,8 +223,6 @@ def registry_json_related2(request, bloks_loaded):
     return registry
 
 
-@pytest.mark.skipif(sgdb_in(['MariaDB']),
-                    reason='JSON is not existing in this SGDB')
 class TestJsonRelated2:
 
     @pytest.fixture(autouse=True)
@@ -246,6 +250,8 @@ class TestJsonRelated2:
         t.name = 'jssuzanne'
         assert t.properties == {'sub': {'name': 'jssuzanne'}}
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_exp_4(self, registry_json_related2):
         registry = registry_json_related2
         Test = registry.Test
@@ -333,8 +339,6 @@ class TestField2:
         registry = self.init_registry(add_in_registry)
         registry.Test.val2
 
-    @pytest.mark.skipif(sgdb_in(['MariaDB']),
-                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_with_missing_json_column(self):
 
         def add_in_registry():
@@ -349,8 +353,6 @@ class TestField2:
         with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
-    @pytest.mark.skipif(sgdb_in(['MariaDB']),
-                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_with_missing_keys(self):
 
         def add_in_registry():
@@ -365,8 +367,6 @@ class TestField2:
         with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
-    @pytest.mark.skipif(sgdb_in(['MariaDB']),
-                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_with_adapter(self):
 
         def add_in_registry():
@@ -387,8 +387,6 @@ class TestField2:
         t.properties['name'] = '2'
         assert t.name == 2
 
-    @pytest.mark.skipif(sgdb_in(['MariaDB']),
-                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_with_adapter_with_method(self):
 
         def add_in_registry():
