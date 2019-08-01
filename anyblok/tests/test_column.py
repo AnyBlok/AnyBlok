@@ -105,6 +105,24 @@ def column_definition(request, bloks_loaded):
     return request.param
 
 
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
+
+
 class OneColumn(Column):
     sqlalchemy_type = SA_Integer
 
@@ -138,6 +156,53 @@ def column_with_foreign_key():
 
     @register(Model)
     class Test:
+
+        name = String(primary_key=True)
+
+    @register(Model)
+    class Test2:
+
+        id = Integer(primary_key=True)
+        test = String(foreign_key=Model.Test.use('name'))
+
+
+def column_with_foreign_key_with_schema():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_fk_schema'
+
+        name = String(primary_key=True)
+
+    @register(Model)
+    class Test2:
+        __db_schema__ = 'test_db_fk_schema'
+
+        id = Integer(primary_key=True)
+        test = String(foreign_key=Model.Test.use('name'))
+
+
+def column_with_foreign_key_with_diff_schema1():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_fk_schema'
+
+        name = String(primary_key=True)
+
+    @register(Model)
+    class Test2:
+        __db_schema__ = 'test_db_fk_schema2'
+
+        id = Integer(primary_key=True)
+        test = String(foreign_key=Model.Test.use('name'))
+
+
+def column_with_foreign_key_with_diff_schema2():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_fk_schema'
 
         name = String(primary_key=True)
 
@@ -187,6 +252,21 @@ class TestColumns:
 
     def test_column_with_foreign_key(self):
         registry = self.init_registry(column_with_foreign_key)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
+
+    def test_column_with_foreign_key_with_schema(self, db_schema):
+        registry = self.init_registry(column_with_foreign_key_with_schema)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
+
+    def test_column_with_foreign_key_with_diff_schema1(self, db_schema):
+        registry = self.init_registry(column_with_foreign_key_with_diff_schema1)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
+
+    def test_column_with_foreign_key_with_diff_schema2(self, db_schema):
+        registry = self.init_registry(column_with_foreign_key_with_diff_schema2)
         registry.Test.insert(name='test')
         registry.Test2.insert(test='test')
 
@@ -1313,6 +1393,32 @@ class TestColumns:
         with pytest.raises(Exception):
             registry.Item.insert(template_code='other')
 
+    def test_foreign_key_on_mapper_issue_112_with_schema(self, db_schema):
+
+        def add_in_registry():
+
+            @Declarations.register(Declarations.Model)
+            class Template:
+                __db_schema__ = 'test_db_column_schema'
+
+                code = String(primary_key=True, db_column_name='ProductId')
+
+            @Declarations.register(Declarations.Model)
+            class Item:
+                __db_schema__ = 'test_db_column_schema'
+
+                id = Integer(primary_key=True, db_column_name='ProductDetailId')
+                template_code = String(
+                    db_column_name='ProductId',
+                    foreign_key=Model.Template.use('code'))
+
+        registry = self.init_registry(add_in_registry)
+        registry.Template.insert(code='test')
+        registry.Item.insert(template_code='test')
+
+        with pytest.raises(Exception):
+            registry.Item.insert(template_code='other')
+
 
 class TestColumnsAutoDoc:
 
@@ -1388,6 +1494,8 @@ class TestColumnsAutoDoc:
         ]
         self.call_autodoc(Selection, selections=SELECTIONS)
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB']),
+                        reason='JSON is not existing in this SGDB')
     def test_json(self):
         self.call_autodoc(Json)
 

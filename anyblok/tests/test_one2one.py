@@ -9,6 +9,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
 from anyblok import Declarations
+from anyblok.config import Configuration
 from anyblok.field import FieldException
 from anyblok.column import Integer, String
 from anyblok.relationship import One2One
@@ -19,10 +20,75 @@ register = Declarations.register
 Model = Declarations.Model
 
 
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
+
+
 def _minimum_one2one(**kwargs):
 
     @register(Model)
     class Address:
+
+        id = Integer(primary_key=True)
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = One2One(model=Model.Address, backref="person")
+
+
+def _minimum_one2one_with_schema(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        id = Integer(primary_key=True)
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        name = String(primary_key=True)
+        address = One2One(model=Model.Address, backref="person")
+
+
+def _minimum_one2one_with_diferent_schema1(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        id = Integer(primary_key=True)
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_other_db_schema'
+
+        name = String(primary_key=True)
+        address = One2One(model=Model.Address, backref="person")
+
+
+def _minimum_one2one_with_diferent_schema2(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
 
         id = Integer(primary_key=True)
 
@@ -49,9 +115,12 @@ def _one2one_with_str_method(**kwargs):
 
 @pytest.fixture(scope="class", params=[
     _minimum_one2one,
+    _minimum_one2one_with_schema,
+    _minimum_one2one_with_diferent_schema1,
+    _minimum_one2one_with_diferent_schema2,
     _one2one_with_str_method
 ])
-def registry_minimum_one2one(request, bloks_loaded):
+def registry_minimum_one2one(request, bloks_loaded, db_schema):
     reset_db()
     registry = init_registry(request.param)
     request.addfinalizer(registry.close)
@@ -167,6 +236,27 @@ def _complete_one2one(**kwargs):
                           backref="person", nullable=False)
 
 
+def _complete_one2one_with_schema(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        name = String(primary_key=True)
+        address = One2One(model=Model.Address,
+                          remote_columns="id", column_names="id_of_address",
+                          backref="person", nullable=False)
+
+
 def _minimum_one2one_without_backref(**kwargs):
 
     @register(Model)
@@ -214,6 +304,17 @@ class TestOne2One:
 
     def test_complete_one2one(self):
         registry = self.init_registry(_complete_one2one)
+        assert hasattr(registry.Person, 'address')
+        assert hasattr(registry.Person, 'id_of_address')
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+        person = registry.Person.insert(
+            name="Jean-sébastien SUZANNE", address=address)
+
+        assert address.person is person
+
+    def test_complete_one2one_with_schema(self, db_schema):
+        registry = self.init_registry(_complete_one2one_with_schema)
         assert hasattr(registry.Person, 'address')
         assert hasattr(registry.Person, 'id_of_address')
         address = registry.Address.insert(

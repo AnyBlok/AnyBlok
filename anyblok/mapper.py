@@ -1,12 +1,28 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.schema import ForeignKey
 from anyblok.common import anyblok_column_prefix
+from .config import Configuration
+
+
+def format_schema(schema, registry_name):
+    if schema is not None:
+        prefix = Configuration.get(
+            'prefix_db_schema.%s' % registry_name,
+            Configuration.get('prefix_db_schema', ''))
+        suffix = Configuration.get(
+            'suffix_db_schema.%s' % registry_name,
+            Configuration.get('suffix_db_schema', ''))
+
+        return prefix + schema + suffix
+
+    return schema
 
 
 class ModelReprException(Exception):
@@ -139,7 +155,7 @@ class ModelAttribute:
         self._options.update(kwargs)
         return self
 
-    def get_fk_name(self, registry):
+    def get_fk_name(self, registry, with_schema=True):
         """Return the name of the foreign key
 
         the need of foreign key may be before the creation of the model in
@@ -154,6 +170,10 @@ class ModelAttribute:
         tablename = Model['__tablename__']
         if Model[self.attribute_name].db_column_name:
             column_name = Model[self.attribute_name].db_column_name
+
+        if with_schema and Model.get('__db_schema__'):
+            return '%s.%s.%s' % (
+                Model['__db_schema__'], tablename, column_name)
 
         return tablename + '.' + column_name
 
@@ -287,13 +307,16 @@ class ModelRepr:
 
         return registry.loaded_namespaces_first_step[self.model_name]
 
-    def tablename(self, registry):
+    def tablename(self, registry, with_schema=True):
         """Return the  real tablename of the Model
 
         :param registry: instance of the registry
         :rtype: string
         """
         Model = self.check_model(registry)
+        if with_schema and Model.get('__db_schema__'):
+            return Model['__db_schema__'] + '.' + Model['__tablename__']
+
         return Model['__tablename__']
 
     def modelname(self, registry):

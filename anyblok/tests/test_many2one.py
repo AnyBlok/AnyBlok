@@ -11,11 +11,12 @@
 import pytest
 from anyblok.testing import sgdb_in
 from anyblok import Declarations
+from anyblok.config import Configuration
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
 from anyblok.column import (
     Integer, String, BigInteger, Float, Decimal, Boolean, DateTime, Date, Time,
-    Sequence)
+    Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection)
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.engine.reflection import Inspector
@@ -27,10 +28,90 @@ Model = Declarations.Model
 Mixin = Declarations.Mixin
 
 
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
+
+
 def _complete_many2one(**kwargs):
 
     @register(Model)
     class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
+                           remote_columns="id", column_names="id_of_address",
+                           one2many="persons", nullable=False)
+
+
+def _complete_many2one_with_schema(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
+                           remote_columns="id", column_names="id_of_address",
+                           one2many="persons", nullable=False)
+
+
+def _complete_many2one_with_different_schema1(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_other_m2o_schema'
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
+                           remote_columns="id", column_names="id_of_address",
+                           one2many="persons", nullable=False)
+
+
+def _complete_many2one_with_different_schema2(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2o_schema'
 
         id = Integer(primary_key=True)
         street = String()
@@ -63,6 +144,25 @@ def _minimum_many2one(**kwargs):
         address = Many2One(model=Model.Address)
 
 
+def _minimum_many2one_with_schema(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address)
+
+
 def _many2one_with_str_model(**kwargs):
 
     @register(Model)
@@ -84,11 +184,15 @@ def _many2one_with_str_model(**kwargs):
     scope="class",
     params=[
         (_complete_many2one, 'id_of_address', True),
+        (_complete_many2one_with_schema, 'id_of_address', True),
+        (_complete_many2one_with_different_schema1, 'id_of_address', True),
+        (_complete_many2one_with_different_schema2, 'id_of_address', True),
         (_minimum_many2one, 'address_id', False),
+        (_minimum_many2one_with_schema, 'address_id', False),
         (_many2one_with_str_model, 'address_id', False),
     ]
 )
-def registry_many2one(request, bloks_loaded):
+def registry_many2one(request, bloks_loaded, db_schema):
     reset_db()
     registry = init_registry_with_bloks(
         [], request.param[0])
@@ -155,15 +259,23 @@ params = [
     (Boolean, {}),
     (Date, {}),
     (Time, {}),
+    (Email, {}),
+    (UUID, {}),
+    (Color, {}),
+    (Country, {}),
+    (PhoneNumber, {}),
+    (Selection, {}),
 ]
 
 if not sgdb_in(['MySQL', 'MariaDB']):
+    params.append((URL, {}))
     params.append((DateTime, {}))
 
 
 @pytest.fixture(scope="class", params=params)
 def registry_many2one_auto_detect(request, bloks_loaded):
     reset_db()
+    print("=>", request.param)
     registry = init_registry_with_bloks(
         [], _auto_detect_type, ColumnType=request.param[0], **request.param[1])
     request.addfinalizer(registry.close)

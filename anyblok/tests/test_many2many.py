@@ -11,6 +11,7 @@
 from anyblok.testing import sgdb_in
 import pytest
 from anyblok import Declarations
+from anyblok.config import Configuration
 from anyblok.mapper import ModelAttributeException
 from anyblok.column import Integer, String, DateTime
 from anyblok.relationship import Many2Many, Many2One
@@ -21,6 +22,24 @@ from .conftest import init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_many2many(**kwargs):
@@ -45,10 +64,90 @@ def _complete_many2many(**kwargs):
                               many2many="persons")
 
 
-@pytest.fixture(scope="class")
-def registry_many2many(request, bloks_loaded):
+def _complete_many2many_with_schema(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        name = String(primary_key=True)
+        addresses = Many2Many(model=Model.Address,
+                              join_table="join_addresses_by_persons",
+                              schema="test_db_m2m_schema",
+                              remote_columns="id", local_columns="name",
+                              m2m_remote_columns='a_id',
+                              m2m_local_columns='p_name',
+                              many2many="persons")
+
+
+def _complete_many2many_with_diferent_schema1(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2m_other_schema'
+
+        name = String(primary_key=True)
+        addresses = Many2Many(model=Model.Address,
+                              join_table="join_addresses_by_persons",
+                              remote_columns="id", local_columns="name",
+                              m2m_remote_columns='a_id',
+                              m2m_local_columns='p_name',
+                              many2many="persons")
+
+
+def _complete_many2many_with_diferent_schema2(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        addresses = Many2Many(model=Model.Address,
+                              join_table="join_addresses_by_persons",
+                              remote_columns="id", local_columns="name",
+                              m2m_remote_columns='a_id',
+                              m2m_local_columns='p_name',
+                              many2many="persons")
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        _complete_many2many,
+        _complete_many2many_with_schema,
+        _complete_many2many_with_diferent_schema1,
+        _complete_many2many_with_diferent_schema2,
+    ]
+)
+def registry_many2many(request, bloks_loaded, db_schema):
     reset_db()
-    registry = init_registry(_complete_many2many)
+    registry = init_registry(request.param)
     request.addfinalizer(registry.close)
     return registry
 
@@ -71,14 +170,14 @@ class TestMany2ManyComplete:
         assert m2m_tables_exist
 
         jt = registry.declarativebase.metadata.tables
-        join_table_exist = 'join_addresses_by_persons' in jt
-        assert join_table_exist
+        join_table = 'join_addresses_by_persons'
+        if registry.Person.__db_schema__:
+            join_table = '%s.%s' % (registry.Person.__db_schema__, join_table)
+        assert join_table in jt
 
-        assert len(jt['join_addresses_by_persons'].primary_key.columns) == 2
-        assert 'a_id' in jt[
-            'join_addresses_by_persons'].primary_key.columns
-        assert 'p_name' in jt[
-            'join_addresses_by_persons'].primary_key.columns
+        assert len(jt[join_table].primary_key.columns) == 2
+        assert 'a_id' in jt[join_table].primary_key.columns
+        assert 'p_name' in jt[join_table].primary_key.columns
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')
@@ -114,6 +213,25 @@ def _minimum_many2many(**kwargs):
 
     @register(Model)
     class Person:
+
+        name = String(primary_key=True)
+        addresses = Many2Many(model=Model.Address)
+
+
+def _minimum_many2many_with_schema(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2m_schema'
 
         name = String(primary_key=True)
         addresses = Many2Many(model=Model.Address)
@@ -162,7 +280,7 @@ def auto_detect_two_primary_keys(**kwargs):
     class Address:
 
         id = Integer(primary_key=True)
-        id2 = Integer(primary_key=True)
+        id2 = Integer(primary_key=True, autoincrement=False)
 
     @register(Model)
     class Person:
@@ -245,6 +363,31 @@ class TestMany2Many:
 
         assert person.addresses == [address]
 
+    def test_minimum_many2many_with_schema(self, db_schema):
+        registry = self.init_registry(_minimum_many2many_with_schema)
+
+        address_exist = hasattr(registry.Person, 'addresses')
+        assert address_exist
+
+        m2m_tables_exist = hasattr(registry, 'many2many_tables')
+        assert m2m_tables_exist
+
+        jt = registry.declarativebase.metadata.tables
+        join_table_exist = (
+            '%s.join_person_and_address_for_addresses' % (
+                registry.Person.__db_schema__
+            ) in jt)
+        assert join_table_exist
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+
+        person.addresses.append(address)
+
+        assert person.addresses == [address]
+
     def test_many2many_with_str_model(self):
         registry = self.init_registry(_many2many_with_str_model)
 
@@ -263,6 +406,15 @@ class TestMany2Many:
 
         person = registry.Person.insert(name="Jean-sébastien SUZANNE")
 
+        person.addresses.append(address)
+
+        assert person.addresses == [address]
+
+    def test_many2many_with_two_primary_key(self):
+        registry = self.init_registry(auto_detect_two_primary_keys)
+
+        address = registry.Address.insert(id2=1)
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
         person.addresses.append(address)
 
         assert person.addresses == [address]
@@ -500,12 +652,53 @@ class TestMany2Many:
         t1.childs.append(t2)
         assert t1 in t2.parents
 
+    def test_many2many_on_self_with_schema(self, db_schema):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    m2m_remote_columns='id2',
+                    many2many='parents'
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert()
+        t1.childs.append(t2)
+        assert t1 in t2.parents
+
     def test_many2many_on_self_auto_column(self):
 
         def add_in_registry():
 
             @register(Model)
             class Test2:
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test2',
+                    many2many='parents'
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test2.insert()
+        t2 = registry.Test2.insert()
+        t1.childs.append(t2)
+        assert t1 in t2.parents
+
+    def test_many2many_on_self_auto_column_with_schema(self, db_schema):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Test2:
+                __db_schema__ = 'test_db_m2m_schema'
 
                 id = Integer(primary_key=True)
                 childs = Many2Many(
@@ -540,8 +733,19 @@ class TestMany2Many:
         with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
-    def test_rich_many2many_complete_config(self):
+    def assert_rich_many2many_complete_config(self, registry):
+        person = registry.Person.insert(name='jssuzanne')
+        address = registry.Address.insert(
+            street='somewhere', zip="75001", city="Paris")
+        person.addresses.append(address)
+        personaddress = registry.PersonAddress.query().one()
+        assert personaddress.a_id == address.id
+        assert personaddress.p_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
 
+    def test_rich_many2many_complete_config(self):
         def add_in_registry():
 
             @register(Model)
@@ -574,16 +778,88 @@ class TestMany2Many:
                                       many2many="persons")
 
         registry = self.init_registry(add_in_registry)
-        person = registry.Person.insert(name='jssuzanne')
-        address = registry.Address.insert(
-            street='somewhere', zip="75001", city="Paris")
-        person.addresses.append(address)
-        personaddress = registry.PersonAddress.query().one()
-        assert personaddress.a_id == address.id
-        assert personaddress.p_name == person.name
-        assert personaddress.id
-        assert personaddress.create_at
-        assert personaddress.foo == 'bar'
+        self.assert_rich_many2many_complete_config(registry)
+
+    def test_rich_many2many_complete_config_with_schema(self, db_schema):
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class PersonAddress:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                a_id = Integer(
+                    foreign_key=Model.Address.use('id'), nullable=False)
+                p_name = String(
+                    foreign_key='Model.Person=>name', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Person:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                name = String(primary_key=True)
+                addresses = Many2Many(
+                    model=Model.Address,
+                    join_table="test_db_m2m_schema.personaddress",
+                    remote_columns="id", local_columns="name",
+                    m2m_remote_columns='a_id',
+                    m2m_local_columns='p_name',
+                    many2many="persons")
+
+        registry = self.init_registry(add_in_registry)
+        self.assert_rich_many2many_complete_config(registry)
+
+    def test_rich_many2many_complete_config_with_different_schema(self,
+                                                                  db_schema):
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+                __db_schema__ = 'test_db_m2m_schema1'
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class PersonAddress:
+                __db_schema__ = 'test_db_m2m_schema2'
+
+                id = Integer(primary_key=True)
+                a_id = Integer(
+                    foreign_key=Model.Address.use('id'), nullable=False)
+                p_name = String(
+                    foreign_key='Model.Person=>name', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Person:
+                __db_schema__ = 'test_db_m2m_schema3'
+
+                name = String(primary_key=True)
+                addresses = Many2Many(
+                    model=Model.Address,
+                    join_table="test_db_m2m_schema2.personaddress",
+                    remote_columns="id", local_columns="name",
+                    m2m_remote_columns='a_id',
+                    m2m_local_columns='p_name',
+                    many2many="persons")
+
+        registry = self.init_registry(add_in_registry)
+        self.assert_rich_many2many_complete_config(registry)
 
     def test_rich_many2many_minimum_config(self):
 
@@ -651,6 +927,148 @@ class TestMany2Many:
 
             @register(Model)
             class Person:
+
+                name = String(primary_key=True)
+                addresses = Many2Many(model=Model.Address,
+                                      join_model=Model.PersonAddress,
+                                      many2many="persons")
+
+        registry = self.init_registry(add_in_registry)
+        person = registry.Person.insert(name='jssuzanne')
+        address = registry.Address.insert(
+            street='somewhere', zip="75001", city="Paris")
+        person.addresses.append(address)
+        personaddress = registry.PersonAddress.query().one()
+        assert personaddress.a_id == address.id
+        assert personaddress.p_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
+
+    def test_rich_many2many_minimum_config_on_join_model_with_schema(self,
+                                                                     db_schema):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class PersonAddress:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                a_id = Integer(
+                    foreign_key=Model.Address.use('id'), nullable=False)
+                p_name = String(
+                    foreign_key='Model.Person=>name', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Person:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                name = String(primary_key=True)
+                addresses = Many2Many(model=Model.Address,
+                                      join_model=Model.PersonAddress,
+                                      many2many="persons")
+
+        registry = self.init_registry(add_in_registry)
+        person = registry.Person.insert(name='jssuzanne')
+        address = registry.Address.insert(
+            street='somewhere', zip="75001", city="Paris")
+        person.addresses.append(address)
+        personaddress = registry.PersonAddress.query().one()
+        assert personaddress.a_id == address.id
+        assert personaddress.p_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
+
+    def test_rich_many2many_minimum_config_on_join_model_with_dif_schema(
+        self, db_schema
+    ):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+                __db_schema__ = 'test_db_m2m_schema1'
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class PersonAddress:
+                __db_schema__ = 'test_db_m2m_schema2'
+
+                id = Integer(primary_key=True)
+                a_id = Integer(
+                    foreign_key=Model.Address.use('id'), nullable=False)
+                p_name = String(
+                    foreign_key='Model.Person=>name', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Person:
+                __db_schema__ = 'test_db_m2m_schema3'
+
+                name = String(primary_key=True)
+                addresses = Many2Many(model=Model.Address,
+                                      join_model=Model.PersonAddress,
+                                      many2many="persons")
+
+        registry = self.init_registry(add_in_registry)
+        person = registry.Person.insert(name='jssuzanne')
+        address = registry.Address.insert(
+            street='somewhere', zip="75001", city="Paris")
+        person.addresses.append(address)
+        personaddress = registry.PersonAddress.query().one()
+        assert personaddress.a_id == address.id
+        assert personaddress.p_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
+
+    def test_rich_many2many_minimum_config_on_join_model_with_di_schema2(
+        self, db_schema
+    ):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+                __db_schema__ = 'test_db_m2m_schema1'
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class PersonAddress:
+
+                id = Integer(primary_key=True)
+                a_id = Integer(
+                    foreign_key=Model.Address.use('id'), nullable=False)
+                p_name = String(
+                    foreign_key='Model.Person=>name', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Person:
+                __db_schema__ = 'test_db_m2m_schema3'
 
                 name = String(primary_key=True)
                 addresses = Many2Many(model=Model.Address,
@@ -833,6 +1251,46 @@ class TestMany2Many:
         with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
+    def test_rich_many2many_complete_config_on_self_with_schema(self,
+                                                                db_schema):
+
+        def add_in_registry():
+
+            @register(Model)
+            class TestLink:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                t_left = Integer(foreign_key='Model.Test=>id', nullable=False)
+                t_right = Integer(foreign_key='Model.Test=>id', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Test:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    many2many='parents',
+                    join_table="testlink",
+                    remote_columns="id", local_columns="id",
+                    m2m_local_columns='t_left',
+                    m2m_remote_columns='t_right',
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert()
+        t1.parents.append(t2)
+        link = registry.TestLink.query().one()
+        assert link.t_left == t2.id
+        assert link.t_right == t1.id
+        assert link.id
+        assert link.create_at
+        assert link.foo == 'bar'
+
     def test_rich_many2many_complete_config_on_self(self):
 
         def add_in_registry():
@@ -883,6 +1341,44 @@ class TestMany2Many:
 
             @register(Model)
             class Test:
+
+                id = Integer(primary_key=True)
+                childs = Many2Many(
+                    model='Model.Test',
+                    many2many='parents',
+                    join_table="testlink",
+                    m2m_local_columns='t_left',
+                    m2m_remote_columns='t_right',
+                )
+
+        registry = self.init_registry(add_in_registry)
+        t1 = registry.Test.insert()
+        t2 = registry.Test.insert()
+        t1.parents.append(t2)
+        link = registry.TestLink.query().one()
+        assert link.t_left == t2.id
+        assert link.t_right == t1.id
+        assert link.id
+        assert link.create_at
+        assert link.foo == 'bar'
+
+    def test_rich_many2many_minimum_config_on_self_with_schema(self, db_schema):
+
+        def add_in_registry():
+
+            @register(Model)
+            class TestLink:
+                __db_schema__ = 'test_db_m2m_schema'
+
+                id = Integer(primary_key=True)
+                t_left = Integer(foreign_key='Model.Test=>id', nullable=False)
+                t_right = Integer(foreign_key='Model.Test=>id', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Test:
+                __db_schema__ = 'test_db_m2m_schema'
 
                 id = Integer(primary_key=True)
                 childs = Many2Many(

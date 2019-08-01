@@ -9,6 +9,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
 from anyblok import Declarations
+from anyblok.config import Configuration
 from anyblok.column import Integer, String
 from anyblok.relationship import One2Many
 from .conftest import init_registry, reset_db
@@ -17,6 +18,24 @@ from .conftest import init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_one2many(**kwargs):
@@ -45,10 +64,104 @@ def _complete_one2many(**kwargs):
                            many2one="address")
 
 
-@pytest.fixture(scope="class")
-def registry_complete_one2many(request, bloks_loaded):
+def _complete_one2many_with_schema(**kwargs):
+    primaryjoin = "ModelAddress.id == ModelPerson.address_id"
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        name = String(primary_key=True)
+        address_id = Integer(foreign_key=Model.Address.use('id'))
+
+    @register(Model)  # noqa
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        persons = One2Many(model=Model.Person,
+                           remote_columns="address_id",
+                           primaryjoin=primaryjoin,
+                           many2one="address")
+
+
+def _complete_one2many_with_diferent_schema1(**kwargs):
+    primaryjoin = "ModelAddress.id == ModelPerson.address_id"
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_other_db_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        name = String(primary_key=True)
+        address_id = Integer(foreign_key=Model.Address.use('id'))
+
+    @register(Model)  # noqa
+    class Address:
+        __db_schema__ = 'test_other_db_schema'
+
+        persons = One2Many(model=Model.Person,
+                           remote_columns="address_id",
+                           primaryjoin=primaryjoin,
+                           many2one="address")
+
+
+def _complete_one2many_with_diferent_schema2(**kwargs):
+    primaryjoin = "ModelAddress.id == ModelPerson.address_id"
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_other_db_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address_id = Integer(foreign_key=Model.Address.use('id'))
+
+    @register(Model)  # noqa
+    class Address:
+        __db_schema__ = 'test_other_db_schema'
+
+        persons = One2Many(model=Model.Person,
+                           remote_columns="address_id",
+                           primaryjoin=primaryjoin,
+                           many2one="address")
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        _complete_one2many,
+        _complete_one2many_with_schema,
+        _complete_one2many_with_diferent_schema1,
+        _complete_one2many_with_diferent_schema2,
+    ]
+)
+def registry_complete_one2many(request, bloks_loaded, db_schema):
     reset_db()
-    registry = init_registry(_complete_one2many)
+    registry = init_registry(request.param)
     request.addfinalizer(registry.close)
     return registry
 
@@ -159,6 +272,26 @@ def _minimum_one2many(**kwargs):
         address_id = Integer(foreign_key=Model.Address.use('id'))
 
 
+def _minimum_one2many_with_schema(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+        persons = One2Many(model='Model.Person')
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2m_schema'
+
+        name = String(primary_key=True)
+        address_id = Integer(foreign_key=Model.Address.use('id'))
+
+
 def _minimum_one2many_remote_field_in_mixin(**kwargs):
 
     @register(Model)
@@ -224,6 +357,15 @@ class TestOne2Many:
 
     def test_minimum_one2many(self):
         registry = self.init_registry(_minimum_one2many)
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        address.persons.append(person)
+
+    def test_minimum_one2many_with_schema(self, db_schema):
+        registry = self.init_registry(_minimum_one2many_with_schema)
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')

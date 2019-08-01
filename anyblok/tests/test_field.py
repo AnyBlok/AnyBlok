@@ -12,6 +12,7 @@ from anyblok.column import Integer, String, Json
 from anyblok import Declarations
 from sqlalchemy import func, types
 from .conftest import init_registry
+from anyblok.testing import sgdb_in
 
 
 Model = Declarations.Model
@@ -115,6 +116,8 @@ def registry_json_related(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.skipif(sgdb_in(['MariaDB']),
+                    reason='JSON is not existing in this SGDB')
 class TestJsonRelated:
 
     @pytest.fixture(autouse=True)
@@ -214,6 +217,8 @@ def registry_json_related2(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.skipif(sgdb_in(['MariaDB']),
+                    reason='JSON is not existing in this SGDB')
 class TestJsonRelated2:
 
     @pytest.fixture(autouse=True)
@@ -328,6 +333,8 @@ class TestField2:
         registry = self.init_registry(add_in_registry)
         registry.Test.val2
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_with_missing_json_column(self):
 
         def add_in_registry():
@@ -342,6 +349,8 @@ class TestField2:
         with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_with_missing_keys(self):
 
         def add_in_registry():
@@ -356,6 +365,8 @@ class TestField2:
         with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_with_adapter(self):
 
         def add_in_registry():
@@ -376,6 +387,8 @@ class TestField2:
         t.properties['name'] = '2'
         assert t.name == 2
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_with_adapter_with_method(self):
 
         def add_in_registry():

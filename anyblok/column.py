@@ -23,6 +23,7 @@ from datetime import datetime, date
 from dateutil.parser import parse
 from inspect import ismethod
 from anyblok.config import Configuration
+from .common import sgdb_in
 import time
 import pytz
 import decimal
@@ -761,11 +762,14 @@ class Selection(Column):
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
 
-    def update_table_args(self, Model):
+    def update_table_args(self, registry, Model):
         """return check constraint to limit the value"""
         if self.encrypt_key:
             # dont add constraint because the state is crypted and nobody
             # can add new entry
+            return []
+        if sgdb_in(registry.engine, ['MariaDB']):
+            # No check constraint in MariaDB
             return []
 
         selections = self.sqlalchemy_type.selections
@@ -1132,11 +1136,15 @@ class Country(Column):
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
 
-    def update_table_args(self, Model):
+    def update_table_args(self, registry, Model):
         """return check constraint to limit the value"""
         if self.encrypt_key:
             # dont add constraint because the state is crypted and nobody
             # can add new entry
+            return []
+
+        if sgdb_in(registry.engine, ['MariaDB']):
+            # No Check constraint in MariaDB
             return []
 
         enum = [country.alpha_3 for country in pycountry.countries]

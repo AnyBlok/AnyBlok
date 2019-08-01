@@ -19,6 +19,7 @@ class TestQueryScope:
         assert query.dictone() == {
             'name': model.name,
             'table': model.table,
+            'schema': model.schema,
             'is_sql_model': model.is_sql_model,
             'description': model.description,
         }
@@ -51,6 +52,7 @@ class TestQueryScope:
         assert query.dictfirst() == {
             'name': model.name,
             'table': model.table,
+            'schema': model.schema,
             'is_sql_model': model.is_sql_model,
             'description': model.description,
         }
@@ -83,6 +85,7 @@ class TestQueryScope:
             return {
                 'name': model.name,
                 'table': model.table,
+                'schema': model.schema,
                 'is_sql_model': model.is_sql_model,
                 'description': model.description,
             }
