@@ -267,7 +267,7 @@ params = [
     (Selection, {}),
 ]
 
-if not sgdb_in(['MySQL', 'MariaDB']):
+if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
     params.append((URL, {}))
     params.append((DateTime, {}))
 
@@ -364,7 +364,8 @@ class TestMany2OneOld:
         with pytest.raises(FieldException):
             self.init_registry(_many2one_with_same_name_for_column_names)
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #89')
     def test_minimum_many2one_on_sequence(self):
 
         def add_in_registry():
