@@ -270,27 +270,12 @@ class TestColumns:
         registry.Test.insert(name='test')
         registry.Test2.insert(test='test')
 
-    def test_integer(self):
-        registry = self.init_registry(simple_column, ColumnType=Integer)
-        test = registry.Test.insert(col=1)
-        assert test.col == 1
-
     def test_integer_str_foreign_key(self):
         registry = self.init_registry(
             simple_column, ColumnType=Integer, foreign_key='Model.Test=>id')
         test = registry.Test.insert()
         test2 = registry.Test.insert(col=test.id)
         assert test2.col == test.id
-
-    def test_big_integer(self):
-        registry = self.init_registry(simple_column, ColumnType=BigInteger)
-        test = registry.Test.insert(col=1)
-        assert test.col == 1
-
-    def test_Float(self):
-        registry = self.init_registry(simple_column, ColumnType=Float)
-        test = registry.Test.insert(col=1.0)
-        assert test.col == 1.0
 
     def test_decimal(self):
         registry = self.init_registry(simple_column, ColumnType=Decimal)
@@ -303,21 +288,11 @@ class TestColumns:
         test.col = '1.0'
         assert test.col == D('1.0')
 
-    def test_boolean(self):
-        registry = self.init_registry(simple_column, ColumnType=Boolean)
-        test = registry.Test.insert(col=True)
-        assert test.col
-
     def test_boolean_with_default(self):
         registry = self.init_registry(simple_column, ColumnType=Boolean,
                                       default=False)
         test = registry.Test.insert()
         assert test.col is False
-
-    def test_string(self):
-        registry = self.init_registry(simple_column, ColumnType=String)
-        test = registry.Test.insert(col='col')
-        assert test.col == 'col'
 
     def test_string_with_False(self):
         registry = self.init_registry(simple_column, ColumnType=String)
@@ -385,11 +360,6 @@ class TestColumns:
         assert test.col == 'col'
         assert registry.execute('Select col from test').fetchone()[0] != 'col'
 
-    def test_text(self):
-        registry = self.init_registry(simple_column, ColumnType=Text)
-        test = registry.Test.insert(col='col')
-        assert test.col == 'col'
-
     def test_text_with_False(self):
         registry = self.init_registry(simple_column, ColumnType=Text)
         test = registry.Test.insert(col=False)
@@ -415,35 +385,12 @@ class TestColumns:
         self.registry.expire(test, ['col'])
         assert test.col == ''
 
-    def test_date(self):
-        from datetime import date
-
-        now = date.today()
-        registry = self.init_registry(simple_column, ColumnType=Date)
-        test = registry.Test.insert(col=now)
-        assert test.col == now
-
-    def test_datetime(self):
-        import datetime
-        import time
-        import pytz
-
-        timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
-        test = registry.Test.insert(col=now)
-        assert test.col == now
-
     def test_datetime_none_value(self):
         registry = self.init_registry(simple_column, ColumnType=DateTime)
         test = registry.Test.insert(col=None)
         assert test.col is None
 
     def test_datetime_str_conversion_1(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -451,10 +398,6 @@ class TestColumns:
         assert test.col == now
 
     def test_datetime_str_conversion_2(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -462,10 +405,6 @@ class TestColumns:
         assert test.col == now
 
     def test_datetime_str_conversion_3(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -473,10 +412,6 @@ class TestColumns:
         assert test.col == now
 
     def test_datetime_str_conversion_4(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -484,10 +419,6 @@ class TestColumns:
         assert test.col == now.replace(microsecond=0)
 
     def test_datetime_by_property(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -502,10 +433,6 @@ class TestColumns:
         assert test.col is None
 
     def test_datetime_str_conversion_1_by_property(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -514,10 +441,6 @@ class TestColumns:
         assert test.col == now
 
     def test_datetime_str_conversion_2_by_property(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -526,10 +449,6 @@ class TestColumns:
         assert test.col == now
 
     def test_datetime_str_conversion_3_by_property(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -538,10 +457,6 @@ class TestColumns:
         assert test.col == now
 
     def test_datetime_str_conversion_4_by_property(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -550,10 +465,6 @@ class TestColumns:
         assert test.col == now.replace(microsecond=0)
 
     def test_datetime_by_query(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -618,10 +529,6 @@ class TestColumns:
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
     def test_datetime_by_query_filter(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -632,10 +539,6 @@ class TestColumns:
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
     def test_datetime_str_conversion_1_by_query_filter(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -647,10 +550,6 @@ class TestColumns:
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
     def test_datetime_str_conversion_2_by_query_filter(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -662,10 +561,6 @@ class TestColumns:
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
     def test_datetime_str_conversion_3_by_query_filter(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -783,14 +678,6 @@ class TestColumns:
         registry = self.init_registry(simple_column, ColumnType=Interval)
         test = registry.Test.insert(col=dt)
         assert test.col == dt
-
-    def test_time(self):
-        from datetime import time
-
-        now = time()
-        registry = self.init_registry(simple_column, ColumnType=Time)
-        test = registry.Test.insert(col=now)
-        assert test.col == now
 
     def test_large_binary(self):
         blob = urandom(10000)
@@ -1234,14 +1121,6 @@ class TestColumns:
         registry.flush()
         assert registry.execute('Select col from test').fetchone()[0] == ''
 
-    def test_email_at_insert(self):
-        registry = self.init_registry(simple_column, ColumnType=Email)
-        test = registry.Test.insert(col='John.Smith@foo.com')
-        assert test.col == 'john.smith@foo.com'
-        getted = registry.Test.query().filter_by(
-            col='John.Smith@foo.com').count()
-        assert getted == 1
-
     def test_email_at_setter(self):
         registry = self.init_registry(simple_column, ColumnType=Email)
         test = registry.Test.insert()
@@ -1249,18 +1128,6 @@ class TestColumns:
         assert test.col == 'john.smith@foo.com'
         assert registry.Test.query().filter_by(
             col='John.Smith@foo.com').count() == 1
-
-    @pytest.mark.skipif(not has_cryptography,
-                        reason="cryptography is not installed")
-    def test_email_with_encrypt_key(self):
-        registry = self.init_registry(simple_column, ColumnType=Email,
-                                      encrypt_key='secretkey')
-        test = registry.Test.insert(col='John.Smith@foo.com')
-        registry.session.commit()
-        assert test.col == 'john.smith@foo.com'
-        res = registry.execute('select col from test where id = %s' % test.id)
-        res = res.fetchall()[0][0]
-        assert res != test.col
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert(self):
