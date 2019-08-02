@@ -109,7 +109,7 @@ class TestSharedDataTestCaseException(unittest.TestCase):
         self.assertFalse(result.failures)
         self.assertFalse(result.errors)
 
-    @unittest.skipIf(sgdb_in(['MySQL', 'MariaDB']),
+    @unittest.skipIf(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                      "ShareDataTestCase doesn't work, issue #96")
     def test_setup_error(self):
         """Test rollback of test case and class with error in setUp"""
