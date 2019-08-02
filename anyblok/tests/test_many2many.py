@@ -455,7 +455,8 @@ class TestMany2Many:
 
         assert person.addresses == [address]
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #90')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #90')
     def test_declared_in_mixin_inherit_by_two_models(self):
         def add_in_registry():
             _minimum_many2many_by_mixin()
@@ -1494,12 +1495,8 @@ class TestMany2Many:
             @register(Model)
             class TestLink:
                 id = Integer(primary_key=True)
-                left = Many2One(
-                    model='Model.Test', nullable=False,
-                    foreign_key_options={'ondelete': 'cascade'})
-                right = Many2One(
-                    model='Model.Test', nullable=False,
-                    foreign_key_options={'ondelete': 'cascade'})
+                left = Many2One(model='Model.Test', nullable=False)
+                right = Many2One(model='Model.Test', nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default='bar')
 
@@ -1533,13 +1530,9 @@ class TestMany2Many:
             @register(Model)
             class TestLink:
                 left = Many2One(
-                    model='Model.Test', nullable=False,
-                    primary_key=True,
-                    foreign_key_options={'ondelete': 'cascade'})
+                    model='Model.Test', nullable=False, primary_key=True)
                 right = Many2One(
-                    model='Model.Test', nullable=False,
-                    primary_key=True,
-                    foreign_key_options={'ondelete': 'cascade'})
+                    model='Model.Test', nullable=False, primary_key=True)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default='bar')
 

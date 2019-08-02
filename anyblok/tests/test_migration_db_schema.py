@@ -563,7 +563,7 @@ class TestMigrationDbSchema:
         assert not report.log_has(
             "Drop constraint anyblok_uq_test__other on test_db_schema.test")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_detect_add_check_constraint(self, registry):
         with cnx(registry) as conn:
@@ -585,7 +585,7 @@ class TestMigrationDbSchema:
             "Add check constraint anyblok_ck_testcheck__test "
             "on test_db_schema.testcheck")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_anyblok_constraint(self, registry):
         with cnx(registry) as conn:

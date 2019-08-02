@@ -875,7 +875,8 @@ class TestColumns:
         t = registry.Test.insert()
         assert t.col is None
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #90')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #90')
     def test_selection_change_by_query(self):
         SELECTIONS = [
             ('admin', 'Admin'),
@@ -1346,7 +1347,8 @@ class TestColumns:
             registry.Test.insert(col='WG')
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #90')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #90')
     def test_pycoundtry_query_insert_by_wrong_query(self):
         registry = self.init_registry(simple_column, ColumnType=Country)
         with pytest.raises(Exception):
