@@ -14,10 +14,8 @@ from anyblok.blok import BlokManager
 from anyblok.config import Configuration
 from anyblok.environment import EnvironmentManager
 from anyblok.registry import RegistryManager
-from copy import copy
-import sqlalchemy
-from sqlalchemy_utils.functions import database_exists, create_database, orm
-import os
+from sqlalchemy_utils.functions import (
+    drop_database, database_exists, create_database)
 
 logger = logging.getLogger(__name__)
 
@@ -59,26 +57,6 @@ def init_registry_with_bloks(bloks, function, **kwargs):
 
 def init_registry(function, **kwargs):
     return init_registry_with_bloks([], function, **kwargs)
-
-
-def drop_database(url):
-    url = copy(sqlalchemy.engine.url.make_url(url))
-    database = url.database
-    if url.drivername.startswith('postgres'):
-        url.database = 'postgres'
-    elif not url.drivername.startswith('sqlite'):
-        url.database = None
-
-    engine = sqlalchemy.create_engine(url)
-    if engine.dialect.name == 'sqlite' and url.database != ':memory:':
-        os.remove(url.database)
-    else:
-        text = 'DROP DATABASE {0}'.format(orm.quote(engine, database))
-        cnx = engine.connect()
-        cnx.execute("ROLLBACK")
-        cnx.execute(text)
-        cnx.execute("commit")
-        cnx.close()
 
 
 @pytest.fixture(scope="session")
