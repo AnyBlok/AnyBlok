@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import Blok
+from anyblok.common import sgdb_in
 
 
 class TestBlok(Blok):
@@ -24,17 +25,26 @@ class TestBlok(Blok):
         reload(test)
 
     def is_table_exist(self):
-        drivername = self.registry.engine.url.drivername
-        if drivername.startswith('postgres'):
+        engine = self.registry.engine
+        if sgdb_in(engine, ['PostgreSQL']):
             return bool(self.registry.execute("""
                 select count(*)
                 from pg_catalog.pg_tables
                 where tablename = 'test';
             """).fetchone()[0])
-        elif drivername.startswith('mysql'):
+        elif sgdb_in(engine, ['MySQL']):
             return bool(self.registry.execute("""
                 show tables like 'test';
             """).fetchall())
+        elif sgdb_in(engine, ['MsSQL']):
+            query = """
+                SELECT count(*)
+                FROM INFORMATION_SCHEMA.TABLES
+                WHERE TABLE_TYPE = 'BASE TABLE'
+                      AND TABLE_CATALOG='%s'
+                      AND TABLE_NAME='test'
+            """ % self.registry.db_name
+            return bool(self.registry.execute(query).fetchall()[0][0])
 
     def pre_migration(self, latest_version):
         self.__class__.table_exist_before_automigration = self.is_table_exist()
