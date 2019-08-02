@@ -127,7 +127,7 @@ class TestMigrationDbSchema:
         registry.migration.schema('other_schema')
         registry.migration.schema('other_schema').drop()
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't create empty table")
     def test_add_table_from_schema(self, registry):
         schema = registry.migration.schema('test_db_schema')
@@ -135,7 +135,7 @@ class TestMigrationDbSchema:
         table = schema.table('test2')
         assert table.schema == 'test_db_schema'
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't create empty table")
     def test_add_table(self, registry):
         registry.migration.table(schema='test_db_schema').add('test2')
@@ -225,7 +225,7 @@ class TestMigrationDbSchema:
         t.unique(name='test_unique_constraint').add(t.column('other'))
         t.unique(name='test_unique_constraint').drop()
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't drop check constraint issue #93")
     def test_constraint_check(self, registry):
         t = registry.migration.table('test', schema='test_db_schema')
@@ -435,6 +435,8 @@ class TestMigrationDbSchema:
             "Add Foreign keys on (testfk.other) => "
             "(test_db_schema.testfktarget.integer)")
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not change fk")
     def test_detect_foreign_key_options_changed(self, registry):
         with cnx(registry) as conn:
             registry.TestFK2.__table__.drop(bind=conn)

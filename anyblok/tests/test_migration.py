@@ -144,7 +144,7 @@ def registry(request, clean_db, bloks_loaded):
 
 class TestMigration:
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't create empty table")
     def test_add_table(self, registry):
         registry.migration.table().add('test2')
@@ -171,6 +171,8 @@ class TestMigration:
         t.column().add(Column('new_column', Integer, nullable=False))
         t.column('new_column')
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="Not rollback to savepoint")
     def test_add_not_null_column_in_filled_table(self, registry):
         self.fill_test_table(registry)
         t = registry.migration.table('test')
@@ -196,6 +198,8 @@ class TestMigration:
             "select count(*) from test where new_column is null")][0][0]
         assert res == 0
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="Can't change server default")
     def test_add_not_null_column_in_filled_table_with_default_value(
         self, registry
     ):
@@ -205,6 +209,8 @@ class TestMigration:
                        server_default="1"))
         t.column('new_column')
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="Not rollback to savepoint")
     def test_add_unique_constraint_on_good_table(self, registry):
         self.fill_test_table(registry)
         t = registry.migration.table('test')
@@ -213,6 +219,7 @@ class TestMigration:
         with pytest.raises(IntegrityError):
             registry.Test.insert(other='One entry')
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']), reason="#121")
     def test_add_unique_constraint_on_not_unique_column(self, registry):
         Test = registry.Test
         vals = [{'other': 'test'} for x in range(10)]
@@ -252,6 +259,8 @@ class TestMigration:
         c = t.column('other').alter(nullable=False)
         assert not c.nullable
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="Not rollback to savepoint")
     def test_alter_column_nullable_in_filled_table(self, registry):
         t = registry.migration.table('test')
         t.column().add(Column('new_column', Integer))
@@ -260,6 +269,8 @@ class TestMigration:
         # the column doesn't change of nullable to not lock the migration
         assert c.nullable
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="Can't change server default")
     def test_alter_column_default(self, registry):
         t = registry.migration.table('test')
         c = t.column('other').alter(server_default='test')
@@ -295,7 +306,7 @@ class TestMigration:
         t.unique(name='test_unique_constraint').add(t.column('other'))
         t.unique(name='test_unique_constraint').drop()
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't drop check constraint issue #93")
     def test_constraint_check(self, registry):
         t = registry.migration.table('test')
@@ -623,6 +634,8 @@ class TestMigration:
         assert not(report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)"))
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not change fk")
     def test_detect_foreign_key_options_changed(self, registry):
         with cnx(registry) as conn:
             registry.TestFK2.__table__.drop(bind=conn)
@@ -751,6 +764,8 @@ class TestMigration:
         assert not(report.log_has(
             "Drop Foreign keys on test.other2 => system_blok.name"))
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not add unique #121")
     def test_detect_add_unique_constraint(self, registry):
         with cnx(registry) as conn:
             registry.TestUnique.__table__.drop(bind=conn)
@@ -768,6 +783,8 @@ class TestMigration:
         assert not(report.log_has(
             "Add unique constraint on testunique (other)"))
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not add unique #121")
     def test_detect_add_column_with_unique_constraint(self, registry):
         with cnx(registry) as conn:
             registry.TestUnique.__table__.drop(bind=conn)
@@ -786,6 +803,8 @@ class TestMigration:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="MySQL transform unique constraint on index")
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not drop unique #121")
     def test_detect_drop_unique_constraint(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
@@ -804,6 +823,8 @@ class TestMigration:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="MySQL transform unique constraint on index")
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not drop unique #121")
     def test_detect_drop_unique_anyblok_constraint(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
@@ -823,6 +844,8 @@ class TestMigration:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="MySQL transform unique constraint on index")
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not drop unique #121")
     def test_detect_drop_unique_constraint_with_reinit_constraints(
         self, registry
     ):
@@ -845,6 +868,8 @@ class TestMigration:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="MySQL transform unique constraint on index")
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not drop unique #121")
     def test_detect_drop_unique_constraint_with_reinit_all(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
@@ -986,6 +1011,8 @@ class TestMigration:
         assert Test.query().count() == 10
         registry.migration.release_savepoint('test')
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="No error when rollback to released save point")
     def test_savepoint_without_rollback(self, registry):
         registry.migration.savepoint('test')
         registry.migration.release_savepoint('test')

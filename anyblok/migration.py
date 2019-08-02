@@ -664,6 +664,17 @@ class MigrationColumn:
         if not nullable:
             column.nullable = True
 
+        # check the table exist
+        table = (
+            "%s.%s" % (self.table.schema, self.table.name)
+            if self.table.schema
+            else self.table.name)
+
+        table_ = migration.metadata.tables[table]
+
+        if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
+            column.table = table_
+
         migration.operation.impl.add_column(self.table.name, column,
                                             schema=self.table.schema)
         self.apply_default_value(column)
@@ -672,12 +683,6 @@ class MigrationColumn:
             c = MigrationColumn(self.table, column.name)
             c.alter(nullable=False)
 
-        # check the table exist
-        table = (
-            "%s.%s" % (self.table.schema, self.table.name)
-            if self.table.schema
-            else self.table.name)
-        migration.metadata.tables[table]
         return MigrationColumn(self.table, column.name)
 
     def alter(self, **kwargs):
@@ -863,7 +868,7 @@ class MigrationConstraintUnique:
                                      """must define one or more columns""")
 
         columns_name = [x.name for x in columns]
-        savepoint = 'add_unique_constraint_%s' % (self.name or '')
+        savepoint = 'uq_%s' % (self.name or '')
         try:
             self.table.migration.savepoint(savepoint)
             self.table.migration.operation.create_unique_constraint(
@@ -918,6 +923,11 @@ class MigrationConstraintPrimaryKey:
         if not columns:
             raise MigrationException("""To add a primary key constraint """
                                      """you must define one or more columns""")
+
+        if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
+            for column in columns:
+                if column.nullable:
+                    column.alter(nullable=False)
 
         columns_name = [x.name for x in columns]
         self.table.migration.operation.create_primary_key(
