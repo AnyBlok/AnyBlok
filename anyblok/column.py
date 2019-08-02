@@ -47,6 +47,11 @@ except ImportError:
 logger = getLogger(__name__)
 
 
+class MsSQLEncryptedType(EncryptedType):
+    """In MsSQL the column must be a Text"""
+    impl = types.Text
+
+
 def wrap_default(registry, namespace, default_val):
 
     def wrapper():
@@ -199,7 +204,11 @@ class Column(Field):
         sqlalchemy_type = self.native_type(registry)
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
-            sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
+            if sgdb_in(registry.engine, ['MsSQL']):
+                sqlalchemy_type = MsSQLEncryptedType(
+                    sqlalchemy_type, encrypt_key)
+            else:
+                sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
 
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
 
@@ -530,6 +539,17 @@ class String(Column):
         return res
 
 
+class MsSQLPasswordType(PasswordType):
+    impl = types.VARCHAR(1024)
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'mssql':
+            # Use a BLOB type for sqlite
+            return dialect.type_descriptor(types.VARCHAR(self.length))
+
+        return super(MsSQLPasswordType, self).load_dialect_impl(dialect)
+
+
 class Password(Column):
     """ String column
 
@@ -563,7 +583,7 @@ class Password(Column):
             ==> 0
     """
     def __init__(self, *args, **kwargs):
-        size = kwargs.pop('size', 64)
+        self.size = size = kwargs.pop('size', 64)
         crypt_context = kwargs.pop('crypt_context', {})
         self.crypt_context = crypt_context
         kwargs.pop('type_', None)
@@ -579,8 +599,16 @@ class Password(Column):
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
 
+    def native_type(self, registry):
+        """ Return the native SqlAlchemy type """
+        if sgdb_in(registry.engine, ['MsSQL']):
+            return MsSQLPasswordType(max_length=self.size, **self.crypt_context)
+
+        return self.sqlalchemy_type
+
     def autodoc_get_properties(self):
         res = super(Password, self).autodoc_get_properties()
+        res['size'] = self.size
         res['Crypt context'] = self.crypt_context
         return res
 
@@ -800,13 +828,6 @@ class Selection(Column):
             return [CheckConstraint(constraint, name=name)]
 
         return []
-
-
-"""
-    Added *process_result_value* at the class *JSON*, because
-    this method is necessary for encrypt the column
-"""
-types.JSON.process_result_value = lambda self, value, dialect: value
 
 
 class Json(Column):

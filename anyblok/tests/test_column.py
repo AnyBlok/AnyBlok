@@ -567,12 +567,9 @@ class TestColumns:
         registry.Test.query().update(dict(col=None))
         assert test.col is None
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_1_by_query(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -582,12 +579,9 @@ class TestColumns:
         registry.expire(test, ['col'])
         assert test.col == now
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_2_by_query(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -597,12 +591,9 @@ class TestColumns:
         registry.expire(test, ['col'])
         assert test.col == now
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_3_by_query(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -612,12 +603,9 @@ class TestColumns:
         registry.expire(test, ['col'])
         assert test.col == now
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_4_by_query(self):
-        import datetime
-        import time
-        import pytz
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=DateTime)
@@ -627,7 +615,8 @@ class TestColumns:
         registry.expire(test, ['col'])
         assert test.col == now.replace(microsecond=0)
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_by_query_filter(self):
         import datetime
         import time
@@ -640,7 +629,8 @@ class TestColumns:
         Test = registry.Test
         assert Test.query().filter(Test.col == now).one() is test
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_1_by_query_filter(self):
         import datetime
         import time
@@ -654,7 +644,8 @@ class TestColumns:
         assert Test.query().filter(
             Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%z')).one() is test
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_2_by_query_filter(self):
         import datetime
         import time
@@ -668,7 +659,8 @@ class TestColumns:
         assert Test.query().filter(
             Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')).one() is test
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_3_by_query_filter(self):
         import datetime
         import time
