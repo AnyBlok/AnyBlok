@@ -1031,13 +1031,6 @@ class TestColumns:
         assert test.col is uuid
 
     @pytest.mark.skipif(not has_furl, reason="furl is not installed")
-    def test_URL(self):
-        f = furl.furl('http://doc.anyblok.org')
-        registry = self.init_registry(simple_column, ColumnType=URL)
-        test = registry.Test.insert(col=f)
-        assert test.col == f
-
-    @pytest.mark.skipif(not has_furl, reason="furl is not installed")
     def test_setter_URL(self):
         f = 'http://doc.anyblok.org'
         registry = self.init_registry(simple_column, ColumnType=URL)
@@ -1284,33 +1277,18 @@ class TestColumnsAutoDoc:
         col = column(**kwargs)
         col.autodoc()
 
-    def test_integer(self):
-        self.call_autodoc(Integer)
+    def test_autodoc(self, column_definition):
+        column, _, kwargs = column_definition
+        self.call_autodoc(column, **kwargs)
 
-    def test_big_integer(self):
-        self.call_autodoc(BigInteger)
-
-    def test_Float(self):
-        self.call_autodoc(Float)
+    @pytest.mark.skipif(not has_cryptography,
+                        reason="cryptography is not installed")
+    def test_autodoc_with_encrypt_key(self, column_definition):
+        column, _, kwargs = column_definition
+        self.call_autodoc(column, encrypt_key='secretkey', **kwargs)
 
     def test_decimal(self):
         self.call_autodoc(Decimal)
-
-    def test_boolean(self):
-        self.call_autodoc(Boolean)
-
-    def test_string(self):
-        self.call_autodoc(String)
-
-    @pytest.mark.skipif(not has_cryptography,
-                        reason="cryptography is not installed")
-    def test_string_with_encrypt_key(self):
-        self.call_autodoc(String, encrypt_key='secretkey')
-
-    @pytest.mark.skipif(not has_cryptography,
-                        reason="cryptography is not installed")
-    def test_datetime_with_encrypt_key(self):
-        self.call_autodoc(DateTime, encrypt_key='secretkey')
 
     def test_string_with_size(self):
         self.call_autodoc(String, size=100)
@@ -1319,17 +1297,7 @@ class TestColumnsAutoDoc:
     def test_password(self):
         self.call_autodoc(Password, crypt_context={'schemes': ['md5_crypt']})
 
-    def test_text(self):
-        self.call_autodoc(Text)
-
-    def test_date(self):
-        self.call_autodoc(Date)
-
-    def test_datetime(self):
-        self.call_autodoc(DateTime)
-
     def test_datetime_with_default_timezone_tz(self):
-        import pytz
         timezone = pytz.timezone('Asia/Tokyo')
         self.call_autodoc(DateTime, default_timezone=timezone)
 
@@ -1339,18 +1307,8 @@ class TestColumnsAutoDoc:
     def test_interval(self):
         self.call_autodoc(Interval)
 
-    def test_time(self):
-        self.call_autodoc(Time)
-
     def test_large_binary(self):
         self.call_autodoc(LargeBinary)
-
-    def test_selection(self):
-        SELECTIONS = [
-            ('admin', 'Admin'),
-            ('regular-user', 'Regular user')
-        ]
-        self.call_autodoc(Selection, selections=SELECTIONS)
 
     def test_json(self):
         self.call_autodoc(Json)
@@ -1368,31 +1326,8 @@ class TestColumnsAutoDoc:
     def test_sequence_with_primary_key(self):
         self.call_autodoc(Sequence, primary_key=True)
 
-    @pytest.mark.skipif(not has_colour, reason="colour is not installed")
-    def test_color(self):
-        self.call_autodoc(Color)
-
-    def test_uuid_binary_1(self):
-        self.call_autodoc(UUID)
-
     def test_uuid_char32(self):
         self.call_autodoc(UUID, binary=False)
-
-    @pytest.mark.skipif(not has_furl, reason="furl is not installed")
-    def test_URL(self):
-        self.call_autodoc(URL)
-
-    @pytest.mark.skipif(not has_phonenumbers,
-                        reason="phonenumbers is not installed")
-    def test_phonenumbers_at_insert(self):
-        self.call_autodoc(PhoneNumber)
-
-    def test_email_at_insert(self):
-        self.call_autodoc(Email)
-
-    @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
-    def test_pycoundtry_at_insert(self):
-        self.call_autodoc(Country)
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_alpha_3(self):
