@@ -57,7 +57,11 @@ with open(
 
 
 extra_dependencies = {
-    'nose': ['nose']
+    'nose': ['nose'],
+    'postgres': ['psycopg2-binary'],
+    'mysql': ['mysqlclient'],
+    'mariadb': ['mysqlclient'],
+    'mssql': ['pymssql'],
 }
 
 
