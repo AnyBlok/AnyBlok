@@ -4,7 +4,7 @@ from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from contextlib import contextmanager
-from sqlalchemy import func, select, update, join, and_
+from sqlalchemy import func, select, update, join, and_, text
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.dialects.mysql.types import TINYINT
@@ -709,15 +709,26 @@ class MigrationColumn:
         """
         vals = {}
         name = self.name
-        vals.update({
-            'existing_type': self.type if 'type_' not in kwargs else None,
-            'existing_server_default': (
+        if 'existing_server_default' in kwargs:
+            esd = kwargs['existing_server_default']
+            if esd:
+                vals['existing_server_default'] = esd.arg
+            else:
+                vals['existing_server_default'] = esd
+        else:
+            vals['existing_server_default'] = (
                 self.server_default
                 if 'server_default' not in kwargs
-                else None),
-            'existing_autoincrement': (
+                else None)
+        vals.update({
+            'existing_type': kwargs.get(
+                'existing_type',
+                self.type if 'type_' not in kwargs else None),
+            'existing_autoincrement': kwargs.get(
+                'existing_autoincrement',
                 self.autoincrement if 'autoincrement' not in kwargs else None),
-            'existing_comment': (
+            'existing_comment': kwargs.get(
+                'existing_comment',
                 self.comment if 'comment' not in kwargs else None)
         })
 
@@ -779,7 +790,7 @@ class MigrationColumn:
                 if not isinstance(sdefault, str):
                     return sdefault.arg
                 else:
-                    return eval(sdefault, {}, {})
+                    return text(sdefault)
 
         return sdefault
 
