@@ -43,6 +43,7 @@ COLUMNS = [
     (Float, 1., {}),
     (Integer, 1, {}),
     (Email, 'jhon@doe.com', {}),
+    (Interval, datetime.timedelta(days=6), {}),
     (Decimal, D('1'), {}),
     (Json, {'name': 'test'}, {}),
 ]
@@ -98,7 +99,6 @@ Model = Declarations.Model
 register = Declarations.register
 
 
-# FIXME (Interval, datetime.timedelta(days=6), {}),
 # FIXME (LargeBinary, urandom(100), {}),
 @pytest.fixture(params=COLUMNS)
 def column_definition(request, bloks_loaded):

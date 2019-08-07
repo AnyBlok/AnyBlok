@@ -20,7 +20,7 @@ from sqlalchemy_utils.types.url import URLType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.scalar_coercible import ScalarCoercible
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from dateutil.parser import parse
 from inspect import ismethod
 from anyblok.config import Configuration
@@ -196,7 +196,7 @@ class Column(Field):
             else:
                 kwargs['default'] = self.default_val
 
-        sqlalchemy_type = self.sqlalchemy_type
+        sqlalchemy_type = self.native_type()
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
             sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
@@ -505,6 +505,26 @@ class Interval(Column):
 
     """
     sqlalchemy_type = types.Interval
+
+    def native_type(self):
+        if self.encrypt_key:
+            return types.VARCHAR(1024)
+
+        return self.sqlalchemy_type
+
+    def setter_format_value(self, value):
+        if self.encrypt_key:
+            value = dumps({
+                x: getattr(value, x)
+                for x in ['days', 'seconds', 'microseconds']})
+
+        return value
+
+    def getter_format_value(self, value):
+        if self.encrypt_key:
+            value = timedelta(**loads(value))
+
+        return value
 
 
 class StringType(types.TypeDecorator):
