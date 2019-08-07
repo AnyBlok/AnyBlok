@@ -731,10 +731,10 @@ class MigrationColumn:
                 'existing_comment',
                 self.comment if 'comment' not in kwargs else None)
         })
-
-        for k in ('autoincrement', 'server_default', 'type_'):
-            if k in kwargs:
-                vals[k] = kwargs[k]
+        vals.update({
+            k: kwargs[k]
+            for k in ('autoincrement', 'server_default', 'type_')
+            if k in kwargs})
 
         if 'name' in kwargs:
             vals['new_column_name'] = kwargs['name']
