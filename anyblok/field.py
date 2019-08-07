@@ -165,7 +165,7 @@ class Field:
             label = fieldname.replace('_', ' ')
             self.label = label.capitalize()
 
-    def native_type(self):
+    def native_type(self, registry):
         """ Return the native SqlAlchemy type
 
         :exception: FieldException
@@ -176,7 +176,7 @@ class Field:
         """ Return False, it is the default value """
         return False
 
-    def must_be_duplicate_before_added(self):
+    def must_be_copied_before_declaration(self):
         """ Return False, it is the default value """
         return False
 

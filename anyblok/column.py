@@ -3,10 +3,12 @@
 #    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from base64 import b64encode, b64decode
 from .field import Field, FieldException
 from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
@@ -19,10 +21,13 @@ from sqlalchemy_utils.types.url import URLType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.scalar_coercible import ScalarCoercible
-from datetime import datetime, date
+from sqlalchemy_utils import JSONType
+from datetime import datetime, date, timedelta
 from dateutil.parser import parse
 from inspect import ismethod
 from anyblok.config import Configuration
+from .common import sgdb_in
+from json import dumps, loads
 import time
 import pytz
 import decimal
@@ -46,8 +51,18 @@ logger = getLogger(__name__)
 
 
 def wrap_default(registry, namespace, default_val):
+    """Return default wrapper
 
+    :param registry: the current registry
+    :param namespace: the namespace of the model
+    :param default_val:
+    :return: default wrapper
+    """
     def wrapper():
+        """Return wrapper
+
+        :return: default val
+        """
         Model = registry.get(namespace)
         if hasattr(Model, default_val):
             func = getattr(Model, default_val)
@@ -57,19 +72,19 @@ def wrap_default(registry, namespace, default_val):
                         return func()
                     else:
                         logger.warning(
-                            "On a Model %r the attribute %r is "
-                            "declared as a default value, a field "
-                            "with the same name exist" % (namespace,
-                                                          default_val))
+                            "The attribute %r is already declared as a default "
+                            "value on the Model %r, a field with the same name "
+                            "already exists" % (default_val, namespace))
                 else:
-                    logger.warning("On a Model %r the attribute %r is "
-                                   "declared as a default value, a column "
-                                   "with the same name exist" % (namespace,
-                                                                 default_val))
+                    logger.warning(
+                        "The attribute %r is already declared as a default "
+                        "value on the Model %r, a column with the same name "
+                        "already exists" % (default_val, namespace))
             else:
-                logger.warning("On a Model %r the attribute %r is declared as "
-                               "a default value, a instance method with the "
-                               "same name exist" % (namespace, default_val))
+                logger.warning(
+                    "The attribute %r is already declared as a default "
+                    "value on the Model %r, an instance method with the same "
+                    "name already exists" % (default_val, namespace))
 
         return default_val
 
@@ -82,6 +97,14 @@ class ColumnDefaultValue:
         self.callable = callable
 
     def get_default_callable(self, registry, namespace, fieldname, properties):
+        """Get default callable
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
+        :return: default callable
+        """
         return self.callable(registry, namespace, fieldname, properties)
 
 
@@ -90,9 +113,9 @@ class NoDefaultValue:
 
 
 class Column(Field):
-    """ Column class
+    """Column class
 
-    This class can't be instanciated
+    This class can't be instantiated
     """
 
     use_hybrid_property = True
@@ -101,7 +124,7 @@ class Column(Field):
     type = None
 
     def __init__(self, *args, **kwargs):
-        """ Initialize the column
+        """Initialize the column
 
         :param label: label of this field
         :type label: str
@@ -131,6 +154,10 @@ class Column(Field):
         super(Column, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """Return properties list for autodoc
+
+        :return: autodoc properties
+        """
         res = super(Column, self).autodoc_get_properties()
         res['foreign_key'] = self.foreign_key
         res['DB column name'] = self.db_column_name
@@ -145,11 +172,21 @@ class Column(Field):
         ('is crypted', False),
     ))
 
-    def native_type(cls):
-        """ Return the native SqlAlchemy type """
-        return cls.sqlalchemy_type
+    def native_type(self, registry):
+        """Return the native SqlAlchemy type
+
+        :rtype: sqlalchemy native type
+        """
+        return self.sqlalchemy_type
 
     def format_foreign_key(self, registry, args, kwargs):
+        """Format a foreign key
+
+        :param registry: the current registry
+        :param args:
+        :param kwargs:
+        :return:
+        """
         if self.foreign_key:
             args = args + (self.foreign_key.get_fk(registry),)
             kwargs['info'].update({
@@ -161,7 +198,7 @@ class Column(Field):
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
-        """ Return the instance of the real field
+        """Return the instance of the real field
 
         :param registry: current registry
         :param namespace: name of the model
@@ -194,7 +231,7 @@ class Column(Field):
             else:
                 kwargs['default'] = self.default_val
 
-        sqlalchemy_type = self.sqlalchemy_type
+        sqlalchemy_type = self.native_type(registry)
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
             sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
@@ -202,15 +239,25 @@ class Column(Field):
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
 
     def format_encrypt_key(self, registry, namespace):
+        """Format and return the encyption key
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :return: encrypt key
+        """
         encrypt_key = self.encrypt_key
         if encrypt_key is True:
             encrypt_key = Configuration.get('default_encrypt_key')
 
         if not encrypt_key:
-            raise FieldException("No encrypt_key define in the "
+            raise FieldException("No encrypt_key defined in the "
                                  "configuration")
 
         def wrapper():
+            """Return encrypt_key wrapper
+
+            :return:
+            """
             Model = registry.get(namespace)
             if hasattr(Model, encrypt_key):
                 func = getattr(Model, encrypt_key)
@@ -224,7 +271,7 @@ class Column(Field):
         return wrapper
 
     def must_be_declared_as_attr(self):
-        """ Return True if the column have a foreign key to a remote column """
+        """Return True if the column have a foreign key to a remote column """
         if self.foreign_key is not None:
             return True
 
@@ -232,7 +279,7 @@ class Column(Field):
 
 
 class Integer(Column):
-    """ Integer column
+    """Integer column
 
     ::
 
@@ -257,7 +304,7 @@ class Integer(Column):
 
 
 class BigInteger(Column):
-    """ Big integer column
+    """Big integer column
 
     ::
 
@@ -275,7 +322,7 @@ class BigInteger(Column):
 
 
 class Boolean(Column):
-    """ Boolean column
+    """Boolean column
 
     ::
 
@@ -293,7 +340,7 @@ class Boolean(Column):
 
 
 class Float(Column):
-    """ Float column
+    """Float column
 
     ::
 
@@ -310,8 +357,15 @@ class Float(Column):
     sqlalchemy_type = types.Float
 
 
+"""
+    Added *process_result_value* at the class *DECIMAL*, because
+    this method is necessary for encrypt the column
+"""
+types.DECIMAL.process_result_value = lambda self, value, dialect: value
+
+
 class Decimal(Column):
-    """ Decimal column
+    """Decimal column
 
     ::
 
@@ -329,15 +383,31 @@ class Decimal(Column):
     sqlalchemy_type = types.DECIMAL
 
     def setter_format_value(self, value):
+        """Format the given value to decimal if needed
+
+        :param value:
+        :return: decimal value
+        """
         if value is not None:
-            if not isinstance(value, decimal.Decimal):
+            if self.encrypt_key:
+                value = str(value)
+            elif not isinstance(value, decimal.Decimal):
                 value = decimal.Decimal(value)
+
+        return value
+
+    def getter_format_value(self, value):
+        if value is None:
+            return None
+
+        if self.encrypt_key:
+            value = decimal.Decimal(value)
 
         return value
 
 
 class Date(Column):
-    """ Date column
+    """Date column
 
     ::
 
@@ -356,6 +426,11 @@ class Date(Column):
 
 
 def convert_string_to_datetime(value):
+    """Convert a given value to datetime
+
+    :param value:
+    :return: datetime value
+    """
     if value is None:
         return None
     elif isinstance(value, datetime):
@@ -369,6 +444,12 @@ def convert_string_to_datetime(value):
 
 
 def add_timezone_on_datetime(dt, default_timezone):
+    """Convert a datetime considering the default timezone
+
+    :param dt:
+    :param default_timezone:
+    :return:
+    """
     if dt is not None:
         if dt.tzinfo is None:
             dt = default_timezone.localize(dt)
@@ -404,7 +485,7 @@ class DateTimeType(types.TypeDecorator):
 
 
 class DateTime(Column):
-    """ DateTime column
+    """DateTime column
 
     ::
 
@@ -437,10 +518,19 @@ class DateTime(Column):
         super(DateTime, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """Return converted and formatted value
+
+        :param value:
+        :return:
+        """
         value = convert_string_to_datetime(value)
         return add_timezone_on_datetime(value, self.default_timezone)
 
     def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
         res = super(Column, self).autodoc_get_properties()
         res['is auto updated'] = self.auto_update
         if self.default_timezone:
@@ -449,8 +539,33 @@ class DateTime(Column):
         return res
 
 
+class TimeStamp(DateTime):
+    """ TimeStamp column
+
+    ::
+
+        from datetime import datetime
+        from anyblok.declarations import Declarations
+        from anyblok.column import DateTime
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = TimeStamp(default=datetime.now)
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(TimeStamp, self).__init__(*args, **kwargs)
+        self.sqlalchemy_type = types.TIMESTAMP(timezone=True)
+
+    def getter_format_value(self, value):
+        return convert_string_to_datetime(value)
+
+
 class Time(Column):
-    """ Time column
+    """Time column
 
     ::
 
@@ -469,7 +584,7 @@ class Time(Column):
 
 
 class Interval(Column):
-    """ Datetime interval column
+    """Datetime interval column
 
     ::
 
@@ -485,6 +600,26 @@ class Interval(Column):
 
     """
     sqlalchemy_type = types.Interval
+
+    def native_type(self, registry):
+        if self.encrypt_key:
+            return types.VARCHAR(1024)
+
+        return self.sqlalchemy_type
+
+    def setter_format_value(self, value):
+        if self.encrypt_key:
+            value = dumps({
+                x: getattr(value, x)
+                for x in ['days', 'seconds', 'microseconds']})
+
+        return value
+
+    def getter_format_value(self, value):
+        if self.encrypt_key:
+            value = timedelta(**loads(value))
+
+        return value
 
 
 class StringType(types.TypeDecorator):
@@ -502,7 +637,7 @@ class StringType(types.TypeDecorator):
 
 
 class String(Column):
-    """ String column
+    """String column
 
     ::
 
@@ -523,13 +658,17 @@ class String(Column):
         super(String, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
         res = super(String, self).autodoc_get_properties()
         res['size'] = self.size
         return res
 
 
 class Password(Column):
-    """ String column
+    """String column
 
     ::
 
@@ -561,7 +700,7 @@ class Password(Column):
             ==> 0
     """
     def __init__(self, *args, **kwargs):
-        size = kwargs.pop('size', 64)
+        self.size = kwargs.pop('size', 64)
         crypt_context = kwargs.pop('crypt_context', {})
         self.crypt_context = crypt_context
         kwargs.pop('type_', None)
@@ -569,16 +708,27 @@ class Password(Column):
         if 'foreign_key' in kwargs:
             raise FieldException("Column Password can not have a foreign key")
 
-        self.sqlalchemy_type = PasswordType(max_length=size, **crypt_context)
+        self.sqlalchemy_type = PasswordType(
+            max_length=self.size, **crypt_context)
         super(Password, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """Return formatted value
+
+        :param value:
+        :return:
+        """
         value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
 
     def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
         res = super(Password, self).autodoc_get_properties()
+        res['size'] = self.size
         res['Crypt context'] = self.crypt_context
         return res
 
@@ -598,7 +748,7 @@ class TextType(types.TypeDecorator):
 
 
 class Text(Column):
-    """ Text column
+    """Text column
 
     ::
 
@@ -616,12 +766,16 @@ class Text(Column):
 
 
 class StrSelection(str):
-    """ Class representing the data of one column Selection """
+    """Class representing the data of one column Selection """
     selections = {}
     registry = None
     namespace = None
 
     def get_selections(self):
+        """Return a dict of selections
+
+        :return: selections dict
+        """
         if isinstance(self.selections, dict):
             return self.selections
         if isinstance(self.selections, str):
@@ -629,17 +783,25 @@ class StrSelection(str):
             return dict(getattr(m, self.selections)())
 
     def validate(self):
+        """Validate if the key is in the selections
+
+        :return: True or False
+        """
         a = super(StrSelection, self).__str__()
         return a in self.get_selections().keys()
 
     @property
     def label(self):
+        """Return the label corresponding to the selection key
+
+        :return:
+        """
         a = super(StrSelection, self).__str__()
         return self.get_selections()[a]
 
 
 class SelectionType(types.TypeDecorator):
-    """ Generic type for Column Selection """
+    """Generic type for Column Selection """
 
     impl = types.String
 
@@ -683,7 +845,7 @@ class SelectionType(types.TypeDecorator):
 
 
 class Selection(Column):
-    """ Selection column
+    """Selection column
 
     ::
 
@@ -712,18 +874,33 @@ class Selection(Column):
         super(Selection, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
         res = super(Selection, self).autodoc_get_properties()
         res['selections'] = self.selections
         res['size'] = self.size
         return res
 
     def getter_format_value(self, value):
+        """Return formatted value
+
+        :param value:
+        :return:
+        """
         if value is None:
             return None
 
         return self.sqlalchemy_type.python_type(value)
 
     def setter_format_value(self, value):
+        """Return value or raise exception if the given value is invalid
+
+        :param value:
+        :exception FieldException
+        :return:
+        """
         if value is not None:
             val = self.sqlalchemy_type.python_type(value)
             if not val.validate():
@@ -734,21 +911,36 @@ class Selection(Column):
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
+        """Return sqlalchmy mapping
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
+        :return: instance of the real field
+        """
         self.sqlalchemy_type = SelectionType(
             self.selections, self.size, registry=registry, namespace=namespace)
         return super(Selection, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
 
     def update_description(self, registry, model, res):
+        """Update model description
+
+        :param registry: the current registry
+        :param model:
+        :param res:
+        """
         super(Selection, self).update_description(registry, model, res)
         sqlalchemy_type = SelectionType(
             self.selections, self.size, registry=registry, namespace=model)
         values = sqlalchemy_type._StrSelection().get_selections()
         res['selections'] = [(k, v) for k, v in values.items()]
 
-    def must_be_duplicate_before_added(self):
-        """ Return True because the field selection in a mixin must be copied
-        else the selection method can be wrond
+    def must_be_copied_before_declaration(self):
+        """Return True if selections is an instance of str.
+        In the case of the field selection is a mixin, it must be copied or the
+        selection method can fail
         """
         if isinstance(self.selections, str):
             return True
@@ -756,13 +948,29 @@ class Selection(Column):
             return False
 
     def update_properties(self, registry, namespace, fieldname, properties):
+        """Update column properties
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
+        """
         super(Selection, self).update_properties(registry, namespace,
                                                  fieldname, properties)
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
 
     def update_table_args(self, Model):
-        """return check constraint to limit the value"""
+        """Return check constraints to limit the value
+
+        :param Model:
+        :return: list of checkConstraint
+        """
+        if self.encrypt_key:
+            # dont add constraint because the state is crypted and nobody
+            # can add new entry
+            return []
+
         selections = self.sqlalchemy_type.selections
         if isinstance(selections, dict):
             enum = selections.keys()
@@ -792,8 +1000,15 @@ class Selection(Column):
         return []
 
 
+"""
+    Added *process_result_value* at the class *JSON*, because
+    this method is necessary for encrypt the column
+"""
+types.JSON.process_result_value = lambda self, value, dialect: value
+
+
 class Json(Column):
-    """ JSON column
+    """JSON column
 
     ::
 
@@ -809,9 +1024,31 @@ class Json(Column):
     """
     sqlalchemy_type = types.JSON(none_as_null=True)
 
+    def native_type(self, registry):
+        """ Return the native SqlAlchemy type """
+        if sgdb_in(registry.engine, ['MariaDB']):
+            return JSONType
+
+        return self.sqlalchemy_type
+
+    def setter_format_value(self, value):
+        if self.encrypt_key:
+            value = dumps(value)
+
+        return value
+
+    def getter_format_value(self, value):
+        if value is None:
+            return None
+
+        if self.encrypt_key:
+            value = loads(value)
+
+        return value
+
 
 class LargeBinary(Column):
-    """ Large binary column
+    """Large binary column
 
     ::
 
@@ -831,9 +1068,27 @@ class LargeBinary(Column):
     """
     sqlalchemy_type = types.LargeBinary
 
+    def native_type(self, registry):
+        if self.encrypt_key:
+            return types.Text
+
+        return self.sqlalchemy_type
+
+    def setter_format_value(self, value):
+        if self.encrypt_key:
+            value = b64encode(value).decode('utf-8')
+
+        return value
+
+    def getter_format_value(self, value):
+        if self.encrypt_key:
+            value = b64decode(value.encode('utf-8'))
+
+        return value
+
 
 class Sequence(String):
-    """ Sequence column
+    """Sequence column
 
     ::
 
@@ -862,11 +1117,22 @@ class Sequence(String):
         super(Sequence, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
         res = super(Sequence, self).autodoc_get_properties()
         res['formater'] = self.formater
         return res
 
     def wrap_default(self, registry, namespace, fieldname, properties):
+        """Return default wrapper
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :return:
+        """
         if not hasattr(registry, '_need_sequence_to_create_if_not_exist'):
             registry._need_sequence_to_create_if_not_exist = []
         elif registry._need_sequence_to_create_if_not_exist is None:
@@ -877,6 +1143,10 @@ class Sequence(String):
             {'code': code, 'formater': self.formater})
 
         def default_value():
+            """Return next sequence value
+
+            :return:
+            """
             return registry.System.Sequence.nextvalBy(code=code)
 
         return default_value
@@ -884,7 +1154,7 @@ class Sequence(String):
 
 class Color(Column):
     """Color column.
-    `See coulour pakage <https://pypi.python.org/pypi/colour/>`_
+    `See colour package on pypi <https://pypi.python.org/pypi/colour/>`_
 
     ::
 
@@ -905,19 +1175,28 @@ class Color(Column):
         super(Color, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """Format the given value
+
+        :param value:
+        :return:
+        """
         if isinstance(value, str):
             value = self.sqlalchemy_type.python_type(value)
 
         return value
 
     def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
         res = super(Color, self).autodoc_get_properties()
         res['size'] = self.max_length
         return res
 
 
 class UUID(Column):
-    """ UUID column
+    """UUID column
 
     ::
 
@@ -943,6 +1222,10 @@ class UUID(Column):
         super(UUID, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
         res = super(UUID, self).autodoc_get_properties()
         res['binary'] = self.binary
         res['native'] = self.native
@@ -950,7 +1233,7 @@ class UUID(Column):
 
 
 class URL(Column):
-    """ URL column
+    """URL column
 
     ::
 
@@ -967,6 +1250,11 @@ class URL(Column):
     sqlalchemy_type = URLType
 
     def setter_format_value(self, value):
+        """Return formatted url value
+
+        :param value:
+        :return:
+        """
         from furl import furl
 
         if value is not None:
@@ -977,7 +1265,7 @@ class URL(Column):
 
 
 class PhoneNumber(Column):
-    """ PhoneNumber column
+    """PhoneNumber column
 
     ::
 
@@ -1004,12 +1292,21 @@ class PhoneNumber(Column):
         super(PhoneNumber, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """Return formatted phone number value
+
+        :param value:
+        :return:
+        """
         if value and isinstance(value, str):
             value = self.sqlalchemy_type.python_type(value, self.region)
 
         return value
 
     def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
         res = super(PhoneNumber, self).autodoc_get_properties()
         res['region'] = self.region
         res['max_length'] = self.max_length
@@ -1024,7 +1321,7 @@ EmailType.process_result_value = lambda self, value, dialect: value
 
 
 class Email(Column):
-    """ Email column
+    """Email column
 
     ::
 
@@ -1040,13 +1337,18 @@ class Email(Column):
     sqlalchemy_type = EmailType
 
     def setter_format_value(self, value):
+        """Return formatted email value
+
+        :param value:
+        :return:
+        """
         if value is not None:
             return value.lower()
         return value
 
 
 class CountryType(types.TypeDecorator, ScalarCoercible):
-    """ Generic type for Column Country """
+    """Generic type for Column Country """
 
     impl = types.Unicode(3)
     python_type = python_pycountry_type
@@ -1099,6 +1401,11 @@ class Country(Column):
         super(Country, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
+        """Return formatted country value
+
+        :param value:
+        :return:
+        """
         if value and not isinstance(value, self.sqlalchemy_type.python_type):
             value = pycountry.countries.get(
                 **{
@@ -1109,19 +1416,38 @@ class Country(Column):
         return value
 
     def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
         res = super(Country, self).autodoc_get_properties()
         res['mode'] = self.mode
         res['choices'] = self.choices
         return res
 
     def update_properties(self, registry, namespace, fieldname, properties):
+        """Update column properties
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
+        """
         super(Country, self).update_properties(registry, namespace,
                                                fieldname, properties)
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
 
     def update_table_args(self, Model):
-        """return check constraint to limit the value"""
+        """Return check constraints to limit the value
+
+        :return: list of checkConstraint
+        """
+        if self.encrypt_key:
+            # dont add constraint because the state is crypted and nobody
+            # can add new entry
+            return []
+          
         enum = [country.alpha_3 for country in pycountry.countries]
         constraint = """"%s" in ('%s')""" % (self.fieldname, "', '".join(enum))
         enum.sort()
