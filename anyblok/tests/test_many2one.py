@@ -251,32 +251,32 @@ def _auto_detect_type(ColumnType=None, **kwargs):
 
 
 params = [
-    (Integer, {}),
-    (BigInteger, {}),
-    (Float, {}),
-    (Decimal, {}),
-    (String, {}),
-    (Boolean, {}),
-    (Date, {}),
-    (Time, {}),
-    (Email, {}),
-    (UUID, {}),
-    (Color, {}),
-    (Country, {}),
-    (PhoneNumber, {}),
-    (Selection, {}),
+    Integer,
+    BigInteger,
+    Float,
+    Decimal,
+    String,
+    Boolean,
+    Date,
+    Time,
+    Email,
+    UUID,
+    Color,
+    Country,
+    PhoneNumber,
+    Selection,
 ]
 
-if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
-    params.append((URL, {}))
-    params.append((DateTime, {}))
+if not sgdb_in(['MySQL', 'MariaDB']):
+    params.append(DateTime)
+    params.append(URL)
 
 
 @pytest.fixture(scope="class", params=params)
 def registry_many2one_auto_detect(request, bloks_loaded):
     reset_db()
     registry = init_registry_with_bloks(
-        [], _auto_detect_type, ColumnType=request.param[0], **request.param[1])
+        [], _auto_detect_type, ColumnType=request.param)
     request.addfinalizer(registry.close)
     return registry
 
