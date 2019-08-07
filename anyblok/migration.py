@@ -305,19 +305,19 @@ class MigrationReport:
                 # Boolean are TINYINT in MySQL DataBase
                 return True
 
-        table = "%s.%s" % diff[1:2] if diff[1] else diff[2]
+        table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
         self.log_names.append("Modify column type %s.%s : %s => %s" % (
             table, diff[3], diff[5], diff[6]))
         return False
 
     def init_modify_nullable(self, diff):
-        table = "%s.%s" % diff[1:2] if diff[1] else diff[2]
+        table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
         self.log_names.append("Modify column nullable %s.%s : %s => %s" % (
             table, diff[3], diff[5], diff[6]))
         return False
 
     def init_modify_server_default(self, diff):
-        table = "%s.%s" % diff[1:2] if diff[1] else diff[2]
+        table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
         self.log_names.append("Modify column default %s.%s : %s => %s" % (
             table, diff[3], diff[5], diff[6]))
         return False
