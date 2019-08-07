@@ -161,11 +161,11 @@ params = [
     Country,
     PhoneNumber,
     Selection,
-    URL,
 ]
 
 if not sgdb_in(['MySQL', 'MariaDB']):
     params.append(DateTime)
+    params.append(URL)
 
 
 @pytest.fixture(scope="class", params=params)
