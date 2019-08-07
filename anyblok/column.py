@@ -21,10 +21,12 @@ from sqlalchemy_utils.types.url import URLType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.scalar_coercible import ScalarCoercible
+from sqlalchemy_utils import JSONType
 from datetime import datetime, date, timedelta
 from dateutil.parser import parse
 from inspect import ismethod
 from anyblok.config import Configuration
+from .common import sgdb_in
 from json import dumps, loads
 import time
 import pytz
@@ -148,9 +150,9 @@ class Column(Field):
         ('is crypted', False),
     ))
 
-    def native_type(cls):
+    def native_type(self, registry):
         """ Return the native SqlAlchemy type """
-        return cls.sqlalchemy_type
+        return self.sqlalchemy_type
 
     def format_foreign_key(self, registry, args, kwargs):
         if self.foreign_key:
@@ -197,7 +199,7 @@ class Column(Field):
             else:
                 kwargs['default'] = self.default_val
 
-        sqlalchemy_type = self.native_type()
+        sqlalchemy_type = self.native_type(registry)
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
             sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
@@ -507,7 +509,7 @@ class Interval(Column):
     """
     sqlalchemy_type = types.Interval
 
-    def native_type(self):
+    def native_type(self, registry):
         if self.encrypt_key:
             return types.VARCHAR(1024)
 
@@ -602,7 +604,7 @@ class Password(Column):
             ==> 0
     """
     def __init__(self, *args, **kwargs):
-        size = kwargs.pop('size', 64)
+        self.size = kwargs.pop('size', 64)
         crypt_context = kwargs.pop('crypt_context', {})
         self.crypt_context = crypt_context
         kwargs.pop('type_', None)
@@ -610,7 +612,8 @@ class Password(Column):
         if 'foreign_key' in kwargs:
             raise FieldException("Column Password can not have a foreign key")
 
-        self.sqlalchemy_type = PasswordType(max_length=size, **crypt_context)
+        self.sqlalchemy_type = PasswordType(
+            max_length=self.size, **crypt_context)
         super(Password, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
@@ -620,6 +623,7 @@ class Password(Column):
 
     def autodoc_get_properties(self):
         res = super(Password, self).autodoc_get_properties()
+        res['size'] = self.size
         res['Crypt context'] = self.crypt_context
         return res
 
@@ -862,6 +866,13 @@ class Json(Column):
     """
     sqlalchemy_type = types.JSON(none_as_null=True)
 
+    def native_type(self, registry):
+        """ Return the native SqlAlchemy type """
+        if sgdb_in(registry.engine, ['MariaDB']):
+            return JSONType
+
+        return self.sqlalchemy_type
+
     def setter_format_value(self, value):
         if self.encrypt_key:
             value = dumps(value)
@@ -899,7 +910,7 @@ class LargeBinary(Column):
     """
     sqlalchemy_type = types.LargeBinary
 
-    def native_type(self):
+    def native_type(self, registry):
         if self.encrypt_key:
             return types.Text
 
