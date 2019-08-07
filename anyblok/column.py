@@ -449,6 +449,31 @@ class DateTime(Column):
         return res
 
 
+class TimeStamp(DateTime):
+    """ TimeStamp column
+
+    ::
+
+        from datetime import datetime
+        from anyblok.declarations import Declarations
+        from anyblok.column import DateTime
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = TimeStamp(default=datetime.now)
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(TimeStamp, self).__init__(*args, **kwargs)
+        self.sqlalchemy_type = types.TIMESTAMP(timezone=True)
+
+    def getter_format_value(self, value):
+        return convert_string_to_datetime(value)
+
+
 class Time(Column):
     """ Time column
 

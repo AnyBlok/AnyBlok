@@ -28,6 +28,7 @@ class AutoUpdatePlugin(ModelPluginBase):
             for c in self.registry.get(ns).loaded_columns:
                 f = self.registry.loaded_namespaces_first_step[namespace].get(c)
                 if isinstance(f, DateTime) and f.auto_update:
+                    # TimeStamp inherit of DateTime so it works too
                     fields.append(c)
 
         if fields:
