@@ -43,7 +43,7 @@ COLUMNS = [
     (Float, 1., {}),
     (Integer, 1, {}),
     (Email, 'jhon@doe.com', {}),
-    # (Decimal, D('1'), {}),
+    (Decimal, D('1'), {}),
     (Json, {'name': 'test'}, {}),
 ]
 

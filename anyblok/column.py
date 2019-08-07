@@ -346,6 +346,15 @@ class Decimal(Column):
 
         return value
 
+    def getter_format_value(self, value):
+        if value is None:
+            return None
+
+        if self.encrypt_key:
+            value = decimal.Decimal(value)
+
+        return value
+
 
 class Date(Column):
     """ Date column
