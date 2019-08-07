@@ -8,6 +8,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from base64 import b64encode, b64decode
 from .field import Field, FieldException
 from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
@@ -897,6 +898,24 @@ class LargeBinary(Column):
 
     """
     sqlalchemy_type = types.LargeBinary
+
+    def native_type(self):
+        if self.encrypt_key:
+            return types.Text
+
+        return self.sqlalchemy_type
+
+    def setter_format_value(self, value):
+        if self.encrypt_key:
+            value = b64encode(value).decode('utf-8')
+
+        return value
+
+    def getter_format_value(self, value):
+        if self.encrypt_key:
+            value = b64decode(value.encode('utf-8'))
+
+        return value
 
 
 class Sequence(String):
