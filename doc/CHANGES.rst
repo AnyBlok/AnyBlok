@@ -18,9 +18,11 @@ CHANGELOG
 1.0.0
 -----
 
-* Nom the Email field can be crypted
+* Now the Email, Selection, Country, Json, Decimal, Interval, LargeBinary 
+  columns can be crypted
 * Removed compatibility with **Python 3.4**, because this version is
   deprecated
+* Added *TimeStamp* column
 
 0.22.5 (2019-06-24)
 -------------------
