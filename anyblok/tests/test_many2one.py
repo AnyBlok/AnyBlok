@@ -11,7 +11,6 @@
 import pytest
 from anyblok.testing import sgdb_in
 from anyblok import Declarations
-from anyblok.config import Configuration
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
 from anyblok.column import (
@@ -26,24 +25,6 @@ from .conftest import init_registry_with_bloks, init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
-
-
-@pytest.fixture(
-    scope="class",
-    params=[
-        ('prefix', 'suffix'),
-        ('', ''),
-    ]
-)
-def db_schema(request, bloks_loaded):
-    Configuration.set('prefix_db_schema', request.param[0])
-    Configuration.set('suffix_db_schema', request.param[1])
-
-    def rollback():
-        Configuration.set('prefix_db_schema', '')
-        Configuration.set('suffix_db_schema', '')
-
-    request.addfinalizer(rollback)
 
 
 def _complete_many2one(**kwargs):

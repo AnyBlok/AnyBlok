@@ -65,24 +65,6 @@ Model = Declarations.Model
 register = Declarations.register
 
 
-@pytest.fixture(
-    scope="class",
-    params=[
-        ('prefix', 'suffix'),
-        ('', ''),
-    ]
-)
-def db_schema(request, bloks_loaded):
-    Configuration.set('prefix_db_schema', request.param[0])
-    Configuration.set('suffix_db_schema', request.param[1])
-
-    def rollback():
-        Configuration.set('prefix_db_schema', '')
-        Configuration.set('suffix_db_schema', '')
-
-    request.addfinalizer(rollback)
-
-
 class OneColumn(Column):
     sqlalchemy_type = SA_Integer
 
