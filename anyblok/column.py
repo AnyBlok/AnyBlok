@@ -3,10 +3,12 @@
 #    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from base64 import b64encode, b64decode
 from .field import Field, FieldException
 from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
@@ -19,10 +21,13 @@ from sqlalchemy_utils.types.url import URLType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.scalar_coercible import ScalarCoercible
-from datetime import datetime, date
+from sqlalchemy_utils import JSONType
+from datetime import datetime, date, timedelta
 from dateutil.parser import parse
 from inspect import ismethod
 from anyblok.config import Configuration
+from .common import sgdb_in
+from json import dumps, loads
 import time
 import pytz
 import decimal
@@ -145,9 +150,9 @@ class Column(Field):
         ('is crypted', False),
     ))
 
-    def native_type(cls):
+    def native_type(self, registry):
         """ Return the native SqlAlchemy type """
-        return cls.sqlalchemy_type
+        return self.sqlalchemy_type
 
     def format_foreign_key(self, registry, args, kwargs):
         if self.foreign_key:
@@ -194,7 +199,7 @@ class Column(Field):
             else:
                 kwargs['default'] = self.default_val
 
-        sqlalchemy_type = self.sqlalchemy_type
+        sqlalchemy_type = self.native_type(registry)
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
             sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
@@ -310,6 +315,13 @@ class Float(Column):
     sqlalchemy_type = types.Float
 
 
+"""
+    Added *process_result_value* at the class *DECIMAL*, because
+    this method is necessary for encrypt the column
+"""
+types.DECIMAL.process_result_value = lambda self, value, dialect: value
+
+
 class Decimal(Column):
     """ Decimal column
 
@@ -330,8 +342,19 @@ class Decimal(Column):
 
     def setter_format_value(self, value):
         if value is not None:
-            if not isinstance(value, decimal.Decimal):
+            if self.encrypt_key:
+                value = str(value)
+            elif not isinstance(value, decimal.Decimal):
                 value = decimal.Decimal(value)
+
+        return value
+
+    def getter_format_value(self, value):
+        if value is None:
+            return None
+
+        if self.encrypt_key:
+            value = decimal.Decimal(value)
 
         return value
 
@@ -511,6 +534,26 @@ class Interval(Column):
     """
     sqlalchemy_type = types.Interval
 
+    def native_type(self, registry):
+        if self.encrypt_key:
+            return types.VARCHAR(1024)
+
+        return self.sqlalchemy_type
+
+    def setter_format_value(self, value):
+        if self.encrypt_key:
+            value = dumps({
+                x: getattr(value, x)
+                for x in ['days', 'seconds', 'microseconds']})
+
+        return value
+
+    def getter_format_value(self, value):
+        if self.encrypt_key:
+            value = timedelta(**loads(value))
+
+        return value
+
 
 class StringType(types.TypeDecorator):
 
@@ -586,7 +629,7 @@ class Password(Column):
             ==> 0
     """
     def __init__(self, *args, **kwargs):
-        size = kwargs.pop('size', 64)
+        self.size = kwargs.pop('size', 64)
         crypt_context = kwargs.pop('crypt_context', {})
         self.crypt_context = crypt_context
         kwargs.pop('type_', None)
@@ -594,7 +637,8 @@ class Password(Column):
         if 'foreign_key' in kwargs:
             raise FieldException("Column Password can not have a foreign key")
 
-        self.sqlalchemy_type = PasswordType(max_length=size, **crypt_context)
+        self.sqlalchemy_type = PasswordType(
+            max_length=self.size, **crypt_context)
         super(Password, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
@@ -604,6 +648,7 @@ class Password(Column):
 
     def autodoc_get_properties(self):
         res = super(Password, self).autodoc_get_properties()
+        res['size'] = self.size
         res['Crypt context'] = self.crypt_context
         return res
 
@@ -788,6 +833,11 @@ class Selection(Column):
 
     def update_table_args(self, Model):
         """return check constraint to limit the value"""
+        if self.encrypt_key:
+            # dont add constraint because the state is crypted and nobody
+            # can add new entry
+            return []
+
         selections = self.sqlalchemy_type.selections
         if isinstance(selections, dict):
             enum = selections.keys()
@@ -817,6 +867,13 @@ class Selection(Column):
         return []
 
 
+"""
+    Added *process_result_value* at the class *JSON*, because
+    this method is necessary for encrypt the column
+"""
+types.JSON.process_result_value = lambda self, value, dialect: value
+
+
 class Json(Column):
     """ JSON column
 
@@ -833,6 +890,28 @@ class Json(Column):
 
     """
     sqlalchemy_type = types.JSON(none_as_null=True)
+
+    def native_type(self, registry):
+        """ Return the native SqlAlchemy type """
+        if sgdb_in(registry.engine, ['MariaDB']):
+            return JSONType
+
+        return self.sqlalchemy_type
+
+    def setter_format_value(self, value):
+        if self.encrypt_key:
+            value = dumps(value)
+
+        return value
+
+    def getter_format_value(self, value):
+        if value is None:
+            return None
+
+        if self.encrypt_key:
+            value = loads(value)
+
+        return value
 
 
 class LargeBinary(Column):
@@ -855,6 +934,24 @@ class LargeBinary(Column):
 
     """
     sqlalchemy_type = types.LargeBinary
+
+    def native_type(self, registry):
+        if self.encrypt_key:
+            return types.Text
+
+        return self.sqlalchemy_type
+
+    def setter_format_value(self, value):
+        if self.encrypt_key:
+            value = b64encode(value).decode('utf-8')
+
+        return value
+
+    def getter_format_value(self, value):
+        if self.encrypt_key:
+            value = b64decode(value.encode('utf-8'))
+
+        return value
 
 
 class Sequence(String):
@@ -1147,6 +1244,11 @@ class Country(Column):
 
     def update_table_args(self, Model):
         """return check constraint to limit the value"""
+        if self.encrypt_key:
+            # dont add constraint because the state is crypted and nobody
+            # can add new entry
+            return []
+
         enum = [country.alpha_3 for country in pycountry.countries]
         constraint = """"%s" in ('%s')""" % (self.fieldname, "', '".join(enum))
         enum.sort()
