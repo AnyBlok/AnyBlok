@@ -305,8 +305,21 @@ class MigrationReport:
                 # Boolean are TINYINT in MySQL DataBase
                 return True
 
+        table = "%s.%s" % diff[1:2] if diff[1] else diff[2]
         self.log_names.append("Modify column type %s.%s : %s => %s" % (
-            diff[2], diff[3], diff[5], diff[6]))
+            table, diff[3], diff[5], diff[6]))
+        return False
+
+    def init_modify_nullable(self, diff):
+        table = "%s.%s" % diff[1:2] if diff[1] else diff[2]
+        self.log_names.append("Modify column nullable %s.%s : %s => %s" % (
+            table, diff[3], diff[5], diff[6]))
+        return False
+
+    def init_modify_server_default(self, diff):
+        table = "%s.%s" % diff[1:2] if diff[1] else diff[2]
+        self.log_names.append("Modify column default %s.%s : %s => %s" % (
+            table, diff[3], diff[5], diff[6]))
         return False
 
     def __init__(self, migration, diffs):
@@ -337,6 +350,8 @@ class MigrationReport:
             'remove_table': self.init_remove_table,
             'change_pk': self.init_change_pk,
             'modify_type': self.init_modify_type,
+            'modify_nullable': self.init_modify_nullable,
+            'modify_default': self.init_modify_server_default,
         }
         for diff in diffs:
             if isinstance(diff, list):
