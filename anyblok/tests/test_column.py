@@ -45,6 +45,8 @@ COLUMNS = [
     (Date, datetime.date.today(), {}),
     (DateTime, datetime.datetime.now().replace(
         tzinfo=pytz.timezone(time.tzname[0])), {}),
+    (TimeStamp, datetime.datetime.now().replace(
+        tzinfo=pytz.timezone(time.tzname[0])), {}),
     (Time, datetime.time(), {}),
     (Float, 1., {}),
     (Integer, 1, {}),
