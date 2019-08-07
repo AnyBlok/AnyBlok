@@ -86,14 +86,14 @@ class TestModelSchema:
         dot = ModelSchema('My UML model')
         label = dot.add_label('My label')
         cls = dot.add_class('My class')
-        cls.agregate(label, label_to='test', multiplicity_to='test')
+        cls.aggregate(label, label_to='test', multiplicity_to='test')
         dot.render()
 
     def test_one_model_with_class_which_strong_agregate_label(self):
         dot = ModelSchema('My UML model')
         label = dot.add_label('My label')
         cls = dot.add_class('My class')
-        cls.strong_agregate(label, multiplicity_from='test')
+        cls.strong_aggregate(label, multiplicity_from='test')
         dot.render()
 
     def test_get_class(self):

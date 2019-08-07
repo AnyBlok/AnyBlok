@@ -223,7 +223,7 @@ class Model:
         if name in properties['loaded_columns']:
             return
 
-        if field.must_be_duplicate_before_added():
+        if field.must_be_copied_before_declaration():
             field = deepcopy(field)
 
         attr_name = name

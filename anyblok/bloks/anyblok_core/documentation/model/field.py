@@ -98,8 +98,8 @@ class Field:
             if self.field.nullable:
                 multiplicity = "0..1"
 
-            model.agregate(remote_model, label_from=name,
-                           multiplicity_from=multiplicity)
+            model.aggregate(remote_model, label_from=name,
+                            multiplicity_from=multiplicity)
         else:
             name += ' (%s)' % self.field.ftype
             model.add_column(name)

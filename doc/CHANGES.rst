@@ -18,7 +18,6 @@ CHANGELOG
 1.0.0
 -----
 
-
 * It is now possible to place a "Model" in another schema on the SGDB
   ::
 
@@ -26,7 +25,8 @@ CHANGELOG
       class MyModelInOtherSchema:
           __db_schema__ = 'my_schema'
 
-* Nom the Email field can be crypted
+* Now the Email, Selection, Country, Json, Decimal, Interval, LargeBinary 
+  columns can be crypted
 * Removed compatibility with **Python 3.4**, because this version is
   deprecated
 * Added *TimeStamp* column
