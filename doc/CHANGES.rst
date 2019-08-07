@@ -22,6 +22,7 @@ CHANGELOG
   columns can be crypted
 * Removed compatibility with **Python 3.4**, because this version is
   deprecated
+* Added *TimeStamp* column
 
 0.22.5 (2019-06-24)
 -------------------
