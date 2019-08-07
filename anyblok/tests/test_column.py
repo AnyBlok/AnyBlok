@@ -43,6 +43,8 @@ COLUMNS = [
     (Float, 1., {}),
     (Integer, 1, {}),
     (Email, 'jhon@doe.com', {}),
+    # (Decimal, D('1'), {}),
+    (Json, {'name': 'test'}, {}),
 ]
 
 if not sgdb_in(['MySQL', 'MariaDB']):
@@ -96,9 +98,7 @@ Model = Declarations.Model
 register = Declarations.register
 
 
-# FIXME (Json, {'name': 'test'}, {}),
 # FIXME (Interval, datetime.timedelta(days=6), {}),
-# FIXME (Decimal, D('1'), {}),
 # FIXME (LargeBinary, urandom(100), {}),
 @pytest.fixture(params=COLUMNS)
 def column_definition(request, bloks_loaded):

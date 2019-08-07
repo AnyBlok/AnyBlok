@@ -3,6 +3,7 @@
 #    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -23,6 +24,7 @@ from datetime import datetime, date
 from dateutil.parser import parse
 from inspect import ismethod
 from anyblok.config import Configuration
+from json import dumps, loads
 import time
 import pytz
 import decimal
@@ -310,6 +312,13 @@ class Float(Column):
     sqlalchemy_type = types.Float
 
 
+"""
+    Added *process_result_value* at the class *DECIMAL*, because
+    this method is necessary for encrypt the column
+"""
+types.DECIMAL.process_result_value = lambda self, value, dialect: value
+
+
 class Decimal(Column):
     """ Decimal column
 
@@ -330,7 +339,9 @@ class Decimal(Column):
 
     def setter_format_value(self, value):
         if value is not None:
-            if not isinstance(value, decimal.Decimal):
+            if self.encrypt_key:
+                value = str(value)
+            elif not isinstance(value, decimal.Decimal):
                 value = decimal.Decimal(value)
 
         return value
@@ -820,6 +831,21 @@ class Json(Column):
 
     """
     sqlalchemy_type = types.JSON(none_as_null=True)
+
+    def setter_format_value(self, value):
+        if self.encrypt_key:
+            value = dumps(value)
+
+        return value
+
+    def getter_format_value(self, value):
+        if value is None:
+            return None
+
+        if self.encrypt_key:
+            value = loads(value)
+
+        return value
 
 
 class LargeBinary(Column):
