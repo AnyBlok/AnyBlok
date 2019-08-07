@@ -1447,7 +1447,7 @@ class Country(Column):
             # dont add constraint because the state is crypted and nobody
             # can add new entry
             return []
-          
+
         enum = [country.alpha_3 for country in pycountry.countries]
         constraint = """"%s" in ('%s')""" % (self.fieldname, "', '".join(enum))
         enum.sort()
