@@ -253,6 +253,25 @@ def _minimum_one2many(**kwargs):
         address_id = Integer(foreign_key=Model.Address.use('id'))
 
 
+def one2many_on_mapper(**kwargs):
+
+    @register(Model, tablename="x")
+    class Address:
+
+        id = Integer(primary_key=True, db_column_name="x1")
+        street = String(db_column_name="x2")
+        zip = String(db_column_name="x3")
+        city = String(db_column_name="x4")
+        persons = One2Many(model='Model.Person')
+
+    @register(Model, tablename="y")
+    class Person:
+
+        name = String(primary_key=True, db_column_name="y1")
+        address_id = Integer(foreign_key=Model.Address.use('id'),
+                             db_column_name="y2")
+
+
 def _minimum_one2many_with_schema(**kwargs):
 
     @register(Model)
@@ -338,6 +357,15 @@ class TestOne2Many:
 
     def test_minimum_one2many(self):
         registry = self.init_registry(_minimum_one2many)
+
+        address = registry.Address.insert(
+            street='14-16 rue soleillet', zip='75020', city='Paris')
+
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE")
+        address.persons.append(person)
+
+    def test_minimum_one2many_on_mapper(self):
+        registry = self.init_registry(one2many_on_mapper)
 
         address = registry.Address.insert(
             street='14-16 rue soleillet', zip='75020', city='Paris')

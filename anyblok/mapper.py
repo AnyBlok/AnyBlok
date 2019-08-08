@@ -218,9 +218,6 @@ class ModelAttribute:
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
         modelname = self.model_name.replace('.', '')
-        if Model[self.attribute_name].db_column_name:
-            column_name = Model[self.attribute_name].db_column_name
-
         return modelname + '.' + column_name
 
     def get_fk_remote(self, registry):

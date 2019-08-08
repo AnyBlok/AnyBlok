@@ -94,12 +94,44 @@ def _one2one_with_str_method(**kwargs):
         address = One2One(model="Model.Address", backref="person")
 
 
+def _minimum_one2one_on_mapper_1(**kwargs):
+
+    @register(Model, tablename="x")
+    class Address:
+
+        id = Integer(primary_key=True, db_column_name="x1")
+
+    @register(Model, tablename="y")
+    class Person:
+
+        name = String(primary_key=True, db_column_name="y1")
+        address = One2One(model=Model.Address, backref="person")
+
+
+def _minimum_one2one_on_mapper_2(**kwargs):
+
+    @register(Model, tablename="x")
+    class Address:
+
+        id = Integer(primary_key=True, db_column_name="x1")
+
+    @register(Model, tablename="y")
+    class Person:
+
+        name = String(primary_key=True, db_column_name="y1")
+        address_id = Integer(db_column_name="y2",
+                             foreign_key=Model.Address.use('id'))
+        address = One2One(model=Model.Address, backref="person")
+
+
 @pytest.fixture(scope="class", params=[
     _minimum_one2one,
     _minimum_one2one_with_schema,
     _minimum_one2one_with_diferent_schema1,
     _minimum_one2one_with_diferent_schema2,
-    _one2one_with_str_method
+    _one2one_with_str_method,
+    _minimum_one2one_on_mapper_1,
+    _minimum_one2one_on_mapper_2,
 ])
 def registry_minimum_one2one(request, bloks_loaded, db_schema):
     reset_db()
