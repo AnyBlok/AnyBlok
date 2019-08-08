@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -31,6 +32,8 @@ class uniquedict(dict):
 
 
 class SqlMixin:
+
+    __db_schema__ = None
 
     def __repr__(self):
         state = inspect(self)
@@ -76,7 +79,11 @@ class SqlMixin:
 
     @classmethod
     def define_table_kwargs(cls):
-        return {}
+        res = {}
+        if cls.__db_schema__ is not None:
+            res.update({'schema': cls.__db_schema__})
+
+        return res
 
     @classmethod
     def define_mapper_args(cls):

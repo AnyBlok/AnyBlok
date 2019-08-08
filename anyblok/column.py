@@ -960,15 +960,20 @@ class Selection(Column):
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
 
-    def update_table_args(self, Model):
+    def update_table_args(self, registry, Model):
+
         """Return check constraints to limit the value
 
+        :param registry:
         :param Model:
         :return: list of checkConstraint
         """
         if self.encrypt_key:
             # dont add constraint because the state is crypted and nobody
             # can add new entry
+            return []
+
+        if sgdb_in(registry.engine, ['MariaDB']):
             return []
 
         selections = self.sqlalchemy_type.selections
@@ -1438,14 +1443,19 @@ class Country(Column):
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
 
-    def update_table_args(self, Model):
+    def update_table_args(self, registry, Model):
         """Return check constraints to limit the value
 
+        :param registry:
+        :param Model:
         :return: list of checkConstraint
         """
         if self.encrypt_key:
             # dont add constraint because the state is crypted and nobody
             # can add new entry
+            return []
+
+        if sgdb_in(registry.engine, ['MariaDB']):
             return []
 
         enum = [country.alpha_3 for country in pycountry.countries]

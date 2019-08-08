@@ -46,6 +46,68 @@ def _complete_many2one(**kwargs):
                            one2many="persons", nullable=False)
 
 
+def _complete_many2one_with_schema(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
+                           remote_columns="id", column_names="id_of_address",
+                           one2many="persons", nullable=False)
+
+
+def _complete_many2one_with_different_schema1(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_other_m2o_schema'
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
+                           remote_columns="id", column_names="id_of_address",
+                           one2many="persons", nullable=False)
+
+
+def _complete_many2one_with_different_schema2(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
+                           remote_columns="id", column_names="id_of_address",
+                           one2many="persons", nullable=False)
+
+
 def _minimum_many2one(**kwargs):
 
     @register(Model)
@@ -58,6 +120,25 @@ def _minimum_many2one(**kwargs):
 
     @register(Model)
     class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address)
+
+
+def _minimum_many2one_with_schema(**kwargs):
+
+    @register(Model)
+    class Address:
+        __db_schema__ = 'test_db_m2o_schema'
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+        __db_schema__ = 'test_db_m2o_schema'
 
         name = String(primary_key=True)
         address = Many2One(model=Model.Address)
@@ -80,15 +161,57 @@ def _many2one_with_str_model(**kwargs):
         address = Many2One(model='Model.Address')
 
 
+def many2one_on_mapping_model_and_column_1(**kwargs):
+
+    @register(Model, tablename="x")
+    class Address:
+
+        id = Integer(primary_key=True, db_column_name="x1")
+        street = String(db_column_name="x2")
+        zip = String(db_column_name="x3")
+        city = String(db_column_name="x4")
+
+    @register(Model, tablename="y")
+    class Person:
+
+        name = String(primary_key=True, db_column_name="y1")
+        address = Many2One(model=Model.Address)
+
+
+def many2one_on_mapping_model_and_column_2(**kwargs):
+
+    @register(Model, tablename="x")
+    class Address:
+
+        id = Integer(primary_key=True, db_column_name="x1")
+        street = String(db_column_name="x2")
+        zip = String(db_column_name="x3")
+        city = String(db_column_name="x4")
+
+    @register(Model, tablename="y")
+    class Person:
+
+        name = String(primary_key=True, db_column_name="y1")
+        address_id = Integer(db_column_name="y2",
+                             foreign_key=Model.Address.use('id'))
+        address = Many2One(model=Model.Address)
+
+
 @pytest.fixture(
     scope="class",
     params=[
         (_complete_many2one, 'id_of_address', True),
+        (_complete_many2one_with_schema, 'id_of_address', True),
+        (_complete_many2one_with_different_schema1, 'id_of_address', True),
+        (_complete_many2one_with_different_schema2, 'id_of_address', True),
         (_minimum_many2one, 'address_id', False),
+        (_minimum_many2one_with_schema, 'address_id', False),
         (_many2one_with_str_model, 'address_id', False),
+        (many2one_on_mapping_model_and_column_1, 'address_id', False),
+        (many2one_on_mapping_model_and_column_2, 'address_id', False),
     ]
 )
-def registry_many2one(request, bloks_loaded):
+def registry_many2one(request, bloks_loaded, db_schema):
     reset_db()
     registry = init_registry_with_bloks(
         [], request.param[0])

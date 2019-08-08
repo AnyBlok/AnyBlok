@@ -64,7 +64,7 @@ def init_registry(function, **kwargs):
 def drop_database(url):
     url = copy(sqlalchemy.engine.url.make_url(url))
     database = url.database
-    if url.drivername.startswith('postgresql'):
+    if url.drivername.startswith('postgres'):
         url.database = 'postgres'
     elif not url.drivername.startswith('sqlite'):
         url.database = None
@@ -142,3 +142,21 @@ def registry_testblok_func(request, testbloks_loaded):
     registry = init_registry_with_bloks([], None)
     request.addfinalizer(registry.close)
     return registry
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema.Model.*', request.param[0])
+    Configuration.set('suffix_db_schema.Model.*', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema.Model.*', '')
+        Configuration.set('suffix_db_schema.Model.*', '')
+
+    request.addfinalizer(rollback)

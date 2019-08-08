@@ -8,6 +8,49 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.schema import ForeignKey
 from anyblok.common import anyblok_column_prefix
+from .config import Configuration
+
+
+def get_for(basekey, path, default=None):
+    key = '%s.%s' % (basekey, '.'.join(path))
+    if path == ['Model', '*']:
+        return Configuration.get(key, default)
+
+    res = Configuration.get(key, None)
+    if res is not None:
+        return res
+
+    new_path = path[:-1]
+    if path[-1] == '*':
+        new_path[-1] = '*'
+    else:
+        new_path.append('*')
+
+    return get_for(basekey, new_path, default=default)
+
+
+def get_schema_for(path, default=None):
+    return get_for('db_schema', path, default=default)
+
+
+def get_schema_prefix_for(path, default=None):
+    return get_for('prefix_db_schema', path, default=default)
+
+
+def get_schema_suffix_for(path, default=None):
+    return get_for('suffix_db_schema', path, default=default)
+
+
+def format_schema(schema, registry_name):
+    path = registry_name.split('.')
+    schema = get_schema_for(path, default=schema)
+    if schema is not None:
+        prefix = get_schema_prefix_for(path, default='')
+        suffix = get_schema_suffix_for(path, default='')
+
+        return prefix + schema + suffix
+
+    return schema
 
 
 class ModelReprException(Exception):
@@ -140,7 +183,7 @@ class ModelAttribute:
         self._options.update(kwargs)
         return self
 
-    def get_fk_name(self, registry):
+    def get_fk_name(self, registry, with_schema=True):
         """Return the name of the foreign key
 
         the need of foreign key may be before the creation of the model in
@@ -155,6 +198,10 @@ class ModelAttribute:
         tablename = Model['__tablename__']
         if Model[self.attribute_name].db_column_name:
             column_name = Model[self.attribute_name].db_column_name
+
+        if with_schema and Model.get('__db_schema__'):
+            return '%s.%s.%s' % (
+                Model['__db_schema__'], tablename, column_name)
 
         return tablename + '.' + column_name
 
@@ -171,9 +218,6 @@ class ModelAttribute:
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
         modelname = self.model_name.replace('.', '')
-        if Model[self.attribute_name].db_column_name:
-            column_name = Model[self.attribute_name].db_column_name
-
         return modelname + '.' + column_name
 
     def get_fk_remote(self, registry):
@@ -288,13 +332,16 @@ class ModelRepr:
 
         return registry.loaded_namespaces_first_step[self.model_name]
 
-    def tablename(self, registry):
+    def tablename(self, registry, with_schema=True):
         """Return the  real tablename of the Model
 
         :param registry: instance of the registry
         :rtype: string
         """
         Model = self.check_model(registry)
+        if with_schema and Model.get('__db_schema__'):
+            return Model['__db_schema__'] + '.' + Model['__tablename__']
+
         return Model['__tablename__']
 
     def modelname(self, registry):

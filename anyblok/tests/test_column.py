@@ -34,7 +34,6 @@ def dt_column_type(request):
     return request.param
 
 
-
 COLUMNS = [
     (Selection, 'test', {'selections': {'test': 'test'}}),
     (Boolean, True, {}),
@@ -156,6 +155,53 @@ def column_with_foreign_key():
         test = String(foreign_key=Model.Test.use('name'))
 
 
+def column_with_foreign_key_with_schema():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_fk_schema'
+
+        name = String(primary_key=True)
+
+    @register(Model)
+    class Test2:
+        __db_schema__ = 'test_db_fk_schema'
+
+        id = Integer(primary_key=True)
+        test = String(foreign_key=Model.Test.use('name'))
+
+
+def column_with_foreign_key_with_diff_schema1():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_fk_schema'
+
+        name = String(primary_key=True)
+
+    @register(Model)
+    class Test2:
+        __db_schema__ = 'test_db_fk_schema2'
+
+        id = Integer(primary_key=True)
+        test = String(foreign_key=Model.Test.use('name'))
+
+
+def column_with_foreign_key_with_diff_schema2():
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_fk_schema'
+
+        name = String(primary_key=True)
+
+    @register(Model)
+    class Test2:
+
+        id = Integer(primary_key=True)
+        test = String(foreign_key=Model.Test.use('name'))
+
+
 class TestColumns:
 
     @pytest.fixture(autouse=True)
@@ -193,6 +239,21 @@ class TestColumns:
 
     def test_column_with_foreign_key(self):
         registry = self.init_registry(column_with_foreign_key)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
+
+    def test_column_with_foreign_key_with_schema(self, db_schema):
+        registry = self.init_registry(column_with_foreign_key_with_schema)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
+
+    def test_column_with_foreign_key_with_diff_schema1(self, db_schema):
+        registry = self.init_registry(column_with_foreign_key_with_diff_schema1)
+        registry.Test.insert(name='test')
+        registry.Test2.insert(test='test')
+
+    def test_column_with_foreign_key_with_diff_schema2(self, db_schema):
+        registry = self.init_registry(column_with_foreign_key_with_diff_schema2)
         registry.Test.insert(name='test')
         registry.Test2.insert(test='test')
 
@@ -313,7 +374,6 @@ class TestColumns:
         test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%Z'))
         assert test.col == now
 
-
     def test_datetime_str_conversion_3(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -359,7 +419,6 @@ class TestColumns:
         assert test.col == now
 
     def test_datetime_str_conversion_3_by_property(self, dt_column_type):
-
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
@@ -390,7 +449,6 @@ class TestColumns:
         assert test.col is None
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
-
     def test_datetime_str_conversion_1_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
@@ -1105,6 +1163,32 @@ class TestColumns:
 
             @Declarations.register(Declarations.Model)
             class Item:
+                id = Integer(primary_key=True, db_column_name='ProductDetailId')
+                template_code = String(
+                    db_column_name='ProductId',
+                    foreign_key=Model.Template.use('code'))
+
+        registry = self.init_registry(add_in_registry)
+        registry.Template.insert(code='test')
+        registry.Item.insert(template_code='test')
+
+        with pytest.raises(Exception):
+            registry.Item.insert(template_code='other')
+
+    def test_foreign_key_on_mapper_issue_112_with_schema(self, db_schema):
+
+        def add_in_registry():
+
+            @Declarations.register(Declarations.Model)
+            class Template:
+                __db_schema__ = 'test_db_column_schema'
+
+                code = String(primary_key=True, db_column_name='ProductId')
+
+            @Declarations.register(Declarations.Model)
+            class Item:
+                __db_schema__ = 'test_db_column_schema'
+
                 id = Integer(primary_key=True, db_column_name='ProductDetailId')
                 template_code = String(
                     db_column_name='ProductId',
