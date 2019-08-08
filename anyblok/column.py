@@ -1442,7 +1442,7 @@ class Country(Column):
                                                fieldname, properties)
         self.fieldname = fieldname
         properties['add_in_table_args'].append(self)
-        
+
     def update_table_args(self, registry, Model):
         """Return check constraints to limit the value
 
@@ -1454,7 +1454,7 @@ class Country(Column):
             # dont add constraint because the state is crypted and nobody
             # can add new entry
             return []
-          
+
         if sgdb_in(registry.engine, ['MariaDB']):
             return []
 
