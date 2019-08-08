@@ -461,6 +461,7 @@ To declare a ``Column`` in a model, add a column on the table of the model.::
 List of the column type:
 
  * ``DateTime``: use datetime.datetime, with pytz for the timezone
+ * ``TimeStamp``: use datetime.datetime, with pytz for the timezone
  * ``Decimal``: use decimal.Decimal
  * ``Float``
  * ``Time``: use datetime.time
@@ -611,7 +612,7 @@ Other attribute for ``UUID``:
 |                | falls back to a BINARY(16) or a CHAR(32)                   |
 +----------------+------------------------------------------------------------+
 
-Other attribute for ``DateTime``:
+Other attribute for ``DateTime`` and ``TimeStamp``:
 
 +----------------------+------------------------------------------------------+
 | Param                | Description                                          |

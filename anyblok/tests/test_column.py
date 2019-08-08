@@ -26,7 +26,38 @@ from .conftest import init_registry, reset_db
 from anyblok.column import (
     Column, Boolean, Json, String, BigInteger, Text, Selection, Date, DateTime,
     Time, Interval, Decimal, Float, LargeBinary, Integer, Sequence, Color,
-    Password, UUID, URL, PhoneNumber, Email, Country)
+    Password, UUID, URL, PhoneNumber, Email, Country, TimeStamp)
+
+
+@pytest.fixture(params=[DateTime, TimeStamp])
+def dt_column_type(request):
+    return request.param
+
+
+COLUMNS = [
+    (Selection, 'test', {'selections': {'test': 'test'}}),
+    (Boolean, True, {}),
+    (Boolean, False, {}),
+    (String, 'test', {}),
+    (BigInteger, 1, {}),
+    (Text, 'Test', {}),
+    (Date, datetime.date.today(), {}),
+    (DateTime, datetime.datetime.now().replace(
+        tzinfo=pytz.timezone(time.tzname[0])), {}),
+    (TimeStamp, datetime.datetime.now().replace(
+        tzinfo=pytz.timezone(time.tzname[0])), {}),
+    (Time, datetime.time(), {}),
+    (Float, 1., {}),
+    (Integer, 1, {}),
+    (Email, 'jhon@doe.com', {}),
+    (LargeBinary, urandom(100), {}),
+    (Interval, datetime.timedelta(days=6), {}),
+    (Decimal, D('1'), {}),
+    (Json, {'name': 'test'}, {}),
+]
+
+if not sgdb_in(['MySQL', 'MariaDB']):
+    COLUMNS.append((UUID, uuid1(), {}))
 
 
 COLUMNS = [
@@ -96,31 +127,9 @@ Model = Declarations.Model
 register = Declarations.register
 
 
-# FIXME (Json, {'name': 'test'}, {}),
-# FIXME (Interval, datetime.timedelta(days=6), {}),
-# FIXME (Decimal, D('1'), {}),
-# FIXME (LargeBinary, urandom(100), {}),
 @pytest.fixture(params=COLUMNS)
 def column_definition(request, bloks_loaded):
     return request.param
-
-
-@pytest.fixture(
-    scope="class",
-    params=[
-        ('prefix', 'suffix'),
-        ('', ''),
-    ]
-)
-def db_schema(request, bloks_loaded):
-    Configuration.set('prefix_db_schema', request.param[0])
-    Configuration.set('suffix_db_schema', request.param[1])
-
-    def rollback():
-        Configuration.set('prefix_db_schema', '')
-        Configuration.set('suffix_db_schema', '')
-
-    request.addfinalizer(rollback)
 
 
 class OneColumn(Column):
@@ -229,8 +238,6 @@ class TestColumns:
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 
-    @pytest.mark.skipif(not has_cryptography,
-                        reason="cryptography is not installed")
     def test_insert_columns(self, column_definition):
         column, value, kwargs = column_definition
         registry = self.init_registry(simple_column, ColumnType=column,
@@ -277,11 +284,6 @@ class TestColumns:
         test2 = registry.Test.insert(col=test.id)
         assert test2.col == test.id
 
-    def test_decimal(self):
-        registry = self.init_registry(simple_column, ColumnType=Decimal)
-        test = registry.Test.insert(col=D('1.0'))
-        assert test.col == D('1.0')
-
     def test_setter_decimal(self):
         registry = self.init_registry(simple_column, ColumnType=Decimal)
         test = registry.Test.insert()
@@ -318,18 +320,6 @@ class TestColumns:
         assert test.col is False
         self.registry.expire(test, ['col'])
         assert test.col == ''
-
-    @pytest.mark.skipif(not has_cryptography,
-                        reason="cryptography is not installed")
-    def test_string_with_encrypt_key_defined_by_a_method(self):
-        registry = self.init_registry(simple_column, ColumnType=String,
-                                      encrypt_key='meth_secretkey')
-        test = registry.Test.insert(col='col')
-        registry.session.commit()
-        assert test.col == 'col'
-        res = registry.execute('select col from test where id = %s' % test.id)
-        res = res.fetchall()[0][0]
-        assert res != 'col'
 
     @pytest.mark.skipif(not has_cryptography,
                         reason="cryptography is not installed")
@@ -385,105 +375,105 @@ class TestColumns:
         self.registry.expire(test, ['col'])
         assert test.col == ''
 
-    def test_datetime_none_value(self):
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+    def test_datetime_none_value(self, dt_column_type):
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=None)
         assert test.col is None
 
-    def test_datetime_str_conversion_1(self):
+    def test_datetime_str_conversion_1(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%z'))
         assert test.col == now
 
-    def test_datetime_str_conversion_2(self):
+    def test_datetime_str_conversion_2(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%Z'))
         assert test.col == now
 
-    def test_datetime_str_conversion_3(self):
+    def test_datetime_str_conversion_3(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S.%f'))
         assert test.col == now
 
-    def test_datetime_str_conversion_4(self):
+    def test_datetime_str_conversion_4(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=now.strftime('%Y-%m-%d %H:%M:%S'))
         assert test.col == now.replace(microsecond=0)
 
-    def test_datetime_by_property(self):
+    def test_datetime_by_property(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         test.col = now
         assert test.col == now
 
-    def test_datetime_by_property_none_value(self):
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+    def test_datetime_by_property_none_value(self, dt_column_type):
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         test.col = None
         assert test.col is None
 
-    def test_datetime_str_conversion_1_by_property(self):
+    def test_datetime_str_conversion_1_by_property(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         test.col = now.strftime('%Y-%m-%d %H:%M:%S.%f%z')
         assert test.col == now
 
-    def test_datetime_str_conversion_2_by_property(self):
+    def test_datetime_str_conversion_2_by_property(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         test.col = now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')
         assert test.col == now
 
-    def test_datetime_str_conversion_3_by_property(self):
+    def test_datetime_str_conversion_3_by_property(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         test.col = now.strftime('%Y-%m-%d %H:%M:%S.%f')
         assert test.col == now
 
-    def test_datetime_str_conversion_4_by_property(self):
+    def test_datetime_str_conversion_4_by_property(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         test.col = now.strftime('%Y-%m-%d %H:%M:%S')
         assert test.col == now.replace(microsecond=0)
 
-    def test_datetime_by_query(self):
+    def test_datetime_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         registry.Test.query().update(dict(col=now))
         assert test.col == now
 
-    def test_datetime_by_query_none_value(self):
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+    def test_datetime_by_query_none_value(self, dt_column_type):
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         registry.Test.query().update(dict(col=None))
         assert test.col is None
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
-    def test_datetime_str_conversion_1_by_query(self):
+    def test_datetime_str_conversion_1_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         registry.Test.query().update(
             dict(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%z')))
@@ -492,10 +482,10 @@ class TestColumns:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
-    def test_datetime_str_conversion_2_by_query(self):
+    def test_datetime_str_conversion_2_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         registry.Test.query().update(
             dict(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')))
@@ -504,10 +494,10 @@ class TestColumns:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
-    def test_datetime_str_conversion_3_by_query(self):
+    def test_datetime_str_conversion_3_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         registry.Test.query().update(
             dict(col=now.strftime('%Y-%m-%d %H:%M:%S.%f')))
@@ -516,10 +506,10 @@ class TestColumns:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
-    def test_datetime_str_conversion_4_by_query(self):
+    def test_datetime_str_conversion_4_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         registry.Test.query().update(
             dict(col=now.strftime('%Y-%m-%d %H:%M:%S')))
@@ -528,20 +518,20 @@ class TestColumns:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
-    def test_datetime_by_query_filter(self):
+    def test_datetime_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=now)
         Test = registry.Test
         assert Test.query().filter(Test.col == now).one() is test
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
-    def test_datetime_str_conversion_1_by_query_filter(self):
+    def test_datetime_str_conversion_1_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=now)
         Test = registry.Test
         assert Test.query().filter(
@@ -549,10 +539,10 @@ class TestColumns:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
-    def test_datetime_str_conversion_2_by_query_filter(self):
+    def test_datetime_str_conversion_2_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=now)
         Test = registry.Test
         assert Test.query().filter(
@@ -560,16 +550,16 @@ class TestColumns:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason='ISSUE #87')
-    def test_datetime_str_conversion_3_by_query_filter(self):
+    def test_datetime_str_conversion_3_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=DateTime)
+        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=now)
         Test = registry.Test
         assert Test.query().filter(
             Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f')).one() is test
 
-    def test_datetime_without_auto_update_1(self):
+    def test_datetime_without_auto_update_1(self, dt_column_type):
 
         def add_in_registry():
 
@@ -588,7 +578,7 @@ class TestColumns:
         registry.flush()
         assert test.update_at is None
 
-    def test_datetime_without_auto_update_2(self):
+    def test_datetime_without_auto_update_2(self, dt_column_type):
 
         def add_in_registry():
 
@@ -607,7 +597,7 @@ class TestColumns:
         registry.flush()
         assert test.update_at is None
 
-    def test_datetime_with_auto_update(self):
+    def test_datetime_with_auto_update(self, dt_column_type):
 
         def add_in_registry():
 
@@ -626,14 +616,14 @@ class TestColumns:
         registry.flush()
         assert test.update_at is not None
 
-    def test_datetime_with_default_timezone_tz(self):
+    def test_datetime_with_default_timezone_tz(self, dt_column_type):
         import datetime
         import pytz
 
         timezone = pytz.timezone('Asia/Tokyo')
         now = datetime.datetime.now()
         registry = self.init_registry(
-            simple_column, ColumnType=DateTime,
+            simple_column, ColumnType=dt_column_type,
             default_timezone=timezone)
         field = registry.loaded_namespaces_first_step['Model.Test']['col']
         assert field.default_timezone is timezone
@@ -641,14 +631,14 @@ class TestColumns:
         test = registry.Test.insert(col=now)
         assert test.col.tzinfo.zone is timezone.zone
 
-    def test_datetime_with_default_timezone_str(self):
+    def test_datetime_with_default_timezone_str(self, dt_column_type):
         import datetime
         import pytz
 
         timezone = pytz.timezone('Asia/Tokyo')
         now = datetime.datetime.now()
         registry = self.init_registry(
-            simple_column, ColumnType=DateTime,
+            simple_column, ColumnType=dt_column_type,
             default_timezone='Asia/Tokyo')
         field = registry.loaded_namespaces_first_step['Model.Test']['col']
         assert field.default_timezone == timezone
@@ -656,35 +646,21 @@ class TestColumns:
         test = registry.Test.insert(col=now)
         assert test.col.tzinfo.zone == timezone.zone
 
-    def test_datetime_with_default_global_timezone_str(self):
+    def test_datetime_with_default_global_timezone_str(self, dt_column_type):
         import datetime
         import pytz
 
         timezone = pytz.timezone('Asia/Tokyo')
         now = datetime.datetime.now()
         with tmp_configuration(default_timezone='Asia/Tokyo'):
-            registry = self.init_registry(simple_column, ColumnType=DateTime)
+            registry = self.init_registry(simple_column,
+                                          ColumnType=dt_column_type)
 
         field = registry.loaded_namespaces_first_step['Model.Test']['col']
         assert field.default_timezone is timezone
 
         test = registry.Test.insert(col=now)
         assert test.col.tzinfo.zone is timezone.zone
-
-    def test_interval(self):
-        from datetime import timedelta
-
-        dt = timedelta(days=5)
-        registry = self.init_registry(simple_column, ColumnType=Interval)
-        test = registry.Test.insert(col=dt)
-        assert test.col == dt
-
-    def test_large_binary(self):
-        blob = urandom(10000)
-        registry = self.init_registry(simple_column, ColumnType=LargeBinary)
-
-        test = registry.Test.insert(col=blob)
-        assert test.col == blob
 
     def test_selection(self):
         SELECTIONS = [
@@ -825,12 +801,6 @@ class TestColumns:
         registry.Test.insert(col=SELECTIONS[0][0])
         registry.Test.query().filter(
             registry.Test.col.in_(['admin', 'regular-user'])).first()
-
-    def test_json(self):
-        registry = self.init_registry(simple_column, ColumnType=Json)
-        val = {'a': 'Test'}
-        test = registry.Test.insert(col=val)
-        assert test.col == val
 
     def test_json_update(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
@@ -995,12 +965,6 @@ class TestColumns:
         test = registry.Test.insert()
         test.col = color
         assert test.col.hex == colour.Color(color).hex
-
-    def test_uuid_binary_1(self):
-        uuid = uuid1()
-        registry = self.init_registry(simple_column, ColumnType=UUID)
-        test = registry.Test.insert(col=uuid)
-        assert test.col is uuid
 
     def test_uuid_binary_3(self):
         from uuid import uuid3, NAMESPACE_DNS
@@ -1287,9 +1251,6 @@ class TestColumnsAutoDoc:
         column, _, kwargs = column_definition
         self.call_autodoc(column, encrypt_key='secretkey', **kwargs)
 
-    def test_decimal(self):
-        self.call_autodoc(Decimal)
-
     def test_string_with_size(self):
         self.call_autodoc(String, size=100)
 
@@ -1303,15 +1264,6 @@ class TestColumnsAutoDoc:
 
     def test_datetime_with_default_timezone_str(self):
         self.call_autodoc(DateTime, default_timezone='Asia/Tokyo')
-
-    def test_interval(self):
-        self.call_autodoc(Interval)
-
-    def test_large_binary(self):
-        self.call_autodoc(LargeBinary)
-
-    def test_json(self):
-        self.call_autodoc(Json)
 
     def test_add_default(self):
         self.call_autodoc(String, default='get_val')
