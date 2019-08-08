@@ -991,6 +991,7 @@ class Selection(Column):
     def update_table_args(self, registry, Model):
         """Return check constraints to limit the value
 
+        :param registry:
         :param Model:
         :return: list of checkConstraint
         """
@@ -1471,9 +1472,10 @@ class Country(Column):
         properties['add_in_table_args'].append(self)
 
     def update_table_args(self, registry, Model):
-
         """Return check constraints to limit the value
 
+        :param registry:
+        :param Model:
         :return: list of checkConstraint
         """
         if self.encrypt_key:

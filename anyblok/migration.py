@@ -4,7 +4,7 @@ from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
 from alembic.operations import Operations
 from contextlib import contextmanager
-from sqlalchemy import func, select, update, join, and_
+from sqlalchemy import func, select, update, join, and_, text
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.dialects.mysql.types import TINYINT
@@ -310,8 +310,21 @@ class MigrationReport:
                 # Boolean are TINYINT in MySQL DataBase
                 return True
 
+        table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
         self.log_names.append("Modify column type %s.%s : %s => %s" % (
-            diff[2], diff[3], diff[5], diff[6]))
+            table, diff[3], diff[5], diff[6]))
+        return False
+
+    def init_modify_nullable(self, diff):
+        table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
+        self.log_names.append("Modify column nullable %s.%s : %s => %s" % (
+            table, diff[3], diff[5], diff[6]))
+        return False
+
+    def init_modify_server_default(self, diff):
+        table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
+        self.log_names.append("Modify column default %s.%s : %s => %s" % (
+            table, diff[3], diff[5], diff[6]))
         return False
 
     def __init__(self, migration, diffs):
@@ -342,6 +355,8 @@ class MigrationReport:
             'remove_table': self.init_remove_table,
             'change_pk': self.init_change_pk,
             'modify_type': self.init_modify_type,
+            'modify_nullable': self.init_modify_nullable,
+            'modify_default': self.init_modify_server_default,
         }
         for diff in diffs:
             if isinstance(diff, list):
@@ -704,21 +719,32 @@ class MigrationColumn:
         """
         vals = {}
         name = self.name
-        vals.update({
-            'existing_type': self.type if 'type_' not in kwargs else None,
-            'existing_server_default': (
+        if 'existing_server_default' in kwargs:
+            esd = kwargs['existing_server_default']
+            if esd:
+                vals['existing_server_default'] = esd.arg
+            else:
+                vals['existing_server_default'] = esd
+        else:
+            vals['existing_server_default'] = (
                 self.server_default
                 if 'server_default' not in kwargs
-                else None),
-            'existing_autoincrement': (
+                else None)
+        vals.update({
+            'existing_type': kwargs.get(
+                'existing_type',
+                self.type if 'type_' not in kwargs else None),
+            'existing_autoincrement': kwargs.get(
+                'existing_autoincrement',
                 self.autoincrement if 'autoincrement' not in kwargs else None),
-            'existing_comment': (
+            'existing_comment': kwargs.get(
+                'existing_comment',
                 self.comment if 'comment' not in kwargs else None)
         })
-
-        for k in ('autoincrement', 'server_default', 'type_'):
-            if k in kwargs:
-                vals[k] = kwargs[k]
+        vals.update({
+            k: kwargs[k]
+            for k in ('autoincrement', 'server_default', 'type_')
+            if k in kwargs})
 
         if 'name' in kwargs:
             vals['new_column_name'] = kwargs['name']
@@ -776,7 +802,7 @@ class MigrationColumn:
                 elif sdefault is None:
                     return None
                 else:
-                    return eval(sdefault, {}, {})
+                    return text(sdefault)
 
         return sdefault
 

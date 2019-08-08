@@ -11,14 +11,42 @@ from anyblok.common import anyblok_column_prefix
 from .config import Configuration
 
 
+def get_for(basekey, path, default=None):
+    key = '%s.%s' % (basekey, '.'.join(path))
+    if path == ['Model', '*']:
+        return Configuration.get(key, default)
+
+    res = Configuration.get(key, None)
+    if res is not None:
+        return res
+
+    new_path = path[:-1]
+    if path[-1] == '*':
+        new_path[-1] = '*'
+    else:
+        new_path.append('*')
+
+    return get_for(basekey, new_path, default=default)
+
+
+def get_schema_for(path, default=None):
+    return get_for('db_schema', path, default=default)
+
+
+def get_schema_prefix_for(path, default=None):
+    return get_for('prefix_db_schema', path, default=default)
+
+
+def get_schema_suffix_for(path, default=None):
+    return get_for('suffix_db_schema', path, default=default)
+
+
 def format_schema(schema, registry_name):
+    path = registry_name.split('.')
+    schema = get_schema_for(path, default=schema)
     if schema is not None:
-        prefix = Configuration.get(
-            'prefix_db_schema.%s' % registry_name,
-            Configuration.get('prefix_db_schema', ''))
-        suffix = Configuration.get(
-            'suffix_db_schema.%s' % registry_name,
-            Configuration.get('suffix_db_schema', ''))
+        prefix = get_schema_prefix_for(path, default='')
+        suffix = get_schema_suffix_for(path, default='')
 
         return prefix + schema + suffix
 
@@ -190,9 +218,6 @@ class ModelAttribute:
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
         modelname = self.model_name.replace('.', '')
-        if Model[self.attribute_name].db_column_name:
-            column_name = Model[self.attribute_name].db_column_name
-
         return modelname + '.' + column_name
 
     def get_fk_remote(self, registry):

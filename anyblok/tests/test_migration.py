@@ -277,7 +277,7 @@ class TestMigration:
         if sgdb_in(['PostgreSQL']):
             assert c.server_default == "'test'::character varying"
         else:
-            assert c.server_default == "test"
+            assert str(c.server_default) == "'test'"
 
     def test_index(self, registry):
         t = registry.migration.table('test')

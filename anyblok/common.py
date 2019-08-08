@@ -198,6 +198,7 @@ def sgdb_in(engine, databases):
                 if res and database in res[1]:
                     # MariaDB
                     DATABASES_CACHED[database] = True
+
             if (
                 engine.url.drivername.startswith('postgres') and
                 database == 'PostgreSQL'

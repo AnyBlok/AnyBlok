@@ -34,7 +34,6 @@ def dt_column_type(request):
     return request.param
 
 
-
 COLUMNS = [
     (Selection, 'test', {'selections': {'test': 'test'}}),
     (Boolean, True, {}),

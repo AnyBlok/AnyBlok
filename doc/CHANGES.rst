@@ -25,7 +25,6 @@ CHANGELOG
       class MyModelInOtherSchema:
           __db_schema__ = 'my_schema'
 
-
 * Now the Email, Selection, Country, Json, Decimal, Interval, LargeBinary 
   columns can be crypted
 * Removed compatibility with **Python 3.4**, because this version is
