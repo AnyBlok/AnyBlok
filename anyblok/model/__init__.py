@@ -316,7 +316,10 @@ class Model:
             return registry.loaded_namespaces_first_step[namespace]
 
         bases = []
-        properties = {'__depends__': set()}
+        properties = {
+            '__depends__': set(),
+            '__db_schema__': format_schema(None, namespace)
+        }
         ns = registry.loaded_registries[namespace]
 
         for b in ns['bases']:
@@ -340,8 +343,8 @@ class Model:
                     properties[p] = f
 
             if hasattr(b, '__db_schema__'):
-                properties['__db_schema__'] = format_schema(
-                    b.__db_schema__, namespace)
+                properties['__db_schema__'] = format_schema(b.__db_schema__,
+                                                            namespace)
 
         if '__tablename__' in ns['properties']:
             properties['__tablename__'] = ns['properties']['__tablename__']
