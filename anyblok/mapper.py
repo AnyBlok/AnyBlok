@@ -14,7 +14,7 @@ from .config import Configuration
 def get_for(basekey, path, default=None):
     key = '%s.%s' % (basekey, '.'.join(path))
     key = key.lower()
-    
+
     if path in (['Model', '*'], ['Mixin', '*']):
         return Configuration.get(key, default)
 
