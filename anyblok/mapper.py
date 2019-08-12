@@ -13,6 +13,9 @@ from .config import Configuration
 
 def get_for(basekey, path, default=None):
     key = '%s.%s' % (basekey, '.'.join(path))
+    key = key.lower()
+    if 'Model' not in path:
+        return default
     if path == ['Model', '*']:
         return Configuration.get(key, default)
 
