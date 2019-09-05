@@ -11,6 +11,7 @@
 from anyblok.testing import sgdb_in
 import pytest
 from anyblok import Declarations
+from anyblok.config import Configuration
 from anyblok.mapper import ModelAttributeException
 from anyblok.column import Integer, String, DateTime
 from anyblok.relationship import Many2Many, Many2One
@@ -21,6 +22,24 @@ from .conftest import init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_many2many(**kwargs):
@@ -475,7 +494,8 @@ class TestMany2Many:
 
         assert person.addresses == [address]
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #90')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #90')
     def test_declared_in_mixin_inherit_by_two_models(self):
         def add_in_registry():
             _minimum_many2many_by_mixin()
@@ -1111,6 +1131,54 @@ class TestMany2Many:
 
             @register(Model)
             class PersonAddress:
+                __db_schema__ = 'test_db_m2m_schema2'
+
+                id = Integer(primary_key=True)
+                a_id = Integer(
+                    foreign_key=Model.Address.use('id'), nullable=False)
+                p_name = String(
+                    foreign_key='Model.Person=>name', nullable=False)
+                create_at = DateTime(default=datetime.now)
+                foo = String(default='bar')
+
+            @register(Model)
+            class Person:
+                __db_schema__ = 'test_db_m2m_schema3'
+
+                name = String(primary_key=True)
+                addresses = Many2Many(model=Model.Address,
+                                      join_model=Model.PersonAddress,
+                                      many2many="persons")
+
+        registry = self.init_registry(add_in_registry)
+        person = registry.Person.insert(name='jssuzanne')
+        address = registry.Address.insert(
+            street='somewhere', zip="75001", city="Paris")
+        person.addresses.append(address)
+        personaddress = registry.PersonAddress.query().one()
+        assert personaddress.a_id == address.id
+        assert personaddress.p_name == person.name
+        assert personaddress.id
+        assert personaddress.create_at
+        assert personaddress.foo == 'bar'
+
+    def test_rich_many2many_minimum_config_on_join_model_with_di_schema2(
+        self, db_schema
+    ):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+                __db_schema__ = 'test_db_m2m_schema1'
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class PersonAddress:
 
                 id = Integer(primary_key=True)
                 a_id = Integer(
@@ -1548,12 +1616,8 @@ class TestMany2Many:
             @register(Model)
             class TestLink:
                 id = Integer(primary_key=True)
-                left = Many2One(
-                    model='Model.Test', nullable=False,
-                    foreign_key_options={'ondelete': 'cascade'})
-                right = Many2One(
-                    model='Model.Test', nullable=False,
-                    foreign_key_options={'ondelete': 'cascade'})
+                left = Many2One(model='Model.Test', nullable=False)
+                right = Many2One(model='Model.Test', nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default='bar')
 
@@ -1587,13 +1651,9 @@ class TestMany2Many:
             @register(Model)
             class TestLink:
                 left = Many2One(
-                    model='Model.Test', nullable=False,
-                    primary_key=True,
-                    foreign_key_options={'ondelete': 'cascade'})
+                    model='Model.Test', nullable=False, primary_key=True)
                 right = Many2One(
-                    model='Model.Test', nullable=False,
-                    primary_key=True,
-                    foreign_key_options={'ondelete': 'cascade'})
+                    model='Model.Test', nullable=False, primary_key=True)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default='bar')
 

@@ -9,6 +9,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
 from anyblok import Declarations
+from anyblok.config import Configuration
 from anyblok.column import Integer, String
 from anyblok.relationship import One2Many
 from .conftest import init_registry, reset_db
@@ -17,6 +18,24 @@ from .conftest import init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_one2many(**kwargs):

@@ -8,6 +8,7 @@ from sqlalchemy import func, select, update, join, and_, text
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.dialects.mysql.types import TINYINT
+from sqlalchemy.dialects.mssql.base import BIT
 from sqlalchemy.sql.sqltypes import Boolean
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
@@ -302,6 +303,10 @@ class MigrationReport:
     def init_modify_type(self, diff):
         if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
             if isinstance(diff[5], TINYINT) and isinstance(diff[6], Boolean):
+                # Boolean are TINYINT in MySQL DataBase
+                return True
+        if sgdb_in(self.migration.conn.engine, ['MsSQL']):
+            if isinstance(diff[5], BIT) and isinstance(diff[6], Boolean):
                 # Boolean are TINYINT in MySQL DataBase
                 return True
 
@@ -674,6 +679,17 @@ class MigrationColumn:
         if not nullable:
             column.nullable = True
 
+        # check the table exist
+        table = (
+            "%s.%s" % (self.table.schema, self.table.name)
+            if self.table.schema
+            else self.table.name)
+
+        table_ = migration.metadata.tables[table]
+
+        if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
+            column.table = table_
+
         migration.operation.impl.add_column(self.table.name, column,
                                             schema=self.table.schema)
         self.apply_default_value(column)
@@ -682,12 +698,6 @@ class MigrationColumn:
             c = MigrationColumn(self.table, column.name)
             c.alter(nullable=False)
 
-        # check the table exist
-        table = (
-            "%s.%s" % (self.table.schema, self.table.name)
-            if self.table.schema
-            else self.table.name)
-        migration.metadata.tables[table]
         return MigrationColumn(self.table, column.name)
 
     def alter(self, **kwargs):
@@ -774,21 +784,23 @@ class MigrationColumn:
     @property
     def nullable(self):
         """ Use for unittest return if the column is nullable """
-        return self.info['nullable']
+        return self.info.get('nullable', None)
 
     @property
     def type(self):
         """ Use for unittest: return the column type """
-        return self.info['type']
+        return self.info.get('type', None)
 
     @property
     def server_default(self):
         """ Use for unittest: return the default database value """
-        sdefault = self.info['default']
+        sdefault = self.info.get('default', None)
         if sgdb_in(self.table.migration.conn.engine, ['MySQL', 'MariaDB']):
             if sdefault:
                 if not isinstance(sdefault, str):
                     return sdefault.arg
+                elif sdefault is None:
+                    return None
                 else:
                     return text(sdefault)
 
@@ -797,7 +809,7 @@ class MigrationColumn:
     @property
     def comment(self):
         """ Use for unittest: return the default database value """
-        return self.info['comment']
+        return self.info.get('comment', None)
 
     @property
     def autoincrement(self):
@@ -810,7 +822,7 @@ class MigrationColumn:
         if self.name in primary_keys:
             return False
 
-        return self.info.get('autoincrement')
+        return self.info.get('autoincrement', None)
 
 
 class MigrationConstraintCheck:
@@ -882,7 +894,7 @@ class MigrationConstraintUnique:
                                      """must define one or more columns""")
 
         columns_name = [x.name for x in columns]
-        savepoint = 'add_unique_constraint_%s' % (self.name or '')
+        savepoint = 'uq_%s' % (self.name or '')
         try:
             self.table.migration.savepoint(savepoint)
             self.table.migration.operation.create_unique_constraint(
@@ -937,6 +949,11 @@ class MigrationConstraintPrimaryKey:
         if not columns:
             raise MigrationException("""To add a primary key constraint """
                                      """you must define one or more columns""")
+
+        if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
+            for column in columns:
+                if column.nullable:
+                    column.alter(nullable=False)
 
         columns_name = [x.name for x in columns]
         self.table.migration.operation.create_primary_key(
@@ -1170,7 +1187,7 @@ class MigrationSchema:
 
     def has_schema(self):
         with cnx(self.migration) as conn:
-            if sgdb_in(conn.engine, ['MySQL', 'MariaDB']):
+            if sgdb_in(conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
                 query = """
                     SELECT count(*)
                     FROM INFORMATION_SCHEMA.SCHEMATA
@@ -1325,7 +1342,7 @@ class Migration:
         return False
 
     def detect_check_constraint_changed(self, inspector):
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
             # MySQL don t return the reflected constraint
             return []
 

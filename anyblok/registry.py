@@ -554,14 +554,14 @@ class Registry:
             return []
 
         res = []
-        query = """
-            SELECT system_blok.name
-            FROM system_blok
-            WHERE system_blok.state in ('%s')
-            ORDER BY system_blok.order""" % "', '".join(states)
+        query = "SELECT name"
+        query += " FROM system_blok"
+        query += " WHERE state in ('%s')" % "', '".join(states)
+        query += """ ORDER BY "order";"""
         try:
             res = self.execute(query).fetchall()
         except (ProgrammingError, OperationalError):
+            # During the first connection the database is empty
             pass
 
         if res:

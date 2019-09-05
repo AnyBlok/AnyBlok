@@ -16,8 +16,16 @@ env:
     global:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
     matrix:
-        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
-        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
+        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary'
+        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
+        - |-
+            ANYBLOK_DATABASE_HOST=localhost \
+            ANYBLOK_DATABASE_PORT=1433 \
+            ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+            ANYBLOK_DATABASE_USER=sa \
+            ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+            SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
+            SQLPYCLIENT='pymssql'
 
 matrix:
     allow_failures:
@@ -27,10 +35,10 @@ matrix:
       - python: "pypy3.5"
     include:
       - python: "pypy3.5"
-        env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c'
+        env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
     exclude:
       - python: "3.5"
-        env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e'
+        env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
 
 virtualenv:
   system_site_packages: false
@@ -38,16 +46,18 @@ virtualenv:
 services:
   - postgresql
   - mysql
+  - docker
 
 before_install:
   - sudo apt-get update
   - sudo apt-get install graphviz
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server; fi
 
 install:
   - pip install -U pip
+  - pip install git+https://github.com/jssuzanne/sqlalchemy-utils.git@mssql_and_pymssql#egg=sqlalchemy_utils
   - pip install wheel
-  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then pip install psycopg2cffi; else pip install psycopg2-binary; fi
-  - pip install sqlalchemy mysqlclient
+  - pip install sqlalchemy $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
   - pip install coveralls

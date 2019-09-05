@@ -11,7 +11,7 @@ from .conftest import init_registry
 
 
 @pytest.fixture(scope="module")
-def bloks_loaded(request):
+def bloks_loaded(request, configuration_loaded):
     request.addfinalizer(BlokManager.unload)
     BlokManager.load()
 
