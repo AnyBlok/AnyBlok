@@ -305,7 +305,7 @@ params = [
     Selection,
 ]
 
-if not sgdb_in(['MySQL', 'MariaDB']):
+if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
     params.append(DateTime)
     params.append(URL)
 
