@@ -18,14 +18,14 @@ env:
     matrix:
         - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary'
         - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
-          #- |-
-          #  ANYBLOK_DATABASE_HOST=localhost \
-          #  ANYBLOK_DATABASE_PORT=1433 \
-          #  ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
-          #  ANYBLOK_DATABASE_USER=sa \
-          #  ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
-          #  SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
-          #  SQLPYCLIENT='pymssql'
+          - |-
+            ANYBLOK_DATABASE_HOST=localhost \
+            ANYBLOK_DATABASE_PORT=1433 \
+            ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+            ANYBLOK_DATABASE_USER=sa \
+            ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+            SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
+            SQLPYCLIENT='pymssql'
 
 matrix:
     allow_failures:
@@ -51,11 +51,11 @@ services:
 before_install:
   - sudo apt-get update
   - sudo apt-get install graphviz
-    #- if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server; fi
 
 install:
   - pip install -U pip
-    #- pip install git+https://github.com/jssuzanne/sqlalchemy-utils.git@mssql_and_pymssql#egg=sqlalchemy_utils
+  - pip install git+https://github.com/jssuzanne/sqlalchemy-utils.git@mssql_and_pymssql#egg=sqlalchemy_utils
   - pip install wheel
   - pip install sqlalchemy $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
@@ -65,14 +65,18 @@ install:
   - pip install -U coveralls
   - pip install .
 
+env:
+  - TESTS_DIR=anyblok/tests
+  - TESTS_DIR=anyblok_bloks
+
 script:
   - flake8 anyblok --exclude=*/tests/*
   - python3 update_env.py
-  - $SQLSERVER 'create database travis_ci_test;'
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]]; then py.test --cov-report= --cov=anyblok anyblok/tests; fi
-  - $SQLSERVER 'drop database travis_ci_test;'
-  - anyblok_createdb --install-all-bloks
-  - py.test --cov-report= --cov=anyblok anyblok/bloks
+  - if [[ $TESTS_DIR == 'anyblok/tests' ]]; then $SQLSERVER 'create database travis_ci_test;'; fi
+  - if [[ $TESTS_DIR == 'anyblok/tests' and $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]]; then py.test --cov-report= --cov=anyblok anyblok/tests; fi
+  - if [[ $TESTS_DIR == 'anyblok/tests' ]]; then $SQLSERVER 'drop database travis_ci_test;'; fi
+  - if [[ $TESTS_DIR == 'anyblok/bloks' ]]; then anyblok_createdb --install-all-bloks; fi
+  - if [[ $TESTS_DIR == 'anyblok/bloks' ]]; then py.test --cov-report= --cov=anyblok anyblok/bloks; fi
   
 after_success:
   coveralls --data_file=.coverage --config_file=.coveragerc
