@@ -16,8 +16,10 @@ env:
     global:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
     matrix:
-        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary'
-        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
+        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary' TESTS_DIR=anyblok/tests
+        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary' TESTS_DIR=anyblok/bloks
+        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient' TESTS_DIR=anyblok/tests
+        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient' TESTS_DIR=anyblok/bloks
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
@@ -26,6 +28,16 @@ env:
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
           SQLPYCLIENT='pymssql'
+          TESTS_DIR=anyblok/tests
+        - |-
+          ANYBLOK_DATABASE_HOST=localhost \
+          ANYBLOK_DATABASE_PORT=1433 \
+          ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+          ANYBLOK_DATABASE_USER=sa \
+          ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
+          SQLPYCLIENT='pymssql'
+          TESTS_DIR=anyblok/bloks
 
 matrix:
     allow_failures:
@@ -64,10 +76,6 @@ install:
   - pip install -U cryptography
   - pip install -U coveralls
   - pip install .
-
-env:
-  - TESTS_DIR=anyblok/tests
-  - TESTS_DIR=anyblok_bloks
 
 script:
   - flake8 anyblok --exclude=*/tests/*
