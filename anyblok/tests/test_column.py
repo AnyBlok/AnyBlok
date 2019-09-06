@@ -32,7 +32,7 @@ from anyblok.column import (
 time_params = [DateTime]
 
 if not sgdb_in(['MsSQL']):
-    time_params [DateTime, TimeStamp]
+    time_params.append(TimeStamp)
 
 @pytest.fixture(params=time_params)
 def dt_column_type(request):
