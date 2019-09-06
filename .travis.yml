@@ -65,18 +65,21 @@ install:
   - pip install -U coveralls
   - pip install .
 
-env:
-  - TESTS_DIR=anyblok/tests
-  - TESTS_DIR=anyblok_bloks
+jobs:
+  include:
+    - stage: Tests for $SQLSERVER
+      install: skip
+      script: 
+        - $SQLSERVER 'create database travis_ci_test;'
+        - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]] py.test --cov-report= --cov=anyblok anyblok/tests
+        - $SQLSERVER 'drop database travis_ci_test;'
+    - stage: Bloks tests for $SQLSERVER
+      install: skip
+      script:
+        - anyblok_createdb --install-all-bloks
+        - py.test --cov-report= --cov=anyblok anyblok/bloks
 
-script:
-  - flake8 anyblok --exclude=*/tests/*
-  - python3 update_env.py
-  - if [[ $TESTS_DIR == 'anyblok/tests' ]]; then $SQLSERVER 'create database travis_ci_test;'; fi
-  - if [[ $TESTS_DIR == 'anyblok/tests' and $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]]; then py.test --cov-report= --cov=anyblok anyblok/tests; fi
-  - if [[ $TESTS_DIR == 'anyblok/tests' ]]; then $SQLSERVER 'drop database travis_ci_test;'; fi
-  - if [[ $TESTS_DIR == 'anyblok/bloks' ]]; then anyblok_createdb --install-all-bloks; fi
-  - if [[ $TESTS_DIR == 'anyblok/bloks' ]]; then py.test --cov-report= --cov=anyblok anyblok/bloks; fi
-  
+
+
 after_success:
   coveralls --data_file=.coverage --config_file=.coveragerc
