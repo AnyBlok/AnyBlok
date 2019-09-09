@@ -15,7 +15,7 @@ python:
 env:
     global:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
-        - TESTFILES_PATTERN=anyblok/tests
+        - TESTFILES_PATTERN='anyblok/tests'
     matrix:
         - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary'
         - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
@@ -27,7 +27,7 @@ env:
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
           SQLPYCLIENT='pymssql'
-          TESTFILES_PATTERN=anyblok/tests/test_(*2*|migration*|column|mapper).py
+          TESTFILES_PATTERN='anyblok/tests/test_(*2*|migration*|column|mapper).py'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
@@ -36,7 +36,7 @@ env:
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
           SQLPYCLIENT='pymssql'
-          TESTFILES_PATTERN=anyblok/tests --ignore anyblok/tests/test_(*2*|migration*|column|mapper).py
+          TESTFILES_PATTERN='anyblok/tests --ignore anyblok/tests/test_(*2*|migration*|column|mapper).py'
 
 matrix:
     allow_failures:
