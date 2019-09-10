@@ -16,6 +16,7 @@ env:
     global:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
         - TESTFILES_PATTERN='anyblok/tests'
+        - CONFDIR='anyblok'
     matrix:
         - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary'
         - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
@@ -81,10 +82,10 @@ script:
   - flake8 anyblok --exclude=*/tests/*
   - python3 update_env.py
   - $SQLSERVER 'create database travis_ci_test;'
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]]; then py.test --cov-report= --cov=anyblok $TESTFILES_PATTERN; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]]; then py.test -x --cov-report= --cov=anyblok --confcutdir $CONFDIR $TESTFILES_PATTERN; fi
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks
-  - py.test --cov-report= --cov=anyblok anyblok/bloks
+  - py.test -x --cov-report= --cov=anyblok --confcutdir $CONFDIR anyblok/bloks
   
 after_success:
   coveralls --data_file=.coverage --config_file=.coveragerc
