@@ -27,7 +27,7 @@ env:
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
           SQLPYCLIENT='pymssql'
-          TESTCMD_OPTION=-k 'Migration or Many2 or One2 or Column or Mapper'
+          TESTCMD_OPTION='-k "Migration or Many2 or One2 or Column or Mapper"'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
@@ -36,7 +36,7 @@ env:
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
           SQLPYCLIENT='pymssql'
-          TESTCMD_OPTION=-k 'and not Migration and not Many2 and not One2 and not Column and not Mapper'
+          TESTCMD_OPTION='-k "and not Migration and not Many2 and not One2 and not Column and not Mapper"'
 
 matrix:
     allow_failures:
