@@ -34,6 +34,7 @@ time_params = [DateTime]
 if not sgdb_in(['MsSQL']):
     time_params.append(TimeStamp)
 
+
 @pytest.fixture(params=time_params)
 def dt_column_type(request):
     return request.param
@@ -210,6 +211,7 @@ def column_with_foreign_key_with_diff_schema2():
         test = String(foreign_key=Model.Test.use('name'))
 
 
+@pytest.mark.column
 class TestColumns:
 
     @pytest.fixture(autouse=True)
