@@ -9,7 +9,6 @@
 import pytest
 from anyblok.field import Field, FieldException, Function, JsonRelated
 from anyblok.column import Integer, String, Json
-from anyblok.testing import sgdb_in
 from anyblok import Declarations
 from sqlalchemy import func, types
 from .conftest import init_registry
@@ -68,6 +67,7 @@ def registry_field_function(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.field
 class TestFieldFunction:
 
     @pytest.fixture(autouse=True)
@@ -119,6 +119,7 @@ def registry_json_related(request, bloks_loaded):
 
 @pytest.mark.skipif(sgdb_in(['MariaDB']),
                     reason='JSON is not existing in this SGDB')
+@pytest.mark.field
 class TestJsonRelated:
 
     @pytest.fixture(autouse=True)
@@ -228,6 +229,7 @@ def registry_json_related2(request, bloks_loaded):
 
 @pytest.mark.skipif(sgdb_in(['MariaDB']),
                     reason='JSON is not existing in this SGDB')
+@pytest.mark.field
 class TestJsonRelated2:
 
     @pytest.fixture(autouse=True)
@@ -275,6 +277,7 @@ def field_without_name():
         field = OneField()
 
 
+@pytest.mark.field
 class TestField2:
 
     @pytest.fixture(autouse=True)

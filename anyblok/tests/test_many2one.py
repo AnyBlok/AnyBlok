@@ -16,11 +16,59 @@ from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
 from anyblok.column import (
     Integer, String, BigInteger, Float, Decimal, Boolean, DateTime, Date, Time,
-    Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection)
+    Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection,
+    TimeStamp)
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.engine.reflection import Inspector
 from .conftest import init_registry_with_bloks, init_registry, reset_db
+
+
+COLUMNS = [
+    Integer,
+    BigInteger,
+    Float,
+    Decimal,
+    String,
+    Boolean,
+    Date,
+    Time,
+    Email,
+    UUID,
+    Country,
+    Selection,
+]
+
+
+if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
+    COLUMNS.append([DateTime, TimeStamp])
+
+
+try:
+    import colour  # noqa
+    COLUMNS.append(Color)
+except Exception:
+    pass
+
+try:
+    import furl  # noqa
+    if not sgdb_in(['MsSQL']):
+        COLUMNS.append(URL)
+except Exception:
+    pass
+
+
+try:
+    import phonenumbers  # noqa
+    COLUMNS.append(PhoneNumber)
+except Exception:
+    pass
+
+try:
+    import pycountry  # noqa
+    COLUMNS.append(Country)
+except Exception:
+    pass
 
 
 register = Declarations.register
@@ -288,29 +336,7 @@ def _auto_detect_type(ColumnType=None, **kwargs):
         address = Many2One(model=Model.Address)
 
 
-params = [
-    Integer,
-    BigInteger,
-    Float,
-    Decimal,
-    String,
-    Boolean,
-    Date,
-    Time,
-    Email,
-    UUID,
-    Color,
-    Country,
-    PhoneNumber,
-    Selection,
-]
-
-if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
-    params.append(DateTime)
-    params.append(URL)
-
-
-@pytest.fixture(scope="class", params=params)
+@pytest.fixture(scope="class", params=COLUMNS)
 def registry_many2one_auto_detect(request, bloks_loaded):
     reset_db()
     registry = init_registry_with_bloks(

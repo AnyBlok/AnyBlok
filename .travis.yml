@@ -15,7 +15,7 @@ python:
 env:
     global:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
-        - TESTCMD_OPTION=''
+        - MARKERS=''
     matrix:
         - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary'
         - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
@@ -27,7 +27,7 @@ env:
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
           SQLPYCLIENT='pymssql'
-          TESTCMD_OPTION='-k "Migration or Many2 or One2 or Column or Mapper"'
+          MARKERS='field'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
@@ -36,7 +36,7 @@ env:
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
           SQLPYCLIENT='pymssql'
-          TESTCMD_OPTION='-k "and not Migration and not Many2 and not One2 and not Column and not Mapper"'
+          MARKERS='not field'
 
 matrix:
     allow_failures:
@@ -81,7 +81,8 @@ script:
   - flake8 anyblok --exclude=*/tests/*
   - python3 update_env.py
   - $SQLSERVER 'create database travis_ci_test;'
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]]; then pytest $TESTCMD_OPTION --cov-report= --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' && $MARKER_LEVEL == '']]; then pytest --cov-report= --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' && $MARKER_LEVEL != '']]; then pytest -m "$MARKERS" --cov-report= --cov=anyblok anyblok/tests; fi
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks
   - pytest --cov-report= --cov=anyblok anyblok/bloks
