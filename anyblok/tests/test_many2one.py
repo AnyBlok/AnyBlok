@@ -52,7 +52,7 @@ except Exception:
 
 try:
     import furl  # noqa
-    if not sgdb_in(['MsSQL']):
+    if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
         COLUMNS.append(URL)
 except Exception:
     pass
