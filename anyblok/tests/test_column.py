@@ -59,6 +59,26 @@ COLUMNS = [
 if not sgdb_in(['MySQL', 'MariaDB']):
     COLUMNS.append((UUID, uuid1(), {}))
 
+
+COLUMNS = [
+    (Selection, 'test', {'selections': {'test': 'test'}}),
+    (Boolean, True, {}),
+    (Boolean, False, {}),
+    (String, 'test', {}),
+    (BigInteger, 1, {}),
+    (Text, 'Test', {}),
+    (Date, datetime.date.today(), {}),
+    (DateTime, datetime.datetime.now().replace(
+        tzinfo=pytz.timezone(time.tzname[0])), {}),
+    (Time, datetime.time(), {}),
+    (Float, 1., {}),
+    (Integer, 1, {}),
+    (Email, 'jhon@doe.com', {}),
+]
+
+if not sgdb_in(['MySQL', 'MariaDB']):
+    COLUMNS.append((UUID, uuid1(), {}))
+
 try:
     import cryptography  # noqa
     has_cryptography = True
@@ -448,7 +468,8 @@ class TestColumns:
         registry.Test.query().update(dict(col=None))
         assert test.col is None
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_1_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
@@ -459,7 +480,8 @@ class TestColumns:
         registry.expire(test, ['col'])
         assert test.col == now
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_2_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -470,7 +492,8 @@ class TestColumns:
         registry.expire(test, ['col'])
         assert test.col == now
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_3_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -481,7 +504,8 @@ class TestColumns:
         registry.expire(test, ['col'])
         assert test.col == now
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_4_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -492,7 +516,8 @@ class TestColumns:
         registry.expire(test, ['col'])
         assert test.col == now.replace(microsecond=0)
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
@@ -501,7 +526,8 @@ class TestColumns:
         Test = registry.Test
         assert Test.query().filter(Test.col == now).one() is test
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_1_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
@@ -511,7 +537,8 @@ class TestColumns:
         assert Test.query().filter(
             Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%z')).one() is test
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_2_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -521,7 +548,8 @@ class TestColumns:
         assert Test.query().filter(
             Test.col == now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')).one() is test
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #87')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #87')
     def test_datetime_str_conversion_3_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -702,7 +730,8 @@ class TestColumns:
         t = registry.Test.insert()
         assert t.col is None
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #90')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #90')
     def test_selection_change_by_query(self):
         SELECTIONS = [
             ('admin', 'Admin'),
@@ -779,7 +808,7 @@ class TestColumns:
         test.col['b'] = 'test'
         assert test.col == {'a': 'test', 'b': 'test'}
 
-    @pytest.mark.skipif(sgdb_in(['MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
                         reason='JSON is not existing in this SGDB')
     def test_json_simple_filter(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
@@ -879,7 +908,8 @@ class TestColumns:
         t = registry.Test.insert()
         assert t.val == 'val'
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #89')
     def test_sequence(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence)
         assert registry.Test.insert().col == "1"
@@ -889,14 +919,16 @@ class TestColumns:
         Seq = registry.System.Sequence
         assert Seq.query().filter(Seq.code == 'Model.Test=>col').count() == 1
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #89')
     def test_sequence_with_primary_key(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       primary_key=True)
         assert registry.Test.insert().col == "1"
         assert registry.Test.insert().col == "2"
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #89')
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       code="SO", formater="{code}-{seq:06d}")
@@ -1134,7 +1166,8 @@ class TestColumns:
             registry.Test.insert(col='WG')
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #90')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #90')
     def test_pycoundtry_query_insert_by_wrong_query(self):
         registry = self.init_registry(simple_column, ColumnType=Country)
         with pytest.raises(Exception):
@@ -1212,6 +1245,8 @@ class TestColumnsAutoDoc:
         column, _, kwargs = column_definition
         self.call_autodoc(column, **kwargs)
 
+    @pytest.mark.skipif(not has_cryptography,
+                        reason="cryptography is not installed")
     def test_autodoc_with_encrypt_key(self, column_definition):
         column, _, kwargs = column_definition
         self.call_autodoc(column, encrypt_key='secretkey', **kwargs)

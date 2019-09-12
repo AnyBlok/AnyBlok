@@ -11,6 +11,7 @@
 import pytest
 from anyblok.testing import sgdb_in
 from anyblok import Declarations
+from anyblok.config import Configuration
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
 from anyblok.column import (
@@ -25,6 +26,24 @@ from .conftest import init_registry_with_bloks, init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_many2one(**kwargs):
@@ -383,7 +402,8 @@ class TestMany2OneOld:
         with pytest.raises(FieldException):
             self.init_registry(_many2one_with_same_name_for_column_names)
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #89')
     def test_minimum_many2one_on_sequence(self):
 
         def add_in_registry():
