@@ -27,7 +27,7 @@ env:
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
           SQLPYCLIENT='pymssql'
-          MARKERS='field'
+          MARKERS='field and column and relationship'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
@@ -36,7 +36,7 @@ env:
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
           SQLPYCLIENT='pymssql'
-          MARKERS='not field'
+          MARKERS='not field and not column and not relationship'
 
 matrix:
     allow_failures:

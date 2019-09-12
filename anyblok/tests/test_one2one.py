@@ -159,6 +159,7 @@ def registry_minimum_one2one(request, bloks_loaded, db_schema):
     return registry
 
 
+@pytest.mark.relationship
 class TestMinimumOne2One:
 
     @pytest.fixture(autouse=True)
@@ -219,6 +220,7 @@ def registry_multi_fk_one2one(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.relationship
 class TestMultiFKOne2One:
 
     @pytest.fixture(autouse=True)
@@ -318,6 +320,7 @@ def _minimum_one2one_with_one2many(**kwargs):
                           backref="person", one2many="persons")
 
 
+@pytest.mark.relationship
 class TestOne2One:
 
     @pytest.fixture(autouse=True)

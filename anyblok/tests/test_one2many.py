@@ -166,6 +166,7 @@ def registry_complete_one2many(request, bloks_loaded, db_schema):
     return registry
 
 
+@pytest.mark.relationship
 class TestCompleteOne2Many:
 
     @pytest.fixture(autouse=True)
@@ -226,6 +227,7 @@ def registry_multi_fk_one2many(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.relationship
 class TestMultiFkOne2Many:
 
     @pytest.fixture(autouse=True)
@@ -358,6 +360,7 @@ def _one2many_with_str_model(**kwargs):
         persons = One2Many(model='Model.Person')
 
 
+@pytest.mark.relationship
 class TestOne2Many:
 
     @pytest.fixture(autouse=True)

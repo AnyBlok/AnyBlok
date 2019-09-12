@@ -41,7 +41,7 @@ COLUMNS = [
 
 
 if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
-    COLUMNS.append([DateTime, TimeStamp])
+    COLUMNS.extend([DateTime, TimeStamp])
 
 
 try:
@@ -286,6 +286,7 @@ def registry_many2one(request, bloks_loaded, db_schema):
     return registry, request.param[1], request.param[2]
 
 
+@pytest.mark.relationship
 class TestMany2One:
 
     @pytest.fixture(autouse=True)
@@ -345,6 +346,7 @@ def registry_many2one_auto_detect(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.relationship
 class TestMany2OneAutoDetectColumn:
 
     @pytest.fixture(autouse=True)
@@ -408,6 +410,7 @@ def _two_remote_primary_keys(**kwargs):
         test = Many2One(model=Model.Test)
 
 
+@pytest.mark.relationship
 class TestMany2OneOld:
 
     @pytest.fixture(autouse=True)
