@@ -81,7 +81,7 @@ script:
   - flake8 anyblok --exclude=*/tests/*
   - python3 update_env.py
   - $SQLSERVER 'create database travis_ci_test;'
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]]; then py.test -x --cov-report= --cov=anyblok anyblok/tests $TESTCMD_OPTION; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]]; then pytest $TESTCMD_OPTION --cov-report= --cov=anyblok anyblok/tests; fi
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks
   - py.test -x --cov-report= --cov=anyblok anyblok/bloks
