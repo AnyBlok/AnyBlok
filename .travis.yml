@@ -63,7 +63,8 @@ services:
 before_install:
   - sudo apt-get update
   - sudo apt-get install graphviz
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then sudo docker pull mcr.microsoft.com/mssql/server:2019-latest; docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mcr.microsoft.com/mssql/server:2019-latest; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mcr.microsoft.com/mssql/server:2019-latest; fi
 
 install:
   - pip install -U pip
