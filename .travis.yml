@@ -25,8 +25,8 @@ env:
           ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
-          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
-          SQLPYCLIENT='pymssql'
+          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
+          SQLPYCLIENT='pymssql' \
           MARKERS='field or column or relationship'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
@@ -34,8 +34,8 @@ env:
           ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
-          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
-          SQLPYCLIENT='pymssql'
+          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
+          SQLPYCLIENT='pymssql' \
           MARKERS='not field and not column and not relationship'
 
 matrix:
@@ -51,25 +51,9 @@ matrix:
       - python: "3.5"
         env: ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
       - python: "3.5"
-        env: - |-
-          ANYBLOK_DATABASE_HOST=localhost \
-          ANYBLOK_DATABASE_PORT=1433 \
-          ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
-          ANYBLOK_DATABASE_USER=sa \
-          ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
-          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
-          SQLPYCLIENT='pymssql'
-          MARKERS='field or column or relationship'
+        env: ANYBLOK_DATABASE_HOST=localhost ANYBLOK_DATABASE_PORT=1433 ANYBLOK_DATABASE_DRIVER=mssql+pymssql ANYBLOK_DATABASE_USER=sa ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q SQLPYCLIENT='pymssql' MARKERS='field or column or relationship'
       - python: "3.5"
-        env: - |-
-          ANYBLOK_DATABASE_HOST=localhost \
-          ANYBLOK_DATABASE_PORT=1433 \
-          ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
-          ANYBLOK_DATABASE_USER=sa \
-          ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
-          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q'
-          SQLPYCLIENT='pymssql'
-          MARKERS='not field and not column and not relationship'
+        env: ANYBLOK_DATABASE_HOST=localhost ANYBLOK_DATABASE_PORT=1433 ANYBLOK_DATABASE_DRIVER=mssql+pymssql ANYBLOK_DATABASE_USER=sa ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' SQLPYCLIENT='pymssql' MARKERS='not field and not column and not relationship'
     fast_finish: true
 
 virtualenv:
