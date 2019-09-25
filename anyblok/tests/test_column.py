@@ -29,7 +29,13 @@ from anyblok.column import (
     Password, UUID, URL, PhoneNumber, Email, Country, TimeStamp)
 
 
-@pytest.fixture(params=[DateTime, TimeStamp])
+time_params = [DateTime]
+
+if not sgdb_in(['MsSQL']):
+    time_params.append(TimeStamp)
+
+
+@pytest.fixture(params=time_params)
 def dt_column_type(request):
     return request.param
 
@@ -44,8 +50,6 @@ COLUMNS = [
     (Date, datetime.date.today(), {}),
     (DateTime, datetime.datetime.now().replace(
         tzinfo=pytz.timezone(time.tzname[0])), {}),
-    (TimeStamp, datetime.datetime.now().replace(
-        tzinfo=pytz.timezone(time.tzname[0])), {}),
     (Time, datetime.time(), {}),
     (Float, 1., {}),
     (Integer, 1, {}),
@@ -59,25 +63,10 @@ COLUMNS = [
 if not sgdb_in(['MySQL', 'MariaDB']):
     COLUMNS.append((UUID, uuid1(), {}))
 
+if not sgdb_in(['MsSQL']):
+    COLUMNS.append((TimeStamp, datetime.datetime.now().replace(
+                        tzinfo=pytz.timezone(time.tzname[0])), {}))
 
-COLUMNS = [
-    (Selection, 'test', {'selections': {'test': 'test'}}),
-    (Boolean, True, {}),
-    (Boolean, False, {}),
-    (String, 'test', {}),
-    (BigInteger, 1, {}),
-    (Text, 'Test', {}),
-    (Date, datetime.date.today(), {}),
-    (DateTime, datetime.datetime.now().replace(
-        tzinfo=pytz.timezone(time.tzname[0])), {}),
-    (Time, datetime.time(), {}),
-    (Float, 1., {}),
-    (Integer, 1, {}),
-    (Email, 'jhon@doe.com', {}),
-]
-
-if not sgdb_in(['MySQL', 'MariaDB']):
-    COLUMNS.append((UUID, uuid1(), {}))
 
 try:
     import cryptography  # noqa
@@ -222,6 +211,7 @@ def column_with_foreign_key_with_diff_schema2():
         test = String(foreign_key=Model.Test.use('name'))
 
 
+@pytest.mark.column
 class TestColumns:
 
     @pytest.fixture(autouse=True)

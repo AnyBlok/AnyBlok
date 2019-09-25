@@ -152,6 +152,7 @@ def registry_many2many(request, bloks_loaded, db_schema):
     return registry
 
 
+@pytest.mark.relationship
 class TestMany2ManyComplete:
 
     @pytest.fixture(autouse=True)
@@ -342,6 +343,7 @@ def reuse_many2many_table(**kwargs):
             join_table='join_person_and_address_for_addresses')
 
 
+@pytest.mark.relationship
 class TestMany2Many:
 
     @pytest.fixture(autouse=True)
@@ -1067,54 +1069,6 @@ class TestMany2Many:
         assert personaddress.foo == 'bar'
 
     def test_rich_many2many_minimum_config_on_join_model_with_dif_schema(
-        self, db_schema
-    ):
-
-        def add_in_registry():
-
-            @register(Model)
-            class Address:
-                __db_schema__ = 'test_db_m2m_schema1'
-
-                id = Integer(primary_key=True)
-                street = String()
-                zip = String()
-                city = String()
-
-            @register(Model)
-            class PersonAddress:
-                __db_schema__ = 'test_db_m2m_schema2'
-
-                id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use('id'), nullable=False)
-                p_name = String(
-                    foreign_key='Model.Person=>name', nullable=False)
-                create_at = DateTime(default=datetime.now)
-                foo = String(default='bar')
-
-            @register(Model)
-            class Person:
-                __db_schema__ = 'test_db_m2m_schema3'
-
-                name = String(primary_key=True)
-                addresses = Many2Many(model=Model.Address,
-                                      join_model=Model.PersonAddress,
-                                      many2many="persons")
-
-        registry = self.init_registry(add_in_registry)
-        person = registry.Person.insert(name='jssuzanne')
-        address = registry.Address.insert(
-            street='somewhere', zip="75001", city="Paris")
-        person.addresses.append(address)
-        personaddress = registry.PersonAddress.query().one()
-        assert personaddress.a_id == address.id
-        assert personaddress.p_name == person.name
-        assert personaddress.id
-        assert personaddress.create_at
-        assert personaddress.foo == 'bar'
-
-    def test_rich_many2many_minimum_config_on_join_model_with_di_schema2(
         self, db_schema
     ):
 
