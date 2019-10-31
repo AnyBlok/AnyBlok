@@ -735,7 +735,7 @@ We want to foster a very test friendly culture in the AnyBlok
 community, that's why we cover tests writing and launching in this
 "Basic usage" page.
 
-That being said, such a dynamic framework represent a challenge for
+That being said, such a dynamic framework represents a challenge for
 tests, because the application constructs, e.g., application Models,
 must *not* be imported directly. Instead, a proper Registry must be
 set up one way or another before the test launcher kicks in, and that
@@ -750,8 +750,7 @@ find its use for some applications or middleware).
           stricto sensu unit tests, but rather integration
           tests. Nevertheless, we casually speak of them as unit tests
           if they stay lightweight and are about testing individual
-          AnyBlok
-          components.
+          AnyBlok components.
 
           Nothing prevents application developers to also write true unit
           tests, perhaps for subroutines that don't interact with the
@@ -761,115 +760,62 @@ To address these challenges, AnyBlok ships with helper pytest fixture
 
 .. _basedoc_testcases:
 
-Writing tests
-+++++++++++++
+Writing tests with pytest
++++++++++++++++++++++++++
 
-The most commonly used helper base class is :class:`BlokTestCase
-<anyblok.tests.testcase.BlokTestCase>`. It provides everything Blok
-developers need for their daily workflow: a working registry is setup
-once for the whole test run, is exposed as a class attribute,
-and the tests are insulated by rollbacking the database transaction.
+To start correctly you will need a ``conftest.py`` file.
+Generally, you just want to import the conftest from the bloks you need
+in your context, for example in our case::
 
-Another interesting base class is :class:`SharedDataTestCase
-<anyblok.tests.testcase.SharedDataTestCase>`. It uses database
-savepoints to share a common fixture among tests of the same class.
-In concrete test subclasses, any data created by the ``setUpSharedData``
-classmethod will be available to all tests, and will be rollbacked
-once all of them have run. This can save a lot of time in the test runs.
+  from anyblok.conftest import *  # noqa: F401,F403
 
-.. note:: it is advisable to delete the imported base class from the
-          test module, like so::
+But you can do more for example if you need a registry with one blok loaded only, we need a new fixture::
 
-            from anyblok.tests.testcase import SharedDataTestCase
+  @pytest.fixture(scope="class")
+  def registry_with_blok_to_load(request, testbloks_loaded):
+      registry = init_registry_with_bloks(['blok_to_load'], None)
+      request.addfinalizer(registry.close)
+      return registry
 
-            class MyTest(SharedDataTestCase):
+Here you have an example to write a test class::
 
-               (...)
+  class TestRoom:
+    """Test Room model"""
 
-            del SharedDataTestCase
+    def test_create_room(self, rollback_registry):
+      registry = rollback_registry
+      room_count = registry.Room.query().count()
+      room = registry.Room.insert(
+          name="A1",
+          capacity=25,
+      )
+      assert registry.Room.query().count() == room_count + 1
+      assert room.name == "A1"
 
-          in some cases, test launchers can be confused by the
-          presence of the base class in the module namespace,
-          resulting in some double launchings.
-
-We should also mention :class:`DBTestCase
-<anyblok.tests.testcase.DBTestCase>`, which is more suited for
-code that interacts at a deeper level with
-the framework (including the framework itself). It creates and drops
-the database for each test case, and therefore makes the whole run
-terribly slow, but that's sometimes a price worth paying.
-
-
-.. warning:: One must separate the launches of BlokTestCases
-             and of DBTestCases in different runs.
-
-
-Launching tests with the nose plugin
-++++++++++++++++++++++++++++++++++++
+Launching tests with the pytest plugin
+++++++++++++++++++++++++++++++++++++++
 
 Summary: use this if you need accurate coverage results. This is a
 good fit for Continuous Integration (CI).
 
-AnyBlok comes with a `nose <https://pypi.python.org/pypi/nose/1.3.7>`_
+AnyBlok comes with a `pytest <https://pypi.org/project/pytest/>`_
 plugin right away. Once the testing database is set up, and described
 by proper environment variables or :ref:`default configuration files
 <basedoc_conf_files_default>`, you can test your bloks with the
 ``--with-anyblok-bloks`` option.
 
-.. warning:: don't use this if you need advanced tests selection
-             such as replaying failed tests, or cherry picking one
-             specific test which triggers imports that are unwanted
-             before the registry is set up.
-
-             Prefer :ref:`anyblok_nose <basedoc_anyblok_nose>` in that case.
-
 Here's an example, adapted from AnyBlok's ``.travis.yml``::
 
-  export ANYBLOK_DATABASE_URL=postgresql:///travis_ci_test
+  export ANYBLOK_DATABASE_NAME=travis_ci_test
+  export ANYBLOK_DATABASE_DRIVER=postgresql
+  export ANYBLOK_DATABASE_USER=postgres
   anyblok_createdb --install-all-bloks
-  nosetests anyblok/bloks --with-anyblok-bloks -v -s --with-coverage --cover-package=anyblok
-
-In case the ``coverage`` plugin is also in use, as in the example
-above, Anyblok's nose plugin will
-perform all Blok loadings and Model final classes assemblies (i.e.,
-loads of ``BlokManager`` and ``RegistryManager``) *after* the
-``coverage`` startup, thus giving you correct coverage results)
-
-.. note:: If you want to test several Bloks depending on each other, while
-          making sure the tests of the lower ones don't need the upper ones
-          being installed, and still maintain proper coverage results, you can
-          do it with several runs.
-
-          For an example of this, see `anyblok_wms_base/.travis.yml
-          <https://github.com/AnyBlok/anyblok_wms_base/blob/master/.travis.yml>`_
-
-.. _basedoc_anyblok_nose:
-
-Launching tests with ``anyblok_nose``
-+++++++++++++++++++++++++++++++++++++
-Summary: use this if you want the full tests selection capabilities of
-nosetests, and don't care about coverage. This is a good fit for
-development and debug workflows.
-
-AnyBlok provides the ``anyblok_nose`` script right out of the
-box. It takes care of all needed AnyBlok initialization, and *only
-then* invokes the nose launcher.
-
-This is the most respectful way of nose internals, but ``coverage`` is
-blind with respect to any code imported or run during the Registry
-setup. You can use it with ``--failed``, cherry pick any specific test
-without worrying whether that'll trigger ``nose`` importing a
-declaration class before the Registry, etc.
-
-
-Synopsis::
-
-  anyblok_nose [ANYBLOK OPTIONS...] -- [NOSE ARGUMENTS...]
+  py.test --cov-report= --cov=anyblok anyblok/bloks
 
 Typical usage is with a ``configuration file <basedoc_conf_files>``
 (this example also demonstrate the usage of more nose options)::
 
-  anyblok_nose -c mytest.cfg -- workapp/employee_blok --with-doctest --failed --pdb
+  ANYBLOK_CONFIG_FILE=tests.cfg pytest anyblok/bloks
 
 .. _basedoc_conf_files:
 
