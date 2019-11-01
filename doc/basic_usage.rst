@@ -763,21 +763,15 @@ To address these challenges, AnyBlok ships with helper pytest fixture
 Writing tests with pytest
 +++++++++++++++++++++++++
 
+.. note:: See: `Pytest documentation <https://docs.pytest.org/en/latest/>`_
+
 To start correctly you will need a ``conftest.py`` file.
 Generally, you just want to import the conftest from the bloks you need
 in your context, for example in our case::
 
   from anyblok.conftest import *  # noqa: F401,F403
 
-But you can do more for example if you need a registry with one blok loaded only, we need a new fixture::
-
-  @pytest.fixture(scope="class")
-  def registry_with_blok_to_load(request, testbloks_loaded):
-      registry = init_registry_with_bloks(['blok_to_load'], None)
-      request.addfinalizer(registry.close)
-      return registry
-
-Here you have an example to write a test class::
+Here you have an example to write a basic test class::
 
   class TestRoom:
     """Test Room model"""
@@ -791,6 +785,8 @@ Here you have an example to write a test class::
       )
       assert registry.Room.query().count() == room_count + 1
       assert room.name == "A1"
+
+.. note:: For advanced examples, you can refer to our `developer guide <https://anyblok.github.io/anyblok-book/en/>`_
 
 Launching tests with the pytest plugin
 ++++++++++++++++++++++++++++++++++++++
