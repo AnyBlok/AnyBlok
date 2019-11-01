@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pkg_resources import iter_entry_points
 from sqlalchemy.exc import IntegrityError, OperationalError
 from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
@@ -430,14 +431,33 @@ class MigrationReport:
             nullable=newvalue, existing_nullable=oldvalue, **kwargs)
 
     def apply_change_modify_type(self, action):
+
+        def dialect_sort(plugin):
+            return (plugin.dialect is None, plugin)
+
         _, schema, table, column, kwargs, oldvalue, newvalue = action
         if schema:
             t = self.migration.schema(schema).table(table)
         else:
             t = self.migration.table(table)
 
-        t.column(column).alter(
-            type_=newvalue, existing_type=oldvalue, **kwargs)
+        plugins = sorted((
+            entry_point.load()
+            for entry_point in iter_entry_points('anyblok.migration.plugins')
+        ), key=dialect_sort)
+
+        # search plugin by column types
+        selected_plugin = None
+        for plugin in plugins:
+            if plugin.from_type == oldvalue and plugin.to_type == newvalue:
+                selected_plugin = plugin
+                break
+
+        if selected_plugin:
+            selected_plugin.apply(oldvalue, newvalue, **kwargs)
+        else:
+            t.column(column).alter(
+                type_=newvalue, existing_type=oldvalue, **kwargs)
 
     def apply_change_modify_default(self, action):
         _, schema, table, column, kwargs, oldvalue, newvalue = action
@@ -591,6 +611,18 @@ class MigrationConstraintForeignKey:
             self.name, self.table.name, type_='foreignkey',
             schema=self.table.schema)
         return self
+
+
+class MigrationColumnPlugin:
+    """Meta class for column migration plugin"""
+
+    to_type = None
+    from_type = None
+    dialect = None
+
+    def apply(self):
+        """ """
+        raise NotImplementedError()
 
 
 class MigrationColumn:
