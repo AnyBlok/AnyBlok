@@ -450,11 +450,15 @@ class MigrationReport:
         selected_plugin = None
         for plugin in plugins:
             if plugin.from_type == oldvalue and plugin.to_type == newvalue:
-                selected_plugin = plugin
-                break
+                if (
+                    plugin.dialect is None or
+                    sgdb_in(self.table.migration.conn.engine, [plugin.dialect])
+                ):
+                    selected_plugin = plugin
+                    break
 
         if selected_plugin:
-            selected_plugin.apply(oldvalue, newvalue, **kwargs)
+            selected_plugin.apply()
         else:
             t.column(column).alter(
                 type_=newvalue, existing_type=oldvalue, **kwargs)
@@ -621,7 +625,9 @@ class MigrationColumnPlugin:
     dialect = None
 
     def apply(self):
-        """ """
+        """Apply column migration, this method MUST be overrided in plugins
+        subclass
+        """
         raise NotImplementedError()
 
 
