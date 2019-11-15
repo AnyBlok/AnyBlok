@@ -10,7 +10,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from base64 import b64encode, b64decode
 
-from sqlalchemy.dialects.mssql.base import MsSQLVarBinary
+from sqlalchemy.dialects.mssql.base import MSVarBinary as MsSQLVarBinary
 
 from .field import Field, FieldException
 from .mapper import ModelAttributeAdapter
@@ -1113,6 +1113,8 @@ class LargeBinary(Column):
     def setter_format_value(self, value, registry):
         if self.encrypt_key:
             value = b64encode(value).decode('utf-8')
+        if not self.encrypt_key and sgdb_in(registry.engine, ['MsSQL']):
+            value = cast(value, MsSQLVarBinary('MAX'))
 
         return value
 
