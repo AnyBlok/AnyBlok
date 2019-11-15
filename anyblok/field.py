@@ -79,7 +79,7 @@ class Field:
             self.wrap_setter_column(fieldname),
             expr=self.wrap_expr_column(fieldname))
 
-    def getter_format_value(self, value):
+    def getter_format_value(self, value, registry):
         return value
 
     def wrap_getter_column(self, fieldname):
@@ -90,7 +90,8 @@ class Field:
         attr_name = anyblok_column_prefix + fieldname
 
         def getter_column(model_self):
-            return self.getter_format_value(getattr(model_self, attr_name))
+            return self.getter_format_value(getattr(model_self, attr_name),
+                                            model_self.registry)
 
         return getter_column
 
@@ -121,7 +122,7 @@ class Field:
                 if obj._sa_instance_state.persistent:
                     model_self.registry.expire(obj, attrs)
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         return value
 
     def wrap_setter_column(self, fieldname):
@@ -134,7 +135,7 @@ class Field:
                     model_self.__registry_name__, {}).get(fieldname, set())
 
             self.expire_related_attribute(model_self, action_todos)
-            value = self.setter_format_value(value)
+            value = self.setter_format_value(value, model_self.registry)
             res = setattr(model_self, attr_name, value)
             self.expire_related_attribute(model_self, action_todos)
             return res

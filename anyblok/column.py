@@ -9,10 +9,13 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from base64 import b64encode, b64decode
+
+from sqlalchemy.dialects.mssql.base import MsSQLVarBinary
+
 from .field import Field, FieldException
 from .mapper import ModelAttributeAdapter
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
-from sqlalchemy import types, CheckConstraint
+from sqlalchemy import types, CheckConstraint, cast
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.encrypted.encrypted_type import EncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
@@ -392,7 +395,7 @@ class Decimal(Column):
     """
     sqlalchemy_type = types.DECIMAL
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         """Format the given value to decimal if needed
 
         :param value:
@@ -406,7 +409,7 @@ class Decimal(Column):
 
         return value
 
-    def getter_format_value(self, value):
+    def getter_format_value(self, value, registry):
         if value is None:
             return None
 
@@ -527,7 +530,7 @@ class DateTime(Column):
         self.sqlalchemy_type = DateTimeType(self)
         super(DateTime, self).__init__(*args, **kwargs)
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         """Return converted and formatted value
 
         :param value:
@@ -570,7 +573,7 @@ class TimeStamp(DateTime):
         super(TimeStamp, self).__init__(*args, **kwargs)
         self.sqlalchemy_type = types.TIMESTAMP(timezone=True)
 
-    def getter_format_value(self, value):
+    def getter_format_value(self, value, registry):
         return convert_string_to_datetime(value)
 
 
@@ -617,7 +620,7 @@ class Interval(Column):
 
         return self.sqlalchemy_type
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         if self.encrypt_key:
             value = dumps({
                 x: getattr(value, x)
@@ -625,7 +628,7 @@ class Interval(Column):
 
         return value
 
-    def getter_format_value(self, value):
+    def getter_format_value(self, value, registry):
         if self.encrypt_key:
             value = timedelta(**loads(value))
 
@@ -733,7 +736,7 @@ class Password(Column):
             max_length=self.size, **crypt_context)
         super(Password, self).__init__(*args, **kwargs)
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         """Return formatted value
 
         :param value:
@@ -911,7 +914,7 @@ class Selection(Column):
         res['size'] = self.size
         return res
 
-    def getter_format_value(self, value):
+    def getter_format_value(self, value, registry):
         """Return formatted value
 
         :param value:
@@ -922,7 +925,7 @@ class Selection(Column):
 
         return self.sqlalchemy_type.python_type(value)
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         """Return value or raise exception if the given value is invalid
 
         :param value:
@@ -1064,13 +1067,13 @@ class Json(Column):
 
         return self.sqlalchemy_type
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         if self.encrypt_key:
             value = dumps(value)
 
         return value
 
-    def getter_format_value(self, value):
+    def getter_format_value(self, value, registry):
         if value is None:
             return None
 
@@ -1107,13 +1110,13 @@ class LargeBinary(Column):
 
         return self.sqlalchemy_type
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         if self.encrypt_key:
             value = b64encode(value).decode('utf-8')
 
         return value
 
-    def getter_format_value(self, value):
+    def getter_format_value(self, value, registry):
         if self.encrypt_key:
             value = b64decode(value.encode('utf-8'))
 
@@ -1207,7 +1210,7 @@ class Color(Column):
         self.sqlalchemy_type = ColorType(max_length)
         super(Color, self).__init__(*args, **kwargs)
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         """Format the given value
 
         :param value:
@@ -1282,7 +1285,7 @@ class URL(Column):
     """
     sqlalchemy_type = URLType
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         """Return formatted url value
 
         :param value:
@@ -1324,7 +1327,7 @@ class PhoneNumber(Column):
             region=region, max_length=max_length)
         super(PhoneNumber, self).__init__(*args, **kwargs)
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         """Return formatted phone number value
 
         :param value:
@@ -1369,7 +1372,7 @@ class Email(Column):
     """
     sqlalchemy_type = EmailType
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         """Return formatted email value
 
         :param value:
@@ -1433,7 +1436,7 @@ class Country(Column):
                         for country in pycountry.countries}
         super(Country, self).__init__(*args, **kwargs)
 
-    def setter_format_value(self, value):
+    def setter_format_value(self, value, registry):
         """Return formatted country value
 
         :param value:
