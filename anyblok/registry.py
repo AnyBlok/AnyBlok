@@ -952,8 +952,9 @@ class Registry:
             self.assemble_entries()
             self.create_session_factory()
 
-            mustreload = self.apply_model_schema_on_table(
-                blok2install) or mustreload
+            self.apply_model_schema_on_table(blok2install)
+            self.listen_sqlalchemy_known_event()
+            mustreload = self.is_reload_needed() or mustreload
 
         except Exception as e:
             self.close()
@@ -1043,7 +1044,13 @@ class Registry:
         else:
             self.migration.auto_upgrade_database()
 
-        self.listen_sqlalchemy_known_event()
+    def is_reload_needed(self):
+
+        """Determines whether a reload is needed or not."""
+
+        if self.loadwithoutmigration:
+            return
+
         mustreload = False
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_initialize_entries:
