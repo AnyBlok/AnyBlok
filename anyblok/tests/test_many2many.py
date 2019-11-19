@@ -11,6 +11,7 @@
 from anyblok.testing import sgdb_in
 import pytest
 from anyblok import Declarations
+from anyblok.config import Configuration
 from anyblok.mapper import ModelAttributeException
 from anyblok.column import Integer, String, DateTime
 from anyblok.relationship import Many2Many, Many2One
@@ -21,6 +22,24 @@ from .conftest import init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_many2many(**kwargs):
@@ -133,6 +152,7 @@ def registry_many2many(request, bloks_loaded, db_schema):
     return registry
 
 
+@pytest.mark.relationship
 class TestMany2ManyComplete:
 
     @pytest.fixture(autouse=True)
@@ -323,6 +343,7 @@ def reuse_many2many_table(**kwargs):
             join_table='join_person_and_address_for_addresses')
 
 
+@pytest.mark.relationship
 class TestMany2Many:
 
     @pytest.fixture(autouse=True)
@@ -475,7 +496,8 @@ class TestMany2Many:
 
         assert person.addresses == [address]
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #90')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #90')
     def test_declared_in_mixin_inherit_by_two_models(self):
         def add_in_registry():
             _minimum_many2many_by_mixin()
@@ -1548,12 +1570,8 @@ class TestMany2Many:
             @register(Model)
             class TestLink:
                 id = Integer(primary_key=True)
-                left = Many2One(
-                    model='Model.Test', nullable=False,
-                    foreign_key_options={'ondelete': 'cascade'})
-                right = Many2One(
-                    model='Model.Test', nullable=False,
-                    foreign_key_options={'ondelete': 'cascade'})
+                left = Many2One(model='Model.Test', nullable=False)
+                right = Many2One(model='Model.Test', nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default='bar')
 
@@ -1587,13 +1605,9 @@ class TestMany2Many:
             @register(Model)
             class TestLink:
                 left = Many2One(
-                    model='Model.Test', nullable=False,
-                    primary_key=True,
-                    foreign_key_options={'ondelete': 'cascade'})
+                    model='Model.Test', nullable=False, primary_key=True)
                 right = Many2One(
-                    model='Model.Test', nullable=False,
-                    primary_key=True,
-                    foreign_key_options={'ondelete': 'cascade'})
+                    model='Model.Test', nullable=False, primary_key=True)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default='bar')
 

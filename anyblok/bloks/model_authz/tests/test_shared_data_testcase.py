@@ -45,6 +45,8 @@ class Helper:
         self.assertEqual(Grant.query().count(), 0)
 
 
+@unittest.skipIf(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                 "ShareDataTestCase doesn't work, issue #96")
 class TestSharedDataTestCaseException(unittest.TestCase):
     """Test class with an exception in setUpSharedData.
 
@@ -109,8 +111,6 @@ class TestSharedDataTestCaseException(unittest.TestCase):
         self.assertFalse(result.failures)
         self.assertFalse(result.errors)
 
-    @unittest.skipIf(sgdb_in(['MySQL', 'MariaDB']),
-                     "ShareDataTestCase doesn't work, issue #96")
     def test_setup_error(self):
         """Test rollback of test case and class with error in setUp"""
 
