@@ -11,20 +11,87 @@
 import pytest
 from anyblok.testing import sgdb_in
 from anyblok import Declarations
+from anyblok.config import Configuration
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
 from anyblok.column import (
     Integer, String, BigInteger, Float, Decimal, Boolean, DateTime, Date, Time,
-    Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection)
+    Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection,
+    TimeStamp)
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.engine.reflection import Inspector
 from .conftest import init_registry_with_bloks, init_registry, reset_db
 
 
+COLUMNS = [
+    Integer,
+    BigInteger,
+    Float,
+    Decimal,
+    String,
+    Boolean,
+    Date,
+    Time,
+    Email,
+    UUID,
+    Country,
+    Selection,
+]
+
+
+if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
+    COLUMNS.extend([DateTime, TimeStamp])
+
+
+try:
+    import colour  # noqa
+    COLUMNS.append(Color)
+except Exception:
+    pass
+
+try:
+    import furl  # noqa
+    if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
+        COLUMNS.append(URL)
+except Exception:
+    pass
+
+
+try:
+    import phonenumbers  # noqa
+    COLUMNS.append(PhoneNumber)
+except Exception:
+    pass
+
+try:
+    import pycountry  # noqa
+    COLUMNS.append(Country)
+except Exception:
+    pass
+
+
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_many2one(**kwargs):
@@ -219,6 +286,7 @@ def registry_many2one(request, bloks_loaded, db_schema):
     return registry, request.param[1], request.param[2]
 
 
+@pytest.mark.relationship
 class TestMany2One:
 
     @pytest.fixture(autouse=True)
@@ -269,29 +337,7 @@ def _auto_detect_type(ColumnType=None, **kwargs):
         address = Many2One(model=Model.Address)
 
 
-params = [
-    Integer,
-    BigInteger,
-    Float,
-    Decimal,
-    String,
-    Boolean,
-    Date,
-    Time,
-    Email,
-    UUID,
-    Color,
-    Country,
-    PhoneNumber,
-    Selection,
-]
-
-if not sgdb_in(['MySQL', 'MariaDB']):
-    params.append(DateTime)
-    params.append(URL)
-
-
-@pytest.fixture(scope="class", params=params)
+@pytest.fixture(scope="class", params=COLUMNS)
 def registry_many2one_auto_detect(request, bloks_loaded):
     reset_db()
     registry = init_registry_with_bloks(
@@ -300,6 +346,7 @@ def registry_many2one_auto_detect(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.relationship
 class TestMany2OneAutoDetectColumn:
 
     @pytest.fixture(autouse=True)
@@ -363,6 +410,7 @@ def _two_remote_primary_keys(**kwargs):
         test = Many2One(model=Model.Test)
 
 
+@pytest.mark.relationship
 class TestMany2OneOld:
 
     @pytest.fixture(autouse=True)
@@ -383,7 +431,8 @@ class TestMany2OneOld:
         with pytest.raises(FieldException):
             self.init_registry(_many2one_with_same_name_for_column_names)
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #89')
     def test_minimum_many2one_on_sequence(self):
 
         def add_in_registry():

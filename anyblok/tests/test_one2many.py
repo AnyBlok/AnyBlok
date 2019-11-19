@@ -9,6 +9,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
 from anyblok import Declarations
+from anyblok.config import Configuration
 from anyblok.column import Integer, String
 from anyblok.relationship import One2Many
 from .conftest import init_registry, reset_db
@@ -17,6 +18,24 @@ from .conftest import init_registry, reset_db
 register = Declarations.register
 Model = Declarations.Model
 Mixin = Declarations.Mixin
+
+
+@pytest.fixture(
+    scope="class",
+    params=[
+        ('prefix', 'suffix'),
+        ('', ''),
+    ]
+)
+def db_schema(request, bloks_loaded):
+    Configuration.set('prefix_db_schema', request.param[0])
+    Configuration.set('suffix_db_schema', request.param[1])
+
+    def rollback():
+        Configuration.set('prefix_db_schema', '')
+        Configuration.set('suffix_db_schema', '')
+
+    request.addfinalizer(rollback)
 
 
 def _complete_one2many(**kwargs):
@@ -147,6 +166,7 @@ def registry_complete_one2many(request, bloks_loaded, db_schema):
     return registry
 
 
+@pytest.mark.relationship
 class TestCompleteOne2Many:
 
     @pytest.fixture(autouse=True)
@@ -207,6 +227,7 @@ def registry_multi_fk_one2many(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.relationship
 class TestMultiFkOne2Many:
 
     @pytest.fixture(autouse=True)
@@ -339,6 +360,7 @@ def _one2many_with_str_model(**kwargs):
         persons = One2Many(model='Model.Person')
 
 
+@pytest.mark.relationship
 class TestOne2Many:
 
     @pytest.fixture(autouse=True)

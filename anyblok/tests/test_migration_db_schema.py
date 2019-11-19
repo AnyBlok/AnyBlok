@@ -127,7 +127,7 @@ class TestMigrationDbSchema:
         registry.migration.schema('other_schema')
         registry.migration.schema('other_schema').drop()
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't create empty table")
     def test_add_table_from_schema(self, registry):
         schema = registry.migration.schema('test_db_schema')
@@ -135,7 +135,7 @@ class TestMigrationDbSchema:
         table = schema.table('test2')
         assert table.schema == 'test_db_schema'
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't create empty table")
     def test_add_table(self, registry):
         registry.migration.table(schema='test_db_schema').add('test2')
@@ -183,8 +183,8 @@ class TestMigrationDbSchema:
         with pytest.raises(MigrationException):
             t.column('other')
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                        reason="Can't rename schema")
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason="Can't rename schema #122")
     def test_alter_schema_name(self, registry):
         registry.migration.schema('test_db_schema').alter(name='test_db_other')
         with pytest.raises(MigrationException):
@@ -225,7 +225,7 @@ class TestMigrationDbSchema:
         t.unique(name='test_unique_constraint').add(t.column('other'))
         t.unique(name='test_unique_constraint').drop()
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't drop check constraint issue #93")
     def test_constraint_check(self, registry):
         t = registry.migration.table('test', schema='test_db_schema')
@@ -435,6 +435,8 @@ class TestMigrationDbSchema:
             "Add Foreign keys on (testfk.other) => "
             "(test_db_schema.testfktarget.integer)")
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not change fk")
     def test_detect_foreign_key_options_changed(self, registry):
         with cnx(registry) as conn:
             registry.TestFK2.__table__.drop(bind=conn)
@@ -475,12 +477,14 @@ class TestMigrationDbSchema:
             # anyblok_fk_test__other_on_system_blok__name
 
         report = registry.migration.detect_changed()
-        assert report.log_has(
-            "Drop Foreign keys on test.other => system_blok.name")
+
+        message = (
+            "Drop Foreign keys on test.other => %ssystem_blok.name"
+        ) % ('dbo.' if sgdb_in(['MsSQL']) else '')
+        assert report.log_has(message)
         report.apply_change()
         report = registry.migration.detect_changed()
-        assert not(report.log_has(
-            "Drop Foreign keys on test.other => system_blok.name"))
+        assert not report.log_has(message)
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="FIXME: can't create foreign key")
@@ -500,13 +504,16 @@ class TestMigrationDbSchema:
             registry.Test.__table__.create(bind=conn)
 
         report = registry.migration.detect_changed()
-        assert report.log_has(
-            "Drop Foreign keys on test.other2 => system_blok.name")
+        message = (
+            "Drop Foreign keys on test.other2 => %ssystem_blok.name"
+        ) % ('dbo.' if sgdb_in(['MsSQL']) else '')
+        assert report.log_has(message)
         report.apply_change()
         report = registry.migration.detect_changed()
-        assert not(report.log_has(
-            "Drop Foreign keys on test.other2 => system_blok.name"))
+        assert not report.log_has(message)
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not add unique #121")
     def test_detect_add_unique_constraint(self, registry):
         with cnx(registry) as conn:
             registry.TestUnique.__table__.drop(bind=conn)
@@ -525,6 +532,8 @@ class TestMigrationDbSchema:
         assert not(report.log_has(
             "Add unique constraint on testunique (other)"))
 
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not add unique #121")
     def test_detect_add_column_with_unique_constraint(self, registry):
         with cnx(registry) as conn:
             registry.TestUnique.__table__.drop(bind=conn)
@@ -544,6 +553,8 @@ class TestMigrationDbSchema:
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="MySQL transform unique constraint on index")
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not drop unique #121")
     def test_detect_drop_unique_anyblok_constraint(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
@@ -563,7 +574,7 @@ class TestMigrationDbSchema:
         assert not report.log_has(
             "Drop constraint anyblok_uq_test__other on test_db_schema.test")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_detect_add_check_constraint(self, registry):
         with cnx(registry) as conn:
@@ -585,7 +596,7 @@ class TestMigrationDbSchema:
             "Add check constraint anyblok_ck_testcheck__test "
             "on test_db_schema.testcheck")
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_anyblok_constraint(self, registry):
         with cnx(registry) as conn:

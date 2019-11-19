@@ -67,6 +67,7 @@ def registry_field_function(request, bloks_loaded):
     return registry
 
 
+@pytest.mark.field
 class TestFieldFunction:
 
     @pytest.fixture(autouse=True)
@@ -118,6 +119,7 @@ def registry_json_related(request, bloks_loaded):
 
 @pytest.mark.skipif(sgdb_in(['MariaDB']),
                     reason='JSON is not existing in this SGDB')
+@pytest.mark.field
 class TestJsonRelated:
 
     @pytest.fixture(autouse=True)
@@ -126,6 +128,8 @@ class TestJsonRelated:
         request.addfinalizer(transaction.rollback)
         return
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_hasattr(self, registry_json_related):
         registry = registry_json_related
         registry.Test.name
@@ -175,6 +179,8 @@ class TestJsonRelated:
         t.name = 'jssuzanne'
         assert t.properties == {'name': 'jssuzanne'}
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_exp_1(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
@@ -183,6 +189,8 @@ class TestJsonRelated:
             Test.name.cast(types.String) == '"jssuzanne"')
         assert not (query.count())
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_exp_2(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
@@ -191,6 +199,8 @@ class TestJsonRelated:
             Test.name.cast(types.String) == '"jssuzanne"')
         assert not (query.count())
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_exp_3(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
@@ -219,6 +229,7 @@ def registry_json_related2(request, bloks_loaded):
 
 @pytest.mark.skipif(sgdb_in(['MariaDB']),
                     reason='JSON is not existing in this SGDB')
+@pytest.mark.field
 class TestJsonRelated2:
 
     @pytest.fixture(autouse=True)
@@ -246,6 +257,8 @@ class TestJsonRelated2:
         t.name = 'jssuzanne'
         assert t.properties == {'sub': {'name': 'jssuzanne'}}
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_field_json_related_exp_4(self, registry_json_related2):
         registry = registry_json_related2
         Test = registry.Test
@@ -264,6 +277,7 @@ def field_without_name():
         field = OneField()
 
 
+@pytest.mark.field
 class TestField2:
 
     @pytest.fixture(autouse=True)

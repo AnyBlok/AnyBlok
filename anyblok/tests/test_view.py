@@ -152,7 +152,7 @@ class TestSimpleView:
         assert v2.val1 == 3
         assert v2.val2 == 4
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="View must be in RO issue #95")
     def test_view_update_method(self, registry_simple_view):
         registry = registry_simple_view

@@ -747,7 +747,7 @@ Parameters of the ``Many2One`` field:
 ::
 
     Many2One(model=The.Model, nullable=True, 
-             foreign_key_options={'ondelete': cascade})
+             foreign_key_options={'ondelete': 'cascade'})
 
 
 

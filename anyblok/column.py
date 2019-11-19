@@ -50,6 +50,11 @@ except ImportError:
 logger = getLogger(__name__)
 
 
+class MsSQLEncryptedType(EncryptedType):
+    """In MsSQL the column must be a Text"""
+    impl = types.Text
+
+
 def wrap_default(registry, namespace, default_val):
     """Return default wrapper
 
@@ -175,6 +180,7 @@ class Column(Field):
     def native_type(self, registry):
         """Return the native SqlAlchemy type
 
+        :param registry:
         :rtype: sqlalchemy native type
         """
         return self.sqlalchemy_type
@@ -234,7 +240,11 @@ class Column(Field):
         sqlalchemy_type = self.native_type(registry)
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
-            sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
+            if sgdb_in(registry.engine, ['MsSQL']):
+                sqlalchemy_type = MsSQLEncryptedType(
+                    sqlalchemy_type, encrypt_key)
+            else:
+                sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
 
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
 
@@ -667,6 +677,17 @@ class String(Column):
         return res
 
 
+class MsSQLPasswordType(PasswordType):
+    impl = types.VARCHAR(1024)
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'mssql':
+            # Use a BLOB type for sqlite
+            return dialect.type_descriptor(types.VARCHAR(self.length))
+
+        return super(MsSQLPasswordType, self).load_dialect_impl(dialect)
+
+
 class Password(Column):
     """String column
 
@@ -721,6 +742,13 @@ class Password(Column):
         value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
+
+    def native_type(self, registry):
+        """ Return the native SqlAlchemy type """
+        if sgdb_in(registry.engine, ['MsSQL']):
+            return MsSQLPasswordType(max_length=self.size, **self.crypt_context)
+
+        return self.sqlalchemy_type
 
     def autodoc_get_properties(self):
         """Return properties for autodoc
@@ -961,7 +989,6 @@ class Selection(Column):
         properties['add_in_table_args'].append(self)
 
     def update_table_args(self, registry, Model):
-
         """Return check constraints to limit the value
 
         :param registry:
@@ -973,7 +1000,8 @@ class Selection(Column):
             # can add new entry
             return []
 
-        if sgdb_in(registry.engine, ['MariaDB']):
+        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
+            # No check constraint in MariaDB
             return []
 
         selections = self.sqlalchemy_type.selections
@@ -1031,7 +1059,7 @@ class Json(Column):
 
     def native_type(self, registry):
         """ Return the native SqlAlchemy type """
-        if sgdb_in(registry.engine, ['MariaDB']):
+        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
             return JSONType
 
         return self.sqlalchemy_type
@@ -1455,7 +1483,8 @@ class Country(Column):
             # can add new entry
             return []
 
-        if sgdb_in(registry.engine, ['MariaDB']):
+        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
+            # No Check constraint in MariaDB
             return []
 
         enum = [country.alpha_3 for country in pycountry.countries]
