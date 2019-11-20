@@ -25,7 +25,7 @@ env:
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pymssql' \
+          SQLPYCLIENT='pymssql<3.0' \
           MARKERS='field or column or relationship'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
@@ -34,7 +34,7 @@ env:
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pymssql' \
+          SQLPYCLIENT='pymssql<3.0' \
           MARKERS='not field and not column and not relationship'
 
 matrix:
@@ -69,8 +69,6 @@ install:
   - pip install -U pip
   - pip install git+https://github.com/jssuzanne/sqlalchemy-utils.git@mssql_and_pymssql#egg=sqlalchemy_utils
   - pip install wheel
-  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy3.5' ]]; then pip install psycopg2cffi; else pip install psycopg2-binary; fi
-  - if [[ $SQLPYCLIENT == 'pymssql' ]]; then pip install 'pymssql<3.0'; fi
   - pip install sqlalchemy $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
