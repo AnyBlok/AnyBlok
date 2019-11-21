@@ -15,6 +15,13 @@
 CHANGELOG
 =========
 
+1.0.1 (Unreleased)
+------------------
+
+* Bug Fix on registry loading sequence. The **apply_model_schema_on_table**
+  method called at registry initialisation has been splitted to make sqlalchemy
+  ORM events registration independent from migration.
+
 1.0.0
 -----
 
