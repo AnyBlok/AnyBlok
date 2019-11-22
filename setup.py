@@ -8,6 +8,7 @@
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2019 Hugo QUEZADA <gohu@hq.netlib.re>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -50,12 +51,6 @@ with open(
 ) as change:
     CHANGE = change.read()
 
-with open(
-    os.path.join(here, 'doc', 'FRONT.rst'), 'r', encoding='utf-8'
-) as front:
-    FRONT = front.read()
-
-
 extra_dependencies = {
     'pytest': ['pytest', 'pytest-cov'],
     'postgres': ['psycopg2-binary'],
@@ -72,7 +67,7 @@ setup(
     author_email="jssuzanne@anybox.fr",
     description="Anyblok is a dynamic injection blok framework",
     license="MPL2",
-    long_description=README + '\n' + FRONT + '\n' + CHANGE,
+    long_description=README + '\n' + CHANGE,
     url="http://docs.anyblok.org/%s" % version,
     packages=find_packages(),
     zip_safe=False,
