@@ -21,6 +21,9 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
+MIGRATION_TYPE_PLUGINS_NAMESPACE = 'anyblok.migration_type.plugins'
+
+
 class AlterSchema(DDLElement):
     def __init__(self, oldname, newname):
         self.oldname = oldname
@@ -328,6 +331,21 @@ class MigrationReport:
             table, diff[3], diff[5], diff[6]))
         return False
 
+    def init_plugins(self):
+        """Get migration plugins from entry points"""
+
+        def dialect_sort(plugin):
+            """Sort plugins with dialect not None first"""
+            return (plugin.dialect is None, plugin)
+
+        plugins = sorted((
+            entry_point.load()
+            for entry_point
+            in iter_entry_points(MIGRATION_TYPE_PLUGINS_NAMESPACE)
+        ), key=dialect_sort)
+
+        return plugins
+
     def __init__(self, migration, diffs):
         """ Initializer
 
@@ -340,6 +358,7 @@ class MigrationReport:
         self.actions = []
         self.diffs = diffs
         self.log_names = []
+        self.plugins = self.init_plugins()
         mappers = {
             'add_schema': self.init_add_schema,
             'add_table': self.init_add_table,
@@ -431,34 +450,25 @@ class MigrationReport:
             nullable=newvalue, existing_nullable=oldvalue, **kwargs)
 
     def apply_change_modify_type(self, action):
-
-        def dialect_sort(plugin):
-            return (plugin.dialect is None, plugin)
-
         _, schema, table, column, kwargs, oldvalue, newvalue = action
         if schema:
             t = self.migration.schema(schema).table(table)
         else:
             t = self.migration.table(table)
 
-        plugins = sorted((
-            entry_point.load()
-            for entry_point in iter_entry_points('anyblok.migration.plugins')
-        ), key=dialect_sort)
-
         # search plugin by column types
         selected_plugin = None
-        for plugin in plugins:
+        for plugin in self.plugins:
             if plugin.from_type == oldvalue and plugin.to_type == newvalue:
                 if (
                     plugin.dialect is None or
-                    sgdb_in(self.table.migration.conn.engine, [plugin.dialect])
+                    sgdb_in(self.table.migration.conn.engine, plugin.dialects)
                 ):
                     selected_plugin = plugin
                     break
 
         if selected_plugin:
-            selected_plugin.apply()
+            selected_plugin.apply(t.column(column))
         else:
             t.column(column).alter(
                 type_=newvalue, existing_type=oldvalue, **kwargs)
@@ -617,18 +627,46 @@ class MigrationConstraintForeignKey:
         return self
 
 
-class MigrationColumnPlugin:
-    """Meta class for column migration plugin"""
+class MigrationColumnTypePlugin:
+    """Meta class for column migration type plugin
+
+    Must be exposed as entry point in namespace 'anyblok.migration_type.plugins'
+
+    :param to_type: New column type value (sqlalchemy.types)
+    :param from_type: Old column type value (sqlalchemy.types)
+    :param dialect: DB dialect (list of strings or string)
+
+    Example::
+
+    class BooleanToTinyIntMySQL(MigrationColumnPlugin):
+
+        to_type = sqlalchemy.types.Boolean
+        from_type = sqlalchemy.types.TINYINT
+        dialect = ['MySQL', 'MariaDB']
+
+        def apply(self, column):
+            '''Boolean are TINYINT in MySQL DataBases'''
+            # do nothing
+            pass
+    """
 
     to_type = None
     from_type = None
     dialect = None
 
-    def apply(self):
-        """Apply column migration, this method MUST be overrided in plugins
+    def apply(self, column):
+        """Apply column migration, this method MUST be overriden in plugins
         subclass
         """
         raise NotImplementedError()
+
+    @property
+    def dialects(self):
+        """Get sqlalchemy dialects for the migration"""
+        if not isinstance(self.dialect, list):
+            return [self.dialect]
+
+        return self.dialect
 
 
 class MigrationColumn:
