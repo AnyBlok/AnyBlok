@@ -9,19 +9,26 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
+import pkg_resources
 from anyblok.testing import sgdb_in
 from anyblok.column import Integer as Int, String as Str
-from anyblok.migration import MigrationException
+from anyblok.migration import MigrationException, MigrationColumnTypePlugin
 from anyblok.relationship import Many2Many
 from contextlib import contextmanager
 from sqlalchemy import (
     MetaData, Table, Column, Integer, String, TEXT, CheckConstraint,
-    ForeignKey)
+    ForeignKey
+)
 from anyblok import Declarations
 from sqlalchemy.exc import InternalError, IntegrityError, OperationalError
 from anyblok.config import Configuration
 from .conftest import init_registry, drop_database, create_database
 from anyblok.common import naming_convention
+
+try:
+    from unittest import patch
+except ImportError:
+    from mock import patch
 
 
 @pytest.fixture(scope="module")
@@ -140,6 +147,19 @@ def registry(request, clean_db, bloks_loaded):
 
     request.addfinalizer(rollback)
     return registry
+
+
+class MockMigrationColumnTypePlugin(MigrationColumnTypePlugin):
+
+    to_type = TEXT
+    from_type = Str
+    dialect = ['MySQL']
+
+
+class MockMigrationColumnTypePluginLoader:
+
+    def load():
+        return MockMigrationColumnTypePlugin
 
 
 class TestMigration:
@@ -288,6 +308,15 @@ class TestMigration:
         t = registry.migration.table('test')
         c = t.column('other').alter(type_=TEXT)
         assert isinstance(c.type, TEXT)
+
+    @pytest.mark.skipif(not sgdb_in(['MySQL']), reason='Plugin for MySQL only')
+    @patch(pkg_resources, 'load_entry_points',
+           return_value=[MockMigrationColumnTypePluginLoader()])
+    def test_alter_column_type_with_plugin(self, registry):
+        with patch(MockMigrationColumnTypePlugin, 'apply') as mockapply:
+            t = registry.migration.table('test')
+            c = t.column('other').alter(type_=TEXT)
+            mockapply.assert_called_with(c)
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="Can't drop primary key issue #92")

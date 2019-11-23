@@ -459,13 +459,17 @@ class MigrationReport:
         # search plugin by column types
         selected_plugin = None
         for plugin in self.plugins:
-            if plugin.from_type == oldvalue and plugin.to_type == newvalue:
-                if (
+            if (
+                issubclass(plugin, MigrationColumnTypePlugin) and
+                plugin.from_type == oldvalue and
+                plugin.to_type == newvalue and
+                (
                     plugin.dialect is None or
                     sgdb_in(self.table.migration.conn.engine, plugin.dialects)
-                ):
-                    selected_plugin = plugin
-                    break
+                )
+            ):
+                selected_plugin = plugin()
+                break
 
         if selected_plugin:
             selected_plugin.apply(t.column(column))
