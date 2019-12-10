@@ -365,6 +365,50 @@ class TestColumns:
         self.registry.expire(test, ['col'])
         assert test.col == ''
 
+    def test_date_query(self):
+        registry = self.init_registry(simple_column, ColumnType=Date)
+        test = registry.Test.insert(col=datetime.date(2019, 12, 10))
+        query = self.registry.Test.query()
+
+        assert query.filter(
+                registry.Test.col < datetime.date(2020, 1, 1)).count() == 1
+        assert query.filter(
+                registry.Test.col < datetime.date(1999, 12, 31)).count() == 0
+        assert query.filter(
+                registry.Test.col > datetime.date(2020, 1, 1)).count() == 0
+
+    @pytest.mark.skipif(not has_cryptography,
+                        reason="cryptography is not installed")
+    def test_date_encrypted_query(self):
+        Configuration.set('default_encrypt_key', 'secretkey')
+        registry = self.init_registry(simple_column, ColumnType=Date,
+                                      encrypt_key=True)
+        test = registry.Test.insert(col=datetime.date(2019, 12, 10))
+        query = self.registry.Test.query()
+
+        assert query.filter(
+                registry.Test.col < datetime.date(2020, 1, 1)).count() == 1
+        assert query.filter(
+                registry.Test.col < datetime.date(1999, 12, 31)).count() == 0
+        assert query.filter(
+                registry.Test.col > datetime.date(2020, 1, 1)).count() == 0
+
+    @pytest.mark.skipif(not has_cryptography,
+                        reason="cryptography is not installed")
+    def test_date_encrypted_query_with_key(self):
+        Configuration.set('default_encrypt_key', 'mysupersecretkeyverystrong')
+        registry = self.init_registry(simple_column, ColumnType=Date,
+                                      encrypt_key=True)
+        test = registry.Test.insert(col=datetime.date(2019, 12, 10))
+        query = self.registry.Test.query()
+
+        assert query.filter(
+                registry.Test.col < datetime.date(2020, 1, 1)).count() == 1
+        assert query.filter(
+                registry.Test.col < datetime.date(1999, 12, 31)).count() == 0
+        assert query.filter(
+                registry.Test.col > datetime.date(2020, 1, 1)).count() == 0
+
     def test_datetime_none_value(self, dt_column_type):
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert(col=None)
