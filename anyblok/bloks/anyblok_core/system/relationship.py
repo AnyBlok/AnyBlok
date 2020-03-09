@@ -80,5 +80,5 @@ class RelationShip(System.Field):
             cls.insert(**vals)
 
     @classmethod
-    def alter_field(cls, field, label, ftype):
-        pass
+    def alter_field(cls, field, field_, ftype):
+        field.label = field_.info['label']
