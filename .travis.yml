@@ -16,7 +16,7 @@ env:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
         - MARKERS=''
     matrix:
-        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary'
+        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2'
         - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
