@@ -19,8 +19,8 @@ class RelationShip(System.Field):
 
     name = String(primary_key=True)
     model = String(primary_key=True)
-    local_column = String()
-    remote_column = String()
+    local_columns = String()
+    remote_columns = String()
     remote_name = String()
     remote_model = String(nullable=False)
     remote = Boolean(default=False)
@@ -32,7 +32,9 @@ class RelationShip(System.Field):
         res.update(
             nullable=self.nullable,
             model=self.remote_model,
-            remote_name=remote_name
+            remote_name=remote_name,
+            local_columns=[x.strip() for x in self.local_columns.split(',')],
+            remote_columns=[x.strip() for x in self.remote_columns.split(',')],
         )
         return res
 
@@ -46,17 +48,17 @@ class RelationShip(System.Field):
         :param table: name of the table of the model
         :param ftype: type of the AnyBlok Field
         """
-        local_column = relation.info.get('local_column')
-        remote_column = relation.info.get('remote_column')
+        local_columns = relation.info.get('local_columns')
+        remote_columns = relation.info.get('remote_columns')
         remote_model = relation.info.get('remote_model')
         remote_name = relation.info.get('remote_name')
         label = relation.info.get('label')
         nullable = relation.info.get('nullable', True)
 
         vals = dict(code=table + '.' + rname,
-                    model=model, name=rname, local_column=local_column,
+                    model=model, name=rname, local_columns=local_columns,
                     remote_model=remote_model, remote_name=remote_name,
-                    remote_column=remote_column, label=label,
+                    remote_columns=remote_columns, label=label,
                     nullable=nullable, ftype=ftype)
         cls.insert(**vals)
 
@@ -72,9 +74,9 @@ class RelationShip(System.Field):
             m = cls.registry.get(remote_model)
             vals = dict(code=m.__tablename__ + '.' + remote_name,
                         model=remote_model, name=remote_name,
-                        local_column=remote_column, remote_model=model,
+                        local_columns=remote_columns, remote_model=model,
                         remote_name=rname,
-                        remote_column=local_column,
+                        remote_columns=local_columns,
                         label=remote_name.capitalize().replace('_', ' '),
                         nullable=True, ftype=remote_type, remote=True)
             cls.insert(**vals)

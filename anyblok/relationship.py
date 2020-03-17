@@ -407,7 +407,7 @@ class Many2One(RelationShip):
     def update_local_and_remote_columns_names(self, registry, namespace,
                                               fieldname):
         self.remote_columns = self.get_remote_columns(registry)
-        self.kwargs['info']['remote_columns'] = [str(x)
+        self.kwargs['info']['remote_columns'] = [x.attribute_name
                                                  for x in self.remote_columns]
         self.column_names = self.get_columns_names(
             registry, namespace, fieldname, self.remote_columns)
@@ -458,7 +458,7 @@ class Many2One(RelationShip):
                                  "column_names" % fieldname)
 
         self.kwargs['info']['local_columns'] = ', '.join(
-            str(x) for x in self.column_names)
+            x.attribute_name for x in self.column_names)
         remote_types = {x.attribute_name: x.native_type(registry)
                         for x in self.remote_columns}
         remote_columns = {x.attribute_name: x
