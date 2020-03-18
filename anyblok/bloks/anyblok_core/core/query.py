@@ -58,7 +58,7 @@ class Query(query.Query):
         return self.registry.wrap_query_permission(
             self, principals, permission)
 
-    def get_field_nams_in_column_description(self):
+    def get_field_names_in_column_description(self):
         field2get = [x['name'] for x in self.column_descriptions
                      if not hasattr(x['type'], '__table__')]
         field2get = [(x[len(anyblok_column_prefix):]
@@ -74,7 +74,7 @@ class Query(query.Query):
             msg = str(exc).replace('one()', 'dictone()')
             raise exc.__class__(msg)
 
-        field2get = self.get_field_nams_in_column_description()
+        field2get = self.get_field_names_in_column_description()
         if field2get:
             return {x: getattr(val, y) for x, y in field2get}
         else:
@@ -82,7 +82,7 @@ class Query(query.Query):
 
     def dictfirst(self):
         val = self.first()
-        field2get = self.get_field_nams_in_column_description()
+        field2get = self.get_field_names_in_column_description()
         if field2get:
             return {x: getattr(val, y) for x, y in field2get}
         else:
@@ -93,8 +93,22 @@ class Query(query.Query):
         if not vals:
             return []
 
-        field2get = self.get_field_nams_in_column_description()
+        field2get = self.get_field_names_in_column_description()
         if field2get:
             return [{x: getattr(y, z) for x, z in field2get} for y in vals]
         else:
             return vals.to_dict()
+
+    def get(self, primary_keys=None, **kwargs):
+        if primary_keys is None:
+            primary_keys = kwargs
+
+        if isinstance(primary_keys, dict):
+            Model = self.registry.get(self.Model)
+            primary_keys = {
+                (anyblok_column_prefix + k
+                 if k in Model.hybrid_property_columns else k): v
+                for k, v in primary_keys.items()
+            }
+
+        return super(Query, self).get(primary_keys)

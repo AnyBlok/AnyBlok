@@ -124,3 +124,15 @@ class TestQueryScope:
         dictall = query.dictall()
         for i in range(2):
             assert to_dict(models[i]) in dictall
+
+    def test_get_with_dict_use_prefix(self, rollback_registry):
+        registry = rollback_registry
+        M = registry.System.Field
+        entry = M.query().get({'name': 'name', 'model': 'Model.System.Blok'})
+        assert entry is not None
+
+    def test_get_with_kwargs(self, rollback_registry):
+        registry = rollback_registry
+        M = registry.System.Field
+        entry = M.query().get(name='name', model='Model.System.Blok')
+        assert entry is not None
