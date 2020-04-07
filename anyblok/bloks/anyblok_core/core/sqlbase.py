@@ -206,7 +206,7 @@ class SqlMixin:
         query = C.query()
         query = query.filter(C.model.in_(cls.get_all_registry_names()))
         query = query.filter(C.primary_key == true())
-        return query.all().name
+        return list(set(query.all().name))
 
     @classmethod_cache()
     def _fields_description(cls):
