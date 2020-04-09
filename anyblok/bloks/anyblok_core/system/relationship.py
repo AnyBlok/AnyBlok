@@ -57,8 +57,8 @@ class RelationShip(System.Field):
         :param table: name of the table of the model
         :param ftype: type of the AnyBlok Field
         """
-        local_columns = relation.info.get('local_columns')
-        remote_columns = relation.info.get('remote_columns')
+        local_columns = ','.join(relation.info.get('local_columns', []))
+        remote_columns = ','.join(relation.info.get('remote_columns', []))
         remote_model = relation.info.get('remote_model')
         remote_name = relation.info.get('remote_name')
         label = relation.info.get('label')
