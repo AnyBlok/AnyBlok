@@ -7,7 +7,7 @@ addons:
 python:
     - "3.6"
     - "3.7"
-    - "3.8-dev"
+    - "3.8"
     - "3.9-dev"
     - "nightly"
 
@@ -39,7 +39,6 @@ env:
 
 matrix:
     allow_failures:
-      - python: "3.8-dev"
       - python: "3.9-dev"
       - python: "nightly"
       - python: "pypy3.5"
