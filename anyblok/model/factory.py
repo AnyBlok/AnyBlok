@@ -70,7 +70,7 @@ def get_columns(view, columns):
         else:
             columns = [columns]
 
-    return [getattr(view.c, x.split(' => ')[1]) for x in columns]
+    return [getattr(view.c, x) for x in columns]
 
 
 class ViewFactory(BaseFactory):
