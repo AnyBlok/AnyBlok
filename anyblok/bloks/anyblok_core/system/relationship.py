@@ -29,12 +29,21 @@ class RelationShip(System.Field):
     def _description(self):
         res = super(RelationShip, self)._description()
         remote_name = self.remote_name or ''
+        local_columns = []
+        if self.local_columns:
+            local_columns = [x.strip() for x in self.local_columns.split(',')]
+
+        remote_columns = []
+        if self.remote_columns:
+            remote_columns = [
+                x.strip() for x in self.remote_columns.split(',')]
+
         res.update(
             nullable=self.nullable,
             model=self.remote_model,
             remote_name=remote_name,
-            local_columns=[x.strip() for x in self.local_columns.split(',')],
-            remote_columns=[x.strip() for x in self.remote_columns.split(',')],
+            local_columns=local_columns,
+            remote_columns=remote_columns,
         )
         return res
 
