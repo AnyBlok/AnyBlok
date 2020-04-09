@@ -13,7 +13,7 @@ from anyblok.mapper import FakeColumn, FakeRelationShip
 from anyblok.relationship import RelationShip, Many2Many
 from anyblok.common import anyblok_column_prefix
 from ..exceptions import SqlBaseException
-from sqlalchemy.orm import aliased, ColumnProperty
+from sqlalchemy.orm import aliased, ColumnProperty, load_only
 from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
 from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
@@ -210,7 +210,7 @@ class SqlMixin:
         :type: list of the primary keys name
         """
         C = cls.registry.System.Column
-        query = C.query()
+        query = C.query().distinct(C.name).options(load_only(C.name))
         query = query.filter(C.model.in_(cls.get_all_registry_names()))
         query = query.filter(C.primary_key == true())
         return query.all().name
