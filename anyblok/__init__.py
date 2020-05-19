@@ -126,3 +126,7 @@ from . import model  # noqa
 from . import mixin  # noqa
 from .authorization import binding  # noqa
 from .imp import reload_module_if_blok_is_reloading  # noqa
+from .profiler import Profiler, quick_profiler  # noqa
+
+
+profiler = Profiler()
