@@ -13,6 +13,7 @@ import pytest
 import datetime
 import time
 import pytz
+import enum
 from uuid import uuid1
 from os import urandom
 from decimal import Decimal as D
@@ -26,7 +27,7 @@ from .conftest import init_registry, reset_db
 from anyblok.column import (
     Column, Boolean, Json, String, BigInteger, Text, Selection, Date, DateTime,
     Time, Interval, Decimal, Float, LargeBinary, Integer, Sequence, Color,
-    Password, UUID, URL, PhoneNumber, Email, Country, TimeStamp)
+    Password, UUID, URL, PhoneNumber, Email, Country, TimeStamp, Enum)
 
 
 time_params = [DateTime]
@@ -40,8 +41,14 @@ def dt_column_type(request):
     return request.param
 
 
+class MyTestEnum(enum.Enum):
+    test = 'test'
+    other = 'other'
+
+
 COLUMNS = [
     (Selection, 'test', {'selections': {'test': 'test'}}),
+    (Enum, 'test', {'enum_cls': MyTestEnum}),
     (Boolean, True, {}),
     (Boolean, False, {}),
     (String, 'test', {}),
@@ -1171,7 +1178,11 @@ class TestColumns:
                                       encrypt_key='secretkey', **kwargs)
         test = registry.Test.insert(col=value)
         registry.session.commit()
-        assert test.col == value
+        if column is Enum:
+            assert test.col.value == value
+        else:
+            assert test.col == value
+
         res = registry.execute('select col from test where id = %s' % test.id)
         res = res.fetchall()[0][0]
         assert res != test.col

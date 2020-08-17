@@ -677,6 +677,48 @@ class String(Column):
         return res
 
 
+class Enum(Column):
+    """Enum column
+
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import Enum
+        import enum
+
+
+        class MyEnumClass(enum.Enum):
+            one = 1
+            two = 2
+            three = 3
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = Enum(enum_cls=MyEnumClass, default='test')
+
+    enum_cls should be an enum class
+    """
+    def __init__(self, *args, **kwargs):
+        self.enum_cls = kwargs.pop('enum_cls')
+        self.sqlalchemy_type = 'tmp value for assert'
+        super(Enum, self).__init__(*args, **kwargs)
+
+    def native_type(self, registry):
+        enum_cls = self.enum_cls
+        return types.Enum(enum_cls)
+
+    def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
+        res = super(Enum, self).autodoc_get_properties()
+        res['enum_cls'] = repr(self.enum_cls)
+        return res
+
+
 class MsSQLPasswordType(PasswordType):
     impl = types.VARCHAR(1024)
 
