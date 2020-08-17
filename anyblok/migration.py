@@ -477,7 +477,7 @@ class MigrationReport:
     def apply_change_add_ck(self, action):
         _, table, ck = action
         t = self.get_migration_table(ck.table)
-        t.check(ck.name).add(str(ck.sqltext))
+        t.check(ck.name).add(ck.sqltext)
 
     def apply_change_remove_fk(self, action):
         _, fk = action

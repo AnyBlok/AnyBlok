@@ -702,12 +702,8 @@ class Enum(Column):
     """
     def __init__(self, *args, **kwargs):
         self.enum_cls = kwargs.pop('enum_cls')
-        self.sqlalchemy_type = 'tmp value for assert'
+        self.sqlalchemy_type = types.Enum(self.enum_cls)
         super(Enum, self).__init__(*args, **kwargs)
-
-    def native_type(self, registry):
-        enum_cls = self.enum_cls
-        return types.Enum(enum_cls)
 
     def autodoc_get_properties(self):
         """Return properties for autodoc
