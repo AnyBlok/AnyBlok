@@ -295,6 +295,14 @@ class TestMany2One:
         request.addfinalizer(transaction.rollback)
         return
 
+    def test_relationship_remote_columns_values(self, registry_many2one):
+        registry, _, _ = registry_many2one
+        RelationShip = registry.System.RelationShip
+        relations = RelationShip.query().all()
+        for relation in relations:
+            assert "," not in relation.remote_columns
+            assert "," not in relation.local_columns
+
     def test_ok(self, request, registry_many2one):
         registry, column_name, has_one2many = registry_many2one
         address_exist = hasattr(registry.Person, 'address')
