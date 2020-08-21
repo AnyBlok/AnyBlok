@@ -34,7 +34,7 @@ env:
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pymssql<3.0' \
+          SQLPYCLIENT='pymssql-py38' \
           MARKERS='not field and not column and not relationship'
 
 matrix:
@@ -60,6 +60,7 @@ before_install:
   - sudo apt-get install graphviz
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server:2019-latest; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' || $TRAVIS_PYTHON_VERSION == '3.7' ]]; then export SQLPYCLIENT='pymssql<3.0'; fi
 
 install:
   - pip install -U pip
