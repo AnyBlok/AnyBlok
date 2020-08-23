@@ -267,6 +267,9 @@ class MigrationReport:
 
     def init_remove_column(self, diff):
         column = diff[3]
+        if self.ignore_migration_for(column.table.name) is True:
+            return True
+
         msg = "Drop Column %s.%s" % (column.table.name,
                                      column.name)
 
@@ -412,7 +415,6 @@ class MigrationReport:
                 self.raise_if_withoutautomigration()
                 for change in diff:
                     _, _, table, column, _, _, _ = change
-                    self.log_names.append('Alter %s.%s' % (table, column))
                     fnct = mappers.get(change[0])
                     if fnct:
                         if fnct(change):
@@ -420,6 +422,7 @@ class MigrationReport:
                     else:
                         logger.warning('Unknow diff: %r', change)
 
+                    self.log_names.append('Alter %s.%s' % (table, column))
                     self.actions.append(change)
             else:
                 fnct = mappers.get(diff[0])
