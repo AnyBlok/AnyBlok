@@ -21,20 +21,20 @@ env:
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
-          ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pymssql<3.0' \
+          SQLPYCLIENT='pyodbc' \
           MARKERS='field or column or relationship'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
-          ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pymssql<3.0' \
+          SQLPYCLIENT='pyodbc' \
           MARKERS='not field and not column and not relationship'
 
 matrix:
@@ -63,7 +63,6 @@ before_install:
 
 install:
   - pip install -U pip
-  - pip install git+https://github.com/jssuzanne/sqlalchemy-utils.git@mssql_and_pymssql#egg=sqlalchemy_utils
   - pip install wheel
   - pip install sqlalchemy $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
