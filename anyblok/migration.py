@@ -139,7 +139,7 @@ class MigrationReport:
 
     def init_remove_constraint(self, diff):
         _, constraint = diff
-        if self.ignore_migration_for(constraint.table) is True:
+        if self.ignore_migration_for(constraint.table.name) is True:
             return True
 
         self.log_names.append('Drop constraint %s on %s' % (
@@ -196,7 +196,7 @@ class MigrationReport:
         from_ = []
         to_ = []
         for column in fk.columns:
-            if column.name in self.ignore_migration_for(fk.table, []):
+            if column.name in self.ignore_migration_for(fk.table.name, []):
                 return True
 
             for fk_ in column.foreign_keys:
@@ -212,6 +212,9 @@ class MigrationReport:
             return True
 
         for column in fk.columns:
+            if column.name in self.ignore_migration_for(fk.table.name, []):
+                return True
+
             for fk_ in column.foreign_keys:
                 self.log_names.append('Drop Foreign keys on %s.%s => %s' % (
                     fk.table.name, column.name, fk_.target_fullname))
@@ -224,7 +227,7 @@ class MigrationReport:
     def init_add_ck(self, diff):
         self.raise_if_withoutautomigration()
         _, table, ck = diff
-        if self.ignore_migration_for(ck.table) is True:
+        if self.ignore_migration_for(table) is True:
             return True
 
         if ck.table.schema:
@@ -252,7 +255,17 @@ class MigrationReport:
     def init_add_constraint(self, diff):
         self.raise_if_withoutautomigration()
         _, constraint = diff
-        columns = [x.name for x in constraint.columns]
+        columns = []
+
+        if self.ignore_migration_for(constraint.table.name) is True:
+            return True
+
+        for column in constraint.columns:
+            columns.append(column.name)
+            if column.name in self.ignore_migration_for(constraint.table.name,
+                                                        []):
+                return True
+
         self.log_names.append('Add unique constraint on %s (%s)' % (
             constraint.table.name, ', '.join(columns)))
 
