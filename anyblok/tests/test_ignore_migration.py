@@ -30,6 +30,9 @@ def clean_db(request, configuration_loaded):
         db_template_name = Configuration.get('db_template_name', None)
         create_database(url, template=db_template_name)
 
+    if sgdb_in(['MySQL', 'MariaDB']):
+        clean()
+
     request.addfinalizer(clean)
 
 
