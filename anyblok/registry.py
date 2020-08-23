@@ -26,6 +26,12 @@ from .logging import log
 import sqlalchemy.interfaces
 from sqlalchemy.orm.session import close_all_sessions
 
+try:
+    import pyodbc
+    pyodbc.pooling = False
+except ImportError:
+    pass
+
 logger = getLogger(__name__)
 
 
