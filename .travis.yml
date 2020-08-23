@@ -65,7 +65,6 @@ before_install:
 install:
   - pip install -U pip
   - pip install git+https://github.com/jssuzanne/sqlalchemy-utils.git@mssql_and_pymssql#egg=sqlalchemy_utils
-  - pip install wheel
   - pip install sqlalchemy $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
