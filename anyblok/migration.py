@@ -177,7 +177,7 @@ class MigrationReport:
 
     def init_remove_index(self, diff):
         _, index = diff
-        if self.ignore_migration_for(index.table) is True:
+        if self.ignore_migration_for(index.table.name) is True:
             return True
 
         self.log_names.append('Drop index %s on %s' % (index.name,
