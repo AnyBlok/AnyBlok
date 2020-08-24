@@ -24,7 +24,7 @@ env:
           ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
-          ANYBLOK_DATABASE_QUERY='driver=FreeTDS'\
+          ANYBLOK_DATABASE_QUERY='driver=ODBC+Driver+13+for+SQL+Server'\
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
           SQLPYCLIENT='pyodbc' \
           MARKERS='field or column or relationship'
@@ -59,7 +59,7 @@ services:
 before_install:
   - sudo apt-get update
   - sudo apt-get install graphviz
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo apt-get install unixodbc-dev; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo apt-get install unixodbc-dev msodbcsql17; fi
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server:2019-latest; fi
 
