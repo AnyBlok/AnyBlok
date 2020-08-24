@@ -59,7 +59,7 @@ services:
 before_install:
   - sudo apt-get update
   - sudo apt-get install graphviz
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo apt-get install unixodbc-dev msodbcsql17; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo apt-get install unixodbc-dev msodbcsql; fi
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server:2019-latest; fi
 
