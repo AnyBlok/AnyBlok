@@ -26,6 +26,15 @@ from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
 logger = getLogger(__name__)
 
 
+def parse_qs(entry):
+    res = urllib.parse.parse_qs(entry)
+    for k, v in res.items():
+        if len(v) == 1:
+            res[k] = v[0]
+
+    return res
+
+
 def get_db_name():
     """Return an sqlalchemy name of the database from configuration
 
@@ -831,7 +840,7 @@ def add_database(group):
     group.add_argument('--db-port', type=int,
                        default=os.environ.get('ANYBLOK_DATABASE_PORT'),
                        help="The port number")
-    group.add_argument('--db-query', type=urllib.parse.parse_qs,
+    group.add_argument('--db-query', type=parse_qs,
                        default=os.environ.get('ANYBLOK_DATABASE_QUERY'),
                        help="Query string to add parameter to the connection")
     group.add_argument('--db-echo', action="store_true",
