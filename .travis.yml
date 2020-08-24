@@ -57,7 +57,7 @@ services:
   - docker
 
 before_install:
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -; fi
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list; fi
   - sudo apt-get update
   - sudo apt-get install graphviz
