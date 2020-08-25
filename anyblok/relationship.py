@@ -457,8 +457,8 @@ class Many2One(RelationShip):
                                  "the same, please choose another "
                                  "column_names" % fieldname)
 
-        self.kwargs['info']['local_columns'] = ', '.join(
-            x.attribute_name for x in self.column_names)
+        self.kwargs['info']['local_columns'] = [
+            x.attribute_name for x in self.column_names]
         remote_types = {x.attribute_name: x.native_type(registry)
                         for x in self.remote_columns}
         remote_columns = {x.attribute_name: x
