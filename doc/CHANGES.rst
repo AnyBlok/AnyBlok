@@ -30,12 +30,13 @@ CHANGELOG
 
 * Now the Email, Selection, Country, Json, Decimal, Interval, LargeBinary 
   columns can be crypted
-* Removed compatibility with **Python 3.4**, because this version is
-  deprecated
+* Removed compatibility with **Python 3.4** and **python 3.5**, because 
+  these versions are deprecated
 * Added *TimeStamp* column
 * Added *Enum* column
 * Added **ignore_migration** to protect the existing table or column again 
   auto migration when then schema and this definition are diferents
+* Added capability with mssql+pyodbc
 * Add in extra dependencies drivers used in unit tests for dialects tested 
   with cPython 
 
@@ -43,6 +44,7 @@ CHANGELOG
   * mysql: mysqlclient
   * mariadb: mysqlclient
   * mssql: pymssql
+  * pyodbc
 
 0.22.5 (2019-06-24)
 -------------------

@@ -27,17 +27,6 @@ env:
           ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
           SQLPYCLIENT='pyodbc' \
-          MARKERS='field or column or relationship'
-        - |-
-          ANYBLOK_DATABASE_HOST=localhost \
-          ANYBLOK_DATABASE_PORT=1433 \
-          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
-          ANYBLOK_DATABASE_USER=sa \
-          ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
-          ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
-          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pyodbc' \
-          MARKERS='not field and not column and not relationship'
 
 matrix:
     allow_failures:
@@ -47,6 +36,26 @@ matrix:
     include:
       - python: "pypy3.5"
         env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
+      - python: "3.7"
+        env: |-
+             ANYBLOK_DATABASE_HOST=localhost \
+             ANYBLOK_DATABASE_PORT=1433 \
+             ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+             ANYBLOK_DATABASE_USER=sa \
+             ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+             SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
+             SQLPYCLIENT='pymssql' \
+             MARKERS='field or column or relationship'
+      - python: "3.7"
+        env: |-
+             ANYBLOK_DATABASE_HOST=localhost \
+             ANYBLOK_DATABASE_PORT=1433 \
+             ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+             ANYBLOK_DATABASE_USER=sa \
+             ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+             SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
+             SQLPYCLIENT='pymssql' \
+             MARKERS='not field and not column and not relationship'
     fast_finish: true
 
 virtualenv:
@@ -70,6 +79,9 @@ before_install:
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo apt-get install unixodbc-dev; fi
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
   - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server:2019-latest; fi
+
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server:2019-latest; fi
 
 install:
   - pip install -U pip

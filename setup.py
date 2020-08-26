@@ -57,6 +57,7 @@ extra_dependencies = {
     'mysql': ['mysqlclient'],
     'mariadb': ['mysqlclient'],
     'mssql': ['pymssql'],
+    'pyodbc': ['pyodbc'],
 }
 
 
