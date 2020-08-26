@@ -29,8 +29,11 @@ from sqlalchemy.orm.session import close_all_sessions
 try:
     import pyodbc
     pyodbc.pooling = False
+    PyODBCProgrammingError = pyodbc.ProgrammingError
 except ImportError:
-    pass
+
+    class PyODBCProgrammingError(Exception):
+        pass
 
 logger = getLogger(__name__)
 
@@ -563,18 +566,11 @@ class Registry:
         query = """SELECT "order", name"""
         query += " FROM system_blok"
         query += " WHERE state in ('%s')" % "', '".join(states)
-        if self.engine.driver == 'pyodbc':
-            try:
-                res = self.bind.connection.cursor().execute(query).fetchall()
-            except pyodbc.ProgrammingError:
-                # During the first connection the database is empty
-                pass
-        else:
-            try:
-                res = self.execute(query).fetchall()
-            except (ProgrammingError, OperationalError):
-                # During the first connection the database is empty
-                pass
+        try:
+            res = self.execute(query, fetchall=True)
+        except (ProgrammingError, OperationalError, PyODBCProgrammingError):
+            # During the first connection the database is empty
+            pass
 
         if res:
             res.sort()
@@ -825,13 +821,22 @@ class Registry:
         return False
 
     def execute(self, *args, **kwargs):
+        fetchall = kwargs.pop('fetchall', False)
         if self.Session:
-            return self.session.execute(*args, **kwargs)
+            res = self.session.execute(*args, **kwargs)
+            if fetchall:
+                return res.fetchall()
+
+            return res
         else:
             conn = None
             try:
                 conn = self.engine.connect()
-                return conn.execute(*args, **kwargs)
+                res = conn.execute(*args, **kwargs)
+                if fetchall:
+                    return res.fetchall()
+
+                return res
             finally:
                 if conn:
                     conn.close()
@@ -1030,7 +1035,7 @@ class Registry:
             WHERE
                 (state = 'toinstall' AND name = '%s')
                 OR state = 'toupdate'""" % blok2install
-        res = self.execute(query).fetchall()
+        res = self.execute(query, fetchall=True)
         if res:
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
