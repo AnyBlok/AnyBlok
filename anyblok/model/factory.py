@@ -60,6 +60,10 @@ class ModelFactory(BaseFactory):
         bases.extend([x for x in self.registry.loaded_cores['Base']])
 
     def build_model(self, modelname, bases, properties):
+        if properties.get('ignore_migration') is True:
+            self.registry.ignore_migration_for[
+                properties['__tablename__']] = True
+
         return type(modelname, tuple(bases), properties)
 
 

@@ -30,6 +30,7 @@ class Field:
         """
         self.forbid_instance(Field)
         self.label = None
+        self.ignore_migration = kwargs.pop('ignore_migration', False)
 
         if 'label' in kwargs:
             self.label = kwargs.pop('label')
@@ -59,6 +60,16 @@ class Field:
         :param fieldname: name of the field
         :param properties: properties known to the model
         """
+        if self.ignore_migration:
+            table = registry.loaded_namespaces_first_step[
+                namespace]['__tablename__']
+            ignore_migration_for = registry.ignore_migration_for.get(table)
+            if ignore_migration_for is True:
+                return
+            elif not ignore_migration_for:
+                registry.ignore_migration_for[table] = [fieldname]
+            else:
+                ignore_migration_for.append(fieldname)
 
     def get_property(self, registry, namespace, fieldname, properties):
         """Return the property of the field

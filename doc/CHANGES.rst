@@ -15,16 +15,12 @@
 CHANGELOG
 =========
 
-1.0.1 (Unreleased)
+1.0.0 (Unreleased)
 ------------------
 
 * Bug Fix on registry loading sequence. The **apply_model_schema_on_table**
   method called at registry initialisation has been splitted to make sqlalchemy
   ORM events registration independent from migration.
-
-1.0.0
------
-
 * It is now possible to place a "Model" in another schema on the SGDB
   ::
 
@@ -37,6 +33,9 @@ CHANGELOG
 * Removed compatibility with **Python 3.4**, because this version is
   deprecated
 * Added *TimeStamp* column
+* Added *Enum* column
+* Added **ignore_migration** to protect the existing table or column again 
+  auto migration when then schema and this definition are diferents
 * Add in extra dependencies drivers used in unit tests for dialects tested 
   with cPython 
 

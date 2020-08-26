@@ -510,6 +510,10 @@ class Registry:
         self._sqlalchemy_known_events = []
         self.expire_attributes = {}
 
+        # key = tablename
+        # value = True if all table else list of columns names
+        self.ignore_migration_for = {}
+
     @classmethod
     def db_exists(cls, db_name=None):
         if not db_name:
