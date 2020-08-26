@@ -560,18 +560,21 @@ class Registry:
             return []
 
         res = []
-        query = "SELECT name"
+        query = """SELECT "order", name"""
         query += " FROM system_blok"
         query += " WHERE state in ('%s')" % "', '".join(states)
-        query += """ ORDER BY "order";"""
         try:
-            res = self.execute(query).fetchall()
+            if self.engine.driver == 'pyodbc':
+                res = self.bind.connection.cursor().execute(query).fetchall()
+            else:
+                res = self.execute(query).fetchall()
         except (ProgrammingError, OperationalError):
             # During the first connection the database is empty
             pass
 
         if res:
-            return [x[0] for x in res]
+            res.sort()
+            return [x[1] for x in res]
 
         return []
 
