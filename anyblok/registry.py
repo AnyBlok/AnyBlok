@@ -571,7 +571,7 @@ class Registry:
                 pass
         else:
             try:
-                    res = self.execute(query).fetchall()
+                res = self.execute(query).fetchall()
             except (ProgrammingError, OperationalError):
                 # During the first connection the database is empty
                 pass
