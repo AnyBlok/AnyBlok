@@ -563,14 +563,18 @@ class Registry:
         query = """SELECT "order", name"""
         query += " FROM system_blok"
         query += " WHERE state in ('%s')" % "', '".join(states)
-        try:
-            if self.engine.driver == 'pyodbc':
+        if self.engine.driver == 'pyodbc':
+            try:
                 res = self.bind.connection.cursor().execute(query).fetchall()
-            else:
-                res = self.execute(query).fetchall()
-        except (ProgrammingError, OperationalError):
-            # During the first connection the database is empty
-            pass
+            except pyodbc.ProgrammingError:
+                # During the first connection the database is empty
+                pass
+        else:
+            try:
+                    res = self.execute(query).fetchall()
+            except (ProgrammingError, OperationalError):
+                # During the first connection the database is empty
+                pass
 
         if res:
             res.sort()
