@@ -27,6 +27,17 @@ env:
           ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
           SQLPYCLIENT='pyodbc' \
+          MARKERS='field or column or relationship'
+        - |-
+          ANYBLOK_DATABASE_HOST=localhost \
+          ANYBLOK_DATABASE_PORT=1433 \
+          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
+          ANYBLOK_DATABASE_USER=sa \
+          ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+          ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
+          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
+          SQLPYCLIENT='pyodbc' \
+          MARKERS='not field and not column and not relationship'
 
 matrix:
     allow_failures:
