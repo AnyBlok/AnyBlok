@@ -11,7 +11,7 @@ from anyblok.model.common import VIEW
 from anyblok.model.exceptions import ViewException
 from anyblok import Declarations
 from sqlalchemy.sql import select, expression, union
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from anyblok.column import Integer, String
 from anyblok.relationship import Many2One
 import pytest
@@ -161,7 +161,7 @@ class TestSimpleView:
 
     def test_view_delete_method(self, registry_simple_view):
         registry = registry_simple_view
-        with pytest.raises(OperationalError):
+        with pytest.raises((OperationalError, ProgrammingError)):
             registry.TestView.query().delete()
 
 
