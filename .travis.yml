@@ -55,7 +55,7 @@ matrix:
              ANYBLOK_DATABASE_USER=sa \
              ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
              SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-             SQLPYCLIENT='pymssql<3.0 sqlalchemy_utils=0.34.2' \
+             SQLPYCLIENT='pymssql<3.0' \
              MARKERS='field or column or relationship'
       - python: "3.7"
         env: |-
@@ -65,7 +65,7 @@ matrix:
              ANYBLOK_DATABASE_USER=sa \
              ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
              SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-             SQLPYCLIENT='pymssql<3.0 sqlalchemy_utils=0.34.2' \
+             SQLPYCLIENT='pymssql<3.0' \
              MARKERS='not field and not column and not relationship'
     fast_finish: true
 
@@ -98,6 +98,7 @@ install:
   - pip install -U pip
   - pip install wheel
   - pip install sqlalchemy $SQLPYCLIENT
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then pip install sqlalchemy_utils=0.34.2; fi
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
   - pip install coveralls
