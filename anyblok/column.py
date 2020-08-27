@@ -50,6 +50,11 @@ except ImportError:
 logger = getLogger(__name__)
 
 
+class MsSQLEncryptedType(EncryptedType):
+    """In MsSQL the column must be a Text"""
+    impl = types.Text
+
+
 def wrap_default(registry, namespace, default_val):
     """Return default wrapper
 
@@ -233,9 +238,17 @@ class Column(Field):
                 kwargs['default'] = self.default_val
 
         sqlalchemy_type = self.native_type(registry)
+
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
-            sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
+            if (
+                sgdb_in(registry.engine, ['MsSQL']) and
+                registry.engine.driver != 'pyodbc'
+            ):
+                sqlalchemy_type = MsSQLEncryptedType(
+                    sqlalchemy_type, encrypt_key)
+            else:
+                sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
 
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
 
