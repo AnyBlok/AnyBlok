@@ -50,11 +50,6 @@ except ImportError:
 logger = getLogger(__name__)
 
 
-class MsSQLEncryptedType(EncryptedType):
-    """In MsSQL the column must be a Text"""
-    impl = types.Text
-
-
 def wrap_default(registry, namespace, default_val):
     """Return default wrapper
 
