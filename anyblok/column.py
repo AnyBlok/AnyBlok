@@ -241,14 +241,7 @@ class Column(Field):
 
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
-            if (
-                sgdb_in(registry.engine, ['MsSQL']) and
-                registry.engine.driver != 'pyodbc'
-            ):
-                sqlalchemy_type = MsSQLEncryptedType(
-                    sqlalchemy_type, encrypt_key)
-            else:
-                sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
+            sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
 
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
 
