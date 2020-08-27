@@ -56,7 +56,7 @@ extra_dependencies = {
     'postgres': ['psycopg2-binary'],
     'mysql': ['mysqlclient'],
     'mariadb': ['mysqlclient'],
-    'mssql': ['pymssql'],
+    'mssql': ['pymssql', 'sqlalchemy_utils=0.34.2'],
     'pyodbc': ['pyodbc'],
 }
 
