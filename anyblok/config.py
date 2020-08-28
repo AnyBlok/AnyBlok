@@ -16,6 +16,7 @@ import sys
 import os
 import json
 import yaml
+import urllib
 from appdirs import AppDirs
 from os.path import join, isfile
 from sqlalchemy.engine.url import URL, make_url
@@ -23,6 +24,15 @@ from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
                      CRITICAL, basicConfig, Logger)
 
 logger = getLogger(__name__)
+
+
+def parse_qs(entry):
+    res = urllib.parse.parse_qs(entry)
+    for k, v in res.items():
+        if len(v) == 1:
+            res[k] = v[0]
+
+    return res
 
 
 def get_db_name():
@@ -84,6 +94,7 @@ def get_url(db_name=None):
     host = Configuration.get('db_host', None)
     port = Configuration.get('db_port', None)
     database = Configuration.get('db_name', None)
+    query = Configuration.get('db_query', {})
 
     if db_name is not None:
         database = db_name
@@ -103,7 +114,7 @@ def get_url(db_name=None):
         raise ConfigurationException('No driver name defined')
 
     return URL(drivername, username=username, password=password, host=host,
-               port=port, database=database)
+               port=port, database=database, query=query)
 
 
 class ConfigurationException(LookupError):
@@ -829,6 +840,9 @@ def add_database(group):
     group.add_argument('--db-port', type=int,
                        default=os.environ.get('ANYBLOK_DATABASE_PORT'),
                        help="The port number")
+    group.add_argument('--db-query', type=parse_qs,
+                       default=os.environ.get('ANYBLOK_DATABASE_QUERY'),
+                       help="Query string to add parameter to the connection")
     group.add_argument('--db-echo', action="store_true",
                        default=(os.environ.get(
                            'ANYBLOK_DATABASE_ECHO') or False))

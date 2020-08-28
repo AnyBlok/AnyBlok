@@ -21,20 +21,22 @@ env:
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
-          ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+          ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pymssql<3.0' \
+          SQLPYCLIENT='pyodbc' \
           MARKERS='field or column or relationship'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
-          ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+          ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pymssql<3.0' \
+          SQLPYCLIENT='pyodbc' \
           MARKERS='not field and not column and not relationship'
 
 matrix:
@@ -56,14 +58,21 @@ services:
   - docker
 
 before_install:
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/16.04/prod xenial main" | sudo tee -a /etc/apt/sources.list; fi
   - sudo apt-get update
   - sudo apt-get install graphviz
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server:2019-latest; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo ACCEPT_EULA=Y apt-get install msodbcsql17; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo ACCEPT_EULA=Y apt-get install mssql-tools; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bash_profile; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then source ~/.bashrc; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo apt-get install unixodbc-dev; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server:2019-latest; fi
 
 install:
   - pip install -U pip
-  - pip install git+https://github.com/jssuzanne/sqlalchemy-utils.git@mssql_and_pymssql#egg=sqlalchemy_utils
   - pip install wheel
   - pip install sqlalchemy $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
