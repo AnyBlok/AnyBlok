@@ -21,6 +21,11 @@ CHANGELOG
 * Bug Fix on registry loading sequence. The **apply_model_schema_on_table**
   method called at registry initialisation has been splitted to make sqlalchemy
   ORM events registration independent from migration.
+* Added undefined blok behaviour. It is an important behaviour needed and 
+  written in the roadmap where the goal is to defined blok which need another
+  inexisting blok. this blok is installabled only if the blok exist. A package
+  can defined a group of bloks that depend of another packages. They bloks 
+  are installabled if the another package is installed
 * It is now possible to place a "Model" in another schema on the SGDB
   ::
 

@@ -678,6 +678,53 @@ class TestBlokConflicting:
 
 @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                     reason='Not for MySQL and MariaDB')
+class TestBlokUndefined:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_testblok):
+        transaction = registry_testblok.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_blok_15_exist(self, registry_testblok):
+        registry = registry_testblok
+        Blok = registry.System.Blok
+        query = Blok.query().filter(Blok.name == 'test-blok15')
+        if not query.count():
+            pytest.fail('No blok found')
+
+        testblok15 = query.first()
+        assert testblok15.state == 'uninstalled'
+        assert testblok15.version == '1.0.0'
+        assert testblok15.installed_version is None
+        assert testblok15.short_description == 'Test blok15'
+
+    def test_blok_undefined_exist(self, registry_testblok):
+        registry = registry_testblok
+        Blok = registry.System.Blok
+        query = Blok.query().filter(Blok.name == 'test-undefined')
+        if not query.count():
+            pytest.fail('No blok found')
+
+        testblokundefined = query.first()
+        assert testblokundefined.state == 'undefined'
+        assert testblokundefined.version == '0.0.0'
+        assert testblokundefined.installed_version is None
+        assert testblokundefined.short_description == 'Blok undefined'
+
+    def test_install_both(self, registry_testblok):
+        registry = registry_testblok
+        with pytest.raises(RegistryException):
+            registry.upgrade(install=('test-blok15',))
+
+    def test_install_undefined(self, registry_testblok):
+        registry = registry_testblok
+        with pytest.raises(RegistryException):
+            registry.upgrade(install=('test-undefined',))
+
+
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokOrder:
 
     @pytest.fixture(autouse=True)
