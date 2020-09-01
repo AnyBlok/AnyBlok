@@ -128,8 +128,7 @@ class BlokManager:
         """
         for required in cls.bloks[blok].required:
             if not cls.get_needed_blok(required):
-                raise BlokManagerException(
-                    "%s not found in required bloks" % required)
+                cls.add_undefined_blok(required)
 
             cls.bloks[required].required_by.append(blok)
 
@@ -142,6 +141,18 @@ class BlokManager:
 
         for conflicting in cls.bloks[blok].conflicting:
             cls.bloks[conflicting].conflicting_by.append(blok)
+
+    @classmethod
+    def blok_importers(cls, blok):
+        EnvironmentManager.set('current_blok', blok)
+
+        if not ImportManager.has(blok):
+            # Import only if the blok doesn't exists, do not reload here
+            mod = ImportManager.add(blok)
+            mod.imports()
+        else:
+            mod = ImportManager.get(blok)
+            mod.reload()
 
     @classmethod
     def get_needed_blok(cls, blok):
@@ -158,20 +169,26 @@ class BlokManager:
 
         cls.get_needed_blok_dependencies(blok)
         cls.ordered_bloks.append(blok)
-        EnvironmentManager.set('current_blok', blok)
-
-        if not ImportManager.has(blok):
-            # Import only if the blok doesn't exists, do not reload here
-            mod = ImportManager.add(blok)
-            mod.imports()
-        else:
-            mod = ImportManager.get(blok)
-            mod.reload()
+        cls.blok_importers(blok)
 
         if cls.bloks[blok].autoinstall:
             cls.auto_install.append(blok)
 
         return True
+
+    @classmethod
+    def add_undefined_blok(cls, name):
+        blok = type(
+            'undefined-blok.%s' % name,
+            (UndefinedBlok,),
+            dict(name=name, required_by=[], optional_by=[], conditional_by=[],
+                 conflicting_by=[])
+        )
+        blok.__doc__ = "Blok undefined"
+        cls.set(name, blok)
+        # here they are not python module to load, but this action
+        # add the undefined blok in registryManager
+        cls.blok_importers(name)
 
     @classmethod
     @log(logger, level='debug')
@@ -295,3 +312,8 @@ class Blok:
     def load(self):
         """Called on start / launch
         """
+
+
+class UndefinedBlok(Blok):
+
+    version = '0.0.0'

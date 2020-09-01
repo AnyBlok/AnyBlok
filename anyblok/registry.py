@@ -1409,8 +1409,9 @@ class Registry:
                         self.check_conflict_with(blok)
                         self.apply_state(blok, state, ['uninstalled'])
                         upgrade_state_bloks(state)(
-                            self.get_bloks(blok, ['uninstalled'], [
-                                'required', 'optional', 'conditional']))
+                            self.get_bloks(
+                                blok,  ['undefined', 'uninstalled'],
+                                ['required', 'optional', 'conditional']))
                     elif state == 'toupdate':
                         self.apply_state(blok, state, ['installed'])
                         upgrade_state_bloks(state)(
