@@ -84,7 +84,7 @@ install:
 
 script:
   - flake8 anyblok --exclude=*/tests/*
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]] && [[ $MARKERS == '' ]]; then pytest --cov-report= --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]] && [[ $MARKERS == '' ]]; then pytest --cov-report= --cov=anyblok anyblok/tests/test_authorization.py; fi
   - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov-report= --cov=anyblok anyblok/tests; fi
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks
