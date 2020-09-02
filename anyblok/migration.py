@@ -817,7 +817,6 @@ class MigrationColumn:
             name = kwargs['name']
 
         if vals:
-            print(self.table.name, self.name, vals)
             self.table.migration.operation.alter_column(
                 self.table.name, self.name,
                 schema=self.table.schema, **vals)
