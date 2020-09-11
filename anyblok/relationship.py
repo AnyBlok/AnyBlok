@@ -1091,6 +1091,7 @@ class One2Many(RelationShip):
         self.link_between_columns = [
             (x.attribute_name, x.get_fk_mapper(registry).attribute_name)
             for x in self.remote_columns
+            if x.get_fk_mapper(registry)
         ]
 
         if 'primaryjoin' not in self.kwargs:
