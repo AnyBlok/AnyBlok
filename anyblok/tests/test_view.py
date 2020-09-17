@@ -74,7 +74,8 @@ def simple_view_with_m2o():
         code = String(primary_key=True)
         val1 = Integer()
         val2 = Integer()
-        m2o = Many2One(model=Model.T0)
+        m2o = Many2One(model=Model.T0,
+                       primaryjoin='ModelT0.id == ModelTestView.m2o_id')
 
         @classmethod
         def sqlalchemy_view_declaration(cls):

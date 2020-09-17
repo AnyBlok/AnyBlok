@@ -582,7 +582,9 @@ class Many2One(RelationShip):
             [x.get_complete_name(registry) for x in self.column_names])
         if not self.remote_model_is_a_table(registry):
             self.kwargs['viewonly'] = True
-            self.kwargs['primaryjoin'] = 'ModelWmsReceptionLine.location_id == ModelWmsLocation.id'
+            # we used primaryjoin and let the userto defined the good one
+            # The foreign key does not exist, we should fine a good way to
+            # the the local and remote columns
 
         return super(Many2One, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
