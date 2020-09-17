@@ -7,8 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .exceptions import ModelFactoryException
 from anyblok.field import Field, FieldException
-from sqlalchemy import event
-from sqlalchemy.sql import table, and_
+from sqlalchemy import table, and_, Table
 from sqlalchemy.orm import Query, mapper, relationship
 from .exceptions import ViewException
 from anyblok.common import anyblok_column_prefix
@@ -108,23 +107,22 @@ class ViewFactory(BaseFactory):
                     "%r.'sqlalchemy_view_declaration' is required to "
                     "define the query to apply of the view" % base)
 
-            view = table(tablename)
+            view_config = table(tablename)
 
-            self.registry.loaded_views[tablename] = view
             selectable = getattr(base, 'sqlalchemy_view_declaration')()
 
             if isinstance(selectable, Query):
                 selectable = selectable.subquery()
 
             for c in selectable.c:
-                c._make_proxy(view)
+                c._make_proxy(view_config)
 
-            event.listen(self.registry.declarativebase.metadata,
-                         'before_create', DropView(tablename))
-            event.listen(self.registry.declarativebase.metadata,
-                         'after_create', CreateView(tablename, selectable))
-            event.listen(self.registry.declarativebase.metadata,
-                         'before_drop', DropView(tablename))
+            self.registry.execute(DropView(tablename))
+            self.registry.execute(CreateView(tablename, selectable))
+            metadata = self.registry.declarativebase.metadata
+            view = Table(tablename, metadata, autoload=True,
+                         autoload_with=self.registry.engine)
+            self.registry.loaded_views[tablename] = view
 
         pks = [col for col in properties['loaded_columns']
                if getattr(getattr(base, anyblok_column_prefix + col),
