@@ -498,8 +498,17 @@ class Many2One(RelationShip):
             self.fk_names = fk_names
             properties['add_in_table_args'].append(self)
 
+    def remote_model_is_a_table(self, registry):
+        if self.model.model_name not in registry.loaded_namespaces:
+            return True  # by default
+
+        return hasattr(registry.get(self.model.model_name), '__table__')
+
     def update_table_args(self, registry, Model):
         """Add foreign key constraint in table args"""
+        if not self.remote_model_is_a_table(registry):
+            return []
+
         return [
             ForeignKeyConstraint(self.col_names, self.fk_names,
                                  **self.foreign_key_options)
@@ -571,6 +580,12 @@ class Many2One(RelationShip):
         """
         self.kwargs['foreign_keys'] = '[%s]' % ', '.join(
             [x.get_complete_name(registry) for x in self.column_names])
+        if not self.remote_model_is_a_table(registry):
+            self.kwargs['viewonly'] = True
+            # we used primaryjoin and let the userto defined the good one
+            # The foreign key does not exist, we should fine a good way to
+            # the the local and remote columns
+
         return super(Many2One, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
 
