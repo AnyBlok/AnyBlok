@@ -119,11 +119,11 @@ class ViewFactory(BaseFactory):
 
             metadata = self.registry.declarativebase.metadata
             event.listen(metadata, 'before_create', DropView(
-                view, if_exists=True, cascade=True))
+                view, if_exists=True))
             event.listen(metadata, 'after_create', CreateView(
                 view, selectable, or_replace=True))
             event.listen(metadata, 'before_drop', DropView(
-                view, if_exists=True, cascade=True))
+                view, if_exists=True))
             self.registry.loaded_views[tablename] = view
 
         pks = [col for col in properties['loaded_columns']
