@@ -51,11 +51,7 @@ def simple_view():
             return query.where(T1.code == T2.code)
 
 
-def simple_view_with_m2o():
-
-    @register(Model)
-    class T0:
-        id = Integer(primary_key=True)
+def m2o_to_a_simple_view():
 
     @register(Model)
     class T1:
@@ -74,8 +70,6 @@ def simple_view_with_m2o():
         code = String(primary_key=True)
         val1 = Integer()
         val2 = Integer()
-        m2o = Many2One(model=Model.T0,
-                       primaryjoin='ModelT0.id == ModelTestView.m2o_id')
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
@@ -85,6 +79,12 @@ def simple_view_with_m2o():
                             T1.val.label('val1'),
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
+
+    @register(Model)
+    class T0:
+        id = Integer(primary_key=True)
+        m2o = Many2One(model=Model.TestView,
+                       primaryjoin='ModelT0.m2o_code == ModelTestView.code')
 
 
 def deprecated_view_before_0_19_2():
@@ -151,7 +151,7 @@ def deprecated_view_before_0_19_4():
     scope="class",
     params=[
         simple_view,
-        simple_view_with_m2o,
+        m2o_to_a_simple_view,
         deprecated_view_before_0_19_2,
         deprecated_view_before_0_19_4,
     ]

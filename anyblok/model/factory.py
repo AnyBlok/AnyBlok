@@ -7,11 +7,11 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .exceptions import ModelFactoryException
 from anyblok.field import Field, FieldException
-from sqlalchemy import table, and_, Table
+from sqlalchemy import table, and_, event
 from sqlalchemy.orm import Query, mapper, relationship
 from .exceptions import ViewException
 from anyblok.common import anyblok_column_prefix
-from .view import CreateView, DropView
+from sqlalchemy_views import CreateView, DropView
 
 
 def has_sql_fields(bases):
@@ -107,7 +107,7 @@ class ViewFactory(BaseFactory):
                     "%r.'sqlalchemy_view_declaration' is required to "
                     "define the query to apply of the view" % base)
 
-            view_config = table(tablename)
+            view = table(tablename)
 
             selectable = getattr(base, 'sqlalchemy_view_declaration')()
 
@@ -115,13 +115,15 @@ class ViewFactory(BaseFactory):
                 selectable = selectable.subquery()
 
             for c in selectable.c:
-                c._make_proxy(view_config)
+                c._make_proxy(view)
 
-            self.registry.execute(DropView(tablename))
-            self.registry.execute(CreateView(tablename, selectable))
             metadata = self.registry.declarativebase.metadata
-            view = Table(tablename, metadata, autoload=True,
-                         autoload_with=self.registry.engine)
+            event.listen(metadata, 'before_create', DropView(
+                view, if_exists=True, cascade=True))
+            event.listen(metadata, 'after_create', CreateView(
+                view, selectable, or_replace=True))
+            event.listen(metadata, 'before_drop', DropView(
+                view, if_exists=True, cascade=True))
             self.registry.loaded_views[tablename] = view
 
         pks = [col for col in properties['loaded_columns']
@@ -138,6 +140,7 @@ class ViewFactory(BaseFactory):
         setattr(base, '__view__', view)
         __mapper__ = mapper(
             base, view, primary_key=pks, properties=mapper_properties)
+        self.registry.declarativebase._decl_class_registry[base.__name__] = base
         setattr(base, '__mapper__', __mapper__)
 
     def get_mapper_properties(self, base, view, properties):
