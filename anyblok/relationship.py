@@ -1139,6 +1139,7 @@ class One2Many(RelationShip):
         pjs_ = {}
         self.link_between_columns = []
         self.kwargs['info']['remote_columns'] = []
+        self.kwargs['info']['local_columns'] = []
         for m2o_name, many2one in many2ones:
             remote_columns = many2one.get_remote_columns(registry)
             for x in remote_columns:
@@ -1185,6 +1186,13 @@ class One2Many(RelationShip):
             self.format_join_from_remote_columns(registry, namespace, fieldname)
         else:
             self.format_join_and_remote_columns(registry, namespace, fieldname)
+
+        self.kwargs['info']['local_columns'] = []
+        for rcol in self.kwargs['info']['remote_columns']:
+            col = ModelAttribute(
+                self.model.model_name, rcol).get_fk_column(registry)
+            if col:
+                self.kwargs['info']['local_columns'].append(col)
 
         self.add_expire_attributes(registry, namespace, fieldname)
         return super(One2Many, self).get_sqlalchemy_mapping(
