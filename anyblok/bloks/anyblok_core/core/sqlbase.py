@@ -567,6 +567,14 @@ class SqlBase(SqlMixin):
         """
         self.registry.expire(self, fields)
 
+    def flag_modified(self, *fields):
+        """ Flag the attributes as modified
+
+        see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
+        #sqlalchemy.orm.session.Session.expire
+        """
+        self.registry.flag_modified(self, fields)
+
     def delete(self, byquery=False, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
         model::

@@ -42,6 +42,8 @@ CHANGELOG
 * Added **ignore_migration** to protect the existing table or column again 
   auto migration when then schema and this definition are diferents
 * Added capability with mssql+pyodbc
+* Fixed View: allow to add Many2One to a View
+* Added flag_modified method on SQLModel #72
 * Add in extra dependencies drivers used in unit tests for dialects tested 
   with cPython 
 

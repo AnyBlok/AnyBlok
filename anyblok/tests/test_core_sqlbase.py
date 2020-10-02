@@ -119,6 +119,13 @@ class TestCoreSQLBase:
         t.refresh()
         assert t.id2 == 2
 
+    def test_modified(self, registry_declare_model):
+        registry = registry_declare_model
+        t = registry.Test.insert(id2=2)
+        assert 'id2' not in t.get_modified_fields()
+        t.flag_modified('id2')
+        assert 'id2' in t.get_modified_fields()
+
     def test_update(self, registry_declare_model):
         registry = registry_declare_model
         nb_value = 3
