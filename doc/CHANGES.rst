@@ -53,6 +53,8 @@ CHANGELOG
   * mssql: pymssql
   * pyodbc
 
+* System.Parameter.get do not raise if a default value is provided
+
 0.22.5 (2019-06-24)
 -------------------
 

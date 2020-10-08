@@ -13,6 +13,8 @@ from ..exceptions import ParameterException
 register = Declarations.register
 System = Declarations.Model.System
 
+NOT_PROVIDED = object
+
 
 @register(Declarations.Model.System)
 class Parameter:
@@ -64,17 +66,21 @@ class Parameter:
         return True if query.count() else False
 
     @classmethod
-    def get(cls, key):
+    def get(cls, key, default=NOT_PROVIDED):
         """ Return the value of the key
 
         :param key: key whose value to retrieve
+        :param default: default value if key does not exists
         :return: associated value
         :rtype: anything JSON encodable
-        :raises ParameterException: if the key doesn't exist.
+        :raises ParameterException: if the key doesn't exist and default is not
+                                    set.
         """
         if not cls.is_exist(key):
-            raise ParameterException(
-                "unexisting key %r" % key)
+            if default is NOT_PROVIDED:
+                raise ParameterException(
+                    "unexisting key %r" % key)
+            return default
 
         param = cls.from_primary_keys(key=key)
         if param.multi:
