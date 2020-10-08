@@ -25,6 +25,7 @@ from .version import parse_version
 from .logging import log
 import sqlalchemy.interfaces
 from sqlalchemy.orm.session import close_all_sessions
+from sqlalchemy.orm.attributes import flag_modified
 
 try:
     import pyodbc
@@ -1103,6 +1104,25 @@ class Registry:
             ]
 
         self.session.expire(obj, attribute_names=attribute_names)
+
+    def flag_modified(self, obj, attribute_names=None):
+        """ Flag the attributes as modified
+        ::
+
+            registry.flag_modified(instance, ['attr1', 'attr2', ...])
+
+        :param obj: instance of ``Model``
+        :param attribute_names: list of string, names of the attr to expire
+        """
+        if attribute_names:
+            hybrid_property_columns = (
+                obj.__class__.get_hybrid_property_columns()
+            )
+            for attribute_name in attribute_names:
+                if attribute_name in hybrid_property_columns:
+                    attribute_name = anyblok_column_prefix + attribute_name
+
+                flag_modified(obj, attribute_name)
 
     def expire_all(self):
         """Expire all the objects in session
