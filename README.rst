@@ -96,7 +96,7 @@ To run framework tests with ``pytest``::
 
 To run tests of all installed bloks with demo data::
 
-    anyblok_createdb --with-demo --db-name test_anyblok --db-driver-name postgresql --install-all-bloks
+    anyblok_createdb --db-name test_anyblok --db-driver-name postgresql --install-all-bloks
     ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_NAME=test_anyblok py.test anyblok/bloks
 
 AnyBlok is tested continuously using `Travis CI

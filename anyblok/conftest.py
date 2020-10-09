@@ -53,7 +53,24 @@ def init_session(request, configuration_loaded):
 
 @pytest.fixture(scope='function')
 def rollback_registry(request, init_session):
+    """Provide registry that is rollback between each tests
+
+    If you want to skip test if demo data are not installed you can
+    place ``skip_unless_demo_data_installed`` pytest marker::
+
+    @pytest.mark.skip_unless_demo_data_installed
+    def test_somthing(rollback_registry):
+        registry = rollback_registry
+        ...
+    """
     registry = init_session
+
+    if request.node.get_closest_marker('skip_unless_demo_data_installed'):
+        if not registry.System.Parameter.get("with-demo", False):
+            pytest.skip(
+                "Demo data are required (Use ``--with-demo`` to create the "
+                "test database)."
+            )
 
     yield registry
 
