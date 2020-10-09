@@ -218,6 +218,8 @@ class Blok:
         self.fire('Update installed blok')
         entry = self.registry.loaded_bloks[self.name]
         entry.update(None)
+        if self.registry.System.Parameter.get("with-demo", False):
+            entry.update_demo(None)
         self.state = 'installed'
         self.installed_version = self.version
 
@@ -232,6 +234,8 @@ class Blok:
             if self.installed_version is not None
             else None)
         entry.update(parsed_version)
+        if self.registry.System.Parameter.get("with-demo", False):
+            entry.update_demo(parsed_version)
         self.state = 'installed'
         self.installed_version = self.version
 
@@ -241,6 +245,8 @@ class Blok:
         logger.info("Uninstall the blok %r" % self.name)
         self.fire('Update installed blok')
         entry = BlokManager.bloks[self.name](self.registry)
+        if self.registry.System.Parameter.get("with-demo", False):
+            entry.uninstall_demo()
         entry.uninstall()
         self.state = 'uninstalled'
         self.installed_version = None

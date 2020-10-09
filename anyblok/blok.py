@@ -305,6 +305,19 @@ class Blok:
                                been installed, latest_version is None
         """
 
+    def update_demo(self, latest_version):
+        """Called on install or update to set or update demo data if
+        `System.Parameter.get("with-demo", False) is True`
+
+        :param latest_version: latest version installed, if the blok has never
+                               been installed, latest_version is None
+        """
+
+    def uninstall_demo(self):
+        """Called on uninstall demo data if
+        `System.Parameter.get("with-demo", False) is True`
+        """
+
     def uninstall(self):
         """Called on uninstall
         """

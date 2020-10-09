@@ -865,6 +865,16 @@ def add_create_database(group):
         '--db-template-name',
         default=os.environ.get('ANYBLOK_DATABASE_TEMPLATE_NAME'),
         help="Name of the template")
+    group.add_argument(
+        '--with-demo',
+        default=os.environ.get('ANYBLOK_WITH_DEMO', False),
+        action='store_true',
+        help="Call **update_demo** method define on bloks to import demo data "
+             "while installing the project. If this option is used at database "
+             "creation that information will be kept in the database then "
+             "**update_demo** method will be called while updating bloks as "
+             "well.",
+    )
 
 
 @Configuration.add('install-bloks')

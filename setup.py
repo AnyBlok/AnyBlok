@@ -120,6 +120,7 @@ setup(
             'test-blok13=anyblok.test_bloks.test_blok13:TestBlok',
             'test-blok14=anyblok.test_bloks.test_blok14:TestBlok',
             'test-blok15=anyblok.test_bloks.test_blok15:TestBlok',
+            'test-blok16=anyblok.test_bloks.test_blok16:TestBlok',
         ],
         'nose.plugins.0.10': [
             'anyblok-bloks=anyblok_nose.plugins:AnyBlokPlugin',
