@@ -58,8 +58,14 @@ class TestSystemParameter:
     def test_get_with_default(self, rollback_registry):
         registry = rollback_registry
         Parameter = registry.System.Parameter
-        assert Parameter.get('test.parameter', default="default value") == "default value"
-        assert Parameter.get('test.parameter', "default value") == "default value"
+        assert (
+            Parameter.get('test.parameter', default="default value") ==
+            "default value"
+        )
+        assert (
+            Parameter.get('test.parameter', "default value") ==
+            "default value"
+        )
         assert Parameter.get('test.parameter', None) is None
         assert Parameter.get('test.parameter', True) is True
         assert Parameter.get('test.parameter', False) is False
