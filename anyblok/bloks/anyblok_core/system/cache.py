@@ -88,6 +88,8 @@ class Cache:
 
         :rtype: Boolean
         """
+        if cls.last_cache_id is None:
+            return True
         return cls.last_cache_id < cls.get_last_id()
 
     @classmethod
