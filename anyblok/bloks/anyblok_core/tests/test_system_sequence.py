@@ -7,7 +7,6 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
 from anyblok.testing import sgdb_in
-from anyblok.conftest import configuration_loaded
 
 
 @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']), reason='ISSUE #89')

@@ -1160,7 +1160,9 @@ class Registry:
                 for x in attribute_names]
 
         self.session.refresh(
-            obj, attribute_names=attribute_names, with_for_update=with_for_update
+            obj,
+            attribute_names=attribute_names,
+            with_for_update=with_for_update,
         )
 
     def rollback(self, *args, **kwargs):
