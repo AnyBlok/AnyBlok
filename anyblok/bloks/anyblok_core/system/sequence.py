@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from sqlalchemy import Sequence as SQLASequence
-from anyblok.column import Integer, String
+from anyblok.column import Integer, String, Boolean
 
 
 register = Declarations.register
@@ -44,6 +44,24 @@ class Sequence:
         'SO-000001'
         >>> seq.nextval()
         'SO-000002'
+
+    You can create a Sequence without gap warranty using `no_gap` while
+    creating the sequence::
+
+
+        >>> seq = Sequence.insert(
+                code='SO', formater="{code}-{seq:06d}", no_gap=True)
+        >>> commit()
+
+        >>> # Transaction 1:
+        >>> Sequence.nextvalBy(code='SO')
+        'SO-000001'
+
+        >>> # Concurrent transaction 2:
+        >>> Sequence.nextvalBy(code='SO')
+        ...
+        sqlalchemy.exc.OperationalError: (psycopg2.errors.LockNotAvailable)
+        ...
     """
 
     _cls_seq_name = 'system_sequence_seq_name'
@@ -69,6 +87,14 @@ class Sequence:
        * seq: current value of the underlying database sequence
        * code: :attr:`code` field
        * id: :attr:`id` field
+    """
+    no_gap = Boolean(default=False, nullable=False)
+    """If no_gap is False, it will use Database sequence. Otherwise, if `True`
+    it will ensure there is no gap while getting next value locking the
+    sequence row until transaction is released (rollback/commit). If a
+    concurrent transaction try to get a lock an
+    `sqlalchemy.exc.OperationalError: (psycopg2.errors.LockNotAvailable)`
+    exception is raised.
     """
 
     @classmethod
@@ -101,17 +127,20 @@ class Sequence:
         :rtype: dict
         """
         seq_name = values.get('seq_name')
-        if seq_name is None:
-            seq_id = cls.registry.execute(SQLASequence(cls._cls_seq_name))
-            seq_name = '%s_%d' % (cls.__tablename__, seq_id)
-            values['seq_name'] = seq_name
-
         number = values.setdefault('number', 0)
-        if number:
-            seq = SQLASequence(seq_name, number)
+        if values.get("no_gap"):
+            values.setdefault('seq_name', values.get("code", "no_gap"))
         else:
-            seq = SQLASequence(seq_name)
-        seq.create(cls.registry.bind)
+            if seq_name is None:
+                seq_id = cls.registry.execute(SQLASequence(cls._cls_seq_name))
+                seq_name = '%s_%d' % (cls.__tablename__, seq_id)
+                values['seq_name'] = seq_name
+
+            if number:
+                seq = SQLASequence(seq_name, number)
+            else:
+                seq = SQLASequence(seq_name)
+            seq.create(cls.registry.bind)
         return values
 
     @classmethod
@@ -130,7 +159,11 @@ class Sequence:
 
         :rtype: str
         """
-        nextval = self.registry.execute(SQLASequence(self.seq_name))
+        if self.no_gap:
+            self.refresh(with_for_update={"nowait": True})
+            nextval = self.number + 1
+        else:
+            nextval = self.registry.execute(SQLASequence(self.seq_name))
         self.update(number=nextval)
         return self.formater.format(code=self.code, seq=nextval, id=self.id)
 

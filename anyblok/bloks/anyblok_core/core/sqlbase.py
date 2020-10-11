@@ -546,13 +546,13 @@ class SqlBase(SqlMixin):
                 if field is not None:
                     field.expire(*rfields)
 
-    def refresh(self, *fields):
+    def refresh(self, *fields, with_for_update=None):
         """ Expire and reload all the attribute of the instance
 
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
         """
-        self.registry.refresh(self, fields)
+        self.registry.refresh(self, fields, with_for_update=with_for_update)
 
     def expunge(self):
         """Expunge the instance in the session"""
