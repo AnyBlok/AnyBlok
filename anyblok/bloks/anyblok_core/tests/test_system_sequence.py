@@ -85,7 +85,7 @@ class TestSystemSequence:
     def test_sequence_with_no_gap_rollback(self, rollback_registry):
         registry = rollback_registry
         Sequence = registry.System.Sequence
-        seq = Sequence.insert(code='test.sequence', no_gap=True)
+        seq = Sequence.insert(code='test.sequence.nogap', no_gap=True)
         number = seq.number
         assert Sequence.nextvalBy(code=seq.code) == str(number + 1)
         registry.commit()
