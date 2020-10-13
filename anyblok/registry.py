@@ -1142,7 +1142,7 @@ class Registry:
         """
         self.session.expunge(obj)
 
-    def refresh(self, obj, attribute_names=None):
+    def refresh(self, obj, attribute_names=None, with_for_update=None):
         """Expire  and reload object in session, you can define some attribute
         which are refreshed::
 
@@ -1150,6 +1150,8 @@ class Registry:
 
         :param obj: instance of ``Model``
         :param attribute_names: list of string, names of the attr to refresh
+        :param with_for_update: Boolean, acquire lock on the row until
+        commit/rollback transaction
         """
         if attribute_names:
             attribute_names = [
@@ -1157,7 +1159,11 @@ class Registry:
                  if x in obj.hybrid_property_columns else x)
                 for x in attribute_names]
 
-        self.session.refresh(obj, attribute_names=attribute_names)
+        self.session.refresh(
+            obj,
+            attribute_names=attribute_names,
+            with_for_update=with_for_update,
+        )
 
     def rollback(self, *args, **kwargs):
         logger.debug('[ROLLBACK] with args=%r and kwargs = %r', args, kwargs)

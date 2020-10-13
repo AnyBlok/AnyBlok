@@ -70,3 +70,25 @@ class TestSystemSequence:
         assert Sequence.nextvalBy(code=seq.code) == str(number + 1)
         assert Sequence.nextvalBy(code=seq.code) == str(number + 2)
         assert Sequence.nextvalBy(code=seq.code) == str(number + 3)
+
+    def test_sequence_with_gap_rollback(self, rollback_registry):
+        registry = rollback_registry
+        Sequence = registry.System.Sequence
+        seq = Sequence.insert(code='test.sequence', no_gap=False)
+        number = seq.number
+        assert Sequence.nextvalBy(code=seq.code) == str(number + 1)
+        registry.commit()
+        assert Sequence.nextvalBy(code=seq.code) == str(number + 2)
+        registry.rollback()
+        assert Sequence.nextvalBy(code=seq.code) == str(number + 3)
+
+    def test_sequence_with_no_gap_rollback(self, rollback_registry):
+        registry = rollback_registry
+        Sequence = registry.System.Sequence
+        seq = Sequence.insert(code='test.sequence.nogap', no_gap=True)
+        number = seq.number
+        assert Sequence.nextvalBy(code=seq.code) == str(number + 1)
+        registry.commit()
+        assert Sequence.nextvalBy(code=seq.code) == str(number + 2)
+        registry.rollback()
+        assert Sequence.nextvalBy(code=seq.code) == str(number + 2)
