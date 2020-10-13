@@ -108,6 +108,37 @@ class ColumnDefaultValue:
         return self.callable(registry, namespace, fieldname, properties)
 
 
+class CompareType:
+
+    comparators = []
+
+    @classmethod
+    def default_comparator(cls, col1, col2):
+        if col1.__class__ is not col2.__class__:
+            raise FieldException(
+                "You can't add a foreign key %r -> %r" % (
+                    col1.__class__, col2.__class__))
+
+    @classmethod
+    def add_comparator(cls, type1, type2):
+
+        def wrapper(funct):
+            cls.comparators.append((type1, type2, funct))
+            return funct
+
+        return wrapper
+
+    @classmethod
+    def validate(cls, col1, col2):
+        for (cls1, cls2, funct) in cls.comparators:
+            print(cls1, cls2, funct)
+            if col1.__class__ is cls1 and col2.__class__ is cls2:
+                funct(col1, col2)
+                return
+
+        cls.default_comparator(col1, col2)
+
+
 class NoDefaultValue:
     pass
 
@@ -189,6 +220,7 @@ class Column(Field):
         :return:
         """
         if self.foreign_key:
+            CompareType.validate(self, self.foreign_key.get_type(registry))
             args = args + (self.foreign_key.get_fk(registry),)
             kwargs['info'].update({
                 'foreign_key': self.foreign_key.get_fk_name(registry),
@@ -1524,3 +1556,21 @@ class Country(Column):
         key.update(str(enum).encode('utf-8'))
         name = self.fieldname + '_' + key.hexdigest() + '_types'
         return [CheckConstraint(constraint, name=name)]
+
+
+@CompareType.add_comparator(String, String)
+@CompareType.add_comparator(String, Selection)
+@CompareType.add_comparator(String, Sequence)
+def compare_strings(col1, col2):
+    if col1.size != col2.size:
+        raise FieldException(
+            "You can't add a foreign key on %r(%d) -> %r(%d)" % (
+                col1.__class__, col1.size, col2.__class__, col2.size))
+
+
+@CompareType.add_comparator(String, Color)
+def compare_string_to_color(col1, col2):
+    if col1.size != col2.max_length:
+        raise FieldException(
+            "You can't add a foreign key on %r(%d) -> %r(%d)" % (
+                col1.__class__, col1.size, col2.__class__, col2.max_length))

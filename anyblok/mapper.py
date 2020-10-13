@@ -137,6 +137,19 @@ class ModelAttribute:
 
         return getattr(Model, attribute_name)
 
+    def get_type(self, registry):
+        """Return the foreign key which represent the attribute in the data
+        base
+
+        :param registry: instance of the sqlalchemy ForeignKey
+        :rtype: instance of the attribute
+        """
+        Model = self.check_model_in_first_step(registry)
+        column_name = self.check_column_in_first_step(registry, Model)
+        col = registry.loaded_namespaces_first_step[self.model_name][
+            column_name]
+        return col
+
     def get_fk_column(self, registry):
         """Return the foreign key which represent the attribute in the data
         base
