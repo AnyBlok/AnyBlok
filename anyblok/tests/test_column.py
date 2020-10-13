@@ -929,12 +929,15 @@ class TestColumns:
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       code="SO", formater="{code}-{seq:06d}")
+        registry.begin_nested()
         assert registry.Test.insert().col == "SO-000001"
         assert registry.Test.insert().col == "SO-000002"
         assert registry.Test.insert().col == "SO-000003"
+        registry.rollback()
         assert registry.Test.insert().col == "SO-000004"
         Seq = registry.System.Sequence
-        assert Seq.query().filter(Seq.code == 'SO').count() == 1
+        seq = Seq.query().filter(Seq.code == 'SO').one()
+        assert seq.number == 4
 
     def test_sequence_with_foreign_key(self):
         with pytest.raises(FieldException):
@@ -945,6 +948,26 @@ class TestColumns:
         with pytest.raises(FieldException):
             self.init_registry(simple_column, ColumnType=Sequence,
                                default='default value')
+
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason='ISSUE #89')
+    def test_sequence_with_nogap(self):
+        registry = self.init_registry(
+            simple_column,
+            ColumnType=Sequence,
+            code="SO-NO-GAP",
+            formater="{code}-{seq:06d}",
+            no_gap=True,
+        )
+        registry.begin_nested()
+        print("test registry", registry.transaction)
+        assert registry.Test.insert().col == "SO-NO-GAP-000001"
+        assert registry.Test.insert().col == "SO-NO-GAP-000002"
+        assert registry.Test.insert().col == "SO-NO-GAP-000003"
+        registry.rollback()
+        assert registry.Test.insert().col == "SO-NO-GAP-000001"
+        Seq = registry.System.Sequence
+        seq = Seq.query().filter(Seq.code == 'SO-NO-GAP').one()
 
     @pytest.mark.skipif(not has_colour,
                         reason="colour is not installed")

@@ -1163,6 +1163,32 @@ class Sequence(String):
 
             x = Sequence()
 
+    If you wish ensure no gap in the sequence::
+
+        from anyblok.column import Sequence
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = Sequence(no_gap=True, code="SO", formater="{code}-{seq:06d}")
+    
+    .. warning::
+
+        Keep in mind `no_gap=True` will raise an
+        `sqlalchemy.exc.OperationalError: (psycopg2.errors.LockNotAvailable)`
+        exception in case a concurrent transaction do not release the lock
+        while getting the next value.
+
+    usage with `no_gap=True`::
+
+        >>> Test.insert().x
+        "SO-000001"
+        >>> Test.insert().x
+        "SO-000002"
+        >>> registry.rollback()
+        >>> Test.insert().x
+        "SO-000001"
     """
     def __init__(self, *args, **kwargs):
         if 'foreign_key' in kwargs:
@@ -1176,6 +1202,8 @@ class Sequence(String):
         self.code = kwargs.pop('code') if 'code' in kwargs else None
         self.formater = kwargs.pop(
             'formater') if 'formater' in kwargs else None
+        self.no_gap = kwargs.pop(
+            'no_gap') if 'no_gap' in kwargs else None
 
         super(Sequence, self).__init__(*args, **kwargs)
 
@@ -1186,6 +1214,7 @@ class Sequence(String):
         """
         res = super(Sequence, self).autodoc_get_properties()
         res['formater'] = self.formater
+        res['no_gap'] = self.no_gap
         return res
 
     def wrap_default(self, registry, namespace, fieldname, properties):
@@ -1203,13 +1232,14 @@ class Sequence(String):
 
         code = self.code if self.code else "%s=>%s" % (namespace, fieldname)
         registry._need_sequence_to_create_if_not_exist.append(
-            {'code': code, 'formater': self.formater})
+            {'code': code, 'formater': self.formater, 'no_gap': self.no_gap})
 
-        def default_value():
+        def default_value(self, *args, **kwargs):
             """Return next sequence value
 
             :return:
             """
+            import pdb; pdb.set_trace()
             return registry.System.Sequence.nextvalBy(code=code)
 
         return default_value

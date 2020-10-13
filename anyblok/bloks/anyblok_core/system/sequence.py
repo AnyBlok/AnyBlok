@@ -7,11 +7,12 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from sqlalchemy import Sequence as SQLASequence
-from anyblok.column import Integer, String, Boolean
+from anyblok.column import Integer, String, Boolean, Sequence as SeqUence
 
 
 register = Declarations.register
 System = Declarations.Model.System
+Model = Declarations.Model
 
 
 @register(System)
@@ -117,6 +118,10 @@ class Sequence:
             if formatter is None:
                 del vals['formater']
 
+            no_gap = vals.get('no_gap')
+            if no_gap is None:
+                del vals['no_gap']
+
             cls.insert(**vals)
 
     @classmethod
@@ -129,7 +134,7 @@ class Sequence:
         seq_name = values.get('seq_name')
         number = values.setdefault('number', 0)
         if values.get("no_gap"):
-            values.setdefault('seq_name', values.get("code", "no_gap"))
+            values.setdefault('seq_name', values.get("code", "no_gap_seq"))
         else:
             if seq_name is None:
                 seq_id = cls.registry.execute(SQLASequence(cls._cls_seq_name))
