@@ -91,6 +91,22 @@ And the methods that define blok behaviours:
 |                               | ``latest_verison`` is an                    |
 |                               | **pkg_resources.parse_version**             |
 +-------------------------------+---------------------------------------------+
+| ``update_demo``               | Action to do when the blok is being         |
+|                               | install or updated. Called after ``update`` |
+|                               | if database was created with ``--with-demo``|
+|                               | parameter.                                  |
+|                               | This method has one argument                |
+|                               | ``latest_version`` (None for install)       |
+|                               |                                             |
+|                               | Since version **0.20.0** the                |
+|                               | ``latest_verison`` is an                    |
+|                               | **pkg_resources.parse_version**             |
++-------------------------------+---------------------------------------------+
+| ``uninstall_demo``            | Action to do when the blok is being         |
+|                               | uninstalled. Called before ``uninstall``    |
+|                               | if database was created with ``--with-demo``|
+|                               | parameter.                                  |
++-------------------------------+---------------------------------------------+
 | ``uninstall``                 | Action to do when the blok is being         |
 |                               | uninstalled                                 |
 +-------------------------------+---------------------------------------------+

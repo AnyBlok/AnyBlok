@@ -80,14 +80,41 @@ File tree::
         logo = 'relative/path'
 
         def install(self):
-            """ method called at blok installation time """
+            """This room will be always present after the blok installation
+            """
+            address = self.registry.Address.insert(
+                street='la Tour Eiffel',
+                street2='5 avenue Anatole France',
+                zip='75007',
+                city='Paris'
+            )
+            self.registry.Room.insert(number=1, address=address)
+
+        def install_demo(self):
+            """Extra data to add once blok is installed if database was created
+            with ``--with-demo``.
+            """
             address = self.registry.Address.insert(street='14-16 rue Soleillet',
                                                    zip='75020', city='Paris')
             self.registry.Room.insert(number=308, address=address)
 
         def update(self, latest_version):
+            """Method called when blok is installed or updated to let
+            a chance to add data or configuration.
+            """
             if latest_version is None:
                 self.install()
+
+        def update_demo(self, latest_version):
+            """Method called when blok is installed or updated if database
+            was created with the `--with-demo` parameter in order to add demo
+            data to quickly present product with examples or to
+            populate database with data that could be use in test case.
+
+            This method is called after ``update``.
+            """
+            if latest_version is None:
+                self.install_demo()
 
         @classmethod
         def import_declaration_module(cls):
@@ -121,14 +148,14 @@ File tree::
 
         version = '1.0.0'
 
-        def install(self):
+        def install_demo(self):
             self.registry.Position.multi_insert({'name': 'CTO'},
                                                 {'name': 'CEO'},
                                                 {'name': 'Administrative Manager'},
                                                 {'name': 'Project Manager'},
                                                 {'name': 'Developer'})
 
-        def update(self, latest_version):
+        def update_demo(self, latest_version):
             if latest_version is None:
                 self.install()
 
@@ -186,7 +213,7 @@ File tree::
                                           "Jean-Sébastien Suzanne")]
             self.registry.Employee.multi_insert(*employees)
 
-        def update(self, latest_version):
+        def update_demo(self, latest_version):
             if latest_version is None:
                 self.install()
 
@@ -240,7 +267,7 @@ File tree::
                 Employee.query().filter(Employee.name == employee).update({
                     'position_name': position})
 
-        def update(self, latest_version):
+        def update_demo(self, latest_version):
             if latest_version is None:
                 self.install()
 

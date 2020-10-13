@@ -568,7 +568,7 @@ class TestMany2OneOld:
         registry = self.init_registry(add_in_registry)
         inspector = Inspector(registry.session.connection())
         pks = inspector.get_primary_keys(registry.Person.__tablename__)
-        assert 'address_id'in pks
+        assert 'address_id' in pks
 
     def test_complet_with_multi_foreign_key(self):
 
