@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -69,7 +70,7 @@ class Sequence:
     id = Integer(primary_key=True)
     code = String(nullable=False)
     start = Integer(default=1)
-    number = Integer(default=None)
+    current = Integer(default=None)
     seq_name = String(nullable=False)
     """Name of the sequence in the database.
 
@@ -160,10 +161,10 @@ class Sequence:
         """
         if self.no_gap:
             self.refresh(with_for_update={"nowait": True})
-            nextval = self.number + 1 if self.number else self.start
+            nextval = self.current + 1 if self.current else self.start
         else:
             nextval = self.registry.execute(SQLASequence(self.seq_name))
-        self.update(number=nextval)
+        self.update(current=nextval)
         return self.formater.format(code=self.code, seq=nextval, id=self.id)
 
     @classmethod
