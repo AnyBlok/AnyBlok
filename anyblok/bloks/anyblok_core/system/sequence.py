@@ -68,7 +68,8 @@ class Sequence:
 
     id = Integer(primary_key=True)
     code = String(nullable=False)
-    number = Integer(nullable=False)
+    start = Integer(default=1)
+    number = Integer(default=None)
     seq_name = String(nullable=False)
     """Name of the sequence in the database.
 
@@ -127,7 +128,8 @@ class Sequence:
         :rtype: dict
         """
         seq_name = values.get('seq_name')
-        number = values.setdefault('number', 0)
+        start = values.setdefault('start', 1)
+
         if values.get("no_gap"):
             values.setdefault('seq_name', values.get("code", "no_gap"))
         else:
@@ -136,10 +138,7 @@ class Sequence:
                 seq_name = '%s_%d' % (cls.__tablename__, seq_id)
                 values['seq_name'] = seq_name
 
-            if number:
-                seq = SQLASequence(seq_name, number)
-            else:
-                seq = SQLASequence(seq_name)
+            seq = SQLASequence(seq_name, start=start)
             seq.create(cls.registry.bind)
         return values
 
@@ -161,7 +160,7 @@ class Sequence:
         """
         if self.no_gap:
             self.refresh(with_for_update={"nowait": True})
-            nextval = self.number + 1
+            nextval = self.number + 1 if self.number else self.start
         else:
             nextval = self.registry.execute(SQLASequence(self.seq_name))
         self.update(number=nextval)
