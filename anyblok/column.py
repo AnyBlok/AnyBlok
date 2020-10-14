@@ -4,13 +4,14 @@
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from base64 import b64encode, b64decode
 from .field import Field, FieldException
-from .mapper import ModelAttributeAdapter
+from .mapper import ModelAttributeAdapter, ModelAttribute
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types, CheckConstraint
 from sqlalchemy_utils.types.color import ColorType
@@ -113,11 +114,20 @@ class CompareType:
     comparators = []
 
     @classmethod
-    def default_comparator(cls, col1, col2):
-        if col1.__class__ is not col2.__class__:
+    def default_comparator(cls, col1, type1, col2, type2):
+        if type1.__class__ is not type2.__class__:
             raise FieldException(
-                "You can't add a foreign key %r -> %r" % (
-                    col1.__class__, col2.__class__))
+                "You can't add a foreign key using columns with different "
+                "types {model1!s}.{col1!s}` pointing to `{model2!s}.{col2!s}` "
+                "have different types  {type1!r} -> {type2!r}".format(
+                    model1=col1.model_name,
+                    col1=col1.attribute_name,
+                    model2=col2.model_name,
+                    col2=col2.attribute_name,
+                    type1=type1.__class__,
+                    type2=type2.__class__
+                )
+            )
 
     @classmethod
     def add_comparator(cls, type1, type2):
@@ -129,14 +139,13 @@ class CompareType:
         return wrapper
 
     @classmethod
-    def validate(cls, col1, col2):
+    def validate(cls, col1, type1, col2, type2):
         for (cls1, cls2, funct) in cls.comparators:
-            print(cls1, cls2, funct)
-            if col1.__class__ is cls1 and col2.__class__ is cls2:
-                funct(col1, col2)
+            if type1.__class__ is cls1 and type2.__class__ is cls2:
+                funct(col1, type1, col2, type2)
                 return
 
-        cls.default_comparator(col1, col2)
+        cls.default_comparator(col1, type1, col2, type2)
 
 
 class NoDefaultValue:
@@ -211,7 +220,7 @@ class Column(Field):
         """
         return self.sqlalchemy_type
 
-    def format_foreign_key(self, registry, args, kwargs):
+    def format_foreign_key(self, registry, namespace, fieldname, args, kwargs):
         """Format a foreign key
 
         :param registry: the current registry
@@ -220,7 +229,10 @@ class Column(Field):
         :return:
         """
         if self.foreign_key:
-            CompareType.validate(self, self.foreign_key.get_type(registry))
+            CompareType.validate(
+                ModelAttribute(namespace, fieldname), self,
+                self.foreign_key, self.foreign_key.get_type(registry)
+            )
             args = args + (self.foreign_key.get_fk(registry),)
             kwargs['info'].update({
                 'foreign_key': self.foreign_key.get_fk_name(registry),
@@ -244,7 +256,9 @@ class Column(Field):
         kwargs = self.kwargs.copy()
         if 'info' not in kwargs:
             kwargs['info'] = {}
-        args = self.format_foreign_key(registry, args, kwargs)
+        args = self.format_foreign_key(
+            registry, namespace, fieldname, args, kwargs)
+
         kwargs['info']['label'] = self.label
         if self.sequence:
             args = (self.sequence,) + args
@@ -1561,16 +1575,40 @@ class Country(Column):
 @CompareType.add_comparator(String, String)
 @CompareType.add_comparator(String, Selection)
 @CompareType.add_comparator(String, Sequence)
-def compare_strings(col1, col2):
-    if col1.size != col2.size:
+def compare_strings(col1, type1, col2, type2):
+    if type1.size != type2.size:
         raise FieldException(
-            "You can't add a foreign key on %r(%d) -> %r(%d)" % (
-                col1.__class__, col1.size, col2.__class__, col2.size))
+            "You can't add a foreign key using based String columns with "
+            "different size `{model1!s}.{col1!s}` pointing to "
+            "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
+            "-> ({type2!r}){size2:d}".format(
+                model1=col1.model_name,
+                col1=col1.attribute_name,
+                model2=col2.model_name,
+                col2=col2.attribute_name,
+                type1=type1.__class__,
+                type2=type2.__class__,
+                size1=type1.size,
+                size2=type2.size
+            )
+        )
 
 
 @CompareType.add_comparator(String, Color)
-def compare_string_to_color(col1, col2):
-    if col1.size != col2.max_length:
+def compare_string_to_color(col1, type1, col2, type2):
+    if type1.size != type2.max_length:
         raise FieldException(
-            "You can't add a foreign key on %r(%d) -> %r(%d)" % (
-                col1.__class__, col1.size, col2.__class__, col2.max_length))
+            "You can't add a foreign key using based String columns with "
+            "different size `{model1!s}.{col1!s}` pointing to "
+            "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
+            "-> ({type2!r}){size2:d}".format(
+                model1=col1.model_name,
+                col1=col1.attribute_name,
+                model2=col2.model_name,
+                col2=col2.attribute_name,
+                type1=type1.__class__,
+                type2=type2.__class__,
+                size1=type1.size,
+                size2=type2.max_length
+            )
+        )

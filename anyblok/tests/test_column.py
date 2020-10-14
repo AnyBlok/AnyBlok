@@ -4,11 +4,13 @@
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.testing import sgdb_in
+from anyblok.mapper import ModelAttribute
 import pytest
 import datetime
 import time
@@ -1291,11 +1293,13 @@ class TestColumnsAutoDoc:
 class TestCompareColumn:
 
     def same_type(self, col1, col2):
-        CompareType.validate(col1, col2)
+        CompareType.validate(ModelAttribute('Test1', 'col1'), col1,
+                             ModelAttribute('Test2', 'col2'), col2)
 
     def diff_type(self, col1, col2):
         with pytest.raises(FieldException):
-            CompareType.validate(col1, col2)
+            CompareType.validate(ModelAttribute('Test1', 'col1'), col1,
+                                 ModelAttribute('Test2', 'col2'), col2)
 
     def test_compare_default_method_on_same_type(self):
         self.same_type(Integer(), Integer())
