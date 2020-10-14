@@ -4,11 +4,13 @@
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.testing import sgdb_in
+from anyblok.mapper import ModelAttribute
 import pytest
 import datetime
 import time
@@ -25,9 +27,10 @@ from anyblok import Declarations
 from anyblok.field import FieldException
 from .conftest import init_registry, reset_db
 from anyblok.column import (
-    Column, Boolean, Json, String, BigInteger, Text, Selection, Date, DateTime,
-    Time, Interval, Decimal, Float, LargeBinary, Integer, Sequence, Color,
-    Password, UUID, URL, PhoneNumber, Email, Country, TimeStamp, Enum)
+    CompareType, Column, Boolean, Json, String, BigInteger, Text, Selection,
+    Date, DateTime, Time, Interval, Decimal, Float, LargeBinary, Integer,
+    Sequence, Color, Password, UUID, URL, PhoneNumber, Email, Country,
+    TimeStamp, Enum)
 
 
 time_params = [DateTime]
@@ -1285,3 +1288,50 @@ class TestColumnsAutoDoc:
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_alpha_3(self):
         self.call_autodoc(Country, mode='alpha_3')
+
+
+class TestCompareColumn:
+
+    def same_type(self, col1, col2):
+        CompareType.validate(ModelAttribute('Test1', 'col1'), col1,
+                             ModelAttribute('Test2', 'col2'), col2)
+
+    def diff_type(self, col1, col2):
+        with pytest.raises(FieldException):
+            CompareType.validate(ModelAttribute('Test1', 'col1'), col1,
+                                 ModelAttribute('Test2', 'col2'), col2)
+
+    def test_compare_default_method_on_same_type(self):
+        self.same_type(Integer(), Integer())
+
+    def test_compare_default_method_on_different_type(self):
+        self.diff_type(Integer(), BigInteger())
+
+    def test_string_to_string_with_default_size(self):
+        self.same_type(String(), String())
+
+    def test_string_to_string_with_diff_size(self):
+        self.diff_type(String(size=10), String(size=20))
+
+    def test_string_to_selection_with_default_size(self):
+        self.same_type(String(), Selection(selections={'foo': 'Bar'}))
+
+    def test_string_to_selection_with_diff_size(self):
+        self.diff_type(String(size=10),
+                       Selection(selections={'foo': 'Bar'}, size=20))
+
+    def test_string_to_sequence_with_default_size(self):
+        self.same_type(String(), Sequence())
+
+    def test_string_to_sequence_with_diff_size(self):
+        self.diff_type(String(size=10), Sequence(size=20))
+
+    @pytest.mark.skipif(not has_colour,
+                        reason="colour is not installed")
+    def test_string_to_color_with_default_size(self):
+        self.same_type(String(size=10), Color(size=10))
+
+    @pytest.mark.skipif(not has_colour,
+                        reason="colour is not installed")
+    def test_string_to_color_with_diff_size(self):
+        self.diff_type(String(size=10), Color(size=20))
