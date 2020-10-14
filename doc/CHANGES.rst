@@ -59,6 +59,8 @@ CHANGELOG
 * Add ``--with-demo`` parameter while creating a database (anyblok_createdb) in
   order to load demo data while installing bloks on that database.
 * Fixed issue #45: System.Sequence: inconsistency in 'number' field
+* Fixed issue #134: is now possible de check if the type at each part of foreign key
+  are the same
 
 0.22.5 (2019-06-24)
 -------------------
