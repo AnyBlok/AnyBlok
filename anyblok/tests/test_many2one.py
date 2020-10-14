@@ -192,6 +192,81 @@ def _minimum_many2one(**kwargs):
         address = Many2One(model=Model.Address)
 
 
+def _many2one_to_polymorphic_models_1(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+        type_entity = String(default='shipping')
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Address, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_on': cls.type_entity,
+            })
+            return mapper_args
+
+    @register(Model.Address, tablename=Model.Address)
+    class Shipping(Model.Address):
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Shipping, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_identity': 'shipping',
+            })
+            return mapper_args
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address, one2many="persons")
+
+
+def _many2one_to_polymorphic_models_2(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+        type_entity = String(default='shipping')
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Address, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_on': cls.type_entity,
+            })
+            return mapper_args
+
+    @register(Model.Address)
+    class Shipping(Model.Address):
+        id = Integer(primary_key=True, foreign_key=Model.Address.use('id'))
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Shipping, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_identity': 'shipping',
+            })
+            return mapper_args
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address, one2many="persons")
+
+
 def _minimum_many2one_with_schema(**kwargs):
 
     @register(Model)
@@ -272,6 +347,8 @@ def many2one_on_mapping_model_and_column_2(**kwargs):
         (_complete_many2one_with_different_schema1, 'id_of_address', True),
         (_complete_many2one_with_different_schema2, 'id_of_address', True),
         (_minimum_many2one, 'address_id', False),
+        (_many2one_to_polymorphic_models_1, 'address_id', True),
+        (_many2one_to_polymorphic_models_2, 'address_id', True),
         (_minimum_many2one_with_schema, 'address_id', False),
         (_many2one_with_str_model, 'address_id', False),
         (many2one_on_mapping_model_and_column_1, 'address_id', False),
@@ -310,6 +387,8 @@ class TestMany2One:
 
         if has_one2many:
             assert address.persons == [person]
+            person.delete()  # issue 68
+            address.expire('persons')
 
     def test_autodoc(self, registry_many2one):
         registry, _, _ = registry_many2one
