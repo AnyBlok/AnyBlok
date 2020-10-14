@@ -100,6 +100,19 @@ class TestSystemSequence:
         registry.rollback()
         assert Sequence.nextvalBy(code=seq.code) == '3'
 
+    def test_sequence_with_gap_rollback_and_start(self, rollback_registry):
+        registry = rollback_registry
+        Sequence = registry.System.Sequence
+        seq = Sequence.insert(
+            code='test.sequence.start', no_gap=False, start=10)
+        assert seq.current is None
+        assert Sequence.nextvalBy(code=seq.code) == '10'
+        registry.commit()
+        assert Sequence.nextvalBy(code=seq.code) == '11'
+        registry.rollback()
+        assert Sequence.nextvalBy(code=seq.code) == '12'
+        assert seq.current == 12
+
     def test_sequence_with_no_gap_rollback(self, rollback_registry):
         registry = rollback_registry
         Sequence = registry.System.Sequence
