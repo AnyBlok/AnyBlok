@@ -1220,6 +1220,7 @@ class Sequence(String):
         kwargs['default'] = ColumnDefaultValue(self.wrap_default)
 
         self.code = kwargs.pop('code') if 'code' in kwargs else None
+        self.start = kwargs.pop('start', 1)
         self.formater = kwargs.pop(
             'formater') if 'formater' in kwargs else None
 
@@ -1249,7 +1250,7 @@ class Sequence(String):
 
         code = self.code if self.code else "%s=>%s" % (namespace, fieldname)
         registry._need_sequence_to_create_if_not_exist.append(
-            {'code': code, 'formater': self.formater})
+            {'code': code, 'formater': self.formater, 'start': self.start})
 
         def default_value():
             """Return next sequence value
