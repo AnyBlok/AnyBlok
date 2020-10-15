@@ -161,7 +161,7 @@ class Sequence:
         """
         if self.no_gap:
             self.refresh(with_for_update={"nowait": True})
-            nextval = self.current + 1 if self.current is not None else self.start
+            nextval = self.start if self.current is None else self.current + 1
         else:
             nextval = self.registry.execute(SQLASequence(self.seq_name))
         self.update(current=nextval)
