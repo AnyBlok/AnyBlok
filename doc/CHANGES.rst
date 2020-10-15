@@ -7,6 +7,7 @@
 ..    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+..    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -57,6 +58,9 @@ CHANGELOG
 * System.Parameter.get do not raise if a default value is provided
 * Add ``--with-demo`` parameter while creating a database (anyblok_createdb) in
   order to load demo data while installing bloks on that database.
+* Fixed issue #45: System.Sequence: inconsistency in 'number' field
+* Fixed issue #134: is now possible de check if the type at each part of foreign key
+  are the same
 
 0.22.5 (2019-06-24)
 -------------------
