@@ -484,14 +484,18 @@ class TestMigration:
 
     def test_detect_m2m_primary_key(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE reltable")
-            conn.execute(
-                """CREATE TABLE reltable (
-                    idmodel1 INT,
-                    idmodel2 INT,
-                    FOREIGN KEY (idmodel1) REFERENCES testm2m1 (idmodel1),
-                    FOREIGN KEY (idmodel2) REFERENCES testm2m2 (idmodel2)
-                );""")
+            Table('reltable', registry.declarativebase.metadata,
+                  autoload_with=conn).drop(bind=conn)
+
+            meta = MetaData()
+            meta._add_table('testm2m1', None, registry.TestM2M1.__table__)
+            meta._add_table('testm2m2', None, registry.TestM2M2.__table__)
+
+            Table(
+                'reltable', meta,
+                Column('idmodel1', Integer, ForeignKey('testm2m1.idmodel1')),
+                Column('idmodel2', Integer, ForeignKey('testm2m2.idmodel2')),
+            ).create(bind=conn)
 
         with pytest.raises(MigrationException):
             registry.migration.detect_changed()
@@ -932,12 +936,15 @@ class TestMigration:
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint("other != 'test'", name='ck_other')
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
         report.apply_change()
@@ -948,20 +955,22 @@ class TestMigration:
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_anyblok_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT anyblok_ck__test__check
-                        CHECK (other != 'test')
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(naming_convention=naming_convention),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint("other != 'test'", name='check')
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has(
-            "Drop check constraint anyblok_ck__test__check on test")
+            "Drop check constraint anyblok_ck_test__check on test")
         report.apply_change()
         report = registry.migration.detect_changed()
         assert not(report.log_has(
-            "Drop check constraint anyblok_ck__test__check on test"))
+            "Drop check constraint anyblok_ck_test__check on test"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
@@ -969,12 +978,15 @@ class TestMigration:
         self, registry
     ):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint("other != 'test'", name='ck_other')
+            )
+            registry.Test.__table__.create(bind=conn)
+
         registry.migration.reinit_constraints = True
         report = registry.migration.detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
@@ -987,12 +999,15 @@ class TestMigration:
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint_with_reinit_all(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint("other != 'test'", name='ck_other')
+            )
+            registry.Test.__table__.create(bind=conn)
+
         registry.migration.reinit_all = True
         report = registry.migration.detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")

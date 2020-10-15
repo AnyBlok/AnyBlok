@@ -388,13 +388,15 @@ class TestMigration:
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_anyblok_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT anyblok_ck__test__check
-                        CHECK (other != 'test')
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(naming_convention=naming_convention),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint(
+                    "other != 'test'", name='check')
+            )
+            registry.Test.__table__.create(bind=conn)
 
         registry.migration.ignore_migration_for = {'test': True}
         report = registry.migration.detect_changed()
