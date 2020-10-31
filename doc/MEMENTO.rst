@@ -356,7 +356,7 @@ Non SQL Model
 This is the default model. This model has no tables. It is used to
 organize the registry or for specific process.::
 
-    #register(Model)
+    @register(Model)
     class Foo:
         pass
 
