@@ -85,6 +85,12 @@ class TestCache:
         Cache.insert(registry_name="Model.Test", method="method_cached")
         assert Cache.detect_invalidation()
 
+    def test_detect_cache_invalidation_first_call(self, registry_method_cached):
+        registry = registry_method_cached
+        Cache = registry.System.Cache
+        Cache.last_cache_id = None
+        assert Cache.detect_invalidation()
+
     def test_get_invalidation(self, registry_method_cached):
         registry = registry_method_cached
         Cache = registry.System.Cache
