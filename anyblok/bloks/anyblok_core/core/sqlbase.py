@@ -160,14 +160,28 @@ class SqlMixin:
         return [getattr(cls, k) == v for k, v in pks.items()]
 
     @classmethod
+    def query_from_primary_keys(cls, **pks):
+        """return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param **pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        """
+        where_clause = cls.get_where_clause_from_primary_keys(**pks)
+        return cls.query().filter(*where_clause)
+
+    @classmethod
     def from_primary_keys(cls, **pks):
         """ return the instance of the model from the primary keys
 
         :param **pks: dict {primary_key: value, ...}
         :rtype: instance of the model
         """
-        where_clause = cls.get_where_clause_from_primary_keys(**pks)
-        query = cls.query().filter(*where_clause)
+        query = cls.query_from_primary_keys(**pks)
         if query.count():
             return query.first()
 
