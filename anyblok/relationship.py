@@ -1077,7 +1077,7 @@ class One2Many(RelationShip):
 
         if 'many2one' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('many2one')
-            self.kwargs['info']['remote_names'] = self.kwargs['backref']
+            self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
     def autodoc_get_properties(self):
         res = super(One2Many, self).autodoc_get_properties()
