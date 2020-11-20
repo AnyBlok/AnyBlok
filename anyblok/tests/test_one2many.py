@@ -197,6 +197,22 @@ class TestCompleteOne2Many:
         assert ('address', 'persons') in registry.expire_attributes[
             'Model.Person']['address_id']
 
+    def test_get_field_description(self, registry_complete_one2many):
+        registry = registry_complete_one2many
+        assert registry.Address.fields_description('persons') == {
+            'persons': {
+                'id': 'persons',
+                'label': 'Persons',
+                'local_columns': ['id'],
+                'model': 'Model.Person',
+                'nullable': True,
+                'primary_key': False,
+                'remote_columns': ['address_id'],
+                'remote_name': 'address',
+                'type': 'One2Many'
+            },
+        }
+
 
 def _multi_fk_one2many():
 
