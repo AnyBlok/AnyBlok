@@ -20,6 +20,7 @@ from anyblok.column import (
     TimeStamp)
 from anyblok.relationship import Many2One
 from sqlalchemy import ForeignKeyConstraint
+from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.engine.reflection import Inspector
 from .conftest import init_registry_with_bloks, init_registry, reset_db
 
@@ -111,6 +112,32 @@ def _complete_many2one(**kwargs):
         address = Many2One(model=Model.Address,
                            remote_columns="id", column_names="id_of_address",
                            one2many="persons", nullable=False)
+
+
+def _complete_many2one_with_ordered_one2many(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
+                           remote_columns="id", column_names="id_of_address",
+                           one2many=(
+                               "persons",
+                               dict(
+                                   order_by="ModelPerson.name",
+                                   collection_class=ordering_list('name'),
+                               ),
+                           ),
+                           nullable=False)
 
 
 def _complete_many2one_with_schema(**kwargs):
@@ -343,6 +370,7 @@ def many2one_on_mapping_model_and_column_2(**kwargs):
     scope="class",
     params=[
         (_complete_many2one, 'id_of_address', True),
+        (_complete_many2one_with_ordered_one2many, 'id_of_address', True),
         (_complete_many2one_with_schema, 'id_of_address', True),
         (_complete_many2one_with_different_schema1, 'id_of_address', True),
         (_complete_many2one_with_different_schema2, 'id_of_address', True),

@@ -353,8 +353,9 @@ class Many2One(RelationShip):
         self.kwargs['info']['primary_key'] = self.primary_key
 
         if 'one2many' in kwargs:
-            self.kwargs['backref'] = self.kwargs.pop('one2many')
-            self.kwargs['info']['remote_name'] = self.kwargs['backref']
+            self.kwargs['backref'] = backref = self.kwargs.pop('one2many')
+            self.kwargs['info']['remote_name'] = (
+                backref[0] if isinstance(backref, (tuple, list)) else backref)
 
         self._column_names = None
         if 'column_names' in kwargs:
