@@ -772,8 +772,9 @@ class Many2Many(RelationShip):
             self.m2m_local_columns = [self.m2m_local_columns]
 
         self.compute_join = self.kwargs.pop('compute_join', False)
-        self.kwargs['backref'] = self.kwargs.pop('many2many', None)
-        self.kwargs['info']['remote_name'] = self.kwargs['backref']
+        self.kwargs['backref'] = backref = self.kwargs.pop('many2many', None)
+        self.kwargs['info']['remote_name'] = (
+            backref[0] if isinstance(backref, (tuple, list)) else backref)
         self.schema = self.kwargs.pop('schema', None)
 
     def autodoc_get_properties(self):

@@ -10,6 +10,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.testing import sgdb_in
 import pytest
+from sqlalchemy.ext.orderinglist import ordering_list
 from anyblok import Declarations
 from anyblok.config import Configuration
 from anyblok.mapper import ModelAttributeException
@@ -62,6 +63,34 @@ def _complete_many2many(**kwargs):
                               m2m_remote_columns='a_id',
                               m2m_local_columns='p_name',
                               many2many="persons")
+
+
+def _complete_many2many_with_ordered_backref(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        addresses = Many2Many(model=Model.Address,
+                              join_table="join_addresses_by_persons",
+                              remote_columns="id", local_columns="name",
+                              m2m_remote_columns='a_id',
+                              m2m_local_columns='p_name',
+                              many2many=(
+                                  "persons",
+                                  dict(
+                                      order_by="ModelPerson.name",
+                                      collection_class=ordering_list('name'),
+                                  ),
+                              ))
 
 
 def _complete_many2many_with_schema(**kwargs):
@@ -140,6 +169,7 @@ def _complete_many2many_with_diferent_schema2(**kwargs):
     scope="class",
     params=[
         _complete_many2many,
+        _complete_many2many_with_ordered_backref,
         _complete_many2many_with_schema,
         _complete_many2many_with_diferent_schema1,
         _complete_many2many_with_diferent_schema2,
