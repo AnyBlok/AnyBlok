@@ -239,8 +239,10 @@ class RelationShip(Field):
         if isinstance(_backref, (list, tuple)):
             _backref, backref_properties = _backref
             if backref_properties.get('collection_class'):
-                backref_properties['collection_class'] = backref_properties[
-                    'collection_class'](registry)
+                collection_class = backref_properties['collection_class']
+                if isinstance(collection_class, FunctionType):
+                    backref_properties['collection_class'] = collection_class(
+                        registry)
 
             self.backref_properties.update(backref_properties)
 
