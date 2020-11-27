@@ -1692,6 +1692,26 @@ class TestMany2Many:
         assert person.delivery_addresses == []
 
     def test_many2many_and_order_list(self):
+
+        def ordering_list(*args, **kwargs):
+            fnct_args = args
+            fnct_kwargs = kwargs
+
+            def wrap(registry):
+                from sqlalchemy.ext.orderinglist import (
+                    OrderingList, _unsugar_count_from)
+
+                instrumentedlist_base = [] + registry.loaded_cores[
+                    'InstrumentedList']
+                instrumentedlist_base.extend([OrderingList.__mro__[0], list])
+                InstrumentedList = type(
+                    'InstrumentedList', tuple(instrumentedlist_base), {})
+
+                kw = _unsugar_count_from(**fnct_kwargs)
+                return lambda: InstrumentedList(*fnct_args, **kw)
+
+            return wrap
+
         def add_in_registry(**kwargs):
 
             @register(Model)

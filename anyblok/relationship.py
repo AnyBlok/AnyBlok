@@ -202,8 +202,11 @@ class RelationShip(Field):
 
         :param registry: current registry
         """
-        self.kwargs['collection_class'] = registry.InstrumentedList
-        self.backref_properties['collection_class'] = registry.InstrumentedList
+        for dict_ in (self.kwargs, self.backref_properties):
+            if dict_.get('collection_class'):
+                dict_['collection_class'] = dict_['collection_class'](registry)
+            else:
+                dict_['collection_class'] = registry.InstrumentedList
 
     def define_backref_properties(self, registry, namespace, properties):
         """ Add in the backref_properties, new property for the backref
@@ -229,6 +232,10 @@ class RelationShip(Field):
 
         if isinstance(_backref, (list, tuple)):
             _backref, backref_properties = _backref
+            if 'collection_class' in backref_properties:
+                backref_properties['collection_class'] = backref_properties[
+                    'collection_class'](registry)
+
             self.backref_properties.update(backref_properties)
 
         self.define_backref_properties(registry, namespace, properties)
