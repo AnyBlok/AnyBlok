@@ -19,9 +19,8 @@ from anyblok.column import (
     Integer, String, BigInteger, Float, Decimal, Boolean, DateTime, Date, Time,
     Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection,
     TimeStamp)
-from anyblok.relationship import Many2One
+from anyblok.relationship import Many2One, ordering_list
 from sqlalchemy import ForeignKeyConstraint
-from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.engine.reflection import Inspector
 from .conftest import init_registry_with_bloks, init_registry, reset_db
 
