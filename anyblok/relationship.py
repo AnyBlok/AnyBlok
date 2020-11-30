@@ -209,7 +209,10 @@ class RelationShip(Field):
         if self.kwargs.get('collection_class'):
             collection_class = self.kwargs['collection_class']
             if isinstance(collection_class, FunctionType):
-                InstrumentedList = self.kwargs['collection_class'](registry)
+                if getattr(
+                    collection_class, 'is_an_anyblok_instrumented_list', False
+                ) is True:
+                    InstrumentedList = self.kwargs['collection_class'](registry)
 
         self.kwargs['collection_class'] = InstrumentedList
         self.backref_properties['collection_class'] = registry.InstrumentedList
@@ -241,8 +244,12 @@ class RelationShip(Field):
             if backref_properties.get('collection_class'):
                 collection_class = backref_properties['collection_class']
                 if isinstance(collection_class, FunctionType):
-                    backref_properties['collection_class'] = collection_class(
-                        registry)
+                    if getattr(
+                        collection_class, 'is_an_anyblok_instrumented_list',
+                        False
+                    ) is True:
+                        backref_properties[
+                            'collection_class'] = collection_class(registry)
 
             self.backref_properties.update(backref_properties)
 
@@ -369,8 +376,10 @@ class Many2One(RelationShip):
 
         if 'one2many' in kwargs:
             self.kwargs['backref'] = backref = self.kwargs.pop('one2many')
-            self.kwargs['info']['remote_name'] = (
-                backref[0] if isinstance(backref, (tuple, list)) else backref)
+            self.kwargs['info']['remote_name'] = backref
+            if isinstance(backref, (list, tuple)):
+                self.kwargs['info']['remote_name'] = backref[0]
+                self.backref_properties.update(**backref[1])
 
         self._column_names = None
         if 'column_names' in kwargs:
@@ -556,7 +565,15 @@ class Many2One(RelationShip):
             'fieldname': fieldname, 'relationship_fied': self}
 
         collection_class = self.backref_properties.get('collection_class', None)
-        if collection_class and isinstance(collection_class, FunctionType):
+        print('apply_instrumentedlist', namespace, fieldname, collection_class,
+              collection_class.__module__ if collection_class else None)
+        if (
+            collection_class
+            and isinstance(collection_class, FunctionType)
+            and getattr(
+                collection_class, 'is_an_anyblok_instrumented_list', False
+            ) is True
+        ):
             InstrumentedList = collection_class(
                 registry, RelationShipListMany2One, RelationShipList,
                 **properties)
@@ -797,8 +814,11 @@ class Many2Many(RelationShip):
 
         self.compute_join = self.kwargs.pop('compute_join', False)
         self.kwargs['backref'] = backref = self.kwargs.pop('many2many', None)
-        self.kwargs['info']['remote_name'] = (
-            backref[0] if isinstance(backref, (tuple, list)) else backref)
+        self.kwargs['info']['remote_name'] = backref
+        if isinstance(backref, (list, tuple)):
+            self.kwargs['info']['remote_name'] = backref[0]
+            self.backref_properties.update(**backref[1])
+
         self.schema = self.kwargs.pop('schema', None)
 
     def autodoc_get_properties(self):
@@ -1260,5 +1280,7 @@ def ordering_list(*args, **kwargs):
 
         kw = _unsugar_count_from(**fnct_kwargs)
         return lambda: InstrumentedList(*fnct_args, **kw)
+
+    wrap.is_an_anyblok_instrumented_list = True
 
     return wrap
