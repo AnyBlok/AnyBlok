@@ -565,8 +565,6 @@ class Many2One(RelationShip):
             'fieldname': fieldname, 'relationship_fied': self}
 
         collection_class = self.backref_properties.get('collection_class', None)
-        print('apply_instrumentedlist', namespace, fieldname, collection_class,
-              collection_class.__module__ if collection_class else None)
         if (
             collection_class
             and isinstance(collection_class, FunctionType)
