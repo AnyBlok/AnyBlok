@@ -20,6 +20,7 @@ CHANGELOG
 ------------------
 
 * Added Sequence with *no gap* to provide functional sequence without gaps.
+* OrderList class_collection can be defined on x2Many
 * Bug Fix on registry loading sequence. The **apply_model_schema_on_table**
   method called at registry initialisation has been splitted to make sqlalchemy
   ORM events registration independent from migration.
