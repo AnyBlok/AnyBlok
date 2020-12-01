@@ -94,6 +94,8 @@ class TestCache:
     def test_get_invalidation(self, registry_method_cached):
         registry = registry_method_cached
         Cache = registry.System.Cache
+        # call it before to clear cache and to be predictible
+        Cache.get_invalidation()
         Cache.insert(registry_name="Model.Test", method="method_cached")
         caches = Cache.get_invalidation()
         assert len(caches) == 1
