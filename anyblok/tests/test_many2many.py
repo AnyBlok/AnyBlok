@@ -14,7 +14,7 @@ from anyblok import Declarations
 from anyblok.config import Configuration
 from anyblok.mapper import ModelAttributeException
 from anyblok.column import Integer, String, DateTime
-from anyblok.relationship import Many2Many, Many2One
+from anyblok.relationship import Many2Many, Many2One, ordering_list
 from anyblok.field import FieldException
 from datetime import datetime
 from .conftest import init_registry, reset_db
@@ -62,6 +62,34 @@ def _complete_many2many(**kwargs):
                               m2m_remote_columns='a_id',
                               m2m_local_columns='p_name',
                               many2many="persons")
+
+
+def _complete_many2many_with_ordered_backref(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        addresses = Many2Many(model=Model.Address,
+                              join_table="join_addresses_by_persons",
+                              remote_columns="id", local_columns="name",
+                              m2m_remote_columns='a_id',
+                              m2m_local_columns='p_name',
+                              many2many=(
+                                  "persons",
+                                  dict(
+                                      order_by="ModelPerson.name",
+                                      collection_class=ordering_list('name'),
+                                  ),
+                              ))
 
 
 def _complete_many2many_with_schema(**kwargs):
@@ -140,6 +168,7 @@ def _complete_many2many_with_diferent_schema2(**kwargs):
     scope="class",
     params=[
         _complete_many2many,
+        _complete_many2many_with_ordered_backref,
         _complete_many2many_with_schema,
         _complete_many2many_with_diferent_schema1,
         _complete_many2many_with_diferent_schema2,
@@ -1660,3 +1689,71 @@ class TestMany2Many:
 
         assert person.invoiced_addresses == [address]
         assert person.delivery_addresses == []
+
+    def test_many2many_and_order_list(self):
+
+        def add_in_registry(**kwargs):
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class Person:
+
+                name = String(primary_key=True)
+                addresses = Many2Many(
+                    model=Model.Address,
+                    many2many=(
+                        "persons",
+                        dict(
+                            order_by="ModelPerson.name",
+                            collection_class=ordering_list('name'),
+                        )
+                    ),
+                    order_by="ModelAddress.city",
+                    collection_class=ordering_list('city'),
+                )
+
+        registry = self.init_registry(add_in_registry)
+
+        address3 = registry.Address.insert(city='Paris 3')
+        address1 = registry.Address.insert(city='Paris 1')
+        address4 = registry.Address.insert(city='Paris 4')
+        address2 = registry.Address.insert(city='Paris 2')
+
+        person3 = registry.Person.insert(name="test 3")
+        person1 = registry.Person.insert(name="test 1")
+        person4 = registry.Person.insert(name="test 4")
+        person2 = registry.Person.insert(name="test 2")
+
+        person3.addresses.append(address3)
+        person1.addresses.append(address1)
+        person4.addresses.append(address4)
+        person2.addresses.append(address2)
+
+        person1.addresses.append(address4)
+        person1.addresses.append(address2)
+
+        address1.persons.append(person4)
+
+        registry.flush()
+
+        assert address1.persons.ordering_attr == 'name'
+        assert person1.addresses.ordering_attr == 'city'
+
+        assert address1.persons == [person1, person4]
+        assert address2.persons == [person1, person2]
+        assert address3.persons == [person3]
+        assert address4.persons == [person1, person4]
+
+        person1.refresh()
+        assert person1.addresses == [address1, address2, address4]
+        assert person2.addresses == [address2]
+        assert person3.addresses == [address3]
+        person4.refresh()
+        assert person4.addresses == [address1, address4]

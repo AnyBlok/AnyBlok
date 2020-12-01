@@ -88,6 +88,7 @@ script:
   - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov-report= --cov=anyblok anyblok/tests; fi
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks  --with-demo
+  - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
   - pytest --cov-report= --cov=anyblok anyblok/bloks
   
 after_success:
