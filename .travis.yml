@@ -7,8 +7,8 @@ addons:
 python:
     - "3.6"
     - "3.7"
-    - "3.7-dev"
-    - "3.8-dev"
+    - "3.8"
+    - "3.9-dev"
     - "nightly"
 
 env:
@@ -16,39 +16,37 @@ env:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
         - MARKERS=''
     matrix:
-        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary'
+        - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2'
         - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
-          ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+          ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pymssql' \
+          SQLPYCLIENT='pyodbc' \
           MARKERS='field or column or relationship'
         - |-
           ANYBLOK_DATABASE_HOST=localhost \
           ANYBLOK_DATABASE_PORT=1433 \
-          ANYBLOK_DATABASE_DRIVER=mssql+pymssql \
+          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
           ANYBLOK_DATABASE_USER=sa \
           ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+          ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
           SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          SQLPYCLIENT='pymssql' \
+          SQLPYCLIENT='pyodbc' \
           MARKERS='not field and not column and not relationship'
 
 matrix:
     allow_failures:
-      - python: "3.7-dev"
-      - python: "3.8-dev"
+      - python: "3.9-dev"
       - python: "nightly"
       - python: "pypy3.5"
     include:
       - python: "pypy3.5"
         env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
-    include:
-      - python: "3.5"
-        env: ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2-binary'
     fast_finish: true
 
 virtualenv:
@@ -60,14 +58,21 @@ services:
   - docker
 
 before_install:
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/16.04/prod xenial main" | sudo tee -a /etc/apt/sources.list; fi
   - sudo apt-get update
   - sudo apt-get install graphviz
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
-  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pymssql' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server:2019-latest; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo ACCEPT_EULA=Y apt-get install msodbcsql17; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo ACCEPT_EULA=Y apt-get install mssql-tools; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bash_profile; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then source ~/.bashrc; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then sudo apt-get install unixodbc-dev; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker pull mcr.microsoft.com/mssql/server:2019-latest; fi
+  - if [[ $ANYBLOK_DATABASE_DRIVER == 'mssql+pyodbc' ]]; then docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=AnyBl@k2019' -p 1433:1433 -d --name mssql mcr.microsoft.com/mssql/server:2019-latest; fi
 
 install:
   - pip install -U pip
-  - pip install git+https://github.com/jssuzanne/sqlalchemy-utils.git@mssql_and_pymssql#egg=sqlalchemy_utils
   - pip install wheel
   - pip install sqlalchemy $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
@@ -79,12 +84,11 @@ install:
 
 script:
   - flake8 anyblok --exclude=*/tests/*
-  - python3 update_env.py
-  - $SQLSERVER 'create database travis_ci_test;'
   - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]] && [[ $MARKERS == '' ]]; then pytest --cov-report= --cov=anyblok anyblok/tests; fi
   - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov-report= --cov=anyblok anyblok/tests; fi
   - $SQLSERVER 'drop database travis_ci_test;'
-  - anyblok_createdb --install-all-bloks
+  - anyblok_createdb --install-all-bloks  --with-demo
+  - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
   - pytest --cov-report= --cov=anyblok anyblok/bloks
   
 after_success:

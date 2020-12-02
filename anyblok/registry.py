@@ -25,6 +25,16 @@ from .version import parse_version
 from .logging import log
 import sqlalchemy.interfaces
 from sqlalchemy.orm.session import close_all_sessions
+from sqlalchemy.orm.attributes import flag_modified
+
+try:
+    import pyodbc
+    pyodbc.pooling = False
+    PyODBCProgrammingError = pyodbc.ProgrammingError
+except ImportError:
+
+    class PyODBCProgrammingError(Exception):
+        pass
 
 logger = getLogger(__name__)
 
@@ -501,6 +511,10 @@ class Registry:
         self._sqlalchemy_known_events = []
         self.expire_attributes = {}
 
+        # key = tablename
+        # value = True if all table else list of columns names
+        self.ignore_migration_for = {}
+
     @classmethod
     def db_exists(cls, db_name=None):
         if not db_name:
@@ -554,18 +568,18 @@ class Registry:
             return []
 
         res = []
-        query = "SELECT name"
+        query = """SELECT "order", name"""
         query += " FROM system_blok"
         query += " WHERE state in ('%s')" % "', '".join(states)
-        query += """ ORDER BY "order";"""
         try:
-            res = self.execute(query).fetchall()
-        except (ProgrammingError, OperationalError):
+            res = self.execute(query, fetchall=True)
+        except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
             pass
 
         if res:
-            return [x[0] for x in res]
+            res.sort()
+            return [x[1] for x in res]
 
         return []
 
@@ -812,13 +826,22 @@ class Registry:
         return False
 
     def execute(self, *args, **kwargs):
+        fetchall = kwargs.pop('fetchall', False)
         if self.Session:
-            return self.session.execute(*args, **kwargs)
+            res = self.session.execute(*args, **kwargs)
+            if fetchall:
+                return res.fetchall()
+
+            return res
         else:
             conn = None
             try:
                 conn = self.engine.connect()
-                return conn.execute(*args, **kwargs)
+                res = conn.execute(*args, **kwargs)
+                if fetchall:
+                    return res.fetchall()
+
+                return res
             finally:
                 if conn:
                     conn.close()
@@ -952,8 +975,9 @@ class Registry:
             self.assemble_entries()
             self.create_session_factory()
 
-            mustreload = self.apply_model_schema_on_table(
-                blok2install) or mustreload
+            self.apply_model_schema_on_table(blok2install)
+            self.listen_sqlalchemy_known_event()
+            mustreload = self.is_reload_needed() or mustreload
 
         except Exception as e:
             self.close()
@@ -1016,7 +1040,7 @@ class Registry:
             WHERE
                 (state = 'toinstall' AND name = '%s')
                 OR state = 'toupdate'""" % blok2install
-        res = self.execute(query).fetchall()
+        res = self.execute(query, fetchall=True)
         if res:
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
@@ -1043,7 +1067,13 @@ class Registry:
         else:
             self.migration.auto_upgrade_database()
 
-        self.listen_sqlalchemy_known_event()
+    def is_reload_needed(self):
+
+        """Determines whether a reload is needed or not."""
+
+        if self.loadwithoutmigration:
+            return
+
         mustreload = False
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_initialize_entries:
@@ -1075,6 +1105,25 @@ class Registry:
 
         self.session.expire(obj, attribute_names=attribute_names)
 
+    def flag_modified(self, obj, attribute_names=None):
+        """ Flag the attributes as modified
+        ::
+
+            registry.flag_modified(instance, ['attr1', 'attr2', ...])
+
+        :param obj: instance of ``Model``
+        :param attribute_names: list of string, names of the attr to expire
+        """
+        if attribute_names:
+            hybrid_property_columns = (
+                obj.__class__.get_hybrid_property_columns()
+            )
+            for attribute_name in attribute_names:
+                if attribute_name in hybrid_property_columns:
+                    attribute_name = anyblok_column_prefix + attribute_name
+
+                flag_modified(obj, attribute_name)
+
     def expire_all(self):
         """Expire all the objects in session
 
@@ -1093,7 +1142,7 @@ class Registry:
         """
         self.session.expunge(obj)
 
-    def refresh(self, obj, attribute_names=None):
+    def refresh(self, obj, attribute_names=None, with_for_update=None):
         """Expire  and reload object in session, you can define some attribute
         which are refreshed::
 
@@ -1101,6 +1150,8 @@ class Registry:
 
         :param obj: instance of ``Model``
         :param attribute_names: list of string, names of the attr to refresh
+        :param with_for_update: Boolean, acquire lock on the row until
+        commit/rollback transaction
         """
         if attribute_names:
             attribute_names = [
@@ -1108,7 +1159,11 @@ class Registry:
                  if x in obj.hybrid_property_columns else x)
                 for x in attribute_names]
 
-        self.session.refresh(obj, attribute_names=attribute_names)
+        self.session.refresh(
+            obj,
+            attribute_names=attribute_names,
+            with_for_update=with_for_update,
+        )
 
     def rollback(self, *args, **kwargs):
         logger.debug('[ROLLBACK] with args=%r and kwargs = %r', args, kwargs)
@@ -1380,8 +1435,9 @@ class Registry:
                         self.check_conflict_with(blok)
                         self.apply_state(blok, state, ['uninstalled'])
                         upgrade_state_bloks(state)(
-                            self.get_bloks(blok, ['uninstalled'], [
-                                'required', 'optional', 'conditional']))
+                            self.get_bloks(
+                                blok,  ['undefined', 'uninstalled'],
+                                ['required', 'optional', 'conditional']))
                     elif state == 'toupdate':
                         self.apply_state(blok, state, ['installed'])
                         upgrade_state_bloks(state)(

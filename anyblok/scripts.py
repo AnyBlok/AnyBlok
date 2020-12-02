@@ -101,6 +101,9 @@ def anyblok_createdb():
     if registry is None:
         return
 
+    registry.System.Parameter.set(
+        "with-demo", Configuration.get('with_demo', False))
+
     if Configuration.get('install_all_bloks'):
         bloks = registry.System.Blok.list_by_state('uninstalled')
     else:

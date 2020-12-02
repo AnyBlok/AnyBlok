@@ -91,6 +91,22 @@ And the methods that define blok behaviours:
 |                               | ``latest_verison`` is an                    |
 |                               | **pkg_resources.parse_version**             |
 +-------------------------------+---------------------------------------------+
+| ``update_demo``               | Action to do when the blok is being         |
+|                               | install or updated. Called after ``update`` |
+|                               | if database was created with ``--with-demo``|
+|                               | parameter.                                  |
+|                               | This method has one argument                |
+|                               | ``latest_version`` (None for install)       |
+|                               |                                             |
+|                               | Since version **0.20.0** the                |
+|                               | ``latest_verison`` is an                    |
+|                               | **pkg_resources.parse_version**             |
++-------------------------------+---------------------------------------------+
+| ``uninstall_demo``            | Action to do when the blok is being         |
+|                               | uninstalled. Called before ``uninstall``    |
+|                               | if database was created with ``--with-demo``|
+|                               | parameter.                                  |
++-------------------------------+---------------------------------------------+
 | ``uninstall``                 | Action to do when the blok is being         |
 |                               | uninstalled                                 |
 +-------------------------------+---------------------------------------------+
@@ -281,52 +297,53 @@ model overloads the first model::
 
 Here are the parameters of the ``register`` method for ``Model``:
 
-+-------------+---------------------------------------------------------------+
-| Param       | Description                                                   |
-+=============+===============================================================+
-| cls\_       | Define the real class if ``register`` is used as a            |
-|             | function not as a decorator                                   |
-+-------------+---------------------------------------------------------------+
-| name\_      | Overload the name of the class::                              |
-|             |                                                               |
-|             |    @register(Model, name_='Bar')                              |
-|             |    class Foo:                                                 |
-|             |        pass                                                   |
-|             |                                                               |
-|             |   Declarations.Bar                                            |
-|             |                                                               |
-+-------------+---------------------------------------------------------------+
-| tablename   | Overload the name of the table::                              |
-|             |                                                               |
-|             |    @register(Model, tablename='my_table')                     |
-|             |    class Foo:                                                 |
-|             |        pass                                                   |
-|             |                                                               |
-+-------------+---------------------------------------------------------------+
-| is_sql_view | Boolean flag, which indicateis if the model is based on a SQL |
-|             | view. Deprecated use factory                                  |
-+-------------+---------------------------------------------------------------+
-| factory     | Factory class to build the Model class.                       |
-|             | Default : ``anyblok.model.factory.ModelFactory``              |
-+-------------+---------------------------------------------------------------+
-| tablename   | Define the real name of the table. By default the table name  |
-|             | is the registry name without the declaration type, and with   |
-|             | '.' replaced with '_'. This attribute is also used to map an  |
-|             | existing table declared by a previous Model. Allowed values:  |
-|             |                                                               |
-|             | * str ::                                                      |
-|             |                                                               |
-|             |    @register(Model, tablename='foo')                          |
-|             |    class Bar:                                                 |
-|             |        pass                                                   |
-|             |                                                               |
-|             | * declaration ::                                              |
-|             |                                                               |
-|             |    @register(Model, tablename=Model.Foo)                      |
-|             |    class Bar:                                                 |
-|             |        pass                                                   |
-|             |                                                               |
-+-------------+---------------------------------------------------------------+
++------------------+---------------------------------------------------------------+
+| Param            | Description                                                   |
++==================+===============================================================+
+| cls\_            | Define the real class if ``register`` is used as a            |
+|                  | function not as a decorator                                   |
++------------------+---------------------------------------------------------------+
+| name\_           | Overload the name of the class::                              |
+|                  |                                                               |
+|                  |    @register(Model, name_='Bar')                              |
+|                  |    class Foo:                                                 |
+|                  |        pass                                                   |
+|                  |                                                               |
+|                  |   Declarations.Bar                                            |
+|                  |                                                               |
++------------------+---------------------------------------------------------------+
+| is_sql_view      | Boolean flag, which indicateis if the model is based on a SQL |
+|                  | view. Deprecated use factory                                  |
++------------------+---------------------------------------------------------------+
+| factory          | Factory class to build the Model class.                       |
+|                  | Default : ``anyblok.model.factory.ModelFactory``              |
++------------------+---------------------------------------------------------------+
+| tablename        | Define the real name of the table. By default the table name  |
+|                  | is the registry name without the declaration type, and with   |
+|                  | '.' replaced with '_'. This attribute is also used to map an  |
+|                  | existing table declared by a previous Model. Allowed values:  |
+|                  |                                                               |
+|                  | * str ::                                                      |
+|                  |                                                               |
+|                  |    @register(Model, tablename='foo')                          |
+|                  |    class Bar:                                                 |
+|                  |        pass                                                   |
+|                  |                                                               |
+|                  | * declaration ::                                              |
+|                  |                                                               |
+|                  |    @register(Model, tablename=Model.Foo)                      |
+|                  |    class Bar:                                                 |
+|                  |        pass                                                   |
+|                  |                                                               |
++------------------+---------------------------------------------------------------+
+| ignore_migration | If True then the table will not be altered if the definition  |
+|                  | of the model and the schema in the database are diferents ::  |
+|                  |                                                               |
+|                  |    @register(Model, ignore_migration=True)                    |
+|                  |    class Foo:                                                 |
+|                  |        pass                                                   |
+|                  |                                                               |
++------------------+---------------------------------------------------------------+
 
 .. warning::
 
@@ -339,7 +356,7 @@ Non SQL Model
 This is the default model. This model has no tables. It is used to
 organize the registry or for specific process.::
 
-    #register(Model)
+    @register(Model)
     class Foo:
         pass
 
@@ -474,6 +491,7 @@ List of the column type:
  * ``String``
  * ``Text``
  * ``Selection``
+ * ``Enum``: use enum.Enum inherited class
  * ``Json``
  * ``Sequence``
  * ``Color``: use colour.Color
@@ -486,67 +504,71 @@ List of the column type:
 
 All the columns have the following optional parameters:
 
-+----------------+------------------------------------------------------------+
-| Parameter      | Description                                                |
-+================+============================================================+
-| label          | Label of the column, If None the label is the name of      |
-|                | column capitalized                                         |
-+----------------+------------------------------------------------------------+
-| default        | define a default value for this column.                    |
-|                |                                                            |
-|                | ..warning::                                                |
-|                |                                                            |
-|                |     The default value depends of the column type           |
-|                |                                                            |
-|                | ..note::                                                   |
-|                |                                                            |
-|                |     Put the name of a classmethod to call it               |
-|                |                                                            |
-+----------------+------------------------------------------------------------+
-| index          | boolean flag to define whether the column is indexed       |
-+----------------+------------------------------------------------------------+
-| nullable       | Defines if the column must be filled or not                |
-+----------------+------------------------------------------------------------+
-| primary_key    | Boolean flag to define if the column is a primary key or   |
-|                | not                                                        |
-+----------------+------------------------------------------------------------+
-| unique         | Boolean flag to define if the column value must be unique  |
-|                | or not                                                     |
-+----------------+------------------------------------------------------------+
-| foreign_key    | Define a foreign key on this column to another column of   |
-|                | another model::                                            |
-|                |                                                            |
-|                |    @register(Model)                                        |
-|                |    class Foo:                                              |
-|                |        id = Integer(primary_key=True)                      |
-|                |                                                            |
-|                |    @register(Model)                                        |
-|                |    class Bar:                                              |
-|                |        id = Integer(primary_key=True)                      |
-|                |        foo = Integer(foreign_key=Model.Foo.use('id'))      |
-|                |                                                            |
-|                | If the ``Model`` Declarations doesn't exist yet, you can   |
-|                | use the regisrty name::                                    |
-|                |                                                            |
-|                |     foo = Integer(foreign_key='Model.Foo=>id'))            |
-|                |                                                            |
-+----------------+------------------------------------------------------------+
-| db_column_name | String to define the real column name in the table,        |
-|                | different from the model attribute name                    |
-+----------------+------------------------------------------------------------+
-| encrypt_key    | Crypt the column in the database. can take the values:     |
-|                |                                                            |
-|                | * a String ex: foo = String(encrypt_key='SecretKey')       |
-|                | * a classmethod name on the model                          |
-|                | * True value, search in the Configuration                  |
-|                |   ``default_encrypt_key`` the value, they are no default.  |
-|                |   if no value exist, an exception is raised                |
-|                |                                                            |
-|                | ..warning::                                                |
-|                |                                                            |
-|                |     The python package cryptography must be installed      |
-|                |                                                            |
-+----------------+------------------------------------------------------------+
++------------------+------------------------------------------------------------+
+| Parameter        | Description                                                |
++==================+============================================================+
+| label            | Label of the column, If None the label is the name of      |
+|                  | column capitalized                                         |
++------------------+------------------------------------------------------------+
+| default          | define a default value for this column.                    |
+|                  |                                                            |
+|                  | ..warning::                                                |
+|                  |                                                            |
+|                  |     The default value depends of the column type           |
+|                  |                                                            |
+|                  | ..note::                                                   |
+|                  |                                                            |
+|                  |     Put the name of a classmethod to call it               |
+|                  |                                                            |
++------------------+------------------------------------------------------------+
+| index            | boolean flag to define whether the column is indexed       |
++------------------+------------------------------------------------------------+
+| nullable         | Defines if the column must be filled or not                |
++------------------+------------------------------------------------------------+
+| primary_key      | Boolean flag to define if the column is a primary key or   |
+|                  | not                                                        |
++------------------+------------------------------------------------------------+
+| unique           | Boolean flag to define if the column value must be unique  |
+|                  | or not                                                     |
++------------------+------------------------------------------------------------+
+| foreign_key      | Define a foreign key on this column to another column of   |
+|                  | another model::                                            |
+|                  |                                                            |
+|                  |    @register(Model)                                        |
+|                  |    class Foo:                                              |
+|                  |        id = Integer(primary_key=True)                      |
+|                  |                                                            |
+|                  |    @register(Model)                                        |
+|                  |    class Bar:                                              |
+|                  |        id = Integer(primary_key=True)                      |
+|                  |        foo = Integer(foreign_key=Model.Foo.use('id'))      |
+|                  |                                                            |
+|                  | If the ``Model`` Declarations doesn't exist yet, you can   |
+|                  | use the regisrty name::                                    |
+|                  |                                                            |
+|                  |     foo = Integer(foreign_key='Model.Foo=>id'))            |
+|                  |                                                            |
++------------------+------------------------------------------------------------+
+| db_column_name   | String to define the real column name in the table,        |
+|                  | different from the model attribute name                    |
++------------------+------------------------------------------------------------+
+| encrypt_key      | Crypt the column in the database. can take the values:     |
+|                  |                                                            |
+|                  | * a String ex: foo = String(encrypt_key='SecretKey')       |
+|                  | * a classmethod name on the model                          |
+|                  | * True value, search in the Configuration                  |
+|                  |   ``default_encrypt_key`` the value, they are no default.  |
+|                  |   if no value exist, an exception is raised                |
+|                  |                                                            |
+|                  | ..warning::                                                |
+|                  |                                                            |
+|                  |     The python package cryptography must be installed      |
+|                  |                                                            |
++------------------+------------------------------------------------------------+
+| ignore_migration | if True then the column in the table will not be modified  |
+|                  | when the definition of the column and the column of the    |
+|                  | table are diferents                                        |
++------------------+------------------------------------------------------------+
 
 Other attribute for ``String``:
 

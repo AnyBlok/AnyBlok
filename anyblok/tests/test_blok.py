@@ -3,6 +3,7 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2002 Pierre Verkest <pierreverkest84@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -678,6 +679,53 @@ class TestBlokConflicting:
 
 @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                     reason='Not for MySQL and MariaDB')
+class TestBlokUndefined:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_testblok):
+        transaction = registry_testblok.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_blok_15_exist(self, registry_testblok):
+        registry = registry_testblok
+        Blok = registry.System.Blok
+        query = Blok.query().filter(Blok.name == 'test-blok15')
+        if not query.count():
+            pytest.fail('No blok found')
+
+        testblok15 = query.first()
+        assert testblok15.state == 'uninstalled'
+        assert testblok15.version == '1.0.0'
+        assert testblok15.installed_version is None
+        assert testblok15.short_description == 'Test blok15'
+
+    def test_blok_undefined_exist(self, registry_testblok):
+        registry = registry_testblok
+        Blok = registry.System.Blok
+        query = Blok.query().filter(Blok.name == 'test-undefined')
+        if not query.count():
+            pytest.fail('No blok found')
+
+        testblokundefined = query.first()
+        assert testblokundefined.state == 'undefined'
+        assert testblokundefined.version == '0.0.0'
+        assert testblokundefined.installed_version is None
+        assert testblokundefined.short_description == 'Blok undefined'
+
+    def test_install_both(self, registry_testblok):
+        registry = registry_testblok
+        with pytest.raises(RegistryException):
+            registry.upgrade(install=('test-blok15',))
+
+    def test_install_undefined(self, registry_testblok):
+        registry = registry_testblok
+        with pytest.raises(RegistryException):
+            registry.upgrade(install=('test-undefined',))
+
+
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
 class TestBlokOrder:
 
     @pytest.fixture(autouse=True)
@@ -807,3 +855,95 @@ class TestBlokSession:
         Session = registry.Session
         registry.upgrade(install=('test-blok12',))
         assert Session is not registry.Session
+
+
+@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                    reason='Not for MySQL and MariaDB')
+class TestBlokInstallLifeCycle:
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_testblok_func):
+        def clear_called_methods():
+            BlokManager.get('test-blok16').called_methods = []
+        request.addfinalizer(clear_called_methods)
+        request.addfinalizer(
+            registry_testblok_func.unittest_transaction.rollback)
+
+    @pytest.fixture()
+    def registry_blok16_installed(self, registry_testblok_func):
+        registry_testblok_func.upgrade(install=('test-blok16',))
+        blok = BlokManager.get('test-blok16')
+        blok.called_methods = []
+        return registry_testblok_func
+
+    def test_install_without_demo(self, registry_testblok_func):
+        registry = registry_testblok_func
+        registry.System.Parameter.set("with-demo", False)
+        registry.upgrade(install=('test-blok16',))
+        blok = BlokManager.get('test-blok16')
+        assert blok.called_methods == [
+            "pre_migration", "post_migration", "update",
+        ]
+
+    def test_install_with_demo(self, registry_testblok_func):
+        registry = registry_testblok_func
+        registry.System.Parameter.set("with-demo", True)
+        registry.upgrade(install=('test-blok16',))
+        blok = BlokManager.get('test-blok16')
+        assert blok.called_methods == [
+            "pre_migration", "post_migration", "update", "update_demo",
+        ]
+
+    def test_update_without_demo(self, registry_blok16_installed):
+        registry = registry_blok16_installed
+        registry.System.Parameter.set("with-demo", False)
+        registry.upgrade(update=('test-blok16',))
+        blok = BlokManager.get('test-blok16')
+        assert blok.called_methods == [
+            "pre_migration", "post_migration", "update",
+        ]
+
+    def test_update_with_demo(self, registry_blok16_installed):
+        registry = registry_blok16_installed
+        registry.System.Parameter.set("with-demo", True)
+        registry.upgrade(update=('test-blok16',))
+        blok = BlokManager.get('test-blok16')
+        assert blok.called_methods == [
+            "pre_migration", "post_migration", "update", "update_demo",
+        ]
+
+    def test_unistall_without_demo(self, registry_blok16_installed):
+        registry = registry_blok16_installed
+        registry.System.Parameter.set("with-demo", False)
+        registry.upgrade(uninstall=('test-blok16',))
+        blok = BlokManager.get('test-blok16')
+        assert blok.called_methods == [
+            "uninstall",
+        ]
+
+    def test_unistall_with_demo(self, registry_blok16_installed):
+        registry = registry_blok16_installed
+        registry.System.Parameter.set("with-demo", True)
+        registry.upgrade(uninstall=('test-blok16',))
+        blok = BlokManager.get('test-blok16')
+        assert blok.called_methods == [
+            "uninstall_demo", "uninstall",
+        ]
+
+    def test_update_loadwithoutmigration(self, registry_blok16_installed):
+        registry = registry_blok16_installed
+        registry.loadwithoutmigration = True
+        registry.System.Parameter.set("with-demo", True)
+        registry.upgrade(update=('test-blok16',))
+        blok = BlokManager.get('test-blok16')
+        assert blok.called_methods == []
+
+    def test_update_withoutautomigration(self, registry_blok16_installed):
+        registry = registry_blok16_installed
+        registry.withoutautomigration = True
+        registry.System.Parameter.set("with-demo", True)
+        registry.upgrade(update=('test-blok16',))
+        blok = BlokManager.get('test-blok16')
+        assert blok.called_methods == [
+            "pre_migration", "post_migration", "update", "update_demo",
+        ]

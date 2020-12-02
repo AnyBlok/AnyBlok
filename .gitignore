@@ -23,5 +23,9 @@ venv/
 develop-eggs/
 htmlcov/
 
+test
+test.pdf
+test_doc_output
+
 gmon.out
 .idea

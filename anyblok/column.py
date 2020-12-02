@@ -4,13 +4,14 @@
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from base64 import b64encode, b64decode
 from .field import Field, FieldException
-from .mapper import ModelAttributeAdapter
+from .mapper import ModelAttributeAdapter, ModelAttribute
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types, CheckConstraint
 from sqlalchemy_utils.types.color import ColorType
@@ -48,11 +49,6 @@ except ImportError:
 
 
 logger = getLogger(__name__)
-
-
-class MsSQLEncryptedType(EncryptedType):
-    """In MsSQL the column must be a Text"""
-    impl = types.Text
 
 
 def wrap_default(registry, namespace, default_val):
@@ -111,6 +107,45 @@ class ColumnDefaultValue:
         :return: default callable
         """
         return self.callable(registry, namespace, fieldname, properties)
+
+
+class CompareType:
+
+    comparators = []
+
+    @classmethod
+    def default_comparator(cls, col1, type1, col2, type2):
+        if type1.__class__ is not type2.__class__:
+            raise FieldException(
+                "You can't add a foreign key using columns with different "
+                "types {model1!s}.{col1!s}` pointing to `{model2!s}.{col2!s}` "
+                "have different types  {type1!r} -> {type2!r}".format(
+                    model1=col1.model_name,
+                    col1=col1.attribute_name,
+                    model2=col2.model_name,
+                    col2=col2.attribute_name,
+                    type1=type1.__class__,
+                    type2=type2.__class__
+                )
+            )
+
+    @classmethod
+    def add_comparator(cls, type1, type2):
+
+        def wrapper(funct):
+            cls.comparators.append((type1, type2, funct))
+            return funct
+
+        return wrapper
+
+    @classmethod
+    def validate(cls, col1, type1, col2, type2):
+        for (cls1, cls2, funct) in cls.comparators:
+            if type1.__class__ is cls1 and type2.__class__ is cls2:
+                funct(col1, type1, col2, type2)
+                return
+
+        cls.default_comparator(col1, type1, col2, type2)
 
 
 class NoDefaultValue:
@@ -185,7 +220,7 @@ class Column(Field):
         """
         return self.sqlalchemy_type
 
-    def format_foreign_key(self, registry, args, kwargs):
+    def format_foreign_key(self, registry, namespace, fieldname, args, kwargs):
         """Format a foreign key
 
         :param registry: the current registry
@@ -194,6 +229,10 @@ class Column(Field):
         :return:
         """
         if self.foreign_key:
+            CompareType.validate(
+                ModelAttribute(namespace, fieldname), self,
+                self.foreign_key, self.foreign_key.get_type(registry)
+            )
             args = args + (self.foreign_key.get_fk(registry),)
             kwargs['info'].update({
                 'foreign_key': self.foreign_key.get_fk_name(registry),
@@ -217,7 +256,9 @@ class Column(Field):
         kwargs = self.kwargs.copy()
         if 'info' not in kwargs:
             kwargs['info'] = {}
-        args = self.format_foreign_key(registry, args, kwargs)
+        args = self.format_foreign_key(
+            registry, namespace, fieldname, args, kwargs)
+
         kwargs['info']['label'] = self.label
         if self.sequence:
             args = (self.sequence,) + args
@@ -238,13 +279,10 @@ class Column(Field):
                 kwargs['default'] = self.default_val
 
         sqlalchemy_type = self.native_type(registry)
+
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
-            if sgdb_in(registry.engine, ['MsSQL']):
-                sqlalchemy_type = MsSQLEncryptedType(
-                    sqlalchemy_type, encrypt_key)
-            else:
-                sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
+            sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
 
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
 
@@ -674,6 +712,44 @@ class String(Column):
         """
         res = super(String, self).autodoc_get_properties()
         res['size'] = self.size
+        return res
+
+
+class Enum(Column):
+    """Enum column
+
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import Enum
+        import enum
+
+
+        class MyEnumClass(enum.Enum):
+            one = 1
+            two = 2
+            three = 3
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = Enum(enum_cls=MyEnumClass, default='test')
+
+    enum_cls should be an enum class
+    """
+    def __init__(self, *args, **kwargs):
+        self.enum_cls = kwargs.pop('enum_cls')
+        self.sqlalchemy_type = types.Enum(self.enum_cls)
+        super(Enum, self).__init__(*args, **kwargs)
+
+    def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
+        res = super(Enum, self).autodoc_get_properties()
+        res['enum_cls'] = repr(self.enum_cls)
         return res
 
 
@@ -1144,6 +1220,7 @@ class Sequence(String):
         kwargs['default'] = ColumnDefaultValue(self.wrap_default)
 
         self.code = kwargs.pop('code') if 'code' in kwargs else None
+        self.start = kwargs.pop('start', 1)
         self.formater = kwargs.pop(
             'formater') if 'formater' in kwargs else None
 
@@ -1173,7 +1250,7 @@ class Sequence(String):
 
         code = self.code if self.code else "%s=>%s" % (namespace, fieldname)
         registry._need_sequence_to_create_if_not_exist.append(
-            {'code': code, 'formater': self.formater})
+            {'code': code, 'formater': self.formater, 'start': self.start})
 
         def default_value():
             """Return next sequence value
@@ -1494,3 +1571,45 @@ class Country(Column):
         key.update(str(enum).encode('utf-8'))
         name = self.fieldname + '_' + key.hexdigest() + '_types'
         return [CheckConstraint(constraint, name=name)]
+
+
+@CompareType.add_comparator(String, String)
+@CompareType.add_comparator(String, Selection)
+@CompareType.add_comparator(String, Sequence)
+def compare_strings(col1, type1, col2, type2):
+    if type1.size != type2.size:
+        raise FieldException(
+            "You can't add a foreign key using based String columns with "
+            "different size `{model1!s}.{col1!s}` pointing to "
+            "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
+            "-> ({type2!r}){size2:d}".format(
+                model1=col1.model_name,
+                col1=col1.attribute_name,
+                model2=col2.model_name,
+                col2=col2.attribute_name,
+                type1=type1.__class__,
+                type2=type2.__class__,
+                size1=type1.size,
+                size2=type2.size
+            )
+        )
+
+
+@CompareType.add_comparator(String, Color)
+def compare_string_to_color(col1, type1, col2, type2):
+    if type1.size != type2.max_length:
+        raise FieldException(
+            "You can't add a foreign key using based String columns with "
+            "different size `{model1!s}.{col1!s}` pointing to "
+            "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
+            "-> ({type2!r}){size2:d}".format(
+                model1=col1.model_name,
+                col1=col1.attribute_name,
+                model2=col2.model_name,
+                col2=col2.attribute_name,
+                type1=type1.__class__,
+                type2=type2.__class__,
+                size1=type1.size,
+                size2=type2.max_length
+            )
+        )

@@ -7,12 +7,11 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from .exceptions import ModelFactoryException
 from anyblok.field import Field, FieldException
-from sqlalchemy import event
-from sqlalchemy.sql import table, and_
+from sqlalchemy import table, and_, event
 from sqlalchemy.orm import Query, mapper, relationship
 from .exceptions import ViewException
 from anyblok.common import anyblok_column_prefix
-from .view import CreateView, DropView
+from sqlalchemy_views import CreateView, DropView
 
 
 def has_sql_fields(bases):
@@ -60,6 +59,10 @@ class ModelFactory(BaseFactory):
         bases.extend([x for x in self.registry.loaded_cores['Base']])
 
     def build_model(self, modelname, bases, properties):
+        if properties.get('ignore_migration') is True:
+            self.registry.ignore_migration_for[
+                properties['__tablename__']] = True
+
         return type(modelname, tuple(bases), properties)
 
 
@@ -70,7 +73,7 @@ def get_columns(view, columns):
         else:
             columns = [columns]
 
-    return [getattr(view.c, x.split(' => ')[1]) for x in columns]
+    return [getattr(view.c, x) for x in columns]
 
 
 class ViewFactory(BaseFactory):
@@ -106,7 +109,6 @@ class ViewFactory(BaseFactory):
 
             view = table(tablename)
 
-            self.registry.loaded_views[tablename] = view
             selectable = getattr(base, 'sqlalchemy_view_declaration')()
 
             if isinstance(selectable, Query):
@@ -115,12 +117,14 @@ class ViewFactory(BaseFactory):
             for c in selectable.c:
                 c._make_proxy(view)
 
-            event.listen(self.registry.declarativebase.metadata,
-                         'before_create', DropView(tablename))
-            event.listen(self.registry.declarativebase.metadata,
-                         'after_create', CreateView(tablename, selectable))
-            event.listen(self.registry.declarativebase.metadata,
-                         'before_drop', DropView(tablename))
+            metadata = self.registry.declarativebase.metadata
+            event.listen(metadata, 'before_create', DropView(
+                view, if_exists=True))
+            event.listen(metadata, 'after_create', CreateView(
+                view, selectable))
+            event.listen(metadata, 'before_drop', DropView(
+                view, if_exists=True))
+            self.registry.loaded_views[tablename] = view
 
         pks = [col for col in properties['loaded_columns']
                if getattr(getattr(base, anyblok_column_prefix + col),
@@ -136,6 +140,7 @@ class ViewFactory(BaseFactory):
         setattr(base, '__view__', view)
         __mapper__ = mapper(
             base, view, primary_key=pks, properties=mapper_properties)
+        self.registry.declarativebase._decl_class_registry[base.__name__] = base
         setattr(base, '__mapper__', __mapper__)
 
     def get_mapper_properties(self, base, view, properties):

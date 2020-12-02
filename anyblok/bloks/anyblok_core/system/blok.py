@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.blok import BlokManager
+from anyblok.blok import BlokManager, BlokManagerException, UndefinedBlok
 from anyblok.declarations import Declarations, listen, classmethod_cache
 from anyblok.column import String, Integer, Selection
 from anyblok.field import Function
@@ -113,14 +113,30 @@ class Blok:
         # Do not remove blok because 2 or More AnyBlok api may use the same
         # Database
         for order, blok in enumerate(BlokManager.ordered_bloks):
-            b = cls.query().filter(cls.name == blok)
-            version = BlokManager.bloks[blok].version
-            author = BlokManager.bloks[blok].author
-            if b.count():
-                b.update(dict(order=order, version=version, author=author))
+            b = cls.query().filter(cls.name == blok).one_or_none()
+            Blok = BlokManager.bloks[blok]
+
+            version = Blok.version
+            author = Blok.author
+            is_undefined = issubclass(Blok, UndefinedBlok)
+
+            if b is None:
+                cls.insert(
+                    name=blok, order=order, version=version, author=author,
+                    state='undefined' if is_undefined else 'uninstalled')
             else:
-                cls.insert(name=blok, order=order, version=version,
-                           author=author)
+                values = dict(order=order, version=version, author=author)
+                if b.state == 'undefined' and not is_undefined:
+                    values['state'] = 'uninstalled'
+                elif is_undefined:
+                    if b.state not in ('uninstalled', 'undefined'):
+                        raise BlokManagerException(
+                            ("Change state %r => 'undefined' for %s is "
+                             "forbidden") % (b.state, blok))
+
+                    values['state'] = 'undefined'
+
+                b.update(**values)
 
     @classmethod
     def apply_state(cls, *bloks):
@@ -135,7 +151,7 @@ class Blok:
         for blok in bloks:
             # Make the query in the loop to be sure to keep order
             b = cls.query().filter(cls.name == blok).first()
-            if b.state in ('undefined', 'uninstalled', 'toinstall'):
+            if b.state in ('uninstalled', 'toinstall'):
                 b.install()
             elif b.state == 'toupdate':
                 b.upgrade()
@@ -202,6 +218,8 @@ class Blok:
         self.fire('Update installed blok')
         entry = self.registry.loaded_bloks[self.name]
         entry.update(None)
+        if self.registry.System.Parameter.get("with-demo", False):
+            entry.update_demo(None)
         self.state = 'installed'
         self.installed_version = self.version
 
@@ -216,6 +234,8 @@ class Blok:
             if self.installed_version is not None
             else None)
         entry.update(parsed_version)
+        if self.registry.System.Parameter.get("with-demo", False):
+            entry.update_demo(parsed_version)
         self.state = 'installed'
         self.installed_version = self.version
 
@@ -225,6 +245,8 @@ class Blok:
         logger.info("Uninstall the blok %r" % self.name)
         self.fire('Update installed blok')
         entry = BlokManager.bloks[self.name](self.registry)
+        if self.registry.System.Parameter.get("with-demo", False):
+            entry.uninstall_demo()
         entry.uninstall()
         self.state = 'uninstalled'
         self.installed_version = None

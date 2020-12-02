@@ -8,6 +8,7 @@
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2019 Hugo QUEZADA <gohu@hq.netlib.re>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -26,6 +27,7 @@ if sys.version_info < (3, 5):
 requires = [
     'sqlalchemy >= 1.3',
     'sqlalchemy-utils >= 0.33.0',
+    'sqlalchemy-views',
     'packaging',
     'setuptools',
     'argparse',
@@ -50,18 +52,13 @@ with open(
 ) as change:
     CHANGE = change.read()
 
-with open(
-    os.path.join(here, 'doc', 'FRONT.rst'), 'r', encoding='utf-8'
-) as front:
-    FRONT = front.read()
-
-
 extra_dependencies = {
     'pytest': ['pytest', 'pytest-cov'],
     'postgres': ['psycopg2-binary'],
     'mysql': ['mysqlclient'],
     'mariadb': ['mysqlclient'],
-    'mssql': ['pymssql'],
+    'mssql': ['pymssql', 'sqlalchemy_utils==0.34.2'],
+    'pyodbc': ['pyodbc'],
 }
 
 
@@ -72,7 +69,7 @@ setup(
     author_email="jssuzanne@anybox.fr",
     description="Anyblok is a dynamic injection blok framework",
     license="MPL2",
-    long_description=README + '\n' + FRONT + '\n' + CHANGE,
+    long_description=README + '\n' + CHANGE,
     url="http://docs.anyblok.org/%s" % version,
     packages=find_packages(),
     zip_safe=False,
@@ -83,10 +80,10 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development',
@@ -122,6 +119,8 @@ setup(
             'test-blok12=anyblok.test_bloks.test_blok12:TestBlok',
             'test-blok13=anyblok.test_bloks.test_blok13:TestBlok',
             'test-blok14=anyblok.test_bloks.test_blok14:TestBlok',
+            'test-blok15=anyblok.test_bloks.test_blok15:TestBlok',
+            'test-blok16=anyblok.test_bloks.test_blok16:TestBlok',
         ],
         'nose.plugins.0.10': [
             'anyblok-bloks=anyblok_nose.plugins:AnyBlokPlugin',

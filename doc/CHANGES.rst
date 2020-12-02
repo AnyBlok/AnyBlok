@@ -7,6 +7,7 @@
 ..    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+..    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -15,9 +16,19 @@
 CHANGELOG
 =========
 
-1.0.0
------
+1.0.0 (Unreleased)
+------------------
 
+* Added Sequence with *no gap* to provide functional sequence without gaps.
+* OrderList class_collection can be defined on x2Many
+* Bug Fix on registry loading sequence. The **apply_model_schema_on_table**
+  method called at registry initialisation has been splitted to make sqlalchemy
+  ORM events registration independent from migration.
+* Added undefined blok behaviour. It is an important behaviour needed and 
+  written in the roadmap where the goal is to defined blok which need another
+  inexisting blok. this blok is installabled only if the blok exist. A package
+  can defined a group of bloks that depend of another packages. They bloks 
+  are installabled if the another package is installed
 * It is now possible to place a "Model" in another schema on the SGDB
   ::
 
@@ -27,9 +38,15 @@ CHANGELOG
 
 * Now the Email, Selection, Country, Json, Decimal, Interval, LargeBinary 
   columns can be crypted
-* Removed compatibility with **Python 3.4**, because this version is
-  deprecated
+* Removed compatibility with **Python 3.4** and **python 3.5**, because 
+  these versions are deprecated
 * Added *TimeStamp* column
+* Added *Enum* column
+* Added **ignore_migration** to protect the existing table or column again 
+  auto migration when then schema and this definition are diferents
+* Added capability with mssql+pyodbc
+* Fixed View: allow to add Many2One to a View
+* Added flag_modified method on SQLModel #72
 * Add in extra dependencies drivers used in unit tests for dialects tested 
   with cPython 
 
@@ -37,6 +54,14 @@ CHANGELOG
   * mysql: mysqlclient
   * mariadb: mysqlclient
   * mssql: pymssql
+  * pyodbc
+
+* System.Parameter.get do not raise if a default value is provided
+* Add ``--with-demo`` parameter while creating a database (anyblok_createdb) in
+  order to load demo data while installing bloks on that database.
+* Fixed issue #45: System.Sequence: inconsistency in 'number' field
+* Fixed issue #134: is now possible to validate if the type at each part of foreign key
+  are the same
 
 0.22.5 (2019-06-24)
 -------------------

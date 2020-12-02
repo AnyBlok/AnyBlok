@@ -11,7 +11,7 @@ from anyblok.model.common import VIEW
 from anyblok.model.exceptions import ViewException
 from anyblok import Declarations
 from sqlalchemy.sql import select, expression, union
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from anyblok.column import Integer, String
 from anyblok.relationship import Many2One
 import pytest
@@ -49,6 +49,42 @@ def simple_view():
                             T1.val.label('val1'),
                             T2.val.label('val2')])
             return query.where(T1.code == T2.code)
+
+
+def m2o_to_a_simple_view():
+
+    @register(Model)
+    class T1:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @register(Model)
+    class T2:
+        id = Integer(primary_key=True)
+        code = String()
+        val = Integer()
+
+    @register(Model, factory=ViewFactory)
+    class TestView:
+        code = String(primary_key=True)
+        val1 = Integer()
+        val2 = Integer()
+
+        @classmethod
+        def sqlalchemy_view_declaration(cls):
+            T1 = cls.registry.T1
+            T2 = cls.registry.T2
+            query = select([T1.code.label('code'),
+                            T1.val.label('val1'),
+                            T2.val.label('val2')])
+            return query.where(T1.code == T2.code)
+
+    @register(Model)
+    class T0:
+        id = Integer(primary_key=True)
+        m2o = Many2One(model=Model.TestView,
+                       primaryjoin='ModelT0.m2o_code == ModelTestView.code')
 
 
 def deprecated_view_before_0_19_2():
@@ -115,6 +151,7 @@ def deprecated_view_before_0_19_4():
     scope="class",
     params=[
         simple_view,
+        m2o_to_a_simple_view,
         deprecated_view_before_0_19_2,
         deprecated_view_before_0_19_4,
     ]
@@ -161,7 +198,7 @@ class TestSimpleView:
 
     def test_view_delete_method(self, registry_simple_view):
         registry = registry_simple_view
-        with pytest.raises(OperationalError):
+        with pytest.raises((OperationalError, ProgrammingError)):
             registry.TestView.query().delete()
 
 

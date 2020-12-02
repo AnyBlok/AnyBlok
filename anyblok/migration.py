@@ -67,6 +67,10 @@ class MigrationReport:
         report = MigrationReport(migrationinstance, change_detected)
 
     """
+
+    def ignore_migration_for(self, table, default=None):
+        return self.migration.ignore_migration_for.get(table, default)
+
     def raise_if_withoutautomigration(self):
         if self.migration.withoutautomigration:
             raise MigrationException("The metadata and the base structue are "
@@ -96,6 +100,9 @@ class MigrationReport:
     def init_add_column(self, diff):
         self.raise_if_withoutautomigration()
         _, _, table, column = diff
+        if self.ignore_migration_for(table) is True:
+            return True
+
         self.log_names.append('Add %s.%s' % (table, column.name))
 
     def can_remove_constraints(self, name):
@@ -136,6 +143,9 @@ class MigrationReport:
 
     def init_remove_constraint(self, diff):
         _, constraint = diff
+        if self.ignore_migration_for(constraint.table.name) is True:
+            return True
+
         self.log_names.append('Drop constraint %s on %s' % (
             constraint.name, constraint.table))
 
@@ -159,6 +169,9 @@ class MigrationReport:
     def init_add_index(self, diff):
         self.raise_if_withoutautomigration()
         _, constraint = diff
+        if self.ignore_migration_for(constraint.table.name) is True:
+            return True
+
         columns = [x.name for x in constraint.columns]
         if self.table_is_added(constraint.table):
             return True
@@ -168,6 +181,9 @@ class MigrationReport:
 
     def init_remove_index(self, diff):
         _, index = diff
+        if self.ignore_migration_for(index.table.name) is True:
+            return True
+
         self.log_names.append('Drop index %s on %s' % (index.name,
                                                        index.table))
         if self.can_remove_index(index.name):
@@ -178,9 +194,15 @@ class MigrationReport:
     def init_add_fk(self, diff):
         self.raise_if_withoutautomigration()
         _, fk = diff
+        if self.ignore_migration_for(fk.table.name) is True:
+            return True
+
         from_ = []
         to_ = []
         for column in fk.columns:
+            if column.name in self.ignore_migration_for(fk.table.name, []):
+                return True
+
             for fk_ in column.foreign_keys:
                 from_.append('%s.%s' % (fk.table.name, column.name))
                 to_.append(fk_.target_fullname)
@@ -190,7 +212,13 @@ class MigrationReport:
 
     def init_remove_fk(self, diff):
         _, fk = diff
+        if self.ignore_migration_for(fk.table.name) is True:
+            return True
+
         for column in fk.columns:
+            if column.name in self.ignore_migration_for(fk.table.name, []):
+                return True
+
             for fk_ in column.foreign_keys:
                 self.log_names.append('Drop Foreign keys on %s.%s => %s' % (
                     fk.table.name, column.name, fk_.target_fullname))
@@ -203,6 +231,9 @@ class MigrationReport:
     def init_add_ck(self, diff):
         self.raise_if_withoutautomigration()
         _, table, ck = diff
+        if self.ignore_migration_for(table) is True:
+            return True
+
         if ck.table.schema:
             table = ck.table.schema + '.' + table
 
@@ -211,6 +242,9 @@ class MigrationReport:
 
     def init_remove_ck(self, diff):
         _, table, ck = diff
+        if self.ignore_migration_for(table) is True:
+            return True
+
         if ck['schema']:
             table = ck['schema'] + '.' + table
 
@@ -225,7 +259,17 @@ class MigrationReport:
     def init_add_constraint(self, diff):
         self.raise_if_withoutautomigration()
         _, constraint = diff
-        columns = [x.name for x in constraint.columns]
+        columns = []
+
+        if self.ignore_migration_for(constraint.table.name) is True:
+            return True
+
+        for column in constraint.columns:
+            columns.append(column.name)
+            if column.name in self.ignore_migration_for(constraint.table.name,
+                                                        []):
+                return True
+
         self.log_names.append('Add unique constraint on %s (%s)' % (
             constraint.table.name, ', '.join(columns)))
 
@@ -240,6 +284,9 @@ class MigrationReport:
 
     def init_remove_column(self, diff):
         column = diff[3]
+        if self.ignore_migration_for(column.table.name) is True:
+            return True
+
         msg = "Drop Column %s.%s" % (column.table.name,
                                      column.name)
 
@@ -305,6 +352,12 @@ class MigrationReport:
             return True
 
     def init_modify_type(self, diff):
+        if self.ignore_migration_for(diff[2]) is True:
+            return True
+
+        if diff[3] in self.ignore_migration_for(diff[2], []):
+            return True
+
         if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
             if isinstance(diff[5], TINYINT) and isinstance(diff[6], Boolean):
                 # Boolean are TINYINT in MySQL DataBase
@@ -320,12 +373,24 @@ class MigrationReport:
         return False
 
     def init_modify_nullable(self, diff):
+        if self.ignore_migration_for(diff[2]) is True:
+            return True
+
+        if diff[3] in self.ignore_migration_for(diff[2], []):
+            return True
+
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
         self.log_names.append("Modify column nullable %s.%s : %s => %s" % (
             table, diff[3], diff[5], diff[6]))
         return False
 
     def init_modify_server_default(self, diff):
+        if self.ignore_migration_for(diff[2]) is True:
+            return True
+
+        if diff[3] in self.ignore_migration_for(diff[2], []):
+            return True
+
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
         self.log_names.append("Modify column default %s.%s : %s => %s" % (
             table, diff[3], diff[5], diff[6]))
@@ -383,7 +448,6 @@ class MigrationReport:
                 self.raise_if_withoutautomigration()
                 for change in diff:
                     _, _, table, column, _, _, _ = change
-                    self.log_names.append('Alter %s.%s' % (table, column))
                     fnct = mappers.get(change[0])
                     if fnct:
                         if fnct(change):
@@ -391,6 +455,7 @@ class MigrationReport:
                     else:
                         logger.warning('Unknow diff: %r', change)
 
+                    self.log_names.append('Alter %s.%s' % (table, column))
                     self.actions.append(change)
             else:
                 fnct = mappers.get(diff[0])
@@ -515,7 +580,7 @@ class MigrationReport:
     def apply_change_add_ck(self, action):
         _, table, ck = action
         t = self.get_migration_table(ck.table)
-        t.check(ck.name).add(str(ck.sqltext))
+        t.check(ck.name).add(ck.sqltext)
 
     def apply_change_remove_fk(self, action):
         _, fk = action
@@ -621,6 +686,7 @@ class MigrationConstraintForeignKey:
             source_schema=self.table.schema,
             referent_schema=remote_columns[0].table.schema,
             **kwargs)
+
         return self
 
     def drop(self):
@@ -1331,6 +1397,7 @@ class Migration:
         self.metadata = registry.declarativebase.metadata
         self.ddl_compiler = self.conn.dialect.ddl_compiler(
             self.conn.dialect, None)
+        self.ignore_migration_for = registry.ignore_migration_for
 
         opts = {
             'include_schemas': True,

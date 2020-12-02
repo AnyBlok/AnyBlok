@@ -13,7 +13,7 @@ from anyblok.mapper import FakeColumn, FakeRelationShip
 from anyblok.relationship import RelationShip, Many2Many
 from anyblok.common import anyblok_column_prefix
 from ..exceptions import SqlBaseException
-from sqlalchemy.orm import aliased, ColumnProperty
+from sqlalchemy.orm import aliased, ColumnProperty, load_only
 from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
 from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
@@ -160,14 +160,28 @@ class SqlMixin:
         return [getattr(cls, k) == v for k, v in pks.items()]
 
     @classmethod
+    def query_from_primary_keys(cls, **pks):
+        """return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param **pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        """
+        where_clause = cls.get_where_clause_from_primary_keys(**pks)
+        return cls.query().filter(*where_clause)
+
+    @classmethod
     def from_primary_keys(cls, **pks):
         """ return the instance of the model from the primary keys
 
         :param **pks: dict {primary_key: value, ...}
         :rtype: instance of the model
         """
-        where_clause = cls.get_where_clause_from_primary_keys(**pks)
-        query = cls.query().filter(*where_clause)
+        query = cls.query_from_primary_keys(**pks)
         if query.count():
             return query.first()
 
@@ -210,7 +224,7 @@ class SqlMixin:
         :type: list of the primary keys name
         """
         C = cls.registry.System.Column
-        query = C.query()
+        query = C.query().distinct(C.name).options(load_only(C.name))
         query = query.filter(C.model.in_(cls.get_all_registry_names()))
         query = query.filter(C.primary_key == true())
         return query.all().name
@@ -546,13 +560,13 @@ class SqlBase(SqlMixin):
                 if field is not None:
                     field.expire(*rfields)
 
-    def refresh(self, *fields):
+    def refresh(self, *fields, with_for_update=None):
         """ Expire and reload all the attribute of the instance
 
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
         """
-        self.registry.refresh(self, fields)
+        self.registry.refresh(self, fields, with_for_update=with_for_update)
 
     def expunge(self):
         """Expunge the instance in the session"""
@@ -566,6 +580,14 @@ class SqlBase(SqlMixin):
         #sqlalchemy.orm.session.Session.expire
         """
         self.registry.expire(self, fields)
+
+    def flag_modified(self, *fields):
+        """ Flag the attributes as modified
+
+        see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
+        #sqlalchemy.orm.session.Session.expire
+        """
+        self.registry.flag_modified(self, fields)
 
     def delete(self, byquery=False, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
