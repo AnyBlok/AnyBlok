@@ -714,8 +714,8 @@ class MigrationColumnTypePlugin:
 
     Must be exposed as entry point in namespace 'anyblok.migration_type.plugins'
 
-    :param to_type: New column type value (sqlalchemy.types)
-    :param from_type: Old column type value (sqlalchemy.types)
+    :param to_type: Column type value (sqlalchemy.types) as used in Model classes in source code
+    :param from_type: Column type value (sqlalchemy.types) as required to communicate with the DBMS
     :param dialect: DB dialect (list of strings or string)
 
     Example::
