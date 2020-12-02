@@ -406,7 +406,7 @@ class MigrationReport:
 
         def dialect_sort(plugin):
             """Sort plugins with dialect not None first"""
-            return (plugin.dialect is None, plugin)
+            return (plugin.dialect is None, plugin.dialect)
 
         plugins = sorted((
             entry_point.load()
@@ -714,8 +714,10 @@ class MigrationColumnTypePlugin:
 
     Must be exposed as entry point in namespace 'anyblok.migration_type.plugins'
 
-    :param to_type: Column type value (sqlalchemy.types) as used in Model classes in source code
-    :param from_type: Column type value (sqlalchemy.types) as required to communicate with the DBMS
+    :param to_type: Column type value (sqlalchemy.types) as used in Model
+                    classes in source code
+    :param from_type: Column type value (sqlalchemy.types) as required to
+                      communicate with the DBMS
     :param dialect: DB dialect (list of strings or string)
 
     Example::
