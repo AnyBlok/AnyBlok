@@ -1,4 +1,16 @@
 # -*- coding: utf-8 -*-
+# This file is a part of the AnyBlok project
+#
+#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Joachim Trouverie
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file,You can
+# obtain one at http://mozilla.org/MPL/2.0/.
 from pkg_resources import iter_entry_points
 from sqlalchemy.exc import IntegrityError, OperationalError
 from alembic.migration import MigrationContext
@@ -8,9 +20,6 @@ from contextlib import contextmanager
 from sqlalchemy import func, select, update, join, and_, text
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
-from sqlalchemy.dialects.mysql.types import TINYINT
-from sqlalchemy.dialects.mssql.base import BIT
-from sqlalchemy.sql.sqltypes import Boolean
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 from .common import sgdb_in
@@ -358,16 +367,10 @@ class MigrationReport:
         if diff[3] in self.ignore_migration_for(diff[2], []):
             return True
 
-        if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
-            if isinstance(diff[5], TINYINT) and isinstance(diff[6], Boolean):
-                # Boolean are TINYINT in MySQL DataBase
+        selected_plugin = self.get_plugin_for(diff[5], diff[6])
+        if selected_plugin is not None:
+            if not selected_plugin.need_to_modify_type():
                 return True
-        if sgdb_in(self.migration.conn.engine, ['MsSQL']):
-            if isinstance(diff[5], BIT) and isinstance(diff[6], Boolean):
-                # Boolean are TINYINT in MySQL DataBase
-                return True
-        # selected_plugin = self.get_plugin_for(oldvalue, newvalue)
-        # if selected_plugin is not None:
 
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
         self.log_names.append("Modify column type %s.%s : %s => %s" % (
@@ -717,13 +720,16 @@ class MigrationColumnTypePlugin:
 
     Example::
 
-    class BooleanToTinyIntMySQL(MigrationColumnPlugin):
+    class BooleanToTinyIntMySQL(MigrationColumnTypePlugin):
 
         to_type = sqlalchemy.types.Boolean
         from_type = sqlalchemy.types.TINYINT
         dialect = ['MySQL', 'MariaDB']
 
-        def apply(self, column):
+        def need_to_modify_type(self):
+            return False
+
+        def apply(self, column, **kwargs):
             '''Boolean are TINYINT in MySQL DataBases'''
             # do nothing
             pass
@@ -733,11 +739,15 @@ class MigrationColumnTypePlugin:
     from_type = None
     dialect = None
 
-    def apply(self, column):
+    def apply(self, column, **kwargs):
         """Apply column migration, this method MUST be overriden in plugins
         subclass
         """
         raise NotImplementedError()
+
+    def need_to_modify_type(self, column, **kwargs):
+        """If False the type won't be modified"""
+        return True
 
 
 class MigrationColumn:
