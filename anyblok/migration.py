@@ -413,6 +413,27 @@ class MigrationReport:
 
         return plugins
 
+    def get_plugin_for(self, oldvalue, newvalue):
+        """search plugin by column types"""
+        for plugin in self.plugins:
+            if isinstance(plugin.dialect, (tuple, list)):
+                dialects = plugin.dialect
+            else:
+                dialects = [plugin.dialect]
+
+            if (
+                issubclass(plugin, MigrationColumnTypePlugin) and
+                isinstance(oldvalue, plugin.from_type) and
+                isinstance(newvalue, plugin.to_type) and
+                (
+                    plugin.dialect is None or
+                    sgdb_in(self.migration.conn.engine, dialects)
+                )
+            ):
+                return plugin()
+
+        return None
+
     def __init__(self, migration, diffs):
         """ Initializer
 
@@ -481,22 +502,6 @@ class MigrationReport:
         :param log: log sentence expected
         """
         return log in self.logs
-
-    def get_plugin_for(self, oldvalue, newvalue):
-        """search plugin by column types"""
-        for plugin in self.plugins:
-            if (
-                issubclass(plugin, MigrationColumnTypePlugin) and
-                isinstance(oldvalue, plugin.from_type) and
-                isinstance(newvalue, plugin.to_type) and
-                (
-                    plugin.dialect is None or
-                    sgdb_in(self.table.migration.conn.engine, plugin.dialects)
-                )
-            ):
-                return plugin()
-
-        return None
 
     def apply_change_add_schema(self, action):
         _, schema = action
@@ -733,14 +738,6 @@ class MigrationColumnTypePlugin:
         subclass
         """
         raise NotImplementedError()
-
-    @property
-    def dialects(self):
-        """Get sqlalchemy dialects for the migration"""
-        if not isinstance(self.dialect, list):
-            return [self.dialect]
-
-        return self.dialect
 
 
 class MigrationColumn:

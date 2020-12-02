@@ -147,27 +147,20 @@ def registry(request, clean_db, bloks_loaded):
     return registry
 
 
-class MockMigrationColumnTypePlugin(MigrationColumnTypePlugin):
-
-    to_type = TEXT
-    from_type = Str
-    dialect = ['MySQL']
-
-
 class MockMigrationColumnTypePluginInteger2String(MigrationColumnTypePlugin):
 
     to_type = String
     from_type = Integer
     dialect = None
 
-    def apply(self, c, **kwargs):
-        pass
 
+class MockMigrationColumnTypePluginInteger2StringMySQL(
+    MigrationColumnTypePlugin
+):
 
-class MockMigrationColumnTypePluginLoaderForMySQL:
-
-    def load():
-        return MockMigrationColumnTypePlugin
+    to_type = String
+    from_type = Integer
+    dialect = ['MySQL']
 
 
 class TestMigration:
@@ -1099,7 +1092,7 @@ class TestMigrationPlugin:
             [None, None, 'test', 'other', {}, Integer(), Boolean()])
         assert res is False
 
-    def test_alter_column_type_with_plugin_2(self, registry_plugin):
+    def test_alter_column_type_with_plugin_1(self, registry_plugin):
         report = MigrationReport(registry_plugin.migration, [])
         report.plugins = [
             MockMigrationColumnTypePluginInteger2String,
@@ -1112,7 +1105,7 @@ class TestMigrationPlugin:
                 [None, None, 'test', 'other', {}, Integer(), String()])
             mockapply.assert_called()
 
-    def test_alter_column_type_with_plugin_3(self, registry_plugin):
+    def test_alter_column_type_with_plugin_2(self, registry_plugin):
         report = MigrationReport(registry_plugin.migration, [])
         report.plugins = [
             MockMigrationColumnTypePluginInteger2String,
@@ -1122,4 +1115,35 @@ class TestMigrationPlugin:
         ) as mockapply:
             report.apply_change_modify_type(
                 [None, None, 'test', 'other', {}, String(), Integer()])
+            mockapply.assert_called()
+
+    @pytest.mark.skipif(
+        not sgdb_in(['MySQL', 'MariaDB']),
+        reason='Plugin for MySQL only')
+    def test_alter_column_type_with_plugin_3(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        report.plugins = [
+            MockMigrationColumnTypePluginInteger2StringMySQL,
+        ]
+        with patch(
+            'anyblok.tests.test_migration.'
+            'MockMigrationColumnTypePluginInteger2StringMySQL.apply'
+        ) as mockapply:
+            report.apply_change_modify_type(
+                [None, None, 'test', 'other', {}, Integer(), String()])
+            mockapply.assert_called()
+
+    @pytest.mark.skipif(
+        sgdb_in(['MySQL', 'MariaDB']),
+        reason='Plugin for MySQL only')
+    def test_alter_column_type_with_plugin_4(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        report.plugins = [
+            MockMigrationColumnTypePluginInteger2StringMySQL,
+        ]
+        with patch(
+            'anyblok.migration.MigrationColumn.alter'
+        ) as mockapply:
+            report.apply_change_modify_type(
+                [None, None, 'test', 'other', {}, Integer(), String()])
             mockapply.assert_called()
