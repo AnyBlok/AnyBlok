@@ -366,6 +366,8 @@ class MigrationReport:
             if isinstance(diff[5], BIT) and isinstance(diff[6], Boolean):
                 # Boolean are TINYINT in MySQL DataBase
                 return True
+        # selected_plugin = self.get_plugin_for(oldvalue, newvalue)
+        # if selected_plugin is not None:
 
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
         self.log_names.append("Modify column type %s.%s : %s => %s" % (
@@ -480,6 +482,22 @@ class MigrationReport:
         """
         return log in self.logs
 
+    def get_plugin_for(self, oldvalue, newvalue):
+        """search plugin by column types"""
+        for plugin in self.plugins:
+            if (
+                issubclass(plugin, MigrationColumnTypePlugin) and
+                isinstance(oldvalue, plugin.from_type) and
+                isinstance(newvalue, plugin.to_type) and
+                (
+                    plugin.dialect is None or
+                    sgdb_in(self.table.migration.conn.engine, plugin.dialects)
+                )
+            ):
+                return plugin()
+
+        return None
+
     def apply_change_add_schema(self, action):
         _, schema = action
         self.migration.schema().add(schema)
@@ -521,23 +539,9 @@ class MigrationReport:
         else:
             t = self.migration.table(table)
 
-        # search plugin by column types
-        selected_plugin = None
-        for plugin in self.plugins:
-            if (
-                issubclass(plugin, MigrationColumnTypePlugin) and
-                plugin.from_type == oldvalue and
-                plugin.to_type == newvalue and
-                (
-                    plugin.dialect is None or
-                    sgdb_in(self.table.migration.conn.engine, plugin.dialects)
-                )
-            ):
-                selected_plugin = plugin()
-                break
-
-        if selected_plugin:
-            selected_plugin.apply(t.column(column))
+        selected_plugin = self.get_plugin_for(oldvalue, newvalue)
+        if selected_plugin is not None:
+            selected_plugin.apply(t.column(column), **kwargs)
         else:
             t.column(column).alter(
                 type_=newvalue, existing_type=oldvalue, **kwargs)
