@@ -136,5 +136,9 @@ setup(
             'cache=anyblok.model.cache:CachePlugin',
             'field_datetime=anyblok.model.field_datetime:AutoUpdatePlugin',
         ],
+        'anyblok.migration_type.plugins': [
+            'mysql-bool2tinyint=anyblok.plugins:BooleanToTinyIntMySQL',
+            'mssql-bool2bit=anyblok.plugins:BooleanToBitMsSQL',
+        ],
     },
 )

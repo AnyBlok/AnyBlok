@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# This file is a part of the AnyBlok project
+#
+#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2019 Joachim Trouverie
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file,You can
+# obtain one at http://mozilla.org/MPL/2.0/.
+from pkg_resources import iter_entry_points
 from sqlalchemy.exc import IntegrityError, OperationalError
 from alembic.migration import MigrationContext
 from alembic.autogenerate import compare_metadata
@@ -7,9 +20,6 @@ from contextlib import contextmanager
 from sqlalchemy import func, select, update, join, and_, text
 from anyblok.config import Configuration
 from sqlalchemy.engine.reflection import Inspector
-from sqlalchemy.dialects.mysql.types import TINYINT
-from sqlalchemy.dialects.mssql.base import BIT
-from sqlalchemy.sql.sqltypes import Boolean
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 from .common import sgdb_in
@@ -18,6 +28,9 @@ from sqlalchemy.schema import (
 from logging import getLogger
 
 logger = getLogger(__name__)
+
+
+MIGRATION_TYPE_PLUGINS_NAMESPACE = 'anyblok.migration_type.plugins'
 
 
 class AlterSchema(DDLElement):
@@ -354,13 +367,9 @@ class MigrationReport:
         if diff[3] in self.ignore_migration_for(diff[2], []):
             return True
 
-        if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
-            if isinstance(diff[5], TINYINT) and isinstance(diff[6], Boolean):
-                # Boolean are TINYINT in MySQL DataBase
-                return True
-        if sgdb_in(self.migration.conn.engine, ['MsSQL']):
-            if isinstance(diff[5], BIT) and isinstance(diff[6], Boolean):
-                # Boolean are TINYINT in MySQL DataBase
+        selected_plugin = self.get_plugin_for(diff[5], diff[6])
+        if selected_plugin is not None:
+            if not selected_plugin.need_to_modify_type():
                 return True
 
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
@@ -392,6 +401,42 @@ class MigrationReport:
             table, diff[3], diff[5], diff[6]))
         return False
 
+    def init_plugins(self):
+        """Get migration plugins from entry points"""
+
+        def dialect_sort(plugin):
+            """Sort plugins with dialect not None first"""
+            return (plugin.dialect is None, plugin.dialect)
+
+        plugins = sorted((
+            entry_point.load()
+            for entry_point
+            in iter_entry_points(MIGRATION_TYPE_PLUGINS_NAMESPACE)
+        ), key=dialect_sort)
+
+        return plugins
+
+    def get_plugin_for(self, oldvalue, newvalue):
+        """search plugin by column types"""
+        for plugin in self.plugins:
+            if isinstance(plugin.dialect, (tuple, list)):
+                dialects = plugin.dialect
+            else:
+                dialects = [plugin.dialect]
+
+            if (
+                issubclass(plugin, MigrationColumnTypePlugin) and
+                isinstance(oldvalue, plugin.from_type) and
+                isinstance(newvalue, plugin.to_type) and
+                (
+                    plugin.dialect is None or
+                    sgdb_in(self.migration.conn.engine, dialects)
+                )
+            ):
+                return plugin()
+
+        return None
+
     def __init__(self, migration, diffs):
         """ Initializer
 
@@ -404,6 +449,7 @@ class MigrationReport:
         self.actions = []
         self.diffs = diffs
         self.log_names = []
+        self.plugins = self.init_plugins()
         mappers = {
             'add_schema': self.init_add_schema,
             'add_table': self.init_add_table,
@@ -501,8 +547,12 @@ class MigrationReport:
         else:
             t = self.migration.table(table)
 
-        t.column(column).alter(
-            type_=newvalue, existing_type=oldvalue, **kwargs)
+        selected_plugin = self.get_plugin_for(oldvalue, newvalue)
+        if selected_plugin is not None:
+            selected_plugin.apply(t.column(column), **kwargs)
+        else:
+            t.column(column).alter(
+                type_=newvalue, existing_type=oldvalue, **kwargs)
 
     def apply_change_modify_default(self, action):
         _, schema, table, column, kwargs, oldvalue, newvalue = action
@@ -657,6 +707,49 @@ class MigrationConstraintForeignKey:
             self.name, self.table.name, type_='foreignkey',
             schema=self.table.schema)
         return self
+
+
+class MigrationColumnTypePlugin:
+    """Meta class for column migration type plugin
+
+    Must be exposed as entry point in namespace 'anyblok.migration_type.plugins'
+
+    :param to_type: Column type value (sqlalchemy.types) as used in Model
+                    classes in source code
+    :param from_type: Column type value (sqlalchemy.types) as required to
+                      communicate with the DBMS
+    :param dialect: DB dialect (list of strings or string)
+
+    Example::
+
+    class BooleanToTinyIntMySQL(MigrationColumnTypePlugin):
+
+        to_type = sqlalchemy.types.Boolean
+        from_type = sqlalchemy.types.TINYINT
+        dialect = ['MySQL', 'MariaDB']
+
+        def need_to_modify_type(self):
+            return False
+
+        def apply(self, column, **kwargs):
+            '''Boolean are TINYINT in MySQL DataBases'''
+            # do nothing
+            pass
+    """
+
+    to_type = None
+    from_type = None
+    dialect = None
+
+    def apply(self, column, **kwargs):
+        """Apply column migration, this method MUST be overriden in plugins
+        subclass
+        """
+        raise NotImplementedError()
+
+    def need_to_modify_type(self, column, **kwargs):
+        """If False the type won't be modified"""
+        return True
 
 
 class MigrationColumn:
