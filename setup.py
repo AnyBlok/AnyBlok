@@ -16,7 +16,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '0.22.5'
+version = '1.0.0'
 
 
 if sys.version_info < (3, 5):

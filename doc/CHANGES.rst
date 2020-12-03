@@ -16,7 +16,7 @@
 CHANGELOG
 =========
 
-1.0.0 (Unreleased)
+1.0.0 (2020-12-03)
 ------------------
 
 * Added Sequence with *no gap* to provide functional sequence without gaps.
