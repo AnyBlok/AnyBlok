@@ -36,7 +36,6 @@ COLUMNS = [
     Time,
     Email,
     UUID,
-    Country,
     Selection,
 ]
 
