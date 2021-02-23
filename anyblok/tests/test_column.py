@@ -317,7 +317,6 @@ class TestColumns:
         registry = self.init_registry(simple_column, ColumnType=String)
         test = registry.Test.insert()
         self.registry.Test.query().filter_by(id=test.id).update({'col': False})
-        assert test.col is False
         self.registry.expire(test, ['col'])
         assert test.col == ''
 
@@ -371,7 +370,6 @@ class TestColumns:
         registry = self.init_registry(simple_column, ColumnType=Text)
         test = registry.Test.insert()
         self.registry.Test.query().filter_by(id=test.id).update({'col': False})
-        assert test.col is False
         self.registry.expire(test, ['col'])
         assert test.col == ''
 
@@ -460,6 +458,7 @@ class TestColumns:
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
         registry.Test.query().update(dict(col=now))
+        registry.refresh(test)
         assert test.col == now
 
     def test_datetime_by_query_none_value(self, dt_column_type):
