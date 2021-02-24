@@ -88,6 +88,10 @@ class Field:
         fget = self.wrap_getter_column(fieldname)
         fset = self.wrap_setter_column(fieldname)
         fexp = self.wrap_expr_column(fieldname)
+
+        for func in (fget, fset, fexp):
+            func.__name__ = fieldname
+
         hybrid = hybrid_property(fget)
         hybrid = hybrid.setter(fset)
         hybrid = hybrid.expression(fexp)
@@ -106,7 +110,6 @@ class Field:
         def getter_column(model_self):
             return self.getter_format_value(getattr(model_self, attr_name))
 
-        getter_column.__name__ = fieldname
         return getter_column
 
     def wrap_expr_column(self, fieldname):
@@ -119,7 +122,6 @@ class Field:
         def expr_column(model_self):
             return getattr(model_self, attr_name)
 
-        expr_column.__name__ = fieldname
         return expr_column
 
     def expire_related_attribute(self, model_self, action_todos):
@@ -155,7 +157,6 @@ class Field:
             self.expire_related_attribute(model_self, action_todos)
             return res
 
-        setter_column.__name__ = fieldname
         return setter_column
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
