@@ -102,11 +102,11 @@ def get_url(db_name=None):
     if url:
         url = make_url(url)
         if username:
-            url.username = username
+            url = url.set(username=username)
         if password:
-            url.password = password
+            url = url.set(password=password)
         if database:
-            url.database = database
+            url = url.set(database=database)
 
         return url
 
