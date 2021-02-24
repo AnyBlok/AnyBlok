@@ -9,7 +9,6 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from logging import getLogger
 from sqlalchemy import create_engine, event, MetaData
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
@@ -26,6 +25,8 @@ from .logging import log
 import sqlalchemy.interfaces
 from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.orm.decl_base import _declarative_constructor
+from sqlalchemy.orm.decl_api import DeclarativeMeta, registry as SQLARegistry
 
 try:
     import pyodbc
@@ -421,6 +422,39 @@ class RegistryManager:
         blok = EnvironmentManager.get('current_blok')
         if cls.has_blok_property(property_):
             del cls.loaded_bloks[blok]['properties'][property_]
+
+
+class NewSQLARegistry(SQLARegistry):
+
+    def __getattr__(self, key):
+        sself = super(NewSQLARegistry, self)
+        if hasattr(sself, key):
+            return getattr(sself, key)
+
+        return getattr(self._class_registry['registry'], key)
+
+
+def declarative_base(
+    bind=None,
+    metadata=None,
+    mapper=None,
+    cls=object,
+    name="Base",
+    constructor=_declarative_constructor,
+    class_registry=None,
+    metaclass=DeclarativeMeta,
+):
+    return NewSQLARegistry(
+        _bind=bind,
+        metadata=metadata,
+        class_registry=class_registry,
+        constructor=constructor,
+    ).generate_base(
+        mapper=mapper,
+        cls=cls,
+        name=name,
+        metaclass=metaclass,
+    )
 
 
 class Registry:
@@ -1415,7 +1449,10 @@ class Registry:
 
         logger.info("Change state %s => %s for blok %s" % (
             blok.state, state, blok_name))
-        query.update({Blok.state: state})
+        Q = "UPDATE system_blok SET state='%s' where name='%s';" % (
+            state, blok_name)
+        self.execute(Q)
+        # blok.update(state=state)
 
     @log(logger, level='debug', withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):
