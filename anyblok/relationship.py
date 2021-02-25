@@ -360,19 +360,21 @@ class Many2One(RelationShip):
             if not isinstance(self._remote_columns, (list, tuple)):
                 self._remote_columns = [self._remote_columns]
 
-        self.nullable = True
-        if 'nullable' in kwargs:
-            self.nullable = self.kwargs.pop('nullable')
-            self.kwargs['info']['nullable'] = self.nullable
+        self.primary_key = self.kwargs.pop('primary_key', False)
+        self.kwargs['info']['primary_key'] = self.primary_key
+
+        self.nullable = False if self.primary_key else True
+        nullable = self.kwargs.pop('nullable', True)
+        if not self.primary_key:
+            self.nullable = nullable
+
+        self.kwargs['info']['nullable'] = self.nullable
 
         self.unique = self.kwargs.pop('unique', False)
         self.kwargs['info']['unique'] = self.unique
 
         self.index = self.kwargs.pop('index', False)
         self.kwargs['info']['index'] = self.index
-
-        self.primary_key = self.kwargs.pop('primary_key', False)
-        self.kwargs['info']['primary_key'] = self.primary_key
 
         if 'one2many' in kwargs:
             self.kwargs['backref'] = backref = self.kwargs.pop('one2many')
