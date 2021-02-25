@@ -19,7 +19,7 @@ from alembic.operations import Operations
 from contextlib import contextmanager
 from sqlalchemy import func, select, update, join, and_, text
 from anyblok.config import Configuration
-from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy import inspect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 from .common import sgdb_in
@@ -1454,7 +1454,7 @@ class Migration:
 
         :rtype: MigrationReport instance
         """
-        inspector = Inspector(self.conn)
+        inspector = inspect(self.conn)
         if schema_only:
             diff = self.detect_added_new_schema(inspector)
         else:
