@@ -20,8 +20,7 @@ from anyblok.column import (
     Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection,
     TimeStamp)
 from anyblok.relationship import Many2One, ordering_list
-from sqlalchemy import ForeignKeyConstraint
-from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy import ForeignKeyConstraint, inspect
 from .conftest import init_registry_with_bloks, init_registry, reset_db
 
 
@@ -653,7 +652,7 @@ class TestMany2OneOld:
                 address = Many2One(model=Model.Address, index=True)
 
         registry = self.init_registry(add_in_registry)
-        inspector = Inspector(registry.session.connection())
+        inspector = inspect(registry.session.connection())
         indexes = inspector.get_indexes(registry.Person.__tablename__)
         assert len(indexes) == 1
 
@@ -672,8 +671,9 @@ class TestMany2OneOld:
                 address = Many2One(model=Model.Address, primary_key=True)
 
         registry = self.init_registry(add_in_registry)
-        inspector = Inspector(registry.session.connection())
-        pks = inspector.get_primary_keys(registry.Person.__tablename__)
+        inspector = inspect(registry.session.connection())
+        constraint = inspector.get_pk_constraint(registry.Person.__tablename__)
+        pks = constraint['constrained_columns']
         assert 'address_id' in pks
 
     def test_complet_with_multi_foreign_key(self):
