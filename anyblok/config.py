@@ -113,8 +113,9 @@ def get_url(db_name=None):
     if drivername is None:
         raise ConfigurationException('No driver name defined')
 
-    return URL(drivername, username=username, password=password, host=host,
-               port=port, database=database, query=query)
+    return URL.create(
+        drivername, username=username, password=password, host=host,
+        port=port, database=database, query=query)
 
 
 class ConfigurationException(LookupError):
