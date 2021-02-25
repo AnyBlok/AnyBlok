@@ -1590,7 +1590,7 @@ class Migration:
 
         :param name: name of the savepoint
         """
-        self.conn._rollback_to_savepoint_impl(name, None)
+        self.conn._rollback_to_savepoint_impl(name)
 
     def release_savepoint(self, name):
         """ Release the save point
