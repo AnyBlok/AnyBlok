@@ -364,8 +364,9 @@ class Many2One(RelationShip):
         self.kwargs['info']['primary_key'] = self.primary_key
 
         self.nullable = False if self.primary_key else True
-        if 'nullable' in kwargs and not self.primary_key:
-            self.nullable = self.kwargs.pop('nullable')
+        nullable = self.kwargs.pop('nullable', True)
+        if not self.primary_key:
+            self.nullable = nullable
 
         self.kwargs['info']['nullable'] = self.nullable
 
