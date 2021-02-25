@@ -871,7 +871,7 @@ class Text(Column):
 
 class StrSelection(str):
     """Class representing the data of one column Selection """
-    selections = {}
+    selections = dumps({})
     registry = None
     namespace = None
 
@@ -880,11 +880,12 @@ class StrSelection(str):
 
         :return: selections dict
         """
-        if isinstance(self.selections, dict):
-            return self.selections
-        if isinstance(self.selections, str):
+        selections = loads(self.selections)
+        if isinstance(selections, dict):
+            return selections
+        if isinstance(selections, str):
             m = self.registry.get(self.namespace)
-            return dict(getattr(m, self.selections)())
+            return dict(getattr(m, selections)())
 
     def validate(self):
         """Validate if the key is in the selections
@@ -929,6 +930,7 @@ class SelectionType(types.TypeDecorator):
                         '%r is too long %r, waiting max %s or use size arg' % (
                             k, len(k), size))
 
+        self.selections = dumps(self.selections)
         self._StrSelection = type('StrSelection', (StrSelection,),
                                   {'selections': self.selections,
                                    'registry': registry,
@@ -1080,7 +1082,7 @@ class Selection(Column):
             # No check constraint in MariaDB
             return []
 
-        selections = self.sqlalchemy_type.selections
+        selections = loads(self.sqlalchemy_type.selections)
         if isinstance(selections, dict):
             enum = selections.keys()
         else:
