@@ -22,7 +22,7 @@ from anyblok.common import anyblok_column_prefix, naming_convention
 from pkg_resources import iter_entry_points
 from .version import parse_version
 from .logging import log
-import sqlalchemy.interfaces
+# import sqlalchemy.interfaces
 from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.decl_base import _declarative_constructor
@@ -59,12 +59,12 @@ def return_list(entry):
     return entry
 
 
-class DontBeSilly(sqlalchemy.interfaces.PoolListener):
-    def connect(self, dbapi_con, connection_record):
-        cur = dbapi_con.cursor()
-        cur.execute("SET autocommit=0;")
-        cur.execute("SET SESSION sql_mode='TRADITIONAL';")
-        cur = None
+# class DontBeSilly(sqlalchemy.interfaces.PoolListener):
+#     def connect(self, dbapi_con, connection_record):
+#         cur = dbapi_con.cursor()
+#         cur.execute("SET autocommit=0;")
+#         cur.execute("SET SESSION sql_mode='TRADITIONAL';")
+#         cur = None
 
 
 class RegistryManager:
@@ -505,10 +505,10 @@ class Registry:
                 'isolation_level',
                 Configuration.get('isolation_level', 'READ_UNCOMMITTED')
             ),
-            listeners=[]
+            # listeners=[]
         )
-        if url.drivername.startswith('mysql'):
-            options['listeners'].append(DontBeSilly())
+        # if url.drivername.startswith('mysql'):
+        #     options['listeners'].append(DontBeSilly())
 
         return options
 
