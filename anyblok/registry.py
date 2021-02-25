@@ -948,11 +948,8 @@ class Registry:
             Session = type('Session', tuple(session_bases), {
                 'registry_query': Query})
 
-            extension = self.additional_setting.get('sa.session.extension')
-            if extension:
-                extension = extension()
             self.Session = scoped_session(
-                sessionmaker(bind=bind, class_=Session, extension=extension),
+                sessionmaker(bind=bind, class_=Session),
                 EnvironmentManager.scoped_function_for_session())
 
             self.nb_query_bases = len(self.loaded_cores['Query'])
