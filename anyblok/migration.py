@@ -893,9 +893,15 @@ class MigrationColumn:
             'existing_type': kwargs.get(
                 'existing_type',
                 self.type if 'type_' not in kwargs else None),
-            'existing_autoincrement': kwargs.get(
-                'existing_autoincrement',
-                self.autoincrement if 'autoincrement' not in kwargs else None),
+            'existing_autoincrement': (
+                None
+                if not sgdb_in(self.table.migration.conn.engine,
+                               ['MySQL', 'MariaDB'])
+                else kwargs.get(
+                    'existing_autoincrement',
+                    self.autoincrement
+                    if 'autoincrement' not in kwargs else None)
+            ),
             'existing_comment': kwargs.get(
                 'existing_comment',
                 self.comment if 'comment' not in kwargs else None)
@@ -924,13 +930,11 @@ class MigrationColumn:
                 self.table.migration.operation.alter_column(
                     self.table.name, self.name, nullable=nullable,
                     schema=self.table.schema, **vals)
-            except IntegrityError as e:
-                # POSTGRES
+                self.table.migration.release_savepoint(savepoint)
+            except (IntegrityError, OperationalError) as e:
+                # IntegrityError => POSTGRES
+                # OperationalError => MariaDB, MySQL (NO SAVEPOIN)
                 self.table.migration.rollback_savepoint(savepoint)
-                logger.warning(str(e))
-            except OperationalError as e:
-                # MariaDB, MySQL
-                # No save point, because already rollbacked
                 logger.warning(str(e))
 
         return MigrationColumn(self.table, name)
@@ -1059,10 +1063,9 @@ class MigrationConstraintUnique:
             self.table.migration.operation.create_unique_constraint(
                 self.name, self.table.name, columns_name,
                 schema=self.table.schema)
+            self.table.migration.release_savepoint(savepoint)
         except (IntegrityError, OperationalError) as e:
-            if not sgdb_in(self.table.migration.conn.engine,
-                           ['MySQL', 'MariaDB']):
-                self.table.migration.rollback_savepoint(savepoint)
+            self.table.migration.rollback_savepoint(savepoint)
 
             logger.warning(
                 "Error during the add of new unique constraint %r "
@@ -1583,6 +1586,12 @@ class Migration:
         :param name: name of the save point
         :rtype: return the name of the save point
         """
+        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+            logger.warning(
+                "Try to create a SAVEPOINT, but %r don't have this "
+                "functionality" % self.conn.engine.dialect)
+            return
+
         return self.conn._savepoint_impl(name=name)
 
     def rollback_savepoint(self, name):
@@ -1590,6 +1599,12 @@ class Migration:
 
         :param name: name of the savepoint
         """
+        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+            logger.warning(
+                "Try to ROLLBACK TO SAVEPOINT, but %r don't have this "
+                "functionality" % self.conn.engine.dialect)
+            return
+
         self.conn._rollback_to_savepoint_impl(name)
 
     def release_savepoint(self, name):
@@ -1597,7 +1612,13 @@ class Migration:
 
         :param name: name of the savepoint
         """
-        self.conn._release_savepoint_impl(name, None)
+        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+            logger.warning(
+                "Try to RELEASE SAVEPOINT, but %r don't have this "
+                "functionality" % self.conn.engine.dialect)
+            return
+
+        self.conn._release_savepoint_impl(name)
 
     def render_item(self, type_, obj, autogen_context):
         logger.debug("%r, %r, %r" % (type_, obj, autogen_context))

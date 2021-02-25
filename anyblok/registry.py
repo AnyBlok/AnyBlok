@@ -1213,7 +1213,9 @@ class Registry:
 
         if self.Session:
             session = self.Session()
-            session.rollback()
+            if not self.unittest_transaction:
+                session.rollback()
+
             session.expunge_all()
             close_all_sessions()
 

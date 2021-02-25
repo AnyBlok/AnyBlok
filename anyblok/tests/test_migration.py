@@ -138,7 +138,7 @@ def registry(request, clean_db, bloks_loaded):
                       'testchecklongconstraintname', 'testindex'):
             try:
                 registry.migration.table(table).drop()
-            except MigrationException:
+            except MigrationException as e:
                 pass
 
         registry.close()
@@ -1050,6 +1050,7 @@ class TestMigration:
     @pytest.mark.skipif(sgdb_in(['MsSQL']),
                         reason="No error when rollback to released save point")
     def test_savepoint_without_rollback(self, registry):
+        raise Exception('This fail and break more than this test')
         registry.migration.savepoint('test')
         registry.migration.release_savepoint('test')
         with pytest.raises((InternalError, OperationalError)):
