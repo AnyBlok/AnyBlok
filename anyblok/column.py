@@ -574,6 +574,12 @@ class DateTime(Column):
         value = convert_string_to_datetime(value)
         return add_timezone_on_datetime(value, self.default_timezone)
 
+    def getter_format_value(self, value):
+        import ipdb
+        ipdb.set_trace()
+        value = convert_string_to_datetime(value)
+        return add_timezone_on_datetime(value, self.default_timezone)
+
     def autodoc_get_properties(self):
         """Return properties for autodoc
 
