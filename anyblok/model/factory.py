@@ -8,7 +8,7 @@
 from .exceptions import ModelFactoryException
 from anyblok.field import Field, FieldException
 from sqlalchemy import table, and_, event
-from sqlalchemy.orm import Query, mapper, relationship
+from sqlalchemy.orm import Query, relationship
 from .exceptions import ViewException
 from anyblok.common import anyblok_column_prefix
 from sqlalchemy_views import CreateView, DropView
@@ -114,8 +114,9 @@ class ViewFactory(BaseFactory):
             if isinstance(selectable, Query):
                 selectable = selectable.subquery()
 
-            for c in selectable.c:
-                c._make_proxy(view)
+            for c in selectable.subquery().columns:
+                col = c._make_proxy(view)[1]
+                view._columns.replace(col)
 
             metadata = self.registry.declarativebase.metadata
             event.listen(metadata, 'before_create', DropView(
@@ -135,13 +136,10 @@ class ViewFactory(BaseFactory):
                 "%r have any primary key defined" % base)
 
         pks = [getattr(view.c, x) for x in pks]
-
         mapper_properties = self.get_mapper_properties(base, view, properties)
-        setattr(base, '__view__', view)
-        __mapper__ = mapper(
+        base.registry.declarativebase.registry.map_imperatively(
             base, view, primary_key=pks, properties=mapper_properties)
-        self.registry.declarativebase._decl_class_registry[base.__name__] = base
-        setattr(base, '__mapper__', __mapper__)
+        setattr(base, '__view__', view)
 
     def get_mapper_properties(self, base, view, properties):
         mapper_properties = base.define_mapper_args()
