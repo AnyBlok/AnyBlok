@@ -30,7 +30,7 @@ from anyblok.column import (
     CompareType, Column, Boolean, Json, String, BigInteger, Text, Selection,
     Date, DateTime, Time, Interval, Decimal, Float, LargeBinary, Integer,
     Sequence, Color, Password, UUID, URL, PhoneNumber, Email, Country,
-    TimeStamp, Enum)
+    TimeStamp, Enum, add_timezone_on_datetime)
 
 
 time_params = [DateTime]
@@ -317,7 +317,6 @@ class TestColumns:
         registry = self.init_registry(simple_column, ColumnType=String)
         test = registry.Test.insert()
         self.registry.Test.query().filter_by(id=test.id).update({'col': False})
-        assert test.col is False
         self.registry.expire(test, ['col'])
         assert test.col == ''
 
@@ -371,7 +370,6 @@ class TestColumns:
         registry = self.init_registry(simple_column, ColumnType=Text)
         test = registry.Test.insert()
         self.registry.Test.query().filter_by(id=test.id).update({'col': False})
-        assert test.col is False
         self.registry.expire(test, ['col'])
         assert test.col == ''
 
@@ -456,11 +454,13 @@ class TestColumns:
 
     def test_datetime_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
+        d = datetime.datetime(2020, 7, 3, 18, 59, 0)
+        d = add_timezone_on_datetime(d, timezone)
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
         test = registry.Test.insert()
-        registry.Test.query().update(dict(col=now))
-        assert test.col == now
+        registry.Test.query().update(dict(col=d))
+        registry.refresh(test)
+        assert test.col == d
 
     def test_datetime_by_query_none_value(self, dt_column_type):
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
