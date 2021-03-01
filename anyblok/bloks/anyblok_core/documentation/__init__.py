@@ -33,10 +33,10 @@ class Documentation(Declarations.Mixin.DocElement):
         self.models = []
 
     def auto_doc_blok(self):
-        self._auto_doc(self.registry.Documentation.Blok, self.bloks)
+        self._auto_doc(self.anyblok.Documentation.Blok, self.bloks)
 
     def auto_doc_model(self):
-        self._auto_doc(self.registry.Documentation.Model, self.models)
+        self._auto_doc(self.anyblok.Documentation.Model, self.models)
 
     def auto_doc(self):
         self.auto_doc_blok()
@@ -75,10 +75,10 @@ class Documentation(Declarations.Mixin.DocElement):
             m.toSQL_add_fields(dot)
 
     def toRST_blok(self, doc):
-        self._toRST(doc, self.registry.Documentation.Blok, self.bloks)
+        self._toRST(doc, self.anyblok.Documentation.Blok, self.bloks)
 
     def toRST_model(self, doc):
-        self._toRST(doc, self.registry.Documentation.Model, self.models)
+        self._toRST(doc, self.anyblok.Documentation.Model, self.models)
 
 
 from . import blok  # noqa

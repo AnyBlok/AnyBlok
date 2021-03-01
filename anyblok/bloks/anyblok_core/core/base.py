@@ -30,16 +30,16 @@ class Base:
 
         :param event: Name of the event
         """
-        events = cls.registry.events
+        events = cls.anyblok.events
         if cls.__registry_name__ in events:
             if event in events[cls.__registry_name__]:
                 for model, method in events[cls.__registry_name__][event]:
-                    m = cls.registry.get(model)
+                    m = cls.anyblok.get(model)
                     getattr(m, method)(*args, **kwargs)
 
     @classmethod
     def get_model(cls, model):
-        return cls.registry.get(model)
+        return cls.anyblok.get(model)
 
     @classmethod
     def get_primary_keys(cls, **pks):
@@ -61,7 +61,7 @@ class Base:
         Since this is an ordinary instance method, it can't be used on the
         model class itself. For this use case, see :meth:`has_model_perm`
         """
-        return self.registry.check_permission(self, principals, permission)
+        return self.anyblok.check_permission(self, principals, permission)
 
     @classmethod
     def has_model_perm(cls, principals, permission):
@@ -70,7 +70,7 @@ class Base:
         Since this is a classmethod, even if called on a record, only its
         model class will be considered for the permission check.
         """
-        return cls.registry.check_permission(cls, principals, permission)
+        return cls.anyblok.check_permission(cls, principals, permission)
 
     @classmethod
     def precommit_hook(cls, method, *args, **kwargs):
@@ -84,7 +84,7 @@ class Base:
         :param method: the method to call on this model
         :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
         """
-        cls.registry.precommit_hook(
+        cls.anyblok.precommit_hook(
             cls.__registry_name__, method, *args, **kwargs)
 
     @classmethod
@@ -106,5 +106,5 @@ class Base:
         :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
         :param call_only_if: ['commited' (default), 'raised', 'always']
         """
-        cls.registry.postcommit_hook(
+        cls.anyblok.postcommit_hook(
             cls.__registry_name__, method, *args, **kwargs)

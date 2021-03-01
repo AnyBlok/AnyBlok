@@ -43,8 +43,8 @@ def simple_view():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T2.val.label('val2')])
@@ -73,8 +73,8 @@ def m2o_to_a_simple_view():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T2.val.label('val2')])
@@ -109,8 +109,8 @@ def deprecated_view_before_0_19_2():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T2.val.label('val2')])
@@ -139,8 +139,8 @@ def deprecated_view_before_0_19_4():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T2.val.label('val2')])
@@ -231,8 +231,8 @@ def view_with_relationship():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T1.rs_id.label('rs_id'),
@@ -300,9 +300,9 @@ def view_with_relationship_on_self():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            TP = cls.registry.T1.aliased()
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            TP = cls.anyblok.T1.aliased()
+            T2 = cls.anyblok.T2
             subquery = union(
                 select([
                     T1.code.label('code'),
@@ -346,9 +346,9 @@ def view_with_relationship_on_self_2():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            TP = cls.registry.T1.aliased()
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            TP = cls.anyblok.T1.aliased()
+            T2 = cls.anyblok.T2
             subquery = union(
                 select([
                     T1.code.label('code'),
@@ -434,8 +434,8 @@ def simple_view_with_same_table_by_declaration_model():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T2.val.label('val2')])
@@ -470,8 +470,8 @@ def simple_view_with_same_table_by_name():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T2.val.label('val2')])
@@ -506,8 +506,8 @@ def simple_view_with_same_table_by_inherit():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T2.val.label('val2')])
@@ -581,8 +581,8 @@ def simple_view_without_primary_key():
 
         @classmethod
         def sqlalchemy_view_declaration(cls):
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T1.val.label('val2')])

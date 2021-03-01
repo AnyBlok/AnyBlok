@@ -36,7 +36,7 @@ class Model:
     def get_model_doc_string(self):
         """ Return the docstring of the model
         """
-        m = self.registry.get(self.name)
+        m = self.anyblok.get(self.name)
         if hasattr(m, '__doc__'):
             return m.__doc__ or ''
 
@@ -44,23 +44,23 @@ class Model:
 
     @listen('Model.System.Model', 'Update Model')
     def listener_update_model(cls, model):
-        cls.registry.System.Cache.invalidate(model, '_fields_description')
-        cls.registry.System.Cache.invalidate(model, 'getFieldType')
-        cls.registry.System.Cache.invalidate(model, 'get_primary_keys')
-        cls.registry.System.Cache.invalidate(
+        cls.anyblok.System.Cache.invalidate(model, '_fields_description')
+        cls.anyblok.System.Cache.invalidate(model, 'getFieldType')
+        cls.anyblok.System.Cache.invalidate(model, 'get_primary_keys')
+        cls.anyblok.System.Cache.invalidate(
             model, 'find_remote_attribute_to_expire')
-        cls.registry.System.Cache.invalidate(
+        cls.anyblok.System.Cache.invalidate(
             model, 'find_relationship')
-        cls.registry.System.Cache.invalidate(
+        cls.anyblok.System.Cache.invalidate(
             model, 'get_hybrid_property_columns')
 
     @classmethod
     def get_field_model(cls, field):
         ftype = field.property.__class__.__name__
         if ftype == 'ColumnProperty':
-            return cls.registry.System.Column
+            return cls.anyblok.System.Column
         elif ftype == 'RelationshipProperty':
-            return cls.registry.System.RelationShip
+            return cls.anyblok.System.RelationShip
         else:
             raise Exception('Not implemented yet')
 
@@ -68,7 +68,7 @@ class Model:
     def get_field(cls, model, cname):
         if cname in model.loaded_fields.keys():
             field = model.loaded_fields[cname]
-            Field = cls.registry.System.Field
+            Field = cls.anyblok.System.Field
         else:
             field = getattr(model, cname)
             Field = cls.get_field_model(field)
@@ -77,10 +77,10 @@ class Model:
 
     @classmethod
     def update_fields(cls, model, table):
-        fsp = cls.registry.loaded_namespaces_first_step
-        m = cls.registry.get(model)
+        fsp = cls.anyblok.loaded_namespaces_first_step
+        m = cls.anyblok.get(model)
         # remove useless column
-        Field = cls.registry.System.Field
+        Field = cls.anyblok.System.Field
         query = Field.query()
         query = query.filter(Field.model == model)
         query = query.filter(Field.name.notin_(m.loaded_columns))
@@ -89,7 +89,7 @@ class Model:
                 if model_.remote:
                     continue
 
-                RelationShip = cls.registry.System.RelationShip
+                RelationShip = cls.anyblok.System.RelationShip
                 Q = RelationShip.query()
                 Q = Q.filter(RelationShip.name == model_.remote_name)
                 Q = Q.filter(RelationShip.model == model_.remote_model)
@@ -112,8 +112,8 @@ class Model:
 
     @classmethod
     def add_fields(cls, model, table):
-        fsp = cls.registry.loaded_namespaces_first_step
-        m = cls.registry.get(model)
+        fsp = cls.anyblok.loaded_namespaces_first_step
+        m = cls.anyblok.get(model)
         is_sql_model = len(m.loaded_columns) > 0
         cls.insert(name=model, table=table, schema=m.__db_schema__,
                    is_sql_model=is_sql_model)
@@ -129,11 +129,11 @@ class Model:
 
         :exception: Exception
         """
-        for model in cls.registry.loaded_namespaces.keys():
+        for model in cls.anyblok.loaded_namespaces.keys():
             try:
                 # TODO need refactor, then try except pass whenever refactor
                 # not apply
-                m = cls.registry.get(model)
+                m = cls.anyblok.get(model)
                 table = ''
                 if hasattr(m, '__tablename__'):
                     table = m.__tablename__
@@ -153,8 +153,8 @@ class Model:
         # remove model and field which are not in loaded_namespaces
         query = cls.query()
         query = query.filter(
-            cls.name.notin_(cls.registry.loaded_namespaces.keys()))
-        Field = cls.registry.System.Field
+            cls.name.notin_(cls.anyblok.loaded_namespaces.keys()))
+        Field = cls.anyblok.System.Field
         for model_ in query.all():
             Q = Field.query().filter(Field.model == model_.name)
             for field in Q.all():

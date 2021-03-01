@@ -104,9 +104,9 @@ class Sequence:
         """ Create the sequence to determine name """
         super(Sequence, cls).initialize_model()
         seq = SQLASequence(cls._cls_seq_name)
-        seq.create(cls.registry.bind)
+        seq.create(cls.anyblok.bind)
 
-        to_create = getattr(cls.registry,
+        to_create = getattr(cls.anyblok,
                             '_need_sequence_to_create_if_not_exist', ())
         if to_create is None:
             return
@@ -135,12 +135,12 @@ class Sequence:
             values.setdefault('seq_name', values.get("code", "no_gap"))
         else:
             if seq_name is None:
-                seq_id = cls.registry.execute(SQLASequence(cls._cls_seq_name))
+                seq_id = cls.anyblok.execute(SQLASequence(cls._cls_seq_name))
                 seq_name = '%s_%d' % (cls.__tablename__, seq_id)
                 values['seq_name'] = seq_name
 
             seq = SQLASequence(seq_name, start=start)
-            seq.create(cls.registry.bind)
+            seq.create(cls.anyblok.bind)
         return values
 
     @classmethod
@@ -163,7 +163,7 @@ class Sequence:
             self.refresh(with_for_update={"nowait": True})
             nextval = self.start if self.current is None else self.current + 1
         else:
-            nextval = self.registry.execute(SQLASequence(self.seq_name))
+            nextval = self.anyblok.execute(SQLASequence(self.seq_name))
         self.update(current=nextval)
         return self.formater.format(code=self.code, seq=nextval, id=self.id)
 
