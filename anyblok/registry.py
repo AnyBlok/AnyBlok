@@ -8,6 +8,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from logging import getLogger
+import warnings
 from sqlalchemy import create_engine, event, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -423,6 +424,18 @@ class RegistryManager:
             del cls.loaded_bloks[blok]['properties'][property_]
 
 
+class DeprecatedClassProperty:
+    def __init__(self, registry):
+        self.registry = registry
+
+    def __getattr__(self, key, **kw):
+        warnings.warn(
+            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
+            "own 'registry' attribute. Replace it by 'anyblok' attribute",
+            DeprecationWarning, stacklevel=2)
+        return getattr(self.registry, key, **kw)
+
+
 class Registry:
     """ Define one registry
 
@@ -441,7 +454,8 @@ class Registry:
         self.init_engine(db_name=db_name)
         self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
-            'registry': self,
+            'anyblok': self,
+            'registry': DeprecatedClassProperty(self),
             'Env': EnvironmentManager})
         self.withoutautomigration = Configuration.get('withoutautomigration')
         self.ini_var()
