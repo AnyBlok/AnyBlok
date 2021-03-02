@@ -135,9 +135,9 @@ class Field:
                 if obj is None:
                     continue
 
-            if obj in model_self.registry.session:
+            if obj in model_self.anyblok.session:
                 if obj._sa_instance_state.persistent:
-                    model_self.registry.expire(obj, attrs)
+                    model_self.anyblok.expire(obj, attrs)
 
     def setter_format_value(self, value):
         return value
@@ -148,7 +148,7 @@ class Field:
         def setter_column(model_self, value):
             action_todos = set()
             if fieldname in model_self.loaded_columns:
-                action_todos = model_self.registry.expire_attributes.get(
+                action_todos = model_self.anyblok.expire_attributes.get(
                     model_self.__registry_name__, {}).get(fieldname, set())
 
             self.expire_related_attribute(model_self, action_todos)

@@ -30,7 +30,7 @@ class Field:
     def define_table_args(cls):
         table_args = super(Field, cls).define_table_args()
         if cls.__registry_name__ != System.Field.__registry_name__:
-            F = cls.registry.System.Field
+            F = cls.anyblok.System.Field
             return table_args + (ForeignKeyConstraint([cls.name, cls.model],
                                                       [F.name, F.model],
                                                       ondelete="CASCADE"),)
@@ -64,8 +64,8 @@ class Field:
             'primary_key': False,
             'model': None,
         }
-        c = self.registry.loaded_namespaces_first_step[self.model][self.name]
-        c.update_description(self.registry, self.model, res)
+        c = self.anyblok.loaded_namespaces_first_step[self.model][self.name]
+        c.update_description(self.anyblok, self.model, res)
         return res
 
     @classmethod

@@ -223,6 +223,16 @@ class TestModel2:
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 
+    def test_anyblok_attribute(self):
+        registry = self.init_registry(simple_model)
+        self.check_registry(registry.Test)
+        assert registry.System.Model.anyblok
+
+    def test_deprecated_registry_attribute(self):
+        registry = self.init_registry(simple_model)
+        self.check_registry(registry.Test)
+        assert registry.System.Model.anyblok
+
     def test_model_is_assembled(self):
         with LogCapture('anyblok.registry', level=DEBUG) as logs:
             self.init_registry(None)

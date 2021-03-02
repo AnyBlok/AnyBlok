@@ -574,6 +574,10 @@ class DateTime(Column):
         value = convert_string_to_datetime(value)
         return add_timezone_on_datetime(value, self.default_timezone)
 
+    def getter_format_value(self, value):
+        value = convert_string_to_datetime(value)
+        return add_timezone_on_datetime(value, self.default_timezone)
+
     def autodoc_get_properties(self):
         """Return properties for autodoc
 
@@ -609,7 +613,8 @@ class TimeStamp(DateTime):
         self.sqlalchemy_type = types.TIMESTAMP(timezone=True)
 
     def getter_format_value(self, value):
-        return convert_string_to_datetime(value)
+        value = convert_string_to_datetime(value)
+        return add_timezone_on_datetime(value, self.default_timezone)
 
 
 class Time(Column):

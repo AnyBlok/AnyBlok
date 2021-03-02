@@ -80,7 +80,7 @@ class RelationShip(System.Field):
             elif ftype == "One2One":
                 remote_type = "One2One"
 
-            m = cls.registry.get(remote_model)
+            m = cls.anyblok.get(remote_model)
             vals = dict(code=m.__tablename__ + '.' + remote_name,
                         model=remote_model, name=remote_name,
                         local_columns=remote_columns, remote_model=model,
