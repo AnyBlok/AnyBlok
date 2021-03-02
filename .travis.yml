@@ -74,7 +74,10 @@ before_install:
 install:
   - pip install -U pip
   - pip install wheel
-  - pip install sqlalchemy $SQLPYCLIENT
+  - pip install sqlalchemy --pre
+  - pip install -e git+https://github.com/jssuzanne/sqlalchemy-utils.git#egg=sqlalchemy-utils
+  - pip install -e git+https://github.com/jssuzanne/sqlalchemy-views.git#egg=sqlalchemy-views
+  - pip install $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
   - pip install coveralls
