@@ -137,7 +137,7 @@ class ViewFactory(BaseFactory):
 
         pks = [getattr(view.c, x) for x in pks]
         mapper_properties = self.get_mapper_properties(base, view, properties)
-        base.registry.declarativebase.registry.map_imperatively(
+        base.anyblok.declarativebase.registry.map_imperatively(
             base, view, primary_key=pks, properties=mapper_properties)
         setattr(base, '__view__', view)
 

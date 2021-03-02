@@ -226,12 +226,18 @@ class TestModel2:
     def test_anyblok_attribute(self):
         registry = self.init_registry(simple_model)
         self.check_registry(registry.Test)
-        assert registry.System.Model.anyblok
+        assert registry.System.Model.anyblok is registry
+        t2 = Model.query().first()
+        registry.System.Model.anyblok.refresh(t2)
 
     def test_deprecated_registry_attribute(self):
         registry = self.init_registry(simple_model)
         self.check_registry(registry.Test)
-        assert registry.System.Model.anyblok
+        assert registry.System.registry  # NoSQL Base must also have registry
+        assert registry.System.Model.registry
+        assert registry.System.Model.registry is not registry
+        t2 = registry.Test.query().first()
+        registry.System.Model.registry.refresh(t2)
 
     def test_model_is_assembled(self):
         with LogCapture('anyblok.registry', level=DEBUG) as logs:
