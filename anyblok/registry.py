@@ -431,12 +431,24 @@ class NewSQLARegistry(SQLARegistry):
         sself = super(NewSQLARegistry, self)
         if hasattr(sself, key):
             return getattr(sself, key)
-          
+
         warnings.warn(
             "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
             "own 'registry' attribute. Replace it by 'anyblok' attribute",
             DeprecationWarning, stacklevel=2)
         return getattr(self._class_registry['registry'], key)
+
+
+class DeprecatedClassProperty:
+    def __init__(self, registry):
+        self.registry = registry
+
+    def __getattr__(self, key, **kw):
+        warnings.warn(
+            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
+            "own 'registry' attribute. Replace it by 'anyblok' attribute",
+            DeprecationWarning, stacklevel=2)
+        return getattr(self.registry, key, **kw)
 
 
 def declarative_base(
@@ -481,6 +493,7 @@ class Registry:
         self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
             'anyblok': self,
+            'registry': DeprecatedClassProperty(self),  # For Model No SQL
             'Env': EnvironmentManager})
         self.withoutautomigration = Configuration.get('withoutautomigration')
         self.ini_var()
