@@ -20,12 +20,12 @@ class Blok:
 
     @classmethod
     def filterBloks(cls, query):
-        Blok = cls.registry.System.Blok
+        Blok = cls.anyblok.System.Blok
         return query.filter(Blok.state == 'installed').order_by(Blok.order)
 
     @classmethod
     def getelements(cls):
-        Blok = cls.registry.System.Blok
+        Blok = cls.anyblok.System.Blok
         query = Blok.query()
         query = cls.filterBloks(query)
         return query.all()

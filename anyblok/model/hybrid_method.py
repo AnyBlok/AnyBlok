@@ -56,7 +56,7 @@ class HybridMethodPlugin(ModelPluginBase):
         def apply_wrapper(attr):
 
             def wrapper(self, *args, **kwargs):
-                self_ = self.registry.loaded_namespaces[self.__registry_name__]
+                self_ = self.anyblok.loaded_namespaces[self.__registry_name__]
                 if self is self_:
                     return getattr(super(new_base, self), attr)(
                         self, *args, **kwargs)

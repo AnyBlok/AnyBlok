@@ -103,7 +103,7 @@ class SqlMixin:
 
         is equal at::
 
-            query = self.registry.session.query(MyModel)
+            query = self.anyblok.session.query(MyModel)
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
@@ -117,9 +117,9 @@ class SqlMixin:
                 res.append(f)
 
         if res:
-            query = cls.registry.query(*res)
+            query = cls.anyblok.query(*res)
         else:
-            query = cls.registry.query(cls)
+            query = cls.anyblok.query(cls)
 
         query.set_Model(cls)
         return query
@@ -140,7 +140,7 @@ class SqlMixin:
         :rtype: SqlAlchemy aliased of the model
         """
         alias = aliased(cls, *args, **kwargs)
-        alias.registry = alias._aliased_insp._target.registry
+        alias.anyblok = cls.anyblok
         return alias
 
     @classmethod
@@ -223,7 +223,7 @@ class SqlMixin:
 
         :type: list of the primary keys name
         """
-        C = cls.registry.System.Column
+        C = cls.anyblok.System.Column
         query = C.query().distinct(C.name).options(load_only(C.name))
         query = query.filter(C.model.in_(cls.get_all_registry_names()))
         query = query.filter(C.primary_key == true())
@@ -232,7 +232,7 @@ class SqlMixin:
     @classmethod_cache()
     def _fields_description(cls):
         """ Return the information of the Field, Column, RelationShip """
-        Field = cls.registry.System.Field
+        Field = cls.anyblok.System.Field
         res = {}
         for registry_name in cls.__depends__:
             query = Field.query().filter(Field.model == registry_name)
@@ -261,7 +261,7 @@ class SqlMixin:
             fd = cls.fields_description(*pks)
             for pk in pks:
                 if fd[pk].get('model'):
-                    Model = cls.registry.get(fd[pk]['model'])
+                    Model = cls.anyblok.get(fd[pk]['model'])
                     hybrid_property_columns.extend(
                         Model.get_hybrid_property_columns())
 
@@ -409,7 +409,7 @@ class SqlMixin:
         :param name: name of the column
         :rtype: String, the name of the Type of column used
         """
-        Field = cls.registry.System.Field
+        Field = cls.anyblok.System.Field
         query = Field.query()
         query = query.filter(Field.name == name)
         query = query.filter(Field.model.in_(cls.get_all_registry_names()))
@@ -421,7 +421,7 @@ class SqlMixin:
         res = uniquedict()
         _fields = []
         _fields.extend(fields)
-        model = get_model_information(cls.registry, cls.__registry_name__)
+        model = get_model_information(cls.anyblok, cls.__registry_name__)
         while _fields:
             field = _fields.pop()
             field = field if isinstance(field, str) else field.name
@@ -434,7 +434,7 @@ class SqlMixin:
                                for mapper in y.column_names
                                if mapper.attribute_name == field)
                 if isinstance(_field, Column) and _field.foreign_key:
-                    rmodel = cls.registry.loaded_namespaces_first_step[
+                    rmodel = cls.anyblok.loaded_namespaces_first_step[
                         _field.foreign_key.model_name]
                     for rc in [x for x, y in rmodel.items()
                                if isinstance(y, RelationShip)
@@ -468,7 +468,7 @@ class SqlMixin:
         res = []
         _fields = []
         _fields.extend(fields)
-        model = get_model_information(cls.registry, cls.__registry_name__)
+        model = get_model_information(cls.anyblok, cls.__registry_name__)
         while _fields:
             field = _fields.pop()
             if not isinstance(field, str):
@@ -494,11 +494,11 @@ class SqlMixin:
         return res
 
 
-def get_model_information(registry, registry_name):
-    model = registry.loaded_namespaces_first_step[registry_name]
+def get_model_information(anyblok, registry_name):
+    model = anyblok.loaded_namespaces_first_step[registry_name]
     for depend in model['__depends__']:
         if depend != registry_name:
-            for x, y in get_model_information(registry, depend).items():
+            for x, y in get_model_information(anyblok, depend).items():
                 if x not in model:
                     model[x] = y
 
@@ -566,11 +566,11 @@ class SqlBase(SqlMixin):
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
         """
-        self.registry.refresh(self, fields, with_for_update=with_for_update)
+        self.anyblok.refresh(self, fields, with_for_update=with_for_update)
 
     def expunge(self):
         """Expunge the instance in the session"""
-        self.registry.session.expunge(self)
+        self.anyblok.session.expunge(self)
 
     def expire(self, *fields):
         """ Expire the attribute of the instance, theses attributes will be
@@ -579,7 +579,7 @@ class SqlBase(SqlMixin):
         see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.expire
         """
-        self.registry.expire(self, fields)
+        self.anyblok.expire(self, fields)
 
     def flag_modified(self, *fields):
         """ Flag the attributes as modified
@@ -587,7 +587,7 @@ class SqlBase(SqlMixin):
         see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.expire
         """
-        self.registry.flag_modified(self, fields)
+        self.anyblok.flag_modified(self, fields)
 
     def delete(self, byquery=False, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
@@ -608,15 +608,15 @@ class SqlBase(SqlMixin):
                 **self.to_primary_keys())).delete()
             self.expunge()
         else:
-            model = self.registry.loaded_namespaces_first_step[
+            model = self.anyblok.loaded_namespaces_first_step[
                 self.__registry_name__]
             fields = model.keys()
             mappers = self.__class__.find_remote_attribute_to_expire(*fields)
             self.expire_relationship_mapped(mappers)
-            self.registry.session.delete(self)
+            self.anyblok.session.delete(self)
 
         if flush:
-            self.registry.flush()
+            self.anyblok.flush()
 
     @classmethod
     def insert(cls, **kwargs):
@@ -627,13 +627,13 @@ class SqlBase(SqlMixin):
         is equal at::
 
             mymodel = MyModel(...)
-            MyModel.registry.session.add(mymodel)
-            MyModel.registry.flush()
+            MyModel.anyblok.session.add(mymodel)
+            MyModel.anyblok.flush()
 
         """
         instance = cls(**kwargs)
-        cls.registry.add(instance)
-        cls.registry.flush()
+        cls.anyblok.add(instance)
+        cls.anyblok.flush()
         return instance
 
     @classmethod
@@ -646,16 +646,16 @@ class SqlBase(SqlMixin):
 
         :exception: SqlBaseException
         """
-        instances = cls.registry.InstrumentedList()
+        instances = cls.anyblok.InstrumentedList()
         for kwargs in args:
             if not isinstance(kwargs, dict):
                 raise SqlBaseException("multi_insert method wait list of dict")
 
             instance = cls(**kwargs)
-            cls.registry.add(instance)
+            cls.anyblok.add(instance)
             instances.append(instance)
 
         if instances:
-            cls.registry.flush()
+            cls.anyblok.flush()
 
         return instances

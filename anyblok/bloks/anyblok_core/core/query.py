@@ -41,7 +41,7 @@ class Query(query.Query):
     def all(self):
         """ Return an instrumented list of the result of the query
         """
-        return self.registry.InstrumentedList(super(Query, self).all())
+        return self.anyblok.InstrumentedList(super(Query, self).all())
 
     def with_perm(self, principals, permission):
         """Add authorization pre- and post-filtering to query.
@@ -55,7 +55,7 @@ class Query(query.Query):
         :returns: a query-like object, with only the returning methods, such
                   as ``all()``, ``count()`` etc. available.
         """
-        return self.registry.wrap_query_permission(
+        return self.anyblok.wrap_query_permission(
             self, principals, permission)
 
     def get_field_names_in_column_description(self):
@@ -104,7 +104,7 @@ class Query(query.Query):
             primary_keys = kwargs
 
         if isinstance(primary_keys, dict):
-            Model = self.registry.get(self.Model)
+            Model = self.anyblok.get(self.Model)
             primary_keys = {
                 (anyblok_column_prefix + k
                  if k in Model.hybrid_property_columns else k): v

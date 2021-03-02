@@ -216,9 +216,9 @@ class Blok:
         """
         logger.info("Install the blok %r" % self.name)
         self.fire('Update installed blok')
-        entry = self.registry.loaded_bloks[self.name]
+        entry = self.anyblok.loaded_bloks[self.name]
         entry.update(None)
-        if self.registry.System.Parameter.get("with-demo", False):
+        if self.anyblok.System.Parameter.get("with-demo", False):
             entry.update_demo(None)
         self.state = 'installed'
         self.installed_version = self.version
@@ -228,13 +228,13 @@ class Blok:
         """
         logger.info("Update the blok %r" % self.name)
         self.fire('Update installed blok')
-        entry = self.registry.loaded_bloks[self.name]
+        entry = self.anyblok.loaded_bloks[self.name]
         parsed_version = (
             parse_version(self.installed_version)
             if self.installed_version is not None
             else None)
         entry.update(parsed_version)
-        if self.registry.System.Parameter.get("with-demo", False):
+        if self.anyblok.System.Parameter.get("with-demo", False):
             entry.update_demo(parsed_version)
         self.state = 'installed'
         self.installed_version = self.version
@@ -244,8 +244,8 @@ class Blok:
         """
         logger.info("Uninstall the blok %r" % self.name)
         self.fire('Update installed blok')
-        entry = BlokManager.bloks[self.name](self.registry)
-        if self.registry.System.Parameter.get("with-demo", False):
+        entry = BlokManager.bloks[self.name](self.anyblok)
+        if self.anyblok.System.Parameter.get("with-demo", False):
             entry.uninstall_demo()
         entry.uninstall()
         self.state = 'uninstalled'
@@ -262,7 +262,7 @@ class Blok:
             return
 
         logger.info("Loading Blok %r", name)
-        blok_cls(self.registry).load()
+        blok_cls(self.anyblok).load()
         logger.debug("Succesfully loaded Blok %r", name)
 
     @classmethod
@@ -281,5 +281,5 @@ class Blok:
 
     @listen('Model.System.Blok', 'Update installed blok')
     def listen_update_installed_blok(cls):
-        cls.registry.System.Cache.invalidate(
+        cls.anyblok.System.Cache.invalidate(
             cls.__registry_name__, 'is_installed')

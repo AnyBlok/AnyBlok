@@ -267,6 +267,9 @@ class Model:
         """
         new_type_properties = {}
         for attr in dir(base):
+            if attr in ('registry', 'anyblok'):
+                continue
+
             method = getattr(base, attr)
             registry.call_plugins(
                 'transform_base_attribute',

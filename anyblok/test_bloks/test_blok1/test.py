@@ -30,12 +30,12 @@ class Blok:
 
     def install(self):
         super(Blok, self).install()
-        self.registry.Test.insert(blok=self.name, mode='install')
+        self.anyblok.Test.insert(blok=self.name, mode='install')
 
     def upgrade(self):
         super(Blok, self).upgrade()
-        self.registry.Test.insert(blok=self.name, mode='update')
+        self.anyblok.Test.insert(blok=self.name, mode='update')
 
     def load(self):
         super(Blok, self).load()
-        self.registry.Test.insert(blok=self.name, mode='load')
+        self.anyblok.Test.insert(blok=self.name, mode='load')

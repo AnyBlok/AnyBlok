@@ -121,14 +121,14 @@ class TestSimpleCache:
         m = Model()
         assert m.method_cached() == value
         assert m.method_cached() == value
-        Model.registry.System.Cache.invalidate(registry_name, 'method_cached')
+        Model.anyblok.System.Cache.invalidate(registry_name, 'method_cached')
         assert m.method_cached() == 2 * value
 
     def check_method_cached_invalidate_all(self, Model, value=1):
         m = Model()
         assert m.method_cached() == value
         assert m.method_cached() == value
-        Model.registry.System.Cache.invalidate_all()
+        Model.anyblok.System.Cache.invalidate_all()
         assert m.method_cached() == 2 * value
 
     def add_model_with_method_cached(self):
@@ -392,7 +392,7 @@ class TestClassMethodCache:
         value = m.method_cached()
         assert m.method_cached() == value
         assert m.method_cached() == value
-        Model.registry.System.Cache.invalidate(registry_name, 'method_cached')
+        Model.anyblok.System.Cache.invalidate(registry_name, 'method_cached')
         assert m.method_cached() != value
 
     def add_model_with_method_cached(self):
@@ -645,14 +645,14 @@ class TestInheritedCache:
         m = Model()
         assert m.method_cached() == 3
         assert m.method_cached() == 5
-        Model.registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        Model.anyblok.System.Cache.invalidate('Model.Test', 'method_cached')
         assert m.method_cached() == 8
 
     def check_inherited_method_cached(self, Model):
         m = Model()
         assert m.method_cached() == 3
         assert m.method_cached() == 3
-        Model.registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        Model.anyblok.System.Cache.invalidate('Model.Test', 'method_cached')
         assert m.method_cached() == 6
 
     def add_model_with_method_cached(self, inheritcache=False):
@@ -790,13 +790,13 @@ class TestInheritedClassMethodCache:
     def check_method_cached(self, Model):
         assert Model.method_cached() == 3
         assert Model.method_cached() == 5
-        Model.registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        Model.anyblok.System.Cache.invalidate('Model.Test', 'method_cached')
         assert Model.method_cached() == 8
 
     def check_inherited_method_cached(self, Model):
         assert Model.method_cached() == 3
         assert Model.method_cached() == 3
-        Model.registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        Model.anyblok.System.Cache.invalidate('Model.Test', 'method_cached')
         assert Model.method_cached() == 6
 
     def add_model_with_method_cached(self, inheritcache=False):
