@@ -22,7 +22,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.mysql.types import TINYINT
 from sqlalchemy.dialects.mssql.base import BIT
 from anyblok import Declarations
-from sqlalchemy.exc import InternalError, IntegrityError, OperationalError
+from sqlalchemy.exc import IntegrityError
 from anyblok.config import Configuration
 from .conftest import init_registry, drop_database, create_database
 from anyblok.common import naming_convention
@@ -138,7 +138,7 @@ def registry(request, clean_db, bloks_loaded):
                       'testchecklongconstraintname', 'testindex'):
             try:
                 registry.migration.table(table).drop()
-            except MigrationException as e:
+            except MigrationException:
                 pass
 
         registry.close()
@@ -1046,15 +1046,6 @@ class TestMigration:
         registry.migration.rollback_savepoint('test')
         assert Test.query().count() == 10
         registry.migration.release_savepoint('test')
-
-    @pytest.mark.skipif(sgdb_in(['MsSQL']),
-                        reason="No error when rollback to released save point")
-    def test_savepoint_without_rollback(self, registry):
-        raise Exception('This fail and break more than this test')
-        registry.migration.savepoint('test')
-        registry.migration.release_savepoint('test')
-        with pytest.raises((InternalError, OperationalError)):
-            registry.migration.rollback_savepoint('test')
 
 
 @pytest.fixture()
