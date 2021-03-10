@@ -19,7 +19,7 @@ from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
 from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
 from sqlalchemy.orm.session import object_state
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select, update as sqla_update
 
 
 class uniquedict(dict):
@@ -532,23 +532,6 @@ class SqlBase(SqlMixin):
 
         return modified_fields
 
-    def update(self, **values):
-        """ Hight livel method to update the session for the instance
-        ::
-
-            self.update(val1=.., val2= ...)
-
-        ..warning::
-
-            the columns and values is passed as named arguments to show
-            a difference with Query.update meth
-
-        """
-        for x, v in values.items():
-            setattr(self, x, v)
-
-        return 1 if values else 0
-
     def expire_relationship_mapped(self, mappers):
         """ Expire the objects linked with this object, in function of
         the mappers definition
@@ -632,6 +615,38 @@ class SqlBase(SqlMixin):
 
         if flush:
             self.anyblok.flush()
+
+    @hybridmethod
+    def update(cls):
+        return sqla_update(cls)
+
+    @update.instancemethod
+    def update(self, byquery=False, flush=False, **values):
+        """ Hight livel method to update the session for the instance
+        ::
+
+            self.update(val1=.., val2= ...)
+
+        ..warning::
+
+            the columns and values is passed as named arguments to show
+            a difference with Query.update meth
+
+        """
+        if byquery:
+            cls = self.__class__
+            return self.execute(
+                sqla_update(cls).where(
+                    *cls.get_where_clause_from_primary_keys(
+                        **self.to_primary_keys())).values(**values)).rowcount
+
+        for x, v in values.items():
+            setattr(self, x, v)
+
+        if flush:
+            self.anyblok.flush()
+
+        return 1 if values else 0
 
     @classmethod
     def insert(cls, **kwargs):

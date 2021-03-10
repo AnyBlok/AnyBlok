@@ -150,12 +150,32 @@ class TestCoreSQLBase:
         t.flag_modified('id2')
         assert 'id2' in t.get_modified_fields()
 
+    def test_classmethod_update(self, registry_declare_model):
+        registry = registry_declare_model
+        nb_value = 3
+        Test = registry.Test
+        Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        t = Test.query().filter_by(id2=1).one()
+        assert Test.execute(
+            Test.update().where(Test.id2 == 1).values(id2=100)).rowcount == 1
+        assert registry.Test.query().filter(
+            registry.Test.id2 == 100).first() == t
+
     def test_update(self, registry_declare_model):
         registry = registry_declare_model
         nb_value = 3
         registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
         t = registry.Test.query().first()
-        t.update(id2=100)
+        assert t.update(id2=100) == 1
+        assert registry.Test.query().filter(
+            registry.Test.id2 == 100).first() == t
+
+    def test_update_byquery(self, registry_declare_model):
+        registry = registry_declare_model
+        nb_value = 3
+        registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        t = registry.Test.query().first()
+        assert t.update(byquery=True, id2=100) == 1
         assert registry.Test.query().filter(
             registry.Test.id2 == 100).first() == t
 
