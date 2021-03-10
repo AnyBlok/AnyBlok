@@ -28,7 +28,7 @@ class Field:
         if not model.exist():
             return False
 
-        M = self.registry.get(model.model.name)
+        M = self.anyblok.get(model.model.name)
         if self.field.name in M.loaded_columns:
             return True
 
@@ -43,9 +43,9 @@ class Field:
 
     @classmethod
     def getelements(cls, model):
-        query = cls.filterField(cls.registry.System.Field.query())
+        query = cls.filterField(cls.anyblok.System.Field.query())
         return query.filter(
-            cls.registry.System.Field.model == model.model.name).all()
+            cls.anyblok.System.Field.model == model.model.name).all()
 
     @classmethod
     def header2RST(cls, doc):
@@ -135,7 +135,7 @@ class Field:
         pass
 
     def toSQL_column(self, dot):
-        table = dot.get_table(self.registry.get(
+        table = dot.get_table(self.anyblok.get(
             self.field.model).__tablename__)
         if self.field.foreign_key:
             remote_table = dot.get_table(self.field.foreign_key.split('.')[0])
