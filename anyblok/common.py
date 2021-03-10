@@ -214,3 +214,22 @@ def sgdb_in(engine, databases):
             return True
 
     return False
+
+
+class hybridmethod:
+    def __init__(self, fclass, finstance=None):
+        self.fclass = fclass
+        self.finstance = finstance
+
+    def classmethod(self, fclass):
+        return type(self)(fclass, finstance=self.finstance)
+
+    def instancemethod(self, finstance):
+        return type(self)(self.fclass, finstance=finstance)
+
+    def __get__(self, instance, cls):
+        if instance is None or self.finstance is None:
+            # either bound to the class, or no instance method available
+            return self.fclass.__get__(cls, None)
+
+        return self.finstance.__get__(instance, cls)

@@ -9,6 +9,7 @@
 from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
 from anyblok.column import Column
+from anyblok.common import hybridmethod
 from anyblok.mapper import FakeColumn, FakeRelationShip
 from anyblok.relationship import RelationShip, Many2Many
 from anyblok.common import anyblok_column_prefix
@@ -18,6 +19,7 @@ from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
 from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
 from sqlalchemy.orm.session import object_state
+from sqlalchemy import delete, select, update
 
 
 class uniquedict(dict):
@@ -589,6 +591,17 @@ class SqlBase(SqlMixin):
         """
         self.anyblok.flag_modified(self, fields)
 
+    @classmethod
+    def execute(cls, *args, **kwargs):
+        """call SqlA execute method on the session"""
+        return cls.anyblok.session.execute(*args, **kwargs)
+
+    @hybridmethod
+    def delete(cls):
+        """Return a statement to delete some element"""
+        return delete(cls)
+
+    @delete.instancemethod
     def delete(self, byquery=False, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
         model::
@@ -604,8 +617,10 @@ class SqlBase(SqlMixin):
         """
         if byquery:
             cls = self.__class__
-            cls.query().filter(*cls.get_where_clause_from_primary_keys(
-                **self.to_primary_keys())).delete()
+            self.execute(
+                delete(cls).where(
+                    *cls.get_where_clause_from_primary_keys(
+                        **self.to_primary_keys())))
             self.expunge()
         else:
             model = self.anyblok.loaded_namespaces_first_step[

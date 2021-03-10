@@ -79,6 +79,30 @@ class TestCoreSQLBase:
             assert registry.Test.query().filter(
                 registry.Test.id2 == x).count() == 1
 
+    def test_classmethod_delete(self, registry_declare_model):
+        registry = registry_declare_model
+        nb_value = 3
+        Test = registry.Test
+        Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        assert Test.query().count() == nb_value
+        id2 = 1
+        Test.execute(Test.delete().where(Test.id2 == id2))
+        assert registry.Test.query().count() == nb_value - 1
+        assert registry.Test.query().filter(
+            registry.Test.id2 != id2).count() == nb_value - 1
+
+    def test_delete_by_query(self, registry_declare_model):
+        registry = registry_declare_model
+        nb_value = 3
+        registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        assert registry.Test.query().count() == nb_value
+        t = registry.Test.query().first()
+        id2 = t.id2
+        t.delete(byquery=True)
+        assert registry.Test.query().count() == nb_value - 1
+        assert registry.Test.query().filter(
+            registry.Test.id2 != id2).count() == nb_value - 1
+
     def test_delete(self, registry_declare_model):
         registry = registry_declare_model
         nb_value = 3
