@@ -6,6 +6,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import warnings
 from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
 from anyblok.column import Column
@@ -111,6 +112,10 @@ class SqlMixin:
                          string then thet are see as field of the model
         :rtype: SqlAlchemy Query
         """
+        warnings.warn(
+            "'query' class attribute is deprecated because SQLAlchemy 1.4 "
+            "deprecate this behaviour and SQLAlchemy 2.0 will remove it",
+            DeprecationWarning, stacklevel=2)
         res = []
         for f in elements:
             if isinstance(f, str):
@@ -125,6 +130,39 @@ class SqlMixin:
 
         query.set_Model(cls)
         return query
+
+    @classmethod
+    def SELECT(cls, *elements):
+        """ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
+        """
+        res = []
+        for f in elements:
+            if isinstance(f, str):
+                res.append(getattr(cls, f).label(f))
+            else:
+                res.append(f)
+
+        if res:
+            stmt = select(*res)
+        else:
+            stmt = select(cls)
+
+        return stmt
 
     is_sql = True
 

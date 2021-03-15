@@ -52,6 +52,11 @@ class TestCoreSQLBase:
         t1 = registry.Test.insert(id2=1)
         assert registry.Test.query().first() == t1
 
+    def test_insert_and_select(self, registry_declare_model):
+        Test = registry_declare_model.Test
+        t1 = Test.insert(id2=1)
+        assert Test.execute(Test.SELECT()).scalars().first() == t1
+
     def test_query_one_is_more_explicite(self, registry_declare_model):
         registry = registry_declare_model
         with pytest.raises(NoResultFound) as exc:
