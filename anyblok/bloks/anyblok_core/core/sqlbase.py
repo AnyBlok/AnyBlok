@@ -157,7 +157,11 @@ class SqlMixin:
         else:
             stmt = select(cls)
 
-        return stmt
+        return cls.default_filter_on_sql_statement(stmt)
+
+    @classmethod
+    def default_filter_on_sql_statement(cls, statement):
+        return statement
 
     is_sql = True
 
@@ -615,7 +619,7 @@ class SqlBase(SqlMixin):
     @classmethod
     def delete_sql_statement(cls):
         """Return a statement to delete some element"""
-        return delete(cls)
+        return cls.default_filter_on_sql_statement(delete(cls))
 
     def delete(self, byquery=False, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
@@ -650,7 +654,7 @@ class SqlBase(SqlMixin):
 
     @classmethod
     def update_sql_statement(cls):
-        return sqla_update(cls)
+        return cls.default_filter_on_sql_statement(sqla_update(cls))
 
     def update(self, byquery=False, flush=False, **values):
         """ Hight livel method to update the session for the instance
