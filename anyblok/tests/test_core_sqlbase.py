@@ -55,7 +55,8 @@ class TestCoreSQLBase:
     def test_insert_and_select(self, registry_declare_model):
         Test = registry_declare_model.Test
         t1 = Test.insert(id2=1)
-        assert Test.execute(Test.SELECT()).scalars().first() == t1
+        assert Test.execute(
+            Test.select_sql_statement()).scalars().first() == t1
 
     def test_query_one_is_more_explicite(self, registry_declare_model):
         registry = registry_declare_model
@@ -91,7 +92,7 @@ class TestCoreSQLBase:
         Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
         assert Test.query().count() == nb_value
         id2 = 1
-        Test.execute(Test.delete().where(Test.id2 == id2))
+        Test.execute(Test.delete_sql_statement().where(Test.id2 == id2))
         assert registry.Test.query().count() == nb_value - 1
         assert registry.Test.query().filter(
             registry.Test.id2 != id2).count() == nb_value - 1
@@ -162,7 +163,8 @@ class TestCoreSQLBase:
         Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
         t = Test.query().filter_by(id2=1).one()
         assert Test.execute(
-            Test.update().where(Test.id2 == 1).values(id2=100)).rowcount == 1
+            Test.update_sql_statement().where(Test.id2 == 1).values(id2=100)
+        ).rowcount == 1
         assert registry.Test.query().filter(
             registry.Test.id2 == 100).first() == t
 

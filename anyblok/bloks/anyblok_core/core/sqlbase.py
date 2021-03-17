@@ -2,15 +2,14 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import warnings
 from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
 from anyblok.column import Column
-from anyblok.common import hybridmethod
 from anyblok.mapper import FakeColumn, FakeRelationShip
 from anyblok.relationship import RelationShip, Many2Many
 from anyblok.common import anyblok_column_prefix
@@ -112,10 +111,6 @@ class SqlMixin:
                          string then thet are see as field of the model
         :rtype: SqlAlchemy Query
         """
-        warnings.warn(
-            "'query' class attribute is deprecated because SQLAlchemy 1.4 "
-            "deprecate this behaviour and SQLAlchemy 2.0 will remove it",
-            DeprecationWarning, stacklevel=2)
         res = []
         for f in elements:
             if isinstance(f, str):
@@ -132,7 +127,7 @@ class SqlMixin:
         return query
 
     @classmethod
-    def SELECT(cls, *elements):
+    def select_sql_statement(cls, *elements):
         """ Facility to do a SqlAlchemy query::
 
             stmt = MyModel.select()
@@ -617,12 +612,11 @@ class SqlBase(SqlMixin):
         """call SqlA execute method on the session"""
         return cls.anyblok.session.execute(*args, **kwargs)
 
-    @hybridmethod
-    def delete(cls):
+    @classmethod
+    def delete_sql_statement(cls):
         """Return a statement to delete some element"""
         return delete(cls)
 
-    @delete.instancemethod
     def delete(self, byquery=False, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
         model::
@@ -654,11 +648,10 @@ class SqlBase(SqlMixin):
         if flush:
             self.anyblok.flush()
 
-    @hybridmethod
-    def update(cls):
+    @classmethod
+    def update_sql_statement(cls):
         return sqla_update(cls)
 
-    @update.instancemethod
     def update(self, byquery=False, flush=False, **values):
         """ Hight livel method to update the session for the instance
         ::
