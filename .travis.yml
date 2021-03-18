@@ -74,7 +74,7 @@ before_install:
 install:
   - pip install -U pip
   - pip install wheel
-  - pip install -U sqlalchemy >= 1.4.0 --pre
+  - pip install sqlalchemy==1.4.1
   - pip install -e git+https://github.com/jssuzanne/sqlalchemy-utils.git#egg=sqlalchemy-utils
   - pip install -e git+https://github.com/jssuzanne/sqlalchemy-views.git#egg=sqlalchemy-views
   - pip install $SQLPYCLIENT
