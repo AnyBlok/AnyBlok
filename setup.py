@@ -116,7 +116,6 @@ setup(
             'test-blok9=anyblok.test_bloks.test_blok9:TestBlok',
             'test-blok10=anyblok.test_bloks.test_blok10:TestBlok',
             'test-blok11=anyblok.test_bloks.test_blok11:TestBlok',
-            'test-blok12=anyblok.test_bloks.test_blok12:TestBlok',
             'test-blok13=anyblok.test_bloks.test_blok13:TestBlok',
             'test-blok14=anyblok.test_bloks.test_blok14:TestBlok',
             'test-blok15=anyblok.test_bloks.test_blok15:TestBlok',

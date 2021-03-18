@@ -101,11 +101,11 @@ class TestRegistry:
 
     def test_load_core(self):
         RegistryManager.loaded_bloks['blok'] = {
-            'Core': {'Session': [TestCase]},
+            'Core': {'Query': [TestCase]},
         }
         registry = self.init_registry(None)
-        registry.load_core('blok', 'Session')
-        assert TestCase in registry.loaded_cores['Session']
+        registry.load_core('blok', 'Query')
+        assert TestCase in registry.loaded_cores['Query']
 
     def test_load_blok(self):
 
@@ -115,11 +115,10 @@ class TestRegistry:
         registry = self.init_registry(None)
         BlokManager.bloks['blok'] = BlokTest
         RegistryManager.loaded_bloks['blok'] = {
-            'Core': {'Session': [TestCase],
+            'Core': {'Query': [TestCase],
                      'Base': [],
                      'SqlBase': [],
                      'SqlViewBase': [],
-                     'Query': [],
                      'InstrumentedList': []},
             'removed': [],
             'properties': {},
@@ -129,7 +128,7 @@ class TestRegistry:
                 'registry_names': []}
 
         registry.load_blok('blok', False, [])
-        assert TestCase in registry.loaded_cores['Session']
+        assert TestCase in registry.loaded_cores['Query']
 
     def check_added_in_regisry(self, registry):
         assert registry.Test is Test

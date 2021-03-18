@@ -105,26 +105,13 @@ class SqlMixin:
 
         is equal at::
 
-            query = self.anyblok.session.query(MyModel)
+            query = self.anyblok.Query(MyModel)
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: AnyBlok Query
         """
-        res = []
-        for f in elements:
-            if isinstance(f, str):
-                res.append(getattr(cls, f).label(f))
-            else:
-                res.append(f)
-
-        if res:
-            query = cls.anyblok.query(*res)
-        else:
-            query = cls.anyblok.query(cls)
-
-        query.set_Model(cls)
-        return query
+        return cls.anyblok.Query(cls, *elements)
 
     @classmethod
     def select_sql_statement(cls, *elements):
@@ -143,7 +130,7 @@ class SqlMixin:
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         """
         res = []
         for f in elements:
@@ -158,6 +145,11 @@ class SqlMixin:
             stmt = select(cls)
 
         return cls.default_filter_on_sql_statement(stmt)
+
+    @classmethod
+    def execute(cls, *args, **kwargs):
+        """call SqlA execute method on the session"""
+        return cls.anyblok.session.execute(*args, **kwargs)
 
     @classmethod
     def default_filter_on_sql_statement(cls, statement):
@@ -610,11 +602,6 @@ class SqlBase(SqlMixin):
         #sqlalchemy.orm.session.Session.expire
         """
         self.anyblok.flag_modified(self, fields)
-
-    @classmethod
-    def execute(cls, *args, **kwargs):
-        """call SqlA execute method on the session"""
-        return cls.anyblok.session.execute(*args, **kwargs)
 
     @classmethod
     def delete_sql_statement(cls):
