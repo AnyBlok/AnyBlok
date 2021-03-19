@@ -636,7 +636,7 @@ class SqlBase(SqlMixin):
         """
         if byquery:
             cls = self.__class__
-            self.execute(
+            self.execute_sql_statement(
                 delete(cls).where(
                     *cls.get_where_clause_from_primary_keys(
                         **self.to_primary_keys())))
@@ -670,7 +670,7 @@ class SqlBase(SqlMixin):
         """
         if byquery:
             cls = self.__class__
-            return self.execute(
+            return self.execute_sql_statement(
                 sqla_update(cls).where(
                     *cls.get_where_clause_from_primary_keys(
                         **self.to_primary_keys())).values(**values)).rowcount
