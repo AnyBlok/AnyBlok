@@ -127,6 +127,11 @@ class SqlMixin:
         return query
 
     @classmethod
+    def execute_sql_statement(cls, *args, **kwargs):
+        """call SqlA execute method on the session"""
+        return cls.anyblok.execute(*args, **kwargs)
+
+    @classmethod
     def select_sql_statement(cls, *elements):
         """ Facility to do a SqlAlchemy query::
 
@@ -610,11 +615,6 @@ class SqlBase(SqlMixin):
         #sqlalchemy.orm.session.Session.expire
         """
         self.anyblok.flag_modified(self, fields)
-
-    @classmethod
-    def execute(cls, *args, **kwargs):
-        """call SqlA execute method on the session"""
-        return cls.anyblok.session.execute(*args, **kwargs)
 
     @classmethod
     def delete_sql_statement(cls):

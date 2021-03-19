@@ -214,11 +214,11 @@ class TestSingleTablePoly:
             Manager.insert(name='Manager %d' % index)
 
         for Model in (Employee, Engineer):
-            assert Model.execute(
+            assert Model.execute_sql_statement(
                 Model.select_sql_statement(func.count(Model.id))
             ).scalars().one() == 9
 
-        assert Manager.execute(
+        assert Manager.execute_sql_statement(
             Manager.select_sql_statement(func.count(Manager.id))
         ).scalars().one() == 3
 
@@ -233,11 +233,11 @@ class TestSingleTablePoly:
             Manager.insert(name='Manager %d' % index)
 
         for Model in (Employee, Engineer):
-            assert Model.execute(
+            assert Model.execute_sql_statement(
                 Model.update_sql_statement().values(name='other')
             ).rowcount == 9
 
-        assert Manager.execute(
+        assert Manager.execute_sql_statement(
             Manager.update_sql_statement().values(name="another")
         ).rowcount == 3
 
@@ -251,8 +251,8 @@ class TestSingleTablePoly:
             Engineer.insert(name='Engineer %d' % index)
             Manager.insert(name='Manager %d' % index)
 
-        assert Employee.execute(
-            Employee.update_sql_statement().values(name="another")
+        assert Employee.execute_sql_statement(
+            Employee.delete_sql_statement().values(name="another")
         ).rowcount == 9
 
     def test_delete_sql_statement_2(self, registry_single_table_poly):
@@ -265,8 +265,8 @@ class TestSingleTablePoly:
             Engineer.insert(name='Engineer %d' % index)
             Manager.insert(name='Manager %d' % index)
 
-        assert Engineer.execute(
-            Engineer.update_sql_statement().values(name="another")
+        assert Engineer.execute_sql_statement(
+            Engineer.delete_sql_statement().values(name="another")
         ).rowcount == 9
 
     def test_delete_sql_statement_3(self, registry_single_table_poly):
@@ -279,8 +279,8 @@ class TestSingleTablePoly:
             Engineer.insert(name='Engineer %d' % index)
             Manager.insert(name='Manager %d' % index)
 
-        assert Manager.execute(
-            Manager.update_sql_statement().values(name="another")
+        assert Manager.execute_sql_statement(
+            Manager.delete_sql_statement().values(name="another")
         ).rowcount == 3
 
 
