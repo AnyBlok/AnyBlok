@@ -267,7 +267,7 @@ class Model:
         """
         new_type_properties = {}
         for attr in dir(base):
-            if attr in ('registry', 'anyblok'):
+            if attr in ('registry', 'anyblok', '_sa_registry'):
                 continue
 
             method = getattr(base, attr)
