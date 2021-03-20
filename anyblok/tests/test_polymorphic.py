@@ -252,7 +252,7 @@ class TestSingleTablePoly:
             Manager.insert(name='Manager %d' % index)
 
         assert Employee.execute_sql_statement(
-            Employee.delete_sql_statement().values(name="another")
+            Employee.delete_sql_statement()
         ).rowcount == 9
 
     def test_delete_sql_statement_2(self, registry_single_table_poly):
@@ -266,7 +266,7 @@ class TestSingleTablePoly:
             Manager.insert(name='Manager %d' % index)
 
         assert Engineer.execute_sql_statement(
-            Engineer.delete_sql_statement().values(name="another")
+            Engineer.delete_sql_statement()
         ).rowcount == 9
 
     def test_delete_sql_statement_3(self, registry_single_table_poly):
@@ -280,7 +280,7 @@ class TestSingleTablePoly:
             Manager.insert(name='Manager %d' % index)
 
         assert Manager.execute_sql_statement(
-            Manager.delete_sql_statement().values(name="another")
+            Manager.delete_sql_statement()
         ).rowcount == 3
 
 
