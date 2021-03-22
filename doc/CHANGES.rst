@@ -17,6 +17,19 @@
 CHANGELOG
 =========
 
+1.2.0 (unreleased)
+------------------
+
+* Adapted to **SQLAlchemy >= 1.4**
+* Fixed Many2One with pycountry as primary key
+* Fixed Many2One with **primary_key=True**, when primary key is True, 
+  this nullable is forced to False
+* Refactored hybrid_property to use the decorator mecanisme
+* Adapted SQLA.URL manipulation, which was became immutable
+* Used the inspect method, not the deprecated Inspector
+* Refactored View, need the latest version of sqlalchemy-views
+
+
 1.1.0 (2021-03-22)
 ------------------
 
