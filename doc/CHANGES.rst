@@ -17,7 +17,7 @@
 CHANGELOG
 =========
 
-1.1.0 (unreleased)
+1.1.0 (2021-03-22)
 ------------------
 
 * Fixed version of **SQLAlchemy < 1.4.0**, The next version of AnyBlok 
