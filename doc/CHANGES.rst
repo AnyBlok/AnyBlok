@@ -8,6 +8,7 @@
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+..    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -18,6 +19,16 @@ CHANGELOG
 
 1.1.0 (unreleased)
 ------------------
+
+* Fixed version of **SQLAlchemy < 1.4.0**, The next version of AnyBlok 
+  will be adapted to **SQLAlchemy >= 1.4.0 < 2.0.0**, and will prepare to 
+  **SQLAlchemy >= 2.0**, See issue #168
+* **SQLAlchemy 1.4.0** add a new attribut in the model **registry**, 
+  this attribute conflicts with the registry of AnyBlok. A new attribute 
+  **anyblok** is created on the model to call the registry of AnyBlok. 
+  A modification of the attribute **registry** is done to use both attributes
+  with the same name. A deprecation warning is added on the attibute **registry**
+  of AnyBlok
 
 1.0.0 (2020-12-03)
 ------------------
