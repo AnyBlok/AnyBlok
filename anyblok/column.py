@@ -15,7 +15,7 @@ from .mapper import ModelAttributeAdapter, ModelAttribute
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types, CheckConstraint
 from sqlalchemy_utils.types.color import ColorType
-from sqlalchemy_utils.types.encrypted.encrypted_type import EncryptedType
+from sqlalchemy_utils.types.encrypted.encrypted_type import StringEncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
 from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy_utils.types.url import URLType
@@ -282,9 +282,17 @@ class Column(Field):
 
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
-            sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
+            sqlalchemy_type = self.get_encrypt_key_type(
+                registry, sqlalchemy_type, encrypt_key)
 
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(64)
+
+        return sqlalchemy_type
 
     def format_encrypt_key(self, registry, namespace):
         """Format and return the encyption key
@@ -719,6 +727,13 @@ class String(Column):
         res['size'] = self.size
         return res
 
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(max(self.size, 64))
+
+        return sqlalchemy_type
+
 
 class Enum(Column):
     """Enum column
@@ -820,7 +835,7 @@ class Password(Column):
         :param value:
         :return:
         """
-        value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
+        value = self.sqlalchemy_type.context.hash(value).encode('utf8')
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
 
@@ -840,6 +855,13 @@ class Password(Column):
         res['size'] = self.size
         res['Crypt context'] = self.crypt_context
         return res
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(max(self.size, 64))
+
+        return sqlalchemy_type
 
 
 class TextType(types.TypeDecorator):
@@ -872,6 +894,13 @@ class Text(Column):
 
     """
     sqlalchemy_type = TextType
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.Text()
+
+        return sqlalchemy_type
 
 
 class StrSelection(str):
@@ -1113,6 +1142,13 @@ class Selection(Column):
 
         return []
 
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(max(self.size, 64))
+
+        return sqlalchemy_type
+
 
 """
     Added *process_result_value* at the class *JSON*, because
@@ -1160,6 +1196,13 @@ class Json(Column):
 
         return value
 
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.Text()
+
+        return sqlalchemy_type
+
 
 class LargeBinary(Column):
     """Large binary column
@@ -1199,6 +1242,13 @@ class LargeBinary(Column):
             value = b64decode(value.encode('utf-8'))
 
         return value
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.Text()
+
+        return sqlalchemy_type
 
 
 class Sequence(String):
@@ -1308,6 +1358,13 @@ class Color(Column):
         res = super(Color, self).autodoc_get_properties()
         res['size'] = self.max_length
         return res
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(max(self.max_length, 64))
+
+        return sqlalchemy_type
 
 
 class UUID(Column):
@@ -1426,6 +1483,13 @@ class PhoneNumber(Column):
         res['region'] = self.region
         res['max_length'] = self.max_length
         return res
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(max(self.max_length, 64))
+
+        return sqlalchemy_type
 
 
 """
