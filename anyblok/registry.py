@@ -24,7 +24,6 @@ from anyblok.common import anyblok_column_prefix, naming_convention
 from pkg_resources import iter_entry_points
 from .version import parse_version
 from .logging import log
-# import sqlalchemy.interfaces
 from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.decl_base import _declarative_constructor
@@ -59,14 +58,6 @@ def return_list(entry):
         entry = [entry]
 
     return entry
-
-
-# class DontBeSilly(sqlalchemy.interfaces.PoolListener):
-#     def connect(self, dbapi_con, connection_record):
-#         cur = dbapi_con.cursor()
-#         cur.execute("SET autocommit=0;")
-#         cur.execute("SET SESSION sql_mode='TRADITIONAL';")
-#         cur = None
 
 
 class RegistryManager:
@@ -515,7 +506,7 @@ class Registry:
 
     def init_engine_options(self, url):
         """Define the options to initialize the engine"""
-        options = dict(
+        return dict(
             echo=Configuration.get('db_echo') or False,
             max_overflow=Configuration.get('db_max_overflow') or 10,
             echo_pool=Configuration.get('db_echo_pool') or False,
@@ -524,12 +515,7 @@ class Registry:
                 'isolation_level',
                 Configuration.get('isolation_level', 'READ_UNCOMMITTED')
             ),
-            # listeners=[]
         )
-        # if url.drivername.startswith('mysql'):
-        #     options['listeners'].append(DontBeSilly())
-
-        return options
 
     def init_engine(self, db_name=None):
         """Define the engine
@@ -539,6 +525,31 @@ class Registry:
         url = Configuration.get('get_url', get_url)(db_name=db_name)
         kwargs = self.init_engine_options(url)
         self.rw_engine = create_engine(url, **kwargs)
+        self.apply_engine_events(self.rw_engine)
+
+    def apply_engine_events(self, engine):
+        """Add engine events
+
+        the engine event come from:
+
+        * entrypoints: ``anyblok.engine.event``
+        * entrypoints: ``anyblok.engine.event.**dialect's name**``
+        * registry additional_setting: ``anyblok.engine.event``
+        """
+        for i in iter_entry_points('anyblok.engine.event'):
+            logger.info('Update engine event from entrypoint %r' % i)
+            i.load()(engine)
+
+        for i in iter_entry_points(
+            'anyblok.engine.event.' + engine.dialect.name
+        ):
+            logger.info('Update engine event for %s from entrypoint %r' % (
+                self.engine.dialect.name, i))
+            i.load()(engine)
+
+        for funct in self.additional_setting.get('anyblok.engine.event', []):
+            logger.info('Update engine event %r' % funct)
+            funct(engine)
 
     @property
     def engine(self):
@@ -1046,10 +1057,18 @@ class Registry:
         the session event come from:
 
         * entrypoints: ``anyblok.session.event``
+        * entrypoints: ``anyblok.session.event.**sgdb**``
         * registry additional_setting: ``anyblok.session.event``
         """
         for i in iter_entry_points('anyblok.session.event'):
             logger.info('Update session event from entrypoint %r' % i)
+            i.load()(self.session)
+
+        for i in iter_entry_points(
+            'anyblok.session.event.' + self.engine.dialect.name
+        ):
+            logger.info('Update session event for %s from entrypoint %r' % (
+                self.engine.dialect.name, i))
             i.load()(self.session)
 
         for funct in self.additional_setting.get('anyblok.session.event', []):

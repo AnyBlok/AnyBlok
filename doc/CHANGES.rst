@@ -28,7 +28,12 @@ CHANGELOG
 * Adapted SQLA.URL manipulation, which was became immutable
 * Used the inspect method, not the deprecated Inspector
 * Refactored View, need the latest version of sqlalchemy-views
-
+* Removed old sqlalchemy interfaces for MySQL, replaced it by entry points
+* Added engine.event entry point to define action on engine
+* Added engine.event.**dialect name** entry point to define action on the
+  engine for the dialect
+* Added session.event.**dialect name** entry point to define action on the
+  session for the dialect
 
 1.1.0 (2021-03-22)
 ------------------
