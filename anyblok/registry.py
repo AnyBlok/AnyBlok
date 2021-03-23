@@ -495,7 +495,7 @@ class Registry:
         the engine event come from:
 
         * entrypoints: ``anyblok.engine.event``
-        * entrypoints: ``anyblok.engine.event.**sgdb**``
+        * entrypoints: ``anyblok.engine.event.**dialect's name**``
         * registry additional_setting: ``anyblok.engine.event``
         """
         for i in iter_entry_points('anyblok.engine.event'):

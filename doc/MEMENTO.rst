@@ -1721,3 +1721,88 @@ In your bloks you can use your factory::
     @register(Model, factory=MyFactory)
     class MyModel:
         ...
+
+**Engine's events**
+-------------------
+
+The engine's events is used to define sqlalchemy event listener on engine
+
+this event is declared by entrypoint:
+
+* **anyblok.engine.event** : For all dialects
+* **anyblok.engine.event.postgres** : only for postgresql
+* **anyblok.engine.event.mysql** : only for MySQL
+* **anyblok.engine.event.mssql** : only for MsSQL
+
+Exemple with the **mysql_no_autocommit** listener
+
+**anyblok.event**::
+
+   from sqlalchemy import event
+
+
+   def mysql_no_autocommit(engine):
+
+       def mysql_set_no_autocommit(dbapi_con, connection_record):
+           cur = dbapi_con.cursor()
+           cur.execute("SET autocommit=0;")
+           cur.execute("SET SESSION sql_mode='TRADITIONAL';")
+           cur = None
+
+       event.listen(engine, 'connect', mysql_set_no_autocommit)
+
+
+**setup.py**::
+
+   setup(
+       entry_points={
+           'anyblok.engine.event.mysql': [
+               'mysql-no-autocommit=anyblok.event:mysql_no_autocommit',
+           ],
+       },
+   )
+
+.. note::
+
+   The SQLAlchemy decumentation for the `core event<https://docs.sqlalchemy.org/en/14/core/events.html?highlight=event#connection-pool-events>`_
+
+**Session's events**
+--------------------
+
+The engine's events is used to define sqlalchemy event listener on engine
+
+this event is declared by entrypoint:
+
+* **anyblok.session.event** : For all dialects
+* **anyblok.session.event.postgresql** : only for postgresql
+* **anyblok.session.event.mysql** : only for MySQL
+* **anyblok.session.event.mssql** : only for MsSQL
+
+Exemple
+
+method::
+
+   from sqlalchemy import event
+
+
+   def do_something(session):
+
+       def something(sess, transaction, connection):
+           pass
+
+       event.listen(session, 'after_begin', something)
+
+
+**setup.py**::
+
+   setup(
+       entry_points={
+           'anyblok.session.event': [
+               'do-something=path:do_something',
+           ],
+       },
+   )
+
+.. note::
+
+   The SQLAlchemy decumentation for the `session events<https://docs.sqlalchemy.org/en/14/orm/events.html#session-events>`_
