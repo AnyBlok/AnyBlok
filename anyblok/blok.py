@@ -283,6 +283,7 @@ class Blok:
             "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
             "own 'registry' attribute. Replace it by 'anyblok' attribute",
             DeprecationWarning, stacklevel=2)
+
         return self.anyblok
 
     @classmethod

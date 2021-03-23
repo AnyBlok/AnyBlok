@@ -82,21 +82,21 @@ File tree::
         def install(self):
             """This room will be always present after the blok installation
             """
-            address = self.registry.Address.insert(
+            address = self.anyblok.Address.insert(
                 street='la Tour Eiffel',
                 street2='5 avenue Anatole France',
                 zip='75007',
                 city='Paris'
             )
-            self.registry.Room.insert(number=1, address=address)
+            self.anyblok.Room.insert(number=1, address=address)
 
         def install_demo(self):
             """Extra data to add once blok is installed if database was created
             with ``--with-demo``.
             """
-            address = self.registry.Address.insert(street='14-16 rue Soleillet',
-                                                   zip='75020', city='Paris')
-            self.registry.Room.insert(number=308, address=address)
+            address = self.anyblok.Address.insert(street='14-16 rue Soleillet',
+                                                  zip='75020', city='Paris')
+            self.anyblok.Room.insert(number=308, address=address)
 
         def update(self, latest_version):
             """Method called when blok is installed or updated to let
@@ -149,11 +149,11 @@ File tree::
         version = '1.0.0'
 
         def install_demo(self):
-            self.registry.Position.multi_insert({'name': 'CTO'},
-                                                {'name': 'CEO'},
-                                                {'name': 'Administrative Manager'},
-                                                {'name': 'Project Manager'},
-                                                {'name': 'Developer'})
+            self.anyblok.Position.multi_insert({'name': 'CTO'},
+                                               {'name': 'CEO'},
+                                               {'name': 'Administrative Manager'},
+                                               {'name': 'Project Manager'},
+                                               {'name': 'Developer'})
 
         def update_demo(self, latest_version):
             if latest_version is None:
@@ -199,8 +199,8 @@ File tree::
         optional = ['position']
 
         def install(self):
-            room = self.registry.Room.query().filter(
-                self.registry.Room.number == 308).first()
+            room = self.anyblok.Room.query().filter(
+                self.anyblok.Room.number == 308).first()
             employees = [dict(name=employee, room=room)
                          for employee in ('Georges Racinet',
                                           'Christophe Combelles',
@@ -211,7 +211,7 @@ File tree::
                                           'Florent Jouatte',
                                           'Clovis Nzouendjou',
                                           "Jean-Sébastien Suzanne")]
-            self.registry.Employee.multi_insert(*employees)
+            self.anyblok.Employee.multi_insert(*employees)
 
         def update_demo(self, latest_version):
             if latest_version is None:
@@ -249,7 +249,7 @@ File tree::
         ]
 
         def install(self):
-            Employee = self.registry.Employee
+            Employee = self.anyblok.Employee
 
             position_by_employee = {
                 'Georges Racinet': 'CTO',
@@ -352,11 +352,11 @@ available within the Registry, which itself can be accessed in various ways, dep
 on the context.
 
 In particular, the Registry is available on any Model
-instance as the ``registry`` attribute. So, from instance, from a method of another
+instance as the ``anyblok`` attribute. So, from instance, from a method of another
 Model, we could create an instance of ``ASQLModel`` in this way::
 
   def mymethod(self):
-      self.registry.ASQLModel.insert(acolumn="Foo")
+      self.anyblok.ASQLModel.insert(acolumn="Foo")
 
 Another example would be the ``install()`` methods of our
 :ref:`basedoc_bloks` above.
@@ -543,10 +543,10 @@ The script must display:
         # Initialise the application, with a name and a version number
         # select the groupe of options to display
         # return a registry if the database are selected
-        registry = anyblok.start(
+        anyblok_registry = anyblok.start(
             'Example Blok', argparse_groups=['message', 'logging'])
 
-        if not registry:
+        if not anyblok_registry:
             return
 
         message_before = Configuration.get('message_before')
@@ -555,7 +555,7 @@ The script must display:
         if message_before:
             logger.info(message_before)
 
-        for address in registry.Address.query().all():
+        for address in anyblok_registry.Address.query().all():
             for room in address.rooms:
                 for employee in room.employees:
                     logger.info(employee)
@@ -804,13 +804,13 @@ Here you have an example to write a basic test class::
     """Test Room model"""
 
     def test_create_room(self, rollback_registry):
-      registry = rollback_registry
-      room_count = registry.Room.query().count()
-      room = registry.Room.insert(
+      registry_anyblok = rollback_registry
+      room_count = registry_anyblok.Room.query().count()
+      room = registry_anyblok.Room.insert(
           name="A1",
           capacity=25,
       )
-      assert registry.Room.query().count() == room_count + 1
+      assert registry_anyblok.Room.query().count() == room_count + 1
       assert room.name == "A1"
 
 .. note:: For advanced examples, you can refer to our `developer guide <https://anyblok.github.io/anyblok-book/en/>`_
