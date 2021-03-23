@@ -730,7 +730,7 @@ class String(Column):
     def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
         if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
-            sqlalchemy_type.impl = types.String(self.size)
+            sqlalchemy_type.impl = types.String(max(self.size, 64))
 
         return sqlalchemy_type
 
@@ -859,7 +859,7 @@ class Password(Column):
     def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
         if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
-            sqlalchemy_type.impl = types.String(self.size)
+            sqlalchemy_type.impl = types.String(max(self.size, 64))
 
         return sqlalchemy_type
 
@@ -1145,7 +1145,7 @@ class Selection(Column):
     def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
         if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
-            sqlalchemy_type.impl = types.String(self.size)
+            sqlalchemy_type.impl = types.String(max(self.size, 64))
 
         return sqlalchemy_type
 
@@ -1362,7 +1362,7 @@ class Color(Column):
     def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
         if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
-            sqlalchemy_type.impl = types.String(self.size)
+            sqlalchemy_type.impl = types.String(max(self.max_length, 64))
 
         return sqlalchemy_type
 
@@ -1487,7 +1487,7 @@ class PhoneNumber(Column):
     def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
         if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
-            sqlalchemy_type.impl = types.String(self.max_length)
+            sqlalchemy_type.impl = types.String(max(self.max_length, 64))
 
         return sqlalchemy_type
 
