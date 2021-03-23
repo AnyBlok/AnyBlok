@@ -141,5 +141,11 @@ setup(
             'mysql-bool2tinyint=anyblok.plugins:BooleanToTinyIntMySQL',
             'mssql-bool2bit=anyblok.plugins:BooleanToBitMsSQL',
         ],
+        'anyblok.engine.event.mysql': [
+            'mysql-no-autocommit=anyblok.event:mysql_no_autocommit',
+        ],
+        'anyblok.engine.event.mariadb': [
+            'mariadb-no-autocommit=anyblok.event:mysql_no_autocommit',
+        ],
     },
 )
