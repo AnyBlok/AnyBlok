@@ -45,6 +45,3 @@ class TestParseVersion:
         assert not (version <= '1.1.13')
         assert version <= '1.12.3'
         assert version <= '1.2.3'
-
-    def test_wrong_version(self):
-        parse_version('Wrong version')
