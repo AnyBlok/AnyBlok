@@ -15,7 +15,7 @@ from .mapper import ModelAttributeAdapter, ModelAttribute
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types, CheckConstraint
 from sqlalchemy_utils.types.color import ColorType
-from sqlalchemy_utils.types.encrypted.encrypted_type import EncryptedType
+from sqlalchemy_utils.types.encrypted.encrypted_type import StringEncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
 from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy_utils.types.url import URLType
@@ -282,7 +282,7 @@ class Column(Field):
 
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
-            sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
+            sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
 
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
 
