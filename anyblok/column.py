@@ -820,7 +820,7 @@ class Password(Column):
         :param value:
         :return:
         """
-        value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
+        value = self.sqlalchemy_type.context.hash(value).encode('utf8')
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
 
