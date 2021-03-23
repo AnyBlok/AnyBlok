@@ -17,6 +17,16 @@
 CHANGELOG
 =========
 
+1.2.0 (unreleased)
+------------------
+
+* Removed old sqlalchemy interfaces for MySQL, replaced it by entry points
+* Added engine.event entry point to define action on engine
+* Added engine.event.**dialect name** entry point to define action on the
+  engine for the dialect
+* Added session.event.**dialect name** entry point to define action on the
+  session for the dialect
+
 1.1.0 (2021-03-22)
 ------------------
 
