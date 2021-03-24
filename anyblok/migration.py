@@ -1599,7 +1599,7 @@ class Migration:
         """
         if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
             logger.warning(
-                "Try to rollback a SAVEPOINT, but %r don't have this "
+                "Try to ROLLBACK TO SAVEPOINT, but %r don't have this "
                 "functionality" % self.conn.engine.dialect)
             return
 
@@ -1612,7 +1612,7 @@ class Migration:
         """
         if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
             logger.warning(
-                "Try to release a SAVEPOINT, but %r don't have this "
+                "Try to RELEASE SAVEPOINT, but %r don't have this "
                 "functionality" % self.conn.engine.dialect)
             return
 

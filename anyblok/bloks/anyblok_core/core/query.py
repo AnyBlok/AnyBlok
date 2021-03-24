@@ -1,10 +1,12 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import warnings
 from anyblok import Declarations
 from anyblok.common import anyblok_column_prefix
 from sqlalchemy.orm import query
@@ -112,3 +114,19 @@ class Query(query.Query):
             }
 
         return super(Query, self).get(primary_keys)
+
+    def update(self, *args, **kwargs):
+        warnings.warn(
+            "This method is deprecated and will be removed in the next version"
+            "of AnyBlok, you should use update_sql_statement classmethod",
+            DeprecationWarning, stacklevel=2)
+
+        return super(Query, self).update(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        warnings.warn(
+            "This method is deprecated and will be removed in the next version"
+            "of AnyBlok, you should use delete_sql_statement classmethod",
+            DeprecationWarning, stacklevel=2)
+
+        return super(Query, self).delete(*args, **kwargs)
