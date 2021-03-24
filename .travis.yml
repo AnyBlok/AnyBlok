@@ -74,7 +74,10 @@ before_install:
 install:
   - pip install -U pip
   - pip install wheel
-  - pip install sqlalchemy $SQLPYCLIENT
+  - pip install sqlalchemy==1.4.1
+  - pip install -e git+https://github.com/jssuzanne/sqlalchemy-utils.git#egg=sqlalchemy-utils
+  - pip install -e git+https://github.com/jssuzanne/sqlalchemy-views.git#egg=sqlalchemy-views
+  - pip install $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
   - pip install coveralls
@@ -89,7 +92,7 @@ script:
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks  --with-demo
   - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
-  - pytest --cov-report= --cov=anyblok anyblok/bloks
+  - pytest --cov-report= --cov=anyblok anyblok/bloks/anyblok_core
   
 after_success:
   coveralls --data_file=.coverage --config_file=.coveragerc

@@ -59,7 +59,7 @@ class TestCoreSQLBase:
 
         assert (
             str(exc._excinfo[1]) ==
-            "On Model 'Model.Test': No row was found for one()")
+            "On Model 'Model.Test': No row was found when one was required")
 
     def test_query_dictone_is_more_explicite(self, registry_declare_model):
         registry = registry_declare_model
@@ -68,7 +68,7 @@ class TestCoreSQLBase:
 
         assert (
             str(exc._excinfo[1]) ==
-            "On Model 'Model.Test': No row was found for dictone()")
+            "On Model 'Model.Test': No row was found when one was required")
 
     def test_multi_insert(self, registry_declare_model):
         registry = registry_declare_model

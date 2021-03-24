@@ -584,12 +584,12 @@ class TestBlokOptional:
         registry.upgrade(uninstall=('test-blok1',))
         testblok1 = Blok.query().filter(Blok.name == 'test-blok1').first()
         testblok6 = Blok.query().filter(Blok.name == 'test-blok6').first()
-        assert testblok1.state, 'uninstalled'
-        assert testblok1.version, '1.0.0'
+        assert testblok1.state == 'uninstalled'
+        assert testblok1.version == '1.0.0'
         assert testblok1.installed_version is None
-        assert testblok6.state, 'installed'
-        assert testblok6.version, '2.0.0'
-        assert testblok6.installed_version, '2.0.0'
+        assert testblok6.state == 'installed'
+        assert testblok6.version == '2.0.0'
+        assert testblok6.installed_version == '2.0.0'
 
     def test_update(self, registry_testblok):
         registry = registry_testblok

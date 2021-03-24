@@ -11,7 +11,6 @@
 from logging import getLogger
 import warnings
 from sqlalchemy import create_engine, event, MetaData
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
@@ -27,6 +26,8 @@ from .version import parse_version
 from .logging import log
 from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.orm.decl_base import _declarative_constructor
+from sqlalchemy.orm.decl_api import DeclarativeMeta, registry as SQLARegistry
 
 try:
     import pyodbc
@@ -416,6 +417,20 @@ class RegistryManager:
             del cls.loaded_bloks[blok]['properties'][property_]
 
 
+class NewSQLARegistry(SQLARegistry):
+
+    def __getattr__(self, key):
+        sself = super(NewSQLARegistry, self)
+        if hasattr(sself, key):
+            return getattr(sself, key)
+
+        warnings.warn(
+            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
+            "own 'registry' attribute. Replace it by 'anyblok' attribute",
+            DeprecationWarning, stacklevel=2)
+        return getattr(self._class_registry['registry'], key)
+
+
 class DeprecatedClassProperty:
     def __init__(self, registry):
         self.registry = registry
@@ -426,6 +441,29 @@ class DeprecatedClassProperty:
             "own 'registry' attribute. Replace it by 'anyblok' attribute",
             DeprecationWarning, stacklevel=2)
         return getattr(self.registry, key, **kw)
+
+
+def declarative_base(
+    bind=None,
+    metadata=None,
+    mapper=None,
+    cls=object,
+    name="Base",
+    constructor=_declarative_constructor,
+    class_registry=None,
+    metaclass=DeclarativeMeta,
+):
+    return NewSQLARegistry(
+        _bind=bind,
+        metadata=metadata,
+        class_registry=class_registry,
+        constructor=constructor,
+    ).generate_base(
+        mapper=mapper,
+        cls=cls,
+        name=name,
+        metaclass=metaclass,
+    )
 
 
 class Registry:
@@ -447,7 +485,7 @@ class Registry:
         self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
             'anyblok': self,
-            'registry': DeprecatedClassProperty(self),
+            'registry': DeprecatedClassProperty(self),  # For Model No SQL
             'Env': EnvironmentManager})
         self.withoutautomigration = Configuration.get('withoutautomigration')
         self.ini_var()
@@ -940,11 +978,8 @@ class Registry:
             Session = type('Session', tuple(session_bases), {
                 'registry_query': Query})
 
-            extension = self.additional_setting.get('sa.session.extension')
-            if extension:
-                extension = extension()
             self.Session = scoped_session(
-                sessionmaker(bind=bind, class_=Session, extension=extension),
+                sessionmaker(bind=bind, class_=Session),
                 EnvironmentManager.scoped_function_for_session())
 
             self.nb_query_bases = len(self.loaded_cores['Query'])
@@ -1216,7 +1251,9 @@ class Registry:
 
         if self.Session:
             session = self.Session()
-            session.rollback()
+            if not self.unittest_transaction:
+                session.rollback()
+
             session.expunge_all()
             close_all_sessions()
 
@@ -1449,7 +1486,10 @@ class Registry:
 
         logger.info("Change state %s => %s for blok %s" % (
             blok.state, state, blok_name))
-        query.update({Blok.state: state})
+        Q = "UPDATE system_blok SET state='%s' where name='%s';" % (
+            state, blok_name)
+        self.execute(Q)
+        # blok.update(state=state)
 
     @log(logger, level='debug', withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):
