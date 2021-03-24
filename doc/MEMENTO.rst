@@ -217,9 +217,9 @@ The ``Declarations`` has two main methods
 Model
 -----
 
-A Model is an AnyBlok class referenced in the registry. The registry is
-hierarchical. The model ``Foo`` is accessed by ``registry.Foo`` and the model
-``Foo.Bar`` is accessed by ``registry.Foo.Bar``.
+A Model is an AnyBlok class referenced in the registry. The registry of AnyBlok 
+is hierarchical. The model ``Foo`` is accessed by ``anyblok.Foo`` and the model
+``Foo.Bar`` is accessed by ``anyblok.Foo.Bar``.
 
 To declare a Model you must use ``register``::
 
@@ -255,25 +255,25 @@ If you define the ``Bar`` model, under the ``Foo`` model, you should write::
     The description is used by the model System.Model to describe the model
 
 The declaration name of ``Bar`` is ``Model.Foo.Bar``. The namespace of
-``Bar`` in the registry is ``Foo.Bar``. The namespace of ``Foo`` in the
-registry is ``Foo``::
+``Bar`` in the AnyBlok's registry is ``Foo.Bar``. The namespace of ``Foo`` in the
+registry r of AnyBlok is ``Foo``::
 
-    Foo = registry.Foo
-    Bar = registry.Foo.Bar
+    Foo = anyblok.Foo
+    Bar = anyblok.Foo.Bar
 
 Some models have a table in the database. The name of the table is by default the
 namespace in lowercase with ``.`` replaced with ``.``.
 
 .. note::
 
-    The registry is accessible only in the method of the models::
+    The registry of AnyBlok is accessible only in the method of the models::
 
         @register(Model)
         class Foo:
 
             def myMethod(self):
-                registry = self.registry
-                Foo = registry.Foo
+                anyblok = self.anyblok
+                Foo = anyblok.Foo
 
 The main goal of AnyBlok is not only to add models in the registry, but also
 to easily overload these models. The declaration stores the Python class in
@@ -292,7 +292,7 @@ model overloads the first model::
 
     ------------------------------------------
 
-    Foo = registry.Foo
+    Foo = anyblok.Foo
     assert Foo.x == 2
 
 Here are the parameters of the ``register`` method for ``Model``:
@@ -450,7 +450,7 @@ A ``View Model`` as ``SQL Model``. Need the declaration of ``Column`` and / or
         @classmethod
         def sqlalchemy_view_declaration(cls):
             from sqlalchemy.sql import select
-            Model = cls.registry.System.Model
+            Model = cls.anyblok.System.Model
             return select([Model.id.label('id'), Model.name.label('name')])
 
 ``sqlalchemy_view_declaration`` must return a select query corresponding to the
@@ -973,7 +973,7 @@ from the overload::
 
     ----------------------------------
 
-    assert hasattr(registry.MyModel, 'foo')
+    assert hasattr(anyblok.MyModel, 'foo')
 
 
 SQL View
@@ -1005,8 +1005,8 @@ register. and the classmethod ``sqlalchemy_view_declaration``::
         @classmethod
         def sqlalchemy_view_declaration(cls):
             """ This method must return the query of the view """
-            T1 = cls.registry.T1
-            T2 = cls.registry.T2
+            T1 = cls.anyblok.T1
+            T2 = cls.anyblok.T2
             query = select([T1.code.label('code'),
                             T1.val.label('val1'),
                             T2.val.label('val2')])
@@ -1310,6 +1310,18 @@ The classmethod ``scoped_function_for_session`` is passed at SQLAlchemy
 contextual.html#contextual-thread-local-sessions>`_
 
 
+Get the registry
+~~~~~~~~~~~~~~~~
+
+You can get the registry in any method of Models with the attribute **anyblok**::
+
+    Model = self.anyblok.System.Model
+    assert Model.__registry_name__ == 'Model.System.Model'
+
+.. warning::
+
+   Since version 1.1.0 of AnyBlok the attribute **registry** is renamed **anyblok**
+
 
 Cache
 ~~~~~
@@ -1556,14 +1568,6 @@ directly in the Model::
 
     .. warning:: Only this method give the registry into the alias, don't import **sqlalchemy.orm.aliased**
 
-Get the registry
-~~~~~~~~~~~~~~~~
-
-You can get a Model by the registry in any method of Models::
-
-    Model = self.registry.System.Model
-    assert Model.__registry_name__ == 'Model.System.Model'
-
 Get the current environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1717,3 +1721,88 @@ In your bloks you can use your factory::
     @register(Model, factory=MyFactory)
     class MyModel:
         ...
+
+**Engine's events**
+-------------------
+
+The engine's events is used to define sqlalchemy event listener on engine
+
+this event is declared by entrypoint:
+
+* **anyblok.engine.event** : For all dialects
+* **anyblok.engine.event.postgres** : only for postgresql
+* **anyblok.engine.event.mysql** : only for MySQL
+* **anyblok.engine.event.mssql** : only for MsSQL
+
+Exemple with the **mysql_no_autocommit** listener
+
+**anyblok.event**::
+
+   from sqlalchemy import event
+
+
+   def mysql_no_autocommit(engine):
+
+       def mysql_set_no_autocommit(dbapi_con, connection_record):
+           cur = dbapi_con.cursor()
+           cur.execute("SET autocommit=0;")
+           cur.execute("SET SESSION sql_mode='TRADITIONAL';")
+           cur = None
+
+       event.listen(engine, 'connect', mysql_set_no_autocommit)
+
+
+**setup.py**::
+
+   setup(
+       entry_points={
+           'anyblok.engine.event.mysql': [
+               'mysql-no-autocommit=anyblok.event:mysql_no_autocommit',
+           ],
+       },
+   )
+
+.. note::
+
+   The SQLAlchemy decumentation for the `core event<https://docs.sqlalchemy.org/en/14/core/events.html?highlight=event#connection-pool-events>`_
+
+**Session's events**
+--------------------
+
+The engine's events is used to define sqlalchemy event listener on engine
+
+this event is declared by entrypoint:
+
+* **anyblok.session.event** : For all dialects
+* **anyblok.session.event.postgresql** : only for postgresql
+* **anyblok.session.event.mysql** : only for MySQL
+* **anyblok.session.event.mssql** : only for MsSQL
+
+Exemple
+
+method::
+
+   from sqlalchemy import event
+
+
+   def do_something(session):
+
+       def something(sess, transaction, connection):
+           pass
+
+       event.listen(session, 'after_begin', something)
+
+
+**setup.py**::
+
+   setup(
+       entry_points={
+           'anyblok.session.event': [
+               'do-something=path:do_something',
+           ],
+       },
+   )
+
+.. note::
+
+   The SQLAlchemy decumentation for the `session events<https://docs.sqlalchemy.org/en/14/orm/events.html#session-events>`_

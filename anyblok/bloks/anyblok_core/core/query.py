@@ -6,6 +6,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import warnings
 from anyblok import Declarations
 from anyblok.common import anyblok_column_prefix
 from sqlalchemy.orm.exc import NoResultFound
@@ -160,5 +161,5 @@ class Query:
                  if k in self.Model.hybrid_property_columns else k): v
                 for k, v in primary_keys.items()
             }
-
+            
         return self.anyblok.session.get(self.Model, primary_keys)

@@ -63,7 +63,7 @@ Configuration.add_application_properties(
     epilog=dedent("Example\n"
                   "-------\n"
                   "  $ anyblok_interpreter [anyblok arguments] \n"
-                  "  $ => registry \n"
+                  "  $ => anyblok_registry \n"
                   "  ... <registry> \n\n"
                   "  The interpreter gives you a python console with the "
                   "registry of the selected database \n\n"
@@ -97,31 +97,31 @@ def anyblok_createdb():
     db_template_name = Configuration.get('db_template_name', None)
     url = Configuration.get('get_url')(db_name=db_name)
     create_database(url, template=db_template_name)
-    registry = RegistryManager.get(db_name)
-    if registry is None:
+    anyblok_registry = RegistryManager.get(db_name)
+    if anyblok_registry is None:
         return
 
-    registry.System.Parameter.set(
+    anyblok_registry.System.Parameter.set(
         "with-demo", Configuration.get('with_demo', False))
 
     if Configuration.get('install_all_bloks'):
-        bloks = registry.System.Blok.list_by_state('uninstalled')
+        bloks = anyblok_registry.System.Blok.list_by_state('uninstalled')
     else:
         install_bloks = Configuration.get('install_bloks') or []
         iou_bloks = Configuration.get('install_or_update_bloks') or []
         bloks = list(set(install_bloks + iou_bloks))
 
-    registry.upgrade(install=bloks)
-    registry.commit()
-    registry.close()
+    anyblok_registry.upgrade(install=bloks)
+    anyblok_registry.commit()
+    anyblok_registry.close()
 
 
 def anyblok_updatedb():
     """Update an existing database"""
-    registry = anyblok.start('updatedb', loadwithoutmigration=True)
+    anyblok_registry = anyblok.start('updatedb', loadwithoutmigration=True)
 
-    installed_bloks = registry.System.Blok.list_by_state('installed')
-    toupdate_bloks = registry.System.Blok.list_by_state('toupdate')
+    installed_bloks = anyblok_registry.System.Blok.list_by_state('installed')
+    toupdate_bloks = anyblok_registry.System.Blok.list_by_state('toupdate')
     required_install_bloks = []
     required_update_bloks = []
     for blok in (Configuration.get('install_or_update_bloks') or []):
@@ -131,33 +131,46 @@ def anyblok_updatedb():
             required_install_bloks.append(blok)
 
     if Configuration.get('install_all_bloks'):
-        install_bloks = registry.System.Blok.list_by_state('uninstalled')
+        install_bloks = anyblok_registry.System.Blok.list_by_state(
+            'uninstalled')
     else:
         install_bloks = Configuration.get('install_bloks') or []
         install_bloks = list(set(install_bloks + required_install_bloks))
 
     if Configuration.get('update_all_bloks'):
-        update_bloks = registry.System.Blok.list_by_state('installed')
+        update_bloks = anyblok_registry.System.Blok.list_by_state('installed')
     else:
         update_bloks = Configuration.get('update_bloks') or []
         update_bloks = list(set(update_bloks + required_update_bloks))
 
     uninstall_bloks = Configuration.get('uninstall_bloks')
 
-    if registry:
-        registry.update_blok_list()  # case, new blok added
-        registry.upgrade(install=install_bloks, update=update_bloks,
-                         uninstall=uninstall_bloks)
-        registry.commit()
-        registry.close()
+    if anyblok_registry:
+        anyblok_registry.update_blok_list()  # case, new blok added
+        anyblok_registry.upgrade(install=install_bloks, update=update_bloks,
+                                 uninstall=uninstall_bloks)
+        anyblok_registry.commit()
+        anyblok_registry.close()
+
+
+class RegistryWrapper:
+
+    def __init__(self, anyblok_registry):
+        self.anyblok_registry = anyblok_registry
+
+    def __getattr__(self, key, **kwargs):
+        logger.warning(
+            'registry in local is déprécated, use anyblok_registry')
+        return getattr(self.anyblok_registry, key, **kwargs)
 
 
 def anyblok_interpreter():
     """Execute a script or open an interpreter
     """
-    registry = anyblok.start('interpreter')
-    if registry:
-        registry.commit()
+    anyblok_registry = anyblok.start('interpreter')
+    if anyblok_registry:
+        anyblok_registry.commit()
+        registry = RegistryWrapper(anyblok_registry)
         python_script = Configuration.get('python_script')
         if python_script:
             with open(python_script, "r") as fh:
@@ -174,10 +187,10 @@ def anyblok_interpreter():
 def anyblok2doc():
     """Return auto documentation for the registry
     """
-    registry = anyblok.start('autodoc')
-    if registry:
-        registry.commit()
-        doc = registry.Documentation()
+    anyblok_registry = anyblok.start('autodoc')
+    if anyblok_registry:
+        anyblok_registry.commit()
+        doc = anyblok_registry.Documentation()
         doc.auto_doc()
         if Configuration.get('doc_format') == 'RST':
             with open(Configuration.get('doc_output'), 'w') as fp:
@@ -212,10 +225,11 @@ def anyblok_nose():
     except ImportError:
         logger.error('"Nosetest" is not installed, try: pip install nose')
 
-    registry = anyblok.start('nose', useseparator=True, unittest=True)
+    anyblok_registry = anyblok.start('nose', useseparator=True, unittest=True)
 
-    if registry:
-        installed_bloks = registry.System.Blok.list_by_state("installed")
+    if anyblok_registry:
+        installed_bloks = anyblok_registry.System.Blok.list_by_state(
+            "installed")
         selected_bloks = return_list(
             Configuration.get('selected_bloks')) or installed_bloks
 
@@ -233,6 +247,6 @@ def anyblok_nose():
                 if 'tests' in dirs:
                     defaultTest.append(join(root, 'tests'))
 
-        registry.close()  # free the registry to force create it again
+        anyblok_registry.close()  # free the registry to force create it again
 
     sys.exit(main(defaultTest=defaultTest))

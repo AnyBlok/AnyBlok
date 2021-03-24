@@ -148,6 +148,7 @@ class TestSharedDataTestCaseException(unittest.TestCase):
 
         self.assertEqual(run_order, ['error', 'class_rollbacked'])
         self.assertEqual(result.testsRun, 2)
+
         self.assertEqual(len(result.errors), 1)
         self.assertFalse(result.failures)
 
