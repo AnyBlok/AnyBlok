@@ -854,6 +854,9 @@ def add_database(group):
                        default=os.environ.get('ANYBLOK_ENCRYPT_KEY'),
                        help=("Default ey definition to encrypt column with "
                              "encryp_key=True"))
+    group.add_argument('--db-mysql-no-savepoint', action="store_true",
+                       default=(os.environ.get(
+                           'ANYBLOK_DATABASE_MYSQL_NO_SAVEPOINT') or False))
 
 
 @Configuration.add('create_db', must_be_loaded_by_unittest=True)
