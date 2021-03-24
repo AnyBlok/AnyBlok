@@ -1037,6 +1037,13 @@ class TestMigration:
         assert not(
             report.log_has("Drop check constraint ck_other on test"))
 
+    @pytest.mark.skipif(
+        sgdb_in(['MySQL', 'MariaDB']),
+        reason=(
+            "Modification of schema create an implicite commit "
+            "with MySQL and MariaDB, save point is by passed for them"
+        )
+    )
     def test_savepoint(self, registry):
         Test = registry.Test
         self.fill_test_table(registry)

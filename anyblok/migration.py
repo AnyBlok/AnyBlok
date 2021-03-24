@@ -931,12 +931,8 @@ class MigrationColumn:
                     self.table.name, self.name, nullable=nullable,
                     schema=self.table.schema, **vals)
                 self.table.migration.release_savepoint(savepoint)
-            except IntegrityError as e:
-                # POSTGRES
-                self.table.migration.rollback_savepoint(savepoint)
-                logger.warning(str(e))
             except (IntegrityError, OperationalError) as e:
-                # OperationalError : MariaDB/MySQL SAVEPOINT already released
+                self.table.migration.rollback_savepoint(savepoint)
                 logger.warning(str(e))
 
         return MigrationColumn(self.table, name)
@@ -1589,11 +1585,10 @@ class Migration:
         :rtype: return the name of the save point
         """
         if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
-            if Configuration.get('mysql_no_savepoint'):
-                logger.warning(
-                    "Try to create a SAVEPOINT, but %r don't have this "
-                    "functionality" % self.conn.engine.dialect)
-                return
+            logger.warning(
+                "Try to create a SAVEPOINT, but %r don't have this "
+                "functionality" % self.conn.engine.dialect)
+            return
 
         return self.conn._savepoint_impl(name=name)
 
@@ -1603,11 +1598,10 @@ class Migration:
         :param name: name of the savepoint
         """
         if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
-            if Configuration.get('mysql_no_savepoint'):
-                logger.warning(
-                    "Try to create a SAVEPOINT, but %r don't have this "
-                    "functionality" % self.conn.engine.dialect)
-                return
+            logger.warning(
+                "Try to rollback a SAVEPOINT, but %r don't have this "
+                "functionality" % self.conn.engine.dialect)
+            return
 
         self.conn._rollback_to_savepoint_impl(name)
 
@@ -1617,11 +1611,10 @@ class Migration:
         :param name: name of the savepoint
         """
         if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
-            if Configuration.get('mysql_no_savepoint'):
-                logger.warning(
-                    "Try to create a SAVEPOINT, but %r don't have this "
-                    "functionality" % self.conn.engine.dialect)
-                return
+            logger.warning(
+                "Try to release a SAVEPOINT, but %r don't have this "
+                "functionality" % self.conn.engine.dialect)
+            return
 
         self.conn._release_savepoint_impl(name)
 
