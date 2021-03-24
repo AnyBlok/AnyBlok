@@ -26,8 +26,8 @@ class TestQueryScope:
 
     def test_dictone_on_some_column(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Model.query('name', 'table').filter_by(
-            name='Model.System.Blok')
+        query = registry.System.Model.query('name', 'table').filter(
+            registry.System.Model.name == 'Model.System.Blok')
         model = query.one()
         assert query.dictone() == {
             'name': model.name,
@@ -37,8 +37,8 @@ class TestQueryScope:
     def test_dictone_on_some_column_with_label(self, rollback_registry):
         registry = rollback_registry
         M = registry.System.Model
-        query = M.query(M.name.label('n2'), M.table.label('t2')).filter_by(
-            name='Model.System.Blok')
+        query = M.query(M.name.label('n2'), M.table.label('t2')).filter(
+            registry.System.Model.name == 'Model.System.Blok')
         model = query.one()
         assert query.dictone() == {
             'n2': model.n2,

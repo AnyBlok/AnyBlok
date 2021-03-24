@@ -2,6 +2,7 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -18,6 +19,7 @@ from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
 from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
 from sqlalchemy.orm.session import object_state
+from sqlalchemy import delete, select, update as sqla_update
 
 
 class uniquedict(dict):
@@ -123,6 +125,48 @@ class SqlMixin:
 
         query.set_Model(cls)
         return query
+
+    @classmethod
+    def execute_sql_statement(cls, *args, **kwargs):
+        """call SqlA execute method on the session"""
+        return cls.anyblok.execute(*args, **kwargs)
+
+    @classmethod
+    def select_sql_statement(cls, *elements):
+        """ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
+        """
+        res = []
+        for f in elements:
+            if isinstance(f, str):
+                res.append(getattr(cls, f).label(f))
+            else:
+                res.append(f)
+
+        if res:
+            stmt = select(*res)
+        else:
+            stmt = select(cls)
+
+        return cls.default_filter_on_sql_statement(stmt)
+
+    @classmethod
+    def default_filter_on_sql_statement(cls, statement):
+        return statement
 
     is_sql = True
 
@@ -530,23 +574,6 @@ class SqlBase(SqlMixin):
 
         return modified_fields
 
-    def update(self, **values):
-        """ Hight livel method to update the session for the instance
-        ::
-
-            self.update(val1=.., val2= ...)
-
-        ..warning::
-
-            the columns and values is passed as named arguments to show
-            a difference with Query.update meth
-
-        """
-        for x, v in values.items():
-            setattr(self, x, v)
-
-        return 1 if values else 0
-
     def expire_relationship_mapped(self, mappers):
         """ Expire the objects linked with this object, in function of
         the mappers definition
@@ -589,6 +616,11 @@ class SqlBase(SqlMixin):
         """
         self.anyblok.flag_modified(self, fields)
 
+    @classmethod
+    def delete_sql_statement(cls):
+        """Return a statement to delete some element"""
+        return cls.default_filter_on_sql_statement(delete(cls))
+
     def delete(self, byquery=False, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
         model::
@@ -604,8 +636,10 @@ class SqlBase(SqlMixin):
         """
         if byquery:
             cls = self.__class__
-            cls.query().filter(*cls.get_where_clause_from_primary_keys(
-                **self.to_primary_keys())).delete()
+            self.execute_sql_statement(
+                delete(cls).where(
+                    *cls.get_where_clause_from_primary_keys(
+                        **self.to_primary_keys())))
             self.expunge()
         else:
             model = self.anyblok.loaded_namespaces_first_step[
@@ -617,6 +651,37 @@ class SqlBase(SqlMixin):
 
         if flush:
             self.anyblok.flush()
+
+    @classmethod
+    def update_sql_statement(cls):
+        return cls.default_filter_on_sql_statement(sqla_update(cls))
+
+    def update(self, byquery=False, flush=False, **values):
+        """ Hight livel method to update the session for the instance
+        ::
+
+            self.update(val1=.., val2= ...)
+
+        ..warning::
+
+            the columns and values is passed as named arguments to show
+            a difference with Query.update meth
+
+        """
+        if byquery:
+            cls = self.__class__
+            return self.execute_sql_statement(
+                sqla_update(cls).where(
+                    *cls.get_where_clause_from_primary_keys(
+                        **self.to_primary_keys())).values(**values)).rowcount
+
+        for x, v in values.items():
+            setattr(self, x, v)
+
+        if flush:
+            self.anyblok.flush()
+
+        return 1 if values else 0
 
     @classmethod
     def insert(cls, **kwargs):

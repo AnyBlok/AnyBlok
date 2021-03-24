@@ -8,6 +8,7 @@
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+..    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -16,8 +17,36 @@
 CHANGELOG
 =========
 
-1.1.0 (unreleased)
+1.2.0 (unreleased)
 ------------------
+
+* Adapted to **SQLAlchemy >= 1.4**
+* Fixed Many2One with pycountry as primary key
+* Fixed Many2One with **primary_key=True**, when primary key is True, 
+  this nullable is forced to False
+* Refactored hybrid_property to use the decorator mecanisme
+* Adapted SQLA.URL manipulation, which was became immutable
+* Used the inspect method, not the deprecated Inspector
+* Refactored View, need the latest version of sqlalchemy-views
+* Removed old sqlalchemy interfaces for MySQL, replaced it by entry points
+* Added engine.event entry point to define action on engine
+* Added engine.event.**dialect name** entry point to define action on the
+  engine for the dialect
+* Added session.event.**dialect name** entry point to define action on the
+  session for the dialect
+
+1.1.0 (2021-03-22)
+------------------
+
+* Fixed version of **SQLAlchemy < 1.4.0**, The next version of AnyBlok 
+  will be adapted to **SQLAlchemy >= 1.4.0 < 2.0.0**, and will prepare to 
+  **SQLAlchemy >= 2.0**, See issue #168
+* **SQLAlchemy 1.4.0** add a new attribut in the model **registry**, 
+  this attribute conflicts with the registry of AnyBlok. A new attribute 
+  **anyblok** is created on the model to call the registry of AnyBlok. 
+  A modification of the attribute **registry** is done to use both attributes
+  with the same name. A deprecation warning is added on the attibute **registry**
+  of AnyBlok
 
 1.0.0 (2020-12-03)
 ------------------

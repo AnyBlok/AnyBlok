@@ -22,7 +22,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.mysql.types import TINYINT
 from sqlalchemy.dialects.mssql.base import BIT
 from anyblok import Declarations
-from sqlalchemy.exc import InternalError, IntegrityError, OperationalError
+from sqlalchemy.exc import IntegrityError
 from anyblok.config import Configuration
 from .conftest import init_registry, drop_database, create_database
 from anyblok.common import naming_convention
@@ -1037,6 +1037,13 @@ class TestMigration:
         assert not(
             report.log_has("Drop check constraint ck_other on test"))
 
+    @pytest.mark.skipif(
+        sgdb_in(['MySQL', 'MariaDB']),
+        reason=(
+            "Modification of schema create an implicite commit "
+            "with MySQL and MariaDB, save point is by passed for them"
+        )
+    )
     def test_savepoint(self, registry):
         Test = registry.Test
         self.fill_test_table(registry)
@@ -1046,14 +1053,6 @@ class TestMigration:
         registry.migration.rollback_savepoint('test')
         assert Test.query().count() == 10
         registry.migration.release_savepoint('test')
-
-    @pytest.mark.skipif(sgdb_in(['MsSQL']),
-                        reason="No error when rollback to released save point")
-    def test_savepoint_without_rollback(self, registry):
-        registry.migration.savepoint('test')
-        registry.migration.release_savepoint('test')
-        with pytest.raises((InternalError, OperationalError)):
-            registry.migration.rollback_savepoint('test')
 
 
 @pytest.fixture()

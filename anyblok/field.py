@@ -85,10 +85,17 @@ class Field:
         :param fieldname: name of the field
         :param properties: properties known to the model
         """
-        return hybrid_property(
-            self.wrap_getter_column(fieldname),
-            self.wrap_setter_column(fieldname),
-            expr=self.wrap_expr_column(fieldname))
+        fget = self.wrap_getter_column(fieldname)
+        fset = self.wrap_setter_column(fieldname)
+        fexp = self.wrap_expr_column(fieldname)
+
+        for func in (fget, fset, fexp):
+            func.__name__ = fieldname
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.expression(fexp)
+        return hybrid
 
     def getter_format_value(self, value):
         return value

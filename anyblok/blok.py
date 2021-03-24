@@ -2,10 +2,12 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import warnings
 from pkg_resources import iter_entry_points
 from anyblok.imp import ImportManager
 from .logging import log
@@ -273,7 +275,16 @@ class Blok:
     logo = ''
 
     def __init__(self, registry):
-        self.registry = registry
+        self.anyblok = registry
+
+    @property
+    def registry(self):
+        warnings.warn(
+            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
+            "own 'registry' attribute. Replace it by 'anyblok' attribute",
+            DeprecationWarning, stacklevel=2)
+
+        return self.anyblok
 
     @classmethod
     def import_declaration_module(cls):

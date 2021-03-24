@@ -3,6 +3,7 @@
 #
 #    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -10,7 +11,6 @@
 from logging import getLogger
 import warnings
 from sqlalchemy import create_engine, event, MetaData
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
@@ -24,9 +24,10 @@ from anyblok.common import anyblok_column_prefix, naming_convention
 from pkg_resources import iter_entry_points
 from .version import parse_version
 from .logging import log
-import sqlalchemy.interfaces
 from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.orm.decl_base import _declarative_constructor
+from sqlalchemy.orm.decl_api import DeclarativeMeta, registry as SQLARegistry
 
 try:
     import pyodbc
@@ -57,14 +58,6 @@ def return_list(entry):
         entry = [entry]
 
     return entry
-
-
-class DontBeSilly(sqlalchemy.interfaces.PoolListener):
-    def connect(self, dbapi_con, connection_record):
-        cur = dbapi_con.cursor()
-        cur.execute("SET autocommit=0;")
-        cur.execute("SET SESSION sql_mode='TRADITIONAL';")
-        cur = None
 
 
 class RegistryManager:
@@ -424,6 +417,20 @@ class RegistryManager:
             del cls.loaded_bloks[blok]['properties'][property_]
 
 
+class NewSQLARegistry(SQLARegistry):
+
+    def __getattr__(self, key):
+        sself = super(NewSQLARegistry, self)
+        if hasattr(sself, key):
+            return getattr(sself, key)
+
+        warnings.warn(
+            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
+            "own 'registry' attribute. Replace it by 'anyblok' attribute",
+            DeprecationWarning, stacklevel=2)
+        return getattr(self._class_registry['registry'], key)
+
+
 class DeprecatedClassProperty:
     def __init__(self, registry):
         self.registry = registry
@@ -434,6 +441,29 @@ class DeprecatedClassProperty:
             "own 'registry' attribute. Replace it by 'anyblok' attribute",
             DeprecationWarning, stacklevel=2)
         return getattr(self.registry, key, **kw)
+
+
+def declarative_base(
+    bind=None,
+    metadata=None,
+    mapper=None,
+    cls=object,
+    name="Base",
+    constructor=_declarative_constructor,
+    class_registry=None,
+    metaclass=DeclarativeMeta,
+):
+    return NewSQLARegistry(
+        _bind=bind,
+        metadata=metadata,
+        class_registry=class_registry,
+        constructor=constructor,
+    ).generate_base(
+        mapper=mapper,
+        cls=cls,
+        name=name,
+        metaclass=metaclass,
+    )
 
 
 class Registry:
@@ -455,7 +485,7 @@ class Registry:
         self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
             'anyblok': self,
-            'registry': DeprecatedClassProperty(self),
+            'registry': DeprecatedClassProperty(self),  # For Model No SQL
             'Env': EnvironmentManager})
         self.withoutautomigration = Configuration.get('withoutautomigration')
         self.ini_var()
@@ -476,7 +506,7 @@ class Registry:
 
     def init_engine_options(self, url):
         """Define the options to initialize the engine"""
-        options = dict(
+        return dict(
             echo=Configuration.get('db_echo') or False,
             max_overflow=Configuration.get('db_max_overflow') or 10,
             echo_pool=Configuration.get('db_echo_pool') or False,
@@ -485,12 +515,7 @@ class Registry:
                 'isolation_level',
                 Configuration.get('isolation_level', 'READ_UNCOMMITTED')
             ),
-            listeners=[]
         )
-        if url.drivername.startswith('mysql'):
-            options['listeners'].append(DontBeSilly())
-
-        return options
 
     def init_engine(self, db_name=None):
         """Define the engine
@@ -500,6 +525,31 @@ class Registry:
         url = Configuration.get('get_url', get_url)(db_name=db_name)
         kwargs = self.init_engine_options(url)
         self.rw_engine = create_engine(url, **kwargs)
+        self.apply_engine_events(self.rw_engine)
+
+    def apply_engine_events(self, engine):
+        """Add engine events
+
+        the engine event come from:
+
+        * entrypoints: ``anyblok.engine.event``
+        * entrypoints: ``anyblok.engine.event.**dialect's name**``
+        * registry additional_setting: ``anyblok.engine.event``
+        """
+        for i in iter_entry_points('anyblok.engine.event'):
+            logger.info('Update engine event from entrypoint %r' % i)
+            i.load()(engine)
+
+        for i in iter_entry_points(
+            'anyblok.engine.event.' + engine.dialect.name
+        ):
+            logger.info('Update engine event for %s from entrypoint %r' % (
+                self.engine.dialect.name, i))
+            i.load()(engine)
+
+        for funct in self.additional_setting.get('anyblok.engine.event', []):
+            logger.info('Update engine event %r' % funct)
+            funct(engine)
 
     @property
     def engine(self):
@@ -928,11 +978,8 @@ class Registry:
             Session = type('Session', tuple(session_bases), {
                 'registry_query': Query})
 
-            extension = self.additional_setting.get('sa.session.extension')
-            if extension:
-                extension = extension()
             self.Session = scoped_session(
-                sessionmaker(bind=bind, class_=Session, extension=extension),
+                sessionmaker(bind=bind, class_=Session),
                 EnvironmentManager.scoped_function_for_session())
 
             self.nb_query_bases = len(self.loaded_cores['Query'])
@@ -1010,10 +1057,18 @@ class Registry:
         the session event come from:
 
         * entrypoints: ``anyblok.session.event``
+        * entrypoints: ``anyblok.session.event.**sgdb**``
         * registry additional_setting: ``anyblok.session.event``
         """
         for i in iter_entry_points('anyblok.session.event'):
             logger.info('Update session event from entrypoint %r' % i)
+            i.load()(self.session)
+
+        for i in iter_entry_points(
+            'anyblok.session.event.' + self.engine.dialect.name
+        ):
+            logger.info('Update session event for %s from entrypoint %r' % (
+                self.engine.dialect.name, i))
             i.load()(self.session)
 
         for funct in self.additional_setting.get('anyblok.session.event', []):
@@ -1196,7 +1251,9 @@ class Registry:
 
         if self.Session:
             session = self.Session()
-            session.rollback()
+            if not self.unittest_transaction:
+                session.rollback()
+
             session.expunge_all()
             close_all_sessions()
 
@@ -1429,7 +1486,10 @@ class Registry:
 
         logger.info("Change state %s => %s for blok %s" % (
             blok.state, state, blok_name))
-        query.update({Blok.state: state})
+        Q = "UPDATE system_blok SET state='%s' where name='%s';" % (
+            state, blok_name)
+        self.execute(Q)
+        # blok.update(state=state)
 
     @log(logger, level='debug', withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):

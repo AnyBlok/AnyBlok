@@ -18,16 +18,16 @@ class Model(Declarations.Mixin.DocElement):
         self.attributes = []
         if self.exist():
             self._auto_doc(
-                self.registry.Documentation.Model.Field, self.fields, self)
-            self._auto_doc(self.registry.Documentation.Model.Attribute,
+                self.anyblok.Documentation.Model.Field, self.fields, self)
+            self._auto_doc(self.anyblok.Documentation.Model.Attribute,
                            self.attributes, self)
 
     def exist(self):
-        return self.registry.has(self.model.name)
+        return self.anyblok.has(self.model.name)
 
     @classmethod
     def get_all_models(cls, models):
-        Model = cls.registry.System.Model
+        Model = cls.anyblok.System.Model
         res = []
         for model in models:
             if model[-2:] == '.*':
@@ -40,7 +40,7 @@ class Model(Declarations.Mixin.DocElement):
 
     @classmethod
     def filterModel(cls, query):
-        Model = cls.registry.System.Model
+        Model = cls.anyblok.System.Model
         wanted_models = Configuration.get('doc_wanted_models')
         if wanted_models:
             wanted_models = cls.get_all_models(wanted_models)
@@ -59,7 +59,7 @@ class Model(Declarations.Mixin.DocElement):
 
     @classmethod
     def getelements(cls):
-        return cls.filterModel(cls.registry.System.Model.query()).all()
+        return cls.filterModel(cls.anyblok.System.Model.query()).all()
 
     @classmethod
     def header2RST(cls, doc):
@@ -81,21 +81,21 @@ class Model(Declarations.Mixin.DocElement):
     def toRST_field(self, doc):
         if self.fields:
             self._toRST(
-                doc, self.registry.Documentation.Model.Field, self.fields)
+                doc, self.anyblok.Documentation.Model.Field, self.fields)
 
     def toRST_method(self, doc):
         if self.attributes:
             self._toRST(
-                doc, self.registry.Documentation.Model.Attribute,
+                doc, self.anyblok.Documentation.Model.Attribute,
                 self.attributes)
 
     def toRST_docstring(self, doc):
-        Model = self.registry.get(self.model.name)
+        Model = self.anyblok.get(self.model.name)
         if hasattr(Model, '__doc__') and Model.__doc__:
             doc.write(Model.__doc__ + '\n\n')
 
     def toRST_properties_get(self):
-        Model = self.registry.get(self.model.name)
+        Model = self.anyblok.get(self.model.name)
         tablename = getattr(Model, '__tablename__', 'No table')
         return {
             'table name': tablename,
@@ -118,12 +118,12 @@ class Model(Declarations.Mixin.DocElement):
             attr.toUML(dot, self.model.name)
 
     def toSQL_add_table(self, dot):
-        Model = self.registry.get(self.model.name)
+        Model = self.anyblok.get(self.model.name)
         if hasattr(Model, '__tablename__'):
             dot.add_table(Model.__tablename__)
 
     def toSQL_add_fields(self, dot):
-        Model = self.registry.get(self.model.name)
+        Model = self.anyblok.get(self.model.name)
         if hasattr(Model, '__tablename__'):
             for f in self.fields:
                 f.toSQL(dot)
