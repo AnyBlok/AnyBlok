@@ -931,10 +931,12 @@ class MigrationColumn:
                     self.table.name, self.name, nullable=nullable,
                     schema=self.table.schema, **vals)
                 self.table.migration.release_savepoint(savepoint)
-            except (IntegrityError, OperationalError) as e:
-                # IntegrityError => POSTGRES
-                # OperationalError => MariaDB, MySQL (NO SAVEPOIN)
+            except IntegrityError as e:
+                # POSTGRES
                 self.table.migration.rollback_savepoint(savepoint)
+                logger.warning(str(e))
+            except (IntegrityError, OperationalError) as e:
+                # OperationalError : MariaDB/MySQL SAVEPOINT already released
                 logger.warning(str(e))
 
         return MigrationColumn(self.table, name)
