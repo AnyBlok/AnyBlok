@@ -315,8 +315,11 @@ class TestColumns:
 
     def test_string_query_False(self):
         registry = self.init_registry(simple_column, ColumnType=String)
-        test = registry.Test.insert()
-        self.registry.Test.query().filter_by(id=test.id).update({'col': False})
+        Test = registry.Test
+        test = Test.insert()
+        Test.execute_sql_statement(
+            Test.update_sql_statement().where(Test.id == test.id).values(
+                col=False))
         self.registry.expire(test, ['col'])
         assert test.col == ''
 
@@ -368,8 +371,11 @@ class TestColumns:
 
     def test_text_query_False(self):
         registry = self.init_registry(simple_column, ColumnType=Text)
-        test = registry.Test.insert()
-        self.registry.Test.query().filter_by(id=test.id).update({'col': False})
+        Test = registry.Test
+        test = Test.insert()
+        Test.execute_sql_statement(
+            Test.update_sql_statement().where(Test.id == test.id).values(
+                col=False))
         self.registry.expire(test, ['col'])
         assert test.col == ''
 
@@ -457,15 +463,18 @@ class TestColumns:
         d = datetime.datetime(2020, 7, 3, 18, 59, 0)
         d = add_timezone_on_datetime(d, timezone)
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        registry.Test.query().update(dict(col=d))
+        Test = registry.Test
+        test = Test.insert()
+        Test.execute_sql_statement(Test.update_sql_statement().values(col=d))
         registry.refresh(test)
         assert test.col == d
 
     def test_datetime_by_query_none_value(self, dt_column_type):
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        registry.Test.query().update(dict(col=None))
+        Test = registry.Test
+        test = Test.insert()
+        Test.execute_sql_statement(Test.update_sql_statement().values(
+            col=None))
         assert test.col is None
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
@@ -474,9 +483,10 @@ class TestColumns:
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        registry.Test.query().update(
-            dict(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%z')))
+        Test = registry.Test
+        test = Test.insert()
+        Test.execute_sql_statement(Test.update_sql_statement().values(
+            col=now.strftime('%Y-%m-%d %H:%M:%S.%f%z')))
         registry.expire(test, ['col'])
         assert test.col == now
 
@@ -486,9 +496,10 @@ class TestColumns:
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        registry.Test.query().update(
-            dict(col=now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')))
+        Test = registry.Test
+        test = Test.insert()
+        Test.execute_sql_statement(Test.update_sql_statement().values(
+            col=now.strftime('%Y-%m-%d %H:%M:%S.%f%Z')))
         registry.expire(test, ['col'])
         assert test.col == now
 
@@ -498,9 +509,10 @@ class TestColumns:
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        registry.Test.query().update(
-            dict(col=now.strftime('%Y-%m-%d %H:%M:%S.%f')))
+        Test = registry.Test
+        test = Test.insert()
+        Test.execute_sql_statement(Test.update_sql_statement().values(
+            col=now.strftime('%Y-%m-%d %H:%M:%S.%f')))
         registry.expire(test, ['col'])
         assert test.col == now
 
@@ -510,9 +522,10 @@ class TestColumns:
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        registry.Test.query().update(
-            dict(col=now.strftime('%Y-%m-%d %H:%M:%S')))
+        Test = registry.Test
+        test = Test.insert()
+        Test.execute_sql_statement(Test.update_sql_statement().values(
+            col=now.strftime('%Y-%m-%d %H:%M:%S')))
         registry.expire(test, ['col'])
         assert test.col == now.replace(microsecond=0)
 
@@ -742,7 +755,9 @@ class TestColumns:
             simple_column, ColumnType=Selection, selections=SELECTIONS)
         registry.Test.insert(col=SELECTIONS[0][0])
         with pytest.raises(StatementError):
-            registry.Test.query().update({'col': 'bad value'})
+            registry.execute(
+                registry.Test.update_sql_statement().values(
+                    {'col': 'bad value'}))
 
     def test_selection_like_comparator(self):
         SELECTIONS = [
