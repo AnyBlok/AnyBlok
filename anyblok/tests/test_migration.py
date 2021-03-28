@@ -47,7 +47,7 @@ def cnx(registry):
     try:
         yield cnx
     except Exception:
-        cnx.execute("rollback")
+        cnx.execute(text("rollback"))
         raise
 
 
