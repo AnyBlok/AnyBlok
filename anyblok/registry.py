@@ -10,7 +10,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from logging import getLogger
 import warnings
-from sqlalchemy import create_engine, event, MetaData
+from sqlalchemy import create_engine, event, MetaData, text
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
@@ -524,6 +524,7 @@ class Registry:
         """
         url = Configuration.get('get_url', get_url)(db_name=db_name)
         kwargs = self.init_engine_options(url)
+        kwargs['future'] = True
         self.rw_engine = create_engine(url, **kwargs)
         self.apply_engine_events(self.rw_engine)
 
@@ -636,7 +637,7 @@ class Registry:
         query += " FROM system_blok"
         query += " WHERE state in ('%s')" % "', '".join(states)
         try:
-            res = self.execute(query, fetchall=True)
+            res = self.execute(text(query), fetchall=True)
         except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
             pass
@@ -979,7 +980,7 @@ class Registry:
                 'registry_query': Query})
 
             self.Session = scoped_session(
-                sessionmaker(bind=bind, class_=Session),
+                sessionmaker(bind=bind, class_=Session, future=True),
                 EnvironmentManager.scoped_function_for_session())
 
             self.nb_query_bases = len(self.loaded_cores['Query'])
@@ -1246,7 +1247,7 @@ class Registry:
         you should use close method which call this method
         """
 
-        if self.unittest_transaction:
+        if self.unittest_transaction and self.unittest_transaction.is_active:
             self.unittest_transaction.rollback()
 
         if self.Session:
