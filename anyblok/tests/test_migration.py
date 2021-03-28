@@ -17,7 +17,7 @@ from anyblok.relationship import Many2Many
 from contextlib import contextmanager
 from sqlalchemy import (
     MetaData, Table, Column, Integer, String, Boolean, TEXT,
-    CheckConstraint, ForeignKey
+    CheckConstraint, ForeignKey, text
 )
 from sqlalchemy.dialects.mysql.types import TINYINT
 from sqlalchemy.dialects.mssql.base import BIT
@@ -574,7 +574,7 @@ class TestMigration:
 
     def test_detect_drop_index(self, registry):
         with cnx(registry) as conn:
-            conn.execute("""CREATE INDEX other_idx ON test (other);""")
+            conn.execute(text("CREATE INDEX other_idx ON test (other);"))
         report = registry.migration.detect_changed()
         assert report.log_has("Drop index other_idx on test")
         report.apply_change()
@@ -584,7 +584,7 @@ class TestMigration:
     def test_detect_drop_anyblok_index(self, registry):
         with cnx(registry) as conn:
             conn.execute(
-                """CREATE INDEX anyblok_ix_test__other ON test (other);""")
+                text("CREATE INDEX anyblok_ix_test__other ON test (other);"))
         report = registry.migration.detect_changed()
         assert report.log_has("Drop index anyblok_ix_test__other on test")
         report.apply_change()
@@ -594,7 +594,7 @@ class TestMigration:
 
     def test_detect_drop_index_with_reinit_indexes(self, registry):
         with cnx(registry) as conn:
-            conn.execute("""CREATE INDEX other_idx ON test (other);""")
+            conn.execute(text("CREATE INDEX other_idx ON test (other);"))
         registry.migration.reinit_indexes = True
         report = registry.migration.detect_changed()
         assert report.log_has("Drop index other_idx on test")
@@ -604,7 +604,7 @@ class TestMigration:
 
     def test_detect_drop_index_with_reinit_all(self, registry):
         with cnx(registry) as conn:
-            conn.execute("""CREATE INDEX other_idx ON test (other);""")
+            conn.execute(text("CREATE INDEX other_idx ON test (other);"))
         registry.migration.reinit_all = True
         report = registry.migration.detect_changed()
         assert report.log_has("Drop index other_idx on test")
