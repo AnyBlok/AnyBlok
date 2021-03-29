@@ -1,6 +1,7 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -10,6 +11,7 @@ from functools import lru_cache
 from sqlalchemy.schema import ForeignKeyConstraint
 from sqlalchemy.sql.naming import ConventionDict
 from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy import text
 
 
 """Define the prefix for the mapper attribute of the column"""
@@ -192,9 +194,9 @@ def sgdb_in(engine, databases):
                 if database == 'MySQL':
                     DATABASES_CACHED['MySQL'] = True
 
-                res = engine.execute("""
-                    show variables like 'version'
-                """).fetchone()
+                res = engine.execute(
+                    text("show variables like 'version'")
+                ).fetchone()
                 if res and database in res[1]:
                     # MariaDB
                     DATABASES_CACHED[database] = True
