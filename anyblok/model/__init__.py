@@ -4,6 +4,7 @@
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -22,8 +23,7 @@ from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
 from .plugins import get_model_plugins
 from .exceptions import ModelException
-from .factory import has_sql_fields, ModelFactory, ViewFactory
-from .common import get_factory
+from .factory import has_sql_fields, ModelFactory
 
 
 def has_sqlalchemy_fields(base):
@@ -92,10 +92,6 @@ def autodoc_fields(declaration_cls, model_cls):
 def update_factory(kwargs):
     if 'factory' in kwargs:
         kwargs['__model_factory__'] = kwargs.pop('factory')
-    elif 'type' in kwargs:
-        kwargs['__model_factory__'] = get_factory(kwargs.pop('type'))
-    elif kwargs.get('is_sql_view'):
-        kwargs['__model_factory__'] = ViewFactory
 
 
 @Declarations.add_declaration_type(isAnEntry=True,
