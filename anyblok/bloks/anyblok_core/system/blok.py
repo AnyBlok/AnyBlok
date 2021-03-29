@@ -166,8 +166,10 @@ class Blok:
 
         if conditional_bloks_to_install:
             for b in conditional_bloks_to_install:
-                cls.query().filter(cls.name == b).update(
-                    {cls.state: 'toinstall'})
+                cls.execute_sql_statement(
+                    cls.update_sql_statement().where(cls.name == b).values(
+                        state='toinstall')
+                )
 
             return True
 

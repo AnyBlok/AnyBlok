@@ -268,10 +268,12 @@ class SqlMixin:
         :type: list of the primary keys name
         """
         C = cls.anyblok.System.Column
-        query = C.query().distinct(C.name).options(load_only(C.name))
+        query = C.query()
+        query = query.options(load_only(C.name))
         query = query.filter(C.model.in_(cls.get_all_registry_names()))
         query = query.filter(C.primary_key == true())
-        return query.all().name
+        # DISTINCT does not works on MySQL/MsSQL
+        return list(set(query.all().name))
 
     @classmethod_cache()
     def _fields_description(cls):

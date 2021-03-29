@@ -799,10 +799,12 @@ class TestBlokModel:
         from sqlalchemy.exc import IntegrityError
         with pytest.raises(IntegrityError):
             with registry.begin_nested():
-                registry.Test2.query().delete()
+                registry.Test2.execute_sql_statement(
+                    registry.Test2.delete_sql_statement())
 
         registry.upgrade(uninstall=('test-blok8',))
-        registry.Test2.query().delete()
+        registry.Test2.execute_sql_statement(
+            registry.Test2.delete_sql_statement())
 
     def test_auto_migration_is_between_pre_and_post_migration_1(
         self, registry_testblok

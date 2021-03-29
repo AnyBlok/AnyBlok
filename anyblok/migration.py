@@ -60,7 +60,7 @@ def cnx(migration):
     except MigrationException:
         raise
     except Exception:
-        migration.conn.execute("rollback")
+        migration.conn.execute(text("rollback"))
         raise
 
 
@@ -1353,7 +1353,7 @@ class MigrationSchema:
                     FROM INFORMATION_SCHEMA.SCHEMATA
                     WHERE SCHEMA_name='%s'
                 """ % self.name
-                return conn.execute(query).fetchone()[0]
+                return conn.execute(text(query)).fetchone()[0]
             else:
                 return self.migration.operation.impl.dialect.has_schema(
                     conn, self.name)

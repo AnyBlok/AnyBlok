@@ -14,7 +14,8 @@ from anyblok.column import Integer as Int, String as Str
 from anyblok.migration import MigrationException
 from contextlib import contextmanager
 from sqlalchemy import (
-    MetaData, Table, Column, Integer, String, CheckConstraint, ForeignKey)
+    MetaData, Table, Column, Integer, String, CheckConstraint, ForeignKey,
+    text)
 from anyblok import Declarations
 from anyblok.config import Configuration
 from .conftest import init_registry, drop_database, create_database
@@ -42,7 +43,7 @@ def cnx(registry):
     try:
         yield cnx
     except Exception:
-        cnx.execute("rollback")
+        cnx.execute(text("rollback"))
         raise
 
 
@@ -211,8 +212,8 @@ class TestMigration:
 
     def test_detect_drop_anyblok_index(self, registry):
         with cnx(registry) as conn:
-            conn.execute(
-                """CREATE INDEX anyblok_ix_test__other ON test (other);""")
+            conn.execute(text(
+                """CREATE INDEX anyblok_ix_test__other ON test (other);"""))
 
         registry.migration.ignore_migration_for = {'test': True}
         report = registry.migration.detect_changed()

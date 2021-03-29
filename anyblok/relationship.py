@@ -974,6 +974,46 @@ class Many2Many(RelationShip):
 
         return has_join_table, schema
 
+    def get_back_populate_relationship(self, registry, join_table):
+        remote_model = self.model.model_name
+        lnfs = registry.loaded_namespaces_first_step[remote_model]
+        for fieldname in lnfs:
+            field = lnfs[fieldname]
+            if not isinstance(field, Many2Many):
+                continue
+
+            field.local_model = self.model
+            remote_join_table = field.get_join_table(
+                registry, remote_model, fieldname)
+            if join_table == remote_join_table:
+                return fieldname
+
+        return None
+
+    def set_overlaps_properties(self, registry, namespace):
+        if not self.join_model:
+            return
+
+        lnfs = registry.loaded_namespaces_first_step[
+            self.join_model.model_name]
+        fieldnames = []
+        for fieldname in lnfs:
+            field = lnfs[fieldname]
+            if not isinstance(field, Many2One):
+                continue
+
+            if field.model.model_name not in (
+                namespace, self.model.model_name
+            ):
+                continue
+
+            fieldnames.append(anyblok_column_prefix + fieldname)
+
+        if fieldnames:
+            # M2O on join model to M2M fields
+            self.kwargs['overlaps'] = ','.join(fieldnames)
+            self.backref_properties['overlaps'] = ','.join(fieldnames)
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Create the relationship
@@ -1048,6 +1088,7 @@ class Many2Many(RelationShip):
             self.kwargs['primaryjoin'] = primaryjoin
             self.kwargs['secondaryjoin'] = secondaryjoin
 
+        self.set_overlaps_properties(registry, namespace)
         self.kwargs['secondary'] = (
             '%s.%s' % (schema, join_table) if schema else join_table)
         # definition of expiration
@@ -1063,6 +1104,10 @@ class Many2Many(RelationShip):
             self.init_expire_attributes(registry, model_name, backref)
             registry.expire_attributes[model_name][backref].add(
                 ('x2m', backref, fieldname))
+        else:
+            m2m = self.get_back_populate_relationship(registry, join_table)
+            if m2m:
+                self.kwargs['back_populates'] = m2m
 
         return super(Many2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
@@ -1213,6 +1258,25 @@ class One2Many(RelationShip):
 
             self.kwargs['primaryjoin'] = 'and_(' + ', '.join(pjs) + ')'
 
+    def get_back_populate_relationship(self, registry, namespace):
+        remote_model = self.model.model_name
+        lnfs = registry.loaded_namespaces_first_step[remote_model]
+        fieldnames = []
+        for fieldname in lnfs:
+            field = lnfs[fieldname]
+            if not isinstance(field, Many2One):
+                continue
+
+            if field.model.model_name != namespace:
+                continue
+
+            if field.kwargs.get('backref'):
+                continue
+
+            fieldnames.append(anyblok_column_prefix + fieldname)
+
+        return fieldnames
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Create the relationship
@@ -1239,6 +1303,11 @@ class One2Many(RelationShip):
                 self.model.model_name, rcol).get_fk_column(registry)
             if col:
                 self.kwargs['info']['local_columns'].append(col)
+
+        if not self.kwargs.get('backref'):
+            m2o = self.get_back_populate_relationship(registry, namespace)
+            if m2o:
+                self.kwargs['overlaps'] = ','.join(m2o)
 
         self.add_expire_attributes(registry, namespace, fieldname)
         return super(One2Many, self).get_sqlalchemy_mapping(
