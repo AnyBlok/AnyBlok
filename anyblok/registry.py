@@ -900,16 +900,12 @@ class Registry:
             return res
         else:
             conn = None
-            try:
-                conn = self.engine.connect()
+            with self.engine.connect() as conn:
                 res = conn.execute(*args, **kwargs)
                 if fetchall:
                     return res.fetchall()
 
                 return res
-            finally:
-                if conn:
-                    conn.close()
 
     def get_namespace(self, parent, child):
         if hasattr(parent, child) and getattr(parent, child):

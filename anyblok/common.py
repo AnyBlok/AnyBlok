@@ -194,12 +194,13 @@ def sgdb_in(engine, databases):
                 if database == 'MySQL':
                     DATABASES_CACHED['MySQL'] = True
 
-                res = engine.execute(
-                    text("show variables like 'version'")
-                ).fetchone()
-                if res and database in res[1]:
-                    # MariaDB
-                    DATABASES_CACHED[database] = True
+                with engine.connect() as conn:
+                    res = conn.execute(
+                        text("show variables like 'version'")
+                    ).fetchone()
+                    if res and database in res[1]:
+                        # MariaDB
+                        DATABASES_CACHED[database] = True
 
             if (
                 engine.url.drivername.startswith('postgres') and
