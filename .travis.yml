@@ -91,4 +91,4 @@ script:
   - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
   - pytest --cov-report=term --cov-append --cov=anyblok anyblok/bloks/anyblok_core
 
-after_success: coveralls --data_file=.coverage --config_file=.coveragerc
+after_success: coveralls  --finish --data_file=.coverage --config_file=.coveragerc
