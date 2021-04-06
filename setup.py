@@ -28,7 +28,7 @@ if sys.version_info < (3, 5):
 requires = [
     'sqlalchemy >= 1.4.0',
     'sqlalchemy-utils >= 0.33.0',
-    'sqlalchemy-views',
+    'sqlalchemy-views >= 0.3.0',
     'packaging',
     'setuptools',
     'argparse',
