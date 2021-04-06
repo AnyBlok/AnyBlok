@@ -77,7 +77,6 @@ install:
   - pip install $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
-  - pip install coveralls
   - pip install -U cryptography
   - pip install -U coveralls
   - pip install .
@@ -91,4 +90,4 @@ script:
   - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
   - pytest --cov-report=term --cov-append --cov=anyblok anyblok/bloks/anyblok_core
 
-after_success: coveralls  --finish
+after_success: coveralls
