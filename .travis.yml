@@ -6,7 +6,6 @@ python:
     - "3.7"
     - "3.8"
     - "3.9"
-    - "3.9-dev"
     - "nightly"
 
 env:
@@ -83,11 +82,11 @@ install:
 
 script:
   - flake8 anyblok --exclude=*/tests/*
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS == '' ]]; then pytest --cov-report=term --cov=anyblok anyblok/tests; fi
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov-report=term --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS == '' ]]; then pytest --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov=anyblok anyblok/tests; fi
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks  --with-demo
   - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
-  - pytest --cov-report=term --cov-append --cov=anyblok anyblok/bloks/anyblok_core
+  - pytest --cov-append --cov=anyblok anyblok/bloks/anyblok_core
 
 after_success: coveralls
