@@ -6,7 +6,7 @@ python:
     - "3.7"
     - "3.8"
     - "3.9"
-    - "3.9-dev"
+    - "3.10-dev"
     - "nightly"
 
 env:
@@ -39,7 +39,7 @@ env:
 
 matrix:
     allow_failures:
-      - python: "3.9-dev"
+      - python: "3.10-dev"
       - python: "nightly"
       - python: "pypy3"
     include:
@@ -77,19 +77,17 @@ install:
   - pip install $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
-  - pip install coveralls
   - pip install -U cryptography
   - pip install -U coveralls
   - pip install .
 
 script:
   - flake8 anyblok --exclude=*/tests/*
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS == '' ]]; then pytest --cov-report=term --cov=anyblok anyblok/tests; fi
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov-report=term --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS == '' ]]; then pytest --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov=anyblok anyblok/tests; fi
   - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks  --with-demo
   - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
-  - pytest --cov-report=term --cov-append --cov=anyblok anyblok/bloks/anyblok_core
-  
-after_success:
-  coveralls --data_file=.coverage --config_file=.coveragerc
+  - pytest --cov-append --cov=anyblok anyblok/bloks/anyblok_core
+
+after_success: coveralls
