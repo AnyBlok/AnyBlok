@@ -3,10 +3,10 @@ sudo: true
 
 python:
     - "3.6"
-      #    - "3.7"
-      #    - "3.8"
-      #    - "3.9"
-      #    - "nightly"
+    - "3.7"
+    - "3.8"
+    - "3.9"
+    - "nightly"
 
 env:
     global:
@@ -14,35 +14,35 @@ env:
         - MARKERS=''
     matrix:
         - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2'
-          # - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
-          # - |-
-          #   ANYBLOK_DATABASE_HOST=localhost \
-          #   ANYBLOK_DATABASE_PORT=1433 \
-          #   ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
-          #   ANYBLOK_DATABASE_USER=sa \
-          #   ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
-          #   ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
-          #   SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          #   SQLPYCLIENT='pyodbc' \
-          #   MARKERS='field or column or relationship'
-          # - |-
-          #   ANYBLOK_DATABASE_HOST=localhost \
-          #   ANYBLOK_DATABASE_PORT=1433 \
-          #   ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
-          #   ANYBLOK_DATABASE_USER=sa \
-          #   ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
-          #   ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
-          #   SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
-          #   SQLPYCLIENT='pyodbc' \
-          #   MARKERS='not field and not column and not relationship'
+        - ANYBLOK_DATABASE_DRIVER=mysql ANYBLOK_DATABASE_USER=travis SQLSERVER='mysql -e' SQLPYCLIENT='mysqlclient'
+        - |-
+          ANYBLOK_DATABASE_HOST=localhost \
+          ANYBLOK_DATABASE_PORT=1433 \
+          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
+          ANYBLOK_DATABASE_USER=sa \
+          ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+          ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
+          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
+          SQLPYCLIENT='pyodbc' \
+          MARKERS='field or column or relationship'
+        - |-
+          ANYBLOK_DATABASE_HOST=localhost \
+          ANYBLOK_DATABASE_PORT=1433 \
+          ANYBLOK_DATABASE_DRIVER=mssql+pyodbc \
+          ANYBLOK_DATABASE_USER=sa \
+          ANYBLOK_DATABASE_PASSWORD=AnyBl@k2019 \
+          ANYBLOK_DATABASE_QUERY='driver=ODBC Driver 17 for SQL Server'\
+          SQLSERVER='docker exec mssql /opt/mssql-tools/bin/sqlcmd -U sa -P AnyBl@k2019 -Q' \
+          SQLPYCLIENT='pyodbc' \
+          MARKERS='not field and not column and not relationship'
 
 matrix:
     allow_failures:
-        # - python: "nightly"
-        # - python: "pypy3"
-        # include:
-        #   - python: "pypy3"
-        #     env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
+     - python: "nightly"
+     - python: "pypy3"
+     include:
+       - python: "pypy3"
+         env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
     fast_finish: true
 
 virtualenv:
@@ -81,9 +81,9 @@ install:
 
 script:
   - flake8 anyblok --exclude=*/tests/*
-    # - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS == '' ]]; then pytest --cov=anyblok anyblok/tests; fi
-    # - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov=anyblok anyblok/tests; fi
-    # - $SQLSERVER 'drop database travis_ci_test;'
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS == '' ]]; then pytest --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov=anyblok anyblok/tests; fi
+  - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks  --with-demo
   - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
   - pytest --cov-append --cov=anyblok anyblok/bloks/anyblok_core
