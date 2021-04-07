@@ -86,6 +86,6 @@ script:
     # - $SQLSERVER 'drop database travis_ci_test;'
   - anyblok_createdb --install-all-bloks  --with-demo
   - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
-  - pytest --cov-append --cov=anyblok anyblok/bloks/anyblok_core
+  - pytest --cov-report= --cov-append --cov=anyblok anyblok/bloks/anyblok_core
 
-after_success: coveralls --merge .coverage
+after_success: coveralls
