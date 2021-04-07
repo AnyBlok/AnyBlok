@@ -51,7 +51,7 @@ class SqlMixin:
                 value = state.attrs.get(
                     anyblok_column_prefix + key).loaded_value
             else:
-                continue
+                continue  # pragma: no cover
 
             if value == NO_VALUE:
                 value = NOT_LOADED_REPR
@@ -197,7 +197,7 @@ class SqlMixin:
         """
         _pks = cls.get_primary_keys()
         for pk in _pks:
-            if pk not in pks:
+            if pk not in pks:  # pragma: no cover
                 raise SqlBaseException("No primary key %s filled for %r" % (
                     pk, cls.__registry_name__))
 
@@ -226,10 +226,7 @@ class SqlMixin:
         :rtype: instance of the model
         """
         query = cls.query_from_primary_keys(**pks)
-        if query.count():
-            return query.first()
-
-        return None
+        return query.one_or_none()
 
     @classmethod
     def from_multi_primary_keys(cls, *pks):
@@ -415,7 +412,7 @@ class SqlMixin:
             field_value, field_property = getattr(self, field), None
             try:
                 field_property = getattr(getattr(cls, field), 'property', None)
-            except FieldException:
+            except FieldException:  # pragma: no cover
                 pass
 
             # Deal with this data
@@ -498,7 +495,7 @@ class SqlMixin:
                   not isinstance(_field, Many2Many) and
                   'backref' in _field.kwargs):
                 res.add_in_res(field, [_field.kwargs['backref'][0]])
-            elif isinstance(_field, FakeRelationShip):
+            elif isinstance(_field, FakeRelationShip):  # pragma: no cover
                 res.add_in_res(field, [_field.mapper.attribute_name])
 
         return res
@@ -518,7 +515,7 @@ class SqlMixin:
         while _fields:
             field = _fields.pop()
             if not isinstance(field, str):
-                field = field.name
+                field = field.name  # pragma: no cover
 
             if field in res:
                 continue
@@ -546,7 +543,7 @@ def get_model_information(anyblok, registry_name):
         if depend != registry_name:
             for x, y in get_model_information(anyblok, depend).items():
                 if x not in model:
-                    model[x] = y
+                    model[x] = y  # pragma: no cover
 
     return model
 
@@ -562,7 +559,7 @@ class SqlBase(SqlMixin):
         modified_fields = {}
         for attr in state.manager.attributes:
             if not hasattr(attr.impl, 'get_history'):
-                continue
+                continue  # pragma: no cover
 
             added, unmodified, deleted = attr.impl.get_history(
                 state, state.dict)
@@ -681,7 +678,7 @@ class SqlBase(SqlMixin):
             setattr(self, x, v)
 
         if flush:
-            self.anyblok.flush()
+            self.anyblok.flush()  # pragma: no cover
 
         return 1 if values else 0
 
@@ -715,7 +712,7 @@ class SqlBase(SqlMixin):
         """
         instances = cls.anyblok.InstrumentedList()
         for kwargs in args:
-            if not isinstance(kwargs, dict):
+            if not isinstance(kwargs, dict):  # pragma: no cover
                 raise SqlBaseException("multi_insert method wait list of dict")
 
             instance = cls(**kwargs)

@@ -306,8 +306,8 @@ class Column(Field):
             encrypt_key = Configuration.get('default_encrypt_key')
 
         if not encrypt_key:
-            raise FieldException("No encrypt_key defined in the "
-                                 "configuration")
+            raise FieldException(  # pragma: no cover
+                "No encrypt_key defined in the configuration")
 
         def wrapper():
             """Return encrypt_key wrapper
@@ -454,7 +454,7 @@ class Decimal(Column):
 
     def getter_format_value(self, value):
         if value is None:
-            return None
+            return None  # pragma: no cover
 
         if self.encrypt_key:
             value = decimal.Decimal(value)
@@ -537,7 +537,7 @@ class DateTimeType(types.TypeDecorator):
 
     @property
     def python_type(self):
-        return datetime
+        return datetime  # pragma: no cover
 
 
 class DateTime(Column):
@@ -777,11 +777,7 @@ class MsSQLPasswordType(PasswordType):
     impl = types.VARCHAR(1024)
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'mssql':
-            # Use a BLOB type for sqlite
-            return dialect.type_descriptor(types.VARCHAR(self.length))
-
-        return super(MsSQLPasswordType, self).load_dialect_impl(dialect)
+        return dialect.type_descriptor(types.VARCHAR(self.length))
 
 
 class Password(Column):
@@ -952,7 +948,7 @@ class SelectionType(types.TypeDecorator):
         elif isinstance(selections, (list, tuple)):
             self.selections = dict(selections)
         else:
-            raise FieldException(
+            raise FieldException(  # pragma: no cover
                 "selection wainting 'dict', get %r" % type(selections))
 
         if isinstance(self.selections, dict):
@@ -960,7 +956,7 @@ class SelectionType(types.TypeDecorator):
                 if not isinstance(k, str):
                     raise FieldException('The key must be a str')
                 if len(k) > 64:
-                    raise Exception(
+                    raise Exception(  # pragma: no cover
                         '%r is too long %r, waiting max %s or use size arg' % (
                             k, len(k), size))
 
@@ -1301,6 +1297,7 @@ class Sequence(String):
         :return:
         """
         if not hasattr(registry, '_need_sequence_to_create_if_not_exist'):
+            # pragma: no cover
             registry._need_sequence_to_create_if_not_exist = []
         elif registry._need_sequence_to_create_if_not_exist is None:
             registry._need_sequence_to_create_if_not_exist = []
@@ -1525,7 +1522,8 @@ class Email(Column):
         """
         if value is not None:
             return value.lower()
-        return value
+
+        return value  # pragma: no cover
 
 
 class CountryType(types.TypeDecorator, ScalarCoercible):
@@ -1544,7 +1542,7 @@ class CountryType(types.TypeDecorator, ScalarCoercible):
         if value:
             return pycountry.countries.get(alpha_3=value)
 
-        return value
+        return value  # pragma: no cover
 
     def _coerce(self, value):
         if value is not None and not isinstance(value, self.python_type):
@@ -1574,7 +1572,7 @@ class Country(Column):
     def __init__(self, mode='alpha_2', *args, **kwargs):
         self.mode = mode
         if pycountry is None:
-            raise FieldException(
+            raise FieldException(  # pragma: no cover
                 "'pycountry' package is required for use 'CountryType'")
 
         self.choices = {getattr(country, mode): country.name

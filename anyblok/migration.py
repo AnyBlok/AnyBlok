@@ -59,7 +59,7 @@ def cnx(migration):
         yield migration.conn
     except MigrationException:
         raise
-    except Exception:
+    except Exception:  # pragma: no cover
         migration.conn.execute(text("rollback"))
         raise
 
@@ -179,7 +179,7 @@ class MigrationReport:
         self.raise_if_withoutautomigration()
         _, constraint = diff
         if self.ignore_migration_for(constraint.table.name) is True:
-            return True
+            return True  # pragma: no cover
 
         columns = [x.name for x in constraint.columns]
         if self.table_is_added(constraint.table):
@@ -310,7 +310,7 @@ class MigrationReport:
                 # only if fk is not removable. FK can come from
                 # * DBA manager, it is the only raison to destroy it
                 # * alembic, some constrainte change name during the remove
-                if fk.name not in fk_removed:
+                if fk.name not in fk_removed:  # pragma: no cover
                     self.actions.append(('remove_fk', fk.constraint))
                     fk_removed.append(fk.name)
 
@@ -557,7 +557,7 @@ class MigrationReport:
     def apply_change_modify_default(self, action):
         _, schema, table, column, kwargs, oldvalue, newvalue = action
         if schema:
-            t = self.migration.schema(schema).table(table)
+            t = self.migration.schema(schema).table(table)  # pragma: no cover
         else:
             t = self.migration.table(table)
 
@@ -687,8 +687,9 @@ class MigrationConstraintForeignKey:
 
         remote_table = set(x.table.name for x in remote_columns)
         if len(remote_table) != 1:
-            raise MigrationException("Remote column must have the same table "
-                                     "(%s)" % ', '.join(remote_table))
+            raise MigrationException(  # pragma: no cover
+                "Remote column must have the same table "
+                "(%s)" % ', '.join(remote_table))
 
         remote_table = remote_table.pop()
         remote_columns_names = [x.name for x in remote_columns]
@@ -745,11 +746,11 @@ class MigrationColumnTypePlugin:
         """Apply column migration, this method MUST be overriden in plugins
         subclass
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def need_to_modify_type(self, column, **kwargs):
         """If False the type won't be modified"""
-        return True
+        return True  # pragma: no cover
 
 
 class MigrationColumn:
@@ -797,7 +798,7 @@ class MigrationColumn:
             table = self.table.migration.metadata.tables[self.table.name]
             table.append_column(column)
             cname = getattr(table.c, column.name)
-            if column.default.is_callable:
+            if column.default.is_callable:  # pragma: no cover
                 Table = self.table.migration.metadata.tables['system_model']
                 Column = self.table.migration.metadata.tables['system_column']
                 j1 = join(Table, Column, Table.c.name == Column.c.model)
@@ -959,9 +960,9 @@ class MigrationColumn:
         if sgdb_in(self.table.migration.conn.engine, ['MySQL', 'MariaDB']):
             if sdefault:
                 if not isinstance(sdefault, str):
-                    return sdefault.arg
+                    return sdefault.arg  # pragma: no cover
                 elif sdefault is None:
-                    return None
+                    return None  # pragma: no cover
                 else:
                     return text(sdefault)
 
@@ -981,7 +982,7 @@ class MigrationColumn:
         table = self.table.migration.metadata.tables[table_name]
         primary_keys = [x.name for x in table.primary_key.columns]
         if self.name in primary_keys:
-            return False
+            return False  # pragma: no cover
 
         return self.info.get('autoincrement', None)
 
@@ -1051,8 +1052,9 @@ class MigrationConstraintUnique:
         :exception: MigrationException
         """
         if not columns:
-            raise MigrationException("""To add an unique constraint you """
-                                     """must define one or more columns""")
+            raise MigrationException(  # pragma: no cover
+                """To add an unique constraint you """
+                """must define one or more columns""")
 
         columns_name = [x.name for x in columns]
         savepoint = 'uq_%s' % (self.name or '')
@@ -1107,8 +1109,9 @@ class MigrationConstraintPrimaryKey:
         :exception: MigrationException
         """
         if not columns:
-            raise MigrationException("""To add a primary key constraint """
-                                     """you must define one or more columns""")
+            raise MigrationException(  # pragma: no cover
+                """To add a primary key constraint """
+                """you must define one or more columns""")
 
         if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
             for column in columns:
@@ -1159,7 +1162,7 @@ class MigrationIndex:
                     self.exist = True
 
             if not self.exist:
-                raise MigrationException(
+                raise MigrationException(  # pragma: no cover
                     "No index %r found on %r" % (self.name, self.table.name))
 
     def format_name(self, *columns):
@@ -1180,7 +1183,7 @@ class MigrationIndex:
         :exception: MigrationException
         """
         if not columns:
-            raise MigrationException(
+            raise MigrationException(  # pragma: no cover
                 "To add an index you must define one or more columns")
 
         index_name = kwargs.get('name', self.format_name(*columns))
@@ -1238,7 +1241,7 @@ class MigrationTable:
         """
         if table is not None:
             if table.schema != self.schema:
-                raise MigrationException(
+                raise MigrationException(  # pragma: no cover
                     "The schema of the table (%r.%r) and the MigrationTable %r"
                     "instance are not the same" % (
                         table.schema, table.name, self.schema))
@@ -1302,7 +1305,8 @@ class MigrationTable:
         :exception: MigrationException
         """
         if 'name' not in kwargs:
-            raise MigrationException("Table can only alter name")
+            raise MigrationException(  # pragma: no cover
+                "Table can only alter name")
 
         name = kwargs['name']
         self.migration.operation.rename_table(
@@ -1490,17 +1494,12 @@ class Migration:
         this method check if the truncated name is the same that no truncated
         name and if the constraint text is the same: return True else False
         """
-        if constraint.name.startswith(reflected_constraint['name']):
-            # case SQLAlchemy < 1.3
+        truncated_name = self.ddl_compiler.preparer.format_constraint(
+            constraint)
+        if truncated_name == reflected_constraint['name']:
             return True
-        else:
-            # case SQLAlchemy >= 1.3
-            truncated_name = self.ddl_compiler.preparer.format_constraint(
-                constraint)
-            if truncated_name == reflected_constraint['name']:
-                return True
 
-        return False
+        return False  # pragma: no cover
 
     def detect_check_constraint_changed(self, inspector):
         if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
@@ -1625,6 +1624,7 @@ class Migration:
     def compare_type(self, context, inspected_column,
                      metadata_column, inspected_type, metadata_type):
         if hasattr(metadata_type, 'compare_type'):
-            return metadata_type.compare_type(inspected_type)
+            return metadata_type.compare_type(  # pragma: no cover
+                inspected_type)
 
         return None
