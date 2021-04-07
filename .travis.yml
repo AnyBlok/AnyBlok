@@ -38,8 +38,8 @@ env:
 
 matrix:
     allow_failures:
-      - python: "nightly"
-      - python: "pypy3"
+        # - python: "nightly"
+        # - python: "pypy3"
         # include:
         #   - python: "pypy3"
         #     env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
