@@ -39,12 +39,12 @@ env:
 
 matrix:
     allow_failures:
-       - python: "3.10-dev"
-       - python: "nightly"
-       - python: "pypy3"
+      - python: "3.10-dev"
+      - python: "nightly"
+      - python: "pypy3"
     include:
-       - python: "pypy3"
-         env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
+      - python: "pypy3"
+        env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
     fast_finish: true
 
 virtualenv:
