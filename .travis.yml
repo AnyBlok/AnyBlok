@@ -88,4 +88,4 @@ script:
   - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
   - pytest --cov-report= --cov-append --cov=anyblok anyblok/bloks/anyblok_core
 
-after_success: coveralls debug
+after_success: coveralls
