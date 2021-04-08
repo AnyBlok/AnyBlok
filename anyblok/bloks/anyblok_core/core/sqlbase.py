@@ -245,10 +245,7 @@ class SqlMixin:
         where_clause = or_(*[and_(*x) for x in where_clause])
 
         query = cls.query().filter(where_clause)
-        if query.count():
-            return query.all()
-
-        return []
+        return query.all()
 
     def to_primary_keys(self):
         """ return the primary keys and values for this instance
@@ -301,7 +298,7 @@ class SqlMixin:
         hybrid_property_columns = cls.hybrid_property_columns
         if 'polymorphic_identity' in cls.__mapper_args__:
             pks = cls.get_primary_keys()
-            fd = cls.fields_description(*pks)
+            fd = cls.fields_description(pks)
             for pk in pks:
                 if fd[pk].get('model'):
                     Model = cls.anyblok.get(fd[pk]['model'])
@@ -476,7 +473,9 @@ class SqlMixin:
                                    not isinstance(y, Many2Many))
                                for mapper in y.column_names
                                if mapper.attribute_name == field)
-                if isinstance(_field, Column) and _field.foreign_key:
+                if (
+                    isinstance(_field, Column) and _field.foreign_key
+                ):  # pragma: no cover
                     rmodel = cls.anyblok.loaded_namespaces_first_step[
                         _field.foreign_key.model_name]
                     for rc in [x for x, y in rmodel.items()

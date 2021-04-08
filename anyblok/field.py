@@ -65,11 +65,11 @@ class Field:
                 namespace]['__tablename__']
             ignore_migration_for = registry.ignore_migration_for.get(table)
             if ignore_migration_for is True:
-                return
+                return  # pragma: no cover
             elif not ignore_migration_for:
                 registry.ignore_migration_for[table] = [fieldname]
             else:
-                ignore_migration_for.append(fieldname)
+                ignore_migration_for.append(fieldname)  # pragma: no cover
 
     def get_property(self, registry, namespace, fieldname, properties):
         """Return the property of the field
@@ -188,8 +188,8 @@ class Field:
 
         :exception: FieldException
         """
-        raise FieldException(  # pragma: no cover
-            "No native type for this field")
+        raise FieldException(
+            "No native type for this field")  # pragma: no cover
 
     def must_be_declared_as_attr(self):
         """ Return False, it is the default value """
