@@ -300,7 +300,7 @@ class SqlMixin:
             pks = cls.get_primary_keys()
             fd = cls.fields_description(pks)
             for pk in pks:
-                if fd[pk].get('model'):
+                if fd[pk].get('model'):  # pragma: no cover
                     Model = cls.anyblok.get(fd[pk]['model'])
                     hybrid_property_columns.extend(
                         Model.get_hybrid_property_columns())
