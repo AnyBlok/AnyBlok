@@ -59,9 +59,9 @@ class AnyBlokCore(Blok):
         if latest_version < '0.4.1':
             self.pre_migration_0_4_1_fields_become_polymorphic(latest_version)
 
-    def pre_migration_0_4_1_fields_become_polymorphic(  # pragma: no cover
+    def pre_migration_0_4_1_fields_become_polymorphic(
         self, latest_version
-    ):
+    ):  # pragma: no cover
         logger.info("Pre Migration %s => %s: Field, Column, Relation Ship "
                     "become prolymophic models" % (latest_version,
                                                    self.version))

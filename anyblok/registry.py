@@ -116,7 +116,7 @@ class RegistryManager:
         """Call all the unload callbacks"""
         for entry, unload_callback in cls.callback_unload_entries.items():
             logger.info('Unload: %r' % entry)
-            unload_callback()
+            unload_callback()  # pragma: no cover
 
     @classmethod
     def get(cls, db_name, loadwithoutmigration=False, log_repeat=True,
@@ -908,7 +908,7 @@ class Registry:
                 if fetchall:
                     return res.fetchall()
 
-                return res
+                return res  # pragma: no cover
 
     def get_namespace(self, parent, child):
         if hasattr(parent, child) and getattr(parent, child):
@@ -1065,7 +1065,7 @@ class Registry:
                 logger.info(
                     'Update session event for %s from entrypoint %r' % (
                         key, i))
-                i.load()(self.session)
+                i.load()(self.session)  # pragma: no cover
 
         _apply_session_events('anyblok.session.event')
         _apply_session_events(

@@ -1290,8 +1290,9 @@ class Sequence(String):
         :param fieldname: the fieldname of the model
         :return:
         """
-        if not hasattr(registry, '_need_sequence_to_create_if_not_exist'):
-            # pragma: no cover
+        if not hasattr(
+            registry, '_need_sequence_to_create_if_not_exist'
+        ):  # pragma: no cover
             registry._need_sequence_to_create_if_not_exist = []
         elif registry._need_sequence_to_create_if_not_exist is None:
             registry._need_sequence_to_create_if_not_exist = []
@@ -1539,7 +1540,7 @@ class CountryType(types.TypeDecorator, ScalarCoercible):
         if value is not None and not isinstance(value, self.python_type):
             return pycountry.countries.get(alpha_3=value)
 
-        return value
+        return value  # pragma: no cover
 
 
 class Country(Column):

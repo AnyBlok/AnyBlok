@@ -23,7 +23,7 @@ class Model:
 
     def __str__(self):
         if self.description:
-            return self.description
+            return self.description  # pragma: no cover
 
         return self.name
 

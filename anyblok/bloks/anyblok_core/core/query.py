@@ -38,7 +38,7 @@ class Query(query.Query):
                 raise exc.__class__(
                     'On Model %r: %s' % (self.Model, str(exc)))
 
-            raise
+            raise  # pragma: no cover
 
     def all(self):
         """ Return an instrumented list of the result of the query

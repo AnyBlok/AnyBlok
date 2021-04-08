@@ -77,9 +77,9 @@ class Field:
             self.toUML_field(dot)
         elif self.field.entity_type == 'Model.System.Column':
             self.toUML_column(dot)
-        elif (  # pragma: no cover
+        elif (
             self.field.entity_type == 'Model.System.RelationShip'
-        ):
+        ):  # pragma: no cover
             self.toUML_relationship(dot)
         else:
             logger.warning("Unknown entity type %r" % self.field.entity_type)
@@ -123,9 +123,9 @@ class Field:
             self.toSQL_field(dot)
         elif self.field.entity_type == 'Model.System.Column':
             self.toSQL_column(dot)
-        elif (  # pragma: no cover
+        elif (
             self.field.entity_type == 'Model.System.RelationShip'
-        ):
+        ):  # pragma: no cover
             self.toSQL_relationship(dot)
         else:
             logger.warning("Unknown entity type %r" % self.field.entity_type)
