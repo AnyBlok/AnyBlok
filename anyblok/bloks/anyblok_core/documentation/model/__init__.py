@@ -26,7 +26,7 @@ class Model(Declarations.Mixin.DocElement):
         return self.anyblok.has(self.model.name)
 
     @classmethod
-    def get_all_models(cls, models):
+    def get_all_models(cls, models):  # pragma: no cover
         Model = cls.anyblok.System.Model
         res = []
         for model in models:
@@ -42,14 +42,14 @@ class Model(Declarations.Mixin.DocElement):
     def filterModel(cls, query):
         Model = cls.anyblok.System.Model
         wanted_models = Configuration.get('doc_wanted_models')
-        if wanted_models:
+        if wanted_models:  # pragma: no cover
             wanted_models = cls.get_all_models(wanted_models)
             query = query.filter(Model.name.in_(wanted_models))
         else:
             wanted_models = []
 
         unwanted_models = Configuration.get('doc_unwanted_models')
-        if unwanted_models:
+        if unwanted_models:  # pragma: no cover
             unwanted_models = cls.get_all_models(unwanted_models)
             unwanted_models = [x for x in unwanted_models
                                if x not in wanted_models]

@@ -110,7 +110,7 @@ class TableMapperPlugin(ModelPluginBase):
                         ):
                             t_args.append(constraint)
                         elif isinstance(constraint, CheckConstraint):
-                            t_args.append(constraint)
+                            t_args.append(constraint)  # pragma: no cover
 
                 return res + tuple(t_args)
 
@@ -156,7 +156,7 @@ class TableMapperPlugin(ModelPluginBase):
                 return cls_.define_table_args()
 
             new_base.__table_args__ = declared_attr(__table_args__)
-        elif transformation_properties['table_kwargs']:
+        elif transformation_properties['table_kwargs']:  # pragma: no cover
 
             def __table_args__(cls_):
                 return cls_.define_table_kwargs()

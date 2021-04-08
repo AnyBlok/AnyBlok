@@ -496,7 +496,8 @@ def convert_string_to_datetime(value):
     elif isinstance(value, str):
         return parse(value)
 
-    return value
+    raise FieldException(
+        "We can't convert this value %s to datetime")
 
 
 def add_timezone_on_datetime(dt, default_timezone):
@@ -851,13 +852,6 @@ class Password(Column):
         res['size'] = self.size
         res['Crypt context'] = self.crypt_context
         return res
-
-    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
-        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
-        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
-            sqlalchemy_type.impl = types.String(max(self.size, 64))
-
-        return sqlalchemy_type
 
 
 class TextType(types.TypeDecorator):
@@ -1539,10 +1533,7 @@ class CountryType(types.TypeDecorator, ScalarCoercible):
         return value
 
     def process_result_value(self, value, dialect):
-        if value:
-            return pycountry.countries.get(alpha_3=value)
-
-        return value  # pragma: no cover
+        return self._coerce(value)
 
     def _coerce(self, value):
         if value is not None and not isinstance(value, self.python_type):

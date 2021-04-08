@@ -12,7 +12,7 @@ class AnyBlokVersion(Version):
 
     def parse_other(self, other):
         if other is None:
-            other = Version('0.0.0')
+            other = Version('0.0.0')  # pragma: no cover
         elif not isinstance(other, Version):
             other = parse_version(other)
 

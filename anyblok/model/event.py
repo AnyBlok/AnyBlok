@@ -43,7 +43,7 @@ class EventPlugin(ModelPluginBase):
             if model not in events:
                 events[model] = {event: []}
             elif event not in events[model]:
-                events[model][event] = []
+                events[model][event] = []  # pragma: no cover
 
             val = (namespace, attr)
             ev = events[model][event]

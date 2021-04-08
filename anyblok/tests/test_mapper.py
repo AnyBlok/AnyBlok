@@ -101,6 +101,42 @@ class TestModelAttribute:
         assert ma.model_name == 'Model.System.Model'
         assert ma.attribute_name == 'name'
 
+    def test_str(self, registry_blok):
+        ma = ModelAttribute('Model.System.Model', 'name')
+        assert str(ma) == 'Model.System.Model => name'
+
+    def test_get_fk_remote(self, registry_blok):
+        registry = registry_blok
+        ma = ModelAttribute('Model.System.Column', 'name')
+        assert ma.get_fk_remote(registry) is None
+
+    def test_get_complete_remote(self, registry_blok):
+        registry = registry_blok
+        ma = ModelAttribute('Model.System.Field', 'name')
+        assert ma.get_complete_remote(registry) is None
+
+    def test_existing_FakeColumn(self, registry_blok):
+        registry = registry_blok
+        ma = ModelAttribute('Model.System.Field', 'name')
+        assert ma.add_fake_column(registry) is None
+
+    def test_existing_FakeRelationShip(self, registry_blok):
+        registry = registry_blok
+        ma = ModelAttribute('Model.System.Field', 'name')
+        assert ma.add_fake_relationship(
+            registry, 'Model.System', 'test') is None
+
+    def test_get_column_name(self, registry_blok):
+        registry = registry_blok
+        ma = ModelAttribute('Model.System.Field', 'name')
+        assert ma.get_column_name(registry) == 'name'
+
+    def test_check_model_in_first_step_no_sql_model(self, registry_blok):
+        registry = registry_blok
+        ma = ModelAttribute('Model.System', 'name')
+        with pytest.raises(ModelAttributeException):
+            ma.check_model_in_first_step(registry)
+
 
 class TestModelAttributeAdapter:
 
@@ -143,6 +179,10 @@ class TestModelRepr:
         mr = ModelRepr('Model.System.Model')
         assert mr.model_name == 'Model.System.Model'
 
+    def test_str(self, registry_blok):
+        mr = ModelRepr('Model.System.Model')
+        assert str(mr) == 'Model.System.Model'
+
     def test_get_primary_keys(self, registry_blok):
         registry = registry_blok
         mr = ModelRepr('Model.System.Model')
@@ -153,6 +193,12 @@ class TestModelRepr:
     def test_without_model(self, registry_blok):
         with pytest.raises(ModelReprException):
             ModelRepr(None)
+
+    def test_mapper_self(self, registry_blok):
+        mm = ModelMapper('SELF', None)
+        assert mm.mapper(
+            registry_blok, 'Model.System.Blok'
+        ) is registry_blok.System.Blok
 
 
 class TestModelAdapter:
@@ -178,6 +224,12 @@ class TestModelMapper:
 
     def test_capable_by_registry_name(self):
         assert ModelMapper.capable('Model.System.Model')
+
+    def test_capable_by_model_repr(self):
+        assert ModelMapper.capable(ModelRepr('Model.System.Model'))
+
+    def test_model_repr(self):
+        assert ModelMapper(ModelRepr('Model.System.Model'), None)
 
     def test_by_declaration(self):
         mm = ModelMapper(Model.System.Model, 'even')

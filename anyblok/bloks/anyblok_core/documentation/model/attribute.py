@@ -52,7 +52,7 @@ class Attribute:
                     continue
 
                 res.append((k, v))
-        except FieldException:
+        except FieldException:  # pragma: no cover
             pass
 
         return res

@@ -26,7 +26,7 @@ def has_sql_fields(bases):
                 if hasattr(getattr(base, p), '__class__'):
                     if Field in getattr(base, p).__class__.__mro__:
                         return True
-            except FieldException:
+            except FieldException:  # pragma: no cover
                 # field function case already computed
                 return True
 
@@ -39,10 +39,10 @@ class BaseFactory:
         self.registry = registry
 
     def insert_core_bases(self, bases, properties):
-        raise ModelFactoryException('Must be overwritten')
+        raise ModelFactoryException('Must be overwritten')  # pragma: no cover
 
     def build_model(self, modelname, bases, properties):
-        raise ModelFactoryException('Must be overwritten')
+        raise ModelFactoryException('Must be overwritten')  # pragma: no cover
 
 
 class ModelFactory(BaseFactory):
@@ -60,14 +60,14 @@ class ModelFactory(BaseFactory):
 
     def build_model(self, modelname, bases, properties):
         if properties.get('ignore_migration') is True:
-            self.registry.ignore_migration_for[
+            self.registry.ignore_migration_for[  # pragma: no cover
                 properties['__tablename__']] = True
 
         return type(modelname, tuple(bases), properties)
 
 
 def get_columns(view, columns):
-    if not isinstance(columns, list):
+    if not isinstance(columns, list):  # pragma: no cover
         if ', ' in columns:
             columns = columns.split(', ')
         else:
@@ -112,7 +112,7 @@ class ViewFactory(BaseFactory):
             selectable = getattr(base, 'sqlalchemy_view_declaration')()
 
             if isinstance(selectable, Query):
-                selectable = selectable.subquery()
+                selectable = selectable.subquery()  # pragma: no cover
 
             for c in selectable.subquery().columns:
                 col = c._make_proxy(view)[1]

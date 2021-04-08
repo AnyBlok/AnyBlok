@@ -231,6 +231,11 @@ class TestModel2:
         t2 = registry.Test.query().first()
         registry.System.Model.anyblok.refresh(t2)
 
+    def test_str(self):
+        registry = self.init_registry(simple_model)
+        test = registry.System.Model.query().get('Model.Test')
+        assert str(test) == 'Model.Test'
+
     def test_deprecated_registry_attribute(self):
         registry = self.init_registry(simple_model)
         self.check_registry(registry.Test)

@@ -26,14 +26,14 @@ class ModelAccessRule(AuthorizationRule):
         :params: grant_model is a model declaration, that has the needed
                  columns (model, principal, permission)
         """
-        if grant_model is not None:
+        if grant_model is not None:  # pragma: no cover
             self.grant_model_name = grant_model.__registry_name__
 
     @property
     def grant_model(self):
         try:
             return self.registry.get(self.grant_model_name)
-        except RegistryManagerException:
+        except RegistryManagerException:  # pragma: no cover
             cls = self.__class__
             if self.grant_model_name is not cls.grant_model_name:
                 raise

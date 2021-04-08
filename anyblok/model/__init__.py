@@ -65,13 +65,13 @@ def get_fields(base, without_relationship=False, only_relationship=False,
                 if is_in_mro(Field, base, p):
                     fields[p] = getattr(base, p)
 
-        except FieldException:
+        except FieldException:  # pragma: no cover
             pass
 
     return fields
 
 
-def autodoc_fields(declaration_cls, model_cls):
+def autodoc_fields(declaration_cls, model_cls):  # pragma: no cover
     """Produces autodocumentation table for the fields.
 
     Exposed as a function in order to be reusable by a simple export,
@@ -184,7 +184,7 @@ class Model:
             setattr(parent, name, ns)
 
         if parent is Declarations:
-            return
+            return  # pragma: no cover
 
         kwargs['__registry_name__'] = _registryname
         kwargs['__tablename__'] = tablename
@@ -383,7 +383,7 @@ class Model:
                 elif brn in registry.loaded_registries['Model_names']:
                     bs, ps = cls.load_namespace_second_step(registry, brn)
                 else:
-                    raise ModelException(
+                    raise ModelException(  # pragma: no cover
                         "You have not to inherit the %r "
                         "Only the 'Mixin' and %r types are allowed" % (
                             brn, cls.__name__))

@@ -30,7 +30,7 @@ from anyblok.column import (
     CompareType, Column, Boolean, Json, String, BigInteger, Text, Selection,
     Date, DateTime, Time, Interval, Decimal, Float, LargeBinary, Integer,
     Sequence, Color, Password, UUID, URL, PhoneNumber, Email, Country,
-    TimeStamp, Enum, add_timezone_on_datetime)
+    TimeStamp, Enum, add_timezone_on_datetime, convert_string_to_datetime)
 
 
 time_params = [DateTime]
@@ -63,6 +63,7 @@ COLUMNS = [
     (Time, datetime.time(), {}),
     (Float, 1., {}),
     (Integer, 1, {}),
+    (Integer, 1, {'sequence': 'foo'}),
     (Email, 'jhon@doe.com', {}),
     (LargeBinary, urandom(100), {}),
     (Interval, datetime.timedelta(days=6), {}),
@@ -256,11 +257,15 @@ class TestColumns:
         assert test.col == 1
         res = registry.execute('select id from test where another_name=1')
         assert res.fetchone()[0] == test.id
+        ma = ModelAttribute('Model.Test', 'col')
+        assert ma.get_column_name(registry) == 'another_name'
 
     def test_column_with_foreign_key(self):
         registry = self.init_registry(column_with_foreign_key)
         registry.Test.insert(name='test')
         registry.Test2.insert(test='test')
+        assert ModelAttribute('Model.Test2', 'test').get_fk_remote(
+            registry) == 'test.name'
 
     def test_column_with_foreign_key_with_schema(self, db_schema):
         registry = self.init_registry(column_with_foreign_key_with_schema)
@@ -337,6 +342,18 @@ class TestColumns:
         assert res != 'col'
         del Configuration.configuration['default_encrypt_key']
 
+    @pytest.mark.skipif(not has_cryptography,
+                        reason="cryptography is not installed")
+    def test_string_with_encrypt_key_by_class_method(self):
+        registry = self.init_registry(simple_column, ColumnType=String,
+                                      encrypt_key='meth_secretkey')
+        test = registry.Test.insert(col='col')
+        registry.session.commit()
+        assert test.col == 'col'
+        res = registry.execute('select col from test where id = %s' % test.id)
+        res = res.fetchall()[0][0]
+        assert res != 'col'
+
     def test_string_with_size(self):
         registry = self.init_registry(
             simple_column, ColumnType=String, size=100)
@@ -351,6 +368,14 @@ class TestColumns:
         test = registry.Test.insert(col='col')
         assert test.col == 'col'
         assert registry.execute('Select col from test').fetchone()[0] != 'col'
+
+    @pytest.mark.skipif(not has_passlib,
+                        reason="passlib is not installed")
+    def test_password_with_foreign_key(self):
+        with pytest.raises(FieldException):
+            self.init_registry(simple_column, ColumnType=Password,
+                               crypt_context={'schemes': ['md5_crypt']},
+                               foreign_key='Model.System.Blok=>name')
 
     def test_text_with_False(self):
         registry = self.init_registry(simple_column, ColumnType=Text)
@@ -1110,6 +1135,15 @@ class TestColumns:
         assert registry.execute('Select col from test').fetchone()[0] == 'FRA'
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
+    def test_pycoundtry_at_insert_with_obj(self):
+        registry = self.init_registry(simple_column, ColumnType=Country)
+        fr = pycountry.countries.get(alpha_2='FR')
+        test = registry.Test.insert(col=fr)
+        assert test.col is pycountry.countries.get(alpha_2='FR')
+        assert test.col.name == 'France'
+        assert registry.execute('Select col from test').fetchone()[0] == 'FRA'
+
+    @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_alpha_3(self):
         registry = self.init_registry(
             simple_column, ColumnType=Country, mode='alpha_3')
@@ -1303,6 +1337,25 @@ class TestColumnsAutoDoc:
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_alpha_3(self):
         self.call_autodoc(Country, mode='alpha_3')
+
+
+class Test_convert_string_to_datetime:
+
+    def test_with_none(self):
+        assert convert_string_to_datetime(None) is None
+
+    def test_with_datetime(self):
+        now = datetime.datetime.now()
+        assert convert_string_to_datetime(now) is now
+
+    def test_with_date(self):
+        today = datetime.date.today()
+        now = datetime.datetime.combine(today, datetime.datetime.min.time())
+        assert convert_string_to_datetime(today) == now
+
+    def test_with_other(self):
+        with pytest.raises(FieldException):
+            convert_string_to_datetime(1)
 
 
 class TestCompareColumn:

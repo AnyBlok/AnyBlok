@@ -38,7 +38,7 @@ def load_init_function_from_entry_points(unittest=False):
 
 
     """
-    for i in iter_entry_points('anyblok.init'):
+    for i in iter_entry_points('anyblok.init'):  # pragma: no cover
         print('AnyBlok Load init: %r' % i)
         i.load()(unittest=unittest)
 
@@ -69,7 +69,7 @@ def configuration_post_load(unittest=False):
     """
     for i in iter_entry_points('anyblok_configuration.post_load'):
         logger.info('AnyBlok configuration post load: %r' % i)
-        i.load()(unittest=unittest)
+        i.load()(unittest=unittest)  # pragma: no cover
 
 
 def start(processName, entry_points=None,
@@ -103,7 +103,7 @@ def start(processName, entry_points=None,
 
     configuration_post_load()
     if entry_points:
-        BlokManager.load(entry_points=entry_points)
+        BlokManager.load(entry_points=entry_points)  # pragma: no cover
     else:
         BlokManager.load()
 
@@ -112,7 +112,7 @@ def start(processName, entry_points=None,
     if not db_name:
         logger.warning("start(): no database name in configuration, "
                        "bailing out")
-        return None
+        return None  # pragma: no cover
 
     registry = RegistryManager.get(
         db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
