@@ -4,6 +4,7 @@
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2015 Pierre Verkest <pverkest@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -18,8 +19,9 @@ from sqlalchemy import (
     text)
 from anyblok import Declarations
 from anyblok.config import Configuration
-from .conftest import init_registry, drop_database, create_database
+from .conftest import init_registry, drop_database, create_database, reset_db
 from anyblok.common import naming_convention
+from .test_column import simple_column
 
 
 @pytest.fixture(scope="module")
@@ -403,3 +405,26 @@ class TestMigration:
         report = registry.migration.detect_changed()
         assert not report.log_has(
             "Drop check constraint anyblok_ck__test__check on test")
+
+
+@pytest.mark.column
+class TestIgnoreMigrationColumns:
+
+    @pytest.fixture(autouse=True)
+    def close_registry(self, request, bloks_loaded):
+
+        def close():
+            if hasattr(self, 'registry'):
+                self.registry.close()
+
+        request.addfinalizer(close)
+
+    def init_registry(self, *args, **kwargs):
+        reset_db()
+        self.registry = init_registry(*args, **kwargs)
+        return self.registry
+
+    def test_insert_columns(self):
+        registry = self.init_registry(simple_column, ColumnType=Str,
+                                      ignore_migration=True)
+        assert registry.migration.ignore_migration_for == {'test': ['col']}

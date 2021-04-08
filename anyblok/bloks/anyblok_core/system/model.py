@@ -23,7 +23,7 @@ class Model:
 
     def __str__(self):
         if self.description:
-            return self.description
+            return self.description  # pragma: no cover
 
         return self.name
 
@@ -40,7 +40,7 @@ class Model:
         if hasattr(m, '__doc__'):
             return m.__doc__ or ''
 
-        return ''
+        return ''  # pragma: no cover
 
     @listen('Model.System.Model', 'Update Model')
     def listener_update_model(cls, model):
@@ -62,7 +62,7 @@ class Model:
         elif ftype == 'RelationshipProperty':
             return cls.anyblok.System.RelationShip
         else:
-            raise Exception('Not implemented yet')
+            raise Exception('Not implemented yet')  # pragma: no cover
 
     @classmethod
     def get_field(cls, model, cname):
@@ -88,12 +88,12 @@ class Model:
             if model_.entity_type == 'Model.System.RelationShip':
                 if model_.remote:
                     continue
-
-                RelationShip = cls.anyblok.System.RelationShip
-                Q = RelationShip.query()
-                Q = Q.filter(RelationShip.name == model_.remote_name)
-                Q = Q.filter(RelationShip.model == model_.remote_model)
-                Q.delete()
+                else:  # pragma: no cover
+                    RelationShip = cls.anyblok.System.RelationShip
+                    Q = RelationShip.query()
+                    Q = Q.filter(RelationShip.name == model_.remote_name)
+                    Q = Q.filter(RelationShip.model == model_.remote_model)
+                    Q.delete()
 
             model_.delete()
 

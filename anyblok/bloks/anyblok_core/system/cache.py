@@ -68,7 +68,7 @@ class Cache:
                 if method in caches[registry_name]:
                     cls.insert(registry_name=registry_name, method=method)
                 else:
-                    raise CacheException(
+                    raise CacheException(  # pragma: no cover
                         "Unknown cached method %r" % method)
             else:
                 raise CacheException(

@@ -314,7 +314,7 @@ class ModelSchema(BaseSchema):
             label_from, multiplicity_from, label_to, multiplicity_to)
 
         if not cls_1 or not cls_2:
-            return
+            return  # pragma: no cover
 
         self.add_edge(cls_1, cls_2, attr={
             'dir': 'back',

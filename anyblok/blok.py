@@ -206,7 +206,7 @@ class BlokManager:
         cls.entry_points = entry_points
 
         if EnvironmentManager.get('current_blok'):
-            while EnvironmentManager.get('current_blok'):
+            while EnvironmentManager.get('current_blok'):  # pragma: no cover
                 sleep(0.1)
 
         EnvironmentManager.set('current_blok', 'start')
@@ -278,7 +278,7 @@ class Blok:
         self.anyblok = registry
 
     @property
-    def registry(self):
+    def registry(self):  # pragma: no cover
         warnings.warn(
             "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
             "own 'registry' attribute. Replace it by 'anyblok' attribute",

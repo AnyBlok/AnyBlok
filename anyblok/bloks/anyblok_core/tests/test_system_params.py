@@ -43,11 +43,29 @@ class TestSystemParameter:
         Parameter.set('test.parameter', True)
         assert Parameter.get('test.parameter') is True
 
+    def test_pop(self, rollback_registry):
+        registry = rollback_registry
+        Parameter = registry.System.Parameter
+        assert Parameter.is_exist('test.parameter') is False
+        Parameter.set('test.parameter', True)
+        assert Parameter.is_exist('test.parameter') is True
+        assert Parameter.pop('test.parameter') is True
+        assert Parameter.is_exist('test.parameter') is False
+
     def test_get_with_multi(self, rollback_registry):
         registry = rollback_registry
         Parameter = registry.System.Parameter
         Parameter.set('test.parameter', {'test': True})
         assert Parameter.get('test.parameter') == {'test': True}
+
+    def test_pop_with_multi(self, rollback_registry):
+        registry = rollback_registry
+        Parameter = registry.System.Parameter
+        assert Parameter.is_exist('test.parameter') is False
+        Parameter.set('test.parameter', {'test': True})
+        assert Parameter.is_exist('test.parameter') is True
+        assert Parameter.pop('test.parameter') == {'test': True}
+        assert Parameter.is_exist('test.parameter') is False
 
     def test_unexisting_get(self, rollback_registry):
         registry = rollback_registry

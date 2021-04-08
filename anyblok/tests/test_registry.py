@@ -3,6 +3,7 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -10,10 +11,13 @@
 import pytest
 from .conftest import init_registry
 from anyblok.testing import TestCase, LogCapture
-from anyblok.registry import RegistryManager
+from anyblok.registry import (
+    RegistryManager, RegistryException, RegistryManagerException,
+    Registry)
 from anyblok.config import Configuration
 from anyblok.blok import BlokManager, Blok
 from anyblok.column import Integer
+from anyblok.environment import EnvironmentManager
 from anyblok import start
 from threading import Thread
 from logging import ERROR
@@ -36,6 +40,14 @@ class TestTest:
 
 class TestTestTest:
     pass
+
+
+class FakeException(Exception):
+    pass
+
+
+def fake_event(session):
+    raise FakeException()
 
 
 class TestRegistry:
@@ -495,6 +507,45 @@ class TestRegistry2:
         registry.commit()
         assert do_somthing == 3
 
+    def test_postcommit_hook_twice(self):
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+                pass
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.postcommit_hook('_postcommit_hook')
+        registry.Test.postcommit_hook('_postcommit_hook')
+        assert len(EnvironmentManager.get('_postcommit_hook', [])) == 1
+
+    def test_postcommit_hook_twice_with_after_another(self):
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+                pass
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.postcommit_hook('_postcommit_hook1')
+        registry.Test.postcommit_hook('_postcommit_hook2')
+        assert len(EnvironmentManager.get('_postcommit_hook', [])) == 2
+        assert [x[1] for x in EnvironmentManager.get('_postcommit_hook')] == [
+            '_postcommit_hook1', '_postcommit_hook2']
+        registry.Test.postcommit_hook('_postcommit_hook1')
+        assert [x[1] for x in EnvironmentManager.get('_postcommit_hook')] == [
+            '_postcommit_hook1', '_postcommit_hook2']
+        registry.Test.postcommit_hook(
+            '_postcommit_hook1', put_at_the_end_if_exist=True)
+        assert [x[1] for x in EnvironmentManager.get('_postcommit_hook')] == [
+            '_postcommit_hook2', '_postcommit_hook1']
+
     def test_postcommit_hook_in_thread(self):
         do_somthing = 0
 
@@ -694,3 +745,116 @@ class TestRegistry2:
             messages = logs.get_error_messages()
             message = messages[0]
             assert 'Here one exception' in message
+
+    def test_precommit_hook_twice(self):
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+                pass
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.precommit_hook('_precommit_hook')
+        registry.Test.precommit_hook('_precommit_hook')
+        assert len(EnvironmentManager.get('_precommit_hook', [])) == 1
+
+    def test_precommit_hook_twice_with_after_another(self):
+
+        def add_in_registry():
+
+            from anyblok import Declarations
+
+            @Declarations.register(Declarations.Model)
+            class Test:
+                pass
+
+        registry = self.init_registry(add_in_registry)
+        registry.Test.precommit_hook('_precommit_hook1')
+        registry.Test.precommit_hook('_precommit_hook2')
+        assert len(EnvironmentManager.get('_precommit_hook', [])) == 2
+        assert [x[1] for x in EnvironmentManager.get('_precommit_hook')] == [
+            '_precommit_hook1', '_precommit_hook2']
+        registry.Test.precommit_hook('_precommit_hook1')
+        assert [x[1] for x in EnvironmentManager.get('_precommit_hook')] == [
+            '_precommit_hook1', '_precommit_hook2']
+        registry.Test.precommit_hook(
+            '_precommit_hook1', put_at_the_end_if_exist=True)
+        assert [x[1] for x in EnvironmentManager.get('_precommit_hook')] == [
+            '_precommit_hook2', '_precommit_hook1']
+
+
+class TestRegistry3:
+
+    def test_refresh(self, registry_blok):
+        registry = registry_blok
+        blok = registry.System.Blok.query().get('anyblok-core')
+        registry.refresh(blok)
+
+    def test_refresh_attribute_name(self, registry_blok):
+        registry = registry_blok
+        blok = registry.System.Blok.query().get('anyblok-core')
+        registry.refresh(blok, attribute_names=['name', 'version'])
+
+    def test_expurge(self, registry_blok):
+        registry = registry_blok
+        blok = registry.System.Blok.query().get('anyblok-core')
+        registry.expunge(blok)
+
+    def test_apply_session_events_from_setting(self, registry_blok):
+        registry = registry_blok
+
+        additional_setting = registry.additional_setting.get(
+            'anyblok.session.event', [])
+        additional_setting.append(fake_event)
+        registry.additional_setting[
+            'anyblok.session.event'] = additional_setting
+        with pytest.raises(FakeException):
+            registry.apply_session_events()
+
+        additional_setting.remove(fake_event)
+
+    def test_get(self, registry_blok):
+        registry = registry_blok
+        assert registry.get(
+            'Model.System.Blok'
+        ) is registry.System.Blok
+
+    def test_get_unexisting_model(self, registry_blok):
+        registry = registry_blok
+        with pytest.raises(RegistryManagerException):
+            registry.get('Model.Unexisting.Model')
+
+    def test_get_bloks_by_states_without_state(self, registry_blok):
+        registry = registry_blok
+        assert registry.get_bloks_by_states() == []
+
+    def test_db_exists_without_db_name(self):
+        with pytest.raises(RegistryException):
+            Registry.db_exists()
+
+    def test_apply_engine_events_from_setting(self, registry_blok):
+        registry = registry_blok
+
+        additional_setting = registry.additional_setting.get(
+            'anyblok.engine.event', [])
+        additional_setting.append(fake_event)
+        registry.additional_setting[
+            'anyblok.engine.event'] = additional_setting
+        with pytest.raises(FakeException):
+            registry.apply_engine_events(registry.rw_engine)
+
+        additional_setting.remove(fake_event)
+
+    def test_apply_state_on_an_unexisting_blok(self, registry_blok):
+        registry = registry_blok
+        with pytest.raises(RegistryException):
+            registry.apply_state(
+                'unexisting_blok', 'toinstall', ['toinstall'])
+
+    def test_apply_the_same_state(self, registry_blok):
+        registry = registry_blok
+        assert registry.apply_state(
+            'anyblok-core', 'installed', ['installed']) is None

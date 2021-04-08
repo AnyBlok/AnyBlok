@@ -48,7 +48,7 @@ def constraint_name(constraint, table):
     conv = ConventionDict(constraint, table, naming_convention)
     try:
         return conv._key_constraint_name()
-    except InvalidRequestError:
+    except InvalidRequestError:  # pragma: no cover
         if constraint._pending_colargs:
             return '_'.join([x.name for x in constraint._pending_colargs])
 
@@ -86,13 +86,10 @@ def function_name(function_):
     :param function_:
     :return:
     """
-    if sys.version_info < (3, 3):
-        return function_.__name__
-    else:
-        return function_.__qualname__
+    return function_.__qualname__
 
 
-def python_version():
+def python_version():  # pragma: no cover
     """Return Python version tuple
 
     :return:
@@ -200,7 +197,7 @@ def sgdb_in(engine, databases):
                     ).fetchone()
                     if res and database in res[1]:
                         # MariaDB
-                        DATABASES_CACHED[database] = True
+                        DATABASES_CACHED[database] = True  # pragma: no cover
 
             if (
                 engine.url.drivername.startswith('postgres') and
