@@ -34,6 +34,7 @@ CHANGELOG
   engine for the dialect
 * Added session.event.**dialect name** entry point to define action on the
   session for the dialect
+* Added entries in configuration to ignore migration for Schema or Model
 
 1.1.0 (2021-03-22)
 ------------------

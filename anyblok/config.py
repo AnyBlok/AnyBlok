@@ -800,6 +800,10 @@ def add_configuration_file(parser):
                         help="Relative path of the config file")
     parser.add_argument('--without-auto-migration', dest='withoutautomigration',
                         action='store_true')
+    parser.add_argument('--ignore-migration-for-models', nargs="+",
+                        help="Models ignored by the migration")
+    parser.add_argument('--ignore-migration-for-schemas', nargs="+",
+                        help="Schemas ignored by the migration")
     parser.add_argument('--isolation-level',
                         default="READ_COMMITTED",
                         choices=["SERIALIZABLE", "REPEATABLE_READ",
