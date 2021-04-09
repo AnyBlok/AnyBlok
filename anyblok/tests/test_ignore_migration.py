@@ -110,6 +110,78 @@ def registry(request, clean_db, bloks_loaded):
     return registry
 
 
+def add_in_registry_with_schema():
+    register = Declarations.register
+    Model = Declarations.Model
+
+    @register(Model)
+    class Test:
+        __db_schema__ = 'test_db_schema'
+
+        integer = Int(primary_key=True)
+        other = Str()
+
+    @register(Model)
+    class TestUnique:
+        __db_schema__ = 'test_db_schema'
+
+        integer = Int(primary_key=True)
+        other = Str(unique=True)
+
+    @register(Model)
+    class TestIndex:
+        __db_schema__ = 'test_db_schema'
+
+        integer = Int(primary_key=True)
+        other = Str(index=True)
+
+    if not sgdb_in(['MySQL', 'MariaDB']):
+        @register(Model)
+        class TestCheck:
+            __db_schema__ = 'test_db_schema'
+
+            integer = Int(primary_key=True)
+
+            @classmethod
+            def define_table_args(cls):
+                table_args = super(TestCheck, cls).define_table_args()
+                return table_args + (
+                    CheckConstraint('integer > 0', name='test'),)
+
+    @register(Model)
+    class TestFKTarget:
+        __db_schema__ = 'test_db_schema'
+
+        integer = Int(primary_key=True)
+
+    @register(Model)
+    class TestFK:
+        __db_schema__ = 'test_db_schema'
+
+        integer = Int(primary_key=True)
+        other = Int(
+            foreign_key=Model.TestFKTarget.use('integer'))
+
+
+@pytest.fixture()
+def registry_db_schema(request, clean_db, bloks_loaded):
+    registry = init_registry(add_in_registry_with_schema)
+
+    def rollback():
+        for table in ('reltable', 'test', 'test2', 'othername', 'testfk',
+                      'testunique', 'reltab',
+                      'testfktarget',  'testcheck', 'testindex'):
+            try:
+                registry.migration.table(table, schema='test_db_schema').drop()
+            except MigrationException:
+                pass
+
+        registry.close()
+
+    request.addfinalizer(rollback)
+    return registry
+
+
 class TestMigration:
 
     def test_detect_column_added_with_protected_table(self, registry):
@@ -547,3 +619,294 @@ class TestIgnoreMigrationColumns:
         registry = self.init_registry(simple_column, ColumnType=Str,
                                       ignore_migration=True)
         assert registry.migration.ignore_migration_for == {'test': ['col']}
+
+
+class TestIgnoreSchemaMigration:
+
+    def test_detect_column_added_with_protected_schema_from_config_1(
+        self, registry_db_schema
+    ):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_added_with_protected_schema_from_config_2(
+        self, registry_db_schema
+    ):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas=['test_db_schema']):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_added_with_protected_schema_from_config_3(
+        self, registry_db_schema
+    ):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(
+            ignore_migration_for_schemas='test_db_schema,other'
+        ):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_added_with_protected_schema_from_config_4(
+        self, registry_db_schema
+    ):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(
+            ignore_migration_for_schemas=['test_db_schema', 'other']
+        ):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_removed(self, registry_db_schema):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                Column('other2', String(64)),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Drop Column test.other2")
+
+    def test_detect_nullable_with_protected_table(self, registry_db_schema):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), nullable=False),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Alter test.other")
+
+    def test_detect_server_default_with_protected_table(
+        self, registry_db_schema
+    ):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), server_default='9.99'),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Alter test.other")
+
+    def test_detect_drop_anyblok_index(self, registry_db_schema):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            conn.execute(text(
+                "CREATE INDEX anyblok_ix_test__other ON "
+                "test_db_schema.test (other);"))
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Drop index anyblok_ix_test__other on test")
+
+    def test_detect_type_with_protected_table(self, registry_db_schema):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', Integer),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Alter test.other")
+
+    def test_detect_add_foreign_key_with_protected_table(
+        self, registry_db_schema
+    ):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.TestFK.__table__.drop(bind=conn)
+            registry.TestFK.__table__ = Table(
+                'testfk', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', Integer),
+                schema='test_db_schema'
+            )
+            registry.TestFK.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has(
+            "Add Foreign keys on (testfk.other) => (testfktarget.integer)")
+
+    def test_detect_drop_foreign_key_with_protected_table(
+        self, registry_db_schema
+    ):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            meta = MetaData(naming_convention=naming_convention)
+            meta._add_table(
+                'system_blok', None, registry.System.Blok.__table__)
+            registry.Test.__table__ = Table(
+                'test', meta,
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), ForeignKey('system_blok.name')),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+            # anyblok_fk_test__other_on_system_blok__name
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has(
+            "Drop Foreign keys on test.other => system_blok.name")
+
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not add unique #121")
+    def test_detect_add_unique_constraint_with_protected_table(
+        self, registry_db_schema
+    ):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.TestUnique.__table__.drop(bind=conn)
+            registry.TestUnique.__table__ = Table(
+                'testunique', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                schema='test_db_schema'
+            )
+            registry.TestUnique.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has(
+            "Add unique constraint on testunique (other)")
+
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                        reason="MySQL transform unique constraint on index")
+    @pytest.mark.skipif(sgdb_in(['MsSQL']),
+                        reason="MsSQL does not drop unique #121")
+    def test_detect_drop_unique_anyblok_constraint(self, registry_db_schema):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(naming_convention=naming_convention),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64), unique=True),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has(
+            "Drop constraint anyblok_uq_test__other on test")
+
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason="No CheckConstraint works #90")
+    def test_detect_add_check_constraint(self, registry_db_schema):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.TestCheck.__table__.drop(bind=conn)
+            registry.TestCheck.__table__ = Table(
+                'testcheck', MetaData(naming_convention=naming_convention),
+                Column('integer', Integer, primary_key=True),
+                schema='test_db_schema'
+            )
+            registry.TestCheck.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has(
+            "Add check constraint anyblok_ck_testcheck__test on testcheck")
+
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+                        reason="No CheckConstraint works #90")
+    def test_detect_drop_check_anyblok_constraint(self, registry_db_schema):
+        registry = registry_db_schema
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(naming_convention=naming_convention),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint(
+                    "other != 'test'", name='check'),
+                schema='test_db_schema'
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has(
+            "Drop check constraint anyblok_ck__test__check on test")

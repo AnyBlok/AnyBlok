@@ -78,7 +78,10 @@ class MigrationReport:
 
     """
 
-    def ignore_migration_for(self, table, default=None):
+    def ignore_migration_for(self, schema, table, default=None):
+        if schema in self.ignore_migration_for_schema_from_configuration:
+            return True
+
         if table in self.ignore_migration_for_table_from_configuration:
             return True
 
@@ -112,8 +115,8 @@ class MigrationReport:
 
     def init_add_column(self, diff):
         self.raise_if_withoutautomigration()
-        _, _, table, column = diff
-        if self.ignore_migration_for(table) is True:
+        _, schema, table, column = diff
+        if self.ignore_migration_for(schema, table) is True:
             return True
 
         self.log_names.append('Add %s.%s' % (table, column.name))
@@ -156,7 +159,8 @@ class MigrationReport:
 
     def init_remove_constraint(self, diff):
         _, constraint = diff
-        if self.ignore_migration_for(constraint.table.name) is True:
+        if self.ignore_migration_for(constraint.table.schema,
+                                     constraint.table.name) is True:
             return True
 
         self.log_names.append('Drop constraint %s on %s' % (
@@ -182,7 +186,8 @@ class MigrationReport:
     def init_add_index(self, diff):
         self.raise_if_withoutautomigration()
         _, constraint = diff
-        if self.ignore_migration_for(constraint.table.name) is True:
+        if self.ignore_migration_for(constraint.table.schema,
+                                     constraint.table.name) is True:
             return True  # pragma: no cover
 
         columns = [x.name for x in constraint.columns]
@@ -194,7 +199,8 @@ class MigrationReport:
 
     def init_remove_index(self, diff):
         _, index = diff
-        if self.ignore_migration_for(index.table.name) is True:
+        if self.ignore_migration_for(index.table.schema,
+                                     index.table.name) is True:
             return True
 
         self.log_names.append('Drop index %s on %s' % (index.name,
@@ -207,13 +213,15 @@ class MigrationReport:
     def init_add_fk(self, diff):
         self.raise_if_withoutautomigration()
         _, fk = diff
-        if self.ignore_migration_for(fk.table.name) is True:
+        if self.ignore_migration_for(fk.table.schema, fk.table.name) is True:
             return True
 
         from_ = []
         to_ = []
         for column in fk.columns:
-            if column.name in self.ignore_migration_for(fk.table.name, []):
+            if column.name in self.ignore_migration_for(
+                fk.table.schema, fk.table.name, []
+            ):
                 return True
 
             for fk_ in column.foreign_keys:
@@ -225,11 +233,13 @@ class MigrationReport:
 
     def init_remove_fk(self, diff):
         _, fk = diff
-        if self.ignore_migration_for(fk.table.name) is True:
+        if self.ignore_migration_for(fk.table.schema, fk.table.name) is True:
             return True
 
         for column in fk.columns:
-            if column.name in self.ignore_migration_for(fk.table.name, []):
+            if column.name in self.ignore_migration_for(
+                fk.table.schema, fk.table.name, []
+            ):
                 return True
 
             for fk_ in column.foreign_keys:
@@ -244,7 +254,7 @@ class MigrationReport:
     def init_add_ck(self, diff):
         self.raise_if_withoutautomigration()
         _, table, ck = diff
-        if self.ignore_migration_for(table) is True:
+        if self.ignore_migration_for(ck.table.schema, table) is True:
             return True
 
         if ck.table.schema:
@@ -255,7 +265,7 @@ class MigrationReport:
 
     def init_remove_ck(self, diff):
         _, table, ck = diff
-        if self.ignore_migration_for(table) is True:
+        if self.ignore_migration_for(ck['schema'], table) is True:
             return True
 
         if ck['schema']:
@@ -274,12 +284,14 @@ class MigrationReport:
         _, constraint = diff
         columns = []
 
-        if self.ignore_migration_for(constraint.table.name) is True:
+        if self.ignore_migration_for(constraint.table.schema,
+                                     constraint.table.name) is True:
             return True
 
         for column in constraint.columns:
             columns.append(column.name)
-            if column.name in self.ignore_migration_for(constraint.table.name,
+            if column.name in self.ignore_migration_for(constraint.table.schema,
+                                                        constraint.table.name,
                                                         []):
                 return True
 
@@ -297,7 +309,8 @@ class MigrationReport:
 
     def init_remove_column(self, diff):
         column = diff[3]
-        if self.ignore_migration_for(column.table.name) is True:
+        if self.ignore_migration_for(column.table.schema,
+                                     column.table.name) is True:
             return True
 
         msg = "Drop Column %s.%s" % (column.table.name,
@@ -365,10 +378,10 @@ class MigrationReport:
             return True
 
     def init_modify_type(self, diff):
-        if self.ignore_migration_for(diff[2]) is True:
+        if self.ignore_migration_for(diff[1], diff[2]) is True:
             return True
 
-        if diff[3] in self.ignore_migration_for(diff[2], []):
+        if diff[3] in self.ignore_migration_for(diff[1], diff[2], []):
             return True
 
         selected_plugin = self.get_plugin_for(diff[5], diff[6])
@@ -382,10 +395,10 @@ class MigrationReport:
         return False
 
     def init_modify_nullable(self, diff):
-        if self.ignore_migration_for(diff[2]) is True:
+        if self.ignore_migration_for(diff[1], diff[2]) is True:
             return True
 
-        if diff[3] in self.ignore_migration_for(diff[2], []):
+        if diff[3] in self.ignore_migration_for(diff[1], diff[2], []):
             return True
 
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
@@ -394,10 +407,10 @@ class MigrationReport:
         return False
 
     def init_modify_server_default(self, diff):
-        if self.ignore_migration_for(diff[2]) is True:
+        if self.ignore_migration_for(diff[1], diff[2]) is True:
             return True
 
-        if diff[3] in self.ignore_migration_for(diff[2], []):
+        if diff[3] in self.ignore_migration_for(diff[1], diff[2], []):
             return True
 
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
@@ -464,6 +477,8 @@ class MigrationReport:
                 self.migration.loaded_namespaces[x].is_sql
             )
         ]
+        self.ignore_migration_for_schema_from_configuration = return_list(
+            Configuration.get('ignore_migration_for_schemas'))
 
         mappers = {
             'add_schema': self.init_add_schema,
