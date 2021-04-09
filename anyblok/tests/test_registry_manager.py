@@ -7,7 +7,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from anyblok.registry import RegistryManager, return_list
+from anyblok.registry import RegistryManager
+from anyblok.common import return_list
 from anyblok.blok import BlokManager
 from anyblok.model import Model
 from anyblok.environment import EnvironmentManager

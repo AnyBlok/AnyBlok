@@ -22,6 +22,7 @@ from anyblok.config import Configuration
 from .conftest import init_registry, drop_database, create_database, reset_db
 from anyblok.common import naming_convention
 from .test_column import simple_column
+from anyblok.testing import tmp_configuration
 
 
 @pytest.fixture(scope="module")
@@ -124,6 +125,124 @@ class TestMigration:
 
         registry.migration.ignore_migration_for = {'test': True}
         report = registry.migration.detect_changed()
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_added_with_protected_table_from_config_1(
+        self, registry
+    ):
+        # Remove a column on the table force the detection to found new column
+        # which is existing in metadata but not in table
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True)
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_models='Model.Test'):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_added_with_protected_table_from_config_2(
+        self, registry
+    ):
+        # Remove a column on the table force the detection to found new column
+        # which is existing in metadata but not in table
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True)
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(ignore_migration_for_models=['Model.Test']):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_added_with_protected_table_from_config_3(
+        self, registry
+    ):
+        # Remove a column on the table force the detection to found new column
+        # which is existing in metadata but not in table
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True)
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(
+            ignore_migration_for_models='Model.Test,Model.System'
+        ):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_added_with_protected_table_from_config_4(
+        self, registry
+    ):
+        # Remove a column on the table force the detection to found new column
+        # which is existing in metadata but not in table
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True)
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(
+            ignore_migration_for_models='Model.Test,Model.System'
+        ):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_added_with_protected_table_from_config_5(
+        self, registry
+    ):
+        # Remove a column on the table force the detection to found new column
+        # which is existing in metadata but not in table
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True)
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(
+            ignore_migration_for_models=(
+                'Model.Test,Model.System,Model.System.Blok')
+        ):
+            report = registry.migration.detect_changed()
+
+        assert not report.log_has("Add test.other")
+
+    def test_detect_column_added_with_protected_table_from_config_6(
+        self, registry
+    ):
+        # Remove a column on the table force the detection to found new column
+        # which is existing in metadata but not in table
+        with cnx(registry) as conn:
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True)
+            )
+            registry.Test.__table__.create(bind=conn)
+
+        with tmp_configuration(
+            ignore_migration_for_models=[
+                'Model.Test', 'Model.System', 'Model.System.Blok']
+        ):
+            report = registry.migration.detect_changed()
+
         assert not report.log_has("Add test.other")
 
     def test_detect_column_added_with_protected_column(self, registry):

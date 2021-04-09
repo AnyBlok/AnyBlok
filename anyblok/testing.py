@@ -84,12 +84,15 @@ def tmp_configuration(**values):
 
     :param **values: values to update
     """
+    old_values = {
+        x: Configuration.get(x)
+        for x in values.keys()
+    }
+    Configuration.update(**values)
     try:
-        old_configuration = Configuration.configuration.copy()
-        Configuration.update(**values)
         yield
     finally:
-        Configuration.configuration = old_configuration
+        Configuration.update(**old_values)
 
 
 class TestCase(unittest.TestCase):

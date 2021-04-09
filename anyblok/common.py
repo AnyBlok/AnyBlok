@@ -214,3 +214,13 @@ def sgdb_in(engine, databases):
             return True
 
     return False
+
+
+def return_list(entry):
+    if entry is None:
+        return []
+
+    elif not isinstance(entry, (list, tuple)):
+        entry = [entry]
+
+    return entry

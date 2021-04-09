@@ -53,13 +53,6 @@ class RegistryConflictingException(Exception):
     """ Simple Exception for Registry """
 
 
-def return_list(entry):
-    if entry is not None and not isinstance(entry, (list, tuple)):
-        entry = [entry]
-
-    return entry
-
-
 class RegistryManager:
     """ Manage the global registry
 

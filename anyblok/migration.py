@@ -7,6 +7,7 @@
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Joachim Trouverie
 #    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -22,7 +23,7 @@ from anyblok.config import Configuration
 from sqlalchemy import inspect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
-from .common import sgdb_in
+from .common import sgdb_in, return_list
 from sqlalchemy.schema import (
     DDLElement, PrimaryKeyConstraint, CheckConstraint, UniqueConstraint)
 from logging import getLogger
@@ -78,6 +79,9 @@ class MigrationReport:
     """
 
     def ignore_migration_for(self, table, default=None):
+        if table in self.ignore_migration_for_table_from_configuration:
+            return True
+
         return self.migration.ignore_migration_for.get(table, default)
 
     def raise_if_withoutautomigration(self):
@@ -450,6 +454,17 @@ class MigrationReport:
         self.diffs = diffs
         self.log_names = []
         self.plugins = self.init_plugins()
+        self.ignore_migration_for_table_from_configuration = [
+            self.migration.loaded_namespaces[x].__tablename__
+            for x in return_list(
+                Configuration.get('ignore_migration_for_models')
+            )
+            if (
+                x in self.migration.loaded_namespaces and
+                self.migration.loaded_namespaces[x].is_sql
+            )
+        ]
+
         mappers = {
             'add_schema': self.init_add_schema,
             'add_table': self.init_add_table,
@@ -1411,6 +1426,7 @@ class Migration:
     def __init__(self, registry):
         self.withoutautomigration = registry.withoutautomigration
         self.conn = registry.connection()
+        self.loaded_namespaces = registry.loaded_namespaces
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
         self.ddl_compiler = self.conn.dialect.ddl_compiler(
