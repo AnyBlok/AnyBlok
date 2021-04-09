@@ -802,6 +802,8 @@ class TestIgnoreSchemaMigration:
         assert not report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)")
 
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
+                        reason="FIXME: can't create foreign key")
     def test_detect_drop_foreign_key_with_protected_table(
         self, registry_db_schema
     ):
@@ -823,8 +825,10 @@ class TestIgnoreSchemaMigration:
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
             report = registry.migration.detect_changed()
 
-        assert not report.log_has(
-            "Drop Foreign keys on test.other => system_blok.name")
+        message = (
+            "Drop Foreign keys on test.other => %ssystem_blok.name"
+        ) % ('dbo.' if sgdb_in(['MsSQL']) else '')
+        assert not report.log_has(message)
 
     @pytest.mark.skipif(sgdb_in(['MsSQL']),
                         reason="MsSQL does not add unique #121")
