@@ -80,7 +80,8 @@ class TableMapperPlugin(ModelPluginBase):
             transformation_properties['table_args'] = True
 
         if transformation_properties['table_kwargs'] is True:
-            if sgdb_in(self.registry.engine, ['MySQL', 'MariaDB']):
+            engine = self.registry.named_engines[properties['engine_name']]
+            if sgdb_in(engine, ['MySQL', 'MariaDB']):
                 new_base.define_table_kwargs = self.define_table_kwargs(
                     new_base, namespace)
 

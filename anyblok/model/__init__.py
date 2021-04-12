@@ -186,6 +186,9 @@ class Model:
         if parent is Declarations:
             return  # pragma: no cover
 
+        if 'engine_name' not in kwargs:
+            kwargs['engine_name'] = 'default'
+
         kwargs['__registry_name__'] = _registryname
         kwargs['__tablename__'] = tablename
         update_factory(kwargs)
@@ -480,8 +483,9 @@ class Model:
             tablename = properties['__tablename__']
             modelname = namespace.replace('.', '')
             cls.init_core_properties_and_bases(registry, bases, properties)
-
-            if tablename in registry.declarativebase.metadata.tables:
+            declarativebase = registry.named_declarativebases[
+                properties['engine_name']]
+            if tablename in declarativebase.metadata.tables:
                 cls.apply_existing_table(
                     registry, namespace, tablename, properties,
                     bases, transformation_properties)

@@ -957,7 +957,8 @@ class Many2Many(RelationShip):
                                   join_table):
         has_join_table = False
         schema = None
-        tables = registry.declarativebase.metadata.tables
+        tables = registry.named_declarativebases[
+            properties['engine_name']].metadata.tables
         if '.' in join_table:
             has_join_table = join_table in tables
         elif self.join_model:
@@ -1042,7 +1043,9 @@ class Many2Many(RelationShip):
                 suffix="left" if namespace == self.model.model_name else ""
             )
 
-            Node = Table(join_table, registry.declarativebase.metadata, *(
+            declarativebase = registry.named_declarativebases[
+                properties['engine_name']]
+            Node = Table(join_table, declarativebase.metadata, *(
                 local_columns + remote_columns + [local_fk, remote_fk]),
                 schema=schema)
 

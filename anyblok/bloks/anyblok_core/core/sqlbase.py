@@ -75,6 +75,10 @@ class SqlMixin:
             self.__class__.__registry_name__, ', '.join(field_reprs)
         )
 
+    @property
+    def engine(self):
+        return self.anyblok.named_engines[self.engine_name]
+
     @classmethod
     def define_table_args(cls):
         return ()

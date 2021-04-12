@@ -17,3 +17,17 @@ class Session(SA_Session):
     def __init__(self, *args, **kwargs):
         kwargs['query_cls'] = self.registry_query
         super(Session, self).__init__(*args, **kwargs)
+
+    def get_bind(self, mapper=None, clause=None, **kwargs):
+        try:
+            return super(Session, self).get_bind(
+                mapper=mapper, clause=clause, **kwargs)
+        except Exception:
+            engine_name = None
+            if mapper is not None:
+                engine_name = mapper.class_.engine_name
+            elif clause is not None:
+                engine_name = self.anyblok.get(
+                    clause.Model).engine_name
+
+            return self.anyblok.named_engines[engine_name]

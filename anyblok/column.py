@@ -212,7 +212,7 @@ class Column(Field):
         ('is crypted', False),
     ))
 
-    def native_type(self, registry):
+    def native_type(self, engine):
         """Return the native SqlAlchemy type
 
         :param registry:
@@ -278,7 +278,8 @@ class Column(Field):
             else:
                 kwargs['default'] = self.default_val
 
-        sqlalchemy_type = self.native_type(registry)
+        sqlalchemy_type = self.native_type(
+            registry.named_engines[properties['engine_name']])
 
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
@@ -663,7 +664,7 @@ class Interval(Column):
     """
     sqlalchemy_type = types.Interval
 
-    def native_type(self, registry):
+    def native_type(self, engine):
         if self.encrypt_key:
             return types.VARCHAR(1024)
 
@@ -836,9 +837,9 @@ class Password(Column):
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
 
-    def native_type(self, registry):
+    def native_type(self, engine):
         """ Return the native SqlAlchemy type """
-        if sgdb_in(registry.engine, ['MsSQL']):
+        if sgdb_in(engine, ['MsSQL']):
             return MsSQLPasswordType(max_length=self.size, **self.crypt_context)
 
         return self.sqlalchemy_type
@@ -1102,7 +1103,7 @@ class Selection(Column):
             # can add new entry
             return []
 
-        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
+        if sgdb_in(Model.engine, ['MariaDB', 'MsSQL']):
             # No check constraint in MariaDB
             return []
 
@@ -1166,9 +1167,9 @@ class Json(Column):
     """
     sqlalchemy_type = types.JSON(none_as_null=True)
 
-    def native_type(self, registry):
+    def native_type(self, engine):
         """ Return the native SqlAlchemy type """
-        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
+        if sgdb_in(engine, ['MariaDB', 'MsSQL']):
             return JSONType
 
         return self.sqlalchemy_type
@@ -1217,7 +1218,7 @@ class LargeBinary(Column):
     """
     sqlalchemy_type = types.LargeBinary
 
-    def native_type(self, registry):
+    def native_type(self, engine):
         if self.encrypt_key:
             return types.Text
 
@@ -1621,7 +1622,7 @@ class Country(Column):
             # can add new entry
             return []
 
-        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
+        if sgdb_in(Model.engine, ['MariaDB', 'MsSQL']):
             # No Check constraint in MariaDB
             return []
 

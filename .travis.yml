@@ -3,11 +3,11 @@ sudo: true
 
 python:
     - "3.6"
-    - "3.7"
-    - "3.8"
-    - "3.9"
-    - "3.10-dev"
-    - "nightly"
+      # - "3.7"
+      # - "3.8"
+      # - "3.9"
+      # - "3.10-dev"
+      # - "nightly"
 
 env:
     global:
@@ -42,9 +42,9 @@ matrix:
       - python: "3.10-dev"
       - python: "nightly"
       - python: "pypy3"
-    include:
-      - python: "pypy3"
-        env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
+        # include:
+        #   - python: "pypy3"
+        #     env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
     fast_finish: true
 
 virtualenv:
