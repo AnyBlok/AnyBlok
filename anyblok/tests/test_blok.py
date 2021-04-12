@@ -838,7 +838,8 @@ class TestBlokSession:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok_func):
         request.addfinalizer(
-            registry_testblok_func.unittest_transaction.rollback)
+            registry_testblok_func.named_unittest_transaction[
+                'default'].rollback)
 
     def test_session_with_no_change(self, registry_testblok_func):
         registry = registry_testblok_func
@@ -869,7 +870,8 @@ class TestBlokInstallLifeCycle:
             BlokManager.get('test-blok16').called_methods = []
         request.addfinalizer(clear_called_methods)
         request.addfinalizer(
-            registry_testblok_func.unittest_transaction.rollback)
+            registry_testblok_func.named_unittest_transaction[
+                'default'].rollback)
 
     @pytest.fixture()
     def registry_blok16_installed(self, registry_testblok_func):
