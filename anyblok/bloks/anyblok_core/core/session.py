@@ -23,11 +23,7 @@ class Session(SA_Session):
             return super(Session, self).get_bind(
                 mapper=mapper, clause=clause, **kwargs)
         except Exception:
-            engine_name = None
             if mapper is not None:
-                engine_name = mapper.class_.engine_name
+                return mapper.class_.get_engine()
             elif clause is not None:
-                engine_name = self.anyblok.get(
-                    clause.Model).engine_name
-
-            return self.anyblok.named_engines[engine_name]
+                return self.anyblok.get(clause.Model).get_engine()

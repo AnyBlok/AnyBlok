@@ -880,8 +880,10 @@ class Registry:
                 where name in ('%s')
                 and state = 'uninstalled'""" % "', '".join(
                 dependencies_to_install)
+
+            bind = self.named_binds['default']
             try:
-                self.execute(query)
+                self.execute(query, session_bind=bind)
             except (ProgrammingError, OperationalError):  # pragma: no cover
                 pass
 

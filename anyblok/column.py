@@ -1103,7 +1103,7 @@ class Selection(Column):
             # can add new entry
             return []
 
-        if sgdb_in(Model.engine, ['MariaDB', 'MsSQL']):
+        if sgdb_in(Model.get_engine(), ['MariaDB', 'MsSQL']):
             # No check constraint in MariaDB
             return []
 
@@ -1622,7 +1622,7 @@ class Country(Column):
             # can add new entry
             return []
 
-        if sgdb_in(Model.engine, ['MariaDB', 'MsSQL']):
+        if sgdb_in(Model.get_engine(), ['MariaDB', 'MsSQL']):
             # No Check constraint in MariaDB
             return []
 
