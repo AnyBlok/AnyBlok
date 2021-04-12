@@ -97,7 +97,6 @@ class ViewFactory(BaseFactory):
         :exception: ViewException
         """
         tablename = base.__tablename__
-
         if hasattr(base, '__view__'):
             view = base.__view__
         elif tablename in self.registry.loaded_views:
@@ -138,7 +137,7 @@ class ViewFactory(BaseFactory):
 
         pks = [getattr(view.c, x) for x in pks]
         mapper_properties = self.get_mapper_properties(base, view, properties)
-        self.registry.declarativebase.registry.map_imperatively(
+        base.anyblok.declarativebase.registry.map_imperatively(
             base, view, primary_key=pks, properties=mapper_properties)
         setattr(base, '__view__', view)
 

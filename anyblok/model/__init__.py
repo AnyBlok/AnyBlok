@@ -483,6 +483,7 @@ class Model:
             tablename = properties['__tablename__']
             modelname = namespace.replace('.', '')
             cls.init_core_properties_and_bases(registry, bases, properties)
+
             if tablename in registry.declarativebase.metadata.tables:
                 cls.apply_existing_table(
                     registry, namespace, tablename, properties,
