@@ -844,7 +844,7 @@ class TestRegistry3:
         registry.additional_setting[
             'anyblok.engine.event'] = additional_setting
         with pytest.raises(FakeException):
-            registry.apply_engine_events(registry.rw_engine)
+            registry.apply_engine_events(registry.named_engines['default'])
 
         additional_setting.remove(fake_event)
 

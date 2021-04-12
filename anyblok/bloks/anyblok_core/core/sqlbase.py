@@ -80,6 +80,10 @@ class SqlMixin:
         return self.anyblok.named_engines[self.engine_name]
 
     @classmethod
+    def get_bind(self):
+        return self.anyblok.named_binds[self.engine_name]
+
+    @classmethod
     def define_table_args(cls):
         return ()
 

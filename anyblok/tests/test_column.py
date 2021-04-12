@@ -143,8 +143,13 @@ class TestColumn:
             Column()
 
     def test_without_label(self):
+
+        class Registry:
+            named_engines = {'default': object}
+
         column = OneColumn()
-        column.get_sqlalchemy_mapping(None, None, 'a_column', None)
+        column.get_sqlalchemy_mapping(
+            Registry(), None, 'a_column', {'engine_name': 'default'})
         assert column.label == 'A column'
 
 

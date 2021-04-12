@@ -505,8 +505,9 @@ class TestMigration:
 
     def test_detect_m2m_primary_key(self, registry):
         with cnx(registry) as conn:
-            Table('reltable', registry.declarativebase.metadata,
-                  autoload_with=conn).drop(bind=conn)
+            Table(
+                'reltable', registry.named_declarativebases['default'].metadata,
+                autoload_with=conn).drop(bind=conn)
 
             meta = MetaData()
             meta._add_table('testm2m1', None, registry.TestM2M1.__table__)

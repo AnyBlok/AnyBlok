@@ -140,7 +140,7 @@ class Sequence:
                 values['seq_name'] = seq_name
 
             seq = SQLASequence(seq_name, start=start)
-            seq.create(cls.anyblok.bind)
+            seq.create(cls.get_bind())
         return values
 
     @classmethod

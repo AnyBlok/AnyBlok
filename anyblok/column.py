@@ -283,14 +283,15 @@ class Column(Field):
 
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
+            engine = registry.named_engines[properties['engine_name']]
             sqlalchemy_type = self.get_encrypt_key_type(
-                registry, sqlalchemy_type, encrypt_key)
+                engine, sqlalchemy_type, encrypt_key)
 
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
 
-    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+    def get_encrypt_key_type(self, engine, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
-        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(engine, ['MySQL', 'MariaDB']):
             sqlalchemy_type.impl = types.String(64)
 
         return sqlalchemy_type
@@ -729,9 +730,9 @@ class String(Column):
         res['size'] = self.size
         return res
 
-    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+    def get_encrypt_key_type(self, engine, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
-        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(engine, ['MySQL', 'MariaDB']):
             sqlalchemy_type.impl = types.String(max(self.size, 64))
 
         return sqlalchemy_type
@@ -886,9 +887,9 @@ class Text(Column):
     """
     sqlalchemy_type = TextType
 
-    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+    def get_encrypt_key_type(self, engine, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
-        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(engine, ['MySQL', 'MariaDB']):
             sqlalchemy_type.impl = types.Text()
 
         return sqlalchemy_type
@@ -1135,9 +1136,9 @@ class Selection(Column):
 
         return []
 
-    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+    def get_encrypt_key_type(self, engine, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
-        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(engine, ['MySQL', 'MariaDB']):
             sqlalchemy_type.impl = types.String(max(self.size, 64))
 
         return sqlalchemy_type
@@ -1189,9 +1190,9 @@ class Json(Column):
 
         return value
 
-    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+    def get_encrypt_key_type(self, engine, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
-        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(engine, ['MySQL', 'MariaDB']):
             sqlalchemy_type.impl = types.Text()
 
         return sqlalchemy_type
@@ -1236,9 +1237,9 @@ class LargeBinary(Column):
 
         return value
 
-    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+    def get_encrypt_key_type(self, engine, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
-        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(engine, ['MySQL', 'MariaDB']):
             sqlalchemy_type.impl = types.Text()
 
         return sqlalchemy_type
@@ -1354,9 +1355,9 @@ class Color(Column):
         res['size'] = self.max_length
         return res
 
-    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+    def get_encrypt_key_type(self, engine, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
-        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(engine, ['MySQL', 'MariaDB']):
             sqlalchemy_type.impl = types.String(max(self.max_length, 64))
 
         return sqlalchemy_type
@@ -1479,9 +1480,9 @@ class PhoneNumber(Column):
         res['max_length'] = self.max_length
         return res
 
-    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+    def get_encrypt_key_type(self, engine, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
-        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(engine, ['MySQL', 'MariaDB']):
             sqlalchemy_type.impl = types.String(max(self.max_length, 64))
 
         return sqlalchemy_type
