@@ -199,7 +199,7 @@ class TestMany2ManyComplete:
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
         assert m2m_tables_exist
 
-        jt = registry.declarativebase.metadata.tables
+        jt = registry.named_declarativebases['default'].metadata.tables
         join_table = 'join_addresses_by_persons'
         if registry.Person.__db_schema__:
             join_table = '%s.%s' % (registry.Person.__db_schema__, join_table)
@@ -398,7 +398,7 @@ class TestMany2Many:
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
         assert m2m_tables_exist
 
-        jt = registry.declarativebase.metadata.tables
+        jt = registry.named_declarativebases['default'].metadata.tables
         join_table_exist = 'join_person_and_address_for_addresses' in jt
         assert join_table_exist
 
@@ -420,7 +420,7 @@ class TestMany2Many:
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
         assert m2m_tables_exist
 
-        jt = registry.declarativebase.metadata.tables
+        jt = registry.named_declarativebases['default'].metadata.tables
         join_table_exist = 'join_y_and_x_for_addresses' in jt
         assert join_table_exist
 
@@ -442,7 +442,7 @@ class TestMany2Many:
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
         assert m2m_tables_exist
 
-        jt = registry.declarativebase.metadata.tables
+        jt = registry.named_declarativebases['default'].metadata.tables
         join_table_exist = (
             '%s.join_person_and_address_for_addresses' % (
                 registry.Person.__db_schema__
@@ -467,7 +467,7 @@ class TestMany2Many:
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
         assert m2m_tables_exist
 
-        jt = registry.declarativebase.metadata.tables
+        jt = registry.named_declarativebases['default'].metadata.tables
         join_table_exist = 'join_person_and_address_for_addresses' in jt
         assert join_table_exist
 
@@ -512,7 +512,7 @@ class TestMany2Many:
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
         assert m2m_tables_exist
 
-        jt = registry.declarativebase.metadata.tables
+        jt = registry.named_declarativebases['default'].metadata.tables
         join_table_exist = 'join_person_and_address_for_addresses' in jt
         assert join_table_exist
 
@@ -546,7 +546,7 @@ class TestMany2Many:
         m2m_tables_exist = hasattr(registry, 'many2many_tables')
         assert m2m_tables_exist
 
-        jt = registry.declarativebase.metadata.tables
+        jt = registry.named_declarativebases['default'].metadata.tables
         join_table_exist = 'join_person_and_address_for_addresses' in jt
         assert join_table_exist
         join_table_exist = 'join_person2_and_address_for_addresses' in jt
@@ -579,7 +579,7 @@ class TestMany2Many:
         t2.test.append(t1)
         assert t1.test2[0] is t2
 
-        jt = registry.declarativebase.metadata.tables
+        jt = registry.named_declarativebases['default'].metadata.tables
         assert len(jt['join_test_and_test2'].primary_key.columns) == 4
         assert 't1_id' in jt[
             'join_test_and_test2'].primary_key.columns

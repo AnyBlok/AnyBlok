@@ -1032,6 +1032,8 @@ class Many2Many(RelationShip):
         join_table = self.get_join_table(registry, namespace, fieldname)
         has_join_table, schema = self.has_join_table_for_schema(
             registry, namespace, properties, join_table)
+        declarativebase = registry.named_declarativebases[
+            properties['engine_name']]
         if not has_join_table:
             modelname = ''.join(x.capitalize() for x in join_table.split('_'))
             remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(
@@ -1043,23 +1045,21 @@ class Many2Many(RelationShip):
                 suffix="left" if namespace == self.model.model_name else ""
             )
 
-            declarativebase = registry.named_declarativebases[
-                properties['engine_name']]
             Node = Table(join_table, declarativebase.metadata, *(
                 local_columns + remote_columns + [local_fk, remote_fk]),
                 schema=schema)
 
             if namespace == self.model.model_name:
-                type(modelname, (registry.declarativebase,), {
+                type(modelname, (declarativebase,), {
                     '__table__': Node
                 })
                 self.kwargs['primaryjoin'] = primaryjoin
                 self.kwargs['secondaryjoin'] = secondaryjoin
 
         elif namespace == self.model.model_name or self.compute_join:
-            table = registry.declarativebase.metadata.tables[
+            table = declarativebase.metadata.tables[
                 '%s.%s' % (schema, join_table) if schema else join_table]
-            cls = get_class_by_table(registry.declarativebase, table)
+            cls = get_class_by_table(declarativebase, table)
             modelname = ModelRepr(cls.__registry_name__).modelname(registry)
             if (
                 self.m2m_local_columns is None and
