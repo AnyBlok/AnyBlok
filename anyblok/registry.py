@@ -982,7 +982,7 @@ class Registry:
             Session = type('Session', tuple(session_bases), {
                 'registry_query': Query})
 
-            sm = sessionmaker(class_=Session, future=True)
+            sm = sessionmaker(class_=Session, future=True, twophase=True)
             sm.configure(binds=binds)
             self.Session = scoped_session(
                 sm, EnvironmentManager.scoped_function_for_session())
