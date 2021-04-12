@@ -1440,12 +1440,10 @@ class Migration:
 
     def __init__(self, registry):
         self.withoutautomigration = registry.withoutautomigration
-        self.conn = registry.connection(
-            bind=registry.named_binds['default']
-        )
+        self.conn = registry.connection()
         self.loaded_namespaces = registry.loaded_namespaces
         self.loaded_views = registry.loaded_views
-        self.metadata = registry.named_declarativebases['default'].metadata
+        self.metadata = registry.declarativebase.metadata
         self.ddl_compiler = self.conn.dialect.ddl_compiler(
             self.conn.dialect, None)
         self.ignore_migration_for = registry.ignore_migration_for

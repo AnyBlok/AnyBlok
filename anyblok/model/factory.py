@@ -51,9 +51,7 @@ class ModelFactory(BaseFactory):
         if has_sql_fields(bases):
             bases.extend(
                 [x for x in self.registry.loaded_cores['SqlBase']])
-            declarativebase = self.registry.named_declarativebases[
-                properties['engine_name']]
-            bases.append(declarativebase)
+            bases.append(self.registry.declarativebase)
         else:
             # remove tablename to inherit from a sqlmodel
             del properties['__tablename__']
@@ -99,8 +97,6 @@ class ViewFactory(BaseFactory):
         :exception: ViewException
         """
         tablename = base.__tablename__
-        declarativebase = self.registry.named_declarativebases[
-            properties['engine_name']]
 
         if hasattr(base, '__view__'):
             view = base.__view__
@@ -123,7 +119,7 @@ class ViewFactory(BaseFactory):
                 col = c._make_proxy(view)[1]
                 view._columns.replace(col)
 
-            metadata = declarativebase.metadata
+            metadata = self.registry.declarativebase.metadata
             event.listen(metadata, 'before_create', DropView(
                 view, if_exists=True))
             event.listen(metadata, 'after_create', CreateView(
@@ -142,7 +138,7 @@ class ViewFactory(BaseFactory):
 
         pks = [getattr(view.c, x) for x in pks]
         mapper_properties = self.get_mapper_properties(base, view, properties)
-        declarativebase.registry.map_imperatively(
+        self.registry.declarativebase.registry.map_imperatively(
             base, view, primary_key=pks, properties=mapper_properties)
         setattr(base, '__view__', view)
 

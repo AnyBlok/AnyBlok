@@ -957,8 +957,7 @@ class Many2Many(RelationShip):
                                   join_table):
         has_join_table = False
         schema = None
-        tables = registry.named_declarativebases[
-            properties['engine_name']].metadata.tables
+        tables = registry.declarativebase.metadata.tables
         if '.' in join_table:
             has_join_table = join_table in tables
         elif self.join_model:
@@ -1032,8 +1031,7 @@ class Many2Many(RelationShip):
         join_table = self.get_join_table(registry, namespace, fieldname)
         has_join_table, schema = self.has_join_table_for_schema(
             registry, namespace, properties, join_table)
-        declarativebase = registry.named_declarativebases[
-            properties['engine_name']]
+        declarativebase = registry.declarativebase
         if not has_join_table:
             modelname = ''.join(x.capitalize() for x in join_table.split('_'))
             remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(

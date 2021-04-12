@@ -559,6 +559,7 @@ class Registry:
     def ini_var(self):
         """ Initialize the var to load the registry """
         self.loaded_namespaces = {}
+        self.declarativebase = None
         self.loaded_bloks = {}
         self.loaded_registries = {x + '_names': []
                                   for x in RegistryManager.declared_entries}
@@ -963,8 +964,10 @@ class Registry:
         """
         if self.Session is None or self.must_recreate_session_factory():
             binds = {
-                self.named_declarativebases[x]: self.named_binds[x]
-                for x in self.named_binds}
+                x: x.get_bind()
+                for x in self.loaded_namespaces.values()
+                if x.is_sql
+            }
             if self.Session:
                 if not self.withoutautomigration:
                     # this is the only case to use commit in the construction
@@ -982,7 +985,7 @@ class Registry:
             Session = type('Session', tuple(session_bases), {
                 'registry_query': Query})
 
-            sm = sessionmaker(class_=Session, future=True, twophase=True)
+            sm = sessionmaker(class_=Session, future=True)
             sm.configure(binds=binds)
             self.Session = scoped_session(
                 sm, EnvironmentManager.scoped_function_for_session())
@@ -1008,13 +1011,6 @@ class Registry:
 
         return False
 
-    def define_declarative_bases(self):
-        self.named_declarativebases = {}
-        for name in self.named_engines:
-            self.named_declarativebases[name] = declarative_base(
-                metadata=MetaData(naming_convention=naming_convention),
-                class_registry=dict(registry=self, engine_name=name))
-
     @log(logger, level='debug')
     def load(self):
         """ Load all the namespaces of the registry
@@ -1025,7 +1021,9 @@ class Registry:
         mustreload = False
         blok2install = None
         try:
-            self.define_declarative_bases()
+            self.declarativebase = declarative_base(
+                metadata=MetaData(naming_convention=naming_convention),
+                class_registry=dict(registry=self))
             toload = self.get_bloks_to_load()
             toinstall = self.get_bloks_to_install(toload)
             if self.update_to_install_blok_dependencies_state(toinstall):
@@ -1111,9 +1109,8 @@ class Registry:
 
         engine_name = self.System.Blok.engine_name
         if not self.withoutautomigration and blok2install == 'anyblok-core':
-            self.named_declarativebases[engine_name].metadata.tables[
-                'system_blok'].create(bind=self.named_binds[engine_name],
-                                      checkfirst=True)
+            self.declarativebase.metadata.tables[
+                'system_blok'].create(bind=self.connection(), checkfirst=True)
 
         self.migration = Configuration.get('Migration', Migration)(self)
         query = """
@@ -1136,8 +1133,8 @@ class Registry:
             self.migration.auto_upgrade_database(schema_only=True)
             if not self.withoutautomigration:
                 for name, bind in self.named_binds.items():
-                    self.named_declarativebases[name].metadata.create_all(
-                        bind=bind)
+                    self.declarativebase.metadata.create_all(
+                        bind=self.connection())
 
             self.migration.auto_upgrade_database()
 
