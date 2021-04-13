@@ -10,7 +10,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from logging import getLogger
 import warnings
-from sqlalchemy import create_engine, event, MetaData
+from sqlalchemy import create_engine, event, MetaData, text
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
@@ -51,13 +51,6 @@ class RegistryException(Exception):
 
 class RegistryConflictingException(Exception):
     """ Simple Exception for Registry """
-
-
-def return_list(entry):
-    if entry is not None and not isinstance(entry, (list, tuple)):
-        entry = [entry]
-
-    return entry
 
 
 class RegistryManager:
@@ -116,7 +109,7 @@ class RegistryManager:
         """Call all the unload callbacks"""
         for entry, unload_callback in cls.callback_unload_entries.items():
             logger.info('Unload: %r' % entry)
-            unload_callback()
+            unload_callback()  # pragma: no cover
 
     @classmethod
     def get(cls, db_name, loadwithoutmigration=False, log_repeat=True,
@@ -161,6 +154,9 @@ class RegistryManager:
             registry.close_session()
             registry.Session = None
             registry.blok_list_is_loaded = False
+            if registry.unittest:
+                registry.init_bind()
+
             registry.reload()
 
     @classmethod
@@ -246,7 +242,8 @@ class RegistryManager:
         :param entry: declaration type name
         :param unload_callback: classmethod pointer
         """
-        cls.callback_unload_entries[entry] = unload_callback
+        cls.callback_unload_entries[  # pragma: no cover
+            entry] = unload_callback
 
     @classmethod
     def undeclare_entry(cls, entry):
@@ -254,7 +251,8 @@ class RegistryManager:
             cls.declared_entries.remove(entry)
 
             if entry in cls.callback_pre_assemble_entries:
-                del cls.callback_pre_assemble_entries[entry]
+                del cls.callback_pre_assemble_entries[  # pragma: no cover
+                    entry]
 
             if entry in cls.callback_assemble_entries:
                 del cls.callback_assemble_entries[entry]
@@ -369,7 +367,7 @@ class RegistryManager:
     def get_entry_properties_in_register(cls, entry, key):
         cb = EnvironmentManager.get('current_blok')
         if key not in cls.loaded_bloks[cb][entry]:
-            return {}
+            return {}  # pragma: no cover
 
         return cls.loaded_bloks[cb][entry][key]['properties'].copy()
 
@@ -422,7 +420,7 @@ class NewSQLARegistry(SQLARegistry):
     def __getattr__(self, key):
         sself = super(NewSQLARegistry, self)
         if hasattr(sself, key):
-            return getattr(sself, key)
+            return getattr(sself, key)  # pragma: no cover
 
         warnings.warn(
             "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
@@ -435,7 +433,7 @@ class DeprecatedClassProperty:
     def __init__(self, registry):
         self.registry = registry
 
-    def __getattr__(self, key, **kw):
+    def __getattr__(self, key, **kw):  # pragma: no cover
         warnings.warn(
             "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
             "own 'registry' attribute. Replace it by 'anyblok' attribute",
@@ -524,6 +522,7 @@ class Registry:
         """
         url = Configuration.get('get_url', get_url)(db_name=db_name)
         kwargs = self.init_engine_options(url)
+        kwargs['future'] = True
         self.rw_engine = create_engine(url, **kwargs)
         self.apply_engine_events(self.rw_engine)
 
@@ -536,16 +535,14 @@ class Registry:
         * entrypoints: ``anyblok.engine.event.**dialect's name**``
         * registry additional_setting: ``anyblok.engine.event``
         """
-        for i in iter_entry_points('anyblok.engine.event'):
-            logger.info('Update engine event from entrypoint %r' % i)
-            i.load()(engine)
+        def _apply_engine_events(key):
+            for i in iter_entry_points(key):
+                logger.info('Update engine event for %s from entrypoint %r' % (
+                    key, i))
+                i.load()(engine)
 
-        for i in iter_entry_points(
-            'anyblok.engine.event.' + engine.dialect.name
-        ):
-            logger.info('Update engine event for %s from entrypoint %r' % (
-                self.engine.dialect.name, i))
-            i.load()(engine)
+        _apply_engine_events('anyblok.engine.event')
+        _apply_engine_events('anyblok.engine.event.' + engine.dialect.name)
 
         for funct in self.additional_setting.get('anyblok.engine.event', []):
             logger.info('Update engine event %r' % funct)
@@ -636,7 +633,7 @@ class Registry:
         query += " FROM system_blok"
         query += " WHERE state in ('%s')" % "', '".join(states)
         try:
-            res = self.execute(query, fetchall=True)
+            res = self.execute(text(query), fetchall=True)
         except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
             pass
@@ -665,7 +662,7 @@ class Registry:
                 toinstall.append(blok)
 
         if toinstall and self.withoutautomigration:
-            raise RegistryManagerException(
+            raise RegistryManagerException(  # pragma: no cover
                 "Install modules %r is forbidden with no auto migration "
                 "mode" % toinstall)
 
@@ -717,11 +714,11 @@ class Registry:
                     # actually, think aliases could work almost direcly
                     # it's just a matter of documenting that what the policy
                     # gets may be an alias instead of a model.
-                    raise NotImplementedError(
+                    raise NotImplementedError(  # pragma: no cover
                         "Sorry, table/model aliases aren't supported yet. "
                         "Here's the unsupported column: %r" % column)
                 if not issubclass(column['type'], self.registry_base):
-                    raise NotImplementedError(
+                    raise NotImplementedError(  # pragma: no cover
                         "Sorry, only model columns are supported for now. "
                         "Here is the unsupported one: %r" % column)
                 models.append(column['type'])
@@ -732,7 +729,7 @@ class Registry:
             query = policy.filter(model, query, principals, permission)
             if query is False:  # TODO use a dedicated singleton ?
                 return QUERY_WITH_NO_RESULTS
-            if policy.postfilter is not None:
+            if policy.postfilter is not None:  # pragma: no cover
                 postfilters[model] = lambda rec: policy.postfilter(
                     rec, principals, permission)
         return PostFilteredQuery(query, postfilters)
@@ -791,7 +788,7 @@ class Registry:
 
     def load_properties(self, blok):
         properties = RegistryManager.loaded_bloks[blok]['properties']
-        for k, v in properties.items():
+        for k, v in properties.items():  # pragma: no cover
             if k not in self.properties:
                 self.properties[k] = v
             elif isinstance(self.properties[k], dict) and isinstance(v, dict):
@@ -810,7 +807,7 @@ class Registry:
         for blok in bloks:
             if required:
                 if not self.load_blok(blok, toinstall, toload):
-                    raise RegistryManagerException(
+                    raise RegistryManagerException(  # pragma: no cover
                         "Required blok %r not found" % blok)
             elif toinstall or blok in toload:
                 self.load_blok(blok, toinstall, toload)
@@ -825,7 +822,7 @@ class Registry:
             return True
 
         if blok not in BlokManager.bloks:
-            return False
+            return False  # pragma: no cover
 
         b = BlokManager.bloks[blok](self)
         self.load_bloks(b.required + b.conditional, toinstall, toload)
@@ -849,13 +846,13 @@ class Registry:
             return True
 
         if blok not in BlokManager.bloks:
-            return False
+            return False  # pragma: no cover
 
         b = BlokManager.bloks[blok](self)
         for required in b.required:
             if not self.check_dependencies(required, dependencies_to_install,
                                            toinstall):
-                raise RegistryManagerException(
+                raise RegistryManagerException(  # pragma: no cover
                     "%r: Required blok not found %r" % (blok, required))
 
         for optional in b.optional:
@@ -882,7 +879,7 @@ class Registry:
                 dependencies_to_install)
             try:
                 self.execute(query)
-            except (ProgrammingError, OperationalError):
+            except (ProgrammingError, OperationalError):  # pragma: no cover
                 pass
 
             return True
@@ -899,16 +896,12 @@ class Registry:
             return res
         else:
             conn = None
-            try:
-                conn = self.engine.connect()
+            with self.engine.connect() as conn:
                 res = conn.execute(*args, **kwargs)
                 if fetchall:
                     return res.fetchall()
 
-                return res
-            finally:
-                if conn:
-                    conn.close()
+                return res  # pragma: no cover
 
     def get_namespace(self, parent, child):
         if hasattr(parent, child) and getattr(parent, child):
@@ -979,7 +972,7 @@ class Registry:
                 'registry_query': Query})
 
             self.Session = scoped_session(
-                sessionmaker(bind=bind, class_=Session),
+                sessionmaker(bind=bind, class_=Session, future=True),
                 EnvironmentManager.scoped_function_for_session())
 
             self.nb_query_bases = len(self.loaded_cores['Query'])
@@ -1022,7 +1015,7 @@ class Registry:
                 toinstall = self.get_bloks_to_install(toload)
             if self.loadwithoutmigration and not toload and toinstall:
                 logger.warning("Impossible to use loadwithoumigration")
-                self.loadwithoutmigration = False
+                self.loadwithoutmigration = False  # pragma: no cover
 
             self.load_bloks(toload, False, toload)
             if toinstall and not self.loadwithoutmigration:
@@ -1060,16 +1053,16 @@ class Registry:
         * entrypoints: ``anyblok.session.event.**sgdb**``
         * registry additional_setting: ``anyblok.session.event``
         """
-        for i in iter_entry_points('anyblok.session.event'):
-            logger.info('Update session event from entrypoint %r' % i)
-            i.load()(self.session)
+        def _apply_session_events(key):
+            for i in iter_entry_points(key):
+                logger.info(
+                    'Update session event for %s from entrypoint %r' % (
+                        key, i))
+                i.load()(self.session)  # pragma: no cover
 
-        for i in iter_entry_points(
-            'anyblok.session.event.' + self.engine.dialect.name
-        ):
-            logger.info('Update session event for %s from entrypoint %r' % (
-                self.engine.dialect.name, i))
-            i.load()(self.session)
+        _apply_session_events('anyblok.session.event')
+        _apply_session_events(
+            'anyblok.session.event.' + self.engine.dialect.name)
 
         for funct in self.additional_setting.get('anyblok.session.event', []):
             logger.info('Update session event %r' % funct)
@@ -1246,7 +1239,7 @@ class Registry:
         you should use close method which call this method
         """
 
-        if self.unittest_transaction:
+        if self.unittest_transaction and self.unittest_transaction.is_active:
             self.unittest_transaction.rollback()
 
         if self.Session:
@@ -1376,6 +1369,7 @@ class Registry:
             finally:
                 _postcommit_hook.remove(hook)
 
+    @log(logger, level='debug')
     def commit(self, *args, **kwargs):
         """ Overload the commit method of the SqlAlchemy session """
         logger.debug('[COMMIT] with args=%r and kwargs = %r', args, kwargs)
@@ -1384,12 +1378,12 @@ class Registry:
             self.session_commit(*args, **kwargs)
             try:
                 self.apply_postcommit_hook(withexception=False)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.exception(str(e))
         except Exception as e:
             try:
                 self.apply_postcommit_hook(withexception=True)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.exception(str(e))
 
             raise e

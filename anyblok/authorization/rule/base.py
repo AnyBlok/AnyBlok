@@ -30,7 +30,7 @@ class AuthorizationRule:
     """Set during assembly phase."""
 
     def is_declaration(self):
-        return self.registry is None
+        return self.registry is None  # pragma: no cover
 
     def check(self, target, principals, permission):
         """Check that one of the principals has permisson on given record.
@@ -44,7 +44,7 @@ class AuthorizationRule:
 
         Must be implemented by concrete subclasses.
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def filter(self, model, query, principals, permission):
         """Return a new query with added permission filtering.
@@ -68,7 +68,7 @@ class AuthorizationRule:
         The policy also has the possibility to return False, for flat denial
         without even querying the server. That may prove useful in some cases.
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     postfilter = None
     """Filter by permission records obtained by a filtered query.
@@ -90,10 +90,10 @@ class AuthorizationRule:
 class DenyAll(AuthorizationRule):
 
     def check(self, *args):
-        return False
+        return False  # pragma: no cover
 
     def filter(self, *args):
-        return False
+        return False  # pragma: no cover
 
 
 deny_all = DenyAll

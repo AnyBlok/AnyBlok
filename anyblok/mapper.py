@@ -20,7 +20,7 @@ def get_for(basekey, path, default=None):
 
     res = Configuration.get(key, None)
     if res is not None:
-        return res
+        return res  # pragma: no cover
 
     new_path = path[:-1]
     if path[-1] == '*':
@@ -255,14 +255,14 @@ class ModelAttribute:
 
     def add_fake_column(self, registry):
         Model = self.check_model_in_first_step(registry)
-        if self.attribute_name in registry.loaded_namespaces_first_step:
+        if self.attribute_name in Model:
             return
 
         Model[self.attribute_name] = FakeColumn()
 
     def add_fake_relationship(self, registry, namespace, fieldname):
         Model = self.check_model_in_first_step(registry)
-        if self.attribute_name in registry.loaded_namespaces_first_step:
+        if self.attribute_name in Model:
             return
 
         Model[self.attribute_name] = FakeRelationShip(ModelAttribute(
@@ -292,7 +292,8 @@ class ModelAttribute:
                 "Unknow model %r" % self.model_name)
 
         Model = registry.loaded_namespaces_first_step[self.model_name]
-        if len(Model.keys()) == 1:
+        if len(Model.keys()) == 3:
+            # (__depends__, __db_schema__, __tablename__)
             # No column found, so is not an sql model
             raise ModelAttributeException(
                 "The Model %r is not an SQL Model" % self.model_name)
@@ -531,7 +532,7 @@ class ModelAttributeMapper:
     def mapper(self, registry, namespace, usehybrid=True):
         attribute = self.attribute
         if self.attribute.model_name.upper() == 'SELF':
-            attribute = ModelAttribute(
+            attribute = ModelAttribute(  # pragma: no cover
                 namespace, self.attribute.attribute_name)
 
         return attribute.get_attribute(registry, usehybrid=usehybrid)

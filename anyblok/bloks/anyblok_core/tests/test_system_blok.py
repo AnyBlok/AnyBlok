@@ -20,3 +20,7 @@ class TestSystemBlok:
     def test_list_by_state_without_state(self, rollback_registry):
         registry = rollback_registry
         assert registry.System.Blok.list_by_state() is None
+
+    def test_is_installed(self, rollback_registry):
+        registry = rollback_registry
+        assert registry.System.Blok.is_installed('anyblok-core') is True

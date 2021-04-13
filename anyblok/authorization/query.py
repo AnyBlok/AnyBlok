@@ -44,11 +44,11 @@ class PostFilteredQuery:
     def count(self):
         if self.postfilters:
             # TODO add policy information (needs to change __init__)
-            raise RuntimeError(
+            raise RuntimeError(  # pragma: no cover
                 "Cannot apply count to a permission postfiltered query")
         return self.query.count()
 
-    def filter_one(self, result):
+    def filter_one(self, result):  # pragma: no cover
         pfs = self.postfilters
         for rec in result:
             pf = pfs.get(result.__class__)
@@ -62,10 +62,10 @@ class PostFilteredQuery:
     def all(self):
         if not self.postfilters:
             return self.query.all()
-        return filter(self.filter_one, self.query.all())
+        return filter(self.filter_one, self.query.all())  # pragma: no cover
 
     def first(self):
         if not self.postfilters:
             return self.query.first()
         else:
-            raise NotImplementedError
+            raise NotImplementedError  # pragma: no cover

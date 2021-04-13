@@ -1,7 +1,11 @@
 [run]
+source = anyblok
 omit =
     # omit scripts file
     anyblok/scripts.py
+    # omit testing files
+    anyblok/testing.py
+    anyblok/logging.py
     # omit anything in a tests directory anywhere
     */tests/*
     # omit anything in a test_bloks directory anywhere
@@ -12,6 +16,7 @@ omit =
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
+    pragma: no cover
     # unexecuting logger
     logger\.
     # exclude all import error of unloaded module

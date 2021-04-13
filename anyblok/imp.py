@@ -49,7 +49,7 @@ class ImportManager:
             return cls.get(blok)
 
         if not BlokManager.has(blok):
-            raise ImportManagerException("Unexisting blok")
+            raise ImportManagerException("Unexisting blok")  # pragma: no cover
 
         loader = Loader(blok)
         cls.modules[blok] = loader

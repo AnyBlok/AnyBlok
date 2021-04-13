@@ -27,7 +27,7 @@ class MixinType:
             setattr(parent, name, ns)
 
         if parent is Declarations:
-            return
+            return  # pragma: no cover
 
         RegistryManager.add_entry_in_register(
             cls.__name__, _registryname, cls_, **kwargs)

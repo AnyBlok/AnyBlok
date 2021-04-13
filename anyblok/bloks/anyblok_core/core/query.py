@@ -38,7 +38,7 @@ class Query(query.Query):
                 raise exc.__class__(
                     'On Model %r: %s' % (self.Model, str(exc)))
 
-            raise
+            raise  # pragma: no cover
 
     def all(self):
         """ Return an instrumented list of the result of the query
@@ -93,7 +93,7 @@ class Query(query.Query):
     def dictall(self):
         vals = self.all()
         if not vals:
-            return []
+            return []  # pragma: no cover
 
         field2get = self.get_field_names_in_column_description()
         if field2get:
@@ -115,7 +115,7 @@ class Query(query.Query):
 
         return super(Query, self).get(primary_keys)
 
-    def update(self, *args, **kwargs):
+    def update(self, *args, **kwargs):  # pragma: no cover
         warnings.warn(
             "This method is deprecated and will be removed in the next version"
             "of AnyBlok, you should use update_sql_statement classmethod",
@@ -123,7 +123,7 @@ class Query(query.Query):
 
         return super(Query, self).update(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
+    def delete(self, *args, **kwargs):  # pragma: no cover
         warnings.warn(
             "This method is deprecated and will be removed in the next version"
             "of AnyBlok, you should use delete_sql_statement classmethod",

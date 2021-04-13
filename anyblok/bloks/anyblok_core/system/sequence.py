@@ -113,7 +113,7 @@ class Sequence:
 
         for vals in to_create:
             if cls.query().filter(cls.code == vals['code']).count():
-                continue
+                continue  # pragma: no cover
 
             formatter = vals.get('formater')
             if formatter is None:
@@ -149,7 +149,7 @@ class Sequence:
         return super(Sequence, cls).insert(**cls.create_sequence(kwargs))
 
     @classmethod
-    def multi_insert(cls, *args):
+    def multi_insert(cls, *args):  # pragma: no cover
         """Overwrite to call :meth:`create_sequence` on the fly."""
         res = [cls.create_sequence(x) for x in args]
         return super(Sequence, cls).multi_insert(*res)
@@ -178,5 +178,5 @@ class Sequence:
         filters = [getattr(cls, k) == v for k, v in crit.items()]
         seq = cls.query().filter(*filters).first()
         if seq is None:
-            return None
+            return None  # pragma: no cover
         return seq.nextval()

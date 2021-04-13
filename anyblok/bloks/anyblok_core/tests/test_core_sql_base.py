@@ -154,3 +154,34 @@ class TestCoreSqlBase:
             'name': model.name,
             'table': model.table,
         }
+
+    def test_select_sql_statement_with_column(self, rollback_registry):
+        registry = rollback_registry
+        Blok = registry.System.Blok
+        assert Blok.execute_sql_statement(
+            Blok.select_sql_statement('name').where(
+                Blok.name == 'anyblok-core').limit(1)
+        ).one() == ('anyblok-core',)
+
+    def test_from_multi_primary_keys(self, rollback_registry):
+        registry = rollback_registry
+        Blok = registry.System.Blok
+        blok_names = Blok.from_multi_primary_keys(
+            dict(name='anyblok-core'),
+            dict(name='anyblok-test'),
+        ).name
+        assert 'anyblok-core' in blok_names
+        assert 'anyblok-test' in blok_names
+
+    def test_from_multi_primary_keys_empty(self, rollback_registry):
+        registry = rollback_registry
+        Blok = registry.System.Blok
+        assert Blok.from_multi_primary_keys() == []
+
+    def test_get_hybrid_property_columns(self, rollback_registry):
+        registry = rollback_registry
+        Column = registry.System.Column
+        columns = Column.get_hybrid_property_columns()
+        for x in ['name', 'model', 'autoincrement', 'foreign_key',
+                  'primary_key', 'unique', 'nullable', 'remote_model']:
+            assert x in columns

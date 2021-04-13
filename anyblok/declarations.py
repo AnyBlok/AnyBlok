@@ -42,7 +42,7 @@ class Declarations:
             name = kwargs.get('name_', self.__name__)
             if parent.__declaration_type__ not in cls.declaration_types:
                 raise DeclarationsException(
-                    "No parents %r for %s" % (parent, name))
+                    "No parents %r for %s" % (parent, name))  # pragma: no cover
 
             declaration = cls.declaration_types[parent.__declaration_type__]
             declaration.register(parent, name, self, **kwargs)
@@ -127,7 +127,7 @@ class Declarations:
             # All declaration type can need to be unload declarated values
             if unload and hasattr(self, unload):
                 RegistryManager.declare_unload_callback(
-                    name, getattr(self, unload))
+                    name, getattr(self, unload))  # pragma: no cover
 
             return self
 

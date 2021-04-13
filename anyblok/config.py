@@ -489,7 +489,7 @@ class Configuration:
                 cls.configuration[opt].set(value)
             else:
                 cls.add_argument(opt, value, type(value))
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.exception("Error while setting the value %r to the option "
                              "%r" % (value, opt))
             raise e
@@ -587,7 +587,7 @@ class Configuration:
                 join(ad.user_config_dir, 'conf.cfg'), False)
             configfile = cls.get('configfile')
             if configfile:
-                cls.parse_configfile(configfile, True)
+                cls.parse_configfile(configfile, True)  # pragma: no cover
 
     @classmethod
     @log(logger, level='debug')
@@ -605,7 +605,7 @@ class Configuration:
         if application in cls.applications:
             description.update(cls.applications[application])
         else:
-            description.update(cls.applications['default'])
+            description.update(cls.applications['default'])  # pragma: no cover
 
         description.update(kwargs)
         configuration_groups = description.pop(
@@ -614,7 +614,7 @@ class Configuration:
         if 'plugins' not in configuration_groups:
             configuration_groups.append('plugins')
 
-        if useseparator:
+        if useseparator:  # pragma: no cover
             parser = getParser(**description)
 
             try:
@@ -640,7 +640,7 @@ class Configuration:
         :param useseparator: boolean(default False)
         """
         if configuration_groups is None:
-            return
+            return  # pragma: no cover
 
         for group in cls.groups:
             if group not in configuration_groups:
@@ -673,13 +673,13 @@ class Configuration:
         logging_level_qualnames = cls.get('logging_level_qualnames')
 
         if logging_configfile:
-            config.fileConfig(logging_configfile)
+            config.fileConfig(logging_configfile)  # pragma: no cover
         elif json_logging_configfile:
-            with open(json_logging_configfile, 'rt') as f:
+            with open(json_logging_configfile, 'rt') as f:  # pragma: no cover
                 configfile = json.load(f.read())
                 config.dictConfig(configfile)
         elif yaml_logging_configfile:
-            with open(yaml_logging_configfile, 'rt') as f:
+            with open(yaml_logging_configfile, 'rt') as f:  # pragma: no cover
                 configfile = yaml.load(f.read())
                 config.dictConfig(configfile)
 
@@ -690,11 +690,11 @@ class Configuration:
                                 for x in Logger.manager.loggerDict.keys()
                                 if x in logging_level_qualnames)
             else:
-                qualnames = set(x.split('.')[0]
+                qualnames = set(x.split('.')[0]  # pragma: no cover
                                 for x in Logger.manager.loggerDict.keys())
 
             for qualname in qualnames:
-                getLogger(qualname).setLevel(level)
+                getLogger(qualname).setLevel(level)  # pragma: no cover
 
     @classmethod
     def parse_configfile(cls, configfile, required):
@@ -709,7 +709,7 @@ class Configuration:
         print('Loading config file %r' % configfile)
         if not isfile(configfile):
             if required:
-                raise ConfigurationException(
+                raise ConfigurationException(  # pragma: no cover
                     "No such file or not a regular file: %r " % configfile)
 
             return
@@ -725,7 +725,7 @@ class Configuration:
             for opt, value in sections:
                 if opt in ('logging_configfile', 'json_logging_configfile',
                            'yaml_logging_configfile'):
-                    if value:
+                    if value:  # pragma: no cover
                         value = os.path.abspath(value)
 
                 configuration[opt] = value
@@ -766,7 +766,7 @@ class Configuration:
                 cls.set(opt, value)
 
         if 'logging_level' in cls.configuration:
-            cls.initialize_logging()
+            cls.initialize_logging()  # pragma: no cover
 
 
 @Configuration.add('plugins', label='Plugins',
@@ -800,6 +800,10 @@ def add_configuration_file(parser):
                         help="Relative path of the config file")
     parser.add_argument('--without-auto-migration', dest='withoutautomigration',
                         action='store_true')
+    parser.add_argument('--ignore-migration-for-models', nargs="+",
+                        help="Models ignored by the migration")
+    parser.add_argument('--ignore-migration-for-schemas', nargs="+",
+                        help="Schemas ignored by the migration")
     parser.add_argument('--isolation-level',
                         default="READ_COMMITTED",
                         choices=["SERIALIZABLE", "REPEATABLE_READ",
