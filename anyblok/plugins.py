@@ -28,7 +28,7 @@ class BooleanToTinyIntMySQL(MigrationColumnTypePlugin):
     def apply(self, column, **kwargs):
         '''Boolean are TINYINT in MySQL DataBases'''
         # do nothing
-        pass
+        pass  # pragma: no cover
 
 
 class BooleanToBitMsSQL(MigrationColumnTypePlugin):
@@ -44,4 +44,4 @@ class BooleanToBitMsSQL(MigrationColumnTypePlugin):
     def apply(self, column, **kwargs):
         '''Boolean are Bit in MsSQL DataBases'''
         # do nothing
-        pass
+        pass  # pragma: no cover

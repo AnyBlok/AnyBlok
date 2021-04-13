@@ -6,7 +6,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import warnings
 from anyblok import Declarations
 from anyblok.common import anyblok_column_prefix
 from sqlalchemy.orm.exc import NoResultFound
@@ -83,7 +82,7 @@ class Query:
             logger.debug('On Model %r: exc %s: query %s',
                          self.Model.__registry_name__,
                          str(exc), str(self))
-            raise exc.__class__(
+            raise exc.__class__(  # pragma: no cover
                 'On Model %r: %s' % (self.Model.__registry_name__, str(exc)))
 
     def one_or_none(self):
@@ -132,24 +131,24 @@ class Query:
         else:
             return val.to_dict()
 
-    # def dictfirst(self):
-    #     val = self.first()
-    #     field2get = self.get_field_names_in_column_description()
-    #     if field2get:
-    #         return {x: getattr(val, y) for x, y in field2get}
-    #     else:
-    #         return val.to_dict()
+    # def dictfirst(self):
+    #     val = self.first()
+    #     field2get = self.get_field_names_in_column_description()
+    #     if field2get:
+    #         return {x: getattr(val, y) for x, y in field2get}
+    #     else:
+    #         return val.to_dict()
 
-    # def dictall(self):
-    #     vals = self.all()
-    #     if not vals:
-    #         return []
+    # def dictall(self):
+    #     vals = self.all()
+    #     if not vals:
+    #         return []
 
-    #     field2get = self.get_field_names_in_column_description()
-    #     if field2get:
-    #         return [{x: getattr(y, z) for x, z in field2get} for y in vals]
-    #     else:
-    #         return vals.to_dict()
+    #     field2get = self.get_field_names_in_column_description()
+    #     if field2get:
+    #         return [{x: getattr(y, z) for x, z in field2get} for y in vals]
+    #     else:
+    #         return vals.to_dict()
 
     def get(self, primary_keys=None, **kwargs):
         if primary_keys is None:
@@ -161,5 +160,5 @@ class Query:
                  if k in self.Model.hybrid_property_columns else k): v
                 for k, v in primary_keys.items()
             }
-            
+
         return self.anyblok.session.get(self.Model, primary_keys)

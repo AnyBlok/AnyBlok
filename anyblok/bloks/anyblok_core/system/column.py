@@ -57,7 +57,7 @@ class Column(System.Field):
         if hasattr(Model, anyblok_column_prefix + cname):
             c = getattr(Model, anyblok_column_prefix + cname)
         else:
-            c = column.property.columns[0]
+            c = column.property.columns[0]  # pragma: no cover
 
         autoincrement = c.autoincrement
 
@@ -90,7 +90,7 @@ class Column(System.Field):
         if hasattr(Model, anyblok_column_prefix + column.name):
             c = getattr(Model, anyblok_column_prefix + column.name)
         else:
-            c = meta_column.property.columns[0]
+            c = meta_column.property.columns[0]  # pragma: no cover
 
         autoincrement = c.autoincrement
 
@@ -100,15 +100,15 @@ class Column(System.Field):
                              else False)
 
         if column.autoincrement != autoincrement:
-            column.autoincrement = autoincrement
+            column.autoincrement = autoincrement  # pragma: no cover
 
         for col in ('nullable', 'primary_key', 'unique'):
             if getattr(column, col) != getattr(c, col):
-                setattr(column, col, getattr(c, col))
+                setattr(column, col, getattr(c, col))  # pragma: no cover
 
         for col in ('foreign_key', 'label', 'remote_model'):
             if getattr(column, col) != c.info.get(col):
-                setattr(column, col, c.info.get(col))
+                setattr(column, col, c.info.get(col))  # pragma: no cover
 
         if column.ftype != ftype:
-            column.ftype = ftype
+            column.ftype = ftype  # pragma: no cover

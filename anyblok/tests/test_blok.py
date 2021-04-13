@@ -797,13 +797,14 @@ class TestBlokModel:
         t2 = registry.Test2.insert(label="test2")
         registry.Test.insert(label="Test1", test2=t2.id)
         from sqlalchemy.exc import IntegrityError
-        Test2 = registry.Test2
         with pytest.raises(IntegrityError):
             with registry.begin_nested():
-                Test2.execute(Test2.delete_sql_statement())
+                registry.Test2.execute_sql_statement(
+                    registry.Test2.delete_sql_statement())
 
         registry.upgrade(uninstall=('test-blok8',))
-        Test2.execute(Test2.delete_sql_statement())
+        registry.Test2.execute_sql_statement(
+            registry.Test2.delete_sql_statement())
 
     def test_auto_migration_is_between_pre_and_post_migration_1(
         self, registry_testblok

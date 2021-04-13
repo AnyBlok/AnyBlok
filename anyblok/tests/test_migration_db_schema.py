@@ -11,7 +11,8 @@ from anyblok.column import Integer as Int, String as Str
 from anyblok.migration import MigrationException, DropSchema
 from contextlib import contextmanager
 from sqlalchemy import (
-    MetaData, Table, Column, Integer, String, CheckConstraint, ForeignKey)
+    MetaData, Table, Column, Integer, String, CheckConstraint, ForeignKey,
+    text)
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
 from anyblok.config import Configuration
@@ -36,7 +37,7 @@ def cnx(registry):
     try:
         yield cnx
     except Exception:
-        cnx.execute("rollback")
+        cnx.execute(text("rollback"))
         raise
 
 
@@ -371,9 +372,9 @@ class TestMigrationDbSchema:
 
     def test_detect_drop_anyblok_index(self, registry):
         with cnx(registry) as conn:
-            conn.execute(
+            conn.execute(text(
                 """CREATE INDEX anyblok_ix_test__other
-                   ON test_db_schema.test (other);""")
+                   ON test_db_schema.test (other);"""))
         report = registry.migration.detect_changed()
         assert report.log_has(
             "Drop index anyblok_ix_test__other on test_db_schema.test")

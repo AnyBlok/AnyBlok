@@ -45,7 +45,7 @@ class AttributeAccessRule(AuthorizationRule):
     @property
     def registry(self):
         """On this rule, we'll need a setter for registry"""
-        return self._registry
+        return self._registry  # pragma: no cover
 
     @registry.setter
     def registry(self, registry):

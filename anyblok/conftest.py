@@ -77,7 +77,7 @@ def rollback_registry(request, init_session):
         request.node.get_closest_marker('skip_unless_demo_data_installed') and
         not registry.System.Parameter.get("with-demo", False)
     ):
-        pytest.skip(
+        pytest.skip(  # pragma: no cover
             "Demo data are required (Use ``--with-demo`` to create the "
             "test database)."
         )
@@ -97,7 +97,7 @@ def rollback_registry(request, init_session):
         try:
             logger.debug('Invalidating all cache')
             registry.System.Cache.invalidate_all()
-        except sqlalchemy.exc.InvalidRequestError:
+        except sqlalchemy.exc.InvalidRequestError:  # pragma: no cover
             logger.warning('Invalid request Error: while invalidating all '
                            'caches after {}'
                            .format(request.function.__name__))

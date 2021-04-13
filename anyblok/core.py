@@ -39,7 +39,7 @@ class Core:
             setattr(parent, name, core)
 
         if parent == Declarations:
-            return
+            return  # pragma: no cover
 
         RegistryManager.add_core_in_register(name, cls_)
 

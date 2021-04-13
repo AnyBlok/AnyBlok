@@ -7,6 +7,7 @@
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Joachim Trouverie
 #    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -22,7 +23,7 @@ from anyblok.config import Configuration
 from sqlalchemy import inspect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
-from .common import sgdb_in
+from .common import sgdb_in, return_list
 from sqlalchemy.schema import (
     DDLElement, PrimaryKeyConstraint, CheckConstraint, UniqueConstraint)
 from logging import getLogger
@@ -59,8 +60,8 @@ def cnx(migration):
         yield migration.conn
     except MigrationException:
         raise
-    except Exception:
-        migration.conn.execute("rollback")
+    except Exception:  # pragma: no cover
+        migration.conn.execute(text("rollback"))
         raise
 
 
@@ -77,7 +78,13 @@ class MigrationReport:
 
     """
 
-    def ignore_migration_for(self, table, default=None):
+    def ignore_migration_for(self, schema, table, default=None):
+        if schema in self.ignore_migration_for_schema_from_configuration:
+            return True
+
+        if table in self.ignore_migration_for_table_from_configuration:
+            return True
+
         return self.migration.ignore_migration_for.get(table, default)
 
     def raise_if_withoutautomigration(self):
@@ -108,8 +115,8 @@ class MigrationReport:
 
     def init_add_column(self, diff):
         self.raise_if_withoutautomigration()
-        _, _, table, column = diff
-        if self.ignore_migration_for(table) is True:
+        _, schema, table, column = diff
+        if self.ignore_migration_for(schema, table) is True:
             return True
 
         self.log_names.append('Add %s.%s' % (table, column.name))
@@ -152,7 +159,8 @@ class MigrationReport:
 
     def init_remove_constraint(self, diff):
         _, constraint = diff
-        if self.ignore_migration_for(constraint.table.name) is True:
+        if self.ignore_migration_for(constraint.table.schema,
+                                     constraint.table.name) is True:
             return True
 
         self.log_names.append('Drop constraint %s on %s' % (
@@ -178,8 +186,9 @@ class MigrationReport:
     def init_add_index(self, diff):
         self.raise_if_withoutautomigration()
         _, constraint = diff
-        if self.ignore_migration_for(constraint.table.name) is True:
-            return True
+        if self.ignore_migration_for(constraint.table.schema,
+                                     constraint.table.name) is True:
+            return True  # pragma: no cover
 
         columns = [x.name for x in constraint.columns]
         if self.table_is_added(constraint.table):
@@ -190,7 +199,8 @@ class MigrationReport:
 
     def init_remove_index(self, diff):
         _, index = diff
-        if self.ignore_migration_for(index.table.name) is True:
+        if self.ignore_migration_for(index.table.schema,
+                                     index.table.name) is True:
             return True
 
         self.log_names.append('Drop index %s on %s' % (index.name,
@@ -203,13 +213,15 @@ class MigrationReport:
     def init_add_fk(self, diff):
         self.raise_if_withoutautomigration()
         _, fk = diff
-        if self.ignore_migration_for(fk.table.name) is True:
+        if self.ignore_migration_for(fk.table.schema, fk.table.name) is True:
             return True
 
         from_ = []
         to_ = []
         for column in fk.columns:
-            if column.name in self.ignore_migration_for(fk.table.name, []):
+            if column.name in self.ignore_migration_for(
+                fk.table.schema, fk.table.name, []
+            ):
                 return True
 
             for fk_ in column.foreign_keys:
@@ -221,11 +233,13 @@ class MigrationReport:
 
     def init_remove_fk(self, diff):
         _, fk = diff
-        if self.ignore_migration_for(fk.table.name) is True:
+        if self.ignore_migration_for(fk.table.schema, fk.table.name) is True:
             return True
 
         for column in fk.columns:
-            if column.name in self.ignore_migration_for(fk.table.name, []):
+            if column.name in self.ignore_migration_for(
+                fk.table.schema, fk.table.name, []
+            ):
                 return True
 
             for fk_ in column.foreign_keys:
@@ -240,7 +254,7 @@ class MigrationReport:
     def init_add_ck(self, diff):
         self.raise_if_withoutautomigration()
         _, table, ck = diff
-        if self.ignore_migration_for(table) is True:
+        if self.ignore_migration_for(ck.table.schema, table) is True:
             return True
 
         if ck.table.schema:
@@ -251,7 +265,7 @@ class MigrationReport:
 
     def init_remove_ck(self, diff):
         _, table, ck = diff
-        if self.ignore_migration_for(table) is True:
+        if self.ignore_migration_for(ck['schema'], table) is True:
             return True
 
         if ck['schema']:
@@ -270,12 +284,14 @@ class MigrationReport:
         _, constraint = diff
         columns = []
 
-        if self.ignore_migration_for(constraint.table.name) is True:
+        if self.ignore_migration_for(constraint.table.schema,
+                                     constraint.table.name) is True:
             return True
 
         for column in constraint.columns:
             columns.append(column.name)
-            if column.name in self.ignore_migration_for(constraint.table.name,
+            if column.name in self.ignore_migration_for(constraint.table.schema,
+                                                        constraint.table.name,
                                                         []):
                 return True
 
@@ -293,7 +309,8 @@ class MigrationReport:
 
     def init_remove_column(self, diff):
         column = diff[3]
-        if self.ignore_migration_for(column.table.name) is True:
+        if self.ignore_migration_for(column.table.schema,
+                                     column.table.name) is True:
             return True
 
         msg = "Drop Column %s.%s" % (column.table.name,
@@ -310,7 +327,7 @@ class MigrationReport:
                 # only if fk is not removable. FK can come from
                 # * DBA manager, it is the only raison to destroy it
                 # * alembic, some constrainte change name during the remove
-                if fk.name not in fk_removed:
+                if fk.name not in fk_removed:  # pragma: no cover
                     self.actions.append(('remove_fk', fk.constraint))
                     fk_removed.append(fk.name)
 
@@ -361,10 +378,10 @@ class MigrationReport:
             return True
 
     def init_modify_type(self, diff):
-        if self.ignore_migration_for(diff[2]) is True:
+        if self.ignore_migration_for(diff[1], diff[2]) is True:
             return True
 
-        if diff[3] in self.ignore_migration_for(diff[2], []):
+        if diff[3] in self.ignore_migration_for(diff[1], diff[2], []):
             return True
 
         selected_plugin = self.get_plugin_for(diff[5], diff[6])
@@ -378,10 +395,10 @@ class MigrationReport:
         return False
 
     def init_modify_nullable(self, diff):
-        if self.ignore_migration_for(diff[2]) is True:
+        if self.ignore_migration_for(diff[1], diff[2]) is True:
             return True
 
-        if diff[3] in self.ignore_migration_for(diff[2], []):
+        if diff[3] in self.ignore_migration_for(diff[1], diff[2], []):
             return True
 
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
@@ -390,10 +407,10 @@ class MigrationReport:
         return False
 
     def init_modify_server_default(self, diff):
-        if self.ignore_migration_for(diff[2]) is True:
+        if self.ignore_migration_for(diff[1], diff[2]) is True:
             return True
 
-        if diff[3] in self.ignore_migration_for(diff[2], []):
+        if diff[3] in self.ignore_migration_for(diff[1], diff[2], []):
             return True
 
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
@@ -450,6 +467,19 @@ class MigrationReport:
         self.diffs = diffs
         self.log_names = []
         self.plugins = self.init_plugins()
+        self.ignore_migration_for_table_from_configuration = [
+            self.migration.loaded_namespaces[x].__tablename__
+            for x in return_list(
+                Configuration.get('ignore_migration_for_models')
+            )
+            if (
+                x in self.migration.loaded_namespaces and
+                self.migration.loaded_namespaces[x].is_sql
+            )
+        ]
+        self.ignore_migration_for_schema_from_configuration = return_list(
+            Configuration.get('ignore_migration_for_schemas'))
+
         mappers = {
             'add_schema': self.init_add_schema,
             'add_table': self.init_add_table,
@@ -557,7 +587,7 @@ class MigrationReport:
     def apply_change_modify_default(self, action):
         _, schema, table, column, kwargs, oldvalue, newvalue = action
         if schema:
-            t = self.migration.schema(schema).table(table)
+            t = self.migration.schema(schema).table(table)  # pragma: no cover
         else:
             t = self.migration.table(table)
 
@@ -687,8 +717,9 @@ class MigrationConstraintForeignKey:
 
         remote_table = set(x.table.name for x in remote_columns)
         if len(remote_table) != 1:
-            raise MigrationException("Remote column must have the same table "
-                                     "(%s)" % ', '.join(remote_table))
+            raise MigrationException(  # pragma: no cover
+                "Remote column must have the same table "
+                "(%s)" % ', '.join(remote_table))
 
         remote_table = remote_table.pop()
         remote_columns_names = [x.name for x in remote_columns]
@@ -745,11 +776,11 @@ class MigrationColumnTypePlugin:
         """Apply column migration, this method MUST be overriden in plugins
         subclass
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def need_to_modify_type(self, column, **kwargs):
         """If False the type won't be modified"""
-        return True
+        return True  # pragma: no cover
 
 
 class MigrationColumn:
@@ -797,7 +828,7 @@ class MigrationColumn:
             table = self.table.migration.metadata.tables[self.table.name]
             table.append_column(column)
             cname = getattr(table.c, column.name)
-            if column.default.is_callable:
+            if column.default.is_callable:  # pragma: no cover
                 Table = self.table.migration.metadata.tables['system_model']
                 Column = self.table.migration.metadata.tables['system_column']
                 j1 = join(Table, Column, Table.c.name == Column.c.model)
@@ -959,9 +990,9 @@ class MigrationColumn:
         if sgdb_in(self.table.migration.conn.engine, ['MySQL', 'MariaDB']):
             if sdefault:
                 if not isinstance(sdefault, str):
-                    return sdefault.arg
+                    return sdefault.arg  # pragma: no cover
                 elif sdefault is None:
-                    return None
+                    return None  # pragma: no cover
                 else:
                     return text(sdefault)
 
@@ -981,7 +1012,7 @@ class MigrationColumn:
         table = self.table.migration.metadata.tables[table_name]
         primary_keys = [x.name for x in table.primary_key.columns]
         if self.name in primary_keys:
-            return False
+            return False  # pragma: no cover
 
         return self.info.get('autoincrement', None)
 
@@ -1051,8 +1082,9 @@ class MigrationConstraintUnique:
         :exception: MigrationException
         """
         if not columns:
-            raise MigrationException("""To add an unique constraint you """
-                                     """must define one or more columns""")
+            raise MigrationException(  # pragma: no cover
+                """To add an unique constraint you """
+                """must define one or more columns""")
 
         columns_name = [x.name for x in columns]
         savepoint = 'uq_%s' % (self.name or '')
@@ -1107,8 +1139,9 @@ class MigrationConstraintPrimaryKey:
         :exception: MigrationException
         """
         if not columns:
-            raise MigrationException("""To add a primary key constraint """
-                                     """you must define one or more columns""")
+            raise MigrationException(  # pragma: no cover
+                """To add a primary key constraint """
+                """you must define one or more columns""")
 
         if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
             for column in columns:
@@ -1159,7 +1192,7 @@ class MigrationIndex:
                     self.exist = True
 
             if not self.exist:
-                raise MigrationException(
+                raise MigrationException(  # pragma: no cover
                     "No index %r found on %r" % (self.name, self.table.name))
 
     def format_name(self, *columns):
@@ -1180,7 +1213,7 @@ class MigrationIndex:
         :exception: MigrationException
         """
         if not columns:
-            raise MigrationException(
+            raise MigrationException(  # pragma: no cover
                 "To add an index you must define one or more columns")
 
         index_name = kwargs.get('name', self.format_name(*columns))
@@ -1238,7 +1271,7 @@ class MigrationTable:
         """
         if table is not None:
             if table.schema != self.schema:
-                raise MigrationException(
+                raise MigrationException(  # pragma: no cover
                     "The schema of the table (%r.%r) and the MigrationTable %r"
                     "instance are not the same" % (
                         table.schema, table.name, self.schema))
@@ -1302,7 +1335,8 @@ class MigrationTable:
         :exception: MigrationException
         """
         if 'name' not in kwargs:
-            raise MigrationException("Table can only alter name")
+            raise MigrationException(  # pragma: no cover
+                "Table can only alter name")
 
         name = kwargs['name']
         self.migration.operation.rename_table(
@@ -1353,7 +1387,7 @@ class MigrationSchema:
                     FROM INFORMATION_SCHEMA.SCHEMATA
                     WHERE SCHEMA_name='%s'
                 """ % self.name
-                return conn.execute(query).fetchone()[0]
+                return conn.execute(text(query)).fetchone()[0]
             else:
                 return self.migration.operation.impl.dialect.has_schema(
                     conn, self.name)
@@ -1407,6 +1441,7 @@ class Migration:
     def __init__(self, registry):
         self.withoutautomigration = registry.withoutautomigration
         self.conn = registry.connection()
+        self.loaded_namespaces = registry.loaded_namespaces
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
         self.ddl_compiler = self.conn.dialect.ddl_compiler(
@@ -1490,17 +1525,12 @@ class Migration:
         this method check if the truncated name is the same that no truncated
         name and if the constraint text is the same: return True else False
         """
-        if constraint.name.startswith(reflected_constraint['name']):
-            # case SQLAlchemy < 1.3
+        truncated_name = self.ddl_compiler.preparer.format_constraint(
+            constraint)
+        if truncated_name == reflected_constraint['name']:
             return True
-        else:
-            # case SQLAlchemy >= 1.3
-            truncated_name = self.ddl_compiler.preparer.format_constraint(
-                constraint)
-            if truncated_name == reflected_constraint['name']:
-                return True
 
-        return False
+        return False  # pragma: no cover
 
     def detect_check_constraint_changed(self, inspector):
         if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
@@ -1625,6 +1655,7 @@ class Migration:
     def compare_type(self, context, inspected_column,
                      metadata_column, inspected_type, metadata_type):
         if hasattr(metadata_type, 'compare_type'):
-            return metadata_type.compare_type(inspected_type)
+            return metadata_type.compare_type(  # pragma: no cover
+                inspected_type)
 
         return None

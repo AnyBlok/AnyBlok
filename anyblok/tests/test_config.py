@@ -26,10 +26,14 @@ from anyblok.config import (
     ConfigOption,
     AnyBlokPlugin,
     define_preload_option,
+    get_url,
+    get_db_name,
+    is_none,
+    cast_value,
+    nargs_type,
 )
 from anyblok.testing import tmp_configuration
 from sqlalchemy.engine.url import make_url
-from anyblok.config import get_url
 
 
 old_getParser = config.getParser
@@ -253,6 +257,104 @@ class TestConfiguration:
         for x in ('drivername', 'host', 'port', 'username', 'password',
                   'database'):
             assert getattr(url, x) == getattr(wanted_url, x)
+
+    def test_is_none_1(self):
+        assert is_none(str, None) is True
+
+    def test_is_none_2(self):
+        assert is_none(str, 'None') is True
+
+    def test_is_none_3(self):
+        assert is_none(float, '') is True
+
+    def test_is_none_4(self):
+        assert is_none(str, '') is False
+
+    def test_cast_value_1(self):
+        assert cast_value(str, None) is None
+
+    def test_cast_value_2(self):
+        assert cast_value(None, 1) == 1
+
+    def test_cast_value_3(self):
+        assert cast_value(bool, 'true') is True
+
+    def test_cast_value_4(self):
+        assert cast_value(bool, 'false') is False
+
+    def test_cast_value_5(self):
+        assert cast_value(bool, 1) is True
+
+    def test_nargs_type_1(self):
+        assert nargs_type('test', 1, str)('test') == ['test']
+
+    def test_nargs_type_2(self):
+        assert nargs_type('test', 2, str)('foo\nbar') == ['foo', 'bar']
+
+    def test_nargs_type_3(self):
+        assert nargs_type('test', 2, str)('foo,bar') == ['foo', 'bar']
+
+    def test_nargs_type_4(self):
+        with pytest.raises(ConfigurationException):
+            nargs_type('test', 2, str)(1)
+
+    def test_nargs_type_5(self):
+        assert nargs_type('test', 1, str)('foo\nbar') == ['foo']
+
+    def test_nargs_type_6(self):
+        assert nargs_type('test', '*', str)('foo\nbar') == ['foo', 'bar']
+
+    def test_set_defaults(self):
+        parser = self.get_parser()
+        with pytest.raises(KeyError):
+            parser.set_defaults(foo='bar')
+
+    def test_AnyBlokPlugin_1(self):
+        def foo():
+            pass
+
+        assert AnyBlokPlugin(foo) is foo
+
+    def test_update_1(self):
+        with pytest.raises(ConfigurationException) as e:
+            Configuration.update({}, {})
+
+        assert e.match('Too many args. Only one expected')
+
+    def test_update_2(self):
+        with pytest.raises(ConfigurationException) as e:
+            Configuration.update(1)
+
+        assert e.match('Wrong args type. Dict expected')
+
+    def test_get_db_name_by_config_name(self):
+        with tmp_configuration(db_name='anyblok',
+                               db_driver_name='postgres',
+                               db_host='localhost',
+                               db_user_name=None,
+                               db_password=None,
+                               db_port=None):
+            assert get_db_name() == 'anyblok'
+
+    def test_get_db_name_by_config_url(self):
+        with tmp_configuration(db_name=None,
+                               db_driver_name=None,
+                               db_host=None,
+                               db_url='postgres://localhost/anyblok',
+                               db_user_name=None,
+                               db_password=None,
+                               db_port=None):
+            assert get_db_name() == 'anyblok'
+
+    def test_get_db_name_ko(self):
+        with tmp_configuration(db_name=None,
+                               db_driver_name=None,
+                               db_host=None,
+                               db_user_name=None,
+                               db_password=None,
+                               db_port=None):
+            with pytest.raises(ConfigurationException):
+                get_db_name()
 
     def test_get_url(self):
         with tmp_configuration(db_name='anyblok',

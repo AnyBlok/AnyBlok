@@ -65,11 +65,11 @@ class Field:
                 namespace]['__tablename__']
             ignore_migration_for = registry.ignore_migration_for.get(table)
             if ignore_migration_for is True:
-                return
+                return  # pragma: no cover
             elif not ignore_migration_for:
                 registry.ignore_migration_for[table] = [fieldname]
             else:
-                ignore_migration_for.append(fieldname)
+                ignore_migration_for.append(fieldname)  # pragma: no cover
 
     def get_property(self, registry, namespace, fieldname, properties):
         """Return the property of the field
@@ -188,7 +188,8 @@ class Field:
 
         :exception: FieldException
         """
-        raise FieldException("No native type for this field")
+        raise FieldException(
+            "No native type for this field")  # pragma: no cover
 
     def must_be_declared_as_attr(self):
         """ Return False, it is the default value """
@@ -215,14 +216,14 @@ class Field:
         bullet = bullets[level]
         padding = '  ' * level
         key = key.strip()
-        if isinstance(value, dict):
+        if isinstance(value, dict):  # pragma: no cover
             res = padding + '%c ``%s``:\n\n' % (bullet, key)
             res += '\n'.join(
                 [self.autodoc_format_dict(x, y, level=level + 1)
                  for x, y in value.items()])
             res += '\n'
             return res
-        elif isinstance(value, (list, tuple)):
+        elif isinstance(value, (list, tuple)):  # pragma: no cover
             res = padding + '%c ``%s``:\n\n' % (bullet, key)
             next_bullet = bullets[level + 1]
             res += '\n'.join(padding + '  %c ``%r``' % (next_bullet, x)
@@ -233,7 +234,7 @@ class Field:
             if isinstance(value, type):
                 rst_val = ':class:`%s.%s`' % (value.__module__,
                                               value.__name__)
-            elif isinstance(value, ModelRepr):
+            elif isinstance(value, ModelRepr):  # pragma: no cover
                 rst_val = value.model_name
             else:
                 rst_val = '``%r``' % value

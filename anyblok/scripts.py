@@ -3,6 +3,7 @@
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -11,7 +12,8 @@ import anyblok
 from anyblok.release import version
 from anyblok.blok import BlokManager
 from anyblok.config import Configuration, get_db_name
-from anyblok.registry import RegistryManager, return_list
+from anyblok.registry import RegistryManager
+from anyblok.common import return_list
 from anyblok._graphviz import ModelSchema, SQLSchema
 from argparse import RawDescriptionHelpFormatter
 from textwrap import dedent

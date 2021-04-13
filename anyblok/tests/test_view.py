@@ -1,13 +1,13 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.testing import sgdb_in
 from anyblok.model.factory import ViewFactory
-from anyblok.model.common import VIEW
 from anyblok.model.exceptions import ViewException
 from anyblok import Declarations
 from sqlalchemy.sql import select, expression, union
@@ -50,78 +50,10 @@ def simple_view():
             return query.where(T1.code == T2.code)
 
 
-def deprecated_view_before_0_19_2():
-
-    @register(Model)
-    class T1:
-        id = Integer(primary_key=True)
-        code = String()
-        val = Integer()
-
-    @register(Model)
-    class T2:
-        id = Integer(primary_key=True)
-        code = String()
-        val = Integer()
-
-    @register(Model, is_sql_view=True)
-    class TestView:
-        code = String(primary_key=True)
-        val1 = Integer()
-        val2 = Integer()
-
-        @classmethod
-        def sqlalchemy_view_declaration(cls):
-            T1 = cls.anyblok.T1
-            T2 = cls.anyblok.T2
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T2.val.label('val2')])
-            return query.where(T1.code == T2.code)
-
-
-def deprecated_view_before_0_19_4():
-
-    @register(Model)
-    class T1:
-        id = Integer(primary_key=True)
-        code = String()
-        val = Integer()
-
-    @register(Model)
-    class T2:
-        id = Integer(primary_key=True)
-        code = String()
-        val = Integer()
-
-    @register(Model, type=VIEW)
-    class TestView:
-        code = String(primary_key=True)
-        val1 = Integer()
-        val2 = Integer()
-
-        @classmethod
-        def sqlalchemy_view_declaration(cls):
-            T1 = cls.anyblok.T1
-            T2 = cls.anyblok.T2
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T2.val.label('val2')])
-            return query.where(T1.code == T2.code)
-
-
-@pytest.fixture(
-    scope="class",
-    params=[
-        simple_view,
-        deprecated_view_before_0_19_2,
-        deprecated_view_before_0_19_4,
-    ]
-)
+@pytest.fixture(scope="class")
 def registry_simple_view(request, bloks_loaded):
     reset_db()
-    registry = init_registry_with_bloks(
-        [], request.param)
+    registry = init_registry_with_bloks([], simple_view)
     request.addfinalizer(registry.close)
     registry.T1.insert(code='test1', val=1)
     registry.T2.insert(code='test1', val=2)
@@ -151,21 +83,17 @@ class TestSimpleView:
         assert v2.val1 == 3
         assert v2.val2 == 4
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
-                        reason="View must be in RO issue #95")
     def test_view_update_method(self, registry_simple_view):
         registry = registry_simple_view
         with pytest.raises(AttributeError):
-            registry.TestView.execute(
-                registry.TestView.update_sql_statement().update({'val2': 3})
-            )
+            registry.TestView.execute_sql_statement(
+                registry.TestView.update_sql_statement().values({'val2': 3}))
 
     def test_view_delete_method(self, registry_simple_view):
         registry = registry_simple_view
         with pytest.raises(AttributeError):
-            registry.TestView.execute(
-                registry.TestView.delete_sql_statement()
-            )
+            registry.TestView.execute_sql_statement(
+                registry.TestView.delete_sql_statement())
 
 
 def view_with_relationship():

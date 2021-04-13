@@ -8,9 +8,11 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
 from anyblok.registry import RegistryManager
+from anyblok.common import return_list
 from anyblok.blok import BlokManager
 from anyblok.model import Model
 from anyblok.environment import EnvironmentManager
+from .conftest import init_registry
 
 
 class TestRegistryManager:
@@ -157,3 +159,39 @@ class TestRegistryManager:
             assert not RegistryManager.has_blok_property('myproperty')
         finally:
             EnvironmentManager.set('current_blok', oldblok)
+
+    def test_has_entry_in_register(self):
+        assert RegistryManager.has_entry_in_register(
+            'anyblok-core', 'Model', 'Model.System') is True
+
+    def test_has_entry_in_register_unexisting_entry(self):
+        assert RegistryManager.has_entry_in_register(
+            'anyblok-core', 'Unexisting', 'Model.System') is False
+
+    def test_has_entry_in_register_unexisting_key(self):
+        assert RegistryManager.has_entry_in_register(
+            'anyblok-core', 'Model', 'Model.Unexisting') is False
+
+    def test_reload(self, bloks_loaded):
+        init_registry(None)
+        RegistryManager.reload()
+
+    def test_complete_reload(self, bloks_loaded):
+        registry = init_registry(None)
+        registry.complete_reload()
+
+    def test_clear(self, bloks_loaded):
+        init_registry(None)
+        RegistryManager.clear()
+
+    def test_has_blok_ok(self):
+        assert RegistryManager.has_blok('anyblok-core') is True
+
+    def test_has_blok_ko(self):
+        assert RegistryManager.has_blok('unexisting-blok') is False
+
+    def test_return_list_1(self):
+        assert return_list('plop') == ['plop']
+
+    def test_return_list_2(self):
+        assert return_list(['plop']) == ['plop']

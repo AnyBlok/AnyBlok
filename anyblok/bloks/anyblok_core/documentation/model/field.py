@@ -26,13 +26,13 @@ class Field:
 
     def exist(self, model):
         if not model.exist():
-            return False
+            return False  # pragma: no cover
 
         M = self.anyblok.get(model.model.name)
         if self.field.name in M.loaded_columns:
             return True
 
-        return False
+        return False  # pragma: no cover
 
     def __init__(self, field):
         self.field = field
@@ -62,7 +62,7 @@ class Field:
 
     def toRST_docstring(self, doc):
         if hasattr(self.field, '__doc__') and self.field.__doc__:
-            doc.write(self.field.__doc__ + '\n\n')
+            doc.write(self.field.__doc__ + '\n\n')  # pragma: no cover
 
     def toRST_properties_get(self):
         return {x: y for x, y in self.field.to_dict().items() if x != 'name'}
@@ -77,7 +77,9 @@ class Field:
             self.toUML_field(dot)
         elif self.field.entity_type == 'Model.System.Column':
             self.toUML_column(dot)
-        elif self.field.entity_type == 'Model.System.RelationShip':
+        elif (
+            self.field.entity_type == 'Model.System.RelationShip'
+        ):  # pragma: no cover
             self.toUML_relationship(dot)
         else:
             logger.warning("Unknown entity type %r" % self.field.entity_type)
@@ -92,7 +94,7 @@ class Field:
         if self.field.primary_key:
             name = '+PK+ ' + name
 
-        if self.field.remote_model:
+        if self.field.remote_model:  # pragma: no cover
             remote_model = dot.get_class(self.field.remote_model)
             multiplicity = "1"
             if self.field.nullable:
@@ -104,7 +106,7 @@ class Field:
             name += ' (%s)' % self.field.ftype
             model.add_column(name)
 
-    def toUML_relationship(self, dot):
+    def toUML_relationship(self, dot):  # pragma: no cover
         if self.field.remote:
             return
 
@@ -121,7 +123,9 @@ class Field:
             self.toSQL_field(dot)
         elif self.field.entity_type == 'Model.System.Column':
             self.toSQL_column(dot)
-        elif self.field.entity_type == 'Model.System.RelationShip':
+        elif (
+            self.field.entity_type == 'Model.System.RelationShip'
+        ):  # pragma: no cover
             self.toSQL_relationship(dot)
         else:
             logger.warning("Unknown entity type %r" % self.field.entity_type)
@@ -132,12 +136,12 @@ class Field:
 
     def toSQL_relationship(self, dot):
         # TODO
-        pass
+        pass  # pragma: no cover
 
     def toSQL_column(self, dot):
         table = dot.get_table(self.anyblok.get(
             self.field.model).__tablename__)
-        if self.field.foreign_key:
+        if self.field.foreign_key:  # pragma: no cover
             remote_table = dot.get_table(self.field.foreign_key.split('.')[0])
             if remote_table is None:
                 remote_table = dot.add_label(
