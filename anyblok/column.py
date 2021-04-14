@@ -278,12 +278,11 @@ class Column(Field):
             else:
                 kwargs['default'] = self.default_val
 
-        sqlalchemy_type = self.native_type(
-            registry.named_engines[properties['engine_name']])
+        engine = registry.get_named_engine(properties['engine_name'])
+        sqlalchemy_type = self.native_type(engine)
 
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
-            engine = registry.named_engines[properties['engine_name']]
             sqlalchemy_type = self.get_encrypt_key_type(
                 engine, sqlalchemy_type, encrypt_key)
 

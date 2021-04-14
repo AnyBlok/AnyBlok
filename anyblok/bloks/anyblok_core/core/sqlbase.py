@@ -77,7 +77,7 @@ class SqlMixin:
 
     @classmethod
     def get_engine(self):
-        return self.anyblok.named_engines[self.engine_name]
+        return self.anyblok.get_named_engine(self.engine_name)
 
     @classmethod
     def get_bind(self):

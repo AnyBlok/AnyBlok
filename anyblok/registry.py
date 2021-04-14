@@ -1391,6 +1391,18 @@ class Registry:
             finally:
                 _postcommit_hook.remove(hook)
 
+    def get_named_engine(self, engine_name):
+        if engine_name not in self.named_engines:
+            raise RegistryException(
+                "%r is not declared in the named engines" % engine_name)
+
+        return self.named_engines[engine_name]
+
+    def get_engine_names(self):
+        engines = {'default'}
+        # TODO get from configurations
+        return list(engines)
+
     @log(logger, level='debug')
     def commit(self, *args, **kwargs):
         """ Overload the commit method of the SqlAlchemy session """
