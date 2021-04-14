@@ -17,7 +17,7 @@
 CHANGELOG
 =========
 
-1.2.0 (unreleased)
+1.2.0 (2021-04-14)
 ------------------
 
 * Adapted to **SQLAlchemy >= 1.4**
@@ -35,6 +35,7 @@ CHANGELOG
 * Added session.event.**dialect name** entry point to define action on the
   session for the dialect
 * Added entries in configuration to ignore migration for Schema or Model
+* Fixed the configuration of the documentation build on readthedoc
 
 1.1.0 (2021-03-22)
 ------------------
