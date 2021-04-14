@@ -102,6 +102,17 @@ class Query(query.Query):
             return vals.to_dict()
 
     def get(self, primary_keys=None, **kwargs):
+        """Return instance of the Model
+
+        ::
+            instance = Model.query().get(the primary key value)
+
+        or
+
+        ::
+            instance Model.query().get(pk1 name=pk1 value, ...)
+        """
+
         if primary_keys is None:
             primary_keys = kwargs
 
@@ -116,6 +127,7 @@ class Query(query.Query):
         return super(Query, self).get(primary_keys)
 
     def update(self, *args, **kwargs):  # pragma: no cover
+        """Overwrite Query.update of sqlalchemy to depreciate this it"""
         warnings.warn(
             "This method is deprecated and will be removed in the next version"
             "of AnyBlok, you should use update_sql_statement classmethod",
@@ -124,6 +136,7 @@ class Query(query.Query):
         return super(Query, self).update(*args, **kwargs)
 
     def delete(self, *args, **kwargs):  # pragma: no cover
+        """Overwrite Query.delete of sqlalchemy to depreciate this it"""
         warnings.warn(
             "This method is deprecated and will be removed in the next version"
             "of AnyBlok, you should use delete_sql_statement classmethod",
