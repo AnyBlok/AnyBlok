@@ -52,7 +52,7 @@ Blok Model Authz
 .. include:: ../anyblok/bloks/model_authz/README.rst
 .. include:: ../anyblok/bloks/model_authz/CODE.rst
 
-.. _blok_anyblok_core:
+.. _blok_anyblok_test:
 
 Blok anyblok-test
 -----------------
