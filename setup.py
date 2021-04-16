@@ -17,7 +17,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '1.1.0'
+version = '1.2.0'
 
 
 if sys.version_info < (3, 5):
@@ -27,7 +27,7 @@ if sys.version_info < (3, 5):
 
 requires = [
     'sqlalchemy >= 1.4.0',
-    'sqlalchemy-utils >= 0.33.0',
+    'sqlalchemy-utils >= 0.37.0',
     'sqlalchemy-views >= 0.3.0',
     'packaging',
     'setuptools',
