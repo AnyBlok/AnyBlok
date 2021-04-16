@@ -4,6 +4,7 @@
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Georges RACINET <gracinet@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -17,7 +18,7 @@ itself, in so-called "framework tests".
 
 import unittest
 import os
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_url
 from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
@@ -130,7 +131,7 @@ class TestCase(unittest.TestCase):
 
         :param keep_existing: If false drop the previous db before create it
         """
-        url = Configuration.get('get_url')()
+        url = get_url()
         db_template_name = Configuration.get('db_template_name', None)
         if database_exists(url):
             if keep_existing:
@@ -159,7 +160,7 @@ class TestCase(unittest.TestCase):
             cls.dropdb()
 
         """
-        url = Configuration.get('get_url')()
+        url = get_url()
         if database_exists(url):
             drop_database(url)
 
@@ -573,6 +574,6 @@ def sgdb_in(databases):
     if not DATABASES_CACHED:
         load_configuration()
 
-    url = Configuration.get('get_url')(db_name='')
+    url = get_url(db_name='')
     engine = sqlalchemy.create_engine(url)
     return sgdb_in_(engine, databases)

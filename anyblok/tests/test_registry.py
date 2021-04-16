@@ -203,12 +203,10 @@ class TestRegistry:
         self.check_added_in_regisry(registry)
 
     def test_registry_db_exist(self):
-        assert Configuration.get('Registry').db_exists(
-            db_name=Configuration.get('db_name'))
+        assert Registry.db_exists(db_name=Configuration.get('db_name'))
 
     def test_registry_db_unexist(self):
-        assert not (Configuration.get('Registry').db_exists(
-            db_name='wrong_db_name'))
+        assert not Registry.db_exists(db_name='wrong_db_name')
 
 
 class TestRegistry2:
