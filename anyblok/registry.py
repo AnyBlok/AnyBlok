@@ -479,7 +479,7 @@ class Registry:
         self.loadwithoutmigration = loadwithoutmigration
         self.unittest = unittest
         self.additional_setting = kwargs
-        self.init_engine(db_name=db_name)
+        self.init_engines(db_name=db_name)
         self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
             'anyblok': self,
@@ -517,22 +517,21 @@ class Registry:
                 'isolation_level',
                 Configuration.get('isolation_level', 'READ_UNCOMMITTED')
             ),
+            future=True,
         )
 
-    def init_engine(self, db_name=None):
+    def init_engines(self, db_name=None):
         """Define the engine
 
         :param db_name: name of the database to link
         """
         self.named_engines = {}
-
-        # default
-        url = Configuration.get('get_url', get_url)(db_name=db_name)
-        kwargs = self.init_engine_options(url)
-        kwargs['future'] = True
-        engine = create_engine(url, **kwargs)
-        self.apply_engine_events(engine)
-        self.named_engines['default'] = engine
+        for engine_name in self.get_engine_names():
+            url = get_url(db_name=db_name, engine_name=engine_name)
+            kwargs = self.init_engine_options(url)
+            engine = create_engine(url, **kwargs)
+            self.apply_engine_events(engine)
+            self.named_engines[engine_name] = engine
 
     def apply_engine_events(self, engine):
         """Add engine events

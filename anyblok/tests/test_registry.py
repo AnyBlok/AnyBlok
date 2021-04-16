@@ -860,4 +860,4 @@ class TestRegistry3:
             'anyblok-core', 'installed', ['installed']) is None
 
     def test_get_engine_names(self, registry_blok):
-        assert registry_blok.get_engine_names == ['default']
+        assert registry_blok.get_engine_names() == ['default']

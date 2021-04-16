@@ -57,7 +57,7 @@ def get_db_name():
     raise ConfigurationException("No database name defined")
 
 
-def get_url(db_name=None):
+def get_url(db_name=None, engine_name='default'):
     """Return an sqlalchemy URL for database
 
     Return database options, only the database name db_name can be overloaded::
@@ -84,6 +84,7 @@ def get_url(db_name=None):
             ==> 'postgresql://jssuzanne:secret@/Mydb'
 
     :param db_name: database name
+    :param engine_name: name of the engine, used to have multi connection
     :rtype: SqlAlchemy URL
     :exception: ConfigurationException
     """
