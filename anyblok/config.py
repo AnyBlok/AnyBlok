@@ -329,10 +329,6 @@ class ConfigOption:
             raise ConfigurationException(
                 "This option is removed and can't be used")
 
-        if self.removed:
-            raise ConfigurationException(
-                "This option is removed and can't be used")
-
         if self.deprecated is not None:
             warnings.warn(self.deprecated, DeprecationWarning, stacklevel=2)
 
