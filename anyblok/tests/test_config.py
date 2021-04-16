@@ -518,6 +518,17 @@ class TestConfiguration:
 
         return Parser()
 
+    def test_add_deprecated_argument_set(self):
+        parser = self.get_parser()
+        with pytest.warns(DeprecationWarning) as record:
+            parser.add_argument(
+                '--value', dest='value', deprecated="test deprecated")
+            assert str(record.list[0].message) == 'test deprecated'
+
+        with pytest.warns(DeprecationWarning) as record:
+            Configuration.get('value')
+            assert str(record.list[0].message) == 'test deprecated'
+
     def test_add_argument_str(self):
         parser = self.get_parser()
         parser.add_argument('--value', dest='value', default='1')

@@ -17,6 +17,13 @@
 CHANGELOG
 =========
 
+1.3.0 (unreleased)
+------------------
+
+* Added deprecated named argument on the configuration to
+  add a deprecated message on theses. The goal is to informe
+  the user of AnyBlok that a sys args will be removed
+
 1.2.0 (2021-04-14)
 ------------------
 
