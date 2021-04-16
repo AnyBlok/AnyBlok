@@ -813,23 +813,17 @@ def add_plugins(group):
     group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPlugin,
                        default='anyblok.registry:Registry',
                        help="Registry class to use",
-                       deprecated=("This plugins will be removed in version "
-                                   "2.0, because this behaviours is "
-                                   "dangerous"))
+                       removed=True)
     group.add_argument('--migration-cls', dest='Migration',
                        type=AnyBlokPlugin,
                        default='anyblok.migration:Migration',
                        help="Migration class to use",
-                       deprecated=("This plugins will be removed in version "
-                                   "2.0, use the entry point "
-                                   "'anyblok.migration_type.plugins'"))
+                       removed=True)
     group.add_argument('--get-url-fnct', dest='get_url',
                        type=AnyBlokPlugin,
                        default='anyblok.config:get_url',
                        help="get_url function to use",
-                       deprecated=("This plugins will be removed in version "
-                                   "2.0, because this behaviours is "
-                                   "dangerous"))
+                       removed=True)
 
 
 @Configuration.add('config', must_be_loaded_by_unittest=True)
