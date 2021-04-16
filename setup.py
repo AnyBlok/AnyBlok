@@ -139,6 +139,7 @@ setup(
         ],
         'anyblok.migration_type.plugins': [
             'mysql-bool2tinyint=anyblok.plugins:BooleanToTinyIntMySQL',
+            'mysql-dt2dt=anyblok.plugins:DateTimeToDateTimeMySQL',
             'mssql-bool2bit=anyblok.plugins:BooleanToBitMsSQL',
         ],
         'anyblok.engine.event.mysql': [
