@@ -151,6 +151,17 @@ class Query:
     #         return vals.to_dict()
 
     def get(self, primary_keys=None, **kwargs):
+        """Return instance of the Model
+
+        ::
+            instance = Model.query().get(the primary key value)
+
+        or
+
+        ::
+            instance Model.query().get(pk1 name=pk1 value, ...)
+        """
+
         if primary_keys is None:
             primary_keys = kwargs
 

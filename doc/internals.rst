@@ -38,12 +38,25 @@ anyblok.model module
 
 .. automodule:: anyblok.model
 
+.. autoclass:: Model
+    :members:
+
+anyblok.model.exceptions module
+-------------------------------
+
+.. automodule:: anyblok.model.exceptions
+
 .. autoexception:: ModelException
     :members:
     :show-inheritance:
     :inherited-members:
 
 .. autoexception:: ViewException
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+.. autoexception:: ModelFactoryException
     :members:
     :show-inheritance:
     :inherited-members:

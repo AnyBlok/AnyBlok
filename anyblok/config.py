@@ -17,6 +17,7 @@ import os
 import json
 import yaml
 import urllib
+import warnings
 from appdirs import AppDirs
 from os.path import join, isfile
 from sqlalchemy.engine.url import URL, make_url
@@ -198,16 +199,26 @@ def nargs_type(key, nargs, cast):
 
 class AnyBlokActionsContainer:
 
-    def add_argument(self, *args, **kwargs):
+    def add_argument(self, *args, deprecated=None, removed=False, **kwargs):
         """Overload the method to add the entry in the configuration dict
 
         :param args:
         :param kwargs:
+        :param deprecated: Deprecated message to display
         :return:
         """
         default = kwargs.pop('default', None)
         nargs = kwargs.get('nargs', None)
         type = kwargs.get('type')
+
+        if deprecated is not None:
+            kwargs['help'] = '[DEPRECATED] {} : {}'.format(
+                kwargs.get('help', ''), deprecated)
+
+        if removed is not None:
+            kwargs['help'] = '[REMOVED] {} : This is forbidden'.format(
+                kwargs.get('help', ''))
+
         arg = super(AnyBlokActionsContainer, self).add_argument(
             *args, **kwargs)
         if type is None:
@@ -222,7 +233,8 @@ class AnyBlokActionsContainer:
         if nargs:
             type = nargs_type(dest, nargs, type)
 
-        Configuration.add_argument(dest, default, type=type)
+        Configuration.add_argument(dest, default, type=type,
+                                   deprecated=deprecated, removed=removed)
         return arg
 
     def set_defaults(self, **kwargs):
@@ -286,15 +298,26 @@ def AnyBlokPlugin(import_definition):
 
 class ConfigOption:
 
-    def __init__(self, value, type):
+    def __init__(self, value, type, deprecated=None, removed=False):
         self.type = type
-        self.set(value)
+        self.deprecated = deprecated
+        self.removed = removed
+        if not removed:
+            self.set(value)
 
     def get(self):
         """Get configuration option value
 
+        :exception: ConfigurationException
         :return:
         """
+        if self.removed:
+            raise ConfigurationException(
+                "This option is removed and can't be used")
+
+        if self.deprecated is not None:
+            warnings.warn(self.deprecated, DeprecationWarning, stacklevel=2)
+
         return self.value
 
     def set(self, value):
@@ -302,6 +325,13 @@ class ConfigOption:
 
         :param value:
         """
+        if self.removed:
+            raise ConfigurationException(
+                "This option is removed and can't be used")
+
+        if self.deprecated is not None:
+            warnings.warn(self.deprecated, DeprecationWarning, stacklevel=2)
+
         self.value = cast_value(self.type, value)
 
 
@@ -500,7 +530,7 @@ class Configuration:
 
         :param args:
         :param kwargs:
-        :exception ConigurationException
+        :exception ConfigurationException
         """
         if args:
             if len(args) > 1:
@@ -517,14 +547,18 @@ class Configuration:
             cls.set(k, v)
 
     @classmethod
-    def add_argument(cls, key, value, type=str):
+    def add_argument(cls, key, value, type=str, deprecated=None,
+                     removed=False):
         """Add a configuration option
 
         :param key:
         :param value:
         :param type:
+        :param deprecated: deprecated message to warn in get/set methods
+        :param removed: bool if True the option can't be set or get
         """
-        cls.configuration[key] = ConfigOption(value, type)
+        cls.configuration[key] = ConfigOption(
+            value, type, deprecated=deprecated, removed=removed)
 
     @classmethod
     def remove_label(cls, group):
@@ -778,15 +812,18 @@ def add_plugins(group):
     """
     group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPlugin,
                        default='anyblok.registry:Registry',
-                       help="Registry class to use")
+                       help="Registry class to use",
+                       removed=True)
     group.add_argument('--migration-cls', dest='Migration',
                        type=AnyBlokPlugin,
                        default='anyblok.migration:Migration',
-                       help="Migration class to use")
+                       help="Migration class to use",
+                       removed=True)
     group.add_argument('--get-url-fnct', dest='get_url',
                        type=AnyBlokPlugin,
                        default='anyblok.config:get_url',
-                       help="get_url function to use")
+                       help="get_url function to use",
+                       removed=True)
 
 
 @Configuration.add('config', must_be_loaded_by_unittest=True)
