@@ -14,7 +14,7 @@ from sqlalchemy import create_engine, event, MetaData, text
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
-from sqlalchemy_utils.functions import database_exists
+from sqlalchemy_utils.functions import database_exists, create_database
 from .config import Configuration, get_url
 from .migration import Migration
 from .blok import BlokManager
@@ -520,6 +520,10 @@ class Registry:
             future=True,
         )
 
+    def ensure_db_schema_existe(self, url):
+        if not database_exists(url):
+            create_database(url)
+
     def init_engines(self, db_name=None):
         """Define the engine
 
@@ -527,7 +531,9 @@ class Registry:
         """
         self.named_engines = {}
         for engine_name in self.get_engine_names():
-            url = get_url(db_name=db_name, engine_name=engine_name)
+            url = Configuration.get('get_url', get_url)(
+                db_name=db_name, engine_name=engine_name)
+            self.ensure_db_schema_existe(url)
             kwargs = self.init_engine_options(url)
             engine = create_engine(url, **kwargs)
             self.apply_engine_events(engine)
@@ -579,11 +585,12 @@ class Registry:
         self.ignore_migration_for = {}
 
     @classmethod
-    def db_exists(cls, db_name=None):
+    def db_exists(cls, db_name=None, engine_name='default'):
         if not db_name:
             raise RegistryException('db_name is required')
 
-        url = Configuration.get('get_url', get_url)(db_name=db_name)
+        url = Configuration.get('get_url', get_url)(
+            db_name=db_name, engine_name=engine_name)
         return database_exists(url)
 
     def listen_sqlalchemy_known_event(self):
