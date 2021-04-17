@@ -37,7 +37,8 @@ def parse_qs(entry):
 
 
 def get_db_name():
-    """Return an sqlalchemy name of the database from configuration
+    """Return an sqlalchemy name of the default engine  database from
+    the configuration
 
     db_name or db_url
 
@@ -194,6 +195,9 @@ def nargs_type(key, nargs, cast):
             limit = int(nargs)
 
         return [cast_value(cast, x) for x in val[:limit]]
+
+    if hasattr(cast, 'default'):
+        wrap.default = cast.default
 
     return wrap
 
@@ -365,7 +369,7 @@ class Configuration:
     applications = {
         'default': {
             'description': "[options] -- other arguments",
-            'configuration_groups': ['config', 'database'],
+            'configuration_groups': ['config', 'database', 'named-database'],
         },
     }
 
@@ -859,7 +863,8 @@ def add_configuration_file(parser):
                              "(by default use the timezone of the serveur")
 
 
-@Configuration.add('database', label="Database",
+@Configuration.add('database',
+                   label="Main database used for default engine name",
                    must_be_loaded_by_unittest=True)
 def add_database(group):
     """Add arguments to 'database' configuration group
@@ -902,6 +907,74 @@ def add_database(group):
                        default=os.environ.get('ANYBLOK_ENCRYPT_KEY'),
                        help=("Default ey definition to encrypt column with "
                              "encryp_key=True"))
+
+
+def named_engine_type(cast=str, default=None, split_key="=>"):
+    def _named_engine_type(value):
+        engine_name, value = value.split(split_key)
+        return (engine_name, cast(value))
+
+    _named_engine_type.default = default
+    return _named_engine_type
+
+
+@Configuration.add('named-database',
+                   label="Named database",
+                   must_be_loaded_by_unittest=True)
+def add_named_database(group):
+    """Add arguments to 'database' configuration group
+
+    :param group:
+    """
+    group.add_argument(
+        '--named-engine', nargs="+",
+        help="engine names list")
+    group.add_argument(
+        '--named-engine-db-name',
+        nargs="+", type=named_engine_type(),
+        help="engine name=>Name of the database")
+    group.add_argument(
+        '--named-engine-db-url',
+        nargs="+", type=named_engine_type(),
+        help="engine name=>url")
+    group.add_argument(
+        '--named-engine-db-driver-name',
+        nargs="+", type=named_engine_type(),
+        help="engine name=>driver")
+    group.add_argument(
+        '--named-engine-db-user-name',
+        nargs="+", type=named_engine_type(),
+        help="engine name=>user")
+    group.add_argument(
+        '--named-engine-db-password',
+        nargs="+", type=named_engine_type(),
+        help="engine name=>password")
+    group.add_argument(
+        '--named-engine-db-host',
+        nargs="+", type=named_engine_type(),
+        help="engine name=>host")
+    group.add_argument(
+        '--named-engine-db-port',
+        nargs="+", type=named_engine_type(int),
+        help="engine name=>port")
+    group.add_argument(
+        '--named-engine-db-query',
+        nargs="+", type=named_engine_type(parse_qs),
+        help="engine name=>query")
+    group.add_argument(
+        '--named-engine-db-echo', nargs="+",
+        help="engine names list to pass to echo mode")
+    group.add_argument(
+        '--named-engine-db-echo-pool', nargs="+",
+        help="engine names list to pass to echo mode")
+    group.add_argument(
+        '--named-engine-db-max-overflow',
+        nargs="+", type=named_engine_type(int, default=10),
+        help="engine name=>number")
+    group.add_argument(
+        '--named-engine-db-pool-size',
+        nargs="+", type=named_engine_type(int, default=10),
+        help="engine name=>number")
 
 
 @Configuration.add('create_db', must_be_loaded_by_unittest=True)

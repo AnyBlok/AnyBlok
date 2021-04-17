@@ -506,7 +506,7 @@ class Registry:
             for name, engine in self.named_engines.items():
                 self.named_binds[name] = engine
 
-    def init_engine_options(self, url):
+    def init_engine_options(self, url, engine_name):
         """Define the options to initialize the engine"""
         return dict(
             echo=Configuration.get('db_echo') or False,
@@ -534,7 +534,7 @@ class Registry:
             url = Configuration.get('get_url', get_url)(
                 db_name=db_name, engine_name=engine_name)
             self.ensure_db_schema_existe(url)
-            kwargs = self.init_engine_options(url)
+            kwargs = self.init_engine_options(url, engine_name)
             engine = create_engine(url, **kwargs)
             self.apply_engine_events(engine)
             self.named_engines[engine_name] = engine
