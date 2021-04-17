@@ -9,7 +9,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.dialects.mysql.types import TINYINT
 from sqlalchemy.dialects.mssql.base import BIT
-from sqlalchemy.sql.sqltypes import Boolean
+from sqlalchemy.sql.sqltypes import Boolean, DateTime
 from logging import getLogger
 from .migration import MigrationColumnTypePlugin
 logger = getLogger(__name__)
@@ -28,6 +28,19 @@ class BooleanToTinyIntMySQL(MigrationColumnTypePlugin):
     def apply(self, column, **kwargs):
         '''Boolean are TINYINT in MySQL DataBases'''
         # do nothing
+        pass  # pragma: no cover
+
+
+class DateTimeToDateTimeMySQL(MigrationColumnTypePlugin):
+
+    to_type = DateTime
+    from_type = DateTime
+    dialect = ['MySQL', 'MariaDB']
+
+    def need_to_modify_type(self):
+        return False
+
+    def apply(self, column, **kwargs):
         pass  # pragma: no cover
 
 

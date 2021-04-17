@@ -17,6 +17,16 @@
 CHANGELOG
 =========
 
+1.3.0 (unreleased)
+------------------
+
+* Added deprecated name argument on the configuration to
+  add a deprecated message on theses. The goal is to informe
+  the user of AnyBlok that a sys args will be removed
+* Added removed name argument on the configuration to forbid
+  the sys arg
+* Added plugins to migrate DateTime to DateTime with MariaDB and MySQL
+
 1.2.0 (2021-04-14)
 ------------------
 

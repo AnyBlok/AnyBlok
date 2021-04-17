@@ -19,7 +19,7 @@ from sqlalchemy import (
     MetaData, Table, Column, Integer, String, Boolean, TEXT,
     CheckConstraint, ForeignKey, text
 )
-from sqlalchemy.dialects.mysql.types import TINYINT
+from sqlalchemy.dialects.mysql.types import TINYINT, DATETIME
 from sqlalchemy.dialects.mssql.base import BIT
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
@@ -1072,6 +1072,15 @@ class TestMigrationPlugin:
         report = MigrationReport(registry_plugin.migration, [])
         res = report.init_modify_type(
             [None, None, 'test', 'other', {}, TINYINT(), Boolean()])
+        assert res is True
+
+    @pytest.mark.skipif(
+        not sgdb_in(['MySQL', 'MariaDB']),
+        reason='Plugin for MySQL only')
+    def test_datetime_with_mysql(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        res = report.init_modify_type(
+            [None, None, 'test', 'other', {}, DATETIME(), DATETIME()])
         assert res is True
 
     @pytest.mark.skipif(
