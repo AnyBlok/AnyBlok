@@ -43,7 +43,7 @@ def clean_db(request, configuration_loaded):
 
 @contextmanager
 def cnx(registry):
-    cnx = registry.migration.conn
+    cnx = registry.migration().conn
     try:
         yield cnx
     except Exception:
@@ -137,7 +137,7 @@ def registry(request, clean_db, bloks_loaded):
                       'testm2m2', 'testfk2', 'testfktarget',  'testcheck',
                       'testchecklongconstraintname', 'testindex'):
             try:
-                registry.migration.table(table).drop()
+                registry.migration().table(table).drop()
             except MigrationException:
                 pass
 
@@ -168,8 +168,8 @@ class TestMigration:
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't create empty table")
     def test_add_table(self, registry):
-        registry.migration.table().add('test2')
-        registry.migration.table('test2')
+        registry.migration().table().add('test2')
+        registry.migration().table('test2')
 
     def fill_test_table(self, registry):
         Test = registry.Test
@@ -177,18 +177,18 @@ class TestMigration:
         Test.multi_insert(*vals)
 
     def test_add_column(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column().add(Column('new_column', Integer))
         t.column('new_column')
 
     def test_add_column_in_filled_table(self, registry):
         self.fill_test_table(registry)
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column().add(Column('new_column', Integer))
         t.column('new_column')
 
     def test_add_not_null_column(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column().add(Column('new_column', Integer, nullable=False))
         t.column('new_column')
 
@@ -196,23 +196,23 @@ class TestMigration:
                         reason="Not rollback to savepoint")
     def test_add_not_null_column_in_filled_table(self, registry):
         self.fill_test_table(registry)
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column().add(Column('new_column', Integer, nullable=False))
         t.column('new_column')
 
     def test_add_column_with_default_value(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column().add(Column('new_column', Integer, default=100))
         t.column('new_column')
 
     def test_add_column_with_default_str_value(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column().add(Column('new_column', Integer, default='100'))
         t.column('new_column')
 
     def test_add_column_in_filled_table_with_default_value(self, registry):
         self.fill_test_table(registry)
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column().add(Column('new_column', Integer, default=100))
         t.column('new_column')
         res = [x for x in registry.execute(
@@ -225,7 +225,7 @@ class TestMigration:
         self, registry
     ):
         self.fill_test_table(registry)
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column().add(Column('new_column', Integer, nullable=False,
                        server_default="1"))
         t.column('new_column')
@@ -234,7 +234,7 @@ class TestMigration:
                         reason="Not rollback to savepoint")
     def test_add_unique_constraint_on_good_table(self, registry):
         self.fill_test_table(registry)
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.unique('unique_constraint').add(t.column('other'))
         registry.Test.insert(other='One entry')
         with pytest.raises(IntegrityError):
@@ -245,45 +245,45 @@ class TestMigration:
         Test = registry.Test
         vals = [{'other': 'test'} for x in range(10)]
         Test.multi_insert(*vals)
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.unique(None).add(t.column('other'))
         registry.Test.insert(other='One entry')
         registry.Test.insert(other='One entry')
 
     def test_drop_table(self, registry):
-        registry.migration.table('test').drop()
+        registry.migration().table('test').drop()
         with pytest.raises(MigrationException):
-            registry.migration.table('Test')
+            registry.migration().table('Test')
 
     def test_drop_column(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column('other').drop()
         with pytest.raises(MigrationException):
             t.column('other')
 
     def test_alter_table_name(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.alter(name='othername')
-        registry.migration.table('othername')
+        registry.migration().table('othername')
         with pytest.raises(MigrationException):
-            registry.migration.table('test')
+            registry.migration().table('test')
 
     def test_alter_column_name(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column('other').alter(name='othername')
         t.column('othername')
         with pytest.raises(MigrationException):
             t.column('other')
 
     def test_alter_column_nullable(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         c = t.column('other').alter(nullable=False)
         assert not c.nullable
 
     @pytest.mark.skipif(sgdb_in(['MsSQL']),
                         reason="Not rollback to savepoint")
     def test_alter_column_nullable_in_filled_table(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.column().add(Column('new_column', Integer))
         self.fill_test_table(registry)
         c = t.column('new_column').alter(nullable=False)
@@ -293,7 +293,7 @@ class TestMigration:
     @pytest.mark.skipif(sgdb_in(['MsSQL']),
                         reason="Can't change server default")
     def test_alter_column_default(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         c = t.column('other').alter(server_default='test')
         if sgdb_in(['PostgreSQL']):
             assert c.server_default == "'test'::character varying"
@@ -301,36 +301,36 @@ class TestMigration:
             assert str(c.server_default) == "'test'"
 
     def test_index(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.index().add(t.column('integer'))
         t.index(t.column('integer')).drop()
 
     def test_alter_column_type(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         c = t.column('other').alter(type_=TEXT)
         assert isinstance(c.type, TEXT)
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason="Can't drop primary key issue #92")
     def test_alter_column_primary_key(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.primarykey().drop().add(t.column('other'))
 
     def test_alter_column_foreign_key(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.foreign_key('my_fk').add(
             ['other'], [registry.System.Blok.name])
         t.foreign_key('my_fk').drop()
 
     def test_constraint_unique(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         t.unique(name='test_unique_constraint').add(t.column('other'))
         t.unique(name='test_unique_constraint').drop()
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="Can't drop check constraint issue #93")
     def test_constraint_check(self, registry):
-        t = registry.migration.table('test')
+        t = registry.migration().table('test')
         Test = registry.Test
         t.check('test').add(Test.other != 'test')
         # particuliar case of check constraint
@@ -346,10 +346,10 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.detect_changed()
-        registry.migration.withoutautomigration = True
+        registry.migration().detect_changed()
+        registry.migration().withoutautomigration = True
         with pytest.raises(MigrationException):
-            registry.migration.detect_changed()
+            registry.migration().detect_changed()
 
     def test_detect_column_added(self, registry):
         # Remove a column on the table force the detection to found new column
@@ -362,10 +362,10 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Add test.other")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not report.log_has("Add test.other")
 
     def test_detect_table_removed(self, registry):
@@ -377,10 +377,10 @@ class TestMigration:
                 Column('other2', String(64)),
             ).create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop Table test2")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop Table test2")
 
     def test_detect_table_removed_with_reinit_column(self, registry):
@@ -392,11 +392,11 @@ class TestMigration:
                 Column('other2', String(64)),
             ).create(bind=conn)
 
-        registry.migration.reinit_tables = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_tables = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop Table test2")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Drop Table test2"))
 
     def test_detect_table_removed_with_reinit_all(self, registry):
@@ -408,11 +408,11 @@ class TestMigration:
                 Column('other2', String(64)),
             ).create(bind=conn)
 
-        registry.migration.reinit_all = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_all = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop Table test2")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Drop Table test2"))
 
     def test_detect_column_removed(self, registry):
@@ -426,10 +426,10 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop Column test.other2")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop Column test.other2")
 
     def test_detect_column_removed_with_reinit_column(self, registry):
@@ -443,11 +443,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.reinit_columns = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_columns = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop Column test.other2")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Drop Column test.other2"))
 
     def test_detect_column_removed_with_reinit_all(self, registry):
@@ -461,11 +461,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.reinit_all = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_all = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop Column test.other2")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Drop Column test.other2"))
 
     def test_detect_not_nullable_column_removed(self, registry):
@@ -479,11 +479,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Drop Column test.other2"))
         assert report.log_has("Drop Column test.other2 (not null)")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop Column test.other2")
         assert not(report.log_has("Drop Column test.other2 (not null)"))
 
@@ -497,10 +497,10 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Alter test.other")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Alter test.other"))
 
     def test_detect_m2m_primary_key(self, registry):
@@ -520,7 +520,7 @@ class TestMigration:
             ).create(bind=conn)
 
         with pytest.raises(MigrationException):
-            registry.migration.detect_changed()
+            registry.migration().detect_changed()
 
     def test_detect_server_default(self, registry):
         with cnx(registry) as conn:
@@ -532,10 +532,10 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Alter test.other")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Alter test.other"))
 
     def test_detect_add_index_constraint(self, registry):
@@ -548,10 +548,10 @@ class TestMigration:
             )
             registry.TestIndex.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Add index constraint on testindex (other)")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Add index constraint on testindex (other)"))
 
@@ -564,11 +564,11 @@ class TestMigration:
             )
             registry.TestIndex.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Add testindex.other")
         assert report.log_has("Add index constraint on testindex (other)")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Add testindex.other"))
         assert not(report.log_has(
             "Add index constraint on testindex (other)"))
@@ -576,41 +576,41 @@ class TestMigration:
     def test_detect_drop_index(self, registry):
         with cnx(registry) as conn:
             conn.execute(text("CREATE INDEX other_idx ON test (other);"))
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop index other_idx on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop index other_idx on test")
 
     def test_detect_drop_anyblok_index(self, registry):
         with cnx(registry) as conn:
             conn.execute(
                 text("CREATE INDEX anyblok_ix_test__other ON test (other);"))
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop index anyblok_ix_test__other on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(
             report.log_has("Drop index anyblok_ix_test__other on test"))
 
     def test_detect_drop_index_with_reinit_indexes(self, registry):
         with cnx(registry) as conn:
             conn.execute(text("CREATE INDEX other_idx ON test (other);"))
-        registry.migration.reinit_indexes = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_indexes = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop index other_idx on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Drop index other_idx on test"))
 
     def test_detect_drop_index_with_reinit_all(self, registry):
         with cnx(registry) as conn:
             conn.execute(text("CREATE INDEX other_idx ON test (other);"))
-        registry.migration.reinit_all = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_all = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop index other_idx on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Drop index other_idx on test"))
 
     def test_detect_type(self, registry):
@@ -623,10 +623,10 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Alter test.other")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has("Alter test.other"))
 
     def test_detect_primary_key(self, registry):
@@ -640,7 +640,7 @@ class TestMigration:
             registry.Test.__table__.create(bind=conn)
 
         with pytest.raises(MigrationException):
-            registry.migration.detect_changed()
+            registry.migration().detect_changed()
 
     def test_detect_add_foreign_key(self, registry):
         with cnx(registry) as conn:
@@ -652,11 +652,11 @@ class TestMigration:
             )
             registry.TestFK.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)"))
 
@@ -675,7 +675,7 @@ class TestMigration:
             )
             registry.TestFK2.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Drop Foreign keys on testfk2.other => testfktarget.integer")
         assert report.log_has(
@@ -694,11 +694,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
 
@@ -716,11 +716,11 @@ class TestMigration:
             registry.Test.__table__.create(bind=conn)
             # anyblok_fk_test__other_on_system_blok__name
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
@@ -737,12 +737,12 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.reinit_constraints = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_constraints = True
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
@@ -759,12 +759,12 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.reinit_all = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_all = True
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Drop Foreign keys on test.other => system_blok.name"))
 
@@ -782,11 +782,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Drop Foreign keys on test.other2 => system_blok.name")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Drop Foreign keys on test.other2 => system_blok.name"))
 
@@ -802,10 +802,10 @@ class TestMigration:
             )
             registry.TestUnique.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Add unique constraint on testunique (other)")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Add unique constraint on testunique (other)"))
 
@@ -820,10 +820,10 @@ class TestMigration:
             )
             registry.TestUnique.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Add unique constraint on testunique (other)")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Add unique constraint on testunique (other)"))
 
@@ -841,10 +841,10 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop constraint test_other_key on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop constraint test_other_key on test")
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
@@ -861,10 +861,10 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop constraint anyblok_uq_test__other on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(
             report.log_has("Drop constraint anyblok_uq_test__other on test"))
 
@@ -884,11 +884,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.reinit_constraints = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_constraints = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop constraint test_other_key on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(
             report.log_has("Drop constraint test_other_key on test"))
 
@@ -906,11 +906,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.reinit_all = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_all = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop constraint test_other_key on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(
             report.log_has("Drop constraint test_other_key on test"))
 
@@ -919,7 +919,7 @@ class TestMigration:
     def test_no_detect_drop_and_add_check_constraint_with_long_name(
         self, registry
     ):
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(
             report.log_has(
                 "Drop check constraint anyblok_ck_testchecklongconstraintname"
@@ -946,11 +946,11 @@ class TestMigration:
             )
             registry.TestCheck.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Add check constraint anyblok_ck_testcheck__test on testcheck")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Add check constraint anyblok_ck_testcheck__test on testcheck"))
 
@@ -967,10 +967,10 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
@@ -986,11 +986,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert report.log_has(
             "Drop check constraint anyblok_ck_test__check on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(report.log_has(
             "Drop check constraint anyblok_ck_test__check on test"))
 
@@ -1009,11 +1009,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.reinit_constraints = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_constraints = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(
             report.log_has("Drop check constraint ck_other on test"))
 
@@ -1030,11 +1030,11 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.reinit_all = True
-        report = registry.migration.detect_changed()
+        registry.migration().reinit_all = True
+        report = registry.migration().detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
         report.apply_change()
-        report = registry.migration.detect_changed()
+        report = registry.migration().detect_changed()
         assert not(
             report.log_has("Drop check constraint ck_other on test"))
 
@@ -1048,12 +1048,12 @@ class TestMigration:
     def test_savepoint(self, registry):
         Test = registry.Test
         self.fill_test_table(registry)
-        registry.migration.savepoint('test')
+        registry.migration().savepoint('test')
         self.fill_test_table(registry)
         assert Test.query().count() == 20
-        registry.migration.rollback_savepoint('test')
+        registry.migration().rollback_savepoint('test')
         assert Test.query().count() == 10
-        registry.migration.release_savepoint('test')
+        registry.migration().release_savepoint('test')
 
 
 @pytest.fixture()
@@ -1069,7 +1069,7 @@ class TestMigrationPlugin:
         not sgdb_in(['MySQL', 'MariaDB']),
         reason='Plugin for MySQL only')
     def test_boolean_with_mysql(self, registry_plugin):
-        report = MigrationReport(registry_plugin.migration, [])
+        report = MigrationReport(registry_plugin.migration(), [])
         res = report.init_modify_type(
             [None, None, 'test', 'other', {}, TINYINT(), Boolean()])
         assert res is True
@@ -1078,7 +1078,7 @@ class TestMigrationPlugin:
         not sgdb_in(['MySQL', 'MariaDB']),
         reason='Plugin for MySQL only')
     def test_datetime_with_mysql(self, registry_plugin):
-        report = MigrationReport(registry_plugin.migration, [])
+        report = MigrationReport(registry_plugin.migration(), [])
         res = report.init_modify_type(
             [None, None, 'test', 'other', {}, DATETIME(), DATETIME()])
         assert res is True
@@ -1087,7 +1087,7 @@ class TestMigrationPlugin:
         not sgdb_in(['MsSQL']),
         reason='Plugin for MsSQL only')
     def test_boolean_with_mssql(self, registry_plugin):
-        report = MigrationReport(registry_plugin.migration, [])
+        report = MigrationReport(registry_plugin.migration(), [])
         res = report.init_modify_type(
             [None, None, 'test', 'other', {}, BIT(), Boolean()])
         assert res is True
@@ -1096,13 +1096,13 @@ class TestMigrationPlugin:
         not sgdb_in(['PostgreSQL']),
         reason='Plugin for MsSQL only')
     def test_boolean_with_postgres(self, registry_plugin):
-        report = MigrationReport(registry_plugin.migration, [])
+        report = MigrationReport(registry_plugin.migration(), [])
         res = report.init_modify_type(
             [None, None, 'test', 'other', {}, Integer(), Boolean()])
         assert res is False
 
     def test_alter_column_type_with_plugin_1(self, registry_plugin):
-        report = MigrationReport(registry_plugin.migration, [])
+        report = MigrationReport(registry_plugin.migration(), [])
         report.plugins = [
             MockMigrationColumnTypePluginInteger2String,
         ]
@@ -1115,7 +1115,7 @@ class TestMigrationPlugin:
             mockapply.assert_called()
 
     def test_alter_column_type_with_plugin_2(self, registry_plugin):
-        report = MigrationReport(registry_plugin.migration, [])
+        report = MigrationReport(registry_plugin.migration(), [])
         report.plugins = [
             MockMigrationColumnTypePluginInteger2String,
         ]
@@ -1130,7 +1130,7 @@ class TestMigrationPlugin:
         not sgdb_in(['MySQL', 'MariaDB']),
         reason='Plugin for MySQL only')
     def test_alter_column_type_with_plugin_3(self, registry_plugin):
-        report = MigrationReport(registry_plugin.migration, [])
+        report = MigrationReport(registry_plugin.migration(), [])
         report.plugins = [
             MockMigrationColumnTypePluginInteger2StringMySQL,
         ]
@@ -1146,7 +1146,7 @@ class TestMigrationPlugin:
         sgdb_in(['MySQL', 'MariaDB']),
         reason='Plugin for MySQL only')
     def test_alter_column_type_with_plugin_4(self, registry_plugin):
-        report = MigrationReport(registry_plugin.migration, [])
+        report = MigrationReport(registry_plugin.migration(), [])
         report.plugins = [
             MockMigrationColumnTypePluginInteger2StringMySQL,
         ]

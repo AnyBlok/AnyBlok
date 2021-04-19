@@ -42,7 +42,7 @@ def clean_db(request, configuration_loaded):
 
 @contextmanager
 def cnx(registry):
-    cnx = registry.migration.conn
+    cnx = registry.migration().conn
     try:
         yield cnx
     except Exception:
@@ -100,7 +100,7 @@ def registry(request, clean_db, bloks_loaded):
                       'testunique', 'reltab',
                       'testfktarget',  'testcheck', 'testindex'):
             try:
-                registry.migration.table(table).drop()
+                registry.migration().table(table).drop()
             except MigrationException:
                 pass
 
@@ -172,7 +172,8 @@ def registry_db_schema(request, clean_db, bloks_loaded):
                       'testunique', 'reltab',
                       'testfktarget',  'testcheck', 'testindex'):
             try:
-                registry.migration.table(table, schema='test_db_schema').drop()
+                registry.migration().table(
+                    table, schema='test_db_schema').drop()
             except MigrationException:
                 pass
 
@@ -195,8 +196,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has("Add test.other")
 
     def test_detect_column_added_with_protected_table_from_config_1(
@@ -213,7 +214,7 @@ class TestMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_models='Model.Test'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -231,7 +232,7 @@ class TestMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_models=['Model.Test']):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -251,7 +252,7 @@ class TestMigration:
         with tmp_configuration(
             ignore_migration_for_models='Model.Test,Model.System'
         ):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -271,7 +272,7 @@ class TestMigration:
         with tmp_configuration(
             ignore_migration_for_models='Model.Test,Model.System'
         ):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -292,7 +293,7 @@ class TestMigration:
             ignore_migration_for_models=(
                 'Model.Test,Model.System,Model.System.Blok')
         ):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -313,7 +314,7 @@ class TestMigration:
             ignore_migration_for_models=[
                 'Model.Test', 'Model.System', 'Model.System.Blok']
         ):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -328,8 +329,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': ['other']}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': ['other']}
+        report = registry.migration().detect_changed()
         assert report.log_has("Add test.other")
 
     def test_detect_column_removed(self, registry):
@@ -343,8 +344,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has("Drop Column test.other2")
 
     def test_detect_nullable_with_protected_table(self, registry):
@@ -357,8 +358,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has("Alter test.other")
 
     def test_detect_nullable_with_protected_column(self, registry):
@@ -371,8 +372,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': ['other']}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': ['other']}
+        report = registry.migration().detect_changed()
         assert not report.log_has("Alter test.other")
 
     def test_detect_server_default_with_protected_table(self, registry):
@@ -385,8 +386,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has("Alter test.other")
 
     def test_detect_server_default_with_protected_column(self, registry):
@@ -399,8 +400,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': ['other']}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': ['other']}
+        report = registry.migration().detect_changed()
         assert not report.log_has("Alter test.other")
 
     def test_detect_drop_anyblok_index(self, registry):
@@ -408,8 +409,8 @@ class TestMigration:
             conn.execute(text(
                 """CREATE INDEX anyblok_ix_test__other ON test (other);"""))
 
-        registry.migration.ignore_migration_for = {'test': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has("Drop index anyblok_ix_test__other on test")
 
     def test_detect_type_with_protected_table(self, registry):
@@ -422,8 +423,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has("Alter test.other")
 
     def test_detect_type_with_protected_column(self, registry):
@@ -436,8 +437,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': ['other']}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': ['other']}
+        report = registry.migration().detect_changed()
         assert not report.log_has("Alter test.other")
 
     def test_detect_add_foreign_key_with_protected_table(self, registry):
@@ -450,8 +451,8 @@ class TestMigration:
             )
             registry.TestFK.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'testfk': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'testfk': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)")
 
@@ -465,8 +466,8 @@ class TestMigration:
             )
             registry.TestFK.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'testfk': ['other']}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'testfk': ['other']}
+        report = registry.migration().detect_changed()
         assert not report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)")
 
@@ -484,8 +485,8 @@ class TestMigration:
             registry.Test.__table__.create(bind=conn)
             # anyblok_fk_test__other_on_system_blok__name
 
-        registry.migration.ignore_migration_for = {'test': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
 
@@ -503,8 +504,8 @@ class TestMigration:
             registry.Test.__table__.create(bind=conn)
             # anyblok_fk_test__other_on_system_blok__name
 
-        registry.migration.ignore_migration_for = {'test': ['other']}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': ['other']}
+        report = registry.migration().detect_changed()
         assert not report.log_has(
             "Drop Foreign keys on test.other => system_blok.name")
 
@@ -520,8 +521,8 @@ class TestMigration:
             )
             registry.TestUnique.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'testunique': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'testunique': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has(
             "Add unique constraint on testunique (other)")
 
@@ -538,8 +539,8 @@ class TestMigration:
             )
             registry.TestUnique.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'testunique': ['other']}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'testunique': ['other']}
+        report = registry.migration().detect_changed()
         assert not report.log_has(
             "Add unique constraint on testunique (other)")
 
@@ -557,8 +558,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has(
             "Drop constraint anyblok_uq_test__other on test")
 
@@ -573,8 +574,8 @@ class TestMigration:
             )
             registry.TestCheck.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'testcheck': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'testcheck': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has(
             "Add check constraint anyblok_ck_testcheck__test on testcheck")
 
@@ -592,8 +593,8 @@ class TestMigration:
             )
             registry.Test.__table__.create(bind=conn)
 
-        registry.migration.ignore_migration_for = {'test': True}
-        report = registry.migration.detect_changed()
+        registry.migration().ignore_migration_for = {'test': True}
+        report = registry.migration().detect_changed()
         assert not report.log_has(
             "Drop check constraint anyblok_ck__test__check on test")
 
@@ -618,7 +619,7 @@ class TestIgnoreMigrationColumns:
     def test_insert_columns(self):
         registry = self.init_registry(simple_column, ColumnType=Str,
                                       ignore_migration=True)
-        assert registry.migration.ignore_migration_for == {'test': ['col']}
+        assert registry.migration().ignore_migration_for == {'test': ['col']}
 
 
 class TestIgnoreSchemaMigration:
@@ -637,7 +638,7 @@ class TestIgnoreSchemaMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -655,7 +656,7 @@ class TestIgnoreSchemaMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas=['test_db_schema']):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -675,7 +676,7 @@ class TestIgnoreSchemaMigration:
         with tmp_configuration(
             ignore_migration_for_schemas='test_db_schema,other'
         ):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -695,7 +696,7 @@ class TestIgnoreSchemaMigration:
         with tmp_configuration(
             ignore_migration_for_schemas=['test_db_schema', 'other']
         ):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Add test.other")
 
@@ -713,7 +714,7 @@ class TestIgnoreSchemaMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Drop Column test.other2")
 
@@ -730,7 +731,7 @@ class TestIgnoreSchemaMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Alter test.other")
 
@@ -749,7 +750,7 @@ class TestIgnoreSchemaMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Alter test.other")
 
@@ -761,7 +762,7 @@ class TestIgnoreSchemaMigration:
                 "test_db_schema.test (other);"))
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Drop index anyblok_ix_test__other on test")
 
@@ -778,7 +779,7 @@ class TestIgnoreSchemaMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has("Alter test.other")
 
@@ -797,7 +798,7 @@ class TestIgnoreSchemaMigration:
             registry.TestFK.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has(
             "Add Foreign keys on (testfk.other) => (testfktarget.integer)")
@@ -823,7 +824,7 @@ class TestIgnoreSchemaMigration:
             # anyblok_fk_test__other_on_system_blok__name
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         message = (
             "Drop Foreign keys on test.other => %ssystem_blok.name"
@@ -847,7 +848,7 @@ class TestIgnoreSchemaMigration:
             registry.TestUnique.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has(
             "Add unique constraint on testunique (other)")
@@ -869,7 +870,7 @@ class TestIgnoreSchemaMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has(
             "Drop constraint anyblok_uq_test__other on test")
@@ -888,7 +889,7 @@ class TestIgnoreSchemaMigration:
             registry.TestCheck.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has(
             "Add check constraint anyblok_ck_testcheck__test on testcheck")
@@ -910,7 +911,7 @@ class TestIgnoreSchemaMigration:
             registry.Test.__table__.create(bind=conn)
 
         with tmp_configuration(ignore_migration_for_schemas='test_db_schema'):
-            report = registry.migration.detect_changed()
+            report = registry.migration().detect_changed()
 
         assert not report.log_has(
             "Drop check constraint anyblok_ck__test__check on test")

@@ -1438,9 +1438,11 @@ class Migration:
         c = t.column('My column name from t')
     """
 
-    def __init__(self, registry):
+    def __init__(self, registry, engine_name='main'):
         self.withoutautomigration = registry.withoutautomigration
-        self.conn = registry.connection()
+        self.conn = registry.connection(
+            bind=registry.named_binds[engine_name]
+        )
         self.loaded_namespaces = registry.loaded_namespaces
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata

@@ -1123,7 +1123,11 @@ class Registry:
             self.declarativebase.metadata.tables[
                 'system_blok'].create(bind=self.connection(), checkfirst=True)
 
-        self.migration = Configuration.get('Migration', Migration)(self)
+        self.named_migrations = {}
+        for engine_name in self.named_engines:
+            self.named_migrations[engine_name] = Configuration.get(
+                'Migration', Migration)(self, engine_name=engine_name)
+
         query = """
             SELECT name, installed_version
             FROM system_blok
@@ -1141,13 +1145,13 @@ class Registry:
                     else None)
                 b.pre_migration(parsed_version)
 
-            self.migration.auto_upgrade_database(schema_only=True)
+            self.do_migration(schema_only=True)
             if not self.withoutautomigration:
                 for name, bind in self.named_binds.items():
                     self.declarativebase.metadata.create_all(
                         bind=self.connection())
 
-            self.migration.auto_upgrade_database()
+            self.do_migration()
 
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
@@ -1158,7 +1162,14 @@ class Registry:
                 b.post_migration(parsed_version)
 
         else:
-            self.migration.auto_upgrade_database()
+            self.do_migration()
+
+    def do_migration(self, **kwargs):
+        for migration in self.named_migrations.values():
+            migration.auto_upgrade_database(**kwargs)
+
+    def migration(self, engine_name='main'):
+        return self.named_migrations[engine_name]
 
     def is_reload_needed(self):
 
