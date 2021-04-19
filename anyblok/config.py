@@ -59,6 +59,17 @@ def get_db_name():
     raise ConfigurationException("No database name defined")
 
 
+def named_engine_config_get(key, engine_name, default):
+    if engine_name == 'default':
+        return Configuration.get(key, default)
+
+    res = Configuration.get('named_engine_{}'.format(key))
+    if not res:
+        return default
+
+    return dict(res).get(engine_name, default)
+
+
 def get_url(db_name=None, engine_name='default'):
     """Return an sqlalchemy URL for database
 
@@ -90,14 +101,14 @@ def get_url(db_name=None, engine_name='default'):
     :rtype: SqlAlchemy URL
     :exception: ConfigurationException
     """
-    url = Configuration.get('db_url', None)
-    drivername = Configuration.get('db_driver_name', None)
-    username = Configuration.get('db_user_name', None)
-    password = Configuration.get('db_password', None)
-    host = Configuration.get('db_host', None)
-    port = Configuration.get('db_port', None)
-    database = Configuration.get('db_name', None)
-    query = Configuration.get('db_query', {})
+    url = named_engine_config_get('db_url', engine_name, None)
+    drivername = named_engine_config_get('db_driver_name', engine_name, None)
+    username = named_engine_config_get('db_user_name', engine_name, None)
+    password = named_engine_config_get('db_password', engine_name, None)
+    host = named_engine_config_get('db_host', engine_name, None)
+    port = named_engine_config_get('db_port', engine_name, None)
+    database = named_engine_config_get('db_name', engine_name, None)
+    query = named_engine_config_get('db_query', engine_name, {})
 
     if db_name is not None:
         database = db_name
@@ -193,7 +204,6 @@ def nargs_type(key, nargs, cast):
         limit = len(val)
         if nargs not in ('?', '+', '*', REMAINDER):
             limit = int(nargs)
-
         return [cast_value(cast, x) for x in val[:limit]]
 
     if hasattr(cast, 'default'):
@@ -919,7 +929,7 @@ def named_engine_type(cast=str, default=None, split_key="=>"):
 
 
 @Configuration.add('named-database',
-                   label="Named database",
+                   label="Named engine database",
                    must_be_loaded_by_unittest=True)
 def add_named_database(group):
     """Add arguments to 'database' configuration group
@@ -927,7 +937,7 @@ def add_named_database(group):
     :param group:
     """
     group.add_argument(
-        '--named-engine', nargs="+",
+        '--named-engines', nargs="+",
         help="engine names list")
     group.add_argument(
         '--named-engine-db-name',

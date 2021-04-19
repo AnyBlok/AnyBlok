@@ -28,6 +28,7 @@ from anyblok.config import (
     AnyBlokPlugin,
     define_preload_option,
     get_url,
+    named_engine_config_get,
     get_db_name,
     is_none,
     cast_value,
@@ -718,3 +719,24 @@ class TestConfigurationOption:
 
     def test_add_install_or_update_bloks(self, parser):
         self.function['add_install_or_update_bloks'](parser)
+
+
+class TestConfiguration2:
+
+    @pytest.fixture(autouse=True)
+    def reset_conf(self, configuration_loaded):
+        pass
+
+    def test_named_engine_config_1(self):
+        with tmp_configuration(db_name="foo"):
+            assert named_engine_config_get('db_name', 'default', None) == 'foo'
+
+    def test_named_engine_config_2(self):
+        with tmp_configuration(named_engine_db_name="foo=>bar"):
+            assert named_engine_config_get('db_name', 'foo', None) == 'bar'
+
+    def test_named_engine_config_3(self):
+        assert named_engine_config_get('db_name', 'foo', None) is None
+
+    def test_named_engine_config_4(self):
+        assert named_engine_config_get('db_name', 'foo', 'bar') == 'bar'

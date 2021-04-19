@@ -147,6 +147,9 @@ class TestColumn:
         class Registry:
             named_engines = {'default': object}
 
+            def get_named_engine(self, *a, **kw):
+                return object
+
         column = OneColumn()
         column.get_sqlalchemy_mapping(
             Registry(), None, 'a_column', {'engine_name': 'default'})

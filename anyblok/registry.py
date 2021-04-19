@@ -15,12 +15,13 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
 from sqlalchemy_utils.functions import database_exists, create_database
-from .config import Configuration, get_url
+from .config import Configuration, get_url, named_engine_config_get
 from .migration import Migration
 from .blok import BlokManager
 from .environment import EnvironmentManager
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
-from anyblok.common import anyblok_column_prefix, naming_convention
+from anyblok.common import (
+    anyblok_column_prefix, naming_convention, return_list)
 from pkg_resources import iter_entry_points
 from .version import parse_version
 from .logging import log
@@ -509,10 +510,14 @@ class Registry:
     def init_engine_options(self, url, engine_name):
         """Define the options to initialize the engine"""
         return dict(
-            echo=Configuration.get('db_echo') or False,
-            max_overflow=Configuration.get('db_max_overflow') or 10,
-            echo_pool=Configuration.get('db_echo_pool') or False,
-            pool_size=Configuration.get('db_pool_size') or 5,
+            echo=named_engine_config_get(
+                'db_echo', engine_name, False) or False,
+            max_overflow=named_engine_config_get(
+                'db_max_overflow', engine_name, 10) or 10,
+            echo_pool=named_engine_config_get(
+                'db_echo_pool', engine_name, False) or False,
+            pool_size=named_engine_config_get(
+                'db_pool_size', engine_name, 5) or 5,
             isolation_level=self.additional_setting.get(
                 'isolation_level',
                 Configuration.get('isolation_level', 'READ_UNCOMMITTED')
@@ -1406,8 +1411,12 @@ class Registry:
 
     def get_engine_names(self):
         engines = {'default'}
-        # TODO get from configurations
-        return list(engines)
+        for engine_name in return_list(Configuration.get('named_engines')):
+            engines.add(engine_name)
+
+        engines = list(engines)
+        engines.sort()
+        return engines
 
     @log(logger, level='debug')
     def commit(self, *args, **kwargs):
