@@ -590,7 +590,7 @@ class Registry:
         self.ignore_migration_for = {}
 
     @classmethod
-    def db_exists(cls, db_name=None, engine_name='default'):
+    def db_exists(cls, db_name=None, engine_name='main'):
         if not db_name:
             raise RegistryException('db_name is required')
 
@@ -647,7 +647,7 @@ class Registry:
         query += " FROM system_blok"
         query += " WHERE state in ('%s')" % "', '".join(states)
         try:
-            bind = self.named_binds['default']
+            bind = self.named_binds['main']
             res = self.execute(text(query), fetchall=True, session_bind=bind)
         except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
@@ -893,7 +893,7 @@ class Registry:
                 and state = 'uninstalled'""" % "', '".join(
                 dependencies_to_install)
 
-            bind = self.named_binds['default']
+            bind = self.named_binds['main']
             try:
                 self.execute(query, session_bind=bind)
             except (ProgrammingError, OperationalError):  # pragma: no cover
@@ -917,7 +917,7 @@ class Registry:
             return res
         else:
             conn = None
-            with self.named_engines['default'].connect() as conn:
+            with self.named_engines['main'].connect() as conn:
                 res = conn.execute(*args, **kwargs)
                 if fetchall:
                     return res.fetchall()
@@ -1410,7 +1410,7 @@ class Registry:
         return self.named_engines[engine_name]
 
     def get_engine_names(self):
-        engines = {'default'}
+        engines = {'main'}
         for engine_name in return_list(Configuration.get('named_engines')):
             engines.add(engine_name)
 
@@ -1532,7 +1532,7 @@ class Registry:
         Q = "UPDATE system_blok SET state='%s' where name='%s';" % (
             state, blok_name)
 
-        bind = self.named_binds['default']
+        bind = self.named_binds['main']
         self.execute(Q, session_bind=bind)
         # blok.update(state=state)
 

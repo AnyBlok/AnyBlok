@@ -187,7 +187,7 @@ class Model:
             return  # pragma: no cover
 
         if 'engine_name' not in kwargs:
-            kwargs['engine_name'] = 'default'
+            kwargs['engine_name'] = 'main'
 
         kwargs['__registry_name__'] = _registryname
         kwargs['__tablename__'] = tablename

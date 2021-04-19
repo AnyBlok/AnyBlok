@@ -60,7 +60,7 @@ def get_db_name():
 
 
 def named_engine_config_get(key, engine_name, default):
-    if engine_name == 'default':
+    if engine_name == 'main':
         return Configuration.get(key, default)
 
     res = Configuration.get('named_engine_{}'.format(key))
@@ -70,7 +70,7 @@ def named_engine_config_get(key, engine_name, default):
     return dict(res).get(engine_name, default)
 
 
-def get_url(db_name=None, engine_name='default'):
+def get_url(db_name=None, engine_name='main'):
     """Return an sqlalchemy URL for database
 
     Return database options, only the database name db_name can be overloaded::

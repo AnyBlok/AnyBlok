@@ -26,8 +26,8 @@ class TestBlok(Blok):
         reload(test)
 
     def is_table_exist(self):
-        engine = self.anyblok.named_engines['default']
-        bind = self.anyblok.named_binds['default']
+        engine = self.anyblok.named_engines['main']
+        bind = self.anyblok.named_binds['main']
         if sgdb_in(engine, ['PostgreSQL']):
             return bool(self.anyblok.execute("""
                 select count(*)

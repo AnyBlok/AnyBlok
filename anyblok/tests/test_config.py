@@ -729,7 +729,7 @@ class TestConfiguration2:
 
     def test_named_engine_config_1(self):
         with tmp_configuration(db_name="foo"):
-            assert named_engine_config_get('db_name', 'default', None) == 'foo'
+            assert named_engine_config_get('db_name', 'main', None) == 'foo'
 
     def test_named_engine_config_2(self):
         with tmp_configuration(named_engine_db_name="foo=>bar"):

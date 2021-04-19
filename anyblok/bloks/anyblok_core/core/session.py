@@ -29,4 +29,4 @@ class Session(SA_Session):
         if bind:
             return bind
 
-        return self.anyblok.named_binds['default']
+        return self.anyblok.named_binds['main']
