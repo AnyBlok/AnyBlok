@@ -1161,6 +1161,9 @@ class Registry:
                     Table.create(bind=self.connection(bind=bind),
                                  checkfirst=True)
 
+                self.declarativebase.metadata.create_all(
+                    self.connection(), tables=[])
+
             self.do_migration()
 
             for blok, installed_version in res:
