@@ -2,6 +2,7 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2015 Pierre Verkest <pverkest@anybox.fr>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -1045,7 +1046,7 @@ class Many2Many(RelationShip):
 
             Node = Table(join_table, declarativebase.metadata, *(
                 local_columns + remote_columns + [local_fk, remote_fk]),
-                schema=schema)
+                schema=schema, info={'engine_name': properties['engine_name']})
 
             if namespace == self.model.model_name:
                 type(modelname, (declarativebase,), {

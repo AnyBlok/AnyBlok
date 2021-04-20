@@ -108,6 +108,9 @@ class MigrationReport:
     def init_add_table(self, diff):
         self.raise_if_withoutautomigration()
         _, table = diff
+        if table not in self.migration.bind_tables:
+            return True
+
         table_name = (
             '%s.%s' % (table.schema, table.name)
             if table.schema else table.name)
@@ -116,6 +119,9 @@ class MigrationReport:
     def init_add_column(self, diff):
         self.raise_if_withoutautomigration()
         _, schema, table, column = diff
+        if column.table not in self.migration.bind_tables:
+            return True
+
         if self.ignore_migration_for(schema, table) is True:
             return True
 
@@ -186,6 +192,9 @@ class MigrationReport:
     def init_add_index(self, diff):
         self.raise_if_withoutautomigration()
         _, constraint = diff
+        if constraint.table not in self.migration.bind_tables:
+            return True
+
         if self.ignore_migration_for(constraint.table.schema,
                                      constraint.table.name) is True:
             return True  # pragma: no cover
@@ -1467,8 +1476,7 @@ class Migration:
             'render_item': self.render_item,
             'compare_type': self.compare_type,
         }
-        self.context = MigrationContext.configure(
-            registry.connection(), opts=opts)
+        self.context = MigrationContext.configure(self.conn, opts=opts)
         self.operation = Operations(self.context)
         self.reinit_all = Configuration.get('reinit_all', False)
         self.reinit_tables = Configuration.get('reinit_tables', False)

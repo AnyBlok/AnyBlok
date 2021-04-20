@@ -1148,9 +1148,18 @@ class Registry:
 
             self.do_migration(schema_only=True)
             if not self.withoutautomigration:
-                for name, bind in self.named_binds.items():
-                    self.declarativebase.metadata.create_all(
-                        bind=self.connection())
+                table_binds = {
+                    x.__table__: x.get_bind()
+                    for x in self.loaded_namespaces.values()
+                    if x.is_sql
+                }
+                for Table in self.declarativebase.metadata.sorted_tables:
+                    bind = table_binds.get(Table)
+                    if not bind:
+                        bind = self.named_binds[Table.info['engine_name']]
+
+                    Table.create(bind=self.connection(bind=bind),
+                                 checkfirst=True)
 
             self.do_migration()
 
