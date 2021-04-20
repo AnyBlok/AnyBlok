@@ -33,18 +33,6 @@ from mock import patch
 
 @pytest.fixture(scope="module")
 def clean_db(request, configuration_loaded):
-
-    def clean():
-        url = Configuration.get('get_url')()
-        drop_database(url)
-        db_template_name = Configuration.get('db_template_name', None)
-        create_database(url, template=db_template_name)
-
-    request.addfinalizer(clean)
-
-
-@pytest.fixture(scope="module")
-def clean_db2(request, configuration_loaded):
     url = Configuration.get('get_url')()
     url2 = url.set(database='{}_other'.format(url.database))
 
@@ -170,9 +158,9 @@ def registry(request, clean_db, bloks_loaded):
 
 
 @pytest.fixture()
-def registry2(request, clean_db2, bloks_loaded):
+def registry2(request, clean_db, bloks_loaded):
     with tmp_configuration(named_engines='other',
-                           named_engine_db_url="other=>{}".format(clean_db2)):
+                           named_engine_db_url="other=>{}".format(clean_db)):
         registry = init_registry(add_in_registry, engine_name='other')
 
     def rollback():
@@ -192,9 +180,9 @@ def registry2(request, clean_db2, bloks_loaded):
 
 
 @pytest.fixture(params=['main', 'other'])
-def registry_with_engine_name(request, clean_db2, bloks_loaded):
+def registry_with_engine_name(request, clean_db, bloks_loaded):
     with tmp_configuration(named_engines='other',
-                           named_engine_db_url="other=>{}".format(clean_db2)):
+                           named_engine_db_url="other=>{}".format(clean_db)):
         registry = init_registry(add_in_registry, engine_name=request.param)
 
     def rollback():
