@@ -1440,15 +1440,26 @@ class Migration:
 
     def __init__(self, registry, engine_name='main'):
         self.withoutautomigration = registry.withoutautomigration
-        self.conn = registry.connection(
-            bind=registry.named_binds[engine_name]
-        )
+        self.engine_name = engine_name
+        bind = registry.named_binds[engine_name]
+        self.conn = registry.connection(bind=bind)
         self.loaded_namespaces = registry.loaded_namespaces
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
-        self.ddl_compiler = self.conn.dialect.ddl_compiler(
-            self.conn.dialect, None)
+
+        self.ddl_compiler = bind.dialect.ddl_compiler(bind.dialect, None)
         self.ignore_migration_for = registry.ignore_migration_for
+
+        self.bind_schemas = {
+            x.__db_schema__
+            for x in self.loaded_namespaces.values()
+            if x.is_sql and x.engine_name == engine_name
+        }
+        self.bind_tables = {
+            x.__table__
+            for x in self.loaded_namespaces.values()
+            if x.is_sql and x.engine_name == engine_name
+        }
 
         opts = {
             'include_schemas': True,
@@ -1456,7 +1467,8 @@ class Migration:
             'render_item': self.render_item,
             'compare_type': self.compare_type,
         }
-        self.context = MigrationContext.configure(self.conn, opts=opts)
+        self.context = MigrationContext.configure(
+            registry.connection(), opts=opts)
         self.operation = Operations(self.context)
         self.reinit_all = Configuration.get('reinit_all', False)
         self.reinit_tables = Configuration.get('reinit_tables', False)

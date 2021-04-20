@@ -1124,9 +1124,9 @@ class Registry:
                 'system_blok'].create(bind=self.connection(), checkfirst=True)
 
         self.named_migrations = {}
-        for engine_name in self.named_engines:
-            self.named_migrations[engine_name] = Configuration.get(
-                'Migration', Migration)(self, engine_name=engine_name)
+        for name in self.named_engines:
+            self.named_migrations[name] = Configuration.get(
+                'Migration', Migration)(self, engine_name=name)
 
         query = """
             SELECT name, installed_version
@@ -1134,6 +1134,7 @@ class Registry:
             WHERE
                 (state = 'toinstall' AND name = '%s')
                 OR state = 'toupdate'""" % blok2install
+
         res = self.execute(query, fetchall=True,
                            bind=self.named_binds[engine_name])
         if res:
@@ -1164,9 +1165,10 @@ class Registry:
         else:
             self.do_migration()
 
+    @log(logger, level='debug')
     def do_migration(self, **kwargs):
-        for migration in self.named_migrations.values():
-            migration.auto_upgrade_database(**kwargs)
+        for engine_name in self.named_migrations:
+            self.migration(engine_name).auto_upgrade_database(**kwargs)
 
     def migration(self, engine_name='main'):
         return self.named_migrations[engine_name]
