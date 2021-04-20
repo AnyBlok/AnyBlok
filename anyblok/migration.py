@@ -103,6 +103,9 @@ class MigrationReport:
     def init_add_schema(self, diff):
         self.raise_if_withoutautomigration()
         _, schema = diff
+        if schema not in self.migration.bind_schemas:
+            return True
+
         self.log_names.append('Add schema %s' % schema)
 
     def init_add_table(self, diff):
