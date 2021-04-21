@@ -25,6 +25,7 @@ from anyblok.common import naming_convention
 def clean_db(request, configuration_loaded):
     url = Configuration.get('get_url')()
     url2 = url.set(database='{}_other'.format(url.database))
+    url2 = url2.set(drivername='postgresql')
 
     def drop_and_create(url_):
         if database_exists(url_):

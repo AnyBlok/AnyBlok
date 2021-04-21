@@ -73,7 +73,7 @@ install:
   - pip install -U pip
   - pip install wheel
   - pip install sqlalchemy
-  - pip install $SQLPYCLIENT
+  - pip install $SQLPYCLIENT psycopg2
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
   - pip install -U cryptography
