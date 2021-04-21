@@ -10,7 +10,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from anyblok.testing import sgdb_in, tmp_configuration
+from anyblok.testing import sgdb_in, tmp_configuration, get_named_url
 from anyblok.column import Integer as Int, String as Str
 from anyblok.migration import (
     MigrationException, MigrationColumnTypePlugin, MigrationReport)
@@ -34,8 +34,7 @@ from mock import patch
 @pytest.fixture(scope="module")
 def clean_db(request, configuration_loaded):
     url = Configuration.get('get_url')()
-    url2 = url.set(database='{}_other'.format(url.database))
-    url2 = url2.set(drivername='postgresql')
+    url2 = get_named_url()
 
     def drop_and_create(url_):
         if database_exists(url_):
@@ -65,6 +64,9 @@ def cnx(registry, engine_name='main'):
 def add_in_registry(**kwargs):
     register = Declarations.register
     Model = Declarations.Model
+    url = None
+    if kwargs.get('engine_name') == 'other':
+        url = get_named_url()
 
     @register(Model, **kwargs)
     class Test:
@@ -81,7 +83,7 @@ def add_in_registry(**kwargs):
         integer = Int(primary_key=True)
         other = Str(index=True)
 
-    if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL']):
+    if not sgdb_in(['MySQL', 'MariaDB', 'MsSQL'], url=url):
         @register(Model, **kwargs)
         class TestCheck:
             integer = Int(primary_key=True)
@@ -380,7 +382,7 @@ class TestMigrationCmd:
         registry, engine_name = registry_with_engine_name
         t = registry.migration(engine_name).table('test')
         c = t.column('other').alter(server_default='test')
-        if sgdb_in(['PostgreSQL']):
+        if sgdb_in(['PostgreSQL'], registry.named_engines[engine_name].url):
             assert c.server_default == "'test'::character varying"
         else:
             assert str(c.server_default) == "'test'"

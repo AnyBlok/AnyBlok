@@ -22,6 +22,7 @@ from anyblok.registry import RegistryManager
 from anyblok.blok import BlokManager
 from anyblok.environment import EnvironmentManager
 import sqlalchemy
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import clear_mappers
 from sqlalchemy import event
 from sqlalchemy_utils.functions import database_exists, create_database, orm
@@ -569,10 +570,26 @@ def skip_unless_bloks_installed(*bloks):
     return bloks_decorator
 
 
-def sgdb_in(databases):
+def get_named_url():
+    url = os.environ.get('ANYBLOK_UNITTEST_NAMED_URL')
+    if url is None:
+        url = Configuration.get('get_url')()
+        url = url.set(database='{}_other'.format(url.database))
+        url = url.set(drivername='postgresql')
+    else:
+        url = make_url(url)
+
+    return url
+
+
+def sgdb_in(databases, url=None):
     if not DATABASES_CACHED_BY_DRIVERNAME:
         load_configuration()
 
-    url = Configuration.get('get_url')(db_name='')
+    if url is None:
+        url = Configuration.get('get_url')(db_name='')
+        import ipdb
+        ipdb.set_trace()
+
     engine = sqlalchemy.create_engine(url)
     return sgdb_in_(engine, databases)
