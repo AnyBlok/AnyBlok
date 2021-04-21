@@ -12,7 +12,7 @@ python:
 env:
     global:
         - ANYBLOK_DATABASE_NAME=travis_ci_test
-        - ANYBLOK_UNITTEST_NAMED_URL=mysql://postgres@/travis_ci_test_other
+        - ANYBLOK_UNITTEST_NAMED_URL=postgresql://postgres@/travis_ci_test_other
         - MARKERS=''
     matrix:
         - ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2'
