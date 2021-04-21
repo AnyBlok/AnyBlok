@@ -588,8 +588,6 @@ def sgdb_in(databases, url=None):
 
     if url is None:
         url = Configuration.get('get_url')(db_name='')
-        import ipdb
-        ipdb.set_trace()
 
     engine = sqlalchemy.create_engine(url)
     return sgdb_in_(engine, databases)
