@@ -29,7 +29,7 @@ from copy import copy
 from testfixtures import LogCapture as LC
 from contextlib import contextmanager
 from logging import getLogger, DEBUG, INFO, WARNING, ERROR, CRITICAL
-from .common import sgdb_in as sgdb_in_, DATABASES_CACHED
+from .common import sgdb_in as sgdb_in_, DATABASES_CACHED_BY_DRIVERNAME
 from anyblok import (
     load_init_function_from_entry_points,
     configuration_post_load,
@@ -570,7 +570,7 @@ def skip_unless_bloks_installed(*bloks):
 
 
 def sgdb_in(databases):
-    if not DATABASES_CACHED:
+    if not DATABASES_CACHED_BY_DRIVERNAME:
         load_configuration()
 
     url = Configuration.get('get_url')(db_name='')

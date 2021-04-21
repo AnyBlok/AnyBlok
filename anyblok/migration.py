@@ -459,7 +459,7 @@ class MigrationReport:
                 isinstance(newvalue, plugin.to_type) and
                 (
                     plugin.dialect is None or
-                    sgdb_in(self.migration.conn.engine, dialects)
+                    sgdb_in(self.migration.engine, dialects)
                 )
             ):
                 return plugin()
@@ -889,7 +889,7 @@ class MigrationColumn:
 
         table_ = migration.metadata.tables[table]
 
-        if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
+        if sgdb_in(self.table.migration.engine, ['MsSQL']):
             column.table = table_
 
         migration.operation.impl.add_column(self.table.name, column,
@@ -938,7 +938,7 @@ class MigrationColumn:
                 self.type if 'type_' not in kwargs else None),
             'existing_autoincrement': (
                 None
-                if not sgdb_in(self.table.migration.conn.engine,
+                if not sgdb_in(self.table.migration.engine,
                                ['MySQL', 'MariaDB'])
                 else kwargs.get(
                     'existing_autoincrement',
@@ -999,7 +999,7 @@ class MigrationColumn:
     def server_default(self):
         """ Use for unittest: return the default database value """
         sdefault = self.info.get('default', None)
-        if sgdb_in(self.table.migration.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.table.migration.engine, ['MySQL', 'MariaDB']):
             if sdefault:
                 if not isinstance(sdefault, str):
                     return sdefault.arg  # pragma: no cover
@@ -1155,7 +1155,7 @@ class MigrationConstraintPrimaryKey:
                 """To add a primary key constraint """
                 """you must define one or more columns""")
 
-        if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
+        if sgdb_in(self.table.migration.engine, ['MsSQL']):
             for column in columns:
                 if column.nullable:
                     column.alter(nullable=False)
@@ -1393,7 +1393,7 @@ class MigrationSchema:
 
     def has_schema(self):
         with cnx(self.migration) as conn:
-            if sgdb_in(conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
+            if sgdb_in(self.migration.engine, ['MySQL', 'MariaDB', 'MsSQL']):
                 query = """
                     SELECT count(*)
                     FROM INFORMATION_SCHEMA.SCHEMATA
@@ -1453,6 +1453,7 @@ class Migration:
     def __init__(self, registry, engine_name='main'):
         self.withoutautomigration = registry.withoutautomigration
         self.engine_name = engine_name
+        self.engine = registry.named_engines[engine_name]
         bind = registry.named_binds[engine_name]
         self.conn = registry.connection(bind=bind)
         self.loaded_namespaces = registry.loaded_namespaces
@@ -1558,7 +1559,7 @@ class Migration:
         return False  # pragma: no cover
 
     def detect_check_constraint_changed(self, inspector):
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
+        if sgdb_in(self.engine, ['MySQL', 'MariaDB', 'MsSQL']):
             # MySQL don t return the reflected constraint
             return []
 
@@ -1639,10 +1640,10 @@ class Migration:
         :param name: name of the save point
         :rtype: return the name of the save point
         """
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.engine, ['MySQL', 'MariaDB']):
             logger.warning(
                 "Try to create a SAVEPOINT, but %r don't have this "
-                "functionality" % self.conn.engine.dialect)
+                "functionality" % self.engine.dialect)
             return
 
         return self.conn._savepoint_impl(name=name)
@@ -1652,10 +1653,10 @@ class Migration:
 
         :param name: name of the savepoint
         """
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.engine, ['MySQL', 'MariaDB']):
             logger.warning(
                 "Try to ROLLBACK TO SAVEPOINT, but %r don't have this "
-                "functionality" % self.conn.engine.dialect)
+                "functionality" % self.engine.dialect)
             return
 
         self.conn._rollback_to_savepoint_impl(name)
@@ -1665,10 +1666,10 @@ class Migration:
 
         :param name: name of the savepoint
         """
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.engine, ['MySQL', 'MariaDB']):
             logger.warning(
                 "Try to RELEASE SAVEPOINT, but %r don't have this "
-                "functionality" % self.conn.engine.dialect)
+                "functionality" % self.engine.dialect)
             return
 
         self.conn._release_savepoint_impl(name)
