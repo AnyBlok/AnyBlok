@@ -1175,6 +1175,7 @@ class Registry:
                 b.post_migration(parsed_version)
 
         else:
+            self.do_migration(schema_only=True)
             self.do_migration()
 
     @log(logger, level='debug')
