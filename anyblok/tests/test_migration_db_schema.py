@@ -231,7 +231,8 @@ class TestMigrationDbSchemaCmd:
         schema.table('testfk2').drop()
         schema.table('testfktarget').drop()
         schema.table('testindex').drop()
-        if not sgdb_in(['MySQL', 'MariaDB']):
+        if not sgdb_in(['MySQL', 'MariaDB'],
+                       url=registry.named_engines[engine_name].url):
             schema.table('testcheck').drop()
 
         schema.drop()
@@ -722,7 +723,7 @@ class TestMigrationDbSchemaAutoGenerateNamedEngine:
             registry2.TestFK2.__table__.drop(bind=conn)
             registry2.TestFKTarget.__table__.drop(bind=conn)
             registry2.TestIndex.__table__.drop(bind=conn)
-            if not sgdb_in(['MySQL', 'MariaDB']):
+            if not sgdb_in(['MySQL', 'MariaDB'], url=get_named_url()):
                 registry2.TestCheck.__table__.drop(bind=conn)
 
             conn.execute(DropSchema('test_db_schema'))
