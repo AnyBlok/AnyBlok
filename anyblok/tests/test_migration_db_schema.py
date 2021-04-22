@@ -784,14 +784,14 @@ class TestMigrationDbSchemaAutoGenerateNamedEngine:
 
         report = registry2.migration().detect_changed()
 
-        if not sgdb_in(['MySQL', 'MariaDB'], url=get_named_url()):
+        if not sgdb_in(['MySQL', 'MariaDB']):
             assert not report.log_has("Drop Table test_db_schema.test2")
             report = registry2.migration('other').detect_changed()
 
         assert report.log_has("Drop Table test_db_schema.test2")
         report.apply_change()
 
-        if not sgdb_in(['MySQL', 'MariaDB'], url=get_named_url()):
+        if not sgdb_in(['MySQL', 'MariaDB']):
             assert not report.log_has("Drop Table test_db_schema.test2")
             report = registry2.migration('other').detect_changed()
 
