@@ -104,7 +104,7 @@ class MigrationReport:
         self.raise_if_withoutautomigration()
         _, schema = diff
         if schema not in self.migration.bind_schemas:
-            return True
+            return True  # pragma: no cover
 
         self.log_names.append('Add schema %s' % schema)
 
