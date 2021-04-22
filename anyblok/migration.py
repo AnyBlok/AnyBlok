@@ -1468,6 +1468,7 @@ class Migration:
             for x in self.loaded_namespaces.values()
             if x.is_sql and x.engine_name == engine_name
         }
+        self.bind_schemas.add(None)
         self.bind_tables = {
             x.__table__
             for x in self.loaded_namespaces.values()
@@ -1528,10 +1529,12 @@ class Migration:
 
     def detect_added_new_schema(self, inspector):
         diff = []
-        schemas = self.metadata._schemas
         reflected_schemas = set(inspector.get_schema_names())
-        added_schemas = schemas - reflected_schemas
+        added_schemas = self.bind_schemas - reflected_schemas
         for schema in added_schemas:
+            if schema is None:
+                continue
+
             diff.append(('add_schema', schema))
 
         return diff
@@ -1564,9 +1567,7 @@ class Migration:
             return []
 
         diff = []
-        schemas = list(self.metadata._schemas)
-        schemas.append(None)
-        for schema in schemas:
+        for schema in self.bind_schemas:
             for table in inspector.get_table_names(schema=schema):
                 table_ = "%s.%s" % (schema, table) if schema else table
                 if table_ not in self.metadata.tables:
@@ -1611,9 +1612,7 @@ class Migration:
 
     def detect_pk_constraint_changed(self, inspector):
         diff = []
-        schemas = list(self.metadata._schemas)
-        schemas.append(None)
-        for schema in schemas:
+        for schema in self.bind_schemas:
             for table in inspector.get_table_names(schema=schema):
                 table_ = "%s.%s" % (schema, table) if schema else table
                 if table_ not in self.metadata.tables:
