@@ -26,6 +26,7 @@ CHANGELOG
 * Added removed name argument on the configuration to forbid
   the sys arg
 * Added plugins to migrate DateTime to DateTime with MariaDB and MySQL
+* Added cache_ok attribute on Column Type
 
 1.2.0 (2021-04-14)
 ------------------
