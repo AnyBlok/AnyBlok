@@ -27,6 +27,8 @@ CHANGELOG
   the sys arg
 * Added plugins to migrate DateTime to DateTime with MariaDB and MySQL
 * Added cache_ok attribute on Column Type
+* Fixed issue 195, the issue was due of a changement of the api of
+  the hybrid properties
 
 1.2.0 (2021-04-14)
 ------------------

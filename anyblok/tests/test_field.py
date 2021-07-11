@@ -99,6 +99,12 @@ class TestFieldFunction:
             registry.Test.name == 'Jean-Sebastien SUZANNE').first()
         assert t.name == 'Jean-Sebastien SUZANNE'
 
+    def test_with_subquery(self, registry_field_function):
+        registry = registry_field_function
+        Test = registry.Test
+        subquery = Test.query(Test.name).subquery()
+        assert subquery.c.keys() == ['name']
+
 
 def define_field_json_related():
 
@@ -208,6 +214,12 @@ class TestJsonRelated:
         query = registry.Test.query().filter(
             Test.name.cast(types.String) == '"jssuzanne"')
         assert query.count()
+
+    def test_with_subquery(self, registry_json_related):
+        registry = registry_json_related
+        Test = registry.Test
+        subquery = Test.query(Test.name).subquery()
+        assert subquery.c.keys() == ['name']
 
 
 def define_field_json_related2():
