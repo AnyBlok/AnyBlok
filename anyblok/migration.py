@@ -96,7 +96,7 @@ class MigrationReport:
     def table_is_added(self, table):
         for action in self.actions:
             if action[0] == 'add_table' and action[1] is table:
-                return True
+                return True  # pragma: no cover
 
         return False
 
@@ -204,7 +204,7 @@ class MigrationReport:
 
         columns = [x.name for x in constraint.columns]
         if self.table_is_added(constraint.table):
-            return True
+            return True  # pragma: no cover
 
         self.log_names.append('Add index constraint on %s (%s)' % (
             constraint.table.name, ', '.join(columns)))

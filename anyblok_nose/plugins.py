@@ -91,7 +91,8 @@ class AnyBlokPlugin(Plugin):
             configuration_post_load,
         )
         from anyblok.blok import BlokManager
-        from anyblok.registry import RegistryManager, return_list
+        from anyblok.registry import RegistryManager
+        from anyblok.common import return_list
 
         # Load the registry here not in configuration,
         # because the configurations are not loaded in order of score

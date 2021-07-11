@@ -518,6 +518,7 @@ def add_timezone_on_datetime(dt, default_timezone):
 class DateTimeType(types.TypeDecorator):
 
     impl = types.DateTime(timezone=True)
+    cache_ok = True
 
     def __init__(self, field):
         self.default_timezone = field.default_timezone
@@ -688,6 +689,7 @@ class Interval(Column):
 class StringType(types.TypeDecorator):
 
     impl = types.String
+    cache_ok = True
 
     def process_bind_param(self, value, engine):
         if value is False:
@@ -858,6 +860,7 @@ class Password(Column):
 class TextType(types.TypeDecorator):
 
     impl = types.Text
+    cache_ok = True
 
     def process_bind_param(self, value, engine):
         if value is False:
@@ -934,6 +937,7 @@ class SelectionType(types.TypeDecorator):
     """Generic type for Column Selection """
 
     impl = types.String
+    cache_ok = True
 
     def __init__(self, selections, size, registry=None, namespace=None):
         super(SelectionType, self).__init__(length=size)
@@ -1399,6 +1403,9 @@ class UUID(Column):
         return res
 
 
+URLType.cache_ok = True  # waiting fix from sqlalchemy_utils
+
+
 class URL(Column):
     """URL column
 
@@ -1492,6 +1499,7 @@ class PhoneNumber(Column):
     this method is necessary for encrypt the column
 """
 EmailType.process_result_value = lambda self, value, dialect: value
+EmailType.cache_ok = True  # waiting fix from sqlalchemy_utils
 
 
 class Email(Column):
@@ -1526,6 +1534,7 @@ class CountryType(types.TypeDecorator, ScalarCoercible):
     """Generic type for Column Country """
 
     impl = types.Unicode(3)
+    cache_ok = True
     python_type = python_pycountry_type
 
     def process_bind_param(self, value, dialect):
