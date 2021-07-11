@@ -304,16 +304,13 @@ class Function(Field):
 
                 return getattr(model_self, m)(*args, **kwargs)
 
+            function_method.__name__ = fieldname
             return function_method
 
         fget = wrap('fget')
         fset = wrap('fset')
         fdel = wrap('fdel')
         fexpr = wrap('fexpr')
-
-        for func in (fget, fset, fdel, fexpr):
-            if func:
-                func.__name__ = fieldname
 
         hybrid = hybrid_property(fget)
         hybrid = hybrid.setter(fset)
