@@ -311,9 +311,18 @@ class Function(Field):
         fdel = wrap('fdel')
         fexpr = wrap('fexpr')
 
+        for func in (fget, fset, fdel, fexpr):
+            if func:
+                func.__name__ = fieldname
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.deleter(fdel)
+        hybrid = hybrid.expression(fexpr)
+
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
-        return hybrid_property(fget, fset, fdel=fdel, expr=fexpr)
+        return hybrid
 
 
 def format_struc(entry, keys):
