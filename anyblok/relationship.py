@@ -605,10 +605,18 @@ class Many2One(RelationShip):
                     cname.attribute_name)] = declared_attr(wrapper)
         properties['loaded_columns'].append(cname.attribute_name)
         properties['hybrid_property_columns'].append(cname.attribute_name)
-        properties[cname.attribute_name] = hybrid_property(
-            self.wrap_getter_column(cname.attribute_name),
-            super(Many2One, self).wrap_setter_column(cname.attribute_name),
-            expr=self.wrap_expr_column(cname.attribute_name))
+
+        fget = self.wrap_getter_column(cname.attribute_name)
+        fset = super(Many2One, self).wrap_setter_column(cname.attribute_name)
+        fexp = self.wrap_expr_column(cname.attribute_name)
+
+        for func in (fget, fset, fexp):
+            func.__name__ = cname.attribute_name
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.expression(fexp)
+        properties[cname.attribute_name] = hybrid
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
