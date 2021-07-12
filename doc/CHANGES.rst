@@ -17,7 +17,7 @@
 CHANGELOG
 =========
 
-1.3.0 (unreleased)
+1.3.0 (2021-07-12)
 ------------------
 
 * Added deprecated name argument on the configuration to
