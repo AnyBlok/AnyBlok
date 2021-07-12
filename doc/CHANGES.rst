@@ -27,8 +27,10 @@ CHANGELOG
   the sys arg
 * Added plugins to migrate DateTime to DateTime with MariaDB and MySQL
 * Added cache_ok attribute on Column Type
-* Fixed issue 195, the issue was due of a changement of the api of
-  the hybrid properties
+* Fixed issue #195, the issue was due of a changement of the api of
+  the hybrid properties, Thanks @petrus-v for your help
+* Fixed issue #196, A setter on the deprecated attribut **registry**
+  do a setter on the attribute **anyblok**
 
 1.2.0 (2021-04-14)
 ------------------
