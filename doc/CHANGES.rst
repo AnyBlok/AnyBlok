@@ -17,6 +17,11 @@
 CHANGELOG
 =========
 
+1.4.0 (UNRELEASED)
+------------------
+
+* Fixed Graphviz dependencies
+
 1.3.0 (2021-07-12)
 ------------------
 
