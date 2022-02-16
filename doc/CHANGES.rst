@@ -22,6 +22,11 @@ CHANGELOG
 
 * Fixed Graphviz dependencies
 
+1.3.1 (2021-08-25)
+------------------
+
+* Fixed sphinx pluggin 
+
 1.3.0 (2021-07-12)
 ------------------
 
