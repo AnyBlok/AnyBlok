@@ -380,7 +380,7 @@ class ModelRepr:
         pks = []
         for k, v in Model.items():
             if isinstance(v, Column):
-                if 'primary_key' in v.kwargs:
+                if v.kwargs.get('primary_key') is True:
                     pks.append(ModelAttribute(self.model_name, k))
 
         return pks

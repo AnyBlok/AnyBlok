@@ -20,7 +20,8 @@ CHANGELOG
 1.4.0 (UNRELEASED)
 ------------------
 
-* Fixed Graphviz dependencies
+* Fixed Graphviz dependencies #207
+* Fixed Mapper on column with **primary_key=False** #208
 
 1.3.1 (2021-08-25)
 ------------------
