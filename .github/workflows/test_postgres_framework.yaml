@@ -36,7 +36,7 @@ jobs:
       - name: Install psycopg2
         run: pip install psycopg2
       - name: Install pytest
-        run: pip install pytest pytest-cov
+        run: pip install pytest pytest-cov mock
       - name: Install extra dependencies
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
