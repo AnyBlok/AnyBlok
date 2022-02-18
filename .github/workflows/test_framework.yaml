@@ -149,7 +149,7 @@ jobs:
           ANYBLOK_DATABASE_PASSWORD: root
         run: pytest anyblok/tests/test_authorization.py
       - name: Drop db
-        run: mysql -U root -e 'DROP DATABASE anyblok_test;'
+        run: mysql --user root --password root -e 'DROP DATABASE anyblok_test;'
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
