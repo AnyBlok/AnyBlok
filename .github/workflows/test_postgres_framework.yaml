@@ -1,12 +1,23 @@
 name: Tests framework for postgres
-on: [push, pull_request]
+on: 
+  push:
+    paths-ignore:
+      - 'docs/**'
+    branches:
+      - main
+    tags:
+      - *
+  pull_request:
+    branches:
+      - '!releases/**'
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        # python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.10']
     services:
       postgres:
         image: postgres:latest
@@ -48,4 +59,4 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
-        run: pytest --cov=anyblok anyblok/tests/
+        run: pytest --cov=anyblok anyblok/tests/test_authorization.py
