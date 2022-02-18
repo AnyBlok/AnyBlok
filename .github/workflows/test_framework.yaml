@@ -16,8 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # python-version: ['3.7', '3.8', '3.9', '3.10']
-        python-version: ['3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10']
     services:
       postgres:
         image: postgres:latest
@@ -59,7 +58,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
-        run: pytest anyblok/tests/test_authorization.py
+        run: pytest anyblok/tests
       - name: Generate lcov
         run: coverage-lcov
       - name: Coveralls
@@ -114,7 +113,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: root
           ANYBLOK_DATABASE_PASSWORD: root
-        run: pytest anyblok/tests/test_authorization.py
+        run: pytest anyblok/tests
       - name: Generate lcov
         run: coverage-lcov
       - name: Coveralls
@@ -166,7 +165,7 @@ jobs:
           ANYBLOK_DATABASE_USER: sa
           ANYBLOK_DATABASE_PASSWORD: dbatools.I0
           ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
-        run: pytest anyblok/tests/test_authorization.py
+        run: pytest anyblok/tests
       - name: Generate lcov
         run: coverage-lcov
       - name: Coveralls
