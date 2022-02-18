@@ -152,6 +152,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install graphviz package
         run: bash .ci/install_graphviz.sh
+      - name: Install mssql package
+        run: bash .ci/install_mssql.sh
       - name: Install Wheel
         run: pip install -U pip wheel
       - name: Install pyodbc
