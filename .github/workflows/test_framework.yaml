@@ -210,7 +210,7 @@ jobs:
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
         run: pip install .
-      - name: Run tests
+      - name: Run Frameworks tests
         env:
           ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
           ANYBLOK_DATABASE_NAME: anyblok_test
@@ -220,6 +220,28 @@ jobs:
           ANYBLOK_DATABASE_PASSWORD: dbatools.I0
           ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
         run: pytest anyblok/tests/test_authorization.py
+      - name: Drop db
+        run: sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "DROP DATABASE anyblok_test;"
+      - name: Run anyblok_createdb
+        env:
+          ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 1433
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: sa
+          ANYBLOK_DATABASE_PASSWORD: dbatools.I0
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
+        run: anyblok_createdb --install-all-bloks  --with-demo
+      - name: Run bloks tests
+        env:
+          ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 1433
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: sa
+          ANYBLOK_DATABASE_PASSWORD: dbatools.I0
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
+        run: pytest --cov-append anyblok/bloks/anyblok_core
       - name: Generate lcov
         run: coverage-lcov
       - name: Coveralls
