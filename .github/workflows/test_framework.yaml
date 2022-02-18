@@ -66,6 +66,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           flag-name: ${{ github.job }}
+          path-to-lcov: coverage.xml
   MySQL:
     runs-on: ubuntu-latest
     strategy:
@@ -112,7 +113,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           flag-name: ${{ github.job }}
-          path--to-lcov: coverage.xml
+          path-to-lcov: coverage.xml
   finish:
     needs: [Postgres, MySQL]
     runs-on: ubuntu-20.04
@@ -122,4 +123,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
-          path--to-lcov: coverage.xml
+          path-to-lcov: coverage.xml
