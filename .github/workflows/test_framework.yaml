@@ -78,6 +78,7 @@ jobs:
         image: mysql:latest
         env:
           MYSQL_DATABASE: sqlalchemy_utils_test
+          MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
     steps:
