@@ -136,10 +136,9 @@ jobs:
         image: mcr.microsoft.com/mssql/server:2017-latest
         env:
           ACCEPT_EULA: Y
-          SA_PASSWORD: Strong_Passw0rd
         # Set health checks to wait until SQL Server has started
         options: >-
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${SA_PASSWORD} -Q 'SELECT 1;' -b"
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P password -Q 'SELECT 1;' -b"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -165,12 +164,13 @@ jobs:
         run: pip install .
       - name: Run tests
         env:
-          ANYBLOK_DATABASE_DRIVER: mysql
+          ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
           ANYBLOK_DATABASE_NAME: sqlalchemy_utils_test
           ANYBLOK_DATABASE_PORT: 1433
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: sa
           ANYBLOK_DATABASE_PASSWORD: password
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'\
         run: pytest anyblok/tests/test_authorization.py
       - name: Generate lcov
         run: coverage-lcov
