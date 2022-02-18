@@ -59,7 +59,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
-        run: pytest --cov=anyblok anyblok/tests/test_authorization.py
+        run: pytest --cov=anyblok --cov-report xml  anyblok/tests/test_authorization.py
       - name: Coveralls
         uses: coverallsapp/github-action@1.1.3
         with:
