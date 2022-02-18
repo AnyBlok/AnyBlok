@@ -112,14 +112,14 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: root
           ANYBLOK_DATABASE_PASSWORD: root
-        run: pytest --cov-report LCOV anyblok/tests/test_authorization.py::TestAuthorizationDeclaration::test_association
+        run: pytest anyblok/tests/test_authorization.py::TestAuthorizationDeclaration::test_association
       - name: Coveralls
         uses: coverallsapp/github-action@1.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           flag-name: ${{ github.job }}
-          path-to-lcov: coverage.xml
+          path-to-lcov: .coverage
 
             #   finish:
             #     needs: [Postgres, MySQL]
