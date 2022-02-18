@@ -49,4 +49,5 @@ jobs:
           ANYBLOK_DATABASE_NAME: sqlalchemy_utils_test
           ANYBLOK_DATABASE_PORT: 3306
           ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: root
         run: pytest --cov=anyblok anyblok/tests/test_authorization.py
