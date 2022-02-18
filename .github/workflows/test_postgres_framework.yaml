@@ -4,7 +4,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         # python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
         python-version: ['3.10']
@@ -45,4 +45,4 @@ jobs:
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
           ANYBLOK_DATABASE_NAME: sqlalchemy_utils_test
-        run: pytest --cov=anyblok anyblok/tests
+        run: pytest --cov=anyblok anyblok/tests/test_authorization.py
