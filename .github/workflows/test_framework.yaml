@@ -164,7 +164,7 @@ jobs:
         run: pip install .
       - name: Run tests
         env:
-          ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
+          ANYBLOK_DATABASE_DRIVER: 'mssql+pyodbc'
           ANYBLOK_DATABASE_NAME: sqlalchemy_utils_test
           ANYBLOK_DATABASE_PORT: 1433
           ANYBLOK_DATABASE_HOST: localhost
