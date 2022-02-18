@@ -82,7 +82,6 @@ jobs:
           MYSQL_USER: root
           MYSQL_PASSWORD: root
           MYSQL_ROOT_PASSWORD: rootpassword
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
         ports:
           - 3306:3306
     steps:
@@ -103,8 +102,8 @@ jobs:
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
         run: pip install .
-      - name: Set up MySQL
-        run: sudo /etc/init.d/mysql start
+          # - name: Set up MySQL
+          #   run: sudo /etc/init.d/mysql start
       - name: Run tests
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
