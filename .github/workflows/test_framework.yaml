@@ -145,17 +145,6 @@ jobs:
     services:
       mssql:
         image: mcr.microsoft.com/mssql/server:2017-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: password
-        # Set health checks to wait until SQL Server has started
-        options: >-
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${SA_PASSWORD} -Q 'SELECT 1;' -b"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 1433:1433
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
