@@ -131,26 +131,18 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.10']
-    services:
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2019-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: password
-        # Set health checks to wait until SQL Server has started
-        options: >-
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${SA_PASSWORD} -Q 'SELECT 1;' -b"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 1433:1433
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Run the action
+        uses: potatoqualitee/mssqlsuite@v1
+        with:
+          install: sqlengine, sqlpackage
+      - name: Run sqlclient
+        run: sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "SELECT @@version;"
       - name: Install graphviz package
         run: bash .ci/install_graphviz.sh
       - name: Install mssql package
