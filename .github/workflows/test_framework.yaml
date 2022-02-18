@@ -16,14 +16,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        # python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.10']
     services:
       postgres:
         image: postgres:latest
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: sqlalchemy_utils_test
+          POSTGRES_DB: anyblok_test
         # Set health checks to wait until PostgreSQL has started
         options: >-
           --health-cmd pg_isready
@@ -50,15 +51,54 @@ jobs:
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
         run: pip install .
-      - name: Run tests
+      - name: Run framework tests
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: sqlalchemy_utils_test
+          ANYBLOK_DATABASE_NAME: anyblok_test
           ANYBLOK_DATABASE_PORT: 5432
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
-        run: pytest anyblok/tests
+        run: pytest anyblok/tests/test_authorization.py
+      - name: Drop db
+        env:
+          PGHOST: localhost
+          PGPASSWORD: postgres
+          PGPORT: 5432
+        run: psql -U postgres -c 'DROP DATABASE anyblok_test;'
+      - name: Drop db
+        env:
+          PGHOST: localhost
+          PGPASSWORD: postgres
+          PGPORT: 5432
+        run: psql -U postgres -c 'DROP DATABASE anyblok_test;'
+      - name: Run anyblok_createdb
+        env:
+          ANYBLOK_DATABASE_DRIVER: postgresql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 5432
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: postgres
+          ANYBLOK_DATABASE_PASSWORD: postgres
+        run: anyblok_createdb --install-all-bloks  --with-demo
+      - name: Run anyblok_updatedb
+        env:
+          ANYBLOK_DATABASE_DRIVER: postgresql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 5432
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: postgres
+          ANYBLOK_DATABASE_PASSWORD: postgres
+        run: anyblok_updatedb --update-all-bloks
+      - name: Run bloks tests
+        env:
+          ANYBLOK_DATABASE_DRIVER: postgresql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 5432
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: postgres
+          ANYBLOK_DATABASE_PASSWORD: postgres
+        run: pytest --cov-append anyblok/bloks/anyblok_core
       - name: Generate lcov
         run: coverage-lcov
       - name: Coveralls
@@ -79,7 +119,7 @@ jobs:
       mysql:
         image: mysql:latest
         env:
-          MYSQL_DATABASE: sqlalchemy_utils_test
+          MYSQL_DATABASE: anyblok_test
           MYSQL_USER: root
           MYSQL_PASSWORD: root
           MYSQL_ROOT_PASSWORD: rootpassword
@@ -108,12 +148,12 @@ jobs:
       - name: Run tests
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
-          ANYBLOK_DATABASE_NAME: sqlalchemy_utils_test
+          ANYBLOK_DATABASE_NAME: anyblok_test
           ANYBLOK_DATABASE_PORT: 3306
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: root
           ANYBLOK_DATABASE_PASSWORD: root
-        run: pytest anyblok/tests
+        run: pytest anyblok/tests/test_authorization.py
       - name: Generate lcov
         run: coverage-lcov
       - name: Coveralls
@@ -159,13 +199,13 @@ jobs:
       - name: Run tests
         env:
           ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
-          ANYBLOK_DATABASE_NAME: sqlalchemy_utils_test
+          ANYBLOK_DATABASE_NAME: anyblok_test
           ANYBLOK_DATABASE_PORT: 1433
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: sa
           ANYBLOK_DATABASE_PASSWORD: dbatools.I0
           ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
-        run: pytest anyblok/tests
+        run: pytest anyblok/tests/test_authorization.py
       - name: Generate lcov
         run: coverage-lcov
       - name: Coveralls

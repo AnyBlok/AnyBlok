@@ -215,6 +215,8 @@ class TestJsonRelated:
             Test.name.cast(types.String) == '"jssuzanne"')
         assert query.count()
 
+    @pytest.mark.skipif(sgdb_in(['MariaDB', 'MsSQL']),
+                        reason='JSON is not existing in this SGDB')
     def test_with_subquery(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
