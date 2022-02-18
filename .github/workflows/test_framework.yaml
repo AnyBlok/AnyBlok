@@ -102,8 +102,8 @@ jobs:
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
         run: pip install .
-          # - name: Set up MySQL
-          #   run: sudo /etc/init.d/mysql start
+      - name: Set up MySQL
+        run: sudo /etc/init.d/mysql start
       - name: Run tests
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
