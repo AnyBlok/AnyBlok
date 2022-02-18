@@ -9,7 +9,7 @@ on:
       - *
   pull_request:
     branches:
-      - '!releases/**'
+      - '*'
 jobs:
   test:
     runs-on: ubuntu-latest
