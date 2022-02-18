@@ -142,7 +142,7 @@ jobs:
         with:
           install: sqlengine, sqlpackage
       - name: Run sqlclient
-        run: sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "SELECT @@version;"
+        run: sqlcmd -S localhost -U sa -P password -d mssql -Q "SELECT @@version;"
       - name: Install graphviz package
         run: bash .ci/install_graphviz.sh
       - name: Install mssql package
