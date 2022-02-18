@@ -66,12 +66,6 @@ jobs:
           PGPASSWORD: postgres
           PGPORT: 5432
         run: psql -U postgres -c 'DROP DATABASE anyblok_test;'
-      - name: Drop db
-        env:
-          PGHOST: localhost
-          PGPASSWORD: postgres
-          PGPORT: 5432
-        run: psql -U postgres -c 'DROP DATABASE anyblok_test;'
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
