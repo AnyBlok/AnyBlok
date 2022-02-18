@@ -49,5 +49,5 @@ jobs:
           ANYBLOK_DATABASE_PORT: 3306
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: root
-          ANYBLOK_DATABASE_PASSWORD: password
+          ANYBLOK_DATABASE_PASSWORD: root
         run: pytest --cov=anyblok anyblok/tests/test_authorization.py
