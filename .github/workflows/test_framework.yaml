@@ -164,13 +164,13 @@ jobs:
         run: pip install .
       - name: Run tests
         env:
-          ANYBLOK_DATABASE_DRIVER: 'mssql+pyodbc'
+          ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
           ANYBLOK_DATABASE_NAME: sqlalchemy_utils_test
           ANYBLOK_DATABASE_PORT: 1433
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: sa
           ANYBLOK_DATABASE_PASSWORD: password
-          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'\
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
         run: pytest anyblok/tests/test_authorization.py
       - name: Generate lcov
         run: coverage-lcov
