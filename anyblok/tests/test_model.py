@@ -247,7 +247,7 @@ class TestModel2:
         test = registry.System.Model.query().get('Model.Test')
         assert str(test) == 'Model.Test'
 
-    def test_deprecated_registry_attribute(self):
+    def test_deprecated_registry_attribute_getter(self):
         with pytest.warns(DeprecationWarning):
             registry = self.init_registry(simple_model)
             self.check_registry(registry.Test)
@@ -257,6 +257,26 @@ class TestModel2:
             assert registry.System.Model.registry is not registry
             t2 = registry.Test.query().first()
             registry.System.Model.registry.refresh(t2)
+
+    def test_deprecated_registry_attribute_setter_1(self):
+        with pytest.warns(DeprecationWarning):
+            registry = self.init_registry(simple_model)
+            self.check_registry(registry.Test)
+            assert registry.System.registry.foo is None
+            assert registry.System.anyblok.foo is None
+            registry.System.registry.foo = 'bar'
+            assert registry.System.registry.foo == 'bar'
+            assert registry.System.anyblok.foo == 'bar'
+
+    def test_deprecated_registry_attribute_setter_2(self):
+        with pytest.warns(DeprecationWarning):
+            registry = self.init_registry(simple_model)
+            self.check_registry(registry.Test)
+            assert registry.System.Model.registry.foo is None
+            assert registry.System.Model.anyblok.foo is None
+            registry.System.registry.foo = 'bar'
+            assert registry.System.Model.registry.foo == 'bar'
+            assert registry.System.Model.anyblok.foo == 'bar'
 
     def test_model_is_assembled(self):
         with LogCapture('anyblok.registry', level=DEBUG) as logs:

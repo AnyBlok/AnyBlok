@@ -1107,7 +1107,7 @@ class Selection(Column):
             # can add new entry
             return []
 
-        if sgdb_in(Model.get_engine(), ['MariaDB', 'MsSQL']):
+        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL', 'MySQL']):
             # No check constraint in MariaDB
             return []
 

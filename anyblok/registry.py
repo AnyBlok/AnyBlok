@@ -441,6 +441,16 @@ class DeprecatedClassProperty:
             DeprecationWarning, stacklevel=2)
         return getattr(self.registry, key, **kw)
 
+    def __setattr__(self, key, value):  # pragma: no cover
+        if key == 'registry':
+            return super().__setattr__(key, value)
+
+        warnings.warn(
+            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
+            "own 'registry' attribute. Replace it by 'anyblok' attribute",
+            DeprecationWarning, stacklevel=2)
+        return setattr(self.registry, key, value)
+
 
 def declarative_base(
     bind=None,

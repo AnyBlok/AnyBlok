@@ -585,8 +585,8 @@ class TestMany2OneOld:
 
                 id = Integer(primary_key=True)
 
-            @register(Model)  # noqa
-            class Test:
+            @register(Model)
+            class Test:  # noqa
 
                 parent = Many2One(model='Model.Test', one2many='children')
 
@@ -595,6 +595,23 @@ class TestMany2OneOld:
         t2 = registry.Test.insert(parent=t1)
         assert t2.parent is t1
         assert t1.children[0] is t2
+
+    def test_with_primary_key_eq_False(self):
+        def add_in_registry():
+
+            @register(Model)
+            class Test1:
+
+                id = Integer(primary_key=True)
+                id2 = Integer(primary_key=False)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                parent = Many2One(model='Model.Test1')
+
+        self.init_registry(add_in_registry)
 
     def test_same_model_pk_by_mixin(self):
         def add_in_registry():
