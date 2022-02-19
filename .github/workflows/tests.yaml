@@ -253,7 +253,7 @@ jobs:
           path-to-lcov: lcov.info
 
   finish:
-    needs: [Postgres, MySQL]
+    needs: [Postgres, MySQL, MsSQL]
     runs-on: ubuntu-20.04
     steps:
       - name: Coveralls Finished
