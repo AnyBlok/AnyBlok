@@ -5,6 +5,7 @@ on:
       - 'docs/**'
     branches:
       - main
+      - master
     tags:
       - '**'
   pull_request:
