@@ -13,6 +13,7 @@ from anyblok.config import (
     add_configuration_file,
     add_plugins,
     add_database,
+    add_named_database,
     add_install_bloks,
     add_uninstall_bloks,
     add_update_bloks,
@@ -27,10 +28,12 @@ from anyblok.config import (
     AnyBlokPlugin,
     define_preload_option,
     get_url,
+    named_engine_config_get,
     get_db_name,
     is_none,
     cast_value,
     nargs_type,
+    named_engine_type,
 )
 from anyblok.testing import tmp_configuration
 from sqlalchemy.engine.url import make_url
@@ -569,6 +572,44 @@ class TestConfiguration:
         parser.add_argument('--value', dest='value', nargs="+", default='1, 2')
         assert Configuration.get('value') == ['1', '2']
 
+    def test_add_argument_named_engine_type_str(self):
+        parser = self.get_parser()
+        parser.add_argument(
+            '--value', dest='value',
+            type=named_engine_type(),
+            default='foo=>bar')
+        assert Configuration.get('value') == ('foo', 'bar')
+
+    def test_add_argument_named_engine_type_int(self):
+        parser = self.get_parser()
+        parser.add_argument(
+            '--value', dest='value',
+            type=named_engine_type(int),
+            default='foo=>1')
+        assert Configuration.get('value') == ('foo', 1)
+
+    def test_add_argument_named_engine_type_str_with_nargs(self):
+        parser = self.get_parser()
+        parser.add_argument(
+            '--value', dest='value',
+            nargs="+", type=named_engine_type(),
+            default='foo=>bar')
+        assert Configuration.get('value') == [('foo', 'bar')]
+
+    def test_add_argument_named_engine_type_str_with_default(self):
+        parser = self.get_parser()
+        parser.add_argument(
+            '--value', dest='value',
+            type=named_engine_type(default='bar'))
+        assert Configuration.configuration['value'].type.default == 'bar'
+
+    def test_add_argument_named_engine_type_str_with_default_and_nargs(self):
+        parser = self.get_parser()
+        parser.add_argument(
+            '--value', dest='value',
+            nargs="+", type=named_engine_type(default='bar'))
+        assert Configuration.configuration['value'].type.default == 'bar'
+
     def test_default_str(self):
         parser = self.get_parser()
         parser.add_argument('--value', dest='value', default='1')
@@ -587,7 +628,8 @@ class TestConfiguration:
             Configuration.applications['test_add_application_properties'] ==
             {
                 'configuration_groups': [
-                    'config', 'database', 'plugins', 'logging'],
+                    'config', 'database', 'named-database', 'plugins',
+                    'logging'],
                 'description': 'Just a test'
             })
 
@@ -627,6 +669,7 @@ class TestConfigurationOption:
         'add_configuration_file': add_configuration_file,
         'add_plugins': add_plugins,
         'add_database': add_database,
+        'add_named_database': add_named_database,
         'add_install_bloks': add_install_bloks,
         'add_uninstall_bloks': add_uninstall_bloks,
         'add_update_bloks': add_update_bloks,
@@ -646,6 +689,9 @@ class TestConfigurationOption:
 
     def test_add_database(self, group):
         self.function['add_database'](group)
+
+    def test_add_named_database(self, group):
+        self.function['add_named_database'](group)
 
     def test_add_install_bloks(self, parser):
         self.function['add_install_bloks'](parser)
@@ -673,3 +719,24 @@ class TestConfigurationOption:
 
     def test_add_install_or_update_bloks(self, parser):
         self.function['add_install_or_update_bloks'](parser)
+
+
+class TestConfiguration2:
+
+    @pytest.fixture(autouse=True)
+    def reset_conf(self, configuration_loaded):
+        pass
+
+    def test_named_engine_config_1(self):
+        with tmp_configuration(db_name="foo"):
+            assert named_engine_config_get('db_name', 'main', None) == 'foo'
+
+    def test_named_engine_config_2(self):
+        with tmp_configuration(named_engine_db_name="foo=>bar"):
+            assert named_engine_config_get('db_name', 'foo', None) == 'bar'
+
+    def test_named_engine_config_3(self):
+        assert named_engine_config_get('db_name', 'foo', None) is None
+
+    def test_named_engine_config_4(self):
+        assert named_engine_config_get('db_name', 'foo', 'bar') == 'bar'

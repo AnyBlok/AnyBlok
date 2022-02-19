@@ -26,17 +26,18 @@ class TestBlok(Blok):
         reload(test)
 
     def is_table_exist(self):
-        engine = self.anyblok.engine
+        engine = self.anyblok.named_engines['main']
+        bind = self.anyblok.named_binds['main']
         if sgdb_in(engine, ['PostgreSQL']):
             return bool(self.anyblok.execute("""
                 select count(*)
                 from pg_catalog.pg_tables
                 where tablename = 'test';
-            """).fetchone()[0])
+            """, session_bind=bind).fetchone()[0])
         elif sgdb_in(engine, ['MySQL']):
             return bool(self.anyblok.execute("""
                 show tables like 'test';
-            """).fetchall())
+            """, session_bind=bind).fetchall())
         elif sgdb_in(engine, ['MsSQL']):
             query = """
                 SELECT count(*)
@@ -45,7 +46,8 @@ class TestBlok(Blok):
                       AND TABLE_CATALOG='%s'
                       AND TABLE_NAME='test'
             """ % self.anyblok.db_name
-            return bool(self.anyblok.execute(query).fetchall()[0][0])
+            return bool(self.anyblok.execute(
+                query, session_bind=bind).fetchall()[0][0])
 
     def pre_migration(self, latest_version):
         self.__class__.table_exist_before_automigration = self.is_table_exist()

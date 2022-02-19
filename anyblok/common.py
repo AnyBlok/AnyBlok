@@ -180,14 +180,17 @@ def apply_cache(attr, method, registry, namespace, base, properties):
     return {}
 
 
-DATABASES_CACHED = {}
+DATABASES_CACHED_BY_DRIVERNAME = {}
 
 
 def sgdb_in(engine, databases):
+    drivername = engine.url.drivername
+    DATABASES_CACHED = DATABASES_CACHED_BY_DRIVERNAME.setdefault(
+        drivername, {})
     for database in databases:
         if database not in DATABASES_CACHED:
             DATABASES_CACHED[database] = False
-            if engine.url.drivername.startswith('mysql'):
+            if drivername.startswith('mysql'):
                 if database == 'MySQL':
                     DATABASES_CACHED['MySQL'] = True
 
@@ -200,12 +203,12 @@ def sgdb_in(engine, databases):
                         DATABASES_CACHED[database] = True  # pragma: no cover
 
             if (
-                engine.url.drivername.startswith('postgres') and
+                drivername.startswith('postgres') and
                 database == 'PostgreSQL'
             ):
                 DATABASES_CACHED['PostgreSQL'] = True
             if (
-                engine.url.drivername.startswith('mssql') and
+                drivername.startswith('mssql') and
                 database == 'MsSQL'
             ):
                 DATABASES_CACHED['MsSQL'] = True

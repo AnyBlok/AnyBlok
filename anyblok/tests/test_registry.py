@@ -18,6 +18,7 @@ from anyblok.config import Configuration
 from anyblok.blok import BlokManager, Blok
 from anyblok.column import Integer
 from anyblok.environment import EnvironmentManager
+from anyblok.testing import tmp_configuration
 from anyblok import start
 from threading import Thread
 from logging import ERROR
@@ -844,7 +845,7 @@ class TestRegistry3:
         registry.additional_setting[
             'anyblok.engine.event'] = additional_setting
         with pytest.raises(FakeException):
-            registry.apply_engine_events(registry.rw_engine)
+            registry.apply_engine_events(registry.named_engines['main'])
 
         additional_setting.remove(fake_event)
 
@@ -858,3 +859,18 @@ class TestRegistry3:
         registry = registry_blok
         assert registry.apply_state(
             'anyblok-core', 'installed', ['installed']) is None
+
+    def test_get_engine_names_1(self, registry_blok):
+        assert registry_blok.get_engine_names() == ['main']
+
+    def test_get_engine_names_2(self, registry_blok):
+        with tmp_configuration(named_engines='foo'):
+            assert registry_blok.get_engine_names() == ['foo', 'main']
+
+    def test_get_engine_names_3(self, registry_blok):
+        with tmp_configuration(named_engines='foo,bar'):
+            assert registry_blok.get_engine_names() == ['bar', 'foo', 'main']
+
+    def test_get_engine_names_4(self, registry_blok):
+        with tmp_configuration(named_engines=['foo', 'bar']):
+            assert registry_blok.get_engine_names() == ['bar', 'foo', 'main']

@@ -104,7 +104,7 @@ class Sequence:
         """ Create the sequence to determine name """
         super(Sequence, cls).initialize_model()
         seq = SQLASequence(cls._cls_seq_name)
-        seq.create(cls.anyblok.bind)
+        seq.create(cls.get_bind())
 
         to_create = getattr(cls.anyblok,
                             '_need_sequence_to_create_if_not_exist', ())
@@ -140,7 +140,7 @@ class Sequence:
                 values['seq_name'] = seq_name
 
             seq = SQLASequence(seq_name, start=start)
-            seq.create(cls.anyblok.bind)
+            seq.create(cls.get_bind())
         return values
 
     @classmethod

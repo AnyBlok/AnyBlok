@@ -10,7 +10,7 @@
 import pytest
 from anyblok.tests.testcase import LogCapture
 from logging import DEBUG
-from anyblok.registry import RegistryManager
+from anyblok.registry import RegistryManager, RegistryException
 from anyblok.environment import EnvironmentManager
 from anyblok.model import (has_sql_fields, get_fields, ModelException,
                            has_sqlalchemy_fields)
@@ -230,6 +230,17 @@ class TestModel2:
         assert registry.System.Model.anyblok is registry
         t2 = registry.Test.query().first()
         registry.System.Model.anyblok.refresh(t2)
+
+    def test_with_unknown_named_engine(self):
+
+        def add_in_registry():
+
+            @register(Model, engine_name='unknown')
+            class Test:
+                id = Integer(primary_key=True)
+
+        with pytest.raises(RegistryException):
+            self.init_registry(add_in_registry)
 
     def test_str(self):
         registry = self.init_registry(simple_model)

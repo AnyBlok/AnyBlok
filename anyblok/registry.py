@@ -14,13 +14,14 @@ from sqlalchemy import create_engine, event, MetaData, text
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
                             InvalidRequestError)
-from sqlalchemy_utils.functions import database_exists
-from .config import Configuration, get_url
+from sqlalchemy_utils.functions import database_exists, create_database
+from .config import Configuration, get_url, named_engine_config_get
 from .migration import Migration
 from .blok import BlokManager
 from .environment import EnvironmentManager
 from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
-from anyblok.common import anyblok_column_prefix, naming_convention
+from anyblok.common import (
+    anyblok_column_prefix, naming_convention, return_list)
 from pkg_resources import iter_entry_points
 from .version import parse_version
 from .logging import log
@@ -489,7 +490,7 @@ class Registry:
         self.loadwithoutmigration = loadwithoutmigration
         self.unittest = unittest
         self.additional_setting = kwargs
-        self.init_engine(db_name=db_name)
+        self.init_engines(db_name=db_name)
         self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
             'anyblok': self,
@@ -505,36 +506,53 @@ class Registry:
 
     def init_bind(self):
         """Initialize the bind"""
+        self.named_unittest_transaction = {}
+        self.named_binds = {}
         if self.unittest:
-            self.bind = self.engine.connect()
-            self.unittest_transaction = self.bind.begin()
+            for name, engine in self.named_engines.items():
+                bind = engine.connect()
+                self.named_unittest_transaction[name] = bind.begin()
+                self.named_binds[name] = bind
         else:
-            self.bind = self.engine
-            self.unittest_transaction = None
+            for name, engine in self.named_engines.items():
+                self.named_binds[name] = engine
 
-    def init_engine_options(self, url):
+    def init_engine_options(self, url, engine_name):
         """Define the options to initialize the engine"""
         return dict(
-            echo=Configuration.get('db_echo') or False,
-            max_overflow=Configuration.get('db_max_overflow') or 10,
-            echo_pool=Configuration.get('db_echo_pool') or False,
-            pool_size=Configuration.get('db_pool_size') or 5,
+            echo=named_engine_config_get(
+                'db_echo', engine_name, False) or False,
+            max_overflow=named_engine_config_get(
+                'db_max_overflow', engine_name, 10) or 10,
+            echo_pool=named_engine_config_get(
+                'db_echo_pool', engine_name, False) or False,
+            pool_size=named_engine_config_get(
+                'db_pool_size', engine_name, 5) or 5,
             isolation_level=self.additional_setting.get(
                 'isolation_level',
                 Configuration.get('isolation_level', 'READ_UNCOMMITTED')
             ),
+            future=True,
         )
 
-    def init_engine(self, db_name=None):
+    def ensure_db_schema_existe(self, url):
+        if not database_exists(url):
+            create_database(url)
+
+    def init_engines(self, db_name=None):
         """Define the engine
 
         :param db_name: name of the database to link
         """
-        url = Configuration.get('get_url', get_url)(db_name=db_name)
-        kwargs = self.init_engine_options(url)
-        kwargs['future'] = True
-        self.rw_engine = create_engine(url, **kwargs)
-        self.apply_engine_events(self.rw_engine)
+        self.named_engines = {}
+        for engine_name in self.get_engine_names():
+            url = Configuration.get('get_url', get_url)(
+                db_name=db_name, engine_name=engine_name)
+            self.ensure_db_schema_existe(url)
+            kwargs = self.init_engine_options(url, engine_name)
+            engine = create_engine(url, **kwargs)
+            self.apply_engine_events(engine)
+            self.named_engines[engine_name] = engine
 
     def apply_engine_events(self, engine):
         """Add engine events
@@ -557,11 +575,6 @@ class Registry:
         for funct in self.additional_setting.get('anyblok.engine.event', []):
             logger.info('Update engine event %r' % funct)
             funct(engine)
-
-    @property
-    def engine(self):
-        """property to get the engine"""
-        return self.rw_engine
 
     def ini_var(self):
         """ Initialize the var to load the registry """
@@ -587,11 +600,12 @@ class Registry:
         self.ignore_migration_for = {}
 
     @classmethod
-    def db_exists(cls, db_name=None):
+    def db_exists(cls, db_name=None, engine_name='main'):
         if not db_name:
             raise RegistryException('db_name is required')
 
-        url = Configuration.get('get_url', get_url)(db_name=db_name)
+        url = Configuration.get('get_url', get_url)(
+            db_name=db_name, engine_name=engine_name)
         return database_exists(url)
 
     def listen_sqlalchemy_known_event(self):
@@ -643,7 +657,8 @@ class Registry:
         query += " FROM system_blok"
         query += " WHERE state in ('%s')" % "', '".join(states)
         try:
-            res = self.execute(text(query), fetchall=True)
+            bind = self.named_binds['main']
+            res = self.execute(text(query), fetchall=True, session_bind=bind)
         except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
             pass
@@ -887,8 +902,10 @@ class Registry:
                 where name in ('%s')
                 and state = 'uninstalled'""" % "', '".join(
                 dependencies_to_install)
+
+            bind = self.named_binds['main']
             try:
-                self.execute(query)
+                self.execute(query, session_bind=bind)
             except (ProgrammingError, OperationalError):  # pragma: no cover
                 pass
 
@@ -898,7 +915,11 @@ class Registry:
 
     def execute(self, *args, **kwargs):
         fetchall = kwargs.pop('fetchall', False)
+        session_bind = kwargs.pop('session_bind', None)
         if self.Session:
+            if session_bind:
+                kwargs['bind'] = session_bind
+
             res = self.session.execute(*args, **kwargs)
             if fetchall:
                 return res.fetchall()
@@ -906,7 +927,7 @@ class Registry:
             return res
         else:
             conn = None
-            with self.engine.connect() as conn:
+            with self.named_engines['main'].connect() as conn:
                 res = conn.execute(*args, **kwargs)
                 if fetchall:
                     return res.fetchall()
@@ -963,7 +984,11 @@ class Registry:
         in function of the Core Session class ans the Core Qery class
         """
         if self.Session is None or self.must_recreate_session_factory():
-            bind = self.bind
+            binds = {
+                x: x.get_bind()
+                for x in self.loaded_namespaces.values()
+                if x.is_sql
+            }
             if self.Session:
                 if not self.withoutautomigration:
                     # this is the only case to use commit in the construction
@@ -981,9 +1006,10 @@ class Registry:
             Session = type('Session', tuple(session_bases), {
                 'registry_query': Query})
 
+            sm = sessionmaker(class_=Session, future=True)
+            sm.configure(binds=binds)
             self.Session = scoped_session(
-                sessionmaker(bind=bind, class_=Session, future=True),
-                EnvironmentManager.scoped_function_for_session())
+                sm, EnvironmentManager.scoped_function_for_session())
 
             self.nb_query_bases = len(self.loaded_cores['Query'])
             self.nb_session_bases = len(self.loaded_cores['Session'])
@@ -1071,8 +1097,9 @@ class Registry:
                 i.load()(self.session)  # pragma: no cover
 
         _apply_session_events('anyblok.session.event')
-        _apply_session_events(
-            'anyblok.session.event.' + self.engine.dialect.name)
+        # TODO
+        # _apply_session_events(
+        #     'anyblok.session.event.' + self.engine.dialect.name)
 
         for funct in self.additional_setting.get('anyblok.session.event', []):
             logger.info('Update session event %r' % funct)
@@ -1101,18 +1128,25 @@ class Registry:
         if self.loadwithoutmigration:
             return
 
+        engine_name = self.System.Blok.engine_name
         if not self.withoutautomigration and blok2install == 'anyblok-core':
-            self.declarativebase.metadata.tables['system_blok'].create(
-                bind=self.connection(), checkfirst=True)
+            self.declarativebase.metadata.tables[
+                'system_blok'].create(bind=self.connection(), checkfirst=True)
 
-        self.migration = Configuration.get('Migration', Migration)(self)
+        self.named_migrations = {}
+        for name in self.named_engines:
+            self.named_migrations[name] = Configuration.get(
+                'Migration', Migration)(self, engine_name=name)
+
         query = """
             SELECT name, installed_version
             FROM system_blok
             WHERE
                 (state = 'toinstall' AND name = '%s')
                 OR state = 'toupdate'""" % blok2install
-        res = self.execute(query, fetchall=True)
+
+        res = self.execute(query, fetchall=True,
+                           bind=self.named_binds[engine_name])
         if res:
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
@@ -1122,11 +1156,25 @@ class Registry:
                     else None)
                 b.pre_migration(parsed_version)
 
-            self.migration.auto_upgrade_database(schema_only=True)
+            self.do_migration(schema_only=True)
             if not self.withoutautomigration:
-                self.declarativebase.metadata.create_all(self.connection())
+                table_binds = {
+                    x.__table__: x.get_bind()
+                    for x in self.loaded_namespaces.values()
+                    if x.is_sql
+                }
+                for Table in self.declarativebase.metadata.sorted_tables:
+                    bind = table_binds.get(Table)
+                    if not bind:
+                        bind = self.named_binds[Table.info['engine_name']]
 
-            self.migration.auto_upgrade_database()
+                    Table.create(bind=self.connection(bind=bind),
+                                 checkfirst=True)
+
+                self.declarativebase.metadata.create_all(
+                    self.connection(), tables=[])
+
+            self.do_migration()
 
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
@@ -1137,7 +1185,16 @@ class Registry:
                 b.post_migration(parsed_version)
 
         else:
-            self.migration.auto_upgrade_database()
+            self.do_migration(schema_only=True)
+            self.do_migration()
+
+    @log(logger, level='debug')
+    def do_migration(self, **kwargs):
+        for engine_name in self.named_migrations:
+            self.migration(engine_name).auto_upgrade_database(**kwargs)
+
+    def migration(self, engine_name='main'):
+        return self.named_migrations[engine_name]
 
     def is_reload_needed(self):
 
@@ -1248,26 +1305,28 @@ class Registry:
         After the call of this method the registry won't be usable
         you should use close method which call this method
         """
-
-        if self.unittest_transaction and self.unittest_transaction.is_active:
-            self.unittest_transaction.rollback()
+        for name, ut in self.named_unittest_transaction.items():
+            if ut.is_active:
+                ut.rollback()
 
         if self.Session:
             session = self.Session()
-            if not self.unittest_transaction:
+            if not self.named_unittest_transaction:
                 session.rollback()
 
             session.expunge_all()
             close_all_sessions()
 
-        if self.unittest_transaction:
-            self.unittest_transaction.close()
-            self.bind.close()
+        for name, ut in self.named_unittest_transaction.items():
+            ut.close()
+            self.named_binds[name].close()
 
     def close(self):
         """Release the session, connection and engine"""
         self.close_session()
-        self.engine.dispose()
+        for engine in self.named_engines.values():
+            engine.dispose()
+
         if self.db_name in RegistryManager.registries:
             del RegistryManager.registries[self.db_name]
 
@@ -1378,6 +1437,22 @@ class Registry:
                 logger.exception(str(e))
             finally:
                 _postcommit_hook.remove(hook)
+
+    def get_named_engine(self, engine_name):
+        if engine_name not in self.named_engines:
+            raise RegistryException(
+                "%r is not declared in the named engines" % engine_name)
+
+        return self.named_engines[engine_name]
+
+    def get_engine_names(self):
+        engines = {'main'}
+        for engine_name in return_list(Configuration.get('named_engines')):
+            engines.add(engine_name)
+
+        engines = list(engines)
+        engines.sort()
+        return engines
 
     @log(logger, level='debug')
     def commit(self, *args, **kwargs):
@@ -1492,7 +1567,9 @@ class Registry:
             blok.state, state, blok_name))
         Q = "UPDATE system_blok SET state='%s' where name='%s';" % (
             state, blok_name)
-        self.execute(Q)
+
+        bind = self.named_binds['main']
+        self.execute(Q, session_bind=bind)
         # blok.update(state=state)
 
     @log(logger, level='debug', withargs=True)

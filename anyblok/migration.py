@@ -103,11 +103,17 @@ class MigrationReport:
     def init_add_schema(self, diff):
         self.raise_if_withoutautomigration()
         _, schema = diff
+        if schema not in self.migration.bind_schemas:
+            return True  # pragma: no cover
+
         self.log_names.append('Add schema %s' % schema)
 
     def init_add_table(self, diff):
         self.raise_if_withoutautomigration()
         _, table = diff
+        if table not in self.migration.bind_tables:
+            return True
+
         table_name = (
             '%s.%s' % (table.schema, table.name)
             if table.schema else table.name)
@@ -116,6 +122,9 @@ class MigrationReport:
     def init_add_column(self, diff):
         self.raise_if_withoutautomigration()
         _, schema, table, column = diff
+        if column.table not in self.migration.bind_tables:
+            return True
+
         if self.ignore_migration_for(schema, table) is True:
             return True
 
@@ -186,6 +195,9 @@ class MigrationReport:
     def init_add_index(self, diff):
         self.raise_if_withoutautomigration()
         _, constraint = diff
+        if constraint.table not in self.migration.bind_tables:
+            return True
+
         if self.ignore_migration_for(constraint.table.schema,
                                      constraint.table.name) is True:
             return True  # pragma: no cover
@@ -465,7 +477,7 @@ class MigrationReport:
                 isinstance(newvalue, plugin.to_type) and
                 (
                     plugin.dialect is None or
-                    sgdb_in(self.migration.conn.engine, dialects)
+                    sgdb_in(self.migration.engine, dialects)
                 )
             ):
                 return plugin()
@@ -895,7 +907,7 @@ class MigrationColumn:
 
         table_ = migration.metadata.tables[table]
 
-        if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
+        if sgdb_in(self.table.migration.engine, ['MsSQL']):
             column.table = table_
 
         migration.operation.impl.add_column(self.table.name, column,
@@ -944,7 +956,7 @@ class MigrationColumn:
                 self.type if 'type_' not in kwargs else None),
             'existing_autoincrement': (
                 None
-                if not sgdb_in(self.table.migration.conn.engine,
+                if not sgdb_in(self.table.migration.engine,
                                ['MySQL', 'MariaDB'])
                 else kwargs.get(
                     'existing_autoincrement',
@@ -1005,7 +1017,7 @@ class MigrationColumn:
     def server_default(self):
         """ Use for unittest: return the default database value """
         sdefault = self.info.get('default', None)
-        if sgdb_in(self.table.migration.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.table.migration.engine, ['MySQL', 'MariaDB']):
             if sdefault:
                 if not isinstance(sdefault, str):
                     return sdefault.arg  # pragma: no cover
@@ -1161,7 +1173,7 @@ class MigrationConstraintPrimaryKey:
                 """To add a primary key constraint """
                 """you must define one or more columns""")
 
-        if sgdb_in(self.table.migration.conn.engine, ['MsSQL']):
+        if sgdb_in(self.table.migration.engine, ['MsSQL']):
             for column in columns:
                 if column.nullable:
                     column.alter(nullable=False)
@@ -1399,7 +1411,7 @@ class MigrationSchema:
 
     def has_schema(self):
         with cnx(self.migration) as conn:
-            if sgdb_in(conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
+            if sgdb_in(self.migration.engine, ['MySQL', 'MariaDB', 'MsSQL']):
                 query = """
                     SELECT count(*)
                     FROM INFORMATION_SCHEMA.SCHEMATA
@@ -1456,15 +1468,30 @@ class Migration:
         c = t.column('My column name from t')
     """
 
-    def __init__(self, registry):
+    def __init__(self, registry, engine_name='main'):
         self.withoutautomigration = registry.withoutautomigration
-        self.conn = registry.connection()
+        self.engine_name = engine_name
+        self.engine = registry.named_engines[engine_name]
+        bind = registry.named_binds[engine_name]
+        self.conn = registry.connection(bind=bind)
         self.loaded_namespaces = registry.loaded_namespaces
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
-        self.ddl_compiler = self.conn.dialect.ddl_compiler(
-            self.conn.dialect, None)
+
+        self.ddl_compiler = bind.dialect.ddl_compiler(bind.dialect, None)
         self.ignore_migration_for = registry.ignore_migration_for
+
+        self.bind_schemas = {
+            x.__db_schema__
+            for x in self.loaded_namespaces.values()
+            if x.is_sql and x.engine_name == engine_name
+        }
+        self.bind_schemas.add(None)
+        self.bind_tables = {
+            x.__table__
+            for x in self.loaded_namespaces.values()
+            if x.is_sql and x.engine_name == engine_name
+        }
 
         opts = {
             'include_schemas': True,
@@ -1520,10 +1547,12 @@ class Migration:
 
     def detect_added_new_schema(self, inspector):
         diff = []
-        schemas = self.metadata._schemas
         reflected_schemas = set(inspector.get_schema_names())
-        added_schemas = schemas - reflected_schemas
+        added_schemas = self.bind_schemas - reflected_schemas
         for schema in added_schemas:
+            if schema is None:
+                continue
+
             diff.append(('add_schema', schema))
 
         return diff
@@ -1551,14 +1580,12 @@ class Migration:
         return False  # pragma: no cover
 
     def detect_check_constraint_changed(self, inspector):
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB', 'MsSQL']):
+        if sgdb_in(self.engine, ['MySQL', 'MariaDB', 'MsSQL']):
             # MySQL don t return the reflected constraint
             return []
 
         diff = []
-        schemas = list(self.metadata._schemas)
-        schemas.append(None)
-        for schema in schemas:
+        for schema in self.bind_schemas:
             for table in inspector.get_table_names(schema=schema):
                 table_ = "%s.%s" % (schema, table) if schema else table
                 if table_ not in self.metadata.tables:
@@ -1603,9 +1630,7 @@ class Migration:
 
     def detect_pk_constraint_changed(self, inspector):
         diff = []
-        schemas = list(self.metadata._schemas)
-        schemas.append(None)
-        for schema in schemas:
+        for schema in self.bind_schemas:
             for table in inspector.get_table_names(schema=schema):
                 table_ = "%s.%s" % (schema, table) if schema else table
                 if table_ not in self.metadata.tables:
@@ -1632,10 +1657,10 @@ class Migration:
         :param name: name of the save point
         :rtype: return the name of the save point
         """
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.engine, ['MySQL', 'MariaDB']):
             logger.warning(
                 "Try to create a SAVEPOINT, but %r don't have this "
-                "functionality" % self.conn.engine.dialect)
+                "functionality" % self.engine.dialect)
             return
 
         return self.conn._savepoint_impl(name=name)
@@ -1645,10 +1670,10 @@ class Migration:
 
         :param name: name of the savepoint
         """
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.engine, ['MySQL', 'MariaDB']):
             logger.warning(
                 "Try to ROLLBACK TO SAVEPOINT, but %r don't have this "
-                "functionality" % self.conn.engine.dialect)
+                "functionality" % self.engine.dialect)
             return
 
         self.conn._rollback_to_savepoint_impl(name)
@@ -1658,10 +1683,10 @@ class Migration:
 
         :param name: name of the savepoint
         """
-        if sgdb_in(self.conn.engine, ['MySQL', 'MariaDB']):
+        if sgdb_in(self.engine, ['MySQL', 'MariaDB']):
             logger.warning(
                 "Try to RELEASE SAVEPOINT, but %r don't have this "
-                "functionality" % self.conn.engine.dialect)
+                "functionality" % self.engine.dialect)
             return
 
         self.conn._release_savepoint_impl(name)
