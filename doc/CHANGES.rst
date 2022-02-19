@@ -17,7 +17,7 @@
 CHANGELOG
 =========
 
-1.4.0 (UNRELEASED)
+1.3.2 (2022-02-19)
 ------------------
 
 * Fixed Graphviz dependencies #207
