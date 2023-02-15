@@ -46,13 +46,13 @@ class AnyBlokDeclarationDocumenter(ClassDocumenter):
     objtype = 'anyblok-declaration'
     directivetype = 'class'
 
-    def get_doc(self, encoding=None, ignore=1):
+    def get_doc(self, ignore=1, **kwargs):
         lines = getattr(self, '_new_docstrings', None)
         if lines is not None:
             return lines
 
         doc = super(AnyBlokDeclarationDocumenter, self).get_doc(
-            encoding=encoding, ignore=ignore)
+            ignore=ignore, **kwargs)
 
         registry_name = self.get_attr(self.object, '__registry_name__', None)
         declaration = self.get_attr(self.object, '__declaration__', None)
@@ -72,13 +72,13 @@ class AnyBlokDeclarationDocumenter(ClassDocumenter):
 
 class AnyBlokMethodDocumenter(MethodDocumenter):
 
-    def get_doc(self, encoding=None, ignore=1):
+    def get_doc(self, ignore=1, **kwargs):
         lines = getattr(self, '_new_docstrings', None)
         if lines is not None:
             return lines
 
-        doc = super(AnyBlokMethodDocumenter, self).get_doc(encoding=encoding,
-                                                           ignore=ignore)
+        doc = super(AnyBlokMethodDocumenter, self).get_doc(
+            ignore=ignore, **kwargs)
         autodocs = self.get_attr(self.object, 'autodocs', [])
         for autodoc in autodocs:
             doc.append(prepare_docstring(autodoc, ignore))

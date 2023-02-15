@@ -1,0 +1,264 @@
+name: Tests
+on: 
+  push:
+    paths-ignore:
+      - 'docs/**'
+    branches:
+      - main
+      - master
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+jobs:
+  Postgres:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: anyblok_test
+        # Set health checks to wait until PostgreSQL has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install graphviz package
+        run: bash .ci/install_graphviz.sh
+      - name: Install Wheel
+        run: pip install -U pip wheel
+      - name: Install psycopg2
+        run: pip install psycopg2
+      - name: Install pytest
+        run: pip install pytest pytest-cov mock coverage-lcov
+      - name: Install extra dependencies
+        run: pip install colour passlib furl phonenumbers pycountry cryptography
+      - name: Install AnyBlok
+        run: pip install .
+      - name: Run framework tests
+        env:
+          ANYBLOK_DATABASE_DRIVER: postgresql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 5432
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: postgres
+          ANYBLOK_DATABASE_PASSWORD: postgres
+        run: pytest anyblok/tests
+      - name: Drop db
+        env:
+          PGHOST: localhost
+          PGPASSWORD: postgres
+          PGPORT: 5432
+        run: psql -U postgres -c 'DROP DATABASE anyblok_test;'
+      - name: Run anyblok_createdb
+        env:
+          ANYBLOK_DATABASE_DRIVER: postgresql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 5432
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: postgres
+          ANYBLOK_DATABASE_PASSWORD: postgres
+        run: anyblok_createdb --install-all-bloks  --with-demo
+      - name: Run anyblok_updatedb
+        env:
+          ANYBLOK_DATABASE_DRIVER: postgresql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 5432
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: postgres
+          ANYBLOK_DATABASE_PASSWORD: postgres
+        run: anyblok_updatedb --update-all-bloks
+      - name: Run bloks tests
+        env:
+          ANYBLOK_DATABASE_DRIVER: postgresql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 5432
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: postgres
+          ANYBLOK_DATABASE_PASSWORD: postgres
+        run: pytest --cov-append anyblok/bloks/anyblok_core
+      - name: Generate lcov
+        run: coverage-lcov
+      - name: Coveralls
+        uses: coverallsapp/github-action@1.1.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel: true
+          flag-name: ${{ github.job }}
+          path-to-lcov: lcov.info
+
+  MySQL:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10']
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_DATABASE: anyblok_test
+          MYSQL_USER: root
+          MYSQL_PASSWORD: root
+          MYSQL_ROOT_PASSWORD: rootpassword
+        ports:
+          - 3306:3306
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install graphviz package
+        run: bash .ci/install_graphviz.sh
+      - name: Install Wheel
+        run: pip install -U pip wheel
+      - name: Install mysqlclient
+        run: pip install mysqlclient
+      - name: Install pytest
+        run: pip install pytest pytest-cov mock coverage-lcov
+      - name: Install extra dependencies
+        run: pip install colour passlib furl phonenumbers pycountry cryptography
+      - name: Install AnyBlok
+        run: pip install .
+      - name: Set up MySQL
+        run: sudo /etc/init.d/mysql start
+      - name: Run Framworks tests
+        env:
+          ANYBLOK_DATABASE_DRIVER: mysql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 3306
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: root
+          ANYBLOK_DATABASE_PASSWORD: root
+        run: pytest anyblok/tests
+      - name: Drop db
+        run: mysql --user=root --password=root --host=localhost --port=3306 -e 'DROP DATABASE anyblok_test;'
+      - name: Run anyblok_createdb
+        env:
+          ANYBLOK_DATABASE_DRIVER: mysql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 3306
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: root
+          ANYBLOK_DATABASE_PASSWORD: root
+        run: anyblok_createdb --install-all-bloks  --with-demo
+      - name: Run bloks tests
+        env:
+          ANYBLOK_DATABASE_DRIVER: mysql
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 3306
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: root
+          ANYBLOK_DATABASE_PASSWORD: root
+        run: pytest --cov-append anyblok/bloks/anyblok_core
+      - name: Generate lcov
+        run: coverage-lcov
+      - name: Coveralls
+        uses: coverallsapp/github-action@1.1.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel: true
+          flag-name: ${{ github.job }}
+          path-to-lcov: lcov.info
+
+  MsSQL:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10']
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run the action
+        uses: potatoqualitee/mssqlsuite@v1
+        with:
+          install: sqlengine, sqlpackage
+      - name: Run sqlclient
+        run: sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "SELECT @@version;"
+      - name: Install graphviz package
+        run: bash .ci/install_graphviz.sh
+      - name: Install mssql package
+        run: bash .ci/install_mssql.sh
+      - name: Install Wheel
+        run: pip install -U pip wheel
+      - name: Install pyodbc
+        run: pip install pyodbc
+      - name: Install pytest
+        run: pip install pytest pytest-cov mock coverage-lcov
+      - name: Install extra dependencies
+        run: pip install colour passlib furl phonenumbers pycountry cryptography
+      - name: Install AnyBlok
+        run: pip install .
+      - name: Run Frameworks tests
+        env:
+          ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 1433
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: sa
+          ANYBLOK_DATABASE_PASSWORD: dbatools.I0
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
+        run: pytest anyblok/tests
+      - name: Drop db
+        run: sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "DROP DATABASE anyblok_test;"
+      - name: Run anyblok_createdb
+        env:
+          ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 1433
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: sa
+          ANYBLOK_DATABASE_PASSWORD: dbatools.I0
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
+        run: anyblok_createdb --install-all-bloks  --with-demo
+      - name: Run bloks tests
+        env:
+          ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
+          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_PORT: 1433
+          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_USER: sa
+          ANYBLOK_DATABASE_PASSWORD: dbatools.I0
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
+        run: pytest --cov-append anyblok/bloks/anyblok_core
+      - name: Generate lcov
+        run: coverage-lcov
+      - name: Coveralls
+        uses: coverallsapp/github-action@1.1.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel: true
+          flag-name: ${{ github.job }}
+          path-to-lcov: lcov.info
+
+  finish:
+    needs: [Postgres, MySQL, MsSQL]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@1.1.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
+          path-to-lcov: lcov.info

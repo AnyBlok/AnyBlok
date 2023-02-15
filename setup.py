@@ -17,7 +17,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-version = '1.2.0'
+version = '1.3.2'
 
 
 if sys.version_info < (3, 5):
@@ -139,6 +139,7 @@ setup(
         ],
         'anyblok.migration_type.plugins': [
             'mysql-bool2tinyint=anyblok.plugins:BooleanToTinyIntMySQL',
+            'mysql-dt2dt=anyblok.plugins:DateTimeToDateTimeMySQL',
             'mssql-bool2bit=anyblok.plugins:BooleanToBitMsSQL',
         ],
         'anyblok.engine.event.mysql': [

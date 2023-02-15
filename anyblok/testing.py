@@ -475,8 +475,8 @@ class SharedDataTestCase(BlokTestCase):
 
         @event.listens_for(self.registry.session, "after_transaction_end")
         def restart_savepoint(session, transaction):
-            session.expire_all()
             if transaction is self.case_savepoint:
+                session.expire_all()
                 self.make_case_savepoint()
 
         self.savepoint_restarter = restart_savepoint
