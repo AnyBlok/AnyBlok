@@ -17,7 +17,7 @@ from anyblok.column import Column
 from sqlalchemy import inspection
 from anyblok.common import TypeList
 from copy import deepcopy
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import declared_attr
 from anyblok.mapper import ModelAttribute, format_schema
 from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
@@ -223,8 +223,8 @@ class Model:
             field = deepcopy(field)
 
         attr_name = name
-        if field.use_hybrid_property:
-            attr_name = anyblok_column_prefix + name
+        # if field.use_hybrid_property:
+        #     attr_name = anyblok_column_prefix + name
 
         if field.must_be_declared_as_attr():
             # All the declaration are seen as mixin for sqlalchemy
@@ -240,10 +240,10 @@ class Model:
             properties[attr_name] = field.get_sqlalchemy_mapping(
                 registry, namespace, name, properties)
 
-        if field.use_hybrid_property:
-            properties[name] = field.get_property(
-                registry, namespace, name, properties)
-            properties['hybrid_property_columns'].append(name)
+        # if field.use_hybrid_property:
+        #     properties[name] = field.get_property(
+        #         registry, namespace, name, properties)
+        #     properties['hybrid_property_columns'].append(name)
 
         registry.call_plugins('declare_field', name, field, namespace,
                               properties, transformation_properties)

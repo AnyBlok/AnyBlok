@@ -9,7 +9,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from logging import getLogger
-import warnings
 from sqlalchemy import create_engine, event, MetaData, text
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
@@ -26,8 +25,7 @@ from .version import parse_version
 from .logging import log
 from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy.orm.decl_base import _declarative_constructor
-from sqlalchemy.orm.decl_api import DeclarativeMeta, registry as SQLARegistry
+from sqlalchemy.orm import declarative_base
 
 try:
     import pyodbc
@@ -415,65 +413,6 @@ class RegistryManager:
             del cls.loaded_bloks[blok]['properties'][property_]
 
 
-class NewSQLARegistry(SQLARegistry):
-
-    def __getattr__(self, key):
-        sself = super(NewSQLARegistry, self)
-        if hasattr(sself, key):
-            return getattr(sself, key)  # pragma: no cover
-
-        warnings.warn(
-            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
-            "own 'registry' attribute. Replace it by 'anyblok' attribute",
-            DeprecationWarning, stacklevel=2)
-        return getattr(self._class_registry['registry'], key)
-
-
-class DeprecatedClassProperty:
-    def __init__(self, registry):
-        self.registry = registry
-
-    def __getattr__(self, key, **kw):  # pragma: no cover
-        warnings.warn(
-            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
-            "own 'registry' attribute. Replace it by 'anyblok' attribute",
-            DeprecationWarning, stacklevel=2)
-        return getattr(self.registry, key, **kw)
-
-    def __setattr__(self, key, value):  # pragma: no cover
-        if key == 'registry':
-            return super().__setattr__(key, value)
-
-        warnings.warn(
-            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
-            "own 'registry' attribute. Replace it by 'anyblok' attribute",
-            DeprecationWarning, stacklevel=2)
-        return setattr(self.registry, key, value)
-
-
-def declarative_base(
-    bind=None,
-    metadata=None,
-    mapper=None,
-    cls=object,
-    name="Base",
-    constructor=_declarative_constructor,
-    class_registry=None,
-    metaclass=DeclarativeMeta,
-):
-    return NewSQLARegistry(
-        _bind=bind,
-        metadata=metadata,
-        class_registry=class_registry,
-        constructor=constructor,
-    ).generate_base(
-        mapper=mapper,
-        cls=cls,
-        name=name,
-        metaclass=metaclass,
-    )
-
-
 class Registry:
     """ Define one registry
 
@@ -493,7 +432,6 @@ class Registry:
         self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
             'anyblok': self,
-            'registry': DeprecatedClassProperty(self),  # For Model No SQL
             'Env': EnvironmentManager})
         self.withoutautomigration = Configuration.get('withoutautomigration')
         self.ini_var()
@@ -881,12 +819,12 @@ class Registry:
             self.check_dependencies(blok, dependencies_to_install, toinstall)
 
         if dependencies_to_install:
-            query = """
+            query = text("""
                 update system_blok
                 set state='toinstall'
                 where name in ('%s')
                 and state = 'uninstalled'""" % "', '".join(
-                dependencies_to_install)
+                dependencies_to_install))
             try:
                 self.execute(query)
             except (ProgrammingError, OperationalError):  # pragma: no cover
@@ -1106,12 +1044,12 @@ class Registry:
                 bind=self.connection(), checkfirst=True)
 
         self.migration = Configuration.get('Migration', Migration)(self)
-        query = """
+        query = text("""
             SELECT name, installed_version
             FROM system_blok
             WHERE
                 (state = 'toinstall' AND name = '%s')
-                OR state = 'toupdate'""" % blok2install
+                OR state = 'toupdate'""" % blok2install)
         res = self.execute(query, fetchall=True)
         if res:
             for blok, installed_version in res:
@@ -1490,8 +1428,8 @@ class Registry:
 
         logger.info("Change state %s => %s for blok %s" % (
             blok.state, state, blok_name))
-        Q = "UPDATE system_blok SET state='%s' where name='%s';" % (
-            state, blok_name)
+        Q = text("UPDATE system_blok SET state='%s' where name='%s';" % (
+            state, blok_name))
         self.execute(Q)
         # blok.update(state=state)
 

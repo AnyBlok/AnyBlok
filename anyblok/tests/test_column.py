@@ -21,7 +21,7 @@ from os import urandom
 from decimal import Decimal as D
 from anyblok.config import Configuration
 from anyblok.testing import tmp_configuration
-from sqlalchemy import Integer as SA_Integer, String as SA_String
+from sqlalchemy import Integer as SA_Integer, String as SA_String, text
 from sqlalchemy.exc import StatementError
 from anyblok import Declarations
 from anyblok.field import FieldException
@@ -255,7 +255,7 @@ class TestColumns:
                                       db_column_name='another_name')
         test = registry.Test.insert(col=1)
         assert test.col == 1
-        res = registry.execute('select id from test where another_name=1')
+        res = registry.execute(text('select id from test where another_name=1'))
         assert res.fetchone()[0] == test.id
         ma = ModelAttribute('Model.Test', 'col')
         assert ma.get_column_name(registry) == 'another_name'

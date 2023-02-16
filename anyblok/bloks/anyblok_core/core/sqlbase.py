@@ -17,7 +17,7 @@ from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty, load_only
 from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
-from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
+from sqlalchemy_utils.models import NOT_LOADED_REPR
 from sqlalchemy.orm.session import object_state
 from sqlalchemy import delete, select, update as sqla_update
 
@@ -53,8 +53,8 @@ class SqlMixin:
             else:
                 continue  # pragma: no cover
 
-            if value == NO_VALUE:
-                value = NOT_LOADED_REPR
+            if value == NOT_LOADED_REPR:
+                pass
             elif value and type_ in ('One2Many', 'Many2Many'):
                 value = '<%s len(%d)>' % (
                     fields_description[key]['model'],
