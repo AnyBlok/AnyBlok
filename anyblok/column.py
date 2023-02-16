@@ -343,9 +343,12 @@ class ForbiddenPrimaryKey:
     ):
         if self.kwargs.get("primary_key") is True:
             raise FieldException(
-                f"{self.__class__} column `{namespace}.{fieldname}` are not allowed as primary key"
+                f"{self.__class__} column `{namespace}.{fieldname}` "
+                "are not allowed as primary key"
             )
-        super().get_sqlalchemy_mapping(registry, namespace, fieldname, properties)
+        super().get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties
+        )
 
 
 class Integer(Column):
