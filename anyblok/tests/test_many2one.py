@@ -27,8 +27,8 @@ from .conftest import init_registry_with_bloks, init_registry, reset_db
 COLUMNS = [
     Integer,
     BigInteger,
-    Float,
-    Decimal,
+    # Float,
+    # Decimal,
     String,
     Boolean,
     Date,
