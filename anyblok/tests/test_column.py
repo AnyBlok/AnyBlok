@@ -1287,6 +1287,17 @@ class TestColumns:
         with pytest.raises(Exception):
             registry.Item.insert(template_code='other')
 
+    def test_float_as_primary_key_should_raises(self):
+        with pytest.raises(FieldException) as ex:
+            self.init_registry(simple_column, ColumnType=Float, primary_key=True)
+
+        assert "<class 'anyblok.column.Float'> column `Model.Test.col` are not allowed as primary key" == str(ex.value), "Column name should be part of raised message"
+
+    def test_decimal_as_primary_key_should_raises(self):
+        with pytest.raises(FieldException) as ex:
+            self.init_registry(simple_column, ColumnType=Decimal, primary_key=True)
+
+        assert "<class 'anyblok.column.Decimal'> column `Model.Test.col` are not allowed as primary key" == str(ex.value), "Column name should be part of raised message"
 
 class TestColumnsAutoDoc:
 
