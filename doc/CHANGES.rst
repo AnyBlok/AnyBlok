@@ -17,6 +17,14 @@
 CHANGELOG
 =========
 
+1.4.0 (2022-02-17)
+------------------
+
+* Freeze version of SQLAlchemy < 2.0
+* Freeze version of SQLAlchemy_Util < 0.40.0
+* Forbid primary key on Float and Decimal
+* Replace setup packagin by pyproject.toml
+
 1.3.2 (2022-02-19)
 ------------------
 
