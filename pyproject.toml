@@ -50,7 +50,7 @@ classifiers = [
 ]
 
 [tool.setuptools.dynamic]
-readme = { file = ["README.rst", "docs/CHANGE.rst"] }
+readme = { file = ["README.rst", "docs/CHANGES.rst"] }
 
 [tool.setuptools.packages.find]
 include = [
