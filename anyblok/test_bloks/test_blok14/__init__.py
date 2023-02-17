@@ -8,6 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import Blok
 from anyblok.common import sgdb_in
+from sqlalchemy import text
 
 
 class TestBlok(Blok):
@@ -28,23 +29,23 @@ class TestBlok(Blok):
     def is_table_exist(self):
         engine = self.anyblok.engine
         if sgdb_in(engine, ['PostgreSQL']):
-            return bool(self.anyblok.execute("""
+            return bool(self.anyblok.execute(text("""
                 select count(*)
                 from pg_catalog.pg_tables
                 where tablename = 'test';
-            """).fetchone()[0])
+            """)).fetchone()[0])
         elif sgdb_in(engine, ['MySQL']):
-            return bool(self.anyblok.execute("""
+            return bool(self.anyblok.execute(text("""
                 show tables like 'test';
-            """).fetchall())
+            """)).fetchall())
         elif sgdb_in(engine, ['MsSQL']):
-            query = """
+            query = text("""
                 SELECT count(*)
                 FROM INFORMATION_SCHEMA.TABLES
                 WHERE TABLE_TYPE = 'BASE TABLE'
                       AND TABLE_CATALOG='%s'
                       AND TABLE_NAME='test'
-            """ % self.anyblok.db_name
+            """ % self.anyblok.db_name)
             return bool(self.anyblok.execute(query).fetchall()[0][0])
 
     def pre_migration(self, latest_version):
