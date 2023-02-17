@@ -104,7 +104,8 @@ class RelationshipProperty(relationships.RelationshipProperty):
                 secondaryjoin=sj,
                 foreign_keys=foreign_keys,
                 back_populates=self.key,
-                relationship_field=self.relationship_field,  # GOAL of the overwrite
+                # GOAL of the overwrite
+                relationship_field=self.relationship_field,
                 **kwargs,
             )
             mapper._configure_property(
