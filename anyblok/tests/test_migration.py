@@ -215,8 +215,8 @@ class TestMigration:
         t = registry.migration.table('test')
         t.column().add(Column('new_column', Integer, default=100))
         t.column('new_column')
-        res = [x for x in registry.execute(
-            "select count(*) from test where new_column is null")][0][0]
+        res = [x for x in registry.execute(text(
+            "select count(*) from test where new_column is null"))][0][0]
         assert res == 0
 
     @pytest.mark.skipif(sgdb_in(['MsSQL']),
