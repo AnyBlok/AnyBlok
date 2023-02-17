@@ -1,8 +1,7 @@
-from sqlalchemy.schema import (
+from sqlalchemy.schema import (  # noqa F401
     ForeignKeyConstraint as SQLAForeignKeyConstraint,
     UniqueConstraint as SQLAUniqueConstraint,
     PrimaryKeyConstraint as SQLAPrimaryKeyConstraint,
-    CheckConstraint,  # noqa
     Index as SQLAIndex,
 )
 

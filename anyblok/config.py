@@ -606,10 +606,7 @@ class Configuration:
             parser = getParser()
             for group in cls.groups.keys():
                 for fnct in cls.groups[group]:
-                    if (
-                            fnct.must_be_loaded_by_unittest or
-                            group in ('plugins',)
-                    ):
+                    if fnct.must_be_loaded_by_unittest:
                         fnct(parser)
 
             ad = AppDirs('AnyBlok')
@@ -645,8 +642,6 @@ class Configuration:
         configuration_groups = description.pop(
             'configuration_groups',
             cls.applications['default']['configuration_groups'])
-        if 'plugins' not in configuration_groups:
-            configuration_groups.append('plugins')
 
         if useseparator:  # pragma: no cover
             parser = getParser(**description)
@@ -801,29 +796,6 @@ class Configuration:
 
         if 'logging_level' in cls.configuration:
             cls.initialize_logging()  # pragma: no cover
-
-
-@Configuration.add('plugins', label='Plugins',
-                   must_be_loaded_by_unittest=True)
-def add_plugins(group):
-    """Add arguments to 'plugins' configuration group
-
-    :param group:
-    """
-    group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPlugin,
-                       default='anyblok.registry:Registry',
-                       help="Registry class to use",
-                       removed=True)
-    group.add_argument('--migration-cls', dest='Migration',
-                       type=AnyBlokPlugin,
-                       default='anyblok.migration:Migration',
-                       help="Migration class to use",
-                       removed=True)
-    group.add_argument('--get-url-fnct', dest='get_url',
-                       type=AnyBlokPlugin,
-                       default='anyblok.config:get_url',
-                       help="get_url function to use",
-                       removed=True)
 
 
 @Configuration.add('config', must_be_loaded_by_unittest=True)
