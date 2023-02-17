@@ -244,6 +244,7 @@ class Model:
             properties[name] = field.get_property(
                 registry, namespace, name, properties)
             properties[name].sqla_column = properties[attr_name]
+
             properties['hybrid_property_columns'].append(name)
 
         registry.call_plugins('declare_field', name, field, namespace,
