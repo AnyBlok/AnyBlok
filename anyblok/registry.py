@@ -132,10 +132,8 @@ class RegistryManager:
                     "because its registry is already loaded", db_name)
             return cls.registries[db_name]
 
-        _Registry = Configuration.get('Registry', Registry)
-        logger.info("Loading registry for database %r with class %r",
-                    db_name, _Registry)
-        registry = _Registry(
+        logger.info("Loading registry for database %r", db_name)
+        registry = Registry(
             db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
         cls.registries[db_name] = registry
         return registry
@@ -468,7 +466,7 @@ class Registry:
 
         :param db_name: name of the database to link
         """
-        url = Configuration.get('get_url', get_url)(db_name=db_name)
+        url = get_url(db_name=db_name)
         kwargs = self.init_engine_options(url)
         kwargs['future'] = True
         self.rw_engine = create_engine(url, **kwargs)
@@ -529,7 +527,7 @@ class Registry:
         if not db_name:
             raise RegistryException('db_name is required')
 
-        url = Configuration.get('get_url', get_url)(db_name=db_name)
+        url = get_url(db_name=db_name)
         return database_exists(url)
 
     def listen_sqlalchemy_known_event(self):
@@ -1043,7 +1041,7 @@ class Registry:
             self.declarativebase.metadata.tables['system_blok'].create(
                 bind=self.connection(), checkfirst=True)
 
-        self.migration = Configuration.get('Migration', Migration)(self)
+        self.migration = Migration(self)
         query = text("""
             SELECT name, installed_version
             FROM system_blok

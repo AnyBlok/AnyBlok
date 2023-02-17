@@ -17,6 +17,12 @@
 CHANGELOG
 =========
 
+2.0.0 (unreleased)
+------------------
+
+* The previsous deprecated configuration are placed as removed
+  theses configurations will be removed from the code in the next version
+
 1.3.2 (2022-02-19)
 ------------------
 

@@ -11,7 +11,7 @@ from copy import deepcopy
 import pytest
 from anyblok.testing import sgdb_in
 from anyblok.blok import BlokManager
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_url
 from anyblok.environment import EnvironmentManager
 from anyblok.registry import RegistryManager
 from sqlalchemy_utils.functions import (
@@ -64,7 +64,7 @@ def base_loaded(request, configuration_loaded):
     if sgdb_in(['MySQL', 'MariaDB']):
         return
 
-    url = Configuration.get('get_url')()
+    url = get_url()
     if not database_exists(url):
         db_template_name = Configuration.get('db_template_name', None)
         create_database(url, template=db_template_name)
@@ -90,7 +90,7 @@ def testbloks_loaded(request, base_loaded):
 
 def reset_db():
     if sgdb_in(['MySQL', 'MariaDB']):
-        url = Configuration.get('get_url')()
+        url = get_url()
         if database_exists(url):
             drop_database(url)
 
