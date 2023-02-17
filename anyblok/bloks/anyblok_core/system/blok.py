@@ -32,7 +32,8 @@ class Blok:
     }
 
     name = String(primary_key=True, nullable=False)
-    state = Selection(selections=STATES, default='uninstalled', nullable=False)
+    state = Selection(
+        selections=STATES, default='uninstalled', nullable=False, index=True)
     author = String()
     order = Integer(default=-1, nullable=False)
     short_description = Function(fget='get_short_description')
