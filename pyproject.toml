@@ -53,7 +53,7 @@ classifiers = [
 include-package-data = true
 
 [tool.setuptools.dynamic]
-readme = { file = ["README.rst", "docs/CHANGE.rst"] }
+readme = { file = ["README.rst", "doc/CHANGES.rst"] }
 
 [tool.setuptools.packages.find]
 include = [
