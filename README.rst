@@ -32,9 +32,6 @@
     :alt: gitter
     :target: https://gitter.im/AnyBlok/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
 
-.. image:: https://img.shields.io/pypi/pyversions/anyblok.svg?longCache=True
-    :alt: Python versions
-
 .. image:: https://img.shields.io/static/v1?label=Compatible%20with&message=PostgreSQL%20|%20MySQL%20|%20Microsoft%20SQL%20Server&color=informational
     :alt: Dialects compatibility
 
@@ -131,6 +128,7 @@ Contributors
 * Florent Jouatte
 * Christophe Combelles
 * Sébastien Chazallet
+* François GUÉRIN
 
 Bugs
 ----
