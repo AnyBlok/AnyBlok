@@ -76,7 +76,7 @@ anyblok_nose = "anyblok.scripts:anyblok_nose"
 anyblok_interpreter = "anyblok.scripts:anyblok_interpreter"
 anyblok_doc = "anyblok.scripts:anyblok2doc"
 
-[project.entry-points."blocks"]
+[project.entry-points."bloks"]
 anyblok-core = "anyblok.bloks.anyblok_core:AnyBlokCore"
 anyblok-test = "anyblok.bloks.anyblok_test:AnyBlokTest"
 model_authz = "anyblok.bloks.model_authz:ModelBasedAuthorizationBlok"
