@@ -44,9 +44,9 @@ def simple_view():
         def sqlalchemy_view_declaration(cls):
             T1 = cls.anyblok.T1
             T2 = cls.anyblok.T2
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T2.val.label('val2')])
+            query = select(T1.code.label('code'),
+                           T1.val.label('val1'),
+                           T2.val.label('val2'))
             return query.where(T1.code == T2.code)
 
 
