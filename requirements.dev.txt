@@ -6,3 +6,4 @@ ipdb
 ipdbplugin
 ipython
 pysqlite3
+mock

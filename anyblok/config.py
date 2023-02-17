@@ -953,10 +953,7 @@ def add_schema(group):
 
     :param group:
     """
-    try:
-        from graphviz.files import FORMATS
-    except ImportError:
-        from graphviz.backend import FORMATS
+    from graphviz import FORMATS
 
     group.add_argument('--schema-format',
                        default='png', choices=tuple(FORMATS))

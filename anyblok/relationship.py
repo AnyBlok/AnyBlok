@@ -12,13 +12,15 @@ from sqlalchemy.orm import (relationships, backref, relationship, base,
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import exc as sa_exc, util
+from sqlalchemy import exc as sa_exc
 from sqlalchemy_utils.functions import get_class_by_table
 from .field import Field, FieldException
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr, format_schema
 from anyblok.common import anyblok_column_prefix
 from sqlalchemy.ext.orderinglist import OrderingList, _unsugar_count_from
 from types import FunctionType
+from typing import Any
+from typing import Dict
 
 from logging import getLogger
 
@@ -32,29 +34,32 @@ class RelationshipProperty(relationships.RelationshipProperty):
         self.relationship_field = kwargs.pop('relationship_field')
         super(RelationshipProperty, self).__init__(*args, **kwargs)
 
-    def _generate_backref(self):  # noqa
+    def _generate_backref(self) -> None:
         """Interpret the 'backref' instruction to create a
-        :func:`.relationship` complementary to this one."""
+        :func:`_orm.relationship` complementary to this one."""
 
         if self.parent.non_primary:
-            return  # pragma: no cover
+            return
         if self.backref is not None and not self.back_populates:
-            if isinstance(self.backref, util.string_types):
-                backref_key, kwargs = self.backref, {}  # pragma: no cover
+            kwargs: Dict[str, Any]
+            if isinstance(self.backref, str):
+                backref_key, kwargs = self.backref, {}
             else:
                 backref_key, kwargs = self.backref
             mapper = self.mapper.primary_mapper()
 
-            check = set(mapper.iterate_to_root()).\
-                union(mapper.self_and_descendants)
-            for m in check:
-                if m.has_property(backref_key):
-                    raise sa_exc.ArgumentError(  # pragma: no cover
-                        "Error creating backref "
-                        "'%s' on relationship '%s': property of that "
-                        "name exists on mapper '%s'" %
-                        (backref_key, self, m))
-
+            if not mapper.concrete:
+                check = set(mapper.iterate_to_root()).union(
+                    mapper.self_and_descendants
+                )
+                for m in check:
+                    if m.has_property(backref_key) and not m.concrete:
+                        raise sa_exc.ArgumentError(
+                            "Error creating backref "
+                            "'%s' on relationship '%s': property of that "
+                            "name exists on mapper '%s'"
+                            % (backref_key, self, m)
+                        )
             # determine primaryjoin/secondaryjoin for the
             # backref.  Use the one we had, so that
             # a custom join doesn't have to be specified in
@@ -63,39 +68,48 @@ class RelationshipProperty(relationships.RelationshipProperty):
                 # for many to many, just switch primaryjoin/
                 # secondaryjoin.   use the annotated
                 # pj/sj on the _join_condition.
-                pj = kwargs.pop(  # pragma: no cover
-                    'primaryjoin',
-                    self._join_condition.secondaryjoin_minus_local)
-                sj = kwargs.pop(  # pragma: no cover
-                    'secondaryjoin',
-                    self._join_condition.primaryjoin_minus_local)
+                pj = kwargs.pop(
+                    "primaryjoin",
+                    self._join_condition.secondaryjoin_minus_local,
+                )
+                sj = kwargs.pop(
+                    "secondaryjoin",
+                    self._join_condition.primaryjoin_minus_local,
+                )
             else:
                 pj = kwargs.pop(
-                    'primaryjoin',
-                    self._join_condition.primaryjoin_reverse_remote)
-                sj = kwargs.pop('secondaryjoin', None)
+                    "primaryjoin",
+                    self._join_condition.primaryjoin_reverse_remote,
+                )
+                sj = kwargs.pop("secondaryjoin", None)
                 if sj:
-                    raise sa_exc.InvalidRequestError(  # pragma: no cover
+                    raise sa_exc.InvalidRequestError(
                         "Can't assign 'secondaryjoin' on a backref "
                         "against a non-secondary relationship."
                     )
 
-            foreign_keys = kwargs.pop('foreign_keys',
-                                      self._user_defined_foreign_keys)
+            foreign_keys = kwargs.pop(
+                "foreign_keys", self._user_defined_foreign_keys
+            )
             parent = self.parent.primary_mapper()
-            kwargs.setdefault('viewonly', self.viewonly)
-            kwargs.setdefault('post_update', self.post_update)
-            kwargs.setdefault('passive_updates', self.passive_updates)
+            kwargs.setdefault("viewonly", self.viewonly)
+            kwargs.setdefault("post_update", self.post_update)
+            kwargs.setdefault("passive_updates", self.passive_updates)
+            kwargs.setdefault("sync_backref", self.sync_backref)
             self.back_populates = backref_key
-            _relationship = RelationshipProperty2(
-                parent, self.secondary,
-                pj, sj,
+            relationship = RelationshipProperty(
+                parent,
+                self.secondary,
+                primaryjoin=pj,
+                secondaryjoin=sj,
                 foreign_keys=foreign_keys,
                 back_populates=self.key,
-                relationship_field=self.relationship_field,
-                **kwargs)
-
-            mapper._configure_property(backref_key, _relationship)
+                relationship_field=self.relationship_field,  # GOAL of the overwrite
+                **kwargs,
+            )
+            mapper._configure_property(
+                backref_key, relationship, warn_for_existing=True
+            )
 
         if self.back_populates:
             self._add_reverse_property(self.back_populates)
@@ -605,10 +619,18 @@ class Many2One(RelationShip):
                     cname.attribute_name)] = declared_attr(wrapper)
         properties['loaded_columns'].append(cname.attribute_name)
         properties['hybrid_property_columns'].append(cname.attribute_name)
-        properties[cname.attribute_name] = hybrid_property(
-            self.wrap_getter_column(cname.attribute_name),
-            super(Many2One, self).wrap_setter_column(cname.attribute_name),
-            expr=self.wrap_expr_column(cname.attribute_name))
+
+        fget = self.wrap_getter_column(cname.attribute_name)
+        fset = super(Many2One, self).wrap_setter_column(cname.attribute_name)
+        fexp = self.wrap_expr_column(cname.attribute_name)
+
+        for func in (fget, fset, fexp):
+            func.__name__ = cname.attribute_name
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.expression(fexp)
+        properties[cname.attribute_name] = hybrid
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):

@@ -304,6 +304,7 @@ class Function(Field):
 
                 return getattr(model_self, m)(*args, **kwargs)
 
+            function_method.__name__ = fieldname
             return function_method
 
         fget = wrap('fget')
@@ -311,9 +312,14 @@ class Function(Field):
         fdel = wrap('fdel')
         fexpr = wrap('fexpr')
 
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.deleter(fdel)
+        hybrid = hybrid.expression(fexpr)
+
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
-        return hybrid_property(fget, fset, fdel=fdel, expr=fexpr)
+        return hybrid
 
 
 def format_struc(entry, keys):
@@ -442,12 +448,20 @@ class JsonRelated(Field):
         """
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
-        return hybrid_property(
-            self.get_fget(),
-            self.get_fset(),
-            fdel=self.get_fdel(),
-            expr=self.get_fexpr()
-        )
+
+        fget = self.get_fget()
+        fset = self.get_fset()
+        fdel = self.get_fdel()
+        fexpr = self.get_fexpr()
+
+        for func in (fget, fset, fdel, fexpr):
+            func.__name__ = fieldname
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.deleter(fdel)
+        hybrid = hybrid.expression(fexpr)
+        return hybrid
 
     def autodoc_get_properties(self):
         res = super(JsonRelated, self).autodoc_get_properties()

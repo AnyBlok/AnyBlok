@@ -173,7 +173,7 @@ def simple_models_with_same_table_by_inherit():
         name = String()
 
     @register(Model, tablename='test')  # noqa
-    class Test2:
+    class Test2:  # noqa F811
         pass
 
 
@@ -235,17 +235,6 @@ class TestModel2:
         registry = self.init_registry(simple_model)
         test = registry.System.Model.query().get('Model.Test')
         assert str(test) == 'Model.Test'
-
-    def test_deprecated_registry_attribute(self):
-        with pytest.warns(DeprecationWarning):
-            registry = self.init_registry(simple_model)
-            self.check_registry(registry.Test)
-            # NoSQL Base must also have registry
-            assert registry.System.registry
-            assert registry.System.Model.registry
-            assert registry.System.Model.registry is not registry
-            t2 = registry.Test.query().first()
-            registry.System.Model.registry.refresh(t2)
 
     def test_model_is_assembled(self):
         with LogCapture('anyblok.registry', level=DEBUG) as logs:
@@ -368,8 +357,8 @@ class TestModel2:
                 def define_table_args(cls):
                     return (val,)
 
-            @register(Model)  # noqa
-            class Test:
+            @register(Model)
+            class Test:  # noqa F811
 
                 @classmethod
                 def define_table_args(cls):
@@ -420,8 +409,8 @@ class TestModel2:
                 def define_mapper_args(cls):
                     return {val: val}
 
-            @register(Model)  # noqa
-            class Test:
+            @register(Model)
+            class Test:  # noqa F811
 
                 @classmethod
                 def define_mapper_args(cls):
