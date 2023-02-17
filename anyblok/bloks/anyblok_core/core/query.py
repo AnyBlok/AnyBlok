@@ -173,3 +173,6 @@ class Query:
             }
 
         return self.anyblok.session.get(self.Model, primary_keys)
+
+    def subquery(self, *args, **kwargs):
+        return self.sql_statement.subquery(*args, **kwargs)
