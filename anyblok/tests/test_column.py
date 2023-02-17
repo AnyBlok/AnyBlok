@@ -50,33 +50,102 @@ class MyTestEnum(enum.Enum):
 
 
 COLUMNS = [
-    (Selection, 'test', {'selections': {'test': 'test'}}),
-    (Enum, 'test', {'enum_cls': MyTestEnum}),
-    (Boolean, True, {}),
-    (Boolean, False, {}),
-    (String, 'test', {}),
-    (BigInteger, 1, {}),
-    (Text, 'Test', {}),
-    (Date, datetime.date.today(), {}),
-    (DateTime, datetime.datetime.now().replace(
-        tzinfo=pytz.timezone(time.tzname[0])), {}),
-    (Time, datetime.time(), {}),
-    (Float, 1., {}),
-    (Integer, 1, {}),
-    (Integer, 1, {'sequence': 'foo'}),
-    (Email, 'jhon@doe.com', {}),
-    (LargeBinary, urandom(100), {}),
-    (Interval, datetime.timedelta(days=6), {}),
-    (Decimal, D('1'), {}),
-    (Json, {'name': 'test'}, {}),
+    pytest.param(
+        (Selection, 'test', {'selections': {'test': 'test'}}),
+        id="Selection",
+    ),
+    pytest.param(
+        (Enum, 'test', {'enum_cls': MyTestEnum}),
+        id="Enum",
+    ),
+    pytest.param(
+        (Boolean, True, {}),
+        id="Boolean",
+    ),
+    pytest.param(
+        (Boolean, False, {}),
+        id="Boolean",
+    ),
+    pytest.param(
+        (String, 'test', {}),
+        id="String",
+    ),
+    pytest.param(
+        (BigInteger, 1, {}),
+        id="BigInteger",
+    ),
+    pytest.param(
+        (Text, 'Test', {}),
+        id="Text",
+    ),
+    pytest.param(
+        (Date, datetime.date.today(), {}),
+        id="Date",
+    ),
+    pytest.param(
+        (
+            DateTime, datetime.datetime.now().replace(
+                tzinfo=pytz.timezone(time.tzname[0])
+            ), {}
+        ),
+        id="DateTime",
+    ),
+    pytest.param(
+        (Time, datetime.time(), {}),
+        id="Time",
+    ),
+    pytest.param(
+        (Float, 1., {}),
+        id="Float",
+    ),
+    pytest.param(
+        (Integer, 1, {}),
+        id="Integer",
+    ),
+    pytest.param(
+        (Integer, 1, {'sequence': 'foo'}),
+        id="Integer with sequence foo",
+    ),
+    pytest.param(
+        (Email, 'jhon@doe.com', {}),
+        id="Email",
+    ),
+    pytest.param(
+        (LargeBinary, urandom(100), {}),
+        id="LargeBinary",
+    ),
+    pytest.param(
+        (Interval, datetime.timedelta(days=6), {}),
+        id="Interval",
+    ),
+    pytest.param(
+        (Decimal, D('1'), {}),
+        id="Decimal",
+    ),
+    pytest.param(
+        (Json, {'name': 'test'}, {}),
+        id="Json",
+    ),
 ]
 
 if not sgdb_in(['MySQL', 'MariaDB']):
-    COLUMNS.append((UUID, uuid1(), {}))
+    COLUMNS.append(
+        pytest.param(
+            (UUID, uuid1(), {}),
+            id="UUID"
+        )
+    )
 
 if not sgdb_in(['MsSQL']):
-    COLUMNS.append((TimeStamp, datetime.datetime.now().replace(
-                        tzinfo=pytz.timezone(time.tzname[0])), {}))
+    COLUMNS.append(
+        pytest.param(
+            (
+                TimeStamp, datetime.datetime.now().replace(
+                    tzinfo=pytz.timezone(time.tzname[0])), {}
+            ),
+            id="TimeStamp",
+        )
+    )
 
 
 try:
@@ -94,14 +163,21 @@ except Exception:
 try:
     import colour
     has_colour = True
-    COLUMNS.append((Color, colour.Color('#123456'), {}))
+    COLUMNS.append(
+        pytest.param(
+            (Color, colour.Color('#123456'), {}),
+            id="Color"
+        )
+    )
 except Exception:
     has_colour = False
 
 try:
     import furl  # noqa
     has_furl = True
-    COLUMNS.append((URL, furl.furl('http://doc.anyblok.org'), {}))
+    COLUMNS.append(
+        pytest.param((URL, furl.furl('http://doc.anyblok.org'), {}), id="URL")
+        )
 except Exception:
     has_furl = False
 
@@ -110,7 +186,12 @@ try:
     import phonenumbers  # noqa
     has_phonenumbers = True
     from sqlalchemy_utils import PhoneNumber as PN
-    COLUMNS.append((PhoneNumber, PN("+120012301", None), {}))
+    COLUMNS.append(
+        pytest.param(
+            (PhoneNumber, PN("+120012301", None), {}),
+            id="PhoneNumber",
+        )
+    )
 except Exception:
     has_phonenumbers = False
 
@@ -118,7 +199,11 @@ try:
     import pycountry  # noqa
     has_pycountry = True
     COLUMNS.append(
-        (Country, pycountry.countries.get(alpha_2='FR'), {}))
+        pytest.param(
+            (Country, pycountry.countries.get(alpha_2='FR'), {}),
+            id="Country"
+        )
+    )
 except Exception:
     has_pycountry = False
 
@@ -1287,6 +1372,15 @@ class TestColumns:
         with pytest.raises(Exception):
             registry.Item.insert(template_code='other')
 
+    @pytest.mark.parametrize("cls", [Float, Decimal])
+    def test_decimal_as_primary_key_should_raises(self,  cls):
+        with pytest.raises(FieldException) as ex:
+            self.init_registry(simple_column, ColumnType=cls, primary_key=True)
+
+        assert (
+            f"{cls} column `Model.Test.col` are not "
+            f"allowed as primary key"
+         ) == str(ex.value), "Column name should be part of raised message"
 
 class TestColumnsAutoDoc:
 

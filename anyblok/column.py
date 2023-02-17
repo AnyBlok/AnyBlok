@@ -334,6 +334,23 @@ class Column(Field):
         return False
 
 
+class ForbiddenPrimaryKey:
+    """Mixin to forbid primary key on column type
+    """
+
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        if self.kwargs.get("primary_key") is True:
+            raise FieldException(
+                f"{self.__class__} column `{namespace}.{fieldname}` "
+                "are not allowed as primary key"
+            )
+        return super().get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties
+        )
+
+
 class Integer(Column):
     """Integer column
 
@@ -395,7 +412,7 @@ class Boolean(Column):
     sqlalchemy_type = types.Boolean
 
 
-class Float(Column):
+class Float(ForbiddenPrimaryKey, Column):
     """Float column
 
     ::
@@ -420,7 +437,7 @@ class Float(Column):
 types.DECIMAL.process_result_value = lambda self, value, dialect: value
 
 
-class Decimal(Column):
+class Decimal(ForbiddenPrimaryKey, Column):
     """Decimal column
 
     ::

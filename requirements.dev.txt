@@ -7,3 +7,4 @@ ipdbplugin
 ipython
 pysqlite3
 mock
+pytest-coverage
