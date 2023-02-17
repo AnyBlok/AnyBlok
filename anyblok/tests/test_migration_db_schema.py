@@ -15,7 +15,7 @@ from sqlalchemy import (
     text)
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_url
 from .conftest import init_registry, drop_database, create_database
 from anyblok.common import naming_convention
 
@@ -23,7 +23,7 @@ from anyblok.common import naming_convention
 @pytest.fixture(scope="module")
 def clean_db(request, configuration_loaded):
     def clean():
-        url = Configuration.get('get_url')()
+        url = get_url()
         drop_database(url)
         db_template_name = Configuration.get('db_template_name', None)
         create_database(url, template=db_template_name)

@@ -1764,7 +1764,7 @@ Exemple with the **mysql_no_autocommit** listener
 
 .. note::
 
-   The SQLAlchemy decumentation for the `core event<https://docs.sqlalchemy.org/en/14/core/events.html?highlight=event#connection-pool-events>`_
+   The SQLAlchemy decumentation for the `core event <https://docs.sqlalchemy.org/en/14/core/events.html?highlight=event#connection-pool-events>`_
 
 **Session's events**
 --------------------
@@ -1805,4 +1805,4 @@ method::
 
 .. note::
 
-   The SQLAlchemy decumentation for the `session events<https://docs.sqlalchemy.org/en/14/orm/events.html#session-events>`_
+   The SQLAlchemy decumentation for the `session events <https://docs.sqlalchemy.org/en/14/orm/events.html#session-events>`_

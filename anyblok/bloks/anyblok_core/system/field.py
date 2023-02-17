@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok.column import String
-from sqlalchemy import ForeignKeyConstraint
+from anyblok.schema import ForeignKeyConstraint
 
 
 register = Declarations.register

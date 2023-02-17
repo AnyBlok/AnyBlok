@@ -19,11 +19,11 @@ from sqlalchemy import (
     MetaData, Table, Column, Integer, String, Boolean, TEXT,
     CheckConstraint, ForeignKey, text
 )
-from sqlalchemy.dialects.mysql.types import TINYINT
+from sqlalchemy.dialects.mysql.types import TINYINT, DATETIME
 from sqlalchemy.dialects.mssql.base import BIT
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_url
 from .conftest import init_registry, drop_database, create_database
 from anyblok.common import naming_convention
 from mock import patch
@@ -33,7 +33,7 @@ from mock import patch
 def clean_db(request, configuration_loaded):
 
     def clean():
-        url = Configuration.get('get_url')()
+        url = get_url()
         drop_database(url)
         db_template_name = Configuration.get('db_template_name', None)
         create_database(url, template=db_template_name)
@@ -215,8 +215,8 @@ class TestMigration:
         t = registry.migration.table('test')
         t.column().add(Column('new_column', Integer, default=100))
         t.column('new_column')
-        res = [x for x in registry.execute(
-            "select count(*) from test where new_column is null")][0][0]
+        res = [x for x in registry.execute(text(
+            "select count(*) from test where new_column is null"))][0][0]
         assert res == 0
 
     @pytest.mark.skipif(sgdb_in(['MsSQL']),
@@ -1071,6 +1071,15 @@ class TestMigrationPlugin:
         report = MigrationReport(registry_plugin.migration, [])
         res = report.init_modify_type(
             [None, None, 'test', 'other', {}, TINYINT(), Boolean()])
+        assert res is True
+
+    @pytest.mark.skipif(
+        not sgdb_in(['MySQL', 'MariaDB']),
+        reason='Plugin for MySQL only')
+    def test_datetime_with_mysql(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        res = report.init_modify_type(
+            [None, None, 'test', 'other', {}, DATETIME(), DATETIME()])
         assert res is True
 
     @pytest.mark.skipif(

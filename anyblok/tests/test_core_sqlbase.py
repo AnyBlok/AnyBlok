@@ -206,6 +206,12 @@ class TestCoreSQLBase:
         t.expire('select')
         assert t.select == 'key'
 
+    def test_with_subquery(self, registry_declare_model):
+        registry = registry_declare_model
+        Test = registry.Test
+        subquery = Test.query(Test.id2).subquery()
+        assert subquery.c.keys() == ['id2']
+
 
 def declare_model_with_m2o():
 
@@ -245,6 +251,18 @@ class TestCoreSQLBaseM2O:
         assert len(t1.test2) == 1
         t2.delete()
         assert len(t1.test2) == 0
+
+    def test_with_subquery_1(self, registry_declare_model_with_m2o):
+        registry = registry_declare_model_with_m2o
+        Test2 = registry.Test2
+        subquery = Test2.query(Test2.test).subquery()
+        assert subquery.c.keys() == ['test']
+
+    def test_with_subquery_2(self, registry_declare_model_with_m2o):
+        registry = registry_declare_model_with_m2o
+        Test2 = registry.Test2
+        subquery = Test2.query(Test2.test_id).subquery()
+        assert subquery.c.keys() == ['test_id']
 
     def test_to_dict_m2o_with_pks(self, registry_declare_model_with_m2o):
         registry = registry_declare_model_with_m2o

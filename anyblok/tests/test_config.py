@@ -11,7 +11,6 @@ from anyblok import config
 from anyblok.config import (
     Configuration,
     add_configuration_file,
-    add_plugins,
     add_database,
     add_install_bloks,
     add_uninstall_bloks,
@@ -518,6 +517,34 @@ class TestConfiguration:
 
         return Parser()
 
+    def test_add_deprecated_argument(self):
+        parser = self.get_parser()
+        with pytest.warns(DeprecationWarning) as record:
+            parser.add_argument(
+                '--value', dest='value', deprecated="test deprecated")
+            assert str(record.list[0].message) == 'test deprecated'
+
+        with pytest.warns(DeprecationWarning) as record:
+            Configuration.get('value')
+            assert str(record.list[0].message) == 'test deprecated'
+
+    def test_add_removed_argument_1(self):
+        parser = self.get_parser()
+        parser.add_argument('--value', dest='value', removed=True)
+        with pytest.raises(ConfigurationException):
+            Configuration.set('value', 1)
+
+    def test_add_removed_argument_2(self):
+        parser = self.get_parser()
+        parser.add_argument('--value', dest='value', removed=True)
+        with pytest.raises(ConfigurationException):
+            Configuration.get('value')
+
+    def test_add_removed_argument_3(self):
+        parser = self.get_parser()
+        parser.add_argument('--value', dest='value',
+                            default=1, removed=True)
+
     def test_add_argument_str(self):
         parser = self.get_parser()
         parser.add_argument('--value', dest='value', default='1')
@@ -558,8 +585,7 @@ class TestConfiguration:
         assert (
             Configuration.applications['test_add_application_properties'] ==
             {
-                'configuration_groups': [
-                    'config', 'database', 'plugins', 'logging'],
+                'configuration_groups': ['config', 'database', 'logging'],
                 'description': 'Just a test'
             })
 
@@ -597,7 +623,6 @@ def group(parser):
 class TestConfigurationOption:
     function = {
         'add_configuration_file': add_configuration_file,
-        'add_plugins': add_plugins,
         'add_database': add_database,
         'add_install_bloks': add_install_bloks,
         'add_uninstall_bloks': add_uninstall_bloks,
@@ -612,9 +637,6 @@ class TestConfigurationOption:
 
     def test_add_configuration_file(self, parser):
         self.function['add_configuration_file'](parser)
-
-    def test_add_plugins(self, group):
-        self.function['add_plugins'](group)
 
     def test_add_database(self, group):
         self.function['add_database'](group)

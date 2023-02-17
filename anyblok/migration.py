@@ -96,7 +96,7 @@ class MigrationReport:
     def table_is_added(self, table):
         for action in self.actions:
             if action[0] == 'add_table' and action[1] is table:
-                return True
+                return True  # pragma: no cover
 
         return False
 
@@ -192,13 +192,22 @@ class MigrationReport:
 
         columns = [x.name for x in constraint.columns]
         if self.table_is_added(constraint.table):
-            return True
+            return True  # pragma: no cover
 
         self.log_names.append('Add index constraint on %s (%s)' % (
             constraint.table.name, ', '.join(columns)))
 
     def init_remove_index(self, diff):
         _, index = diff
+
+        if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
+            if index.table.schema in (
+                'mysql',
+                'performance_schema',
+                'percona',
+            ):
+                return True
+
         if self.ignore_migration_for(index.table.schema,
                                      index.table.name) is True:
             return True
@@ -368,6 +377,15 @@ class MigrationReport:
 
     def init_remove_table(self, diff):
         table = diff[1]
+
+        if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
+            if table.schema in (
+                'mysql',
+                'performance_schema',
+                'percona',
+            ):
+                return True
+
         table_name = (
             '%s.%s' % (table.schema, table.name)
             if table.schema else table.name)

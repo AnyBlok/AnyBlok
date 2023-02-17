@@ -17,7 +17,7 @@ from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty, load_only
 from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
-from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
+from sqlalchemy_utils.models import NOT_LOADED_REPR
 from sqlalchemy.orm.session import object_state
 from sqlalchemy import delete, select, update as sqla_update
 
@@ -53,8 +53,8 @@ class SqlMixin:
             else:
                 continue  # pragma: no cover
 
-            if value == NO_VALUE:
-                value = NOT_LOADED_REPR
+            if value == NOT_LOADED_REPR:
+                pass
             elif value and type_ in ('One2Many', 'Many2Many'):
                 value = '<%s len(%d)>' % (
                     fields_description[key]['model'],
@@ -220,7 +220,7 @@ class SqlMixin:
     def get_where_clause_from_primary_keys(cls, **pks):
         """ return the where clause to find object from pks
 
-        :param **pks: dict {primary_key: value, ...}
+        :param _*_*pks: dict {primary_key: value, ...}
         :rtype: where clause
         :exception: SqlBaseException
         """
@@ -241,7 +241,7 @@ class SqlMixin:
             query = Model.query_from_primary_keys(**pks)
             obj = query.one()
 
-        :param **pks: dict {primary_key: value, ...}
+        :param _*_*pks: dict {primary_key: value, ...}
         :rtype: Query object
         """
         where_clause = cls.get_where_clause_from_primary_keys(**pks)
@@ -261,7 +261,7 @@ class SqlMixin:
     def from_multi_primary_keys(cls, *pks):
         """ return the instances of the model from the primary keys
 
-        :param *pks: list of dict [{primary_key: value, ...}]
+        :param _*pks: list of dict [{primary_key: value, ...}]
         :rtype: instances of the model
         """
         where_clause = []
@@ -533,7 +533,7 @@ class SqlMixin:
         """ Find column and relation ship link with the column or relationship
         passed in fields.
 
-        :param *fields: lists of the attribute name
+        :param _*fields: lists of the attribute name
         :rtype: list of the attribute name of the attribute and relation ship
         """
         res = []

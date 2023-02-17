@@ -9,8 +9,9 @@
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2022 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-version = '1.1.0'
+version = '1.3.2'

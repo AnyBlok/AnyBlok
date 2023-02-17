@@ -17,7 +17,39 @@
 CHANGELOG
 =========
 
-1.2.0 (unreleased)
+2.0.0 (unreleased)
+------------------
+
+* The previsous deprecated configuration are placed as removed
+  theses configurations will be removed from the code in the next version
+
+1.3.2 (2022-02-19)
+------------------
+
+* Fixed Graphviz dependencies #207
+* Fixed Mapper on column with **primary_key=False** #208
+
+1.3.1 (2021-08-25)
+------------------
+
+* Fixed sphinx pluggin 
+
+1.3.0 (2021-07-12)
+------------------
+
+* Added deprecated name argument on the configuration to
+  add a deprecated message on theses. The goal is to informe
+  the user of AnyBlok that a sys args will be removed
+* Added removed name argument on the configuration to forbid
+  the sys arg
+* Added plugins to migrate DateTime to DateTime with MariaDB and MySQL
+* Added cache_ok attribute on Column Type
+* Fixed issue #195, the issue was due of a changement of the api of
+  the hybrid properties, Thanks @petrus-v for your help
+* Fixed issue #196, A setter on the deprecated attribut **registry**
+  do a setter on the attribute **anyblok**
+
+1.2.0 (2021-04-14)
 ------------------
 
 * Adapted to **SQLAlchemy >= 1.4**
@@ -35,6 +67,7 @@ CHANGELOG
 * Added session.event.**dialect name** entry point to define action on the
   session for the dialect
 * Added entries in configuration to ignore migration for Schema or Model
+* Fixed the configuration of the documentation build on readthedoc
 
 1.1.0 (2021-03-22)
 ------------------
