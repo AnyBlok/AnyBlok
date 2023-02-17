@@ -26,8 +26,8 @@ if sys.version_info < (3, 5):
     sys.exit(1)
 
 requires = [
-    'sqlalchemy >= 1.4.0',
-    'sqlalchemy-utils >= 0.37.0',
+    'sqlalchemy >= 1.4.0, < 2.0.0',
+    'sqlalchemy-utils >= 0.37.0, < 0.40.0',
     'sqlalchemy-views >= 0.3.0',
     'packaging',
     'setuptools',
