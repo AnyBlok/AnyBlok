@@ -49,6 +49,9 @@ classifiers = [
     'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
 ]
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.dynamic]
 readme = { file = ["README.rst", "docs/CHANGE.rst"] }
 
@@ -57,7 +60,6 @@ include = [
     "anyblok*",
     "anyblok_nose*",
 ]
-
 [project.urls]
 Homepage = "https://doc.anyblok.org/en/1.4.0/"
 
