@@ -434,7 +434,6 @@ class Registry:
         self.withoutautomigration = Configuration.get('withoutautomigration')
         self.ini_var()
         self.Session = None
-        self.nb_query_bases = self.nb_session_bases = 0
         self.blok_list_is_loaded = False
         self.pre_assemble_entries()
         self.load()
@@ -893,12 +892,23 @@ class Registry:
 
         update_namespaces(self, namespace)
 
+    def create_query_factory(self):
+        """Create a wrapper for select statement
+
+        The goal is to emulate old legacy query behaviour with the
+        uniquify select statement.
+
+        and keep the compatibily between AnyBlok < 1.2 and AnyBlok >= 1.2
+        """
+        query_bases = [] + self.loaded_cores['Query'] + [self.registry_base]
+        self.Query = type('Query', tuple(query_bases), {})
+
     def create_session_factory(self):
         """Create the SQLA Session factory
 
         in function of the Core Session class ans the Core Qery class
         """
-        if self.Session is None or self.must_recreate_session_factory():
+        if self.Session is None:
             bind = self.bind
             if self.Session:
                 if not self.withoutautomigration:
@@ -910,37 +920,13 @@ class Registry:
                 # because the instance are cached
                 self.Session.remove()
 
-            query_bases = [] + self.loaded_cores['Query']
-            query_bases += [self.registry_base]
-            Query = type('Query', tuple(query_bases), {})
-            session_bases = [self.registry_base] + self.loaded_cores['Session']
-            Session = type('Session', tuple(session_bases), {
-                'registry_query': Query})
-
             self.Session = scoped_session(
-                sessionmaker(bind=bind, class_=Session, future=True),
+                sessionmaker(bind=bind, future=True),
                 EnvironmentManager.scoped_function_for_session())
 
-            self.nb_query_bases = len(self.loaded_cores['Query'])
-            self.nb_session_bases = len(self.loaded_cores['Session'])
             self.apply_session_events()
         else:
             self.flush()
-
-    def must_recreate_session_factory(self):
-        """Check if the SQLA Session Factory must be destroy and recreate
-
-        :rtype: Boolean, True if nb Core Session/Query inheritance change
-        """
-        nb_query_bases = len(self.loaded_cores['Query'])
-        if nb_query_bases != self.nb_query_bases:
-            return True
-
-        nb_session_bases = len(self.loaded_cores['Session'])
-        if nb_session_bases != self.nb_session_bases:
-            return True
-
-        return False
 
     @log(logger, level='debug')
     def load(self):
@@ -973,6 +959,7 @@ class Registry:
             self.InstrumentedList = type(
                 'InstrumentedList', tuple(instrumentedlist_base), {})
             self.assemble_entries()
+            self.create_query_factory()
             self.create_session_factory()
 
             self.apply_model_schema_on_table(blok2install)

@@ -34,7 +34,7 @@ class TestRegistryManager:
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         assert is_exist
-        for core in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
+        for core in ('Base', 'SqlBase', 'SqlViewBase', 'Query',
                      'InstrumentedList'):
             assert core in RegistryManager.loaded_bloks[
                 'newblok']['Core'].keys()
@@ -52,7 +52,7 @@ class TestRegistryManager:
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         assert is_exist
-        for core in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
+        for core in ('Base', 'SqlBase', 'SqlViewBase', 'Query',
                      'InstrumentedList'):
             assert core in RegistryManager.loaded_bloks[
                 'newblok']['Core'].keys()
@@ -73,7 +73,6 @@ class TestRegistryManager:
         assert len(anyblokcore['Core']['Base']) == 1
         assert len(anyblokcore['Core']['SqlBase']) == 1
         assert len(anyblokcore['Core']['SqlViewBase']) == 1
-        assert len(anyblokcore['Core']['Session']) == 1
         assert len(anyblokcore['Core']['Query']) == 1
         assert len(anyblokcore['Core']['InstrumentedList']) == 1
         is_exist = 'Model.System' in anyblokcore['Model']
@@ -85,7 +84,7 @@ class TestRegistryManager:
         RegistryManager.init_blok('newblok')
         is_exist = 'newblok' in RegistryManager.loaded_bloks
         assert is_exist
-        for entry in ('Base', 'SqlBase', 'SqlViewBase', 'Session', 'Query',
+        for entry in ('Base', 'SqlBase', 'SqlViewBase', 'Query',
                       'InstrumentedList'):
             assert RegistryManager.loaded_bloks['newblok']['Core'][entry] == []
 

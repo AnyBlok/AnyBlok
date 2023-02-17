@@ -105,11 +105,32 @@ class SqlMixin:
 
         is equal at::
 
-            query = self.anyblok.session.query(MyModel)
+            query = self.anyblok.Query(MyModel)
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: AnyBlok Query
+        """
+        return cls.anyblok.Query(cls, *elements)
+
+    @classmethod
+    def select_sql_statement(cls, *elements):
+        """ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy select statement
         """
         res = []
         for f in elements:
@@ -119,12 +140,20 @@ class SqlMixin:
                 res.append(f)
 
         if res:
-            query = cls.anyblok.query(*res)
+            stmt = select(*res)
         else:
-            query = cls.anyblok.query(cls)
+            stmt = select(cls)
 
-        query.set_Model(cls)
-        return query
+        return cls.default_filter_on_sql_statement(stmt)
+
+    @classmethod
+    def execute(cls, *args, **kwargs):
+        """call SqlA execute method on the session"""
+        return cls.anyblok.session.execute(*args, **kwargs)
+
+    @classmethod
+    def default_filter_on_sql_statement(cls, statement):
+        return statement
 
     @classmethod
     def execute_sql_statement(cls, *args, **kwargs):

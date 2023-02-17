@@ -13,8 +13,6 @@ from . import sqlbase
 reload_module_if_blok_is_reloading(sqlbase)
 from . import sqlviewbase
 reload_module_if_blok_is_reloading(sqlviewbase)
-from . import session
-reload_module_if_blok_is_reloading(session)
 from . import query
 reload_module_if_blok_is_reloading(query)
 from . import instrumentedlist

@@ -6,11 +6,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import warnings
 from anyblok import Declarations
 from anyblok.common import anyblok_column_prefix
-from sqlalchemy.orm import query
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import select, func
 from logging import getLogger
 
 
@@ -18,11 +17,59 @@ logger = getLogger(__name__)
 
 
 @Declarations.register(Declarations.Core)
-class Query(query.Query):
+class Query:
     """ Overload the SqlAlchemy Query
     """
-    def set_Model(self, Model):
-        self.Model = Model.__registry_name__
+    def __init__(self, Model, *elements, sql_statement=None):
+        self.Model = Model
+        self.elements = elements
+        self.sql_statement = sql_statement
+        if sql_statement is None:
+            self.sql_statement = Model.select_sql_statement(*elements)
+
+    def __getattr__(self, key, default=None):
+        sqla_function = getattr(self.sql_statement, key)
+
+        def wrapper(*args, **kwargs):
+            statement = sqla_function(*args, **kwargs)
+            return self.anyblok.Query(
+                self.Model, *self.elements, sql_statement=statement)
+
+        return wrapper
+
+    def _execute(self):
+        res = self.Model.execute(self.sql_statement)
+        if self.elements:
+            return res
+
+        return res.scalars()
+
+    @property
+    def column_descriptions(self):
+        return self.sql_statement.column_descriptions
+
+    def count(self):
+        stmt = select(func.count())
+        stmt = stmt.select_from(self.sql_statement.subquery())
+        return self.Model.execute(stmt).scalars().first()
+
+    def delete(self, *args, **kwargs):
+        raise NotImplementedError(
+            'You have to use Model.delete_sql_statement()')
+
+    def update(self, *args, **kwargs):
+        raise NotImplementedError(
+            'You have to use Model.update_sql_statement()')
+
+    def first(self):
+        try:
+            return self._execute().first()
+        except NoResultFound as exc:
+            logger.debug('On Model %r: exc %s: query %s',
+                         self.Model.__registry_name__,
+                         str(exc), str(self))
+            raise exc.__class__(
+                'On Model %r: %s' % (self.Model.__registry_name__, str(exc)))
 
     def one(self):
         """Overwrite sqlalchemy one() method to improve exception message
@@ -30,20 +77,22 @@ class Query(query.Query):
         Add model name to query exception message
         """
         try:
-            return super(Query, self).one()
+            return self._execute().one()
         except NoResultFound as exc:
-            logger.debug('On Model %r: exc %s: query %s', self.Model, str(exc),
-                         str(self))
-            if self.Model:
-                raise exc.__class__(
-                    'On Model %r: %s' % (self.Model, str(exc)))
+            logger.debug('On Model %r: exc %s: query %s',
+                         self.Model.__registry_name__,
+                         str(exc), str(self))
+            raise exc.__class__(  # pragma: no cover
+                'On Model %r: %s' % (self.Model.__registry_name__, str(exc)))
 
-            raise  # pragma: no cover
+    def one_or_none(self):
+        return self._execute().one_or_none()
 
     def all(self):
         """ Return an instrumented list of the result of the query
         """
-        return self.anyblok.InstrumentedList(super(Query, self).all())
+        res = self._execute().all()
+        return self.anyblok.InstrumentedList(res)
 
     def with_perm(self, principals, permission):
         """Add authorization pre- and post-filtering to query.
@@ -82,24 +131,24 @@ class Query(query.Query):
         else:
             return val.to_dict()
 
-    def dictfirst(self):
-        val = self.first()
-        field2get = self.get_field_names_in_column_description()
-        if field2get:
-            return {x: getattr(val, y) for x, y in field2get}
-        else:
-            return val.to_dict()
+    # def dictfirst(self):
+    #     val = self.first()
+    #     field2get = self.get_field_names_in_column_description()
+    #     if field2get:
+    #         return {x: getattr(val, y) for x, y in field2get}
+    #     else:
+    #         return val.to_dict()
 
-    def dictall(self):
-        vals = self.all()
-        if not vals:
-            return []  # pragma: no cover
+    # def dictall(self):
+    #     vals = self.all()
+    #     if not vals:
+    #         return []
 
-        field2get = self.get_field_names_in_column_description()
-        if field2get:
-            return [{x: getattr(y, z) for x, z in field2get} for y in vals]
-        else:
-            return vals.to_dict()
+    #     field2get = self.get_field_names_in_column_description()
+    #     if field2get:
+    #         return [{x: getattr(y, z) for x, z in field2get} for y in vals]
+    #     else:
+    #         return vals.to_dict()
 
     def get(self, primary_keys=None, **kwargs):
         """Return instance of the Model
@@ -117,29 +166,10 @@ class Query(query.Query):
             primary_keys = kwargs
 
         if isinstance(primary_keys, dict):
-            Model = self.anyblok.get(self.Model)
             primary_keys = {
                 (anyblok_column_prefix + k
-                 if k in Model.hybrid_property_columns else k): v
+                 if k in self.Model.hybrid_property_columns else k): v
                 for k, v in primary_keys.items()
             }
 
-        return super(Query, self).get(primary_keys)
-
-    def update(self, *args, **kwargs):  # pragma: no cover
-        """Overwrite Query.update of sqlalchemy to depreciate this it"""
-        warnings.warn(
-            "This method is deprecated and will be removed in the next version"
-            "of AnyBlok, you should use update_sql_statement classmethod",
-            DeprecationWarning, stacklevel=2)
-
-        return super(Query, self).update(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):  # pragma: no cover
-        """Overwrite Query.delete of sqlalchemy to depreciate this it"""
-        warnings.warn(
-            "This method is deprecated and will be removed in the next version"
-            "of AnyBlok, you should use delete_sql_statement classmethod",
-            DeprecationWarning, stacklevel=2)
-
-        return super(Query, self).delete(*args, **kwargs)
+        return self.anyblok.session.get(self.Model, primary_keys)
