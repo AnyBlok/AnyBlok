@@ -128,6 +128,7 @@ Contributors
 * Florent Jouatte
 * Christophe Combelles
 * Sébastien Chazallet
+* François GUÉRIN
 
 Bugs
 ----

@@ -1,0 +1,123 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "AnyBlok"
+description = "Anyblok is a dynamic injection blok framework"
+authors = [
+    { name = "Jean-Sébastien Suzanne", email = "jssuzanne@anybox.fr" },
+]
+version = "1.4.0"
+license = { text = "MPL2" }
+requires-python = ">=3.7"
+dependencies = [
+    'sqlalchemy >= 1.4.0,<2.0',
+    'sqlalchemy-utils >= 0.37.0,<0.40',
+    'sqlalchemy-views >= 0.3.0,<0.4',
+    'packaging',
+    'argparse',
+    'alembic',
+    'graphviz',
+    'lxml',
+    'PyYAML',
+    'appdirs',
+    'pytz',
+    'python-dateutil',
+    'texttable',
+    'testfixtures',
+]
+dynamic = ["readme"]
+keywords = [
+    "django",
+    "notifications",
+    "delayed sending"
+]
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Intended Audience :: Developers',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Programming Language :: Python :: Implementation :: PyPy',
+    "Topic :: Database",
+    'Topic :: Software Development',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
+]
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.rst", "CHANGE.rst"] }
+
+[tool.setuptools.packages.find]
+include = [
+    "anyblok*",
+    "anyblok_nose*",
+]
+
+[project.urls]
+Homepage = "https://doc.anyblok.org/en/1.4.0/"
+
+[project.optional-dependencies]
+pytest = ['pytest', 'pytest-cov']
+postgres = ['psycopg2-binary']
+mysql = ['mysqlclient']
+mariadb = ['mysqlclient']
+mssql = ['pymssql', 'sqlalchemy_utils==0.34.2']
+pyodbc = ['pyodbc']
+
+[project.scripts]
+anyblok_createdb = "anyblok.scripts:anyblok_createdb"
+anyblok_updatedb = "anyblok.scripts:anyblok_updatedb"
+anyblok_nose = "anyblok.scripts:anyblok_nose"
+anyblok_interpreter = "anyblok.scripts:anyblok_interpreter"
+anyblok_doc = "anyblok.scripts:anyblok2doc"
+
+[project.entry-points."bloks"]
+anyblok-core = "anyblok.bloks.anyblok_core:AnyBlokCore"
+anyblok-test = "anyblok.bloks.anyblok_test:AnyBlokTest"
+model_authz = "anyblok.bloks.model_authz:ModelBasedAuthorizationBlok"
+
+[project.entry-points."test_bloks"]
+test-blok1 = "anyblok.test_bloks.test_blok1:TestBlok"
+test-blok2 = "anyblok.test_bloks.test_blok2:TestBlok"
+test-blok3 = "anyblok.test_bloks.test_blok3:TestBlok"
+test-blok4 = "anyblok.test_bloks.test_blok4:TestBlok"
+test-blok5 = "anyblok.test_bloks.test_blok5:TestBlok"
+test-blok6 = "anyblok.test_bloks.test_blok6:TestBlok"
+test-blok7 = "anyblok.test_bloks.test_blok7:TestBlok"
+test-blok8 = "anyblok.test_bloks.test_blok8:TestBlok"
+test-blok9 = "anyblok.test_bloks.test_blok9:TestBlok"
+test-blok10 = "anyblok.test_bloks.test_blok10:TestBlok"
+test-blok11 = "anyblok.test_bloks.test_blok11:TestBlok"
+test-blok12 = "anyblok.test_bloks.test_blok12:TestBlok"
+test-blok13 = "anyblok.test_bloks.test_blok13:TestBlok"
+test-blok14 = "anyblok.test_bloks.test_blok14:TestBlok"
+test-blok15 = "anyblok.test_bloks.test_blok15:TestBlok"
+test-blok16 = "anyblok.test_bloks.test_blok16:TestBlok"
+
+[project.entry-points."nose.plugins.0.10"]
+anyblok-bloks = "anyblok_nose.plugins:AnyBlokPlugin"
+
+[project.entry-points."anyblok.init"]
+# Is called by AnyBlok before starting, to initialize various external applications.
+
+[project.entry-points."anyblok.model.plugin"]
+hybrid_method = "anyblok.model.hybrid_method:HybridMethodPlugin"
+table_mapper = "anyblok.model.table_and_mapper:TableMapperPlugin"
+event = "anyblok.model.event:EventPlugin"
+sqla-event = "anyblok.model.event:SQLAlchemyEventPlugin"
+auto-orm-event = "anyblok.model.event:AutoSQLAlchemyORMEventPlugin"
+cache = "anyblok.model.cache:CachePlugin"
+field_datetime = "anyblok.model.field_datetime:AutoUpdatePlugin"
+
+[project.entry-points."anyblok.migration_type.plugins"]
+mysql-bool2tinyint = "anyblok.plugins:BooleanToTinyIntMySQL"
+mysql-dt2dt = "anyblok.plugins:DateTimeToDateTimeMySQL"
+mssql-bool2bit = "anyblok.plugins:BooleanToBitMsSQL"
+
+[project.entry-points."anyblok.engine.event.mysql"]
+mysql-no-autocommit = "anyblok.event:mysql_no_autocommit"
