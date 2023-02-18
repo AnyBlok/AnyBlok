@@ -13,6 +13,7 @@ from anyblok.column import Integer, String, Boolean
 
 register = Declarations.register
 System = Declarations.Model.System
+Model = Declarations.Model
 
 
 @register(System)
@@ -69,7 +70,7 @@ class Sequence:
 
     id = Integer(primary_key=True)
     code = String(nullable=False)
-    start = Integer(default=1)
+    number = Integer(nullable=False)
     current = Integer(default=None)
     seq_name = String(nullable=False)
     """Name of the sequence in the database.
@@ -119,6 +120,10 @@ class Sequence:
             if formatter is None:
                 del vals['formater']
 
+            no_gap = vals.get('no_gap')
+            if no_gap is None:
+                del vals['no_gap']
+
             cls.insert(**vals)
 
     @classmethod
@@ -129,17 +134,19 @@ class Sequence:
         :rtype: dict
         """
         seq_name = values.get('seq_name')
-        start = values.setdefault('start', 1)
-
+        number = values.setdefault('number', 0)
         if values.get("no_gap"):
-            values.setdefault('seq_name', values.get("code", "no_gap"))
+            values.setdefault('seq_name', values.get("code", "no_gap_seq"))
         else:
             if seq_name is None:
                 seq_id = cls.anyblok.execute(SQLASequence(cls._cls_seq_name))
                 seq_name = '%s_%d' % (cls.__tablename__, seq_id)
                 values['seq_name'] = seq_name
 
-            seq = SQLASequence(seq_name, start=start)
+            if number:
+                seq = SQLASequence(seq_name, number)
+            else:
+                seq = SQLASequence(seq_name)
             seq.create(cls.anyblok.bind)
         return values
 
@@ -160,11 +167,19 @@ class Sequence:
         :rtype: str
         """
         if self.no_gap:
-            self.refresh(with_for_update={"nowait": True})
-            nextval = self.start if self.current is None else self.current + 1
+            cls = self.__class__
+            nextval = cls.execute_sql_statement(
+                cls.select_sql_statement(cls.number).with_for_update(
+                    nowait=True).where(cls.id == self.id)).scalar()
+
+            nextval += 1
+
+            cls.execute_sql_statement(
+                cls.update_sql_statement().where(
+                    cls.id == self.id).values(number=nextval))
         else:
             nextval = self.anyblok.execute(SQLASequence(self.seq_name))
-        self.update(current=nextval)
+
         return self.formater.format(code=self.code, seq=nextval, id=self.id)
 
     @classmethod

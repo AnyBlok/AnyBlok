@@ -17,6 +17,11 @@
 CHANGELOG
 =========
 
+2.0.0 (unreleased)
+------------------
+
+* Added Sequence with *no gap* to provide functional sequence without gaps.
+
 1.4.0 (2022-02-17)
 ------------------
 
