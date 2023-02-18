@@ -167,11 +167,19 @@ class Sequence:
         :rtype: str
         """
         if self.no_gap:
-            self.refresh(with_for_update={"nowait": True})
-            nextval = self.number + 1
+            cls = self.__class__
+            nextval = cls.execute_sql_statement(
+                cls.select_sql_statement(cls.number).with_for_update(
+                    nowait=True).where(cls.id == self.id)).scalar()
+
+            nextval += 1
+
+            cls.execute_sql_statement(
+                cls.update_sql_statement().where(
+                    cls.id == self.id).values(number=nextval))
         else:
             nextval = self.anyblok.execute(SQLASequence(self.seq_name))
-        self.update(number=nextval)
+
         return self.formater.format(code=self.code, seq=nextval, id=self.id)
 
     @classmethod

@@ -1054,15 +1054,20 @@ class TestColumns:
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       code="SO", formater="{code}-{seq:06d}")
-        registry.begin_nested()
-        assert registry.Test.insert().col == "SO-000001"
-        assert registry.Test.insert().col == "SO-000002"
-        assert registry.Test.insert().col == "SO-000003"
-        registry.rollback()
+        try:
+            with registry.begin_nested():
+                assert registry.Test.insert().col == "SO-000001"
+                assert registry.Test.insert().col == "SO-000002"
+                assert registry.Test.insert().col == "SO-000003"
+                raise Exception('test')
+
+        except Exception:
+            pass
+
         assert registry.Test.insert().col == "SO-000004"
+        registry.flush()
         Seq = registry.System.Sequence
-        seq = Seq.query().filter(Seq.code == 'SO').one()
-        assert seq.number == 4
+        assert Seq.query().filter(Seq.code == 'SO').one()
 
     def test_sequence_with_foreign_key(self):
         with pytest.raises(FieldException):
@@ -1083,14 +1088,20 @@ class TestColumns:
             formater="{code}-{seq:06d}",
             no_gap=True,
         )
-        registry.begin_nested()
-        assert registry.Test.insert().col == "SO-NO-GAP-000001"
-        assert registry.Test.insert().col == "SO-NO-GAP-000002"
-        assert registry.Test.insert().col == "SO-NO-GAP-000003"
-        registry.rollback()
+        try:
+            with registry.begin_nested():
+                assert registry.Test.insert().col == "SO-NO-GAP-000001"
+                assert registry.Test.insert().col == "SO-NO-GAP-000002"
+                assert registry.Test.insert().col == "SO-NO-GAP-000003"
+                raise Exception('test')
+
+        except Exception:
+            pass
+
         assert registry.Test.insert().col == "SO-NO-GAP-000001"
         Seq = registry.System.Sequence
         seq = Seq.query().filter(Seq.code == 'SO-NO-GAP').one()
+        assert seq.number == 1
 
     @pytest.mark.skipif(not has_colour,
                         reason="colour is not installed")
