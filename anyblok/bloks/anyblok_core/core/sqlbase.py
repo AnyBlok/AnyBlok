@@ -19,6 +19,7 @@ from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
 from sqlalchemy_utils.models import NOT_LOADED_REPR
 from sqlalchemy.orm.session import object_state
+from sqlalchemy.orm.base import LoaderCallableStatus
 from sqlalchemy import delete, select, update as sqla_update
 
 
@@ -53,8 +54,8 @@ class SqlMixin:
             else:
                 continue  # pragma: no cover
 
-            if value == NOT_LOADED_REPR:
-                pass
+            if value == LoaderCallableStatus.NO_VALUE:
+                value = NOT_LOADED_REPR
             elif value and type_ in ('One2Many', 'Many2Many'):
                 value = '<%s len(%d)>' % (
                     fields_description[key]['model'],
