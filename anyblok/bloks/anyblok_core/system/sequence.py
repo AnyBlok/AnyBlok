@@ -135,7 +135,7 @@ class Sequence:
             values.setdefault('seq_name', values.get("code", "no_gap"))
         else:
             if seq_name is None:
-                seq_id = cls.anyblok.execute(SQLASequence(cls._cls_seq_name))
+                seq_id = cls.anyblok.scalar(SQLASequence(cls._cls_seq_name))
                 seq_name = '%s_%d' % (cls.__tablename__, seq_id)
                 values['seq_name'] = seq_name
 
@@ -163,7 +163,7 @@ class Sequence:
             self.refresh(with_for_update={"nowait": True})
             nextval = self.start if self.current is None else self.current + 1
         else:
-            nextval = self.anyblok.execute(SQLASequence(self.seq_name))
+            nextval = self.anyblok.scalar(SQLASequence(self.seq_name))
         self.update(current=nextval)
         return self.formater.format(code=self.code, seq=nextval, id=self.id)
 
