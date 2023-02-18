@@ -39,11 +39,11 @@ class RelationshipProperty(relationships.RelationshipProperty):
         :func:`_orm.relationship` complementary to this one."""
 
         if self.parent.non_primary:
-            return
+            return  # pragma: no cover
         if self.backref is not None and not self.back_populates:
             kwargs: Dict[str, Any]
             if isinstance(self.backref, str):
-                backref_key, kwargs = self.backref, {}
+                backref_key, kwargs = self.backref, {}  # pragma: no cover
             else:
                 backref_key, kwargs = self.backref
             mapper = self.mapper.primary_mapper()
@@ -54,7 +54,7 @@ class RelationshipProperty(relationships.RelationshipProperty):
                 )
                 for m in check:
                     if m.has_property(backref_key) and not m.concrete:
-                        raise sa_exc.ArgumentError(
+                        raise sa_exc.ArgumentError(  # pragma: no cover
                             "Error creating backref "
                             "'%s' on relationship '%s': property of that "
                             "name exists on mapper '%s'"
@@ -68,11 +68,11 @@ class RelationshipProperty(relationships.RelationshipProperty):
                 # for many to many, just switch primaryjoin/
                 # secondaryjoin.   use the annotated
                 # pj/sj on the _join_condition.
-                pj = kwargs.pop(
+                pj = kwargs.pop(  # pragma: no cover
                     "primaryjoin",
                     self._join_condition.secondaryjoin_minus_local,
                 )
-                sj = kwargs.pop(
+                sj = kwargs.pop(  # pragma: no cover
                     "secondaryjoin",
                     self._join_condition.primaryjoin_minus_local,
                 )
@@ -83,7 +83,7 @@ class RelationshipProperty(relationships.RelationshipProperty):
                 )
                 sj = kwargs.pop("secondaryjoin", None)
                 if sj:
-                    raise sa_exc.InvalidRequestError(
+                    raise sa_exc.InvalidRequestError(  # pragma: no cover
                         "Can't assign 'secondaryjoin' on a backref "
                         "against a non-secondary relationship."
                     )
@@ -97,7 +97,8 @@ class RelationshipProperty(relationships.RelationshipProperty):
             kwargs.setdefault("passive_updates", self.passive_updates)
             kwargs.setdefault("sync_backref", self.sync_backref)
             self.back_populates = backref_key
-            relationship = RelationshipProperty(
+            # Overwrite here
+            relationship = RelationshipProperty2(
                 parent,
                 self.secondary,
                 primaryjoin=pj,
