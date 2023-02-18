@@ -1,5 +1,5 @@
 =========================================
-Documentation of the anyblok_core project
+Documentation of the anyblok_test project
 =========================================
 
 Bloks
@@ -43,41 +43,8 @@ This Blok is required in all AnyBlok applications.
 Parameter:
 
 * **author** = Suzanne Jean-Sébastien
-* **version** = 0.22.5
-* **installed_version** = 0.22.5
-
-
-
-model_authz
------------
-
-
-
-Parameter:
-
-* **author** = Suzanne Jean-Sébastien
-* **version** = 0.22.5
-* **installed_version** = 0.22.5
-
-.. This file is a part of the AnyBlok project
-..
-..    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
-..
-.. This Source Code Form is subject to the terms of the Mozilla Public License,
-.. v. 2.0. If a copy of the MPL was not distributed with this file,You can
-.. obtain one at http://mozilla.org/MPL/2.0/.
-
-
-anyblok-test
-------------
-
-
-
-Parameter:
-
-* **author** = Suzanne Jean-Sébastien
-* **version** = 0.22.5
-* **installed_version** = 0.22.5
+* **version** = 1.4.0
+* **installed_version** = 1.4.0
 
 
 
@@ -102,6 +69,16 @@ Built-in mutable sequence.
 
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
+
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
 
 * hybrid_property_columns
 
@@ -175,6 +152,12 @@ Attributes, methods and class methods
 
 * _format_field
 
+* _sa_class_manager
+
+Tracks state information at the class level.
+
+* _sa_registry
+
 * add_fields
 
 * add_in_table_args
@@ -184,13 +167,33 @@ Built-in mutable sequence.
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
 
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
+
+* default_filter_on_sql_statement
+
 * define_mapper_args
 
 * define_table_args
 
 * define_table_kwargs
 
+* delete_sql_statement
+
+Return a statement to delete some element
+
 * description
+
+* execute_sql_statement
+
+call SqlA execute method on the session
 
 * expire
 
@@ -309,6 +312,19 @@ A collection of :class:`_schema.Table`
         :param call_only_if: ['commited' (default), 'raised', 'always']
         
 
+* query_from_primary_keys
+
+return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param _*_*pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        
+
 * refresh
 
  Expire and reload all the attribute of the instance
@@ -318,6 +334,26 @@ A collection of :class:`_schema.Table`
         
 
 * schema
+
+* select_sql_statement
+
+ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
+        
 
 * table
 
@@ -329,6 +365,8 @@ A collection of :class:`_schema.Table`
 
         :exception: Exception
         
+
+* update_sql_statement
 
 Model.System.Field
 ------------------
@@ -371,6 +409,12 @@ Attributes, methods and class methods
 
 * _format_field
 
+* _sa_class_manager
+
+Tracks state information at the class level.
+
+* _sa_registry
+
 * add_field
 
  Insert a field definition
@@ -398,7 +442,19 @@ The argument must be an iterable if specified.
         :param ftype: type of the AnyBlok Field
         
 
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
+
 * code
+
+* default_filter_on_sql_statement
 
 * define_mapper_args
 
@@ -406,7 +462,15 @@ The argument must be an iterable if specified.
 
 * define_table_kwargs
 
+* delete_sql_statement
+
+Return a statement to delete some element
+
 * entity_type
+
+* execute_sql_statement
+
+call SqlA execute method on the session
 
 * expire
 
@@ -520,6 +584,19 @@ A collection of :class:`_schema.Table`
         :param call_only_if: ['commited' (default), 'raised', 'always']
         
 
+* query_from_primary_keys
+
+return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param _*_*pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        
+
 * refresh
 
  Expire and reload all the attribute of the instance
@@ -527,6 +604,28 @@ A collection of :class:`_schema.Table`
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
         
+
+* select_sql_statement
+
+ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
+        
+
+* update_sql_statement
 
 Model.System.Column
 -------------------
@@ -577,6 +676,12 @@ Attributes, methods and class methods
 
 * _format_field
 
+* _sa_class_manager
+
+Tracks state information at the class level.
+
+* _sa_registry
+
 * add_field
 
  Insert a column definition
@@ -604,9 +709,21 @@ The argument must be an iterable if specified.
         :param ftype: type of the AnyBlok Field
         
 
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
+
 * autoincrement
 
 * code
+
+* default_filter_on_sql_statement
 
 * define_mapper_args
 
@@ -614,7 +731,15 @@ The argument must be an iterable if specified.
 
 * define_table_kwargs
 
+* delete_sql_statement
+
+Return a statement to delete some element
+
 * entity_type
+
+* execute_sql_statement
+
+call SqlA execute method on the session
 
 * expire
 
@@ -741,6 +866,19 @@ A collection of :class:`_schema.Table`
 
 * primary_key
 
+* query_from_primary_keys
+
+return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param _*_*pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        
+
 * refresh
 
  Expire and reload all the attribute of the instance
@@ -751,7 +889,29 @@ A collection of :class:`_schema.Table`
 
 * remote_model
 
+* select_sql_statement
+
+ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
+        
+
 * unique
+
+* update_sql_statement
 
 * use
 
@@ -804,6 +964,12 @@ Attributes, methods and class methods
 
 * _format_field
 
+* _sa_class_manager
+
+Tracks state information at the class level.
+
+* _sa_registry
+
 * add_field
 
  Insert a relationship definition
@@ -824,7 +990,19 @@ The argument must be an iterable if specified.
 
 * alter_field
 
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
+
 * code
+
+* default_filter_on_sql_statement
 
 * define_mapper_args
 
@@ -832,7 +1010,15 @@ The argument must be an iterable if specified.
 
 * define_table_kwargs
 
+* delete_sql_statement
+
+Return a statement to delete some element
+
 * entity_type
+
+* execute_sql_statement
+
+call SqlA execute method on the session
 
 * expire
 
@@ -950,6 +1136,19 @@ A collection of :class:`_schema.Table`
         :param call_only_if: ['commited' (default), 'raised', 'always']
         
 
+* query_from_primary_keys
+
+return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param _*_*pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        
+
 * refresh
 
  Expire and reload all the attribute of the instance
@@ -965,6 +1164,28 @@ A collection of :class:`_schema.Table`
 * remote_model
 
 * remote_name
+
+* select_sql_statement
+
+ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
+        
+
+* update_sql_statement
 
 * use
 
@@ -1031,12 +1252,28 @@ dict(**kwargs) -> new dictionary initialized with the name=value pairs
 
 * _format_field
 
+* _sa_class_manager
+
+Tracks state information at the class level.
+
+* _sa_registry
+
 * add_in_table_args
 
 Built-in mutable sequence.
 
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
+
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
 
 * apply_state
 
@@ -1059,11 +1296,21 @@ The argument must be an iterable if specified.
         :rtype: boolean
         
 
+* default_filter_on_sql_statement
+
 * define_mapper_args
 
 * define_table_args
 
 * define_table_kwargs
+
+* delete_sql_statement
+
+Return a statement to delete some element
+
+* execute_sql_statement
+
+call SqlA execute method on the session
 
 * expire
 
@@ -1225,12 +1472,45 @@ A collection of :class:`_schema.Table`
         :param call_only_if: ['commited' (default), 'raised', 'always']
         
 
+* query_from_primary_keys
+
+return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param _*_*pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        
+
 * refresh
 
  Expire and reload all the attribute of the instance
 
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
+        
+
+* select_sql_statement
+
+ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
         
 
 * short_description
@@ -1258,6 +1538,8 @@ A collection of :class:`_schema.Table`
 
  Populate the bloks list and update the state of existing bloks
         
+
+* update_sql_statement
 
 * upgrade
 
@@ -1293,6 +1575,12 @@ Attributes, methods and class methods
 
 * _format_field
 
+* _sa_class_manager
+
+Tracks state information at the class level.
+
+* _sa_registry
+
 * add_in_table_args
 
 Built-in mutable sequence.
@@ -1300,10 +1588,22 @@ Built-in mutable sequence.
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
 
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
+
 * clear_invalidate_cache
 
  Invalidate the cache that needs to be invalidated
         
+
+* default_filter_on_sql_statement
 
 * define_mapper_args
 
@@ -1311,12 +1611,20 @@ The argument must be an iterable if specified.
 
 * define_table_kwargs
 
+* delete_sql_statement
+
+Return a statement to delete some element
+
 * detect_invalidation
 
  Return True if a new invalidation is found in the table
 
         :rtype: Boolean
         
+
+* execute_sql_statement
+
+call SqlA execute method on the session
 
 * expire
 
@@ -1474,6 +1782,19 @@ A collection of :class:`_schema.Table`
         :param call_only_if: ['commited' (default), 'raised', 'always']
         
 
+* query_from_primary_keys
+
+return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param _*_*pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        
+
 * refresh
 
  Expire and reload all the attribute of the instance
@@ -1483,6 +1804,28 @@ A collection of :class:`_schema.Table`
         
 
 * registry_name
+
+* select_sql_statement
+
+ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
+        
+
+* update_sql_statement
 
 Model.System.Parameter
 ----------------------
@@ -1523,6 +1866,12 @@ Attributes, methods and class methods
 
 * _format_field
 
+* _sa_class_manager
+
+Tracks state information at the class level.
+
+* _sa_registry
+
 * add_in_table_args
 
 Built-in mutable sequence.
@@ -1530,11 +1879,31 @@ Built-in mutable sequence.
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
 
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
+
+* default_filter_on_sql_statement
+
 * define_mapper_args
 
 * define_table_args
 
 * define_table_kwargs
+
+* delete_sql_statement
+
+Return a statement to delete some element
+
+* execute_sql_statement
+
+call SqlA execute method on the session
 
 * expire
 
@@ -1588,6 +1957,19 @@ Expunge the instance in the session
 * get_modified_fields
 
 return the fields which have changed and their previous values
+
+* get_parameter
+
+ Return the value of the key
+
+        :param key: key whose value to retrieve
+        :param default: default value if key does not exists
+        :param remove: bool if True the entry will be removed
+        :return: associated value
+        :rtype: anything JSON encodable
+        :raises ParameterException: if the key doesn't exist and default is not
+                                    set.
+        
 
 * hybrid_property_columns
 
@@ -1648,6 +2030,7 @@ Remove the given key and return the associated value.
 
         :param str key: the key to remove
         :return: the value before removal
+        :param default: default value if key does not exists
         :rtype: any JSON encodable type
         :raises ParameterException: if the key wasn't present
         
@@ -1672,12 +2055,45 @@ Remove the given key and return the associated value.
         :param call_only_if: ['commited' (default), 'raised', 'always']
         
 
+* query_from_primary_keys
+
+return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param _*_*pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        
+
 * refresh
 
  Expire and reload all the attribute of the instance
 
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
+        
+
+* select_sql_statement
+
+ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
         
 
 * set
@@ -1689,6 +2105,8 @@ Remove the given key and return the associated value.
         :param str key: key to save
         :param value: value to save
         
+
+* update_sql_statement
 
 * value
 
@@ -1723,6 +2141,24 @@ Database sequences.
         'SO-000001'
         >>> seq.nextval()
         'SO-000002'
+
+    You can create a Sequence without gap warranty using `no_gap` while
+    creating the sequence::
+
+
+        >>> seq = Sequence.insert(
+                code='SO', formater="{code}-{seq:06d}", no_gap=True)
+        >>> commit()
+
+        >>> # Transaction 1:
+        >>> Sequence.nextvalBy(code='SO')
+        'SO-000001'
+
+        >>> # Concurrent transaction 2:
+        >>> Sequence.nextvalBy(code='SO')
+        ...
+        sqlalchemy.exc.OperationalError: (psycopg2.errors.LockNotAvailable)
+        ...
     
 
 Properties:
@@ -1740,9 +2176,13 @@ Fields
 
  **code** (system_sequence.code),  **model** (Model.System.Sequence),  **label** (Code),  **ftype** (String),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (False),  **remote_model** (None)
 
-* number
+* start
 
- **code** (system_sequence.number),  **model** (Model.System.Sequence),  **label** (Number),  **ftype** (Integer),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (False),  **remote_model** (None)
+ **code** (system_sequence.start),  **model** (Model.System.Sequence),  **label** (Start),  **ftype** (Integer),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (True),  **remote_model** (None)
+
+* current
+
+ **code** (system_sequence.current),  **model** (Model.System.Sequence),  **label** (Current),  **ftype** (Integer),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (True),  **remote_model** (None)
 
 * seq_name
 
@@ -1751,6 +2191,10 @@ Fields
 * formater
 
  **code** (system_sequence.formater),  **model** (Model.System.Sequence),  **label** (Formater),  **ftype** (String),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (False),  **remote_model** (None)
+
+* no_gap
+
+ **code** (system_sequence.no_gap),  **model** (Model.System.Sequence),  **label** (No gap),  **ftype** (Boolean),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (False),  **remote_model** (None)
 
 Attributes, methods and class methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1770,12 +2214,28 @@ errors defaults to 'strict'.
 
 * _format_field
 
+* _sa_class_manager
+
+Tracks state information at the class level.
+
+* _sa_registry
+
 * add_in_table_args
 
 Built-in mutable sequence.
 
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
+
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
 
 * code
 
@@ -1787,11 +2247,23 @@ Create the database sequence for an instance of Sequence Model.
         :rtype: dict
         
 
+* current
+
+* default_filter_on_sql_statement
+
 * define_mapper_args
 
 * define_table_args
 
 * define_table_kwargs
+
+* delete_sql_statement
+
+Return a statement to delete some element
+
+* execute_sql_statement
+
+call SqlA execute method on the session
 
 * expire
 
@@ -1895,7 +2367,7 @@ Return next value of the first Sequence matching given criteria.
                  or ``None`` if there's no match.
         
 
-* number
+* no_gap
 
 * postcommit_hook
 
@@ -1917,6 +2389,19 @@ Return next value of the first Sequence matching given criteria.
         :param call_only_if: ['commited' (default), 'raised', 'always']
         
 
+* query_from_primary_keys
+
+return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param _*_*pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        
+
 * refresh
 
  Expire and reload all the attribute of the instance
@@ -1925,7 +2410,31 @@ Return next value of the first Sequence matching given criteria.
         #sqlalchemy.orm.session.Session.refresh
         
 
+* select_sql_statement
+
+ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
+        
+
 * seq_name
+
+* start
+
+* update_sql_statement
 
 Model.Authorization
 -------------------
@@ -1945,6 +2454,16 @@ Built-in mutable sequence.
 
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
+
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
 
 * hybrid_property_columns
 
@@ -2001,6 +2520,16 @@ Built-in mutable sequence.
 
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
+
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
 
 * auto_doc
 
@@ -2076,6 +2605,16 @@ Built-in mutable sequence.
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
 
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
+
 * exist
 
 * filterBloks
@@ -2147,6 +2686,16 @@ Built-in mutable sequence.
 
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
+
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
 
 * exist
 
@@ -2231,6 +2780,16 @@ Built-in mutable sequence.
 
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
+
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
 
 * exist
 
@@ -2330,6 +2889,16 @@ Built-in mutable sequence.
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.
 
+* anyblok
+
+ Define one registry
+
+    A registry is linked to a database, and stores the definition of the
+    installed Bloks, Models, Mixins for this database::
+
+        registry = Registry('My database')
+    
+
 * exist
 
 * filterAttribute
@@ -2380,162 +2949,4 @@ The class bool is a subclass of the class int, and cannot be subclassed.
 * toRST_docstring
 
 * toUML
-
-Model.Authorization.ModelPermissionGrant
-----------------------------------------
-
-Default model for ModelBasedAuthorizationRule
-
-Properties:
-
-* **table name** : authorization_modelpermissiongrant
-
-Fields
-~~~~~~
-
-* model
-
- **code** (authorization_modelpermissiongrant.model),  **model** (Model.Authorization.ModelPermissionGrant),  **label** (Model),  **ftype** (String),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (True),  **unique** (None),  **nullable** (False),  **remote_model** (None)
-
-* principal
-
- **code** (authorization_modelpermissiongrant.principal),  **model** (Model.Authorization.ModelPermissionGrant),  **label** (Principal),  **ftype** (String),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (True),  **unique** (None),  **nullable** (False),  **remote_model** (None)
-
-* permission
-
- **code** (authorization_modelpermissiongrant.permission),  **model** (Model.Authorization.ModelPermissionGrant),  **label** (Permission),  **ftype** (String),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (True),  **unique** (None),  **nullable** (False),  **remote_model** (None)
-
-Attributes, methods and class methods
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* _format_field
-
-* add_in_table_args
-
-Built-in mutable sequence.
-
-If no argument is given, the constructor creates a new empty list.
-The argument must be an iterable if specified.
-
-* define_mapper_args
-
-* define_table_args
-
-* define_table_kwargs
-
-* expire
-
- Expire the attribute of the instance, theses attributes will be
-        load at the next  call of the instance
-
-        see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
-        #sqlalchemy.orm.session.Session.expire
-        
-
-* expire_relationship_mapped
-
- Expire the objects linked with this object, in function of
-        the mappers definition
-        
-
-* expunge
-
-Expunge the instance in the session
-
-* find_relationship
-
-* find_remote_attribute_to_expire
-
-* flag_modified
-
- Flag the attributes as modified
-
-        see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
-        #sqlalchemy.orm.session.Session.expire
-        
-
-* getFieldType
-
-* get_all_registry_names
-
-* get_hybrid_property_columns
-
-* get_modified_fields
-
-return the fields which have changed and their previous values
-
-* hybrid_property_columns
-
-Built-in mutable sequence.
-
-If no argument is given, the constructor creates a new empty list.
-The argument must be an iterable if specified.
-
-* is_sql
-
-bool(x) -> bool
-
-Returns True when the argument x is true, False otherwise.
-The builtins True and False are the only two instances of the class bool.
-The class bool is a subclass of the class int, and cannot be subclassed.
-
-* metadata
-
-A collection of :class:`_schema.Table`
-    objects and their associated schema
-    constructs.
-
-    Holds a collection of :class:`_schema.Table` objects as well as
-    an optional binding to an :class:`_engine.Engine` or
-    :class:`_engine.Connection`.  If bound, the :class:`_schema.Table` objects
-    in the collection and their columns may participate in implicit SQL
-    execution.
-
-    The :class:`_schema.Table` objects themselves are stored in the
-    :attr:`_schema.MetaData.tables` dictionary.
-
-    :class:`_schema.MetaData` is a thread-safe object for read operations.
-    Construction of new tables within a single :class:`_schema.MetaData`
-    object,
-    either explicitly or via reflection, may not be completely thread-safe.
-
-    .. seealso::
-
-        :ref:`metadata_describing` - Introduction to database metadata
-
-    
-
-* model
-
-* permission
-
-* postcommit_hook
-
- Same in the registry a hook to call just after the commit
-
-        you can choice if the hook is called in function of ``call_only_if``:
-
-        * ``commited``: Call if the commit is done without exception
-        * ``raised``: Call if one exception was raised
-        * ``always``: Always call
-
-        .. warning::
-
-            Only one instance with same paramters of the hook is called
-            after the commit
-
-        :param method: the method to call on this model
-        :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
-        :param call_only_if: ['commited' (default), 'raised', 'always']
-        
-
-* principal
-
-* refresh
-
- Expire and reload all the attribute of the instance
-
-        See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
-        #sqlalchemy.orm.session.Session.refresh
-        
 

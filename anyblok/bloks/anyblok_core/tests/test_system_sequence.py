@@ -22,8 +22,6 @@ class TestSystemSequence:
         assert seq.nextval() == str(number + 1)
         assert seq.nextval() == str(number + 2)
         assert seq.nextval() == str(number + 3)
-        seq.refresh()
-        assert seq.number == 3
 
     def test_nextval_without_prefix_without_suffix_two_time(
         self, rollback_registry

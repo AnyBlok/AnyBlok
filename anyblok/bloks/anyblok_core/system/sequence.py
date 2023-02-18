@@ -70,7 +70,7 @@ class Sequence:
 
     id = Integer(primary_key=True)
     code = String(nullable=False)
-    start = Integer(default=1)
+    number = Integer(nullable=False)
     current = Integer(default=None)
     seq_name = String(nullable=False)
     """Name of the sequence in the database.
