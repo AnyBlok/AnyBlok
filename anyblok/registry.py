@@ -641,9 +641,11 @@ class Registry:
         res = []
         query = """SELECT "order", name"""
         query += " FROM system_blok"
-        query += " WHERE state in ('%s')" % "', '".join(states)
+        query += " WHERE state in :states"
         try:
-            res = self.execute(text(query), fetchall=True)
+            res = self.execute(
+                text(query).bindparams(states=states), fetchall=True
+            )
         except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
             pass
@@ -884,11 +886,14 @@ class Registry:
             query = """
                 update system_blok
                 set state='toinstall'
-                where name in ('%s')
-                and state = 'uninstalled'""" % "', '".join(
-                dependencies_to_install)
+                where name in :bloks_name
+                and state = 'uninstalled'"""
             try:
-                self.execute(query)
+                self.execute(
+                    text(query).bindparams(
+                        bloks_name=tuple(dependencies_to_install),
+                    )
+                )
             except (ProgrammingError, OperationalError):  # pragma: no cover
                 pass
 
@@ -1110,9 +1115,11 @@ class Registry:
             SELECT name, installed_version
             FROM system_blok
             WHERE
-                (state = 'toinstall' AND name = '%s')
-                OR state = 'toupdate'""" % blok2install
-        res = self.execute(query, fetchall=True)
+                (state = 'toinstall' AND name = :bloks_name)
+                OR state = 'toupdate'"""
+        res = self.execute(
+            text(query).bindparams(bloks_name=blok2install), fetchall=True
+        )
         if res:
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
@@ -1490,9 +1497,13 @@ class Registry:
 
         logger.info("Change state %s => %s for blok %s" % (
             blok.state, state, blok_name))
-        Q = "UPDATE system_blok SET state='%s' where name='%s';" % (
-            state, blok_name)
-        self.execute(Q)
+        self.execute(
+            text(
+                "UPDATE system_blok SET state=:blok_state where name=:blok_name"
+            ).bindparams(
+                blok_state=state, blok_name=blok_name
+            )
+        )
         # blok.update(state=state)
 
     @log(logger, level='debug', withargs=True)
