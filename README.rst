@@ -8,6 +8,9 @@
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
 .. obtain one at http://mozilla.org/MPL/2.0/.
 
+.. image:: https://img.shields.io/pypi/pyversions/anyblok.svg?longCache=True
+    :alt: Python versions
+
 .. image:: https://img.shields.io/pypi/v/AnyBlok.svg
    :target: https://pypi.python.org/pypi/AnyBlok/
    :alt: Version status
@@ -28,9 +31,6 @@
 .. image:: https://badges.gitter.im/AnyBlok/community.svg
     :alt: gitter
     :target: https://gitter.im/AnyBlok/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
-
-.. image:: https://img.shields.io/pypi/pyversions/anyblok.svg?longCache=True
-    :alt: Python versions
 
 .. image:: https://img.shields.io/static/v1?label=Compatible%20with&message=PostgreSQL%20|%20MySQL%20|%20Microsoft%20SQL%20Server&color=informational
     :alt: Dialects compatibility
@@ -94,9 +94,9 @@ To run framework tests with ``pytest``::
     pip install pytest
     ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_NAME=test_anyblok py.test anyblok/tests
 
-To run tests of all installed bloks::
+To run tests of all installed bloks with demo data::
 
-    anyblok_createdb --db-name test_anyblok --db-driver-name postgresql --install-all-bloks
+    anyblok_createdb --db-name test_anyblok --db-driver-name postgresql --install-all-bloks --with-demo
     ANYBLOK_DATABASE_DRIVER=postgresql ANYBLOK_DATABASE_NAME=test_anyblok py.test anyblok/bloks
 
 AnyBlok is tested continuously using `Travis CI
@@ -128,6 +128,7 @@ Contributors
 * Florent Jouatte
 * Christophe Combelles
 * Sébastien Chazallet
+* François GUÉRIN
 
 Bugs
 ----

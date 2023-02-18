@@ -11,7 +11,7 @@ import pytest
 from anyblok import Declarations
 from anyblok.config import Configuration
 from anyblok.column import Integer, String
-from anyblok.relationship import One2Many
+from anyblok.relationship import One2Many, ordering_list
 from .conftest import init_registry, reset_db
 
 
@@ -61,6 +61,34 @@ def _complete_one2many(**kwargs):
         persons = One2Many(model=Model.Person,
                            remote_columns="address_id",
                            primaryjoin=primaryjoin,
+                           many2one="address")
+
+
+def _complete_one2many_with_orderlist(**kwargs):
+    primaryjoin = "ModelAddress.id == ModelPerson.address_id"
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address_id = Integer(foreign_key=Model.Address.use('id'))
+
+    @register(Model)  # noqa
+    class Address:
+
+        persons = One2Many(model=Model.Person,
+                           remote_columns="address_id",
+                           primaryjoin=primaryjoin,
+                           order_by="ModelPerson.name",
+                           collection_class=ordering_list('name'),
                            many2one="address")
 
 
@@ -154,6 +182,7 @@ def _complete_one2many_with_diferent_schema2(**kwargs):
     scope="class",
     params=[
         _complete_one2many,
+        _complete_one2many_with_orderlist,
         _complete_one2many_with_schema,
         _complete_one2many_with_diferent_schema1,
         _complete_one2many_with_diferent_schema2,
@@ -196,6 +225,22 @@ class TestCompleteOne2Many:
             'Model.Person']['address_id']
         assert ('address', 'persons') in registry.expire_attributes[
             'Model.Person']['address_id']
+
+    def test_get_field_description(self, registry_complete_one2many):
+        registry = registry_complete_one2many
+        assert registry.Address.fields_description('persons') == {
+            'persons': {
+                'id': 'persons',
+                'label': 'Persons',
+                'local_columns': ['id'],
+                'model': 'Model.Person',
+                'nullable': True,
+                'primary_key': False,
+                'remote_columns': ['address_id'],
+                'remote_name': 'address',
+                'type': 'One2Many'
+            },
+        }
 
 
 def _multi_fk_one2many():
@@ -542,3 +587,45 @@ class TestOne2Many:
             name='test', address_1_id=address_1.id, address_2_id=address_2.id)
         assert address_1.persons == [person]
         assert address_2.persons == [person]
+
+    def test_order_list(self):
+
+        def add_in_registry():
+            primaryjoin = "ModelAddress.id == ModelPerson.address_id"
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+                street = String()
+                zip = String()
+                city = String()
+
+            @register(Model)
+            class Person:
+
+                id = Integer(primary_key=True)
+                name = String()
+                address_id = Integer(foreign_key=Model.Address.use('id'))
+
+            @register(Model)  # noqa
+            class Address:
+
+                persons = One2Many(model=Model.Person,
+                                   remote_columns="address_id",
+                                   primaryjoin=primaryjoin,
+                                   order_by="ModelPerson.name",
+                                   collection_class=ordering_list('name'),
+                                   many2one="address")
+
+        registry = self.init_registry(add_in_registry)
+
+        address = registry.Address.insert()
+        assert address.persons.ordering_attr == 'name'
+
+        p3 = registry.Person.insert(name='test 3', address_id=address.id)
+        p1 = registry.Person.insert(name='test 1', address_id=address.id)
+        p4 = registry.Person.insert(name='test 4', address_id=address.id)
+        p2 = registry.Person.insert(name='test 2', address_id=address.id)
+        address.refresh()
+        assert address.persons == [p1, p2, p3, p4]

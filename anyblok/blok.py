@@ -2,10 +2,12 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import warnings
 from pkg_resources import iter_entry_points
 from anyblok.imp import ImportManager
 from .logging import log
@@ -204,7 +206,7 @@ class BlokManager:
         cls.entry_points = entry_points
 
         if EnvironmentManager.get('current_blok'):
-            while EnvironmentManager.get('current_blok'):
+            while EnvironmentManager.get('current_blok'):  # pragma: no cover
                 sleep(0.1)
 
         EnvironmentManager.set('current_blok', 'start')
@@ -273,7 +275,16 @@ class Blok:
     logo = ''
 
     def __init__(self, registry):
-        self.registry = registry
+        self.anyblok = registry
+
+    @property
+    def registry(self):  # pragma: no cover
+        warnings.warn(
+            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
+            "own 'registry' attribute. Replace it by 'anyblok' attribute",
+            DeprecationWarning, stacklevel=2)
+
+        return self.anyblok
 
     @classmethod
     def import_declaration_module(cls):
@@ -303,6 +314,19 @@ class Blok:
 
         :param latest_version: latest version installed, if the blok has never
                                been installed, latest_version is None
+        """
+
+    def update_demo(self, latest_version):
+        """Called on install or update to set or update demo data if
+        `System.Parameter.get("with-demo", False) is True`
+
+        :param latest_version: latest version installed, if the blok has never
+                               been installed, latest_version is None
+        """
+
+    def uninstall_demo(self):
+        """Called on uninstall demo data if
+        `System.Parameter.get("with-demo", False) is True`
         """
 
     def uninstall(self):

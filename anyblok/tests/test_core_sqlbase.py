@@ -52,6 +52,12 @@ class TestCoreSQLBase:
         t1 = registry.Test.insert(id2=1)
         assert registry.Test.query().first() == t1
 
+    def test_insert_and_select(self, registry_declare_model):
+        Test = registry_declare_model.Test
+        t1 = Test.insert(id2=1)
+        assert Test.execute_sql_statement(
+            Test.select_sql_statement()).scalars().first() == t1
+
     def test_query_one_is_more_explicite(self, registry_declare_model):
         registry = registry_declare_model
         with pytest.raises(NoResultFound) as exc:
@@ -59,7 +65,7 @@ class TestCoreSQLBase:
 
         assert (
             str(exc._excinfo[1]) ==
-            "On Model 'Model.Test': No row was found for one()")
+            "On Model 'Model.Test': No row was found when one was required")
 
     def test_query_dictone_is_more_explicite(self, registry_declare_model):
         registry = registry_declare_model
@@ -68,7 +74,7 @@ class TestCoreSQLBase:
 
         assert (
             str(exc._excinfo[1]) ==
-            "On Model 'Model.Test': No row was found for dictone()")
+            "On Model 'Model.Test': No row was found when one was required")
 
     def test_multi_insert(self, registry_declare_model):
         registry = registry_declare_model
@@ -78,6 +84,31 @@ class TestCoreSQLBase:
         for x in range(nb_value):
             assert registry.Test.query().filter(
                 registry.Test.id2 == x).count() == 1
+
+    def test_classmethod_delete(self, registry_declare_model):
+        registry = registry_declare_model
+        nb_value = 3
+        Test = registry.Test
+        Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        assert Test.query().count() == nb_value
+        id2 = 1
+        Test.execute_sql_statement(
+            Test.delete_sql_statement().where(Test.id2 == id2))
+        assert registry.Test.query().count() == nb_value - 1
+        assert registry.Test.query().filter(
+            registry.Test.id2 != id2).count() == nb_value - 1
+
+    def test_delete_by_query(self, registry_declare_model):
+        registry = registry_declare_model
+        nb_value = 3
+        registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        assert registry.Test.query().count() == nb_value
+        t = registry.Test.query().first()
+        id2 = t.id2
+        t.delete(byquery=True)
+        assert registry.Test.query().count() == nb_value - 1
+        assert registry.Test.query().filter(
+            registry.Test.id2 != id2).count() == nb_value - 1
 
     def test_delete(self, registry_declare_model):
         registry = registry_declare_model
@@ -126,12 +157,33 @@ class TestCoreSQLBase:
         t.flag_modified('id2')
         assert 'id2' in t.get_modified_fields()
 
+    def test_classmethod_update(self, registry_declare_model):
+        registry = registry_declare_model
+        nb_value = 3
+        Test = registry.Test
+        Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        t = Test.query().filter_by(id2=1).one()
+        assert Test.execute_sql_statement(
+            Test.update_sql_statement().where(Test.id2 == 1).values(id2=100)
+        ).rowcount == 1
+        assert registry.Test.query().filter(
+            registry.Test.id2 == 100).first() == t
+
     def test_update(self, registry_declare_model):
         registry = registry_declare_model
         nb_value = 3
         registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
         t = registry.Test.query().first()
-        t.update(id2=100)
+        assert t.update(id2=100) == 1
+        assert registry.Test.query().filter(
+            registry.Test.id2 == 100).first() == t
+
+    def test_update_byquery(self, registry_declare_model):
+        registry = registry_declare_model
+        nb_value = 3
+        registry.Test.multi_insert(*[{'id2': x} for x in range(nb_value)])
+        t = registry.Test.query().first()
+        assert t.update(byquery=True, id2=100) == 1
         assert registry.Test.query().filter(
             registry.Test.id2 == 100).first() == t
 
@@ -153,6 +205,12 @@ class TestCoreSQLBase:
         t.select = 'key2'
         t.expire('select')
         assert t.select == 'key'
+
+    def test_with_subquery(self, registry_declare_model):
+        registry = registry_declare_model
+        Test = registry.Test
+        subquery = Test.query(Test.id2).subquery()
+        assert subquery.c.keys() == ['id2']
 
 
 def declare_model_with_m2o():
@@ -193,6 +251,18 @@ class TestCoreSQLBaseM2O:
         assert len(t1.test2) == 1
         t2.delete()
         assert len(t1.test2) == 0
+
+    def test_with_subquery_1(self, registry_declare_model_with_m2o):
+        registry = registry_declare_model_with_m2o
+        Test2 = registry.Test2
+        subquery = Test2.query(Test2.test).subquery()
+        assert subquery.c.keys() == ['test']
+
+    def test_with_subquery_2(self, registry_declare_model_with_m2o):
+        registry = registry_declare_model_with_m2o
+        Test2 = registry.Test2
+        subquery = Test2.query(Test2.test_id).subquery()
+        assert subquery.c.keys() == ['test_id']
 
     def test_to_dict_m2o_with_pks(self, registry_declare_model_with_m2o):
         registry = registry_declare_model_with_m2o

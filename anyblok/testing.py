@@ -84,12 +84,15 @@ def tmp_configuration(**values):
 
     :param **values: values to update
     """
+    old_values = {
+        x: Configuration.get(x)
+        for x in values.keys()
+    }
+    Configuration.update(**values)
     try:
-        old_configuration = Configuration.configuration.copy()
-        Configuration.update(**values)
         yield
     finally:
-        Configuration.configuration = old_configuration
+        Configuration.update(**old_values)
 
 
 class TestCase(unittest.TestCase):
@@ -117,7 +120,7 @@ class TestCase(unittest.TestCase):
         Configuration.update(**env)
 
     @classmethod
-    def createdb(cls, keep_existing=False):
+    def createdb(cls, keep_existing=False, with_demo=False):
         """Create the database specified in configuration.
 
         ::
@@ -136,6 +139,14 @@ class TestCase(unittest.TestCase):
             drop_database(url)
 
         create_database(url, template=db_template_name)
+
+        registry = RegistryManager.get(Configuration.get('db_name', None))
+        if registry is None:
+            return
+
+        registry.System.Parameter.set(
+            "with-demo", Configuration.get('with_demo', with_demo))
+
         return True
 
     @classmethod
@@ -464,8 +475,8 @@ class SharedDataTestCase(BlokTestCase):
 
         @event.listens_for(self.registry.session, "after_transaction_end")
         def restart_savepoint(session, transaction):
-            session.expire_all()
             if transaction is self.case_savepoint:
+                session.expire_all()
                 self.make_case_savepoint()
 
         self.savepoint_restarter = restart_savepoint

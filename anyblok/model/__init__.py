@@ -4,6 +4,7 @@
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -22,8 +23,7 @@ from anyblok.common import anyblok_column_prefix
 from texttable import Texttable
 from .plugins import get_model_plugins
 from .exceptions import ModelException
-from .factory import has_sql_fields, ModelFactory, ViewFactory
-from .common import get_factory
+from .factory import has_sql_fields, ModelFactory
 
 
 def has_sqlalchemy_fields(base):
@@ -65,13 +65,13 @@ def get_fields(base, without_relationship=False, only_relationship=False,
                 if is_in_mro(Field, base, p):
                     fields[p] = getattr(base, p)
 
-        except FieldException:
+        except FieldException:  # pragma: no cover
             pass
 
     return fields
 
 
-def autodoc_fields(declaration_cls, model_cls):
+def autodoc_fields(declaration_cls, model_cls):  # pragma: no cover
     """Produces autodocumentation table for the fields.
 
     Exposed as a function in order to be reusable by a simple export,
@@ -92,10 +92,6 @@ def autodoc_fields(declaration_cls, model_cls):
 def update_factory(kwargs):
     if 'factory' in kwargs:
         kwargs['__model_factory__'] = kwargs.pop('factory')
-    elif 'type' in kwargs:
-        kwargs['__model_factory__'] = get_factory(kwargs.pop('type'))
-    elif kwargs.get('is_sql_view'):
-        kwargs['__model_factory__'] = ViewFactory
 
 
 @Declarations.add_declaration_type(isAnEntry=True,
@@ -188,7 +184,7 @@ class Model:
             setattr(parent, name, ns)
 
         if parent is Declarations:
-            return
+            return  # pragma: no cover
 
         kwargs['__registry_name__'] = _registryname
         kwargs['__tablename__'] = tablename
@@ -267,6 +263,9 @@ class Model:
         """
         new_type_properties = {}
         for attr in dir(base):
+            if attr in ('registry', 'anyblok', '_sa_registry'):
+                continue
+
             method = getattr(base, attr)
             registry.call_plugins(
                 'transform_base_attribute',
@@ -384,7 +383,7 @@ class Model:
                 elif brn in registry.loaded_registries['Model_names']:
                     bs, ps = cls.load_namespace_second_step(registry, brn)
                 else:
-                    raise ModelException(
+                    raise ModelException(  # pragma: no cover
                         "You have not to inherit the %r "
                         "Only the 'Mixin' and %r types are allowed" % (
                             brn, cls.__name__))

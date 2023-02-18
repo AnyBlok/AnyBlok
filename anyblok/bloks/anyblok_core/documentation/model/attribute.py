@@ -30,7 +30,7 @@ class Attribute:
                     'get_model', 'from_primary_keys',
                     'from_multi_primary_keys', 'fire', 'fields_description',
                     '_fields_description', 'delete', 'aliased', '__init__',
-                    'loaded_columns', 'loaded_fields', 'registry',
+                    'loaded_columns', 'loaded_fields', 'registry', 'anyblok'
                     '_sa_class_manager', '_decl_class_registry'):
             return True
 
@@ -39,7 +39,7 @@ class Attribute:
     @classmethod
     def getelements(cls, model):
         res = []
-        Model = cls.registry.get(model.model.name)
+        Model = cls.anyblok.get(model.model.name)
         try:
             for k, v in getmembers(Model):
                 if ismodule(v) or isclass(v):
@@ -52,7 +52,7 @@ class Attribute:
                     continue
 
                 res.append((k, v))
-        except FieldException:
+        except FieldException:  # pragma: no cover
             pass
 
         return res

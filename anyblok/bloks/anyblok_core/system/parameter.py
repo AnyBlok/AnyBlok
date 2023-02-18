@@ -13,6 +13,8 @@ from ..exceptions import ParameterException
 register = Declarations.register
 System = Declarations.Model.System
 
+NOT_PROVIDED = object
+
 
 @register(Declarations.Model.System)
 class Parameter:
@@ -64,36 +66,22 @@ class Parameter:
         return True if query.count() else False
 
     @classmethod
-    def get(cls, key):
+    def get_parameter(cls, key, default=NOT_PROVIDED, remove=False):
         """ Return the value of the key
 
         :param key: key whose value to retrieve
+        :param default: default value if key does not exists
+        :param remove: bool if True the entry will be removed
         :return: associated value
         :rtype: anything JSON encodable
-        :raises ParameterException: if the key doesn't exist.
+        :raises ParameterException: if the key doesn't exist and default is not
+                                    set.
         """
         if not cls.is_exist(key):
-            raise ParameterException(
-                "unexisting key %r" % key)
-
-        param = cls.from_primary_keys(key=key)
-        if param.multi:
-            return param.value
-
-        return param.value['value']
-
-    @classmethod
-    def pop(cls, key):
-        """Remove the given key and return the associated value.
-
-        :param str key: the key to remove
-        :return: the value before removal
-        :rtype: any JSON encodable type
-        :raises ParameterException: if the key wasn't present
-        """
-        if not cls.is_exist(key):
-            raise ParameterException(
-                "unexisting key %r" % key)
+            if default is NOT_PROVIDED:
+                raise ParameterException(
+                    "unexisting key %r" % key)
+            return default
 
         param = cls.from_primary_keys(key=key)
         if param.multi:
@@ -101,5 +89,32 @@ class Parameter:
         else:
             res = param.value['value']
 
-        param.delete()
+        if remove:
+            param.delete()
+
         return res
+
+    @classmethod
+    def get(cls, key, default=NOT_PROVIDED):
+        """ Return the value of the key
+
+        :param key: key whose value to retrieve
+        :param default: default value if key does not exists
+        :return: associated value
+        :rtype: anything JSON encodable
+        :raises ParameterException: if the key doesn't exist and default is not
+                                    set.
+        """
+        return cls.get_parameter(key, default=default)
+
+    @classmethod
+    def pop(cls, key, default=NOT_PROVIDED):
+        """Remove the given key and return the associated value.
+
+        :param str key: the key to remove
+        :return: the value before removal
+        :param default: default value if key does not exists
+        :rtype: any JSON encodable type
+        :raises ParameterException: if the key wasn't present
+        """
+        return cls.get_parameter(key, default=default, remove=True)

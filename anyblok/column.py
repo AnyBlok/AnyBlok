@@ -4,17 +4,18 @@
 #    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from base64 import b64encode, b64decode
 from .field import Field, FieldException
-from .mapper import ModelAttributeAdapter
+from .mapper import ModelAttributeAdapter, ModelAttribute
 from sqlalchemy.schema import Sequence as SA_Sequence, Column as SA_Column
 from sqlalchemy import types, CheckConstraint
 from sqlalchemy_utils.types.color import ColorType
-from sqlalchemy_utils.types.encrypted.encrypted_type import EncryptedType
+from sqlalchemy_utils.types.encrypted.encrypted_type import StringEncryptedType
 from sqlalchemy_utils.types.password import PasswordType, Password as SAU_PWD
 from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy_utils.types.url import URLType
@@ -108,6 +109,45 @@ class ColumnDefaultValue:
         return self.callable(registry, namespace, fieldname, properties)
 
 
+class CompareType:
+
+    comparators = []
+
+    @classmethod
+    def default_comparator(cls, col1, type1, col2, type2):
+        if type1.__class__ is not type2.__class__:
+            raise FieldException(
+                "You can't add a foreign key using columns with different "
+                "types {model1!s}.{col1!s}` pointing to `{model2!s}.{col2!s}` "
+                "have different types  {type1!r} -> {type2!r}".format(
+                    model1=col1.model_name,
+                    col1=col1.attribute_name,
+                    model2=col2.model_name,
+                    col2=col2.attribute_name,
+                    type1=type1.__class__,
+                    type2=type2.__class__
+                )
+            )
+
+    @classmethod
+    def add_comparator(cls, type1, type2):
+
+        def wrapper(funct):
+            cls.comparators.append((type1, type2, funct))
+            return funct
+
+        return wrapper
+
+    @classmethod
+    def validate(cls, col1, type1, col2, type2):
+        for (cls1, cls2, funct) in cls.comparators:
+            if type1.__class__ is cls1 and type2.__class__ is cls2:
+                funct(col1, type1, col2, type2)
+                return
+
+        cls.default_comparator(col1, type1, col2, type2)
+
+
 class NoDefaultValue:
     pass
 
@@ -180,7 +220,7 @@ class Column(Field):
         """
         return self.sqlalchemy_type
 
-    def format_foreign_key(self, registry, args, kwargs):
+    def format_foreign_key(self, registry, namespace, fieldname, args, kwargs):
         """Format a foreign key
 
         :param registry: the current registry
@@ -189,6 +229,10 @@ class Column(Field):
         :return:
         """
         if self.foreign_key:
+            CompareType.validate(
+                ModelAttribute(namespace, fieldname), self,
+                self.foreign_key, self.foreign_key.get_type(registry)
+            )
             args = args + (self.foreign_key.get_fk(registry),)
             kwargs['info'].update({
                 'foreign_key': self.foreign_key.get_fk_name(registry),
@@ -212,7 +256,9 @@ class Column(Field):
         kwargs = self.kwargs.copy()
         if 'info' not in kwargs:
             kwargs['info'] = {}
-        args = self.format_foreign_key(registry, args, kwargs)
+        args = self.format_foreign_key(
+            registry, namespace, fieldname, args, kwargs)
+
         kwargs['info']['label'] = self.label
         if self.sequence:
             args = (self.sequence,) + args
@@ -236,9 +282,17 @@ class Column(Field):
 
         if self.encrypt_key:
             encrypt_key = self.format_encrypt_key(registry, namespace)
-            sqlalchemy_type = EncryptedType(sqlalchemy_type, encrypt_key)
+            sqlalchemy_type = self.get_encrypt_key_type(
+                registry, sqlalchemy_type, encrypt_key)
 
         return SA_Column(db_column_name, sqlalchemy_type, *args, **kwargs)
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(64)
+
+        return sqlalchemy_type
 
     def format_encrypt_key(self, registry, namespace):
         """Format and return the encyption key
@@ -252,8 +306,8 @@ class Column(Field):
             encrypt_key = Configuration.get('default_encrypt_key')
 
         if not encrypt_key:
-            raise FieldException("No encrypt_key defined in the "
-                                 "configuration")
+            raise FieldException(  # pragma: no cover
+                "No encrypt_key defined in the configuration")
 
         def wrapper():
             """Return encrypt_key wrapper
@@ -278,6 +332,23 @@ class Column(Field):
             return True
 
         return False
+
+
+class ForbiddenPrimaryKey:
+    """Mixin to forbid primary key on column type
+    """
+
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        if self.kwargs.get("primary_key") is True:
+            raise FieldException(
+                f"{self.__class__} column `{namespace}.{fieldname}` "
+                "are not allowed as primary key"
+            )
+        return super().get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties
+        )
 
 
 class Integer(Column):
@@ -341,7 +412,7 @@ class Boolean(Column):
     sqlalchemy_type = types.Boolean
 
 
-class Float(Column):
+class Float(ForbiddenPrimaryKey, Column):
     """Float column
 
     ::
@@ -366,7 +437,7 @@ class Float(Column):
 types.DECIMAL.process_result_value = lambda self, value, dialect: value
 
 
-class Decimal(Column):
+class Decimal(ForbiddenPrimaryKey, Column):
     """Decimal column
 
     ::
@@ -400,7 +471,7 @@ class Decimal(Column):
 
     def getter_format_value(self, value):
         if value is None:
-            return None
+            return None  # pragma: no cover
 
         if self.encrypt_key:
             value = decimal.Decimal(value)
@@ -442,7 +513,8 @@ def convert_string_to_datetime(value):
     elif isinstance(value, str):
         return parse(value)
 
-    return value
+    raise FieldException(
+        "We can't convert this value %s to datetime")
 
 
 def add_timezone_on_datetime(dt, default_timezone):
@@ -462,6 +534,7 @@ def add_timezone_on_datetime(dt, default_timezone):
 class DateTimeType(types.TypeDecorator):
 
     impl = types.DateTime(timezone=True)
+    cache_ok = True
 
     def __init__(self, field):
         self.default_timezone = field.default_timezone
@@ -483,7 +556,7 @@ class DateTimeType(types.TypeDecorator):
 
     @property
     def python_type(self):
-        return datetime
+        return datetime  # pragma: no cover
 
 
 class DateTime(Column):
@@ -528,6 +601,10 @@ class DateTime(Column):
         value = convert_string_to_datetime(value)
         return add_timezone_on_datetime(value, self.default_timezone)
 
+    def getter_format_value(self, value):
+        value = convert_string_to_datetime(value)
+        return add_timezone_on_datetime(value, self.default_timezone)
+
     def autodoc_get_properties(self):
         """Return properties for autodoc
 
@@ -563,7 +640,8 @@ class TimeStamp(DateTime):
         self.sqlalchemy_type = types.TIMESTAMP(timezone=True)
 
     def getter_format_value(self, value):
-        return convert_string_to_datetime(value)
+        value = convert_string_to_datetime(value)
+        return add_timezone_on_datetime(value, self.default_timezone)
 
 
 class Time(Column):
@@ -627,6 +705,7 @@ class Interval(Column):
 class StringType(types.TypeDecorator):
 
     impl = types.String
+    cache_ok = True
 
     def process_bind_param(self, value, engine):
         if value is False:
@@ -667,6 +746,13 @@ class String(Column):
         res = super(String, self).autodoc_get_properties()
         res['size'] = self.size
         return res
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(max(self.size, 64))
+
+        return sqlalchemy_type
 
 
 class Enum(Column):
@@ -711,11 +797,7 @@ class MsSQLPasswordType(PasswordType):
     impl = types.VARCHAR(1024)
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'mssql':
-            # Use a BLOB type for sqlite
-            return dialect.type_descriptor(types.VARCHAR(self.length))
-
-        return super(MsSQLPasswordType, self).load_dialect_impl(dialect)
+        return dialect.type_descriptor(types.VARCHAR(self.length))
 
 
 class Password(Column):
@@ -769,7 +851,7 @@ class Password(Column):
         :param value:
         :return:
         """
-        value = self.sqlalchemy_type.context.encrypt(value).encode('utf8')
+        value = self.sqlalchemy_type.context.hash(value).encode('utf8')
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
 
@@ -794,6 +876,7 @@ class Password(Column):
 class TextType(types.TypeDecorator):
 
     impl = types.Text
+    cache_ok = True
 
     def process_bind_param(self, value, engine):
         if value is False:
@@ -822,10 +905,17 @@ class Text(Column):
     """
     sqlalchemy_type = TextType
 
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.Text()
+
+        return sqlalchemy_type
+
 
 class StrSelection(str):
     """Class representing the data of one column Selection """
-    selections = {}
+    selections = dumps({})
     registry = None
     namespace = None
 
@@ -834,11 +924,12 @@ class StrSelection(str):
 
         :return: selections dict
         """
-        if isinstance(self.selections, dict):
-            return self.selections
-        if isinstance(self.selections, str):
+        selections = loads(self.selections)
+        if isinstance(selections, dict):
+            return selections
+        if isinstance(selections, str):
             m = self.registry.get(self.namespace)
-            return dict(getattr(m, self.selections)())
+            return dict(getattr(m, selections)())
 
     def validate(self):
         """Validate if the key is in the selections
@@ -862,6 +953,7 @@ class SelectionType(types.TypeDecorator):
     """Generic type for Column Selection """
 
     impl = types.String
+    cache_ok = True
 
     def __init__(self, selections, size, registry=None, namespace=None):
         super(SelectionType, self).__init__(length=size)
@@ -871,7 +963,7 @@ class SelectionType(types.TypeDecorator):
         elif isinstance(selections, (list, tuple)):
             self.selections = dict(selections)
         else:
-            raise FieldException(
+            raise FieldException(  # pragma: no cover
                 "selection wainting 'dict', get %r" % type(selections))
 
         if isinstance(self.selections, dict):
@@ -879,10 +971,11 @@ class SelectionType(types.TypeDecorator):
                 if not isinstance(k, str):
                     raise FieldException('The key must be a str')
                 if len(k) > 64:
-                    raise Exception(
+                    raise Exception(  # pragma: no cover
                         '%r is too long %r, waiting max %s or use size arg' % (
                             k, len(k), size))
 
+        self.selections = dumps(self.selections)
         self._StrSelection = type('StrSelection', (StrSelection,),
                                   {'selections': self.selections,
                                    'registry': registry,
@@ -1030,11 +1123,11 @@ class Selection(Column):
             # can add new entry
             return []
 
-        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL']):
+        if sgdb_in(registry.engine, ['MariaDB', 'MsSQL', 'MySQL']):
             # No check constraint in MariaDB
             return []
 
-        selections = self.sqlalchemy_type.selections
+        selections = loads(self.sqlalchemy_type.selections)
         if isinstance(selections, dict):
             enum = selections.keys()
         else:
@@ -1061,6 +1154,13 @@ class Selection(Column):
             return [CheckConstraint(constraint, name=name)]
 
         return []
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(max(self.size, 64))
+
+        return sqlalchemy_type
 
 
 """
@@ -1109,6 +1209,13 @@ class Json(Column):
 
         return value
 
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.Text()
+
+        return sqlalchemy_type
+
 
 class LargeBinary(Column):
     """Large binary column
@@ -1149,6 +1256,13 @@ class LargeBinary(Column):
 
         return value
 
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.Text()
+
+        return sqlalchemy_type
+
 
 class Sequence(String):
     """Sequence column
@@ -1172,7 +1286,7 @@ class Sequence(String):
         class Test:
 
             x = Sequence(no_gap=True, code="SO", formater="{code}-{seq:06d}")
-    
+
     .. warning::
 
         Keep in mind `no_gap=True` will raise an
@@ -1200,6 +1314,7 @@ class Sequence(String):
         kwargs['default'] = ColumnDefaultValue(self.wrap_default)
 
         self.code = kwargs.pop('code') if 'code' in kwargs else None
+        self.start = kwargs.pop('start', 1)
         self.formater = kwargs.pop(
             'formater') if 'formater' in kwargs else None
         self.no_gap = kwargs.pop(
@@ -1225,7 +1340,9 @@ class Sequence(String):
         :param fieldname: the fieldname of the model
         :return:
         """
-        if not hasattr(registry, '_need_sequence_to_create_if_not_exist'):
+        if not hasattr(
+            registry, '_need_sequence_to_create_if_not_exist'
+        ):  # pragma: no cover
             registry._need_sequence_to_create_if_not_exist = []
         elif registry._need_sequence_to_create_if_not_exist is None:
             registry._need_sequence_to_create_if_not_exist = []
@@ -1233,13 +1350,13 @@ class Sequence(String):
         code = self.code if self.code else "%s=>%s" % (namespace, fieldname)
         registry._need_sequence_to_create_if_not_exist.append(
             {'code': code, 'formater': self.formater, 'no_gap': self.no_gap})
+        # {'code': code, 'formater': self.formater, 'start': self.start})
 
         def default_value(self, *args, **kwargs):
             """Return next sequence value
 
             :return:
             """
-            import pdb; pdb.set_trace()
             return registry.System.Sequence.nextvalBy(code=code)
 
         return default_value
@@ -1287,6 +1404,13 @@ class Color(Column):
         res['size'] = self.max_length
         return res
 
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(max(self.max_length, 64))
+
+        return sqlalchemy_type
+
 
 class UUID(Column):
     """UUID column
@@ -1323,6 +1447,9 @@ class UUID(Column):
         res['binary'] = self.binary
         res['native'] = self.native
         return res
+
+
+URLType.cache_ok = True  # waiting fix from sqlalchemy_utils
 
 
 class URL(Column):
@@ -1405,12 +1532,20 @@ class PhoneNumber(Column):
         res['max_length'] = self.max_length
         return res
 
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ['MySQL', 'MariaDB']):
+            sqlalchemy_type.impl = types.String(max(self.max_length, 64))
+
+        return sqlalchemy_type
+
 
 """
     Added *process_result_value* at the class *EmailType*, because
     this method is necessary for encrypt the column
 """
 EmailType.process_result_value = lambda self, value, dialect: value
+EmailType.cache_ok = True  # waiting fix from sqlalchemy_utils
 
 
 class Email(Column):
@@ -1437,13 +1572,15 @@ class Email(Column):
         """
         if value is not None:
             return value.lower()
-        return value
+
+        return value  # pragma: no cover
 
 
 class CountryType(types.TypeDecorator, ScalarCoercible):
     """Generic type for Column Country """
 
     impl = types.Unicode(3)
+    cache_ok = True
     python_type = python_pycountry_type
 
     def process_bind_param(self, value, dialect):
@@ -1453,16 +1590,13 @@ class CountryType(types.TypeDecorator, ScalarCoercible):
         return value
 
     def process_result_value(self, value, dialect):
-        if value:
-            return pycountry.countries.get(alpha_3=value)
-
-        return value
+        return self._coerce(value)
 
     def _coerce(self, value):
         if value is not None and not isinstance(value, self.python_type):
             return pycountry.countries.get(alpha_3=value)
 
-        return value
+        return value  # pragma: no cover
 
 
 class Country(Column):
@@ -1486,7 +1620,7 @@ class Country(Column):
     def __init__(self, mode='alpha_2', *args, **kwargs):
         self.mode = mode
         if pycountry is None:
-            raise FieldException(
+            raise FieldException(  # pragma: no cover
                 "'pycountry' package is required for use 'CountryType'")
 
         self.choices = {getattr(country, mode): country.name
@@ -1554,3 +1688,45 @@ class Country(Column):
         key.update(str(enum).encode('utf-8'))
         name = self.fieldname + '_' + key.hexdigest() + '_types'
         return [CheckConstraint(constraint, name=name)]
+
+
+@CompareType.add_comparator(String, String)
+@CompareType.add_comparator(String, Selection)
+@CompareType.add_comparator(String, Sequence)
+def compare_strings(col1, type1, col2, type2):
+    if type1.size != type2.size:
+        raise FieldException(
+            "You can't add a foreign key using based String columns with "
+            "different size `{model1!s}.{col1!s}` pointing to "
+            "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
+            "-> ({type2!r}){size2:d}".format(
+                model1=col1.model_name,
+                col1=col1.attribute_name,
+                model2=col2.model_name,
+                col2=col2.attribute_name,
+                type1=type1.__class__,
+                type2=type2.__class__,
+                size1=type1.size,
+                size2=type2.size
+            )
+        )
+
+
+@CompareType.add_comparator(String, Color)
+def compare_string_to_color(col1, type1, col2, type2):
+    if type1.size != type2.max_length:
+        raise FieldException(
+            "You can't add a foreign key using based String columns with "
+            "different size `{model1!s}.{col1!s}` pointing to "
+            "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
+            "-> ({type2!r}){size2:d}".format(
+                model1=col1.model_name,
+                col1=col1.attribute_name,
+                model2=col2.model_name,
+                col2=col2.attribute_name,
+                type1=type1.__class__,
+                type2=type2.__class__,
+                size1=type1.size,
+                size2=type2.max_length
+            )
+        )

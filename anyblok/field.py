@@ -65,11 +65,11 @@ class Field:
                 namespace]['__tablename__']
             ignore_migration_for = registry.ignore_migration_for.get(table)
             if ignore_migration_for is True:
-                return
+                return  # pragma: no cover
             elif not ignore_migration_for:
                 registry.ignore_migration_for[table] = [fieldname]
             else:
-                ignore_migration_for.append(fieldname)
+                ignore_migration_for.append(fieldname)  # pragma: no cover
 
     def get_property(self, registry, namespace, fieldname, properties):
         """Return the property of the field
@@ -85,10 +85,17 @@ class Field:
         :param fieldname: name of the field
         :param properties: properties known to the model
         """
-        return hybrid_property(
-            self.wrap_getter_column(fieldname),
-            self.wrap_setter_column(fieldname),
-            expr=self.wrap_expr_column(fieldname))
+        fget = self.wrap_getter_column(fieldname)
+        fset = self.wrap_setter_column(fieldname)
+        fexp = self.wrap_expr_column(fieldname)
+
+        for func in (fget, fset, fexp):
+            func.__name__ = fieldname
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.expression(fexp)
+        return hybrid
 
     def getter_format_value(self, value):
         return value
@@ -128,9 +135,9 @@ class Field:
                 if obj is None:
                     continue
 
-            if obj in model_self.registry.session:
+            if obj in model_self.anyblok.session:
                 if obj._sa_instance_state.persistent:
-                    model_self.registry.expire(obj, attrs)
+                    model_self.anyblok.expire(obj, attrs)
 
     def setter_format_value(self, value):
         return value
@@ -141,7 +148,7 @@ class Field:
         def setter_column(model_self, value):
             action_todos = set()
             if fieldname in model_self.loaded_columns:
-                action_todos = model_self.registry.expire_attributes.get(
+                action_todos = model_self.anyblok.expire_attributes.get(
                     model_self.__registry_name__, {}).get(fieldname, set())
 
             self.expire_related_attribute(model_self, action_todos)
@@ -181,7 +188,8 @@ class Field:
 
         :exception: FieldException
         """
-        raise FieldException("No native type for this field")
+        raise FieldException(
+            "No native type for this field")  # pragma: no cover
 
     def must_be_declared_as_attr(self):
         """ Return False, it is the default value """
@@ -208,14 +216,14 @@ class Field:
         bullet = bullets[level]
         padding = '  ' * level
         key = key.strip()
-        if isinstance(value, dict):
+        if isinstance(value, dict):  # pragma: no cover
             res = padding + '%c ``%s``:\n\n' % (bullet, key)
             res += '\n'.join(
                 [self.autodoc_format_dict(x, y, level=level + 1)
                  for x, y in value.items()])
             res += '\n'
             return res
-        elif isinstance(value, (list, tuple)):
+        elif isinstance(value, (list, tuple)):  # pragma: no cover
             res = padding + '%c ``%s``:\n\n' % (bullet, key)
             next_bullet = bullets[level + 1]
             res += '\n'.join(padding + '  %c ``%r``' % (next_bullet, x)
@@ -226,7 +234,7 @@ class Field:
             if isinstance(value, type):
                 rst_val = ':class:`%s.%s`' % (value.__module__,
                                               value.__name__)
-            elif isinstance(value, ModelRepr):
+            elif isinstance(value, ModelRepr):  # pragma: no cover
                 rst_val = value.model_name
             else:
                 rst_val = '``%r``' % value
@@ -296,6 +304,7 @@ class Function(Field):
 
                 return getattr(model_self, m)(*args, **kwargs)
 
+            function_method.__name__ = fieldname
             return function_method
 
         fget = wrap('fget')
@@ -303,9 +312,14 @@ class Function(Field):
         fdel = wrap('fdel')
         fexpr = wrap('fexpr')
 
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.deleter(fdel)
+        hybrid = hybrid.expression(fexpr)
+
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
-        return hybrid_property(fget, fset, fdel=fdel, expr=fexpr)
+        return hybrid
 
 
 def format_struc(entry, keys):
@@ -434,12 +448,20 @@ class JsonRelated(Field):
         """
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
-        return hybrid_property(
-            self.get_fget(),
-            self.get_fset(),
-            fdel=self.get_fdel(),
-            expr=self.get_fexpr()
-        )
+
+        fget = self.get_fget()
+        fset = self.get_fset()
+        fdel = self.get_fdel()
+        fexpr = self.get_fexpr()
+
+        for func in (fget, fset, fdel, fexpr):
+            func.__name__ = fieldname
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.deleter(fdel)
+        hybrid = hybrid.expression(fexpr)
+        return hybrid
 
     def autodoc_get_properties(self):
         res = super(JsonRelated, self).autodoc_get_properties()

@@ -44,7 +44,7 @@ class Cache:
     @classmethod
     def invalidate_all(cls):
         res = []
-        for registry_name, methods in cls.registry.caches.items():
+        for registry_name, methods in cls.anyblok.caches.items():
             for method in methods.keys():
                 res.append(dict(registry_name=registry_name, method=method))
 
@@ -61,14 +61,14 @@ class Cache:
         :param method: name of the method on the model
         :exception: CacheException
         """
-        caches = cls.registry.caches
+        caches = cls.anyblok.caches
 
         def insert(registry_name=None, method=None):
             if registry_name in caches:
                 if method in caches[registry_name]:
                     cls.insert(registry_name=registry_name, method=method)
                 else:
-                    raise CacheException(
+                    raise CacheException(  # pragma: no cover
                         "Unknown cached method %r" % method)
             else:
                 raise CacheException(
@@ -88,6 +88,8 @@ class Cache:
 
         :rtype: Boolean
         """
+        if cls.last_cache_id is None:
+            cls.last_cache_id = 0
         return cls.last_cache_id < cls.get_last_id()
 
     @classmethod
@@ -96,7 +98,7 @@ class Cache:
         """
         res = []
         if cls.detect_invalidation():
-            caches = cls.registry.caches
+            caches = cls.anyblok.caches
             for i in cls.query().filter(cls.id > cls.last_cache_id).all():
                 res.extend(caches[i.registry_name][i.method])
 

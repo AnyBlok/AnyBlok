@@ -11,17 +11,22 @@
 import pytest
 from anyblok.testing import sgdb_in
 from anyblok.column import Integer as Int, String as Str
-from anyblok.migration import MigrationException
+from anyblok.migration import (
+    MigrationException, MigrationColumnTypePlugin, MigrationReport)
 from anyblok.relationship import Many2Many
 from contextlib import contextmanager
 from sqlalchemy import (
-    MetaData, Table, Column, Integer, String, TEXT, CheckConstraint,
-    ForeignKey)
+    MetaData, Table, Column, Integer, String, Boolean, TEXT,
+    CheckConstraint, ForeignKey, text
+)
+from sqlalchemy.dialects.mysql.types import TINYINT, DATETIME
+from sqlalchemy.dialects.mssql.base import BIT
 from anyblok import Declarations
-from sqlalchemy.exc import InternalError, IntegrityError, OperationalError
+from sqlalchemy.exc import IntegrityError
 from anyblok.config import Configuration
 from .conftest import init_registry, drop_database, create_database
 from anyblok.common import naming_convention
+from mock import patch
 
 
 @pytest.fixture(scope="module")
@@ -42,7 +47,7 @@ def cnx(registry):
     try:
         yield cnx
     except Exception:
-        cnx.execute("rollback")
+        cnx.execute(text("rollback"))
         raise
 
 
@@ -140,6 +145,22 @@ def registry(request, clean_db, bloks_loaded):
 
     request.addfinalizer(rollback)
     return registry
+
+
+class MockMigrationColumnTypePluginInteger2String(MigrationColumnTypePlugin):
+
+    to_type = String
+    from_type = Integer
+    dialect = None
+
+
+class MockMigrationColumnTypePluginInteger2StringMySQL(
+    MigrationColumnTypePlugin
+):
+
+    to_type = String
+    from_type = Integer
+    dialect = ['MySQL']
 
 
 class TestMigration:
@@ -484,14 +505,18 @@ class TestMigration:
 
     def test_detect_m2m_primary_key(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE reltable")
-            conn.execute(
-                """CREATE TABLE reltable (
-                    idmodel1 INT,
-                    idmodel2 INT,
-                    FOREIGN KEY (idmodel1) REFERENCES testm2m1 (idmodel1),
-                    FOREIGN KEY (idmodel2) REFERENCES testm2m2 (idmodel2)
-                );""")
+            Table('reltable', registry.declarativebase.metadata,
+                  autoload_with=conn).drop(bind=conn)
+
+            meta = MetaData()
+            meta._add_table('testm2m1', None, registry.TestM2M1.__table__)
+            meta._add_table('testm2m2', None, registry.TestM2M2.__table__)
+
+            Table(
+                'reltable', meta,
+                Column('idmodel1', Integer, ForeignKey('testm2m1.idmodel1')),
+                Column('idmodel2', Integer, ForeignKey('testm2m2.idmodel2')),
+            ).create(bind=conn)
 
         with pytest.raises(MigrationException):
             registry.migration.detect_changed()
@@ -549,7 +574,7 @@ class TestMigration:
 
     def test_detect_drop_index(self, registry):
         with cnx(registry) as conn:
-            conn.execute("""CREATE INDEX other_idx ON test (other);""")
+            conn.execute(text("CREATE INDEX other_idx ON test (other);"))
         report = registry.migration.detect_changed()
         assert report.log_has("Drop index other_idx on test")
         report.apply_change()
@@ -559,7 +584,7 @@ class TestMigration:
     def test_detect_drop_anyblok_index(self, registry):
         with cnx(registry) as conn:
             conn.execute(
-                """CREATE INDEX anyblok_ix_test__other ON test (other);""")
+                text("CREATE INDEX anyblok_ix_test__other ON test (other);"))
         report = registry.migration.detect_changed()
         assert report.log_has("Drop index anyblok_ix_test__other on test")
         report.apply_change()
@@ -569,7 +594,7 @@ class TestMigration:
 
     def test_detect_drop_index_with_reinit_indexes(self, registry):
         with cnx(registry) as conn:
-            conn.execute("""CREATE INDEX other_idx ON test (other);""")
+            conn.execute(text("CREATE INDEX other_idx ON test (other);"))
         registry.migration.reinit_indexes = True
         report = registry.migration.detect_changed()
         assert report.log_has("Drop index other_idx on test")
@@ -579,7 +604,7 @@ class TestMigration:
 
     def test_detect_drop_index_with_reinit_all(self, registry):
         with cnx(registry) as conn:
-            conn.execute("""CREATE INDEX other_idx ON test (other);""")
+            conn.execute(text("CREATE INDEX other_idx ON test (other);"))
         registry.migration.reinit_all = True
         report = registry.migration.detect_changed()
         assert report.log_has("Drop index other_idx on test")
@@ -932,12 +957,15 @@ class TestMigration:
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint("other != 'test'", name='ck_other')
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
         report.apply_change()
@@ -948,20 +976,22 @@ class TestMigration:
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_anyblok_constraint(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT anyblok_ck__test__check
-                        CHECK (other != 'test')
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(naming_convention=naming_convention),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint("other != 'test'", name='check')
+            )
+            registry.Test.__table__.create(bind=conn)
+
         report = registry.migration.detect_changed()
         assert report.log_has(
-            "Drop check constraint anyblok_ck__test__check on test")
+            "Drop check constraint anyblok_ck_test__check on test")
         report.apply_change()
         report = registry.migration.detect_changed()
         assert not(report.log_has(
-            "Drop check constraint anyblok_ck__test__check on test"))
+            "Drop check constraint anyblok_ck_test__check on test"))
 
     @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
                         reason="No CheckConstraint works #90")
@@ -969,12 +999,15 @@ class TestMigration:
         self, registry
     ):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint("other != 'test'", name='ck_other')
+            )
+            registry.Test.__table__.create(bind=conn)
+
         registry.migration.reinit_constraints = True
         report = registry.migration.detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
@@ -987,12 +1020,15 @@ class TestMigration:
                         reason="No CheckConstraint works #90")
     def test_detect_drop_check_constraint_with_reinit_all(self, registry):
         with cnx(registry) as conn:
-            conn.execute("DROP TABLE test")
-            conn.execute(
-                """CREATE TABLE test(
-                    integer INT PRIMARY KEY NOT NULL,
-                    other CHAR(64) CONSTRAINT ck_other CHECK (other != 'test')
-                );""")
+            registry.Test.__table__.drop(bind=conn)
+            registry.Test.__table__ = Table(
+                'test', MetaData(),
+                Column('integer', Integer, primary_key=True),
+                Column('other', String(64)),
+                CheckConstraint("other != 'test'", name='ck_other')
+            )
+            registry.Test.__table__.create(bind=conn)
+
         registry.migration.reinit_all = True
         report = registry.migration.detect_changed()
         assert report.log_has("Drop check constraint ck_other on test")
@@ -1001,6 +1037,13 @@ class TestMigration:
         assert not(
             report.log_has("Drop check constraint ck_other on test"))
 
+    @pytest.mark.skipif(
+        sgdb_in(['MySQL', 'MariaDB']),
+        reason=(
+            "Modification of schema create an implicite commit "
+            "with MySQL and MariaDB, save point is by passed for them"
+        )
+    )
     def test_savepoint(self, registry):
         Test = registry.Test
         self.fill_test_table(registry)
@@ -1011,10 +1054,104 @@ class TestMigration:
         assert Test.query().count() == 10
         registry.migration.release_savepoint('test')
 
-    @pytest.mark.skipif(sgdb_in(['MsSQL']),
-                        reason="No error when rollback to released save point")
-    def test_savepoint_without_rollback(self, registry):
-        registry.migration.savepoint('test')
-        registry.migration.release_savepoint('test')
-        with pytest.raises((InternalError, OperationalError)):
-            registry.migration.rollback_savepoint('test')
+
+@pytest.fixture()
+def registry_plugin(request, clean_db, bloks_loaded):
+    registry = init_registry(add_in_registry)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+class TestMigrationPlugin:
+
+    @pytest.mark.skipif(
+        not sgdb_in(['MySQL', 'MariaDB']),
+        reason='Plugin for MySQL only')
+    def test_boolean_with_mysql(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        res = report.init_modify_type(
+            [None, None, 'test', 'other', {}, TINYINT(), Boolean()])
+        assert res is True
+
+    @pytest.mark.skipif(
+        not sgdb_in(['MySQL', 'MariaDB']),
+        reason='Plugin for MySQL only')
+    def test_datetime_with_mysql(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        res = report.init_modify_type(
+            [None, None, 'test', 'other', {}, DATETIME(), DATETIME()])
+        assert res is True
+
+    @pytest.mark.skipif(
+        not sgdb_in(['MsSQL']),
+        reason='Plugin for MsSQL only')
+    def test_boolean_with_mssql(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        res = report.init_modify_type(
+            [None, None, 'test', 'other', {}, BIT(), Boolean()])
+        assert res is True
+
+    @pytest.mark.skipif(
+        not sgdb_in(['PostgreSQL']),
+        reason='Plugin for MsSQL only')
+    def test_boolean_with_postgres(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        res = report.init_modify_type(
+            [None, None, 'test', 'other', {}, Integer(), Boolean()])
+        assert res is False
+
+    def test_alter_column_type_with_plugin_1(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        report.plugins = [
+            MockMigrationColumnTypePluginInteger2String,
+        ]
+        with patch(
+            'anyblok.tests.test_migration.'
+            'MockMigrationColumnTypePluginInteger2String.apply'
+        ) as mockapply:
+            report.apply_change_modify_type(
+                [None, None, 'test', 'other', {}, Integer(), String()])
+            mockapply.assert_called()
+
+    def test_alter_column_type_with_plugin_2(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        report.plugins = [
+            MockMigrationColumnTypePluginInteger2String,
+        ]
+        with patch(
+            'anyblok.migration.MigrationColumn.alter'
+        ) as mockapply:
+            report.apply_change_modify_type(
+                [None, None, 'test', 'other', {}, String(), Integer()])
+            mockapply.assert_called()
+
+    @pytest.mark.skipif(
+        not sgdb_in(['MySQL', 'MariaDB']),
+        reason='Plugin for MySQL only')
+    def test_alter_column_type_with_plugin_3(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        report.plugins = [
+            MockMigrationColumnTypePluginInteger2StringMySQL,
+        ]
+        with patch(
+            'anyblok.tests.test_migration.'
+            'MockMigrationColumnTypePluginInteger2StringMySQL.apply'
+        ) as mockapply:
+            report.apply_change_modify_type(
+                [None, None, 'test', 'other', {}, Integer(), String()])
+            mockapply.assert_called()
+
+    @pytest.mark.skipif(
+        sgdb_in(['MySQL', 'MariaDB']),
+        reason='Plugin for MySQL only')
+    def test_alter_column_type_with_plugin_4(self, registry_plugin):
+        report = MigrationReport(registry_plugin.migration, [])
+        report.plugins = [
+            MockMigrationColumnTypePluginInteger2StringMySQL,
+        ]
+        with patch(
+            'anyblok.migration.MigrationColumn.alter'
+        ) as mockapply:
+            report.apply_change_modify_type(
+                [None, None, 'test', 'other', {}, Integer(), String()])
+            mockapply.assert_called()

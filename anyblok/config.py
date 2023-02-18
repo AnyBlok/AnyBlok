@@ -17,6 +17,7 @@ import os
 import json
 import yaml
 import urllib
+import warnings
 from appdirs import AppDirs
 from os.path import join, isfile
 from sqlalchemy.engine.url import URL, make_url
@@ -102,19 +103,20 @@ def get_url(db_name=None):
     if url:
         url = make_url(url)
         if username:
-            url.username = username
+            url = url.set(username=username)
         if password:
-            url.password = password
+            url = url.set(password=password)
         if database:
-            url.database = database
+            url = url.set(database=database)
 
         return url
 
     if drivername is None:
         raise ConfigurationException('No driver name defined')
 
-    return URL(drivername, username=username, password=password, host=host,
-               port=port, database=database, query=query)
+    return URL.create(
+        drivername, username=username, password=password, host=host,
+        port=port, database=database, query=query)
 
 
 class ConfigurationException(LookupError):
@@ -197,16 +199,26 @@ def nargs_type(key, nargs, cast):
 
 class AnyBlokActionsContainer:
 
-    def add_argument(self, *args, **kwargs):
+    def add_argument(self, *args, deprecated=None, removed=False, **kwargs):
         """Overload the method to add the entry in the configuration dict
 
         :param args:
         :param kwargs:
+        :param deprecated: Deprecated message to display
         :return:
         """
         default = kwargs.pop('default', None)
         nargs = kwargs.get('nargs', None)
         type = kwargs.get('type')
+
+        if deprecated is not None:
+            kwargs['help'] = '[DEPRECATED] {} : {}'.format(
+                kwargs.get('help', ''), deprecated)
+
+        if removed is not None:
+            kwargs['help'] = '[REMOVED] {} : This is forbidden'.format(
+                kwargs.get('help', ''))
+
         arg = super(AnyBlokActionsContainer, self).add_argument(
             *args, **kwargs)
         if type is None:
@@ -221,7 +233,8 @@ class AnyBlokActionsContainer:
         if nargs:
             type = nargs_type(dest, nargs, type)
 
-        Configuration.add_argument(dest, default, type=type)
+        Configuration.add_argument(dest, default, type=type,
+                                   deprecated=deprecated, removed=removed)
         return arg
 
     def set_defaults(self, **kwargs):
@@ -285,15 +298,26 @@ def AnyBlokPlugin(import_definition):
 
 class ConfigOption:
 
-    def __init__(self, value, type):
+    def __init__(self, value, type, deprecated=None, removed=False):
         self.type = type
-        self.set(value)
+        self.deprecated = deprecated
+        self.removed = removed
+        if not removed:
+            self.set(value)
 
     def get(self):
         """Get configuration option value
 
+        :exception: ConfigurationException
         :return:
         """
+        if self.removed:
+            raise ConfigurationException(
+                "This option is removed and can't be used")
+
+        if self.deprecated is not None:
+            warnings.warn(self.deprecated, DeprecationWarning, stacklevel=2)
+
         return self.value
 
     def set(self, value):
@@ -301,6 +325,13 @@ class ConfigOption:
 
         :param value:
         """
+        if self.removed:
+            raise ConfigurationException(
+                "This option is removed and can't be used")
+
+        if self.deprecated is not None:
+            warnings.warn(self.deprecated, DeprecationWarning, stacklevel=2)
+
         self.value = cast_value(self.type, value)
 
 
@@ -488,7 +519,7 @@ class Configuration:
                 cls.configuration[opt].set(value)
             else:
                 cls.add_argument(opt, value, type(value))
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.exception("Error while setting the value %r to the option "
                              "%r" % (value, opt))
             raise e
@@ -499,7 +530,7 @@ class Configuration:
 
         :param args:
         :param kwargs:
-        :exception ConigurationException
+        :exception ConfigurationException
         """
         if args:
             if len(args) > 1:
@@ -516,14 +547,18 @@ class Configuration:
             cls.set(k, v)
 
     @classmethod
-    def add_argument(cls, key, value, type=str):
+    def add_argument(cls, key, value, type=str, deprecated=None,
+                     removed=False):
         """Add a configuration option
 
         :param key:
         :param value:
         :param type:
+        :param deprecated: deprecated message to warn in get/set methods
+        :param removed: bool if True the option can't be set or get
         """
-        cls.configuration[key] = ConfigOption(value, type)
+        cls.configuration[key] = ConfigOption(
+            value, type, deprecated=deprecated, removed=removed)
 
     @classmethod
     def remove_label(cls, group):
@@ -586,7 +621,7 @@ class Configuration:
                 join(ad.user_config_dir, 'conf.cfg'), False)
             configfile = cls.get('configfile')
             if configfile:
-                cls.parse_configfile(configfile, True)
+                cls.parse_configfile(configfile, True)  # pragma: no cover
 
     @classmethod
     @log(logger, level='debug')
@@ -604,7 +639,7 @@ class Configuration:
         if application in cls.applications:
             description.update(cls.applications[application])
         else:
-            description.update(cls.applications['default'])
+            description.update(cls.applications['default'])  # pragma: no cover
 
         description.update(kwargs)
         configuration_groups = description.pop(
@@ -613,7 +648,7 @@ class Configuration:
         if 'plugins' not in configuration_groups:
             configuration_groups.append('plugins')
 
-        if useseparator:
+        if useseparator:  # pragma: no cover
             parser = getParser(**description)
 
             try:
@@ -639,7 +674,7 @@ class Configuration:
         :param useseparator: boolean(default False)
         """
         if configuration_groups is None:
-            return
+            return  # pragma: no cover
 
         for group in cls.groups:
             if group not in configuration_groups:
@@ -672,13 +707,13 @@ class Configuration:
         logging_level_qualnames = cls.get('logging_level_qualnames')
 
         if logging_configfile:
-            config.fileConfig(logging_configfile)
+            config.fileConfig(logging_configfile)  # pragma: no cover
         elif json_logging_configfile:
-            with open(json_logging_configfile, 'rt') as f:
+            with open(json_logging_configfile, 'rt') as f:  # pragma: no cover
                 configfile = json.load(f.read())
                 config.dictConfig(configfile)
         elif yaml_logging_configfile:
-            with open(yaml_logging_configfile, 'rt') as f:
+            with open(yaml_logging_configfile, 'rt') as f:  # pragma: no cover
                 configfile = yaml.load(f.read())
                 config.dictConfig(configfile)
 
@@ -689,11 +724,11 @@ class Configuration:
                                 for x in Logger.manager.loggerDict.keys()
                                 if x in logging_level_qualnames)
             else:
-                qualnames = set(x.split('.')[0]
+                qualnames = set(x.split('.')[0]  # pragma: no cover
                                 for x in Logger.manager.loggerDict.keys())
 
             for qualname in qualnames:
-                getLogger(qualname).setLevel(level)
+                getLogger(qualname).setLevel(level)  # pragma: no cover
 
     @classmethod
     def parse_configfile(cls, configfile, required):
@@ -708,7 +743,7 @@ class Configuration:
         print('Loading config file %r' % configfile)
         if not isfile(configfile):
             if required:
-                raise ConfigurationException(
+                raise ConfigurationException(  # pragma: no cover
                     "No such file or not a regular file: %r " % configfile)
 
             return
@@ -724,7 +759,7 @@ class Configuration:
             for opt, value in sections:
                 if opt in ('logging_configfile', 'json_logging_configfile',
                            'yaml_logging_configfile'):
-                    if value:
+                    if value:  # pragma: no cover
                         value = os.path.abspath(value)
 
                 configuration[opt] = value
@@ -765,7 +800,7 @@ class Configuration:
                 cls.set(opt, value)
 
         if 'logging_level' in cls.configuration:
-            cls.initialize_logging()
+            cls.initialize_logging()  # pragma: no cover
 
 
 @Configuration.add('plugins', label='Plugins',
@@ -777,15 +812,24 @@ def add_plugins(group):
     """
     group.add_argument('--registry-cls', dest='Registry', type=AnyBlokPlugin,
                        default='anyblok.registry:Registry',
-                       help="Registry class to use")
+                       help="Registry class to use",
+                       deprecated=("This plugins will be removed in version "
+                                   "2.0, because this behaviours is "
+                                   "dangerous"))
     group.add_argument('--migration-cls', dest='Migration',
                        type=AnyBlokPlugin,
                        default='anyblok.migration:Migration',
-                       help="Migration class to use")
+                       help="Migration class to use",
+                       deprecated=("This plugins will be removed in version "
+                                   "2.0, use the entry point "
+                                   "'anyblok.migration_type.plugins'"))
     group.add_argument('--get-url-fnct', dest='get_url',
                        type=AnyBlokPlugin,
                        default='anyblok.config:get_url',
-                       help="get_url function to use")
+                       help="get_url function to use",
+                       deprecated=("This plugins will be removed in version "
+                                   "2.0, because this behaviours is "
+                                   "dangerous"))
 
 
 @Configuration.add('config', must_be_loaded_by_unittest=True)
@@ -799,6 +843,10 @@ def add_configuration_file(parser):
                         help="Relative path of the config file")
     parser.add_argument('--without-auto-migration', dest='withoutautomigration',
                         action='store_true')
+    parser.add_argument('--ignore-migration-for-models', nargs="+",
+                        help="Models ignored by the migration")
+    parser.add_argument('--ignore-migration-for-schemas', nargs="+",
+                        help="Schemas ignored by the migration")
     parser.add_argument('--isolation-level',
                         default="READ_COMMITTED",
                         choices=["SERIALIZABLE", "REPEATABLE_READ",
@@ -865,6 +913,16 @@ def add_create_database(group):
         '--db-template-name',
         default=os.environ.get('ANYBLOK_DATABASE_TEMPLATE_NAME'),
         help="Name of the template")
+    group.add_argument(
+        '--with-demo',
+        default=os.environ.get('ANYBLOK_WITH_DEMO', False),
+        action='store_true',
+        help="Call **update_demo** method define on bloks to import demo data "
+             "while installing the project. If this option is used at database "
+             "creation that information will be kept in the database then "
+             "**update_demo** method will be called while updating bloks as "
+             "well.",
+    )
 
 
 @Configuration.add('install-bloks')
@@ -929,10 +987,7 @@ def add_schema(group):
 
     :param group:
     """
-    try:
-        from graphviz.files import FORMATS
-    except ImportError:
-        from graphviz.backend import FORMATS
+    from graphviz import FORMATS
 
     group.add_argument('--schema-format',
                        default='png', choices=tuple(FORMATS))

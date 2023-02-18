@@ -15,6 +15,7 @@ doc/_build
 *.\#*
 *~
 *.orig
+*,cover
 
 parts/
 bin/
@@ -22,6 +23,11 @@ etc/
 venv/
 develop-eggs/
 htmlcov/
+lcov.info
+
+test
+test.pdf
+test_doc_output
 
 gmon.out
 .idea

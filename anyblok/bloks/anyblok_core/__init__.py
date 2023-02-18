@@ -52,20 +52,22 @@ class AnyBlokCore(Blok):
     author = 'Suzanne Jean-Sébastien'
     logo = '../anyblok-logo_alpha_256.png'
 
-    def pre_migration(self, latest_version):
+    def pre_migration(self, latest_version):  # pragma: no cover
         if latest_version is None:
             return
 
         if latest_version < '0.4.1':
             self.pre_migration_0_4_1_fields_become_polymorphic(latest_version)
 
-    def pre_migration_0_4_1_fields_become_polymorphic(self, latest_version):
+    def pre_migration_0_4_1_fields_become_polymorphic(
+        self, latest_version
+    ):  # pragma: no cover
         logger.info("Pre Migration %s => %s: Field, Column, Relation Ship "
                     "become prolymophic models" % (latest_version,
                                                    self.version))
-        system_field = self.registry.migration.table('system_field')
-        system_field.column().add(self.registry.System.Field.entity_type)
-        self.registry.execute(
+        system_field = self.anyblok.migration.table('system_field')
+        system_field.column().add(self.anyblok.System.Field.entity_type)
+        self.anyblok.execute(
             "UPDATE system_field SET entity_type='Model.System.Field'")
         query = """
             INSERT INTO system_field (
@@ -84,17 +86,17 @@ class AnyBlokCore(Blok):
                 '%(entity_type)s' AS entity_type
             FROM %(table)s
         """
-        self.registry.execute(
+        self.anyblok.execute(
             query % {'entity_type': 'Model.System.Column',
                      'table': 'system_column'})
-        self.registry.execute(
+        self.anyblok.execute(
             query % {'entity_type': 'Model.System.RelationShip',
                      'table': 'system_relationship'})
-        system_column = self.registry.migration.table('system_column')
+        system_column = self.anyblok.migration.table('system_column')
         system_column.column('code').drop()
         system_column.column('ftype').drop()
         system_column.column('label').drop()
-        system_relationship = self.registry.migration.table(
+        system_relationship = self.anyblok.migration.table(
             'system_relationship')
         system_relationship.column('code').drop()
         system_relationship.column('ftype').drop()

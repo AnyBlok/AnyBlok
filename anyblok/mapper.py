@@ -20,7 +20,7 @@ def get_for(basekey, path, default=None):
 
     res = Configuration.get(key, None)
     if res is not None:
-        return res
+        return res  # pragma: no cover
 
     new_path = path[:-1]
     if path[-1] == '*':
@@ -137,6 +137,19 @@ class ModelAttribute:
 
         return getattr(Model, attribute_name)
 
+    def get_type(self, registry):
+        """Return the foreign key which represent the attribute in the data
+        base
+
+        :param registry: instance of the sqlalchemy ForeignKey
+        :rtype: instance of the attribute
+        """
+        Model = self.check_model_in_first_step(registry)
+        column_name = self.check_column_in_first_step(registry, Model)
+        col = registry.loaded_namespaces_first_step[self.model_name][
+            column_name]
+        return col
+
     def get_fk_column(self, registry):
         """Return the foreign key which represent the attribute in the data
         base
@@ -242,14 +255,14 @@ class ModelAttribute:
 
     def add_fake_column(self, registry):
         Model = self.check_model_in_first_step(registry)
-        if self.attribute_name in registry.loaded_namespaces_first_step:
+        if self.attribute_name in Model:
             return
 
         Model[self.attribute_name] = FakeColumn()
 
     def add_fake_relationship(self, registry, namespace, fieldname):
         Model = self.check_model_in_first_step(registry)
-        if self.attribute_name in registry.loaded_namespaces_first_step:
+        if self.attribute_name in Model:
             return
 
         Model[self.attribute_name] = FakeRelationShip(ModelAttribute(
@@ -279,7 +292,8 @@ class ModelAttribute:
                 "Unknow model %r" % self.model_name)
 
         Model = registry.loaded_namespaces_first_step[self.model_name]
-        if len(Model.keys()) == 1:
+        if len(Model.keys()) == 3:
+            # (__depends__, __db_schema__, __tablename__)
             # No column found, so is not an sql model
             raise ModelAttributeException(
                 "The Model %r is not an SQL Model" % self.model_name)
@@ -366,7 +380,7 @@ class ModelRepr:
         pks = []
         for k, v in Model.items():
             if isinstance(v, Column):
-                if 'primary_key' in v.kwargs:
+                if v.kwargs.get('primary_key') is True:
                     pks.append(ModelAttribute(self.model_name, k))
 
         return pks
@@ -518,7 +532,7 @@ class ModelAttributeMapper:
     def mapper(self, registry, namespace, usehybrid=True):
         attribute = self.attribute
         if self.attribute.model_name.upper() == 'SELF':
-            attribute = ModelAttribute(
+            attribute = ModelAttribute(  # pragma: no cover
                 namespace, self.attribute.attribute_name)
 
         return attribute.get_attribute(registry, usehybrid=usehybrid)

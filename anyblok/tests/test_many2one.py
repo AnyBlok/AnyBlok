@@ -4,6 +4,7 @@
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -18,24 +19,20 @@ from anyblok.column import (
     Integer, String, BigInteger, Float, Decimal, Boolean, DateTime, Date, Time,
     Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection,
     TimeStamp)
-from anyblok.relationship import Many2One
-from sqlalchemy import ForeignKeyConstraint
-from sqlalchemy.engine.reflection import Inspector
+from anyblok.relationship import Many2One, ordering_list
+from sqlalchemy import ForeignKeyConstraint, inspect
 from .conftest import init_registry_with_bloks, init_registry, reset_db
 
 
 COLUMNS = [
     Integer,
     BigInteger,
-    Float,
-    Decimal,
     String,
     Boolean,
     Date,
     Time,
     Email,
     UUID,
-    Country,
     Selection,
 ]
 
@@ -111,6 +108,32 @@ def _complete_many2one(**kwargs):
         address = Many2One(model=Model.Address,
                            remote_columns="id", column_names="id_of_address",
                            one2many="persons", nullable=False)
+
+
+def _complete_many2one_with_ordered_one2many(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address,
+                           remote_columns="id", column_names="id_of_address",
+                           one2many=(
+                               "persons",
+                               dict(
+                                   order_by="ModelPerson.name",
+                                   collection_class=ordering_list('name'),
+                               ),
+                           ),
+                           nullable=False)
 
 
 def _complete_many2one_with_schema(**kwargs):
@@ -192,6 +215,81 @@ def _minimum_many2one(**kwargs):
         address = Many2One(model=Model.Address)
 
 
+def _many2one_to_polymorphic_models_1(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+        type_entity = String(default='shipping')
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Address, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_on': cls.type_entity,
+            })
+            return mapper_args
+
+    @register(Model.Address, tablename=Model.Address)
+    class Shipping(Model.Address):
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Shipping, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_identity': 'shipping',
+            })
+            return mapper_args
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address, one2many="persons")
+
+
+def _many2one_to_polymorphic_models_2(**kwargs):
+
+    @register(Model)
+    class Address:
+
+        id = Integer(primary_key=True)
+        street = String()
+        zip = String()
+        city = String()
+        type_entity = String(default='shipping')
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Address, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_on': cls.type_entity,
+            })
+            return mapper_args
+
+    @register(Model.Address)
+    class Shipping(Model.Address):
+        id = Integer(primary_key=True, foreign_key=Model.Address.use('id'))
+
+        @classmethod
+        def define_mapper_args(cls):
+            mapper_args = super(Shipping, cls).define_mapper_args()
+            mapper_args.update({
+                'polymorphic_identity': 'shipping',
+            })
+            return mapper_args
+
+    @register(Model)
+    class Person:
+
+        name = String(primary_key=True)
+        address = Many2One(model=Model.Address, one2many="persons")
+
+
 def _minimum_many2one_with_schema(**kwargs):
 
     @register(Model)
@@ -268,10 +366,13 @@ def many2one_on_mapping_model_and_column_2(**kwargs):
     scope="class",
     params=[
         (_complete_many2one, 'id_of_address', True),
+        (_complete_many2one_with_ordered_one2many, 'id_of_address', True),
         (_complete_many2one_with_schema, 'id_of_address', True),
         (_complete_many2one_with_different_schema1, 'id_of_address', True),
         (_complete_many2one_with_different_schema2, 'id_of_address', True),
         (_minimum_many2one, 'address_id', False),
+        (_many2one_to_polymorphic_models_1, 'address_id', True),
+        (_many2one_to_polymorphic_models_2, 'address_id', True),
         (_minimum_many2one_with_schema, 'address_id', False),
         (_many2one_with_str_model, 'address_id', False),
         (many2one_on_mapping_model_and_column_1, 'address_id', False),
@@ -310,6 +411,8 @@ class TestMany2One:
 
         if has_one2many:
             assert address.persons == [person]
+            person.delete()  # issue 68
+            address.expire('persons')
 
     def test_autodoc(self, registry_many2one):
         registry, _, _ = registry_many2one
@@ -480,8 +583,8 @@ class TestMany2OneOld:
 
                 id = Integer(primary_key=True)
 
-            @register(Model)  # noqa
-            class Test:
+            @register(Model)
+            class Test:  # noqa
 
                 parent = Many2One(model='Model.Test', one2many='children')
 
@@ -490,6 +593,23 @@ class TestMany2OneOld:
         t2 = registry.Test.insert(parent=t1)
         assert t2.parent is t1
         assert t1.children[0] is t2
+
+    def test_with_primary_key_eq_False(self):
+        def add_in_registry():
+
+            @register(Model)
+            class Test1:
+
+                id = Integer(primary_key=True)
+                id2 = Integer(primary_key=False)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                parent = Many2One(model='Model.Test1')
+
+        self.init_registry(add_in_registry)
 
     def test_same_model_pk_by_mixin(self):
         def add_in_registry():
@@ -547,7 +667,7 @@ class TestMany2OneOld:
                 address = Many2One(model=Model.Address, index=True)
 
         registry = self.init_registry(add_in_registry)
-        inspector = Inspector(registry.session.connection())
+        inspector = inspect(registry.session.connection())
         indexes = inspector.get_indexes(registry.Person.__tablename__)
         assert len(indexes) == 1
 
@@ -566,9 +686,10 @@ class TestMany2OneOld:
                 address = Many2One(model=Model.Address, primary_key=True)
 
         registry = self.init_registry(add_in_registry)
-        inspector = Inspector(registry.session.connection())
-        pks = inspector.get_primary_keys(registry.Person.__tablename__)
-        assert 'address_id'in pks
+        inspector = inspect(registry.session.connection())
+        constraint = inspector.get_pk_constraint(registry.Person.__tablename__)
+        pks = constraint['constrained_columns']
+        assert 'address_id' in pks
 
     def test_complet_with_multi_foreign_key(self):
 
@@ -839,3 +960,37 @@ class TestMany2OneOld:
         assert person.address_1 is address_1
         assert person.address_2 is address_2
         assert person.address_1 is not person.address_2
+
+    def test_many2one_with_order_list_on_one2many(self):
+
+        def add_in_registry():
+
+            @register(Model)
+            class Address:
+
+                id = Integer(primary_key=True)
+
+            @register(Model)
+            class Person:
+
+                id = Integer(primary_key=True)
+                name = String()
+                address = Many2One(
+                    model=Model.Address,
+                    one2many=(
+                        'persons',
+                        dict(
+                            order_by="ModelPerson.name",
+                            collection_class=ordering_list('name'),
+                        )
+                    )
+                )
+
+        registry = self.init_registry(add_in_registry)
+        address = registry.Address.insert()
+        p3 = registry.Person.insert(name='test 3', address=address)
+        p1 = registry.Person.insert(name='test 1', address=address)
+        p4 = registry.Person.insert(name='test 4', address=address)
+        p2 = registry.Person.insert(name='test 2', address=address)
+        assert address.persons == [p1, p2, p3, p4]
+        assert address.persons.ordering_attr == 'name'

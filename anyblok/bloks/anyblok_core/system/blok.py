@@ -50,7 +50,7 @@ class Blok:
         if hasattr(blok, '__doc__'):
             return blok.__doc__ or ''
 
-        return ''
+        return ''  # pragma: no cover
 
     def get_long_description(self):
         """ fget of the ``long_description`` Column.Selection
@@ -61,7 +61,7 @@ class Blok:
         path = BlokManager.getPath(self.name)
         readme = getattr(blok, 'readme', 'README.rst')
         if readme == '__doc__':
-            return blok.__doc__
+            return blok.__doc__  # pragma: no cover
 
         file_path = join(path, readme)
         description = ''
@@ -71,7 +71,7 @@ class Blok:
 
         return description
 
-    def get_logo(self):
+    def get_logo(self):  # pragma: no cover
         """fget of ``logo`` return the path in the blok of the logo
 
         :rtype: absolute path or None if unexiste logo
@@ -104,7 +104,7 @@ class Blok:
 
         if len(states) == 1:
             return res[states[0]]
-        return res
+        return res  # pragma: no cover
 
     @classmethod
     def update_list(cls):
@@ -127,8 +127,8 @@ class Blok:
             else:
                 values = dict(order=order, version=version, author=author)
                 if b.state == 'undefined' and not is_undefined:
-                    values['state'] = 'uninstalled'
-                elif is_undefined:
+                    values['state'] = 'uninstalled'  # pragma: no cover
+                elif is_undefined:  # pragma: no cover
                     if b.state not in ('uninstalled', 'undefined'):
                         raise BlokManagerException(
                             ("Change state %r => 'undefined' for %s is "
@@ -166,8 +166,10 @@ class Blok:
 
         if conditional_bloks_to_install:
             for b in conditional_bloks_to_install:
-                cls.query().filter(cls.name == b).update(
-                    {cls.state: 'toinstall'})
+                cls.execute_sql_statement(
+                    cls.update_sql_statement().where(cls.name == b).values(
+                        state='toinstall')
+                )
 
             return True
 
@@ -216,8 +218,10 @@ class Blok:
         """
         logger.info("Install the blok %r" % self.name)
         self.fire('Update installed blok')
-        entry = self.registry.loaded_bloks[self.name]
+        entry = self.anyblok.loaded_bloks[self.name]
         entry.update(None)
+        if self.anyblok.System.Parameter.get("with-demo", False):
+            entry.update_demo(None)
         self.state = 'installed'
         self.installed_version = self.version
 
@@ -226,12 +230,14 @@ class Blok:
         """
         logger.info("Update the blok %r" % self.name)
         self.fire('Update installed blok')
-        entry = self.registry.loaded_bloks[self.name]
+        entry = self.anyblok.loaded_bloks[self.name]
         parsed_version = (
             parse_version(self.installed_version)
             if self.installed_version is not None
             else None)
         entry.update(parsed_version)
+        if self.anyblok.System.Parameter.get("with-demo", False):
+            entry.update_demo(parsed_version)
         self.state = 'installed'
         self.installed_version = self.version
 
@@ -240,7 +246,9 @@ class Blok:
         """
         logger.info("Uninstall the blok %r" % self.name)
         self.fire('Update installed blok')
-        entry = BlokManager.bloks[self.name](self.registry)
+        entry = BlokManager.bloks[self.name](self.anyblok)
+        if self.anyblok.System.Parameter.get("with-demo", False):
+            entry.uninstall_demo()
         entry.uninstall()
         self.state = 'uninstalled'
         self.installed_version = None
@@ -253,10 +261,10 @@ class Blok:
         if blok_cls is None:
             logger.warning("load(): class of Blok %r not found, "
                            "Blok can't be loaded", name)
-            return
+            return  # pragma: no cover
 
         logger.info("Loading Blok %r", name)
-        blok_cls(self.registry).load()
+        blok_cls(self.anyblok).load()
         logger.debug("Succesfully loaded Blok %r", name)
 
     @classmethod
@@ -275,5 +283,5 @@ class Blok:
 
     @listen('Model.System.Blok', 'Update installed blok')
     def listen_update_installed_blok(cls):
-        cls.registry.System.Cache.invalidate(
+        cls.anyblok.System.Cache.invalidate(
             cls.__registry_name__, 'is_installed')

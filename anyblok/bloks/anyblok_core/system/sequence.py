@@ -1,13 +1,14 @@
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from sqlalchemy import Sequence as SQLASequence
-from anyblok.column import Integer, String, Boolean, Sequence as SeqUence
+from anyblok.column import Integer, String, Boolean
 
 
 register = Declarations.register
@@ -69,7 +70,8 @@ class Sequence:
 
     id = Integer(primary_key=True)
     code = String(nullable=False)
-    number = Integer(nullable=False)
+    start = Integer(default=1)
+    current = Integer(default=None)
     seq_name = String(nullable=False)
     """Name of the sequence in the database.
 
@@ -103,16 +105,16 @@ class Sequence:
         """ Create the sequence to determine name """
         super(Sequence, cls).initialize_model()
         seq = SQLASequence(cls._cls_seq_name)
-        seq.create(cls.registry.bind)
+        seq.create(cls.anyblok.bind)
 
-        to_create = getattr(cls.registry,
+        to_create = getattr(cls.anyblok,
                             '_need_sequence_to_create_if_not_exist', ())
         if to_create is None:
             return
 
         for vals in to_create:
             if cls.query().filter(cls.code == vals['code']).count():
-                continue
+                continue  # pragma: no cover
 
             formatter = vals.get('formater')
             if formatter is None:
@@ -137,7 +139,7 @@ class Sequence:
             values.setdefault('seq_name', values.get("code", "no_gap_seq"))
         else:
             if seq_name is None:
-                seq_id = cls.registry.execute(SQLASequence(cls._cls_seq_name))
+                seq_id = cls.anyblok.execute(SQLASequence(cls._cls_seq_name))
                 seq_name = '%s_%d' % (cls.__tablename__, seq_id)
                 values['seq_name'] = seq_name
 
@@ -145,7 +147,7 @@ class Sequence:
                 seq = SQLASequence(seq_name, number)
             else:
                 seq = SQLASequence(seq_name)
-            seq.create(cls.registry.bind)
+            seq.create(cls.anyblok.bind)
         return values
 
     @classmethod
@@ -154,7 +156,7 @@ class Sequence:
         return super(Sequence, cls).insert(**cls.create_sequence(kwargs))
 
     @classmethod
-    def multi_insert(cls, *args):
+    def multi_insert(cls, *args):  # pragma: no cover
         """Overwrite to call :meth:`create_sequence` on the fly."""
         res = [cls.create_sequence(x) for x in args]
         return super(Sequence, cls).multi_insert(*res)
@@ -168,7 +170,7 @@ class Sequence:
             self.refresh(with_for_update={"nowait": True})
             nextval = self.number + 1
         else:
-            nextval = self.registry.execute(SQLASequence(self.seq_name))
+            nextval = self.anyblok.execute(SQLASequence(self.seq_name))
         self.update(number=nextval)
         return self.formater.format(code=self.code, seq=nextval, id=self.id)
 
@@ -183,5 +185,5 @@ class Sequence:
         filters = [getattr(cls, k) == v for k, v in crit.items()]
         seq = cls.query().filter(*filters).first()
         if seq is None:
-            return None
+            return None  # pragma: no cover
         return seq.nextval()

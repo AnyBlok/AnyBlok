@@ -13,6 +13,7 @@ from ..exceptions import CoreBaseException
 
 @pytest.mark.usefixtures('rollback_registry')
 class TestCoreBaseScope:
+
     def test_to_primary_keys(self, rollback_registry):
         registry = rollback_registry
         with pytest.raises(CoreBaseException):

@@ -16,9 +16,11 @@ class SqlViewBase(SqlMixin):
     """
 
     def update(self, *args, **kwargs):
-        raise ViewException("%r.update method are not availlable on view "
-                            "model" % self.__registry_name__)
+        raise ViewException(  # pragma: no cover
+            "%r.update method are not availlable on view "
+            "model" % self.__registry_name__)
 
     def delete(self, *args, **kwargs):
-        raise ViewException("%r.delete method are not availlable on view "
-                            "model" % self.__registry_name__)
+        raise ViewException(  # pragma: no cover
+            "%r.delete method are not availlable on view "
+            "model" % self.__registry_name__)

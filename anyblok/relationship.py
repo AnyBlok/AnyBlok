@@ -17,6 +17,9 @@ from sqlalchemy_utils.functions import get_class_by_table
 from .field import Field, FieldException
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr, format_schema
 from anyblok.common import anyblok_column_prefix
+from sqlalchemy.ext.orderinglist import OrderingList, _unsugar_count_from
+from types import FunctionType
+
 from logging import getLogger
 
 
@@ -34,10 +37,10 @@ class RelationshipProperty(relationships.RelationshipProperty):
         :func:`.relationship` complementary to this one."""
 
         if self.parent.non_primary:
-            return
+            return  # pragma: no cover
         if self.backref is not None and not self.back_populates:
             if isinstance(self.backref, util.string_types):
-                backref_key, kwargs = self.backref, {}
+                backref_key, kwargs = self.backref, {}  # pragma: no cover
             else:
                 backref_key, kwargs = self.backref
             mapper = self.mapper.primary_mapper()
@@ -46,7 +49,7 @@ class RelationshipProperty(relationships.RelationshipProperty):
                 union(mapper.self_and_descendants)
             for m in check:
                 if m.has_property(backref_key):
-                    raise sa_exc.ArgumentError(
+                    raise sa_exc.ArgumentError(  # pragma: no cover
                         "Error creating backref "
                         "'%s' on relationship '%s': property of that "
                         "name exists on mapper '%s'" %
@@ -60,10 +63,10 @@ class RelationshipProperty(relationships.RelationshipProperty):
                 # for many to many, just switch primaryjoin/
                 # secondaryjoin.   use the annotated
                 # pj/sj on the _join_condition.
-                pj = kwargs.pop(
+                pj = kwargs.pop(  # pragma: no cover
                     'primaryjoin',
                     self._join_condition.secondaryjoin_minus_local)
-                sj = kwargs.pop(
+                sj = kwargs.pop(  # pragma: no cover
                     'secondaryjoin',
                     self._join_condition.primaryjoin_minus_local)
             else:
@@ -72,7 +75,7 @@ class RelationshipProperty(relationships.RelationshipProperty):
                     self._join_condition.primaryjoin_reverse_remote)
                 sj = kwargs.pop('secondaryjoin', None)
                 if sj:
-                    raise sa_exc.InvalidRequestError(
+                    raise sa_exc.InvalidRequestError(  # pragma: no cover
                         "Can't assign 'secondaryjoin' on a backref "
                         "against a non-secondary relationship."
                     )
@@ -202,7 +205,16 @@ class RelationShip(Field):
 
         :param registry: current registry
         """
-        self.kwargs['collection_class'] = registry.InstrumentedList
+        InstrumentedList = registry.InstrumentedList
+        if self.kwargs.get('collection_class'):
+            collection_class = self.kwargs['collection_class']
+            if isinstance(collection_class, FunctionType):
+                if getattr(
+                    collection_class, 'is_an_anyblok_instrumented_list', False
+                ) is True:
+                    InstrumentedList = self.kwargs['collection_class'](registry)
+
+        self.kwargs['collection_class'] = InstrumentedList
         self.backref_properties['collection_class'] = registry.InstrumentedList
 
     def define_backref_properties(self, registry, namespace, properties):
@@ -229,6 +241,16 @@ class RelationShip(Field):
 
         if isinstance(_backref, (list, tuple)):
             _backref, backref_properties = _backref
+            if backref_properties.get('collection_class'):
+                collection_class = backref_properties['collection_class']
+                if isinstance(collection_class, FunctionType):
+                    if getattr(
+                        collection_class, 'is_an_anyblok_instrumented_list',
+                        False
+                    ) is True:
+                        backref_properties[
+                            'collection_class'] = collection_class(registry)
+
             self.backref_properties.update(backref_properties)
 
         self.define_backref_properties(registry, namespace, properties)
@@ -338,10 +360,15 @@ class Many2One(RelationShip):
             if not isinstance(self._remote_columns, (list, tuple)):
                 self._remote_columns = [self._remote_columns]
 
-        self.nullable = True
-        if 'nullable' in kwargs:
-            self.nullable = self.kwargs.pop('nullable')
-            self.kwargs['info']['nullable'] = self.nullable
+        self.primary_key = self.kwargs.pop('primary_key', False)
+        self.kwargs['info']['primary_key'] = self.primary_key
+
+        self.nullable = False if self.primary_key else True
+        nullable = self.kwargs.pop('nullable', True)
+        if not self.primary_key:
+            self.nullable = nullable
+
+        self.kwargs['info']['nullable'] = self.nullable
 
         self.unique = self.kwargs.pop('unique', False)
         self.kwargs['info']['unique'] = self.unique
@@ -349,12 +376,12 @@ class Many2One(RelationShip):
         self.index = self.kwargs.pop('index', False)
         self.kwargs['info']['index'] = self.index
 
-        self.primary_key = self.kwargs.pop('primary_key', False)
-        self.kwargs['info']['primary_key'] = self.primary_key
-
         if 'one2many' in kwargs:
-            self.kwargs['backref'] = self.kwargs.pop('one2many')
-            self.kwargs['info']['remote_name'] = self.kwargs['backref']
+            self.kwargs['backref'] = backref = self.kwargs.pop('one2many')
+            self.kwargs['info']['remote_name'] = backref
+            if isinstance(backref, (list, tuple)):
+                self.kwargs['info']['remote_name'] = backref[0]
+                self.backref_properties.update(**backref[1])
 
         self._column_names = None
         if 'column_names' in kwargs:
@@ -507,7 +534,7 @@ class Many2One(RelationShip):
     def update_table_args(self, registry, Model):
         """Add foreign key constraint in table args"""
         if not self.remote_model_is_a_table(registry):
-            return []
+            return []  # pragma: no cover
 
         return [
             ForeignKeyConstraint(self.col_names, self.fk_names,
@@ -538,10 +565,25 @@ class Many2One(RelationShip):
         """
         properties = {
             'fieldname': fieldname, 'relationship_fied': self}
-        InstrumentedList = type(
-            'InstrumentedList', (RelationShipListMany2One, RelationShipList,
-                                 registry.InstrumentedList), properties)
+
+        collection_class = self.backref_properties.get('collection_class', None)
+        if (
+            collection_class
+            and isinstance(collection_class, FunctionType)
+            and getattr(
+                collection_class, 'is_an_anyblok_instrumented_list', False
+            ) is True
+        ):
+            InstrumentedList = collection_class(
+                registry, RelationShipListMany2One, RelationShipList,
+                **properties)
+        else:
+            InstrumentedList = type(
+                'InstrumentedList', (RelationShipListMany2One, RelationShipList,
+                                     registry.InstrumentedList), properties)
+
         self.backref_properties['collection_class'] = InstrumentedList
+
         cascade = self.cascade
         if self.foreign_key_options.get('ondelete') == 'cascade':
             cascade += ', delete'
@@ -563,10 +605,18 @@ class Many2One(RelationShip):
                     cname.attribute_name)] = declared_attr(wrapper)
         properties['loaded_columns'].append(cname.attribute_name)
         properties['hybrid_property_columns'].append(cname.attribute_name)
-        properties[cname.attribute_name] = hybrid_property(
-            self.wrap_getter_column(cname.attribute_name),
-            super(Many2One, self).wrap_setter_column(cname.attribute_name),
-            expr=self.wrap_expr_column(cname.attribute_name))
+
+        fget = self.wrap_getter_column(cname.attribute_name)
+        fset = super(Many2One, self).wrap_setter_column(cname.attribute_name)
+        fexp = self.wrap_expr_column(cname.attribute_name)
+
+        for func in (fget, fset, fexp):
+            func.__name__ = cname.attribute_name
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.expression(fexp)
+        properties[cname.attribute_name] = hybrid
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -581,7 +631,7 @@ class Many2One(RelationShip):
         self.kwargs['foreign_keys'] = '[%s]' % ', '.join(
             [x.get_complete_name(registry) for x in self.column_names])
         if not self.remote_model_is_a_table(registry):
-            self.kwargs['viewonly'] = True
+            self.kwargs['viewonly'] = True  # pragma: no cover
             # we used primaryjoin and let the userto defined the good one
             # The foreign key does not exist, we should fine a good way to
             # the the local and remote columns
@@ -626,14 +676,14 @@ class InstrumentedAttribute_O2O(attributes.InstrumentedAttribute):
                     if getattr(instance, fname):
                         setattr(value, cname, getattr(instance, fname))
                     else:
-                        call_super = True
+                        call_super = True  # pragma: no cover
                 else:
-                    setattr(value, cname, instance)
+                    setattr(value, cname, instance)  # pragma: no cover
 
         else:
-            call_super = True
+            call_super = True  # pragma: no cover
 
-        if call_super:
+        if call_super:  # pragma: no cover
             super(InstrumentedAttribute_O2O, self).__set__(instance, value)
 
 
@@ -771,8 +821,12 @@ class Many2Many(RelationShip):
             self.m2m_local_columns = [self.m2m_local_columns]
 
         self.compute_join = self.kwargs.pop('compute_join', False)
-        self.kwargs['backref'] = self.kwargs.pop('many2many', None)
-        self.kwargs['info']['remote_name'] = self.kwargs['backref']
+        self.kwargs['backref'] = backref = self.kwargs.pop('many2many', None)
+        self.kwargs['info']['remote_name'] = backref
+        if isinstance(backref, (list, tuple)):
+            self.kwargs['info']['remote_name'] = backref[0]
+            self.backref_properties.update(**backref[1])
+
         self.schema = self.kwargs.pop('schema', None)
 
     def autodoc_get_properties(self):
@@ -781,7 +835,7 @@ class Many2Many(RelationShip):
             res['join table'] = self.join_table
 
         if self.join_model:
-            res['join model'] = self.join_model.model_name
+            res['join model'] = self.join_model.model_name  # pragma: no cover
 
         if self.schema:
             res['schema'] = self.schema
@@ -806,7 +860,7 @@ class Many2Many(RelationShip):
                 self.join_model.model_name]
             for col in m2m_columns:
                 if col not in first_step:
-                    m2m_columns_.append(col)
+                    m2m_columns_.append(col)  # pragma: no cover
                 elif isinstance(first_step[col], (Many2One, One2One)):
                     c = first_step[col]
                     remote_columns = c.get_remote_columns(registry)
@@ -928,6 +982,46 @@ class Many2Many(RelationShip):
 
         return has_join_table, schema
 
+    def get_back_populate_relationship(self, registry, join_table):
+        remote_model = self.model.model_name
+        lnfs = registry.loaded_namespaces_first_step[remote_model]
+        for fieldname in lnfs:
+            field = lnfs[fieldname]
+            if not isinstance(field, Many2Many):
+                continue
+
+            field.local_model = self.model
+            remote_join_table = field.get_join_table(
+                registry, remote_model, fieldname)
+            if join_table == remote_join_table:
+                return fieldname
+
+        return None
+
+    def set_overlaps_properties(self, registry, namespace):
+        if not self.join_model:
+            return
+
+        lnfs = registry.loaded_namespaces_first_step[
+            self.join_model.model_name]
+        fieldnames = []
+        for fieldname in lnfs:
+            field = lnfs[fieldname]
+            if not isinstance(field, Many2One):
+                continue
+
+            if field.model.model_name not in (
+                namespace, self.model.model_name
+            ):
+                continue  # pragma: no cover
+
+            fieldnames.append(anyblok_column_prefix + fieldname)
+
+        if fieldnames:
+            # M2O on join model to M2M fields
+            self.kwargs['overlaps'] = ','.join(fieldnames)
+            self.backref_properties['overlaps'] = ','.join(fieldnames)
+
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
         """ Create the relationship
@@ -976,7 +1070,7 @@ class Many2Many(RelationShip):
                 self.m2m_local_columns is None and
                 self.m2m_remote_columns is None
             ):
-                raise FieldException(
+                raise FieldException(  # pragma: no cover
                     "No 'm2m_local_columns' and 'm2m_remote_columns' "
                     "attribute filled for many2many "
                     "%r on model %r" % (fieldname, namespace))
@@ -1002,6 +1096,7 @@ class Many2Many(RelationShip):
             self.kwargs['primaryjoin'] = primaryjoin
             self.kwargs['secondaryjoin'] = secondaryjoin
 
+        self.set_overlaps_properties(registry, namespace)
         self.kwargs['secondary'] = (
             '%s.%s' % (schema, join_table) if schema else join_table)
         # definition of expiration
@@ -1017,6 +1112,10 @@ class Many2Many(RelationShip):
             self.init_expire_attributes(registry, model_name, backref)
             registry.expire_attributes[model_name][backref].add(
                 ('x2m', backref, fieldname))
+        else:
+            m2m = self.get_back_populate_relationship(registry, join_table)
+            if m2m:
+                self.kwargs['back_populates'] = m2m
 
         return super(Many2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
@@ -1035,7 +1134,7 @@ class InstrumentedAttribute_O2M(attributes.InstrumentedAttribute):
                 if value:
                     setattr(instance, cname, getattr(value, fname))
                 else:
-                    setattr(instance, cname, value)
+                    setattr(instance, cname, value)  # pragma: no cover
 
 
 class One2Many(RelationShip):
@@ -1077,7 +1176,7 @@ class One2Many(RelationShip):
 
         if 'many2one' in kwargs:
             self.kwargs['backref'] = self.kwargs.pop('many2one')
-            self.kwargs['info']['remote_names'] = self.kwargs['backref']
+            self.kwargs['info']['remote_name'] = self.kwargs['backref']
 
     def autodoc_get_properties(self):
         res = super(One2Many, self).autodoc_get_properties()
@@ -1157,7 +1256,7 @@ class One2Many(RelationShip):
             pjs = []
             for k, v in pjs_.items():
                 if len(v) == 1:
-                    pjs.append("%s == %s" % (k, v[0]))
+                    pjs.append("%s == %s" % (k, v[0]))  # pragma: no cover
                 else:
                     pj = 'or_(%s)' % ', '.join("%s == %s" % (k, y) for y in v)
                     logger.warning(
@@ -1166,6 +1265,25 @@ class One2Many(RelationShip):
                     pjs.append(pj)
 
             self.kwargs['primaryjoin'] = 'and_(' + ', '.join(pjs) + ')'
+
+    def get_back_populate_relationship(self, registry, namespace):
+        remote_model = self.model.model_name
+        lnfs = registry.loaded_namespaces_first_step[remote_model]
+        fieldnames = []
+        for fieldname in lnfs:
+            field = lnfs[fieldname]
+            if not isinstance(field, Many2One):
+                continue
+
+            if field.model.model_name != namespace:
+                continue  # pragma: no cover
+
+            if field.kwargs.get('backref'):
+                continue  # pragma: no cover
+
+            fieldnames.append(anyblok_column_prefix + fieldname)
+
+        return fieldnames
 
     def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
                                properties):
@@ -1194,6 +1312,11 @@ class One2Many(RelationShip):
             if col:
                 self.kwargs['info']['local_columns'].append(col)
 
+        if not self.kwargs.get('backref'):
+            m2o = self.get_back_populate_relationship(registry, namespace)
+            if m2o:
+                self.kwargs['overlaps'] = ','.join(m2o)
+
         self.add_expire_attributes(registry, namespace, fieldname)
         return super(One2Many, self).get_sqlalchemy_mapping(
             registry, namespace, fieldname, properties)
@@ -1215,3 +1338,26 @@ class One2Many(RelationShip):
     def get_relationship_cls(self):
         self.kwargs['relationship_field'] = self
         return RelationshipProperty
+
+
+def ordering_list(*args, **kwargs):
+    fnct_args = args
+    fnct_kwargs = kwargs
+
+    def wrap(registry, *instrumented_list_bases, **properties):
+        InstrumentedList = type(
+            'InstrumentedList',
+            (
+                OrderingList.__mro__[0],
+                *instrumented_list_bases,
+                registry.InstrumentedList,
+            ),
+            properties
+        )
+
+        kw = _unsugar_count_from(**fnct_kwargs)
+        return lambda: InstrumentedList(*fnct_args, **kw)
+
+    wrap.is_an_anyblok_instrumented_list = True
+
+    return wrap

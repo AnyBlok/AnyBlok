@@ -1,14 +1,12 @@
 language: python
-dist: xenial
 sudo: true
-addons:
-    postgresql: "9.6"
 
 python:
     - "3.6"
     - "3.7"
     - "3.8"
-    - "3.9-dev"
+    - "3.9"
+    - "3.10-dev"
     - "nightly"
 
 env:
@@ -41,11 +39,11 @@ env:
 
 matrix:
     allow_failures:
-      - python: "3.9-dev"
+      - python: "3.10-dev"
       - python: "nightly"
-      - python: "pypy3.5"
+      - python: "pypy3"
     include:
-      - python: "pypy3.5"
+      - python: "pypy3"
         env: ANYBLOK_DATABASE_DRIVER=postgresql+psycopg2cffi ANYBLOK_DATABASE_USER=postgres SQLSERVER='psql -c' SQLPYCLIENT='psycopg2cffi'
     fast_finish: true
 
@@ -74,21 +72,21 @@ before_install:
 install:
   - pip install -U pip
   - pip install wheel
-  - pip install sqlalchemy $SQLPYCLIENT
+  - pip install sqlalchemy
+  - pip install $SQLPYCLIENT
   - pip install -U flake8 coverage pytest pytest-cov
   - pip install colour passlib furl phonenumbers pycountry  # special columns
-  - pip install coveralls
   - pip install -U cryptography
   - pip install -U coveralls
   - pip install .
 
 script:
   - flake8 anyblok --exclude=*/tests/*
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]] && [[ $MARKERS == '' ]]; then pytest --cov-report= --cov=anyblok anyblok/tests; fi
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3.5' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov-report= --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS == '' ]]; then pytest --cov=anyblok anyblok/tests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy3' ]] && [[ $MARKERS != '' ]]; then pytest -m "$MARKERS" --cov=anyblok anyblok/tests; fi
   - $SQLSERVER 'drop database travis_ci_test;'
-  - anyblok_createdb --install-all-bloks
-  - pytest --cov-report= --cov=anyblok anyblok/bloks
-  
-after_success:
-  coveralls --data_file=.coverage --config_file=.coveragerc
+  - anyblok_createdb --install-all-bloks  --with-demo
+  - anyblok_updatedb --update-all-bloks  # some attribute is load twice in update
+  - pytest --cov-append --cov=anyblok anyblok/bloks/anyblok_core
+
+after_success: coveralls

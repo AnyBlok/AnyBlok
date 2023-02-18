@@ -7,6 +7,8 @@
 ..    Copyright (C) 2018 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+..    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+..    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -15,10 +17,85 @@
 CHANGELOG
 =========
 
-1.0.0 (Unreleased)
+2.0.0 (unreleased)
 ------------------
 
 * Added Sequence with *no gap* to provide functional sequence without gaps.
+
+1.4.0 (2022-02-17)
+------------------
+
+* Freeze version of SQLAlchemy < 2.0
+* Freeze version of SQLAlchemy_Util < 0.40.0
+* Forbid primary key on Float and Decimal
+* Replace setup packagin by pyproject.toml
+
+1.3.2 (2022-02-19)
+------------------
+
+* Fixed Graphviz dependencies #207
+* Fixed Mapper on column with **primary_key=False** #208
+
+1.3.1 (2021-08-25)
+------------------
+
+* Fixed sphinx pluggin 
+
+1.3.0 (2021-07-12)
+------------------
+
+* Added deprecated name argument on the configuration to
+  add a deprecated message on theses. The goal is to informe
+  the user of AnyBlok that a sys args will be removed
+* Added removed name argument on the configuration to forbid
+  the sys arg
+* Added plugins to migrate DateTime to DateTime with MariaDB and MySQL
+* Added cache_ok attribute on Column Type
+* Fixed issue #195, the issue was due of a changement of the api of
+  the hybrid properties, Thanks @petrus-v for your help
+* Fixed issue #196, A setter on the deprecated attribut **registry**
+  do a setter on the attribute **anyblok**
+
+1.2.0 (2021-04-14)
+------------------
+
+* Adapted to **SQLAlchemy >= 1.4**
+* Fixed Many2One with pycountry as primary key
+* Fixed Many2One with **primary_key=True**, when primary key is True, 
+  this nullable is forced to False
+* Refactored hybrid_property to use the decorator mecanisme
+* Adapted SQLA.URL manipulation, which was became immutable
+* Used the inspect method, not the deprecated Inspector
+* Refactored View, need the latest version of sqlalchemy-views
+* Removed old sqlalchemy interfaces for MySQL, replaced it by entry points
+* Added engine.event entry point to define action on engine
+* Added engine.event.**dialect name** entry point to define action on the
+  engine for the dialect
+* Added session.event.**dialect name** entry point to define action on the
+  session for the dialect
+* Added entries in configuration to ignore migration for Schema or Model
+* Fixed the configuration of the documentation build on readthedoc
+
+1.1.0 (2021-03-22)
+------------------
+
+* Fixed version of **SQLAlchemy < 1.4.0**, The next version of AnyBlok 
+  will be adapted to **SQLAlchemy >= 1.4.0 < 2.0.0**, and will prepare to 
+  **SQLAlchemy >= 2.0**, See issue #168
+* **SQLAlchemy 1.4.0** add a new attribut in the model **registry**, 
+  this attribute conflicts with the registry of AnyBlok. A new attribute 
+  **anyblok** is created on the model to call the registry of AnyBlok. 
+  A modification of the attribute **registry** is done to use both attributes
+  with the same name. A deprecation warning is added on the attibute **registry**
+  of AnyBlok
+
+1.0.0 (2020-12-03)
+------------------
+
+* Added Sequence with *no gap* to provide functional sequence without gaps.
+* OrderList class_collection can be defined on x2Many
+* Added plugins system for migration of column type
+>>>>>>> anyblok/master
 * Bug Fix on registry loading sequence. The **apply_model_schema_on_table**
   method called at registry initialisation has been splitted to make sqlalchemy
   ORM events registration independent from migration.
@@ -53,6 +130,13 @@ CHANGELOG
   * mariadb: mysqlclient
   * mssql: pymssql
   * pyodbc
+
+* System.Parameter.get do not raise if a default value is provided
+* Add ``--with-demo`` parameter while creating a database (anyblok_createdb) in
+  order to load demo data while installing bloks on that database.
+* Fixed issue #45: System.Sequence: inconsistency in 'number' field
+* Fixed issue #134: is now possible to validate if the type at each part of foreign key
+  are the same
 
 0.22.5 (2019-06-24)
 -------------------

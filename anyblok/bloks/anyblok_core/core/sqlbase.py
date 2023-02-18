@@ -2,6 +2,7 @@
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -18,6 +19,7 @@ from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
 from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
 from sqlalchemy.orm.session import object_state
+from sqlalchemy import delete, select, update as sqla_update
 
 
 class uniquedict(dict):
@@ -49,7 +51,7 @@ class SqlMixin:
                 value = state.attrs.get(
                     anyblok_column_prefix + key).loaded_value
             else:
-                continue
+                continue  # pragma: no cover
 
             if value == NO_VALUE:
                 value = NOT_LOADED_REPR
@@ -103,7 +105,7 @@ class SqlMixin:
 
         is equal at::
 
-            query = self.registry.session.query(MyModel)
+            query = self.anyblok.session.query(MyModel)
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
@@ -117,12 +119,54 @@ class SqlMixin:
                 res.append(f)
 
         if res:
-            query = cls.registry.query(*res)
+            query = cls.anyblok.query(*res)
         else:
-            query = cls.registry.query(cls)
+            query = cls.anyblok.query(cls)
 
         query.set_Model(cls)
         return query
+
+    @classmethod
+    def execute_sql_statement(cls, *args, **kwargs):
+        """call SqlA execute method on the session"""
+        return cls.anyblok.execute(*args, **kwargs)
+
+    @classmethod
+    def select_sql_statement(cls, *elements):
+        """ Facility to do a SqlAlchemy query::
+
+            stmt = MyModel.select()
+
+        is equal at::
+
+            from anyblok import select
+
+            stmt = select(MyModel)
+
+        but select can be overload by model and it is
+        possible to apply whereclause or anything matter
+
+        :param elements: pass at the SqlAlchemy query, if the element is a
+                         string then thet are see as field of the model
+        :rtype: SqlAlchemy Query
+        """
+        res = []
+        for f in elements:
+            if isinstance(f, str):
+                res.append(getattr(cls, f).label(f))
+            else:
+                res.append(f)
+
+        if res:
+            stmt = select(*res)
+        else:
+            stmt = select(cls)
+
+        return cls.default_filter_on_sql_statement(stmt)
+
+    @classmethod
+    def default_filter_on_sql_statement(cls, statement):
+        return statement
 
     is_sql = True
 
@@ -140,24 +184,39 @@ class SqlMixin:
         :rtype: SqlAlchemy aliased of the model
         """
         alias = aliased(cls, *args, **kwargs)
-        alias.registry = alias._aliased_insp._target.registry
+        alias.anyblok = cls.anyblok
         return alias
 
     @classmethod
     def get_where_clause_from_primary_keys(cls, **pks):
         """ return the where clause to find object from pks
 
-        :param **pks: dict {primary_key: value, ...}
+        :param _*_*pks: dict {primary_key: value, ...}
         :rtype: where clause
         :exception: SqlBaseException
         """
         _pks = cls.get_primary_keys()
         for pk in _pks:
-            if pk not in pks:
+            if pk not in pks:  # pragma: no cover
                 raise SqlBaseException("No primary key %s filled for %r" % (
                     pk, cls.__registry_name__))
 
         return [getattr(cls, k) == v for k, v in pks.items()]
+
+    @classmethod
+    def query_from_primary_keys(cls, **pks):
+        """return a Query object in order to get object from primary keys.
+
+        .. code::
+
+            query = Model.query_from_primary_keys(**pks)
+            obj = query.one()
+
+        :param _*_*pks: dict {primary_key: value, ...}
+        :rtype: Query object
+        """
+        where_clause = cls.get_where_clause_from_primary_keys(**pks)
+        return cls.query().filter(*where_clause)
 
     @classmethod
     def from_primary_keys(cls, **pks):
@@ -166,18 +225,14 @@ class SqlMixin:
         :param **pks: dict {primary_key: value, ...}
         :rtype: instance of the model
         """
-        where_clause = cls.get_where_clause_from_primary_keys(**pks)
-        query = cls.query().filter(*where_clause)
-        if query.count():
-            return query.first()
-
-        return None
+        query = cls.query_from_primary_keys(**pks)
+        return query.one_or_none()
 
     @classmethod
     def from_multi_primary_keys(cls, *pks):
         """ return the instances of the model from the primary keys
 
-        :param *pks: list of dict [{primary_key: value, ...}]
+        :param _*pks: list of dict [{primary_key: value, ...}]
         :rtype: instances of the model
         """
         where_clause = []
@@ -190,10 +245,7 @@ class SqlMixin:
         where_clause = or_(*[and_(*x) for x in where_clause])
 
         query = cls.query().filter(where_clause)
-        if query.count():
-            return query.all()
-
-        return []
+        return query.all()
 
     def to_primary_keys(self):
         """ return the primary keys and values for this instance
@@ -209,16 +261,18 @@ class SqlMixin:
 
         :type: list of the primary keys name
         """
-        C = cls.registry.System.Column
-        query = C.query().distinct(C.name).options(load_only(C.name))
+        C = cls.anyblok.System.Column
+        query = C.query()
+        query = query.options(load_only(C.name))
         query = query.filter(C.model.in_(cls.get_all_registry_names()))
         query = query.filter(C.primary_key == true())
-        return query.all().name
+        # DISTINCT does not works on MySQL/MsSQL
+        return list(set(query.all().name))
 
     @classmethod_cache()
     def _fields_description(cls):
         """ Return the information of the Field, Column, RelationShip """
-        Field = cls.registry.System.Field
+        Field = cls.anyblok.System.Field
         res = {}
         for registry_name in cls.__depends__:
             query = Field.query().filter(Field.model == registry_name)
@@ -244,10 +298,10 @@ class SqlMixin:
         hybrid_property_columns = cls.hybrid_property_columns
         if 'polymorphic_identity' in cls.__mapper_args__:
             pks = cls.get_primary_keys()
-            fd = cls.fields_description(*pks)
+            fd = cls.fields_description(pks)
             for pk in pks:
-                if fd[pk].get('model'):
-                    Model = cls.registry.get(fd[pk]['model'])
+                if fd[pk].get('model'):  # pragma: no cover
+                    Model = cls.anyblok.get(fd[pk]['model'])
                     hybrid_property_columns.extend(
                         Model.get_hybrid_property_columns())
 
@@ -355,7 +409,7 @@ class SqlMixin:
             field_value, field_property = getattr(self, field), None
             try:
                 field_property = getattr(getattr(cls, field), 'property', None)
-            except FieldException:
+            except FieldException:  # pragma: no cover
                 pass
 
             # Deal with this data
@@ -395,7 +449,7 @@ class SqlMixin:
         :param name: name of the column
         :rtype: String, the name of the Type of column used
         """
-        Field = cls.registry.System.Field
+        Field = cls.anyblok.System.Field
         query = Field.query()
         query = query.filter(Field.name == name)
         query = query.filter(Field.model.in_(cls.get_all_registry_names()))
@@ -407,7 +461,7 @@ class SqlMixin:
         res = uniquedict()
         _fields = []
         _fields.extend(fields)
-        model = get_model_information(cls.registry, cls.__registry_name__)
+        model = get_model_information(cls.anyblok, cls.__registry_name__)
         while _fields:
             field = _fields.pop()
             field = field if isinstance(field, str) else field.name
@@ -419,8 +473,10 @@ class SqlMixin:
                                    not isinstance(y, Many2Many))
                                for mapper in y.column_names
                                if mapper.attribute_name == field)
-                if isinstance(_field, Column) and _field.foreign_key:
-                    rmodel = cls.registry.loaded_namespaces_first_step[
+                if (
+                    isinstance(_field, Column) and _field.foreign_key
+                ):  # pragma: no cover
+                    rmodel = cls.anyblok.loaded_namespaces_first_step[
                         _field.foreign_key.model_name]
                     for rc in [x for x, y in rmodel.items()
                                if isinstance(y, RelationShip)
@@ -438,7 +494,7 @@ class SqlMixin:
                   not isinstance(_field, Many2Many) and
                   'backref' in _field.kwargs):
                 res.add_in_res(field, [_field.kwargs['backref'][0]])
-            elif isinstance(_field, FakeRelationShip):
+            elif isinstance(_field, FakeRelationShip):  # pragma: no cover
                 res.add_in_res(field, [_field.mapper.attribute_name])
 
         return res
@@ -448,17 +504,17 @@ class SqlMixin:
         """ Find column and relation ship link with the column or relationship
         passed in fields.
 
-        :param *fields: lists of the attribute name
+        :param _*fields: lists of the attribute name
         :rtype: list of the attribute name of the attribute and relation ship
         """
         res = []
         _fields = []
         _fields.extend(fields)
-        model = get_model_information(cls.registry, cls.__registry_name__)
+        model = get_model_information(cls.anyblok, cls.__registry_name__)
         while _fields:
             field = _fields.pop()
             if not isinstance(field, str):
-                field = field.name
+                field = field.name  # pragma: no cover
 
             if field in res:
                 continue
@@ -480,13 +536,13 @@ class SqlMixin:
         return res
 
 
-def get_model_information(registry, registry_name):
-    model = registry.loaded_namespaces_first_step[registry_name]
+def get_model_information(anyblok, registry_name):
+    model = anyblok.loaded_namespaces_first_step[registry_name]
     for depend in model['__depends__']:
         if depend != registry_name:
-            for x, y in get_model_information(registry, depend).items():
+            for x, y in get_model_information(anyblok, depend).items():
                 if x not in model:
-                    model[x] = y
+                    model[x] = y  # pragma: no cover
 
     return model
 
@@ -502,7 +558,7 @@ class SqlBase(SqlMixin):
         modified_fields = {}
         for attr in state.manager.attributes:
             if not hasattr(attr.impl, 'get_history'):
-                continue
+                continue  # pragma: no cover
 
             added, unmodified, deleted = attr.impl.get_history(
                 state, state.dict)
@@ -515,23 +571,6 @@ class SqlBase(SqlMixin):
                 modified_fields[field] = deleted[0] if deleted else None
 
         return modified_fields
-
-    def update(self, **values):
-        """ Hight livel method to update the session for the instance
-        ::
-
-            self.update(val1=.., val2= ...)
-
-        ..warning::
-
-            the columns and values is passed as named arguments to show
-            a difference with Query.update meth
-
-        """
-        for x, v in values.items():
-            setattr(self, x, v)
-
-        return 1 if values else 0
 
     def expire_relationship_mapped(self, mappers):
         """ Expire the objects linked with this object, in function of
@@ -552,11 +591,11 @@ class SqlBase(SqlMixin):
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
         """
-        self.registry.refresh(self, fields, with_for_update=with_for_update)
+        self.anyblok.refresh(self, fields, with_for_update=with_for_update)
 
     def expunge(self):
         """Expunge the instance in the session"""
-        self.registry.session.expunge(self)
+        self.anyblok.session.expunge(self)
 
     def expire(self, *fields):
         """ Expire the attribute of the instance, theses attributes will be
@@ -565,7 +604,7 @@ class SqlBase(SqlMixin):
         see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.expire
         """
-        self.registry.expire(self, fields)
+        self.anyblok.expire(self, fields)
 
     def flag_modified(self, *fields):
         """ Flag the attributes as modified
@@ -573,7 +612,12 @@ class SqlBase(SqlMixin):
         see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.expire
         """
-        self.registry.flag_modified(self, fields)
+        self.anyblok.flag_modified(self, fields)
+
+    @classmethod
+    def delete_sql_statement(cls):
+        """Return a statement to delete some element"""
+        return cls.default_filter_on_sql_statement(delete(cls))
 
     def delete(self, byquery=False, flush=True):
         """ Call the SqlAlchemy Query.delete method on the instance of the
@@ -590,19 +634,52 @@ class SqlBase(SqlMixin):
         """
         if byquery:
             cls = self.__class__
-            cls.query().filter(*cls.get_where_clause_from_primary_keys(
-                **self.to_primary_keys())).delete()
+            self.execute_sql_statement(
+                delete(cls).where(
+                    *cls.get_where_clause_from_primary_keys(
+                        **self.to_primary_keys())))
             self.expunge()
         else:
-            model = self.registry.loaded_namespaces_first_step[
+            model = self.anyblok.loaded_namespaces_first_step[
                 self.__registry_name__]
             fields = model.keys()
             mappers = self.__class__.find_remote_attribute_to_expire(*fields)
             self.expire_relationship_mapped(mappers)
-            self.registry.session.delete(self)
+            self.anyblok.session.delete(self)
 
         if flush:
-            self.registry.flush()
+            self.anyblok.flush()
+
+    @classmethod
+    def update_sql_statement(cls):
+        return cls.default_filter_on_sql_statement(sqla_update(cls))
+
+    def update(self, byquery=False, flush=False, **values):
+        """ Hight livel method to update the session for the instance
+        ::
+
+            self.update(val1=.., val2= ...)
+
+        ..warning::
+
+            the columns and values is passed as named arguments to show
+            a difference with Query.update meth
+
+        """
+        if byquery:
+            cls = self.__class__
+            return self.execute_sql_statement(
+                sqla_update(cls).where(
+                    *cls.get_where_clause_from_primary_keys(
+                        **self.to_primary_keys())).values(**values)).rowcount
+
+        for x, v in values.items():
+            setattr(self, x, v)
+
+        if flush:
+            self.anyblok.flush()  # pragma: no cover
+
+        return 1 if values else 0
 
     @classmethod
     def insert(cls, **kwargs):
@@ -613,13 +690,13 @@ class SqlBase(SqlMixin):
         is equal at::
 
             mymodel = MyModel(...)
-            MyModel.registry.session.add(mymodel)
-            MyModel.registry.flush()
+            MyModel.anyblok.session.add(mymodel)
+            MyModel.anyblok.flush()
 
         """
         instance = cls(**kwargs)
-        cls.registry.add(instance)
-        cls.registry.flush()
+        cls.anyblok.add(instance)
+        cls.anyblok.flush()
         return instance
 
     @classmethod
@@ -632,16 +709,16 @@ class SqlBase(SqlMixin):
 
         :exception: SqlBaseException
         """
-        instances = cls.registry.InstrumentedList()
+        instances = cls.anyblok.InstrumentedList()
         for kwargs in args:
-            if not isinstance(kwargs, dict):
+            if not isinstance(kwargs, dict):  # pragma: no cover
                 raise SqlBaseException("multi_insert method wait list of dict")
 
             instance = cls(**kwargs)
-            cls.registry.add(instance)
+            cls.anyblok.add(instance)
             instances.append(instance)
 
         if instances:
-            cls.registry.flush()
+            cls.anyblok.flush()
 
         return instances
