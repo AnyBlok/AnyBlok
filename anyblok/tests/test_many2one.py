@@ -16,7 +16,7 @@ from anyblok.config import Configuration
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
 from anyblok.column import (
-    Integer, String, BigInteger, Float, Decimal, Boolean, DateTime, Date, Time,
+    Integer, String, BigInteger, Boolean, DateTime, Date, Time,
     Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection,
     TimeStamp)
 from anyblok.relationship import Many2One, ordering_list
@@ -534,7 +534,7 @@ class TestMany2OneOld:
         with pytest.raises(FieldException):
             self.init_registry(_many2one_with_same_name_for_column_names)
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason='ISSUE #89')
     def test_minimum_many2one_on_sequence(self):
 

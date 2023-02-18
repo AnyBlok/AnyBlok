@@ -1033,8 +1033,7 @@ class TestColumns:
         t = registry.Test.insert()
         assert t.val == 'val'
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
-                        reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
     def test_sequence(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence)
         assert registry.Test.insert().col == "1"
@@ -1044,16 +1043,14 @@ class TestColumns:
         Seq = registry.System.Sequence
         assert Seq.query().filter(Seq.code == 'Model.Test=>col').count() == 1
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
-                        reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
     def test_sequence_with_primary_key(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       primary_key=True)
         assert registry.Test.insert().col == "1"
         assert registry.Test.insert().col == "2"
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
-                        reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       code="SO", formater="{code}-{seq:06d}")
@@ -1077,8 +1074,7 @@ class TestColumns:
             self.init_registry(simple_column, ColumnType=Sequence,
                                default='default value')
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
-                        reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
     def test_sequence_with_nogap(self):
         registry = self.init_registry(
             simple_column,
@@ -1088,7 +1084,6 @@ class TestColumns:
             no_gap=True,
         )
         registry.begin_nested()
-        print("test registry", registry.transaction)
         assert registry.Test.insert().col == "SO-NO-GAP-000001"
         assert registry.Test.insert().col == "SO-NO-GAP-000002"
         assert registry.Test.insert().col == "SO-NO-GAP-000003"
@@ -1404,6 +1399,7 @@ class TestColumns:
             f"{cls} column `Model.Test.col` are not "
             f"allowed as primary key"
          ) == str(ex.value), "Column name should be part of raised message"
+
 
 class TestColumnsAutoDoc:
 
