@@ -1036,8 +1036,7 @@ class TestColumns:
         t = registry.Test.insert()
         assert t.val == 'val'
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
-                        reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
     def test_sequence(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence)
         assert registry.Test.insert().col == "1"
@@ -1047,25 +1046,31 @@ class TestColumns:
         Seq = registry.System.Sequence
         assert Seq.query().filter(Seq.code == 'Model.Test=>col').count() == 1
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
-                        reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
     def test_sequence_with_primary_key(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       primary_key=True)
         assert registry.Test.insert().col == "1"
         assert registry.Test.insert().col == "2"
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
-                        reason='ISSUE #89')
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence,
                                       code="SO", formater="{code}-{seq:06d}")
-        assert registry.Test.insert().col == "SO-000001"
-        assert registry.Test.insert().col == "SO-000002"
-        assert registry.Test.insert().col == "SO-000003"
+        try:
+            with registry.begin_nested():
+                assert registry.Test.insert().col == "SO-000001"
+                assert registry.Test.insert().col == "SO-000002"
+                assert registry.Test.insert().col == "SO-000003"
+                raise Exception('test')
+
+        except Exception:
+            pass
+
         assert registry.Test.insert().col == "SO-000004"
+        registry.flush()
         Seq = registry.System.Sequence
-        assert Seq.query().filter(Seq.code == 'SO').count() == 1
+        assert Seq.query().filter(Seq.code == 'SO').one()
 
     def test_sequence_with_foreign_key(self):
         with pytest.raises(FieldException):
@@ -1076,6 +1081,30 @@ class TestColumns:
         with pytest.raises(FieldException):
             self.init_registry(simple_column, ColumnType=Sequence,
                                default='default value')
+
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']), reason='ISSUE #89')
+    def test_sequence_with_nogap(self):
+        registry = self.init_registry(
+            simple_column,
+            ColumnType=Sequence,
+            code="SO-NO-GAP",
+            formater="{code}-{seq:06d}",
+            no_gap=True,
+        )
+        try:
+            with registry.begin_nested():
+                assert registry.Test.insert().col == "SO-NO-GAP-000001"
+                assert registry.Test.insert().col == "SO-NO-GAP-000002"
+                assert registry.Test.insert().col == "SO-NO-GAP-000003"
+                raise Exception('test')
+
+        except Exception:
+            pass
+
+        assert registry.Test.insert().col == "SO-NO-GAP-000001"
+        Seq = registry.System.Sequence
+        seq = Seq.query().filter(Seq.code == 'SO-NO-GAP').one()
+        assert seq.number == 1
 
     @pytest.mark.skipif(not has_colour,
                         reason="colour is not installed")
@@ -1397,6 +1426,7 @@ class TestColumns:
             f"{cls} column `Model.Test.col` are not "
             f"allowed as primary key"
          ) == str(ex.value), "Column name should be part of raised message"
+
 
 class TestColumnsAutoDoc:
 
