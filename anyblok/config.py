@@ -215,7 +215,7 @@ class AnyBlokActionsContainer:
             kwargs['help'] = '[DEPRECATED] {} : {}'.format(
                 kwargs.get('help', ''), deprecated)
 
-        if removed is not None:
+        if removed is True:
             kwargs['help'] = '[REMOVED] {} : This is forbidden'.format(
                 kwargs.get('help', ''))
 
