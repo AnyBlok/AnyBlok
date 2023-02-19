@@ -7,8 +7,8 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
 from anyblok.column import Integer, String
-from ..authorization import TestRuleOne, TestRuleTwo
 
+from ..authorization import TestRuleOne, TestRuleTwo
 
 register = Declarations.register
 Model = Declarations.Model
@@ -16,20 +16,17 @@ Model = Declarations.Model
 
 @register(Model)
 class Test:
-
     id = Integer(primary_key=True)
     label = String()
 
 
 @register(Model)
 class Test2:
-
     id = Integer(primary_key=True)
     label = String()
 
 
-Declarations.AuthorizationBinding(Declarations.Model.Test,
-                                  TestRuleOne(),
-                                  permission='Read')
-Declarations.AuthorizationBinding(Declarations.Model.Test,
-                                  TestRuleTwo())
+Declarations.AuthorizationBinding(
+    Declarations.Model.Test, TestRuleOne(), permission="Read"
+)
+Declarations.AuthorizationBinding(Declarations.Model.Test, TestRuleTwo())

@@ -20,7 +20,9 @@ class RuleNotForModelClasses(Exception):
         self.policy = policy
         self.model = model
         self.message = "Rule %r cannot be used on a model class (got %r)" % (
-            policy, model)
+            policy,
+            model,
+        )
 
 
 class AuthorizationRule:
@@ -88,7 +90,6 @@ class AuthorizationRule:
 
 
 class DenyAll(AuthorizationRule):
-
     def check(self, *args):
         return False  # pragma: no cover
 

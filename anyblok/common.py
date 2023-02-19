@@ -8,14 +8,14 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import sys
 from functools import lru_cache
+
+from sqlalchemy import text
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.schema import ForeignKeyConstraint
 from sqlalchemy.sql.naming import ConventionDict
-from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy import text
-
 
 """Define the prefix for the mapper attribute of the column"""
-anyblok_column_prefix = 'ANYBLOK_FIELD_'
+anyblok_column_prefix = "ANYBLOK_FIELD_"
 
 
 def all_column_name(constraint, table):
@@ -25,9 +25,9 @@ def all_column_name(constraint, table):
     :return:
     """
     if isinstance(constraint, ForeignKeyConstraint):
-        return '_'.join(constraint.column_keys)
+        return "_".join(constraint.column_keys)
     else:
-        return '_'.join(constraint.columns.keys())
+        return "_".join(constraint.columns.keys())
 
 
 def model_name(constraint, table):
@@ -36,11 +36,11 @@ def model_name(constraint, table):
     :param table:
     :return:
     """
-    name = table.name.split('_')
+    name = table.name.split("_")
     if len(name) == 1:
         return name[0]
 
-    return ''.join(x[0] for x in name[:-1]) + '_' + name[-1]
+    return "".join(x[0] for x in name[:-1]) + "_" + name[-1]
 
 
 def constraint_name(constraint, table):
@@ -50,7 +50,7 @@ def constraint_name(constraint, table):
         return conv._key_constraint_name()
     except InvalidRequestError:  # pragma: no cover
         if constraint._pending_colargs:
-            return '_'.join([x.name for x in constraint._pending_colargs])
+            return "_".join([x.name for x in constraint._pending_colargs])
 
         raise
 
@@ -74,7 +74,7 @@ def add_autodocs(meth, autodoc):
     :param meth:
     :param autodoc:
     """
-    if not hasattr(meth, 'autodocs'):
+    if not hasattr(meth, "autodocs"):
         meth.autodocs = []
 
     meth.autodocs.append(autodoc)
@@ -99,9 +99,9 @@ def python_version():  # pragma: no cover
 
 
 class TypeList(list):
-
-    def __init__(self, Model, registry, namespace,
-                 transformation_properties=None):
+    def __init__(
+        self, Model, registry, namespace, transformation_properties=None
+    ):
         super(TypeList, self).__init__()
         self.Model = Model
         self.registry = registry
@@ -122,7 +122,8 @@ class TypeList(list):
             namespace = self.namespace
 
         newbase = self.Model.transform_base(
-            self.registry, namespace, base, self.transformation_properties)
+            self.registry, namespace, base, self.transformation_properties
+        )
         return newbase
 
     def append(self, base, **kwargs):
@@ -160,7 +161,7 @@ def apply_cache(attr, method, registry, namespace, base, properties):
     :param namespace: the namespace of the model
     :rtype: new base
     """
-    if hasattr(method, 'is_cache_method') and method.is_cache_method is True:
+    if hasattr(method, "is_cache_method") and method.is_cache_method is True:
         if namespace not in registry.caches:
             registry.caches[namespace] = {attr: []}
         elif attr not in registry.caches[namespace]:
@@ -187,9 +188,9 @@ def sgdb_in(engine, databases):
     for database in databases:
         if database not in DATABASES_CACHED:
             DATABASES_CACHED[database] = False
-            if engine.url.drivername.startswith('mysql'):
-                if database == 'MySQL':
-                    DATABASES_CACHED['MySQL'] = True
+            if engine.url.drivername.startswith("mysql"):
+                if database == "MySQL":
+                    DATABASES_CACHED["MySQL"] = True
 
                 with engine.connect() as conn:
                     res = conn.execute(
@@ -200,15 +201,15 @@ def sgdb_in(engine, databases):
                         DATABASES_CACHED[database] = True  # pragma: no cover
 
             if (
-                engine.url.drivername.startswith('postgres') and
-                database == 'PostgreSQL'
+                engine.url.drivername.startswith("postgres")
+                and database == "PostgreSQL"
             ):
-                DATABASES_CACHED['PostgreSQL'] = True
+                DATABASES_CACHED["PostgreSQL"] = True
             if (
-                engine.url.drivername.startswith('mssql') and
-                database == 'MsSQL'
+                engine.url.drivername.startswith("mssql")
+                and database == "MsSQL"
             ):
-                DATABASES_CACHED['MsSQL'] = True
+                DATABASES_CACHED["MsSQL"] = True
 
         if DATABASES_CACHED[database]:
             return True

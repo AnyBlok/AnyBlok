@@ -13,45 +13,46 @@ import pytest
 import sqlalchemy
 from sqlalchemy import event
 
+from anyblok.blok import BlokManager
 from anyblok.config import Configuration
 from anyblok.registry import RegistryManager
-from anyblok.blok import BlokManager
 from anyblok.testing import load_configuration
 
 logger = getLogger(__name__)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def configuration_loaded(request):
     load_configuration()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def init_session(request, configuration_loaded):
     # Init registry
-    additional_setting = {'unittest': True}
+    additional_setting = {"unittest": True}
 
     if len(BlokManager.list()) == 0:
         BlokManager.load()
-    registry = RegistryManager.get(Configuration.get('db_name'),
-                                   **additional_setting)
+    registry = RegistryManager.get(
+        Configuration.get("db_name"), **additional_setting
+    )
     registry.commit()
     # Add savepoint
     registry.begin_nested()
 
-    @event.listens_for(registry.session, 'after_transaction_end')
+    @event.listens_for(registry.session, "after_transaction_end")
     def restart_savepoint(session, transaction):
         if transaction.nested and not transaction._parent.nested:
             session.expire_all()
             session.begin_nested()
 
-    logger.info('Creating registry')
+    logger.info("Creating registry")
     yield registry
 
     request.addfinalizer(registry.session.close)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def rollback_registry(request, init_session):
     """Provide registry that is rollback between each tests
 
@@ -73,19 +74,17 @@ def rollback_registry(request, init_session):
     """
     registry = init_session
 
-    if (
-        request.node.get_closest_marker('skip_unless_demo_data_installed') and
-        not registry.System.Parameter.get("with-demo", False)
-    ):
+    if request.node.get_closest_marker(
+        "skip_unless_demo_data_installed"
+    ) and not registry.System.Parameter.get("with-demo", False):
         pytest.skip(  # pragma: no cover
             "Demo data are required (Use ``--with-demo`` to create the "
             "test database)."
         )
 
-    if (
-        request.node.get_closest_marker('skip_while_demo_data_installed') and
-        registry.System.Parameter.get("with-demo", False)
-    ):
+    if request.node.get_closest_marker(
+        "skip_while_demo_data_installed"
+    ) and registry.System.Parameter.get("with-demo", False):
         pytest.skip(
             "Demo data are present (Do not use ``--with-demo`` to create the "
             "test database)."
@@ -95,12 +94,13 @@ def rollback_registry(request, init_session):
 
     def clean_up():
         try:
-            logger.debug('Invalidating all cache')
+            logger.debug("Invalidating all cache")
             registry.System.Cache.invalidate_all()
         except sqlalchemy.exc.InvalidRequestError:  # pragma: no cover
-            logger.warning('Invalid request Error: while invalidating all '
-                           'caches after {}'
-                           .format(request.function.__name__))
+            logger.warning(
+                "Invalid request Error: while invalidating all "
+                "caches after {}".format(request.function.__name__)
+            )
         finally:
             registry.rollback()
 

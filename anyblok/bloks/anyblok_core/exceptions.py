@@ -9,20 +9,20 @@
 
 
 class CoreBaseException(TypeError):
-    """ Exception for ``Core.Base`` """
+    """Exception for ``Core.Base``"""
 
 
 class SqlBaseException(Exception):
-    """ Simple Exception for sql base """
+    """Simple Exception for sql base"""
 
 
 class QueryException(Exception):
-    """ Simple Exception for query """
+    """Simple Exception for query"""
 
 
 class CacheException(Exception):
-    """ Simple Exception for the cache Model """
+    """Simple Exception for the cache Model"""
 
 
 class ParameterException(Exception):
-    """ Simple exception for System.Parameter """
+    """Simple exception for System.Parameter"""

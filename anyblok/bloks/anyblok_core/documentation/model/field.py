@@ -5,23 +5,24 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
 from logging import getLogger
+
+from anyblok import Declarations
+
 logger = getLogger(__name__)
 
 
 @Declarations.register(Declarations.Model.Documentation.Model)
 class Field:
-
     mappers = {
-        ('Many2One', True): ("m2o", "o2m"),
-        ('Many2One', False): ("m2o", None),
-        ('Many2Many', True): ("m2m", "m2m"),
-        ('Many2Many', False): ("m2m", None),
-        ('One2Many', True): ("o2m", "m2o"),
-        ('One2Many', False): ("o2m", None),
-        ('One2One', True): ("o2o", "o2o"),
-        ('One2One', False): ("o2o", "o2o"),
+        ("Many2One", True): ("m2o", "o2m"),
+        ("Many2One", False): ("m2o", None),
+        ("Many2Many", True): ("m2m", "m2m"),
+        ("Many2Many", False): ("m2m", None),
+        ("One2Many", True): ("o2m", "m2o"),
+        ("One2Many", False): ("o2m", None),
+        ("One2One", True): ("o2o", "o2o"),
+        ("One2One", False): ("o2o", "o2o"),
     }
 
     def exist(self, model):
@@ -45,7 +46,8 @@ class Field:
     def getelements(cls, model):
         query = cls.filterField(cls.anyblok.System.Field.query())
         return query.filter(
-            cls.anyblok.System.Field.model == model.model.name).all()
+            cls.anyblok.System.Field.model == model.model.name
+        ).all()
 
     @classmethod
     def header2RST(cls, doc):
@@ -56,29 +58,29 @@ class Field:
         pass
 
     def toRST(self, doc):
-        doc.write('* ' + self.field.name + '\n\n')
+        doc.write("* " + self.field.name + "\n\n")
         self.toRST_docstring(doc)
         self.toRST_properties(doc)
 
     def toRST_docstring(self, doc):
-        if hasattr(self.field, '__doc__') and self.field.__doc__:
-            doc.write(self.field.__doc__ + '\n\n')  # pragma: no cover
+        if hasattr(self.field, "__doc__") and self.field.__doc__:
+            doc.write(self.field.__doc__ + "\n\n")  # pragma: no cover
 
     def toRST_properties_get(self):
-        return {x: y for x, y in self.field.to_dict().items() if x != 'name'}
+        return {x: y for x, y in self.field.to_dict().items() if x != "name"}
 
     def toRST_properties(self, doc):
         properties = self.toRST_properties_get()
-        msg = ', '.join(' **%s** (%s)' % (x, y) for x, y in properties.items())
-        doc.write(msg + '\n\n')
+        msg = ", ".join(" **%s** (%s)" % (x, y) for x, y in properties.items())
+        doc.write(msg + "\n\n")
 
     def toUML(self, dot):
-        if self.field.entity_type == 'Model.System.Field':
+        if self.field.entity_type == "Model.System.Field":
             self.toUML_field(dot)
-        elif self.field.entity_type == 'Model.System.Column':
+        elif self.field.entity_type == "Model.System.Column":
             self.toUML_column(dot)
         elif (
-            self.field.entity_type == 'Model.System.RelationShip'
+            self.field.entity_type == "Model.System.RelationShip"
         ):  # pragma: no cover
             self.toUML_relationship(dot)
         else:
@@ -92,7 +94,7 @@ class Field:
         model = dot.get_class(self.field.model)
         name = self.field.name
         if self.field.primary_key:
-            name = '+PK+ ' + name
+            name = "+PK+ " + name
 
         if self.field.remote_model:  # pragma: no cover
             remote_model = dot.get_class(self.field.remote_model)
@@ -100,10 +102,11 @@ class Field:
             if self.field.nullable:
                 multiplicity = "0..1"
 
-            model.aggregate(remote_model, label_from=name,
-                            multiplicity_from=multiplicity)
+            model.aggregate(
+                remote_model, label_from=name, multiplicity_from=multiplicity
+            )
         else:
-            name += ' (%s)' % self.field.ftype
+            name += " (%s)" % self.field.ftype
             model.add_column(name)
 
     def toUML_relationship(self, dot):  # pragma: no cover
@@ -111,20 +114,24 @@ class Field:
             return
 
         model = dot.get_class(self.field.model)
-        multiplicity, multiplicity_to = self.mappers[(
-            self.field.ftype, True if self.field.remote_name else False)]
-        model.associate(self.field.remote_model, label_from=self.field.name,
-                        label_to=self.field.remote_name,
-                        multiplicity_from=multiplicity,
-                        multiplicity_to=multiplicity_to)
+        multiplicity, multiplicity_to = self.mappers[
+            (self.field.ftype, True if self.field.remote_name else False)
+        ]
+        model.associate(
+            self.field.remote_model,
+            label_from=self.field.name,
+            label_to=self.field.remote_name,
+            multiplicity_from=multiplicity,
+            multiplicity_to=multiplicity_to,
+        )
 
     def toSQL(self, dot):
-        if self.field.entity_type == 'Model.System.Field':
+        if self.field.entity_type == "Model.System.Field":
             self.toSQL_field(dot)
-        elif self.field.entity_type == 'Model.System.Column':
+        elif self.field.entity_type == "Model.System.Column":
             self.toSQL_column(dot)
         elif (
-            self.field.entity_type == 'Model.System.RelationShip'
+            self.field.entity_type == "Model.System.RelationShip"
         ):  # pragma: no cover
             self.toSQL_relationship(dot)
         else:
@@ -139,16 +146,22 @@ class Field:
         pass  # pragma: no cover
 
     def toSQL_column(self, dot):
-        table = dot.get_table(self.anyblok.get(
-            self.field.model).__tablename__)
+        table = dot.get_table(self.anyblok.get(self.field.model).__tablename__)
         if self.field.foreign_key:  # pragma: no cover
-            remote_table = dot.get_table(self.field.foreign_key.split('.')[0])
+            remote_table = dot.get_table(self.field.foreign_key.split(".")[0])
             if remote_table is None:
                 remote_table = dot.add_label(
-                    self.field.foreign_key.split('.')[0])
+                    self.field.foreign_key.split(".")[0]
+                )
 
-            table.add_foreign_key(remote_table, label=self.field.name,
-                                  nullable=self.field.nullable)
+            table.add_foreign_key(
+                remote_table,
+                label=self.field.name,
+                nullable=self.field.nullable,
+            )
         else:
-            table.add_column(self.field.name, self.field.ftype,
-                             primary_key=self.field.primary_key)
+            table.add_column(
+                self.field.name,
+                self.field.ftype,
+                primary_key=self.field.primary_key,
+            )

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
@@ -37,26 +36,26 @@
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'anyblok.sphinx.ext.load.blok',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "anyblok.sphinx.ext.load.blok",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'AnyBlok'
-copyright = '2014, Jean-Sebastien SUZANNE'
+project = "AnyBlok"
+copyright = "2014, Jean-Sebastien SUZANNE"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -64,6 +63,7 @@ copyright = '2014, Jean-Sebastien SUZANNE'
 #
 # The short X.Y version.
 from anyblok.release import version
+
 version = version
 # The full version, including alpha/beta/rc tags.
 release = version
@@ -80,7 +80,7 @@ release = version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ["_build"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -98,7 +98,7 @@ exclude_patterns = ['_build']
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -111,7 +111,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'classic'
+html_theme = "classic"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -130,7 +130,7 @@ html_theme = 'classic'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '_static/anyblok-logo_alpha_256.png'
+html_logo = "_static/anyblok-logo_alpha_256.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -140,7 +140,7 @@ html_logo = '_static/anyblok-logo_alpha_256.png'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -189,7 +189,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'AnyBlokdoc'
+htmlhelp_basename = "AnyBlokdoc"
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -197,10 +197,8 @@ htmlhelp_basename = 'AnyBlokdoc'
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     # 'preamble': '',
 }
@@ -210,11 +208,11 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (
-        'index',
-        'AnyBlok.tex',
-        'AnyBlok Documentation',
-        'Jean-Sebastien SUZANNE',
-        'manual',
+        "index",
+        "AnyBlok.tex",
+        "AnyBlok Documentation",
+        "Jean-Sebastien SUZANNE",
+        "manual",
     ),
 ]
 
@@ -244,8 +242,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'anyblok', 'AnyBlok Documentation',
-     ['Jean-Sebastien SUZANNE'], 1)
+    ("index", "anyblok", "AnyBlok Documentation", ["Jean-Sebastien SUZANNE"], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -259,13 +256,13 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (
-        'index',
-        'AnyBlok',
-        'AnyBlok Documentation',
-        'Jean-Sebastien SUZANNE',
-        'AnyBlok',
-        'One line description of project.',
-        'Miscellaneous',
+        "index",
+        "AnyBlok",
+        "AnyBlok Documentation",
+        "Jean-Sebastien SUZANNE",
+        "AnyBlok",
+        "One line description of project.",
+        "Miscellaneous",
     ),
 ]
 

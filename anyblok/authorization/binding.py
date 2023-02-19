@@ -30,8 +30,7 @@ from ..environment import EnvironmentManager
 from ..registry import RegistryManager
 
 
-@Declarations.add_declaration_type(isAnEntry=True,
-                                   assemble='assemble_callback')
+@Declarations.add_declaration_type(isAnEntry=True, assemble="assemble_callback")
 class AuthorizationBinding:
     """Encodes which policy to use per model or (model, permission).
 
@@ -48,7 +47,7 @@ class AuthorizationBinding:
                            permission only, otherwise, it will act as the
                            default policy for this model.
         """
-        cb = EnvironmentManager.get('current_blok')
+        cb = EnvironmentManager.get("current_blok")
         model = model_declaration.__registry_name__
         key = (model, permission) if permission is not None else model
         blok_declarations = RegistryManager.loaded_bloks[cb][cls.__name__]
@@ -61,7 +60,7 @@ class AuthorizationBinding:
             policies.update(RegistryManager.loaded_bloks[blok][cls.__name__])
 
         # for this registry entry, the list of names is irrelevant pollution:
-        del policies['registry_names']
+        del policies["registry_names"]
         registry._authz_policies = deepcopy(policies)
         for policy in registry._authz_policies.values():
             policy.registry = registry

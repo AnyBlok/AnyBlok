@@ -9,39 +9,38 @@ from anyblok.version import parse_version
 
 
 class TestParseVersion:
-
     def test_gt(self):
-        version = parse_version('1.2.3')
-        assert version > '1.1.13'
-        assert not (version > '1.12.3')
-        assert not (version > '1.2.3')
+        version = parse_version("1.2.3")
+        assert version > "1.1.13"
+        assert not (version > "1.12.3")
+        assert not (version > "1.2.3")
 
     def test_ge(self):
-        version = parse_version('1.2.3')
-        assert version >= '1.1.13'
-        assert not (version >= '1.12.3')
-        assert version >= '1.2.3'
+        version = parse_version("1.2.3")
+        assert version >= "1.1.13"
+        assert not (version >= "1.12.3")
+        assert version >= "1.2.3"
 
     def test_eq(self):
-        version = parse_version('1.2.3')
-        assert not (version == '1.1.13')
-        assert not (version == '1.12.3')
-        assert version == '1.2.3'
+        version = parse_version("1.2.3")
+        assert not (version == "1.1.13")
+        assert not (version == "1.12.3")
+        assert version == "1.2.3"
 
     def test_ne(self):
-        version = parse_version('1.2.3')
-        assert version != '1.1.13'
-        assert version != '1.12.3'
-        assert not (version != '1.2.3')
+        version = parse_version("1.2.3")
+        assert version != "1.1.13"
+        assert version != "1.12.3"
+        assert not (version != "1.2.3")
 
     def test_lt(self):
-        version = parse_version('1.2.3')
-        assert not (version < '1.1.13')
-        assert version < '1.12.3'
-        assert not (version < '1.2.3')
+        version = parse_version("1.2.3")
+        assert not (version < "1.1.13")
+        assert version < "1.12.3"
+        assert not (version < "1.2.3")
 
     def test_le(self):
-        version = parse_version('1.2.3')
-        assert not (version <= '1.1.13')
-        assert version <= '1.12.3'
-        assert version <= '1.2.3'
+        version = parse_version("1.2.3")
+        assert not (version <= "1.1.13")
+        assert version <= "1.12.3"
+        assert version <= "1.2.3"

@@ -7,15 +7,17 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.schema import ForeignKey
+
 from anyblok.common import anyblok_column_prefix
+
 from .config import Configuration
 
 
 def get_for(basekey, path, default=None):
-    key = '%s.%s' % (basekey, '.'.join(path))
+    key = "%s.%s" % (basekey, ".".join(path))
     key = key.lower()
 
-    if path in (['Model', '*'], ['Mixin', '*']):
+    if path in (["Model", "*"], ["Mixin", "*"]):
         return Configuration.get(key, default)
 
     res = Configuration.get(key, None)
@@ -23,32 +25,32 @@ def get_for(basekey, path, default=None):
         return res  # pragma: no cover
 
     new_path = path[:-1]
-    if path[-1] == '*':
-        new_path[-1] = '*'
+    if path[-1] == "*":
+        new_path[-1] = "*"
     else:
-        new_path.append('*')
+        new_path.append("*")
 
     return get_for(basekey, new_path, default=default)
 
 
 def get_schema_for(path, default=None):
-    return get_for('db_schema', path, default=default)
+    return get_for("db_schema", path, default=default)
 
 
 def get_schema_prefix_for(path, default=None):
-    return get_for('prefix_db_schema', path, default=default)
+    return get_for("prefix_db_schema", path, default=default)
 
 
 def get_schema_suffix_for(path, default=None):
-    return get_for('suffix_db_schema', path, default=default)
+    return get_for("suffix_db_schema", path, default=default)
 
 
 def format_schema(schema, registry_name):
-    path = registry_name.split('.')
+    path = registry_name.split(".")
     schema = get_schema_for(path, default=schema)
     if schema is not None:
-        prefix = get_schema_prefix_for(path, default='')
-        suffix = get_schema_suffix_for(path, default='')
+        prefix = get_schema_prefix_for(path, default="")
+        suffix = get_schema_suffix_for(path, default="")
 
         return prefix + schema + suffix
 
@@ -68,7 +70,7 @@ class ModelAttributeAdapterException(Exception):
 
 
 class MapperException(AttributeError):
-    """ Simple Exception for Mapper """
+    """Simple Exception for Mapper"""
 
 
 class FakeColumn:
@@ -79,7 +81,6 @@ class FakeColumn:
 
 
 class FakeRelationShip:
-
     def __init__(self, mapper):
         self.mapper = mapper
 
@@ -105,7 +106,8 @@ class ModelAttribute:
         if not model_name or not attribute_name:
             raise ModelAttributeException(
                 "model_name (%s) and attribute_name (%s) are "
-                "required" % (model_name, attribute_name))
+                "required" % (model_name, attribute_name)
+            )
 
         self.model_name = model_name
         self.attribute_name = attribute_name
@@ -122,13 +124,15 @@ class ModelAttribute:
         if self.model_name not in registry.loaded_namespaces:
             raise ModelAttributeException(
                 "Unknow model %r, maybe the model doesn't exist or is not"
-                "assembled yet" % self.model_name)
+                "assembled yet" % self.model_name
+            )
 
         Model = registry.get(self.model_name)
         if not hasattr(Model, self.attribute_name):
             raise ModelAttributeException(
-                "Model %r has not get %r attribute" % (
-                    self.model_name, self.attribute_name))
+                "Model %r has not get %r attribute"
+                % (self.model_name, self.attribute_name)
+            )
 
         attribute_name = self.attribute_name
         if not usehybrid:
@@ -147,7 +151,8 @@ class ModelAttribute:
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
         col = registry.loaded_namespaces_first_step[self.model_name][
-            column_name]
+            column_name
+        ]
         return col
 
     def get_fk_column(self, registry):
@@ -210,15 +215,14 @@ class ModelAttribute:
         """
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
-        tablename = Model['__tablename__']
+        tablename = Model["__tablename__"]
         if Model[self.attribute_name].db_column_name:
             column_name = Model[self.attribute_name].db_column_name
 
-        if with_schema and Model.get('__db_schema__'):
-            return '%s.%s.%s' % (
-                Model['__db_schema__'], tablename, column_name)
+        if with_schema and Model.get("__db_schema__"):
+            return "%s.%s.%s" % (Model["__db_schema__"], tablename, column_name)
 
-        return tablename + '.' + column_name
+        return tablename + "." + column_name
 
     def get_complete_name(self, registry):
         """Return the name of the foreign key
@@ -232,8 +236,8 @@ class ModelAttribute:
         """
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
-        modelname = self.model_name.replace('.', '')
-        return modelname + '.' + column_name
+        modelname = self.model_name.replace(".", "")
+        return modelname + "." + column_name
 
     def get_fk_remote(self, registry):
         Model = self.check_model_in_first_step(registry)
@@ -265,8 +269,9 @@ class ModelAttribute:
         if self.attribute_name in Model:
             return
 
-        Model[self.attribute_name] = FakeRelationShip(ModelAttribute(
-            namespace, fieldname))
+        Model[self.attribute_name] = FakeRelationShip(
+            ModelAttribute(namespace, fieldname)
+        )
 
     def get_column_name(self, registry):
         """Return the name of the column
@@ -280,7 +285,7 @@ class ModelAttribute:
         """
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
-        if hasattr(Model[self.attribute_name], 'db_column_name'):
+        if hasattr(Model[self.attribute_name], "db_column_name"):
             if Model[self.attribute_name].db_column_name:
                 column_name = Model[self.attribute_name].db_column_name
 
@@ -288,22 +293,23 @@ class ModelAttribute:
 
     def check_model_in_first_step(self, registry):
         if self.model_name not in registry.loaded_namespaces_first_step:
-            raise ModelAttributeException(
-                "Unknow model %r" % self.model_name)
+            raise ModelAttributeException("Unknow model %r" % self.model_name)
 
         Model = registry.loaded_namespaces_first_step[self.model_name]
         if len(Model.keys()) == 3:
             # (__depends__, __db_schema__, __tablename__)
             # No column found, so is not an sql model
             raise ModelAttributeException(
-                "The Model %r is not an SQL Model" % self.model_name)
+                "The Model %r is not an SQL Model" % self.model_name
+            )
         return Model
 
     def check_column_in_first_step(self, registry, Model):
         if self.attribute_name not in Model:
             raise ModelAttributeException(
-                "the Model %r has not got attribute %r" % (
-                    self.model_name, self.attribute_name))
+                "the Model %r has not got attribute %r"
+                % (self.model_name, self.attribute_name)
+            )
 
         return self.attribute_name
 
@@ -326,10 +332,10 @@ class ModelRepr:
 
         mr = ModelRepr('registry name')
     """
+
     def __init__(self, model_name):
         if not model_name:
-            raise ModelReprException(
-                "model_name (%s) is required" % model_name)
+            raise ModelReprException("model_name (%s) is required" % model_name)
 
         self.model_name = model_name
 
@@ -355,10 +361,10 @@ class ModelRepr:
         :rtype: string
         """
         Model = self.check_model(registry)
-        if with_schema and Model.get('__db_schema__'):
-            return Model['__db_schema__'] + '.' + Model['__tablename__']
+        if with_schema and Model.get("__db_schema__"):
+            return Model["__db_schema__"] + "." + Model["__tablename__"]
 
-        return Model['__tablename__']
+        return Model["__tablename__"]
 
     def modelname(self, registry):
         """Return the  real tablename of the Model
@@ -367,7 +373,7 @@ class ModelRepr:
         :rtype: string
         """
         self.check_model(registry)
-        return self.model_name.replace('.', '')
+        return self.model_name.replace(".", "")
 
     def primary_keys(self, registry):
         """Return the  of the primary keys
@@ -376,11 +382,12 @@ class ModelRepr:
         :rtype: list of ModelAttribute
         """
         from anyblok.column import Column
+
         Model = self.check_model(registry)
         pks = []
         for k, v in Model.items():
             if isinstance(v, Column):
-                if v.kwargs.get('primary_key') is True:
+                if v.kwargs.get("primary_key") is True:
                     pks.append(ModelAttribute(self.model_name, k))
 
         return pks
@@ -392,6 +399,7 @@ class ModelRepr:
         :rtype: list of ModelAttribute
         """
         from anyblok.column import Column
+
         Model = self.check_model(registry)
         fks = []
         for k, v in Model.items():
@@ -409,6 +417,7 @@ class ModelRepr:
         :rtype: list of many2one field
         """
         from anyblok.relationship import Many2One
+
         Model = self.check_model(registry)
         many2ones = []
         for k, v in Model.items():
@@ -420,25 +429,26 @@ class ModelRepr:
 
 
 def ModelAttributeAdapter(Model):
-    """ Return a ModelAttribute
+    """Return a ModelAttribute
 
     :param Model: ModelAttribute or string ('registry name'=>'attribute name')
     :rtype: instance of ModelAttribute
     :exceptions: ModelAttributeAdapterException
     """
     if isinstance(Model, str):
-        if '=>' not in Model:
+        if "=>" not in Model:
             raise ModelAttributeAdapterException(
-                "Wrong value %r impossible to find model and attribtue" % (
-                    Model))
-        model, attribute = Model.split('=>')
+                "Wrong value %r impossible to find model and attribtue"
+                % (Model)
+            )
+        model, attribute = Model.split("=>")
         return ModelAttribute(model, attribute)
     else:
         return Model
 
 
 def ModelAdapter(Model):
-    """ Return a ModelRepr
+    """Return a ModelRepr
 
     :param Model: ModelRepr or string
     :rtype: instance of ModelRepr
@@ -453,11 +463,20 @@ def ModelAdapter(Model):
 
 
 class ModelMapper:
-
     sqlalchemy_known_events = [
-        'after_delete', 'after_insert', 'after_update', 'append_result',
-        'before_delete', 'before_insert', 'before_update', 'create_instance',
-        'expire', 'first_init', 'init', 'load', 'refresh',
+        "after_delete",
+        "after_insert",
+        "after_update",
+        "append_result",
+        "before_delete",
+        "before_insert",
+        "before_update",
+        "create_instance",
+        "expire",
+        "first_init",
+        "init",
+        "load",
+        "refresh",
     ]
 
     def __init__(self, mapper, event, *args, **kwargs):
@@ -465,7 +484,7 @@ class ModelMapper:
             self.model = ModelRepr(mapper)
         elif isinstance(mapper, ModelRepr):
             self.model = mapper
-        elif hasattr(mapper, '__registry_name__'):
+        elif hasattr(mapper, "__registry_name__"):
             self.model = ModelRepr(mapper.__registry_name__)
 
         self.event = event
@@ -478,7 +497,7 @@ class ModelMapper:
             return True
         elif isinstance(mapper, ModelRepr):
             return True
-        elif hasattr(mapper, '__registry_name__'):
+        elif hasattr(mapper, "__registry_name__"):
             return True
 
         return False
@@ -494,7 +513,7 @@ class ModelMapper:
 
     def mapper(self, registry, namespace, **kwargs):
         model = self.model
-        if self.model.model_name.upper() == 'SELF':
+        if self.model.model_name.upper() == "SELF":
             model = ModelRepr(namespace)
 
         model.check_model(registry)
@@ -502,10 +521,9 @@ class ModelMapper:
 
 
 class ModelAttributeMapper:
-
     def __init__(self, mapper, event, *args, **kwargs):
         if isinstance(mapper, str):
-            self.attribute = ModelAttribute(*mapper.split('=>'))
+            self.attribute = ModelAttribute(*mapper.split("=>"))
         elif isinstance(mapper, ModelAttribute):
             self.attribute = mapper
 
@@ -516,8 +534,8 @@ class ModelAttributeMapper:
     @classmethod
     def capable(cls, mapper):
         if isinstance(mapper, str):
-            if '=>' in mapper:
-                model, column = mapper.split('=>')
+            if "=>" in mapper:
+                model, column = mapper.split("=>")
                 if model and column:
                     return True
         elif isinstance(mapper, ModelAttribute):
@@ -531,9 +549,10 @@ class ModelAttributeMapper:
 
     def mapper(self, registry, namespace, usehybrid=True):
         attribute = self.attribute
-        if self.attribute.model_name.upper() == 'SELF':
+        if self.attribute.model_name.upper() == "SELF":
             attribute = ModelAttribute(  # pragma: no cover
-                namespace, self.attribute.attribute_name)
+                namespace, self.attribute.attribute_name
+            )
 
         return attribute.get_attribute(registry, usehybrid=usehybrid)
 

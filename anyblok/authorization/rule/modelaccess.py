@@ -7,6 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 """Per model flat access rule, based on a Model (table)"""
 from anyblok.registry import RegistryManagerException
+
 from .base import AuthorizationRule
 
 
@@ -18,7 +19,7 @@ class ModelAccessRule(AuthorizationRule):
     provided they pass the model class to be used in all cases.
     """
 
-    grant_model_name = 'Model.Authorization.ModelPermissionGrant'
+    grant_model_name = "Model.Authorization.ModelPermissionGrant"
 
     def __init__(self, grant_model=None):
         """.
@@ -40,24 +41,29 @@ class ModelAccessRule(AuthorizationRule):
             raise RuntimeError(
                 "To use %s with no explicit Grant "
                 "model, you must install the model_access blok, "
-                "that provides the default %r" % (
-                    cls.__name__,
-                    cls.grant_model_name))
+                "that provides the default %r"
+                % (cls.__name__, cls.grant_model_name)
+            )
 
     def check_on_model(self, model, principals, permission):
         Grant = self.grant_model
-        return bool(Grant.query().filter(
-            Grant.model == model,
-            Grant.principal.in_(principals),
-            Grant.permission == permission).limit(1).count())
+        return bool(
+            Grant.query()
+            .filter(
+                Grant.model == model,
+                Grant.principal.in_(principals),
+                Grant.permission == permission,
+            )
+            .limit(1)
+            .count()
+        )
 
     def check(self, record, principals, permission):
-        return self.check_on_model(record.__registry_name__,
-                                   principals,
-                                   permission)
+        return self.check_on_model(
+            record.__registry_name__, principals, permission
+        )
 
     def filter(self, model, query, principals, permission):
-        if self.check_on_model(model.__registry_name__,
-                               principals, permission):
+        if self.check_on_model(model.__registry_name__, principals, permission):
             return query
         return False

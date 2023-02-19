@@ -6,14 +6,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from sqlalchemy import text
+
 from anyblok.blok import Blok
 from anyblok.common import sgdb_in
-from sqlalchemy import text
 
 
 class TestBlok(Blok):
-
-    version = '1.0.0'
+    version = "1.0.0"
     table_exist_before_automigration = None
     table_exist_after_automigration = None
 
@@ -24,28 +24,44 @@ class TestBlok(Blok):
     @classmethod
     def reload_declaration_module(cls, reload):
         from . import test
+
         reload(test)
 
     def is_table_exist(self):
         engine = self.anyblok.engine
-        if sgdb_in(engine, ['PostgreSQL']):
-            return bool(self.anyblok.execute(text("""
+        if sgdb_in(engine, ["PostgreSQL"]):
+            return bool(
+                self.anyblok.execute(
+                    text(
+                        """
                 select count(*)
                 from pg_catalog.pg_tables
                 where tablename = 'test';
-            """)).fetchone()[0])
-        elif sgdb_in(engine, ['MySQL']):
-            return bool(self.anyblok.execute(text("""
+            """
+                    )
+                ).fetchone()[0]
+            )
+        elif sgdb_in(engine, ["MySQL"]):
+            return bool(
+                self.anyblok.execute(
+                    text(
+                        """
                 show tables like 'test';
-            """)).fetchall())
-        elif sgdb_in(engine, ['MsSQL']):
-            query = text("""
+            """
+                    )
+                ).fetchall()
+            )
+        elif sgdb_in(engine, ["MsSQL"]):
+            query = text(
+                """
                 SELECT count(*)
                 FROM INFORMATION_SCHEMA.TABLES
                 WHERE TABLE_TYPE = 'BASE TABLE'
                       AND TABLE_CATALOG='%s'
                       AND TABLE_NAME='test'
-            """ % self.anyblok.db_name)
+            """
+                % self.anyblok.db_name
+            )
             return bool(self.anyblok.execute(query).fetchall()[0][0])
 
     def pre_migration(self, latest_version):

@@ -7,10 +7,13 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from random import random
-from anyblok.declarations import Declarations, cache, classmethod_cache
+
+import pytest
+
 from anyblok.bloks.anyblok_core.exceptions import CacheException
 from anyblok.column import Integer
-import pytest
+from anyblok.declarations import Declarations, cache, classmethod_cache
+
 from .conftest import init_registry, reset_db
 
 register = Declarations.register
@@ -20,7 +23,6 @@ Core = Declarations.Core
 
 
 def wrap_cache(condition):
-
     def wrapper(function):
         return function
 
@@ -38,10 +40,8 @@ def wrap_cls_cache(condition):
 
 
 def add_model_with_method_cached():
-
     @register(Model)
     class Test:
-
         x = 0
 
         @cache()
@@ -59,7 +59,6 @@ def registry_method_cached(request, bloks_loaded):
 
 
 class TestCache:
-
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_method_cached):
         transaction = registry_method_cached.begin_nested()
@@ -69,14 +68,14 @@ class TestCache:
         registry = registry_method_cached
         Cache = registry.System.Cache
         nb_invalidation = Cache.query().count()
-        Cache.invalidate('Model.Test', 'method_cached')
+        Cache.invalidate("Model.Test", "method_cached")
         assert Cache.query().count() == nb_invalidation + 1
 
     def test_invalid_cache_invalidation(self, registry_method_cached):
         registry = registry_method_cached
         Cache = registry.System.Cache
         with pytest.raises(CacheException):
-            Cache.invalidate('Model.Test2', 'method_cached')
+            Cache.invalidate("Model.Test2", "method_cached")
 
     def test_detect_cache_invalidation(self, registry_method_cached):
         registry = registry_method_cached
@@ -100,14 +99,12 @@ class TestCache:
         caches = Cache.get_invalidation()
         assert len(caches) == 1
         cache = caches[0]
-        assert cache.indentify == ('Model.Test', 'method_cached')
+        assert cache.indentify == ("Model.Test", "method_cached")
 
 
 class TestSimpleCache:
-
     @pytest.fixture(autouse=True)
     def close_registry(self, request, bloks_loaded):
-
         def close():
             self.registry.close()
 
@@ -121,7 +118,7 @@ class TestSimpleCache:
         m = Model()
         assert m.method_cached() == value
         assert m.method_cached() == value
-        Model.anyblok.System.Cache.invalidate(registry_name, 'method_cached')
+        Model.anyblok.System.Cache.invalidate(registry_name, "method_cached")
         assert m.method_cached() == 2 * value
 
     def check_method_cached_invalidate_all(self, Model, value=1):
@@ -132,10 +129,8 @@ class TestSimpleCache:
         assert m.method_cached() == 2 * value
 
     def add_model_with_method_cached(self):
-
         @register(Model)
         class Test:
-
             x = 0
 
             @cache()
@@ -144,10 +139,8 @@ class TestSimpleCache:
                 return self.x
 
     def add_model_with_method_cached_by_core(self):
-
         @register(Core)
         class Base:
-
             x = 0
 
             @cache()
@@ -160,10 +153,8 @@ class TestSimpleCache:
             pass
 
     def add_model_with_method_cached_by_mixin(self):
-
         @register(Mixin)
         class MTest:
-
             x = 0
 
             @cache()
@@ -176,10 +167,8 @@ class TestSimpleCache:
             pass
 
     def add_model_with_method_cached_by_mixin_chain(self):
-
         @register(Mixin)
         class MTest:
-
             x = 0
 
             @cache()
@@ -195,14 +184,11 @@ class TestSimpleCache:
         class Test(Mixin.MTest2):
             pass
 
-    def add_model_with_method_cached_with_mixin_and_or_core(self,
-                                                            withmodel=False,
-                                                            withmixin=False,
-                                                            withcore=False):
-
+    def add_model_with_method_cached_with_mixin_and_or_core(
+        self, withmodel=False, withmixin=False, withcore=False
+    ):
         @register(Core)
         class Base:
-
             x = 0
 
             @wrap_cache(withcore)
@@ -212,7 +198,6 @@ class TestSimpleCache:
 
         @register(Mixin)
         class MTest:
-
             y = 0
 
             @wrap_cache(withmixin)
@@ -222,7 +207,6 @@ class TestSimpleCache:
 
         @register(Model)
         class Test(Mixin.MTest):
-
             z = 0
 
             @wrap_cache(withmodel)
@@ -232,47 +216,56 @@ class TestSimpleCache:
 
     def test_model(self):
         registry = self.init_registry(self.add_model_with_method_cached)
-        self.check_method_cached(registry.Test, 'Model.Test')
+        self.check_method_cached(registry.Test, "Model.Test")
 
     def test_model2(self):
         registry = self.init_registry(self.add_model_with_method_cached)
         from anyblok import Declarations
+
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_core(self):
         registry = self.init_registry(self.add_model_with_method_cached_by_core)
-        self.check_method_cached(registry.Test, 'Model.Test')
+        self.check_method_cached(registry.Test, "Model.Test")
 
     def test_core2(self):
         registry = self.init_registry(self.add_model_with_method_cached_by_core)
         from anyblok import Declarations
+
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin)
-        self.check_method_cached(registry.Test, 'Model.Test')
+            self.add_model_with_method_cached_by_mixin
+        )
+        self.check_method_cached(registry.Test, "Model.Test")
 
     def test_mixin2(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin)
+            self.add_model_with_method_cached_by_mixin
+        )
         from anyblok import Declarations
+
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin_chain(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin_chain)
-        self.check_method_cached(registry.Test, 'Model.Test')
+            self.add_model_with_method_cached_by_mixin_chain
+        )
+        self.check_method_cached(registry.Test, "Model.Test")
 
     def test_mixin_chain2(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin_chain)
+            self.add_model_with_method_cached_by_mixin_chain
+        )
         from anyblok import Declarations
+
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_model_mixin_core_not_cache(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_with_mixin_and_or_core)
+            self.add_model_with_method_cached_with_mixin_and_or_core
+        )
         m = registry.Test()
         assert m.method_cached() == 6
         assert m.method_cached() == 12
@@ -280,41 +273,46 @@ class TestSimpleCache:
     def test_model_mixin_core_only_core(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
-            withcore=True)
+            withcore=True,
+        )
         m = registry.Test()
         assert m.method_cached() == 6
         assert m.method_cached() == 11
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 17
 
     def test_model_mixin_core_only_mixin(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
-            withmixin=True)
+            withmixin=True,
+        )
         m = registry.Test()
         assert m.method_cached() == 6
         assert m.method_cached() == 9
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 15
 
     def test_model_mixin_core_only_model(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
-            withmodel=True)
+            withmodel=True,
+        )
         m = registry.Test()
         assert m.method_cached() == 6
         assert m.method_cached() == 6
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 12
 
     def test_model_mixin_core_only_core_and_mixin(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
-            withmixin=True, withcore=True)
+            withmixin=True,
+            withcore=True,
+        )
         m = registry.Test()
         assert m.method_cached() == 6
         assert m.method_cached() == 9
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 15
 
     def test_invalidate_all_check_model(self):
@@ -327,14 +325,13 @@ class TestSimpleCache:
 
     def test_invalidate_all_check_mixin(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin)
+            self.add_model_with_method_cached_by_mixin
+        )
         self.check_method_cached_invalidate_all(registry.Test)
 
     def add_model_with_method_core_cached_with_two_model(self):
-
         @register(Core)
         class Base:
-
             def __init__(self):
                 super(Base, self).__init__()
                 self.x = 0
@@ -347,37 +344,34 @@ class TestSimpleCache:
 
         @register(Model)
         class Test:
-
             def method_cached(self):
                 self.z += 3
                 return self.z + super(Test, self).method_cached()
 
         @register(Model)
         class Test2:
-
             def method_cached(self):
                 self.z += 3
                 return self.z + super(Test2, self).method_cached()
 
     def test_2_model_with_core_catched(self):
         registry = self.init_registry(
-            self.add_model_with_method_core_cached_with_two_model)
+            self.add_model_with_method_core_cached_with_two_model
+        )
         t = registry.Test()
         t2 = registry.Test2()
         assert t.method_cached() == 4
         assert t2.method_cached() == 4
         assert t.method_cached() == 7
         assert t2.method_cached() == 7
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert t.method_cached() == 11
         assert t2.method_cached() == 10
 
 
 class TestClassMethodCache:
-
     @pytest.fixture(autouse=True)
     def close_registry(self, request, bloks_loaded):
-
         def close():
             self.registry.close()
 
@@ -392,14 +386,12 @@ class TestClassMethodCache:
         value = m.method_cached()
         assert m.method_cached() == value
         assert m.method_cached() == value
-        Model.anyblok.System.Cache.invalidate(registry_name, 'method_cached')
+        Model.anyblok.System.Cache.invalidate(registry_name, "method_cached")
         assert m.method_cached() != value
 
     def add_model_with_method_cached(self):
-
         @register(Model)
         class Test:
-
             x = 0
 
             @classmethod_cache()
@@ -408,10 +400,8 @@ class TestClassMethodCache:
                 return cls.x
 
     def add_model_with_method_cached_by_core(self):
-
         @register(Core)
         class Base:
-
             x = 0
 
             @classmethod_cache()
@@ -424,10 +414,8 @@ class TestClassMethodCache:
             pass
 
     def add_model_with_method_cached_by_mixin(self):
-
         @register(Mixin)
         class MTest:
-
             x = 0
 
             @classmethod_cache()
@@ -440,10 +428,8 @@ class TestClassMethodCache:
             pass
 
     def add_model_with_method_cached_by_mixin_chain(self):
-
         @register(Mixin)
         class MTest:
-
             x = 0
 
             @classmethod_cache()
@@ -459,14 +445,11 @@ class TestClassMethodCache:
         class Test(Mixin.MTest2):
             pass
 
-    def add_model_with_method_cached_with_mixin_and_or_core(self,
-                                                            withmodel=False,
-                                                            withmixin=False,
-                                                            withcore=False):
-
+    def add_model_with_method_cached_with_mixin_and_or_core(
+        self, withmodel=False, withmixin=False, withcore=False
+    ):
         @register(Core)
         class Base:
-
             x = 0
 
             @wrap_cls_cache(withcore)
@@ -476,7 +459,6 @@ class TestClassMethodCache:
 
         @register(Mixin)
         class MTest:
-
             y = 0
 
             @wrap_cls_cache(withmixin)
@@ -486,7 +468,6 @@ class TestClassMethodCache:
 
         @register(Model)
         class Test(Mixin.MTest):
-
             z = 0
 
             @wrap_cls_cache(withmodel)
@@ -496,49 +477,56 @@ class TestClassMethodCache:
 
     def test_model(self):
         registry = self.init_registry(self.add_model_with_method_cached)
-        self.check_method_cached(registry.Test, 'Model.Test')
+        self.check_method_cached(registry.Test, "Model.Test")
 
     def test_model2(self):
         registry = self.init_registry(self.add_model_with_method_cached)
         from anyblok import Declarations
+
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_core(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_core)
-        self.check_method_cached(registry.Test, 'Model.Test')
+        registry = self.init_registry(self.add_model_with_method_cached_by_core)
+        self.check_method_cached(registry.Test, "Model.Test")
 
     def test_core2(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_core)
+        registry = self.init_registry(self.add_model_with_method_cached_by_core)
         from anyblok import Declarations
+
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin)
-        self.check_method_cached(registry.Test, 'Model.Test')
+            self.add_model_with_method_cached_by_mixin
+        )
+        self.check_method_cached(registry.Test, "Model.Test")
 
     def test_mixin2(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin)
+            self.add_model_with_method_cached_by_mixin
+        )
         from anyblok import Declarations
+
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin_chain(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin_chain)
-        self.check_method_cached(registry.Test, 'Model.Test')
+            self.add_model_with_method_cached_by_mixin_chain
+        )
+        self.check_method_cached(registry.Test, "Model.Test")
 
     def test_mixin_chain2(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin_chain)
+            self.add_model_with_method_cached_by_mixin_chain
+        )
         from anyblok import Declarations
+
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_model_mixin_core_not_cache(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_with_mixin_and_or_core)
+            self.add_model_with_method_cached_with_mixin_and_or_core
+        )
         m = registry.Test
         assert m.method_cached() == 6
         assert m.method_cached() == 12
@@ -546,48 +534,51 @@ class TestClassMethodCache:
     def test_model_mixin_core_only_core(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
-            withcore=True)
+            withcore=True,
+        )
         m = registry.Test
         assert m.method_cached() == 6
         assert m.method_cached() == 11
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 17
 
     def test_model_mixin_core_only_mixin(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
-            withmixin=True)
+            withmixin=True,
+        )
         m = registry.Test
         assert m.method_cached() == 6
         assert m.method_cached() == 9
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 15
 
     def test_model_mixin_core_only_model(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
-            withmodel=True)
+            withmodel=True,
+        )
         m = registry.Test
         assert m.method_cached() == 6
         assert m.method_cached() == 6
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 12
 
     def test_model_mixin_core_only_core_and_mixin(self):
         registry = self.init_registry(
             self.add_model_with_method_cached_with_mixin_and_or_core,
-            withmixin=True, withcore=True)
+            withmixin=True,
+            withcore=True,
+        )
         m = registry.Test
         assert m.method_cached() == 6
         assert m.method_cached() == 9
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 15
 
     def add_model_with_method_core_cached_with_two_model(self):
-
         @register(Core)
         class Base:
-
             x = 0
 
             @classmethod_cache()
@@ -597,7 +588,6 @@ class TestClassMethodCache:
 
         @register(Model)
         class Test:
-
             z = 0
 
             @classmethod
@@ -607,7 +597,6 @@ class TestClassMethodCache:
 
         @register(Model)
         class Test2:
-
             z = 0
 
             @classmethod
@@ -617,21 +606,20 @@ class TestClassMethodCache:
 
     def test_2_model_with_core_catched(self):
         registry = self.init_registry(
-            self.add_model_with_method_core_cached_with_two_model)
+            self.add_model_with_method_core_cached_with_two_model
+        )
         assert registry.Test.method_cached() == 4
         assert registry.Test2.method_cached() == 4
         assert registry.Test.method_cached() == 7
         assert registry.Test2.method_cached() == 7
-        registry.System.Cache.invalidate('Model.Test', 'method_cached')
+        registry.System.Cache.invalidate("Model.Test", "method_cached")
         assert registry.Test.method_cached() == 11
         assert registry.Test2.method_cached() == 10
 
 
 class TestInheritedCache:
-
     @pytest.fixture(autouse=True)
     def close_registry(self, request, bloks_loaded):
-
         def close():
             self.registry.close()
 
@@ -645,21 +633,19 @@ class TestInheritedCache:
         m = Model()
         assert m.method_cached() == 3
         assert m.method_cached() == 5
-        Model.anyblok.System.Cache.invalidate('Model.Test', 'method_cached')
+        Model.anyblok.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 8
 
     def check_inherited_method_cached(self, Model):
         m = Model()
         assert m.method_cached() == 3
         assert m.method_cached() == 3
-        Model.anyblok.System.Cache.invalidate('Model.Test', 'method_cached')
+        Model.anyblok.System.Cache.invalidate("Model.Test", "method_cached")
         assert m.method_cached() == 6
 
     def add_model_with_method_cached(self, inheritcache=False):
-
         @register(Model)
         class Test:
-
             x = 0
 
             @cache()
@@ -669,24 +655,24 @@ class TestInheritedCache:
 
         @register(Model)  # noqa
         class Test:
-
             y = 0
 
             if inheritcache:
+
                 @cache()
                 def method_cached(self):
                     self.y += 2
                     return self.y + super(Test, self).method_cached()
+
             else:
+
                 def method_cached(self):
                     self.y += 2
                     return self.y + super(Test, self).method_cached()
 
     def add_model_with_method_cached_by_core(self, inheritcache=False):
-
         @register(Core)
         class Base:
-
             x = 0
 
             @cache()
@@ -696,15 +682,17 @@ class TestInheritedCache:
 
         @register(Core)  # noqa
         class Base:
-
             y = 0
 
             if inheritcache:
+
                 @cache()
                 def method_cached(self):
                     self.y += 2
                     return self.y + super(Base, self).method_cached()
+
             else:
+
                 def method_cached(self):
                     self.y += 2
                     return self.y + super(Base, self).method_cached()
@@ -714,10 +702,8 @@ class TestInheritedCache:
             pass
 
     def add_model_with_method_cached_by_mixin(self, inheritcache=False):
-
         @register(Mixin)
         class MTest:
-
             x = 0
 
             @cache()
@@ -727,15 +713,17 @@ class TestInheritedCache:
 
         @register(Mixin)  # noqa
         class MTest:
-
             y = 0
 
             if inheritcache:
+
                 @cache()
                 def method_cached(self):
                     self.y += 2
                     return self.y + super(MTest, self).method_cached()
+
             else:
+
                 def method_cached(self):
                     self.y += 2
                     return self.y + super(MTest, self).method_cached()
@@ -749,8 +737,9 @@ class TestInheritedCache:
         self.check_method_cached(registry.Test)
 
     def test_model2(self):
-        registry = self.init_registry(self.add_model_with_method_cached,
-                                      inheritcache=True)
+        registry = self.init_registry(
+            self.add_model_with_method_cached, inheritcache=True
+        )
         self.check_inherited_method_cached(registry.Test)
 
     def test_core(self):
@@ -759,25 +748,26 @@ class TestInheritedCache:
 
     def test_core2(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_core, inheritcache=True)
+            self.add_model_with_method_cached_by_core, inheritcache=True
+        )
         self.check_inherited_method_cached(registry.Test)
 
     def test_mixin(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin)
+            self.add_model_with_method_cached_by_mixin
+        )
         self.check_method_cached(registry.Test)
 
     def test_mixin2(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin, inheritcache=True)
+            self.add_model_with_method_cached_by_mixin, inheritcache=True
+        )
         self.check_inherited_method_cached(registry.Test)
 
 
 class TestInheritedClassMethodCache:
-
     @pytest.fixture(autouse=True)
     def close_registry(self, request, bloks_loaded):
-
         def close():
             self.registry.close()
 
@@ -790,20 +780,18 @@ class TestInheritedClassMethodCache:
     def check_method_cached(self, Model):
         assert Model.method_cached() == 3
         assert Model.method_cached() == 5
-        Model.anyblok.System.Cache.invalidate('Model.Test', 'method_cached')
+        Model.anyblok.System.Cache.invalidate("Model.Test", "method_cached")
         assert Model.method_cached() == 8
 
     def check_inherited_method_cached(self, Model):
         assert Model.method_cached() == 3
         assert Model.method_cached() == 3
-        Model.anyblok.System.Cache.invalidate('Model.Test', 'method_cached')
+        Model.anyblok.System.Cache.invalidate("Model.Test", "method_cached")
         assert Model.method_cached() == 6
 
     def add_model_with_method_cached(self, inheritcache=False):
-
         @register(Model)
         class Test:
-
             x = 0
 
             @classmethod_cache()
@@ -813,25 +801,25 @@ class TestInheritedClassMethodCache:
 
         @register(Model)  # noqa
         class Test:
-
             y = 0
 
             if inheritcache:
+
                 @classmethod_cache()
                 def method_cached(cls):
                     cls.y += 2
                     return cls.y + super(Test, cls).method_cached()
+
             else:
+
                 @classmethod
                 def method_cached(cls):
                     cls.y += 2
                     return cls.y + super(Test, cls).method_cached()
 
     def add_model_with_method_cached_by_core(self, inheritcache=False):
-
         @register(Core)
         class Base:
-
             x = 0
 
             @classmethod_cache()
@@ -841,15 +829,17 @@ class TestInheritedClassMethodCache:
 
         @register(Core)  # noqa
         class Base:
-
             y = 0
 
             if inheritcache:
+
                 @classmethod_cache()
                 def method_cached(cls):
                     cls.y += 2
                     return cls.y + super(Base, cls).method_cached()
+
             else:
+
                 @classmethod
                 def method_cached(cls):
                     cls.y += 2
@@ -860,10 +850,8 @@ class TestInheritedClassMethodCache:
             pass
 
     def add_model_with_method_cached_by_mixin(self, inheritcache=False):
-
         @register(Mixin)
         class MTest:
-
             x = 0
 
             @classmethod_cache()
@@ -873,15 +861,17 @@ class TestInheritedClassMethodCache:
 
         @register(Mixin)  # noqa
         class MTest:
-
             y = 0
 
             if inheritcache:
+
                 @classmethod_cache()
                 def method_cached(cls):
                     cls.y += 2
                     return cls.y + super(MTest, cls).method_cached()
+
             else:
+
                 @classmethod
                 def method_cached(cls):
                     cls.y += 2
@@ -896,8 +886,9 @@ class TestInheritedClassMethodCache:
         self.check_method_cached(registry.Test)
 
     def test_model2(self):
-        registry = self.init_registry(self.add_model_with_method_cached,
-                                      inheritcache=True)
+        registry = self.init_registry(
+            self.add_model_with_method_cached, inheritcache=True
+        )
         self.check_inherited_method_cached(registry.Test)
 
     def test_core(self):
@@ -906,25 +897,26 @@ class TestInheritedClassMethodCache:
 
     def test_core2(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_core, inheritcache=True)
+            self.add_model_with_method_cached_by_core, inheritcache=True
+        )
         self.check_inherited_method_cached(registry.Test)
 
     def test_mixin(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin)
+            self.add_model_with_method_cached_by_mixin
+        )
         self.check_method_cached(registry.Test)
 
     def test_mixin2(self):
         registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin, inheritcache=True)
+            self.add_model_with_method_cached_by_mixin, inheritcache=True
+        )
         self.check_inherited_method_cached(registry.Test)
 
 
 class TestComparatorInterModel:
-
     @pytest.fixture(autouse=True)
     def close_registry(self, request, bloks_loaded):
-
         def close():
             self.registry.close()
 
@@ -942,19 +934,15 @@ class TestComparatorInterModel:
         assert Test.method_cached() != Test2.method_cached()
 
     def test_model(self):
-
         def add_in_registry():
-
             @register(Model)
             class Test:
-
                 @classmethod_cache()
                 def method_cached(cls):
                     return random()
 
             @register(Model)
             class Test2:
-
                 @classmethod_cache()
                 def method_cached(cls):
                     return random()
@@ -963,12 +951,9 @@ class TestComparatorInterModel:
         self.check_comparator(registry)
 
     def test_mixin(self):
-
         def add_in_registry():
-
             @register(Mixin)
             class MTest:
-
                 @classmethod_cache()
                 def method_cached(cls):
                     return random()
@@ -979,19 +964,15 @@ class TestComparatorInterModel:
 
             @register(Model)
             class Test2(Mixin.MTest):
-
                 pass
 
         registry = self.init_registry(add_in_registry)
         self.check_comparator(registry)
 
     def test_core(self):
-
         def add_in_registry():
-
             @register(Core)
             class Base:
-
                 @classmethod_cache()
                 def method_cached(cls):
                     return random()
@@ -1002,7 +983,6 @@ class TestComparatorInterModel:
 
             @register(Model)
             class Test2:
-
                 pass
 
         registry = self.init_registry(add_in_registry)
@@ -1010,10 +990,8 @@ class TestComparatorInterModel:
 
 
 def add_sql_model_cache():
-
     @register(Model)
     class Test:
-
         id = Integer(primary_key=True)
         id2 = Integer()
 
@@ -1034,7 +1012,6 @@ def registry_sql_model_cached(request, bloks_loaded):
 
 
 class TestSQLModelCache:
-
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_sql_model_cached):
         transaction = registry_sql_model_cached.begin_nested()
@@ -1048,7 +1025,7 @@ class TestSQLModelCache:
         registry.Test.insert()
         assert registry.Test.count() == 2
         Cache = registry.System.Cache
-        Cache.invalidate('Model.Test', 'count')
+        Cache.invalidate("Model.Test", "count")
         assert registry.Test.count() == 3
 
     def test_query_and_method_cached(self, registry_sql_model_cached):
@@ -1058,5 +1035,5 @@ class TestSQLModelCache:
         t.id2 = 2
         assert t.get_id2() == 1
         Cache = registry.System.Cache
-        Cache.invalidate('Model.Test', 'get_id2')
+        Cache.invalidate("Model.Test", "get_id2")
         assert t.get_id2() == 2

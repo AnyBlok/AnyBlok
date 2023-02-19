@@ -5,13 +5,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.registry import RegistryManager
 from anyblok import Declarations
+from anyblok.registry import RegistryManager
 
 
 @Declarations.add_declaration_type()
 class Core:
-    """ The Core class is the base of all the AnyBlok models
+    """The Core class is the base of all the AnyBlok models
 
     Add new core model::
 
@@ -28,7 +28,7 @@ class Core:
 
     @classmethod
     def register(self, parent, name, cls_, **kwargs):
-        """ Add new sub registry in the registry
+        """Add new sub registry in the registry
 
         :param parent: Existing declaration
         :param name: Name of the new declaration to add it
@@ -45,7 +45,7 @@ class Core:
 
     @classmethod
     def unregister(self, entry, cls_):
-        """ Remove the Interface from the registry
+        """Remove the Interface from the registry
 
         :param entry: entry declaration of the model where the ``cls_``
             must be removed
@@ -54,8 +54,8 @@ class Core:
         RegistryManager.remove_in_register(cls_)
 
 
-RegistryManager.declare_core('Base')
-RegistryManager.declare_core('SqlBase')
-RegistryManager.declare_core('SqlViewBase')
-RegistryManager.declare_core('Query')
-RegistryManager.declare_core('InstrumentedList')
+RegistryManager.declare_core("Base")
+RegistryManager.declare_core("SqlBase")
+RegistryManager.declare_core("SqlViewBase")
+RegistryManager.declare_core("Query")
+RegistryManager.declare_core("InstrumentedList")

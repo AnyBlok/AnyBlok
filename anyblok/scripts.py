@@ -8,95 +8,102 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import anyblok
-from anyblok.release import version
-from anyblok.blok import BlokManager
-from anyblok.config import Configuration, get_db_name, get_url
-from anyblok.registry import RegistryManager
-from anyblok.common import return_list
-from anyblok._graphviz import ModelSchema, SQLSchema
-from argparse import RawDescriptionHelpFormatter
-from textwrap import dedent
-from sqlalchemy_utils.functions import create_database
-import warnings
 import sys
-from os.path import join
+import warnings
+from argparse import RawDescriptionHelpFormatter
 from logging import getLogger
 from os import walk
+from os.path import join
+from textwrap import dedent
+
+from sqlalchemy_utils.functions import create_database
+
+import anyblok
 from anyblok import (
-    load_init_function_from_entry_points,
     configuration_post_load,
+    load_init_function_from_entry_points,
 )
+from anyblok._graphviz import ModelSchema, SQLSchema
+from anyblok.blok import BlokManager
+from anyblok.common import return_list
+from anyblok.config import Configuration, get_db_name, get_url
+from anyblok.registry import RegistryManager
+from anyblok.release import version
 
 logger = getLogger(__name__)
 
 Configuration.add_application_properties(
-    'createdb',
+    "createdb",
     [
-        'unittest',
-        'logging',
-        'create_db',
-        'install-bloks',
-        'install-or-update-bloks',
+        "unittest",
+        "logging",
+        "create_db",
+        "install-bloks",
+        "install-or-update-bloks",
     ],
-    prog='AnyBlok create database, version %r' % version,
-    description="Create a database and install bloks to populate it"
+    prog="AnyBlok create database, version %r" % version,
+    description="Create a database and install bloks to populate it",
 )
 
 Configuration.add_application_properties(
-    'updatedb',
+    "updatedb",
     [
-        'unittest',
-        'logging',
-        'install-bloks',
-        'uninstall-bloks',
-        'update-bloks',
-        'install-or-update-bloks',
+        "unittest",
+        "logging",
+        "install-bloks",
+        "uninstall-bloks",
+        "update-bloks",
+        "install-or-update-bloks",
     ],
-    prog='AnyBlok update database, version %r' % version,
-    description="Update a database: install, upgrade or uninstall the bloks "
+    prog="AnyBlok update database, version %r" % version,
+    description="Update a database: install, upgrade or uninstall the bloks ",
 )
 
 Configuration.add_application_properties(
-    'interpreter', ['logging', 'interpreter'],
-    prog='AnyBlok interpreter, version %r' % version,
+    "interpreter",
+    ["logging", "interpreter"],
+    prog="AnyBlok interpreter, version %r" % version,
     description="Run an interpreter on the registry",
     formatter_class=RawDescriptionHelpFormatter,
-    epilog=dedent("Example\n"
-                  "-------\n"
-                  "  $ anyblok_interpreter [anyblok arguments] \n"
-                  "  $ => anyblok_registry \n"
-                  "  ... <registry> \n\n"
-                  "  The interpreter gives you a python console with the "
-                  "registry of the selected database \n\n"
-                  "Note\n"
-                  "----\n"
-                  "  If 'ipython' is installed, then the interpreter will be "
-                  "an interactive ipython one.")
+    epilog=dedent(
+        "Example\n"
+        "-------\n"
+        "  $ anyblok_interpreter [anyblok arguments] \n"
+        "  $ => anyblok_registry \n"
+        "  ... <registry> \n\n"
+        "  The interpreter gives you a python console with the "
+        "registry of the selected database \n\n"
+        "Note\n"
+        "----\n"
+        "  If 'ipython' is installed, then the interpreter will be "
+        "an interactive ipython one."
+    ),
 )
 
 Configuration.add_application_properties(
-    'autodoc', ['logging', 'doc', 'schema'],
-    prog='AnyBlok auto documentation, version %r' % version,
+    "autodoc",
+    ["logging", "doc", "schema"],
+    prog="AnyBlok auto documentation, version %r" % version,
 )
 
 
 Configuration.add_application_properties(
-    'nose', ['logging', 'unittest'],
-    prog='AnyBlok nose, version %r' % version,
-    description="Run functional nosetest against installed bloks."
+    "nose",
+    ["logging", "unittest"],
+    prog="AnyBlok nose, version %r" % version,
+    description="Run functional nosetest against installed bloks.",
 )
 
 
 def anyblok_createdb():
     """Create a database and install blok from config"""
     load_init_function_from_entry_points()
-    Configuration.load('createdb')
+    Configuration.load("createdb")
     configuration_post_load()
     BlokManager.load()
     db_name = get_db_name()
 
-    db_template_name = Configuration.get('db_template_name', None)
+    db_template_name = Configuration.get("db_template_name", None)
     url = get_url(db_name=db_name)
     create_database(url, template=db_template_name)
     anyblok_registry = RegistryManager.get(db_name)
@@ -104,13 +111,14 @@ def anyblok_createdb():
         return
 
     anyblok_registry.System.Parameter.set(
-        "with-demo", Configuration.get('with_demo', False))
+        "with-demo", Configuration.get("with_demo", False)
+    )
 
-    if Configuration.get('install_all_bloks'):
-        bloks = anyblok_registry.System.Blok.list_by_state('uninstalled')
+    if Configuration.get("install_all_bloks"):
+        bloks = anyblok_registry.System.Blok.list_by_state("uninstalled")
     else:
-        install_bloks = Configuration.get('install_bloks') or []
-        iou_bloks = Configuration.get('install_or_update_bloks') or []
+        install_bloks = Configuration.get("install_bloks") or []
+        iou_bloks = Configuration.get("install_or_update_bloks") or []
         bloks = list(set(install_bloks + iou_bloks))
 
     anyblok_registry.upgrade(install=bloks)
@@ -120,124 +128,128 @@ def anyblok_createdb():
 
 def anyblok_updatedb():
     """Update an existing database"""
-    anyblok_registry = anyblok.start('updatedb', loadwithoutmigration=True)
+    anyblok_registry = anyblok.start("updatedb", loadwithoutmigration=True)
 
-    installed_bloks = anyblok_registry.System.Blok.list_by_state('installed')
-    toupdate_bloks = anyblok_registry.System.Blok.list_by_state('toupdate')
+    installed_bloks = anyblok_registry.System.Blok.list_by_state("installed")
+    toupdate_bloks = anyblok_registry.System.Blok.list_by_state("toupdate")
     required_install_bloks = []
     required_update_bloks = []
-    for blok in (Configuration.get('install_or_update_bloks') or []):
+    for blok in Configuration.get("install_or_update_bloks") or []:
         if blok in installed_bloks:
             required_update_bloks.append(blok)
         elif blok not in toupdate_bloks:
             required_install_bloks.append(blok)
 
-    if Configuration.get('install_all_bloks'):
+    if Configuration.get("install_all_bloks"):
         install_bloks = anyblok_registry.System.Blok.list_by_state(
-            'uninstalled')
+            "uninstalled"
+        )
     else:
-        install_bloks = Configuration.get('install_bloks') or []
+        install_bloks = Configuration.get("install_bloks") or []
         install_bloks = list(set(install_bloks + required_install_bloks))
 
-    if Configuration.get('update_all_bloks'):
-        update_bloks = anyblok_registry.System.Blok.list_by_state('installed')
+    if Configuration.get("update_all_bloks"):
+        update_bloks = anyblok_registry.System.Blok.list_by_state("installed")
     else:
-        update_bloks = Configuration.get('update_bloks') or []
+        update_bloks = Configuration.get("update_bloks") or []
         update_bloks = list(set(update_bloks + required_update_bloks))
 
-    uninstall_bloks = Configuration.get('uninstall_bloks')
+    uninstall_bloks = Configuration.get("uninstall_bloks")
 
     if anyblok_registry:
         anyblok_registry.update_blok_list()  # case, new blok added
-        anyblok_registry.upgrade(install=install_bloks, update=update_bloks,
-                                 uninstall=uninstall_bloks)
+        anyblok_registry.upgrade(
+            install=install_bloks,
+            update=update_bloks,
+            uninstall=uninstall_bloks,
+        )
         anyblok_registry.commit()
         anyblok_registry.close()
 
 
 class RegistryWrapper:
-
     def __init__(self, anyblok_registry):
         self.anyblok_registry = anyblok_registry
 
     def __getattr__(self, key, **kwargs):
-        logger.warning(
-            'registry in local is déprécated, use anyblok_registry')
+        logger.warning("registry in local is déprécated, use anyblok_registry")
         return getattr(self.anyblok_registry, key, **kwargs)
 
 
 def anyblok_interpreter():
-    """Execute a script or open an interpreter
-    """
-    anyblok_registry = anyblok.start('interpreter')
+    """Execute a script or open an interpreter"""
+    anyblok_registry = anyblok.start("interpreter")
     if anyblok_registry:
         anyblok_registry.commit()
         registry = RegistryWrapper(anyblok_registry)
-        python_script = Configuration.get('python_script')
+        python_script = Configuration.get("python_script")
         if python_script:
             with open(python_script, "r") as fh:
                 exec(fh.read(), None, locals())
         else:
             try:
                 from IPython import embed
+
                 embed()
             except ImportError:
                 import code
+
                 code.interact(local=locals())
 
 
 def anyblok2doc():
-    """Return auto documentation for the registry
-    """
-    anyblok_registry = anyblok.start('autodoc')
+    """Return auto documentation for the registry"""
+    anyblok_registry = anyblok.start("autodoc")
     if anyblok_registry:
         anyblok_registry.commit()
         doc = anyblok_registry.Documentation()
         doc.auto_doc()
-        if Configuration.get('doc_format') == 'RST':
-            with open(Configuration.get('doc_output'), 'w') as fp:
+        if Configuration.get("doc_format") == "RST":
+            with open(Configuration.get("doc_output"), "w") as fp:
                 doc.toRST(fp)
-        elif Configuration.get('doc_format') == 'UML':
-            format_ = Configuration.get('schema_format')
-            name_ = Configuration.get('schema_output')
+        elif Configuration.get("doc_format") == "UML":
+            format_ = Configuration.get("schema_format")
+            name_ = Configuration.get("schema_output")
             dot = ModelSchema(name_, format=format_)
             doc.toUML(dot)
             dot.save()
-        elif Configuration.get('doc_format') == 'SQL':
-            format_ = Configuration.get('schema_format')
-            name_ = Configuration.get('schema_output')
+        elif Configuration.get("doc_format") == "SQL":
+            format_ = Configuration.get("schema_format")
+            name_ = Configuration.get("schema_output")
             dot = SQLSchema(name_, format=format_)
             doc.toSQL(dot)
             dot.save()
 
 
 def anyblok_nose():
-    """Run nose unit test after giving it the registry
-    """
-    warnings.simplefilter('default')
+    """Run nose unit test after giving it the registry"""
+    warnings.simplefilter("default")
     warnings.warn(
         "This script is deprecated and will be removed soon. "
         "The Nose test machinery has been removed from the framework in order "
         "to be replaced with Pytest. "
         "If you need to run your tests with nose, install the Nose package.",
-        DeprecationWarning, stacklevel=2)
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     try:
         from nose import main
     except ImportError:
         logger.error('"Nosetest" is not installed, try: pip install nose')
 
-    anyblok_registry = anyblok.start('nose', useseparator=True, unittest=True)
+    anyblok_registry = anyblok.start("nose", useseparator=True, unittest=True)
 
     if anyblok_registry:
         installed_bloks = anyblok_registry.System.Blok.list_by_state(
-            "installed")
-        selected_bloks = return_list(
-            Configuration.get('selected_bloks')) or installed_bloks
+            "installed"
+        )
+        selected_bloks = (
+            return_list(Configuration.get("selected_bloks")) or installed_bloks
+        )
 
-        unwanted_bloks = return_list(
-            Configuration.get('unwanted_bloks')) or []
-        unwanted_bloks.extend(['anyblok-core', 'anyblok-test', 'model_authz'])
+        unwanted_bloks = return_list(Configuration.get("unwanted_bloks")) or []
+        unwanted_bloks.extend(["anyblok-core", "anyblok-test", "model_authz"])
 
         defaultTest = []
         for blok in installed_bloks:
@@ -246,8 +258,8 @@ def anyblok_nose():
 
             startpath = BlokManager.getPath(blok)
             for root, dirs, _ in walk(startpath):
-                if 'tests' in dirs:
-                    defaultTest.append(join(root, 'tests'))
+                if "tests" in dirs:
+                    defaultTest.append(join(root, "tests"))
 
         anyblok_registry.close()  # free the registry to force create it again
 

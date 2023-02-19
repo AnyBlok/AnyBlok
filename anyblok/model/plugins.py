@@ -5,23 +5,23 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from pkg_resources import iter_entry_points
 from logging import getLogger
+
+from pkg_resources import iter_entry_points
 
 logger = getLogger(__name__)
 
 
 def get_model_plugins(registry):
     res = []
-    for i in iter_entry_points('anyblok.model.plugin'):
-        logger.info('AnyBlok Load model plugin: %r' % i)
+    for i in iter_entry_points("anyblok.model.plugin"):
+        logger.info("AnyBlok Load model plugin: %r" % i)
         res.append(i.load()(registry))
 
     return res
 
 
 class ModelPluginBase:
-
     def __init__(self, registry):
         self.registry = registry
 

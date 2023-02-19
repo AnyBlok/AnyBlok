@@ -13,8 +13,10 @@ class mockblok(Blok):
     @classmethod
     def reload_declaration_module(cls, reload):
         from . import mockfile
+
         reload(mockfile)
         from . import mockpackage
+
         reload(mockpackage)
         reload(mockpackage.mockfile1)
         reload(mockpackage.mockfile2)

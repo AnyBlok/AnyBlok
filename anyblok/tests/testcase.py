@@ -9,8 +9,14 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 
 from ..testing import (  # noqa
-    TestCase, DBTestCase, BlokTestCase, SharedDataTestCase, LogCapture,
-    skip_unless_bloks_installed, sgdb_in, load_configuration)
-
+    BlokTestCase,
+    DBTestCase,
+    LogCapture,
+    SharedDataTestCase,
+    TestCase,
+    load_configuration,
+    sgdb_in,
+    skip_unless_bloks_installed,
+)
 
 load_configuration()

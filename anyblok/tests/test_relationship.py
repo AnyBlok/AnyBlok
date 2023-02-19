@@ -6,13 +6,18 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from anyblok.field import FieldException
-from anyblok.relationship import RelationShip, RelationShipList
+
 from anyblok import Declarations
 from anyblok.column import Integer
-from anyblok.relationship import One2Many, Many2One
-from .conftest import init_registry_with_bloks
+from anyblok.field import FieldException
+from anyblok.relationship import (
+    Many2One,
+    One2Many,
+    RelationShip,
+    RelationShipList,
+)
 
+from .conftest import init_registry_with_bloks
 
 register = Declarations.register
 Model = Declarations.Model
@@ -23,17 +28,15 @@ class OneRelationShip(RelationShip):
 
 
 class OneModel:
-    __tablename__ = 'test'
-    __registry_name__ = 'One.Model'
+    __tablename__ = "test"
+    __registry_name__ = "One.Model"
 
 
 class MockRegistry:
-
     InstrumentedList = []
 
 
 class TestRelationShip:
-
     def test_forbid_instance(self):
         with pytest.raises(FieldException):
             RelationShip(model=OneModel)
@@ -53,7 +56,6 @@ class List(RelationShipList, list):
 
 
 class TestRelationShipList:
-
     def test_append(self):
         list_ = List()
         list_.append(1)
@@ -96,40 +98,31 @@ class TestRelationShipList:
 
 
 def multi_parallel_foreign_key_with_definition():
-
     @register(Model)
     class Address:
-
         id = Integer(primary_key=True)
 
     @register(Model)
     class Person:
-
         id = Integer(primary_key=True)
-        address_1_id = Integer(foreign_key=Model.Address.use('id'))
-        address_2_id = Integer(foreign_key=Model.Address.use('id'))
-        address_1 = Many2One(model=Model.Address,
-                             column_names=['address_1_id'])
-        address_2 = Many2One(model=Model.Address,
-                             column_names=['address_2_id'])
+        address_1_id = Integer(foreign_key=Model.Address.use("id"))
+        address_2_id = Integer(foreign_key=Model.Address.use("id"))
+        address_1 = Many2One(model=Model.Address, column_names=["address_1_id"])
+        address_2 = Many2One(model=Model.Address, column_names=["address_2_id"])
 
     @register(Model)  # noqa
     class Address:
-
         persons = One2Many(model=Model.Person)
 
 
 def multi_parallel_foreign_key_auto_detect():
-
     @register(Model)
     class Address:
-
         id = Integer(primary_key=True)
-        persons = One2Many(model='Model.Person')
+        persons = One2Many(model="Model.Person")
 
     @register(Model)
     class Person:
-
         id = Integer(primary_key=True)
         address_1 = Many2One(model=Model.Address)
         address_2 = Many2One(model=Model.Address)
@@ -140,17 +133,15 @@ def multi_parallel_foreign_key_auto_detect():
     params=[
         multi_parallel_foreign_key_with_definition,
         multi_parallel_foreign_key_auto_detect,
-    ]
+    ],
 )
 def registry_relationship_multiple_foreign_keys(request, bloks_loaded):
-    registry = init_registry_with_bloks(
-        [], request.param)
+    registry = init_registry_with_bloks([], request.param)
     request.addfinalizer(registry.close)
     return registry
 
 
 class TestComplexeRelationShipCase:
-
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_relationship_multiple_foreign_keys):
         transaction = registry_relationship_multiple_foreign_keys.begin_nested()
@@ -160,11 +151,11 @@ class TestComplexeRelationShipCase:
     def test_with_multi_parallel_foreign_key_with_definition(
         self, registry_relationship_multiple_foreign_keys
     ):
-
         registry = registry_relationship_multiple_foreign_keys
         address_1 = registry.Address.insert()
         address_2 = registry.Address.insert()
         person = registry.Person.insert(
-            address_1=address_1, address_2=address_2)
+            address_1=address_1, address_2=address_2
+        )
         assert address_1.persons == [person]
         assert address_2.persons == [person]

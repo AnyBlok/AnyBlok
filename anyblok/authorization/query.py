@@ -15,6 +15,7 @@ class QueryWithNoResults:
     be any result. This can happen for instance if the policy is about the
     model, instead of individual records.
     """
+
     def count(self):
         return 0
 
@@ -45,7 +46,8 @@ class PostFilteredQuery:
         if self.postfilters:
             # TODO add policy information (needs to change __init__)
             raise RuntimeError(  # pragma: no cover
-                "Cannot apply count to a permission postfiltered query")
+                "Cannot apply count to a permission postfiltered query"
+            )
         return self.query.count()
 
     def filter_one(self, result):  # pragma: no cover

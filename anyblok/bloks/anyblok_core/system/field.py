@@ -9,7 +9,6 @@ from anyblok import Declarations
 from anyblok.column import String
 from anyblok.schema import ForeignKeyConstraint
 
-
 register = Declarations.register
 System = Declarations.Model.System
 Mixin = Declarations.Mixin
@@ -17,7 +16,6 @@ Mixin = Declarations.Mixin
 
 @register(System)  # noqa
 class Field:
-
     name = String(primary_key=True)
     code = String(nullable=True)
     model = String(primary_key=True)
@@ -31,9 +29,11 @@ class Field:
         table_args = super(Field, cls).define_table_args()
         if cls.__registry_name__ != System.Field.__registry_name__:
             F = cls.anyblok.System.Field
-            return table_args + (ForeignKeyConstraint([cls.name, cls.model],
-                                                      [F.name, F.model],
-                                                      ondelete="CASCADE"),)
+            return table_args + (
+                ForeignKeyConstraint(
+                    [cls.name, cls.model], [F.name, F.model], ondelete="CASCADE"
+                ),
+            )
 
         return table_args
 
@@ -41,14 +41,18 @@ class Field:
     def define_mapper_args(cls):
         mapper_args = super(Field, cls).define_mapper_args()
         if cls.__registry_name__ == System.Field.__registry_name__:
-            mapper_args.update({
-                'polymorphic_identity': cls.__registry_name__,
-                'polymorphic_on': cls.entity_type,
-            })
+            mapper_args.update(
+                {
+                    "polymorphic_identity": cls.__registry_name__,
+                    "polymorphic_on": cls.entity_type,
+                }
+            )
         else:
-            mapper_args.update({
-                'polymorphic_identity': cls.__registry_name__,
-            })
+            mapper_args.update(
+                {
+                    "polymorphic_identity": cls.__registry_name__,
+                }
+            )
         return mapper_args
 
     @classmethod
@@ -57,12 +61,12 @@ class Field:
 
     def _description(self):
         res = {
-            'id': self.name,
-            'label': self.label,
-            'type': self.ftype,
-            'nullable': True,
-            'primary_key': False,
-            'model': None,
+            "id": self.name,
+            "label": self.label,
+            "type": self.ftype,
+            "nullable": True,
+            "primary_key": False,
+            "model": None,
         }
         c = self.anyblok.loaded_namespaces_first_step[self.model][self.name]
         c.update_description(self.anyblok, self.model, res)
@@ -70,7 +74,7 @@ class Field:
 
     @classmethod
     def add_field(cls, rname, label, model, table, ftype):
-        """ Insert a field definition
+        """Insert a field definition
 
         :param rname: name of the field
         :param label: label of the field
@@ -78,12 +82,17 @@ class Field:
         :param table: name of the table of the model
         :param ftype: type of the AnyBlok Field
         """
-        cls.insert(code=table + '.' + rname, model=model, name=rname,
-                   label=label, ftype=ftype)
+        cls.insert(
+            code=table + "." + rname,
+            model=model,
+            name=rname,
+            label=label,
+            ftype=ftype,
+        )
 
     @classmethod
     def alter_field(cls, field, label, ftype):
-        """ Update an existing field
+        """Update an existing field
 
         :param field: instance of the Field model to update
         :param label: label of the field

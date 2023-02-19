@@ -10,17 +10,17 @@ from inspect import ismethod
 
 
 class EnvironmentException(AttributeError):
-    """ Exception for the Environment """
+    """Exception for the Environment"""
 
 
 class EnvironmentManager:
-    """ Manage the Environment for an application """
+    """Manage the Environment for an application"""
 
     environment = None
 
     @classmethod
     def define_environment_cls(cls, Environment):
-        """ Define the class used for the environment
+        """Define the class used for the environment
 
         :param Environment: class of environment
         :exception: EnvironmentException
@@ -41,15 +41,15 @@ class EnvironmentManager:
 
             raise EnvironmentException("%r must be a class method" % m)
 
-        check_classmethod('scoped_function_for_session', acceptNone=True)
-        check_classmethod('setter')
-        check_classmethod('getter')
+        check_classmethod("scoped_function_for_session", acceptNone=True)
+        check_classmethod("setter")
+        check_classmethod("getter")
 
         cls.environment = Environment
 
     @classmethod
     def set(cls, key, value):
-        """ Save the value of the key in the environment
+        """Save the value of the key in the environment
 
         :param key: the key of the value to save
         :param value: the value to save
@@ -62,7 +62,7 @@ class EnvironmentManager:
 
     @classmethod
     def get(cls, key, default=None):
-        """ Load the value of the key in the environment
+        """Load the value of the key in the environment
 
         :param key: the key of the value to load
         :param default: return this value if not value loaded for the key
@@ -76,12 +76,12 @@ class EnvironmentManager:
 
     @classmethod
     def scoped_function_for_session(cls):
-        """ Save the value of the key in the environment """
+        """Save the value of the key in the environment"""
         return cls.environment.scoped_function_for_session
 
 
 class ThreadEnvironment:
-    """ Use the thread, to get the environment """
+    """Use the thread, to get the environment"""
 
     scoped_function_for_session = None
     """ No scoped function here because for none value sqlalchemy already uses
@@ -91,7 +91,7 @@ class ThreadEnvironment:
 
     @classmethod
     def setter(cls, key, value):
-        """ Save the value of the key in the environment
+        """Save the value of the key in the environment
 
         :param key: the key of the value to save
         :param value: the value to save
@@ -103,7 +103,7 @@ class ThreadEnvironment:
 
     @classmethod
     def getter(cls, key, default):
-        """ Get the value of the key in the environment
+        """Get the value of the key in the environment
 
         :param key: the key of the value to retrieve
         :param default: return this value if no value loaded for the key

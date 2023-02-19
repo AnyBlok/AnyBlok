@@ -8,6 +8,5 @@
 from anyblok import Declarations
 from anyblok.authorization.rule.modelaccess import ModelAccessRule
 
-
 # Normally, this blok should be part of the edge
 Declarations.AuthorizationBinding(Declarations.Model.Test2, ModelAccessRule())

@@ -5,24 +5,23 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.registry import RegistryManager
 from anyblok import Declarations
+from anyblok.registry import RegistryManager
 
 
 class MixinType:
-
     @classmethod
     def register(cls, parent, name, cls_, **kwargs):
-        """ add new sub registry in the registry
+        """add new sub registry in the registry
 
         :param parent: Existing global registry
         :param name: Name of the new registry to add it
         :param cls_: Class Interface to add in registry
         """
-        _registryname = parent.__registry_name__ + '.' + name
+        _registryname = parent.__registry_name__ + "." + name
 
         if not hasattr(parent, name):
-            kwargs['__registry_name__'] = _registryname
+            kwargs["__registry_name__"] = _registryname
             ns = type(name, tuple(), kwargs)
             setattr(parent, name, ns)
 
@@ -30,11 +29,12 @@ class MixinType:
             return  # pragma: no cover
 
         RegistryManager.add_entry_in_register(
-            cls.__name__, _registryname, cls_, **kwargs)
+            cls.__name__, _registryname, cls_, **kwargs
+        )
 
     @classmethod
     def unregister(cls, entry, cls_):
-        """ Remove the Interface in the registry
+        """Remove the Interface in the registry
 
         :param entry: entry declaration of the model where the ``cls_``
             must be removed
@@ -45,7 +45,7 @@ class MixinType:
 
 @Declarations.add_declaration_type(isAnEntry=True)
 class Mixin(MixinType):
-    """ The Mixin class are used to define a behaviours on models:
+    """The Mixin class are used to define a behaviours on models:
 
     * Add new mixin class::
 

@@ -1,5 +1,5 @@
 name: Tests framework for MySQL
-on: 
+on:
   push:
     paths-ignore:
       - 'docs/**'

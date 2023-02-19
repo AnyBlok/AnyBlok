@@ -9,7 +9,7 @@ from anyblok.blok import Blok
 
 
 class TestBlok(Blok):
-    version = '1.0.0'
+    version = "1.0.0"
 
     @classmethod
     def import_declaration_module(cls):
@@ -18,4 +18,5 @@ class TestBlok(Blok):
     @classmethod
     def reload_declaration_module(cls, reload):
         from . import declarations
+
         reload(declarations)

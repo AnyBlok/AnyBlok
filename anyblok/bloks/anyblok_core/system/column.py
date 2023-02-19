@@ -6,9 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+from anyblok.column import Boolean, String
 from anyblok.common import anyblok_column_prefix
-from anyblok.column import String, Boolean
-
 
 register = Declarations.register
 System = Declarations.Model.System
@@ -17,7 +16,6 @@ Mixin = Declarations.Mixin
 
 @register(System)
 class Column(System.Field):
-
     name = String(primary_key=True)
     model = String(primary_key=True)
     autoincrement = Boolean(label="Auto increment")
@@ -29,13 +27,16 @@ class Column(System.Field):
 
     def _description(self):
         res = super(Column, self)._description()
-        res.update(nullable=self.nullable, primary_key=self.primary_key,
-                   model=self.remote_model)
+        res.update(
+            nullable=self.nullable,
+            primary_key=self.primary_key,
+            model=self.remote_model,
+        )
         return res
 
     @classmethod
     def get_cname(self, field, cname):
-        """ Return the real name of the column
+        """Return the real name of the column
 
         :param field: the instance of the column
         :param cname: Not use here
@@ -45,7 +46,7 @@ class Column(System.Field):
 
     @classmethod
     def add_field(cls, cname, column, model, table, ftype):
-        """ Insert a column definition
+        """Insert a column definition
 
         :param cname: name of the column
         :param column: instance of the column
@@ -61,26 +62,29 @@ class Column(System.Field):
 
         autoincrement = c.autoincrement
 
-        if autoincrement == 'auto':
-            autoincrement = (True
-                             if c.primary_key and ftype == 'Integer'
-                             else False)
+        if autoincrement == "auto":
+            autoincrement = (
+                True if c.primary_key and ftype == "Integer" else False
+            )
 
-        vals = dict(autoincrement=autoincrement,
-                    code=table + '.' + cname,
-                    model=model, name=cname,
-                    foreign_key=c.info.get('foreign_key'),
-                    label=c.info.get('label'),
-                    nullable=c.nullable,
-                    primary_key=c.primary_key,
-                    ftype=ftype,
-                    remote_model=c.info.get('remote_model'),
-                    unique=c.unique)
+        vals = dict(
+            autoincrement=autoincrement,
+            code=table + "." + cname,
+            model=model,
+            name=cname,
+            foreign_key=c.info.get("foreign_key"),
+            label=c.info.get("label"),
+            nullable=c.nullable,
+            primary_key=c.primary_key,
+            ftype=ftype,
+            remote_model=c.info.get("remote_model"),
+            unique=c.unique,
+        )
         cls.insert(**vals)
 
     @classmethod
     def alter_field(cls, column, meta_column, ftype):
-        """ Update an existing column
+        """Update an existing column
 
         :param column: instance of the Column model to update
         :param meta_column: instance of the SqlAlchemy column
@@ -94,19 +98,19 @@ class Column(System.Field):
 
         autoincrement = c.autoincrement
 
-        if autoincrement == 'auto':
-            autoincrement = (True
-                             if c.primary_key and ftype == 'Integer'
-                             else False)
+        if autoincrement == "auto":
+            autoincrement = (
+                True if c.primary_key and ftype == "Integer" else False
+            )
 
         if column.autoincrement != autoincrement:
             column.autoincrement = autoincrement  # pragma: no cover
 
-        for col in ('nullable', 'primary_key', 'unique'):
+        for col in ("nullable", "primary_key", "unique"):
             if getattr(column, col) != getattr(c, col):
                 setattr(column, col, getattr(c, col))  # pragma: no cover
 
-        for col in ('foreign_key', 'label', 'remote_model'):
+        for col in ("foreign_key", "label", "remote_model"):
             if getattr(column, col) != c.info.get(col):
                 setattr(column, col, c.info.get(col))  # pragma: no cover
 

@@ -6,10 +6,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
 from sqlalchemy import Sequence as SQLASequence
-from anyblok.column import Integer, String, Boolean
 
+from anyblok import Declarations
+from anyblok.column import Boolean, Integer, String
 
 register = Declarations.register
 System = Declarations.Model.System
@@ -66,7 +66,7 @@ class Sequence:
         ...
     """
 
-    _cls_seq_name = 'system_sequence_seq_name'
+    _cls_seq_name = "system_sequence_seq_name"
 
     id = Integer(primary_key=True)
     code = String(nullable=False)
@@ -100,27 +100,28 @@ class Sequence:
 
     @classmethod
     def initialize_model(cls):
-        """ Create the sequence to determine name """
+        """Create the sequence to determine name"""
         super(Sequence, cls).initialize_model()
         seq = SQLASequence(cls._cls_seq_name)
         seq.create(cls.anyblok.bind)
 
-        to_create = getattr(cls.anyblok,
-                            '_need_sequence_to_create_if_not_exist', ())
+        to_create = getattr(
+            cls.anyblok, "_need_sequence_to_create_if_not_exist", ()
+        )
         if to_create is None:
             return
 
         for vals in to_create:
-            if cls.query().filter(cls.code == vals['code']).count():
+            if cls.query().filter(cls.code == vals["code"]).count():
                 continue  # pragma: no cover
 
-            formatter = vals.get('formater')
+            formatter = vals.get("formater")
             if formatter is None:
-                del vals['formater']
+                del vals["formater"]
 
-            no_gap = vals.get('no_gap')
+            no_gap = vals.get("no_gap")
             if no_gap is None:
-                del vals['no_gap']
+                del vals["no_gap"]
 
             cls.insert(**vals)
 
@@ -131,15 +132,15 @@ class Sequence:
         :return: suitable field values for insertion of the Model instance
         :rtype: dict
         """
-        seq_name = values.get('seq_name')
-        number = values.setdefault('number', 0)
+        seq_name = values.get("seq_name")
+        number = values.setdefault("number", 0)
         if values.get("no_gap"):
-            values.setdefault('seq_name', values.get("code", "no_gap_seq"))
+            values.setdefault("seq_name", values.get("code", "no_gap_seq"))
         else:
             if seq_name is None:
                 seq_id = cls.anyblok.execute(SQLASequence(cls._cls_seq_name))
-                seq_name = '%s_%d' % (cls.__tablename__, seq_id)
-                values['seq_name'] = seq_name
+                seq_name = "%s_%d" % (cls.__tablename__, seq_id)
+                values["seq_name"] = seq_name
 
             if number:
                 seq = SQLASequence(seq_name, number)
@@ -167,14 +168,18 @@ class Sequence:
         cls = self.__class__
         if self.no_gap:
             nextval = cls.execute_sql_statement(
-                cls.select_sql_statement(cls.number).with_for_update(
-                    nowait=True).where(cls.id == self.id)).scalar()
+                cls.select_sql_statement(cls.number)
+                .with_for_update(nowait=True)
+                .where(cls.id == self.id)
+            ).scalar()
 
             nextval += 1
 
             cls.execute_sql_statement(
-                cls.update_sql_statement().where(
-                    cls.id == self.id).values(number=nextval))
+                cls.update_sql_statement()
+                .where(cls.id == self.id)
+                .values(number=nextval)
+            )
         else:
             nextval = self.anyblok.execute(SQLASequence(self.seq_name))
 

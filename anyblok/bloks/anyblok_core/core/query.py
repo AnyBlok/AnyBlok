@@ -6,20 +6,21 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok import Declarations
-from anyblok.common import anyblok_column_prefix
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import select, func
 from logging import getLogger
 
+from sqlalchemy import func, select
+from sqlalchemy.orm.exc import NoResultFound
+
+from anyblok import Declarations
+from anyblok.common import anyblok_column_prefix
 
 logger = getLogger(__name__)
 
 
 @Declarations.register(Declarations.Core)
 class Query:
-    """ Overload the SqlAlchemy Query
-    """
+    """Overload the SqlAlchemy Query"""
+
     def __init__(self, Model, *elements, sql_statement=None):
         self.Model = Model
         self.elements = elements
@@ -33,7 +34,8 @@ class Query:
         def wrapper(*args, **kwargs):
             statement = sqla_function(*args, **kwargs)
             return self.anyblok.Query(
-                self.Model, *self.elements, sql_statement=statement)
+                self.Model, *self.elements, sql_statement=statement
+            )
 
         return wrapper
 
@@ -55,21 +57,27 @@ class Query:
 
     def delete(self, *args, **kwargs):
         raise NotImplementedError(
-            'You have to use Model.delete_sql_statement()')
+            "You have to use Model.delete_sql_statement()"
+        )
 
     def update(self, *args, **kwargs):
         raise NotImplementedError(
-            'You have to use Model.update_sql_statement()')
+            "You have to use Model.update_sql_statement()"
+        )
 
     def first(self):
         try:
             return self._execute().first()
         except NoResultFound as exc:
-            logger.debug('On Model %r: exc %s: query %s',
-                         self.Model.__registry_name__,
-                         str(exc), str(self))
+            logger.debug(
+                "On Model %r: exc %s: query %s",
+                self.Model.__registry_name__,
+                str(exc),
+                str(self),
+            )
             raise exc.__class__(
-                'On Model %r: %s' % (self.Model.__registry_name__, str(exc)))
+                "On Model %r: %s" % (self.Model.__registry_name__, str(exc))
+            )
 
     def one(self):
         """Overwrite sqlalchemy one() method to improve exception message
@@ -79,18 +87,21 @@ class Query:
         try:
             return self._execute().one()
         except NoResultFound as exc:
-            logger.debug('On Model %r: exc %s: query %s',
-                         self.Model.__registry_name__,
-                         str(exc), str(self))
+            logger.debug(
+                "On Model %r: exc %s: query %s",
+                self.Model.__registry_name__,
+                str(exc),
+                str(self),
+            )
             raise exc.__class__(  # pragma: no cover
-                'On Model %r: %s' % (self.Model.__registry_name__, str(exc)))
+                "On Model %r: %s" % (self.Model.__registry_name__, str(exc))
+            )
 
     def one_or_none(self):
         return self._execute().one_or_none()
 
     def all(self):
-        """ Return an instrumented list of the result of the query
-        """
+        """Return an instrumented list of the result of the query"""
         res = self._execute().all()
         return self.anyblok.InstrumentedList(res)
 
@@ -106,23 +117,30 @@ class Query:
         :returns: a query-like object, with only the returning methods, such
                   as ``all()``, ``count()`` etc. available.
         """
-        return self.anyblok.wrap_query_permission(
-            self, principals, permission)
+        return self.anyblok.wrap_query_permission(self, principals, permission)
 
     def get_field_names_in_column_description(self):
-        field2get = [x['name'] for x in self.column_descriptions
-                     if not hasattr(x['type'], '__table__')]
-        field2get = [(x[len(anyblok_column_prefix):]
-                      if x.startswith(anyblok_column_prefix)
-                      else x, x)
-                     for x in field2get]
+        field2get = [
+            x["name"]
+            for x in self.column_descriptions
+            if not hasattr(x["type"], "__table__")
+        ]
+        field2get = [
+            (
+                x[len(anyblok_column_prefix) :]
+                if x.startswith(anyblok_column_prefix)
+                else x,
+                x,
+            )
+            for x in field2get
+        ]
         return field2get
 
     def dictone(self):
         try:
             val = self.one()
         except NoResultFound as exc:
-            msg = str(exc).replace('one()', 'dictone()')
+            msg = str(exc).replace("one()", "dictone()")
             raise exc.__class__(msg)
 
         field2get = self.get_field_names_in_column_description()
@@ -167,8 +185,11 @@ class Query:
 
         if isinstance(primary_keys, dict):
             primary_keys = {
-                (anyblok_column_prefix + k
-                 if k in self.Model.hybrid_property_columns else k): v
+                (
+                    anyblok_column_prefix + k
+                    if k in self.Model.hybrid_property_columns
+                    else k
+                ): v
                 for k, v in primary_keys.items()
             }
 

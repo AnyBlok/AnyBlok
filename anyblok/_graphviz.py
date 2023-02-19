@@ -12,7 +12,7 @@ from graphviz import Digraph
 class BaseSchema:
     """Common class extended by the type of schema"""
 
-    def __init__(self, name, format='png'):
+    def __init__(self, name, format="png"):
         self.name = name
         self.format = format
         self._nodes = {}
@@ -34,32 +34,36 @@ class BaseSchema:
         cls_2 = cls_2 if isinstance(cls_2, str) else cls_2.name
         self.count += 1
         self._edges["%s_%s_2_%d" % (cls_1, cls_2, self.count)] = {
-            'from': cls_1,
-            'to': cls_2,
-            'attr': {} if attr is None else attr
+            "from": cls_1,
+            "to": cls_2,
+            "attr": {} if attr is None else attr,
         }
 
     def render(self):
-        """Call graphviz to create the schema """
-        self.dot = Digraph(name=self.name, format=self.format,
-                           node_attr={'shape': 'record',
-                                      'style': 'filled',
-                                      'fillcolor': 'gray95'})
+        """Call graphviz to create the schema"""
+        self.dot = Digraph(
+            name=self.name,
+            format=self.format,
+            node_attr={
+                "shape": "record",
+                "style": "filled",
+                "fillcolor": "gray95",
+            },
+        )
         for _, cls in self._nodes.items():
             cls.render(self.dot)
 
         for _, edge in self._edges.items():
-            self.dot.edge(edge['from'], edge['to'],
-                          _attributes=edge['attr'])
+            self.dot.edge(edge["from"], edge["to"], _attributes=edge["attr"])
 
     def save(self):
-        """Render and create the output file """
+        """Render and create the output file"""
         self.render()
         self.dot.render(self.name)
 
 
 class TableSchema:
-    """Describe one table """
+    """Describe one table"""
 
     def __init__(self, name, parent, islabel=False):
         self.name = name
@@ -68,11 +72,11 @@ class TableSchema:
         self.column = []
 
     def render(self, dot):
-        """Call graphviz to create the schema """
+        """Call graphviz to create the schema"""
         if self.islabel:
             label = "{%s}" % self.name
         else:
-            column = '\\n'.join(self.column)
+            column = "\\n".join(self.column)
             label = "{%s|%s}" % (self.name, column)
 
         dot.node(self.name, label=label)
@@ -84,8 +88,9 @@ class TableSchema:
         :param type_: the type of the column
         :param primary_key: if True, 'PK' argument will be added
         """
-        self.column.append("%s%s (%s)" % (
-            'PK ' if primary_key else '', name, type_))
+        self.column.append(
+            "%s%s (%s)" % ("PK " if primary_key else "", name, type_)
+        )
 
     def add_foreign_key(self, node, label=None, nullable=True):
         """Add a new foreign key
@@ -143,16 +148,20 @@ class SQLSchema(BaseSchema):
 
     def add_foreign_key(self, cls_1, cls_2, label=None, nullable=False):
         multiplicity = "0..1" if nullable else "1"
-        hlabel = '%s (%s)' % (label, multiplicity) if label else multiplicity
+        hlabel = "%s (%s)" % (label, multiplicity) if label else multiplicity
 
-        self.add_edge(cls_1, cls_2, attr={
-            'arrowhead': "none",
-            'headlabel': hlabel,
-        })
+        self.add_edge(
+            cls_1,
+            cls_2,
+            attr={
+                "arrowhead": "none",
+                "headlabel": hlabel,
+            },
+        )
 
 
 class ClassSchema:
-    """Used to display a class """
+    """Used to display a class"""
 
     def __init__(self, name, parent, islabel=False):
         self.name = name
@@ -169,9 +178,14 @@ class ClassSchema:
         """
         self.parent.add_extend(self, node)
 
-    def strong_aggregate(self, node,
-                         label_from=None, multiplicity_from=None,
-                         label_to=None, multiplicity_to=None):
+    def strong_aggregate(
+        self,
+        node,
+        label_from=None,
+        multiplicity_from=None,
+        label_to=None,
+        multiplicity_to=None,
+    ):
         """Add an edge with strong aggregate shape to the node
 
         :param node: node (string or object)
@@ -180,13 +194,18 @@ class ClassSchema:
         :param label_to: the name of the attribute
         :param multiplicity_to: multiplicity of the attribute
         """
-        self.parent.add_strong_aggregation(self, node, label_from,
-                                           multiplicity_from, label_to,
-                                           multiplicity_to)
+        self.parent.add_strong_aggregation(
+            self, node, label_from, multiplicity_from, label_to, multiplicity_to
+        )
 
-    def aggregate(self, node,
-                  label_from=None, multiplicity_from=None,
-                  label_to=None, multiplicity_to=None):
+    def aggregate(
+        self,
+        node,
+        label_from=None,
+        multiplicity_from=None,
+        label_to=None,
+        multiplicity_to=None,
+    ):
         """Add an edge with aggregate shape to the node
 
         :param node: node (string or object)
@@ -195,12 +214,18 @@ class ClassSchema:
         :param label_to: the name of the attribute
         :param multiplicity_to: multiplicity of the attribute
         """
-        self.parent.add_aggregation(self, node, label_from, multiplicity_from,
-                                    label_to, multiplicity_to)
+        self.parent.add_aggregation(
+            self, node, label_from, multiplicity_from, label_to, multiplicity_to
+        )
 
-    def associate(self, node,
-                  label_from=None, multiplicity_from=None,
-                  label_to=None, multiplicity_to=None):
+    def associate(
+        self,
+        node,
+        label_from=None,
+        multiplicity_from=None,
+        label_to=None,
+        multiplicity_to=None,
+    ):
         """Add an edge with associate shape to the node
 
         :param node: node (string or object)
@@ -209,8 +234,9 @@ class ClassSchema:
         :param label_to: the name of the attribute
         :param multiplicity_to: multiplicity of the attribute
         """
-        self.parent.add_association(self, node, label_from, multiplicity_from,
-                                    label_to, multiplicity_to)
+        self.parent.add_association(
+            self, node, label_from, multiplicity_from, label_to, multiplicity_to
+        )
 
     def add_property(self, name):
         """Add a property to the class
@@ -234,13 +260,13 @@ class ClassSchema:
         self.method.append(name)
 
     def render(self, dot):
-        """Call graphviz to create the schema """
+        """Call graphviz to create the schema"""
         if self.islabel:
             label = "{%s}" % self.name
         else:
-            properties = '\\n'.join(self.properties)
-            column = '\\n'.join(self.column)
-            method = '\\n'.join('%s()' % x for x in self.method)
+            properties = "\\n".join(self.properties)
+            column = "\\n".join(self.column)
+            method = "\\n".join("%s()" % x for x in self.method)
             label = "{%s|%s|%s|%s}" % (self.name, properties, column, method)
 
         dot.node(self.name, label=label)
@@ -293,14 +319,24 @@ class ModelSchema(BaseSchema):
         :param cls_1: the name of the class 1
         :param cls_2: the name of the class 2
         """
-        self.add_edge(cls_1, cls_2, attr={
-            'dir': 'back',
-            'arrowtail': 'empty',
-        })
+        self.add_edge(
+            cls_1,
+            cls_2,
+            attr={
+                "dir": "back",
+                "arrowtail": "empty",
+            },
+        )
 
-    def add_aggregation(self, cls_1, cls_2,
-                        label_from=None, multiplicity_from=None,
-                        label_to=None, multiplicity_to=None):
+    def add_aggregation(
+        self,
+        cls_1,
+        cls_2,
+        label_from=None,
+        multiplicity_from=None,
+        label_to=None,
+        multiplicity_to=None,
+    ):
         """Add edge for aggregation
 
         :param cls_1: the name of the class 1
@@ -312,21 +348,32 @@ class ModelSchema(BaseSchema):
         :return:
         """
         label_from, label_to = self.format_label(
-            label_from, multiplicity_from, label_to, multiplicity_to)
+            label_from, multiplicity_from, label_to, multiplicity_to
+        )
 
         if not cls_1 or not cls_2:
             return  # pragma: no cover
 
-        self.add_edge(cls_1, cls_2, attr={
-            'dir': 'back',
-            'arrowtail': 'odiamond',
-            'headlabel': label_from,
-            'taillabel': label_to,
-        })
+        self.add_edge(
+            cls_1,
+            cls_2,
+            attr={
+                "dir": "back",
+                "arrowtail": "odiamond",
+                "headlabel": label_from,
+                "taillabel": label_to,
+            },
+        )
 
-    def add_strong_aggregation(self, cls_1, cls_2,
-                               label_from=None, multiplicity_from=None,
-                               label_to=None, multiplicity_to=None):
+    def add_strong_aggregation(
+        self,
+        cls_1,
+        cls_2,
+        label_from=None,
+        multiplicity_from=None,
+        label_to=None,
+        multiplicity_to=None,
+    ):
         """Add edge for strong aggregation
 
         :param cls_1:
@@ -338,21 +385,25 @@ class ModelSchema(BaseSchema):
         :return:
         """
         label_from, label_to = self.format_label(
-            label_from, multiplicity_from, label_to, multiplicity_to)
-        self.add_edge(cls_1, cls_2, attr={
-            'dir': 'back',
-            'arrowtail': 'diamond',
-            'headlabel': label_from,
-            'taillabel': label_to,
-        })
+            label_from, multiplicity_from, label_to, multiplicity_to
+        )
+        self.add_edge(
+            cls_1,
+            cls_2,
+            attr={
+                "dir": "back",
+                "arrowtail": "diamond",
+                "headlabel": label_from,
+                "taillabel": label_to,
+            },
+        )
 
     @staticmethod
-    def format_label(label_from, multiplicity_from, label_to,
-                     multiplicity_to):
+    def format_label(label_from, multiplicity_from, label_to, multiplicity_to):
         def _format_label(label, multiplicity):
             if label:
                 if multiplicity:
-                    return '%s (%s)' % (label, multiplicity)
+                    return "%s (%s)" % (label, multiplicity)
 
                 return label
             else:
@@ -366,13 +417,24 @@ class ModelSchema(BaseSchema):
             _format_label(label_to, multiplicity_to),
         )
 
-    def add_association(self, cls_1, cls_2,
-                        label_from=None, multiplicity_from=None,
-                        label_to=None, multiplicity_to=None):
+    def add_association(
+        self,
+        cls_1,
+        cls_2,
+        label_from=None,
+        multiplicity_from=None,
+        label_to=None,
+        multiplicity_to=None,
+    ):
         label_from, label_to = self.format_label(
-            label_from, multiplicity_from, label_to, multiplicity_to)
-        self.add_edge(cls_1, cls_2, attr={
-            'arrowhead': "none",
-            'headlabel': label_from,
-            'taillabel': label_to,
-        })
+            label_from, multiplicity_from, label_to, multiplicity_to
+        )
+        self.add_edge(
+            cls_1,
+            cls_2,
+            attr={
+                "arrowhead": "none",
+                "headlabel": label_from,
+                "taillabel": label_to,
+            },
+        )

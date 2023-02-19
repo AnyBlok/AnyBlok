@@ -5,10 +5,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from anyblok.column import Integer, String
 from anyblok.declarations import Declarations
-from anyblok.column import String, Integer
-from ..exceptions import CacheException
 
+from ..exceptions import CacheException
 
 register = Declarations.register
 System = Declarations.Model.System
@@ -16,7 +16,6 @@ System = Declarations.Model.System
 
 @register(System)
 class Cache:
-
     last_cache_id = None
     lrus = {}
 
@@ -26,9 +25,8 @@ class Cache:
 
     @classmethod
     def get_last_id(cls):
-        """ Return the last primary key ``id`` value
-        """
-        res = cls.query('id').order_by(cls.id.desc()).limit(1).first()
+        """Return the last primary key ``id`` value"""
+        res = cls.query("id").order_by(cls.id.desc()).limit(1).first()
         if res:
             return res[0]
 
@@ -36,8 +34,7 @@ class Cache:
 
     @classmethod
     def initialize_model(cls):
-        """ Initialize the last_cache_id known
-        """
+        """Initialize the last_cache_id known"""
         super(Cache, cls).initialize_model()
         cls.last_cache_id = cls.get_last_id()
 
@@ -55,7 +52,7 @@ class Cache:
 
     @classmethod
     def invalidate(cls, registry_name, method):
-        """ Call the invalidation for a specific method cached on a model
+        """Call the invalidation for a specific method cached on a model
 
         :param registry_name: namespace of the model
         :param method: name of the method on the model
@@ -69,22 +66,21 @@ class Cache:
                     cls.insert(registry_name=registry_name, method=method)
                 else:
                     raise CacheException(  # pragma: no cover
-                        "Unknown cached method %r" % method)
+                        "Unknown cached method %r" % method
+                    )
             else:
-                raise CacheException(
-                    "Unknown cached model %r" % registry_name)
+                raise CacheException("Unknown cached model %r" % registry_name)
 
         if isinstance(registry_name, str):
             insert(registry_name=registry_name, method=method)
-        elif hasattr(registry_name, '__registry_name__'):
-            insert(registry_name=registry_name.__registry_name__,
-                   method=method)
+        elif hasattr(registry_name, "__registry_name__"):
+            insert(registry_name=registry_name.__registry_name__, method=method)
 
         cls.clear_invalidate_cache()
 
     @classmethod
     def detect_invalidation(cls):
-        """ Return True if a new invalidation is found in the table
+        """Return True if a new invalidation is found in the table
 
         :rtype: Boolean
         """
@@ -94,8 +90,7 @@ class Cache:
 
     @classmethod
     def get_invalidation(cls):
-        """ Return the pointer of the method to invalidate
-        """
+        """Return the pointer of the method to invalidate"""
         res = []
         if cls.detect_invalidation():
             caches = cls.anyblok.caches
@@ -108,7 +103,6 @@ class Cache:
 
     @classmethod
     def clear_invalidate_cache(cls):
-        """ Invalidate the cache that needs to be invalidated
-        """
+        """Invalidate the cache that needs to be invalidated"""
         for cache in cls.get_invalidation():
             cache.cache_clear()

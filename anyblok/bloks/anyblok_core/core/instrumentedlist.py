@@ -10,11 +10,10 @@ from anyblok import Declarations
 
 @Declarations.register(Declarations.Core)
 class InstrumentedList:
-    """ class of the return of the query.all() or the relationship list
-    """
+    """class of the return of the query.all() or the relationship list"""
 
     def __getattr__(self, name):
-        if name in ('__emulates__', ):
+        if name in ("__emulates__",):
             return None
 
         def wrapper(*args, **kwargs):
@@ -22,7 +21,7 @@ class InstrumentedList:
 
         if not self:
             return []
-        elif hasattr(getattr(self[0], name), '__call__'):
+        elif hasattr(getattr(self[0], name), "__call__"):
             return wrapper
         else:
             return [getattr(x, name) for x in self]
