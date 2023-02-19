@@ -132,7 +132,9 @@ def define_field_json_related():
 
         id = Integer(primary_key=True)
         properties = Json()
-        name = JsonRelated(json_column='properties', keys=['name'])
+        name = JsonRelated(
+            json_column='properties', keys=['name'], as_type='string',
+        )
 
 
 @pytest.fixture(scope="class")

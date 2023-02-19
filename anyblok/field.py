@@ -88,15 +88,13 @@ class Field:
         fget = self.wrap_getter_column(fieldname)
         fset = self.wrap_setter_column(fieldname)
         fexp = self.wrap_expr_column(fieldname)
-        fuexp = self.wrap_update_expr_column(fieldname)
 
-        for func in (fget, fset, fexp, fuexp):
+        for func in (fget, fset, fexp):
             func.__name__ = fieldname
 
         hybrid = hybrid_property(fget)
         hybrid = hybrid.setter(fset)
         hybrid = hybrid.expression(fexp)
-        hybrid = hybrid.update_expression(fuexp)
         return hybrid
 
     def getter_format_value(self, value):
@@ -125,18 +123,6 @@ class Field:
             return getattr(model_cls, attr_name)
 
         return expr_column
-
-    def wrap_update_expr_column(self, fieldname):
-        """Return a default expr for update the field
-
-        :param fieldname: name of the field
-        """
-        attr_name = anyblok_column_prefix + fieldname
-
-        def uexpr_column(model_cls):
-            return getattr(model_cls, attr_name)
-
-        return uexpr_column
 
     def expire_related_attribute(self, model_self, action_todos):
         for action_todo in action_todos:
