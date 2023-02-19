@@ -119,8 +119,8 @@ class Field:
         """
         attr_name = anyblok_column_prefix + fieldname
 
-        def expr_column(model_self):
-            return getattr(model_self, attr_name)
+        def expr_column(model_cls):
+            return getattr(model_cls, attr_name)
 
         return expr_column
 
@@ -273,11 +273,13 @@ class Function(Field):
 
         @Declarations.register(Declarations.Model)
         class Test:
-            x = Function(fget='fget', fset='fset', fdel='fdel', fexp='fexpr')
+            x = Function(fget='fget', fset='fset', fdel='fdel', fexp='fexpr',
+                         fuexpr='fuexpr')
 
         ..warning::
 
-            fexp must be a classmethod
+            fexpr must be a classmethod
+            fuexpr must be a classmethod
 
     """
 
@@ -311,11 +313,13 @@ class Function(Field):
         fset = wrap('fset')
         fdel = wrap('fdel')
         fexpr = wrap('fexpr')
+        fuexpr = wrap('fuexpr')
 
         hybrid = hybrid_property(fget)
         hybrid = hybrid.setter(fset)
         hybrid = hybrid.deleter(fdel)
         hybrid = hybrid.expression(fexpr)
+        hybrid = hybrid.update_expression(fuexpr)
 
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
@@ -428,8 +432,8 @@ class JsonRelated(Field):
         return fdel
 
     def get_fexpr(self):
-        def fexpr(model_self):
-            entry = getattr(model_self, self.json_column)
+        def fexpr(model_cls):
+            entry = getattr(model_cls, self.json_column)
             for key in self.keys:
                 entry = entry[key]
 
