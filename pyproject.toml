@@ -122,3 +122,10 @@ mssql-bool2bit = "anyblok.plugins:BooleanToBitMsSQL"
 
 [project.entry-points."anyblok.engine.event.mysql"]
 mysql-no-autocommit = "anyblok.event:mysql_no_autocommit"
+
+[tool.isort]
+profile = "black"
+src_paths = ["anyblok", "anyblok_nose"]
+filter_files = true
+line_length = 80
+skip = ["anyblok/__init__.py"]
