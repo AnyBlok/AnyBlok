@@ -1403,9 +1403,11 @@ class MigrationSchema:
                 query = """
                     SELECT count(*)
                     FROM INFORMATION_SCHEMA.SCHEMATA
-                    WHERE SCHEMA_name='%s'
-                """ % self.name
-                return conn.execute(text(query)).fetchone()[0]
+                    WHERE SCHEMA_name=:schema_name
+                """
+                return conn.execute(text(query).bindparams(
+                    schema_name=self.name
+                )).fetchone()[0]
             else:
                 return self.migration.operation.impl.dialect.has_schema(
                     conn, self.name)
