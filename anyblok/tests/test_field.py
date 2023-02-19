@@ -44,7 +44,7 @@ def define_field_function():
         first_name = String()
         last_name = String()
         name = Function(fget='fget', fset='fset', fdel='fdel',
-                        fexpr='fexpr')
+                        fexpr='fexpr', fuexpr='fuexpr')
 
         def fget(self):
             return '{0} {1}'.format(self.first_name, self.last_name)
@@ -58,6 +58,14 @@ def define_field_function():
         @classmethod
         def fexpr(cls):
             return func.concat(cls.first_name, ' ', cls.last_name)
+
+        @classmethod
+        def fuexpr(cls, value):
+            fname, lname = value.split(" ", 1)
+            return [
+                (cls.first_name, fname),
+                (cls.last_name, lname)
+            ]
 
 
 @pytest.fixture(scope="class")
@@ -98,6 +106,17 @@ class TestFieldFunction:
         t = registry.Test.query().filter(
             registry.Test.name == 'Jean-Sebastien SUZANNE').first()
         assert t.name == 'Jean-Sebastien SUZANNE'
+
+    def test_field_function_fuexpr(self, registry_field_function):
+        registry = registry_field_function
+        Test = registry.Test
+        t = Test.insert(first_name='Jean-Sebastien', last_name='SUZANNE')
+        Test.execute_sql_statement(
+            Test.update_sql_statement().values(
+                name='Pierre Verkest').where(Test.id == t.id)
+        )
+        assert t.first_name == 'Pierre'
+        assert t.last_name == 'Verkest'
 
     def test_with_subquery(self, registry_field_function):
         registry = registry_field_function
