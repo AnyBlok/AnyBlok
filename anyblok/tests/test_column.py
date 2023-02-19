@@ -21,7 +21,7 @@ from os import urandom
 from decimal import Decimal as D
 from anyblok.config import Configuration
 from anyblok.testing import tmp_configuration
-from sqlalchemy import Integer as SA_Integer, String as SA_String
+from sqlalchemy import Integer as SA_Integer, String as SA_String, text
 from sqlalchemy.exc import StatementError
 from anyblok import Declarations
 from anyblok.field import FieldException
@@ -340,7 +340,7 @@ class TestColumns:
                                       db_column_name='another_name')
         test = registry.Test.insert(col=1)
         assert test.col == 1
-        res = registry.execute('select id from test where another_name=1')
+        res = registry.execute(text('select id from test where another_name=1'))
         assert res.fetchone()[0] == test.id
         ma = ModelAttribute('Model.Test', 'col')
         assert ma.get_column_name(registry) == 'another_name'
@@ -422,7 +422,8 @@ class TestColumns:
         test = registry.Test.insert(col='col')
         registry.session.commit()
         assert test.col == 'col'
-        res = registry.execute('select col from test where id = %s' % test.id)
+        res = registry.execute(
+            text('select col from test where id = %s' % test.id))
         res = res.fetchall()[0][0]
         assert res != 'col'
         del Configuration.configuration['default_encrypt_key']
@@ -435,7 +436,8 @@ class TestColumns:
         test = registry.Test.insert(col='col')
         registry.session.commit()
         assert test.col == 'col'
-        res = registry.execute('select col from test where id = %s' % test.id)
+        res = registry.execute(
+            text('select col from test where id = %s' % test.id))
         res = res.fetchall()[0][0]
         assert res != 'col'
 
@@ -452,7 +454,8 @@ class TestColumns:
                                       crypt_context={'schemes': ['md5_crypt']})
         test = registry.Test.insert(col='col')
         assert test.col == 'col'
-        assert registry.execute('Select col from test').fetchone()[0] != 'col'
+        assert registry.execute(
+            text('Select col from test')).fetchone()[0] != 'col'
 
     @pytest.mark.skipif(not has_passlib,
                         reason="passlib is not installed")
@@ -1187,7 +1190,8 @@ class TestColumns:
         registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
         test = registry.Test.insert(col='+120012301')
         assert test.col.national == '20012301'
-        getted = registry.execute('Select col from test').fetchone()[0]
+        getted = registry.execute(
+            text('Select col from test')).fetchone()[0]
         assert getted == '+120012301'
 
     @pytest.mark.skipif(not has_phonenumbers,
@@ -1198,7 +1202,8 @@ class TestColumns:
         test.col = '+120012301'
         assert test.col.national == '20012301'
         registry.flush()
-        getted = registry.execute('Select col from test').fetchone()[0]
+        getted = registry.execute(
+            text('Select col from test')).fetchone()[0]
         assert getted == '+120012301'
 
     @pytest.mark.skipif(not has_phonenumbers,
@@ -1208,7 +1213,8 @@ class TestColumns:
         col = PN("+120012301", None)
         test = registry.Test.insert(col=col)
         assert test.col == col
-        getted = registry.execute('Select col from test').fetchone()[0]
+        getted = registry.execute(
+            text('Select col from test')).fetchone()[0]
         assert getted == '+120012301'
 
     @pytest.mark.skipif(not has_phonenumbers,
@@ -1219,7 +1225,8 @@ class TestColumns:
         test.col = PN("+120012301", None)
         assert test.col.national == '20012301'
         registry.flush()
-        getted = registry.execute('Select col from test').fetchone()[0]
+        getted = registry.execute(
+            text('Select col from test')).fetchone()[0]
         assert getted == '+120012301'
 
     @pytest.mark.skipif(not has_phonenumbers,
@@ -1230,7 +1237,8 @@ class TestColumns:
         test.col = ""
         assert test.col == ''
         registry.flush()
-        assert registry.execute('Select col from test').fetchone()[0] == ''
+        assert registry.execute(
+            text('Select col from test')).fetchone()[0] == ''
 
     def test_email_at_setter(self):
         registry = self.init_registry(simple_column, ColumnType=Email)
@@ -1246,7 +1254,8 @@ class TestColumns:
         test = registry.Test.insert(col='FR')
         assert test.col is pycountry.countries.get(alpha_2='FR')
         assert test.col.name == 'France'
-        assert registry.execute('Select col from test').fetchone()[0] == 'FRA'
+        assert registry.execute(
+            text('Select col from test')).fetchone()[0] == 'FRA'
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_obj(self):
@@ -1255,7 +1264,8 @@ class TestColumns:
         test = registry.Test.insert(col=fr)
         assert test.col is pycountry.countries.get(alpha_2='FR')
         assert test.col.name == 'France'
-        assert registry.execute('Select col from test').fetchone()[0] == 'FRA'
+        assert registry.execute(
+            text('Select col from test')).fetchone()[0] == 'FRA'
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_alpha_3(self):
@@ -1264,7 +1274,8 @@ class TestColumns:
         test = registry.Test.insert(col='FRA')
         assert test.col is pycountry.countries.get(alpha_2='FR')
         assert test.col.name == 'France'
-        assert registry.execute('Select col from test').fetchone()[0] == 'FRA'
+        assert registry.execute(
+            text('Select col from test')).fetchone()[0] == 'FRA'
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_object(self):
@@ -1273,7 +1284,8 @@ class TestColumns:
         test = registry.Test.insert(col=fr)
         assert test.col is fr
         assert test.col.name == 'France'
-        assert registry.execute('Select col from test').fetchone()[0] == 'FRA'
+        assert registry.execute(
+            text('Select col from test')).fetchone()[0] == 'FRA'
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_update(self):
@@ -1283,7 +1295,8 @@ class TestColumns:
         registry.flush()
         assert test.col is pycountry.countries.get(alpha_2='FR')
         assert test.col.name == 'France'
-        assert registry.execute('Select col from test').fetchone()[0] == 'FRA'
+        assert registry.execute(
+            text('Select col from test')).fetchone()[0] == 'FRA'
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_update_with_alpha_3(self):
@@ -1294,7 +1307,8 @@ class TestColumns:
         registry.flush()
         assert test.col is pycountry.countries.get(alpha_2='FR')
         assert test.col.name == 'France'
-        assert registry.execute('Select col from test').fetchone()[0] == 'FRA'
+        assert registry.execute(
+            text('Select col from test')).fetchone()[0] == 'FRA'
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_update_with_object(self):
@@ -1305,7 +1319,8 @@ class TestColumns:
         registry.flush()
         assert test.col is fr
         assert test.col.name == 'France'
-        assert registry.execute('Select col from test').fetchone()[0] == 'FRA'
+        assert registry.execute(
+            text('Select col from test')).fetchone()[0] == 'FRA'
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_query_is_with_object(self):
@@ -1334,7 +1349,7 @@ class TestColumns:
     def test_pycoundtry_query_insert_by_wrong_query(self):
         registry = self.init_registry(simple_column, ColumnType=Country)
         with pytest.raises(Exception):
-            registry.execute("insert into test (col) values ('WG2')")
+            registry.execute(text("insert into test (col) values ('WG2')"))
 
     @pytest.mark.skipif(not has_cryptography,
                         reason="cryptography is not installed")
@@ -1349,7 +1364,8 @@ class TestColumns:
         else:
             assert test.col == value
 
-        res = registry.execute('select col from test where id = %s' % test.id)
+        res = registry.execute(
+            text('select col from test where id = %s' % test.id))
         res = res.fetchall()[0][0]
         assert res != test.col
 

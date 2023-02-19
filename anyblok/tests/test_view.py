@@ -44,9 +44,9 @@ def simple_view():
         def sqlalchemy_view_declaration(cls):
             T1 = cls.anyblok.T1
             T2 = cls.anyblok.T2
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T2.val.label('val2')])
+            query = select(T1.code.label('code'),
+                           T1.val.label('val1'),
+                           T2.val.label('val2'))
             return query.where(T1.code == T2.code)
 
 
@@ -127,10 +127,10 @@ def view_with_relationship():
         def sqlalchemy_view_declaration(cls):
             T1 = cls.anyblok.T1
             T2 = cls.anyblok.T2
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T1.rs_id.label('rs_id'),
-                            T2.val.label('val2')])
+            query = select(T1.code.label('code'),
+                           T1.val.label('val1'),
+                           T1.rs_id.label('rs_id'),
+                           T2.val.label('val2'))
             return query.where(T1.code == T2.code)
 
 
@@ -198,19 +198,19 @@ def view_with_relationship_on_self():
             TP = cls.anyblok.T1.aliased()
             T2 = cls.anyblok.T2
             subquery = union(
-                select([
+                select(
                     T1.code.label('code'),
-                    TP.code.label('parent_code')]
+                    TP.code.label('parent_code')
                 ).where(T1.parent_id == TP.id),
-                select([
+                select(
                     T1.code.label('code'),
                     expression.literal_column("null as parent_code")
-                ]).where(T1.parent_id.is_(None))
+                ).where(T1.parent_id.is_(None))
             ).alias()
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T2.val.label('val2'),
-                            subquery.c.parent_code.label('parent_code')])
+            query = select(T1.code.label('code'),
+                           T1.val.label('val1'),
+                           T2.val.label('val2'),
+                           subquery.c.parent_code.label('parent_code'))
             query = query.where(subquery.c.code == T1.code)
             query = query.where(subquery.c.code == T2.code)
             return query
@@ -244,22 +244,22 @@ def view_with_relationship_on_self_2():
             TP = cls.anyblok.T1.aliased()
             T2 = cls.anyblok.T2
             subquery = union(
-                select([
+                select(
                     T1.code.label('code'),
                     TP.id.label('parent_val1'),
                     TP.code.label('parent_code')
-                ]).where(T1.parent_id == TP.id),
-                select([
+                ).where(T1.parent_id == TP.id),
+                select(
                     T1.code.label('code'),
                     expression.literal_column("null as parent_val1"),
                     expression.literal_column("null as parent_code")
-                ]).where(T1.parent_id.is_(None))
+                ).where(T1.parent_id.is_(None))
             ).alias()
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T2.val.label('val2'),
-                            subquery.c.parent_val1.label('parent_val1'),
-                            subquery.c.parent_code.label('parent_code')])
+            query = select(T1.code.label('code'),
+                           T1.val.label('val1'),
+                           T2.val.label('val2'),
+                           subquery.c.parent_val1.label('parent_val1'),
+                           subquery.c.parent_code.label('parent_code'))
             query = query.where(subquery.c.code == T1.code)
             query = query.where(subquery.c.code == T2.code)
             return query
@@ -330,9 +330,9 @@ def simple_view_with_same_table_by_declaration_model():
         def sqlalchemy_view_declaration(cls):
             T1 = cls.anyblok.T1
             T2 = cls.anyblok.T2
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T2.val.label('val2')])
+            query = select(T1.code.label('code'),
+                           T1.val.label('val1'),
+                           T2.val.label('val2'))
             return query.where(T1.code == T2.code)
 
     @register(Model, factory=ViewFactory, tablename=Model.TestView)
@@ -366,9 +366,9 @@ def simple_view_with_same_table_by_name():
         def sqlalchemy_view_declaration(cls):
             T1 = cls.anyblok.T1
             T2 = cls.anyblok.T2
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T2.val.label('val2')])
+            query = select(T1.code.label('code'),
+                           T1.val.label('val1'),
+                           T2.val.label('val2'))
             return query.where(T1.code == T2.code)
 
     @register(Model, factory=ViewFactory, tablename='testview')
@@ -402,9 +402,9 @@ def simple_view_with_same_table_by_inherit():
         def sqlalchemy_view_declaration(cls):
             T1 = cls.anyblok.T1
             T2 = cls.anyblok.T2
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T2.val.label('val2')])
+            query = select(T1.code.label('code'),
+                           T1.val.label('val1'),
+                           T2.val.label('val2'))
             return query.where(T1.code == T2.code)
 
     @register(Model, factory=ViewFactory)
@@ -477,9 +477,9 @@ def simple_view_without_primary_key():
         def sqlalchemy_view_declaration(cls):
             T1 = cls.anyblok.T1
             T2 = cls.anyblok.T2
-            query = select([T1.code.label('code'),
-                            T1.val.label('val1'),
-                            T1.val.label('val2')])
+            query = select(T1.code.label('code'),
+                           T1.val.label('val1'),
+                           T1.val.label('val2'))
             return query.where(T1.code == T2.code)
 
 

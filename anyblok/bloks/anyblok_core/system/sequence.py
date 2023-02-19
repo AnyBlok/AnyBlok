@@ -71,7 +71,6 @@ class Sequence:
     id = Integer(primary_key=True)
     code = String(nullable=False)
     number = Integer(nullable=False)
-    current = Integer(default=None)
     seq_name = String(nullable=False)
     """Name of the sequence in the database.
 
@@ -87,7 +86,6 @@ class Sequence:
     This format string is used in :meth:`nextval`. Within it, you can use the
     following variables:
 
-       * seq: current value of the underlying database sequence
        * code: :attr:`code` field
        * id: :attr:`id` field
     """
@@ -166,8 +164,8 @@ class Sequence:
 
         :rtype: str
         """
+        cls = self.__class__
         if self.no_gap:
-            cls = self.__class__
             nextval = cls.execute_sql_statement(
                 cls.select_sql_statement(cls.number).with_for_update(
                     nowait=True).where(cls.id == self.id)).scalar()

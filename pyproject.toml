@@ -12,9 +12,9 @@ version = "1.4.0"
 license = { text = "MPL2" }
 requires-python = ">=3.7"
 dependencies = [
-    'sqlalchemy >= 1.4.0,<2.0',
-    'sqlalchemy-utils >= 0.37.0,<0.40',
-    'sqlalchemy-views >= 0.3.0,<0.4',
+    'sqlalchemy >= 2.0',
+    'sqlalchemy-utils >= 0.40',
+    'sqlalchemy-views >= 0.3.2',
     'packaging',
     'argparse',
     'alembic',
@@ -95,7 +95,6 @@ test-blok8 = "anyblok.test_bloks.test_blok8:TestBlok"
 test-blok9 = "anyblok.test_bloks.test_blok9:TestBlok"
 test-blok10 = "anyblok.test_bloks.test_blok10:TestBlok"
 test-blok11 = "anyblok.test_bloks.test_blok11:TestBlok"
-test-blok12 = "anyblok.test_bloks.test_blok12:TestBlok"
 test-blok13 = "anyblok.test_bloks.test_blok13:TestBlok"
 test-blok14 = "anyblok.test_bloks.test_blok14:TestBlok"
 test-blok15 = "anyblok.test_bloks.test_blok15:TestBlok"

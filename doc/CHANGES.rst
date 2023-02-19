@@ -20,6 +20,11 @@ CHANGELOG
 2.0.0 (unreleased)
 ------------------
 
+* Upgrade version of sqlalchemy to **2.0.0**
+* Upgrade version of sqlalchemy utils to **0.40.0**
+* Upgrade version of sqlalchemy views to **0.3.2**
+* The previsous deprecated configuration are placed as removed
+  theses configurations will be removed from the code in the next version
 * Added Sequence with *no gap* to provide functional sequence without gaps.
 
 1.4.0 (2022-02-17)

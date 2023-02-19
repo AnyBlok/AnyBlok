@@ -7,5 +7,5 @@ digraph test {
 	system_blok [label="{system_blok|PK name (String)\nstate (Selection)\nauthor (String)\norder (Integer)\nversion (String)\ninstalled_version (String)}"]
 	system_cache [label="{system_cache|PK id (Integer)\nregistry_name (String)\nmethod (String)}"]
 	system_parameter [label="{system_parameter|PK key (String)\nvalue (Json)\nmulti (Boolean)}"]
-	system_sequence [label="{system_sequence|PK id (Integer)\ncode (String)\nstart (Integer)\ncurrent (Integer)\nseq_name (String)\nformater (String)\nno_gap (Boolean)}"]
+	system_sequence [label="{system_sequence|PK id (Integer)\ncode (String)\nnumber (Integer)\nseq_name (String)\nformater (String)\nno_gap (Boolean)}"]
 }

@@ -150,6 +150,14 @@ Fields
 Attributes, methods and class methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ANYBLOK_FIELD_is_sql_model
+
+* ANYBLOK_FIELD_name
+
+* ANYBLOK_FIELD_schema
+
+* ANYBLOK_FIELD_table
+
 * _format_field
 
 * _sa_class_manager
@@ -157,6 +165,38 @@ Attributes, methods and class methods
 Tracks state information at the class level.
 
 * _sa_registry
+
+Generalized registry for mapping classes.
+
+    The :class:`_orm.registry` serves as the basis for maintaining a collection
+    of mappings, and provides configurational hooks used to map classes.
+
+    The three general kinds of mappings supported are Declarative Base,
+    Declarative Decorator, and Imperative Mapping.   All of these mapping
+    styles may be used interchangeably:
+
+    * :meth:`_orm.registry.generate_base` returns a new declarative base
+      class, and is the underlying implementation of the
+      :func:`_orm.declarative_base` function.
+
+    * :meth:`_orm.registry.mapped` provides a class decorator that will
+      apply declarative mapping to a class without the use of a declarative
+      base class.
+
+    * :meth:`_orm.registry.map_imperatively` will produce a
+      :class:`_orm.Mapper` for a class without scanning the class for
+      declarative class attributes. This method suits the use case historically
+      provided by the ``sqlalchemy.orm.mapper()`` classical mapping function,
+      which is removed as of SQLAlchemy 2.0.
+
+    .. versionadded:: 1.4
+
+    .. seealso::
+
+        :ref:`orm_mapping_classes_toplevel` - overview of class mapping
+        styles.
+
+    
 
 * add_fields
 
@@ -190,6 +230,10 @@ The argument must be an iterable if specified.
 Return a statement to delete some element
 
 * description
+
+* execute
+
+call SqlA execute method on the session
 
 * execute_sql_statement
 
@@ -352,7 +396,7 @@ return a Query object in order to get object from primary keys.
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         
 
 * table
@@ -405,6 +449,18 @@ Fields
 Attributes, methods and class methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ANYBLOK_FIELD_code
+
+* ANYBLOK_FIELD_entity_type
+
+* ANYBLOK_FIELD_ftype
+
+* ANYBLOK_FIELD_label
+
+* ANYBLOK_FIELD_model
+
+* ANYBLOK_FIELD_name
+
 * _description
 
 * _format_field
@@ -414,6 +470,38 @@ Attributes, methods and class methods
 Tracks state information at the class level.
 
 * _sa_registry
+
+Generalized registry for mapping classes.
+
+    The :class:`_orm.registry` serves as the basis for maintaining a collection
+    of mappings, and provides configurational hooks used to map classes.
+
+    The three general kinds of mappings supported are Declarative Base,
+    Declarative Decorator, and Imperative Mapping.   All of these mapping
+    styles may be used interchangeably:
+
+    * :meth:`_orm.registry.generate_base` returns a new declarative base
+      class, and is the underlying implementation of the
+      :func:`_orm.declarative_base` function.
+
+    * :meth:`_orm.registry.mapped` provides a class decorator that will
+      apply declarative mapping to a class without the use of a declarative
+      base class.
+
+    * :meth:`_orm.registry.map_imperatively` will produce a
+      :class:`_orm.Mapper` for a class without scanning the class for
+      declarative class attributes. This method suits the use case historically
+      provided by the ``sqlalchemy.orm.mapper()`` classical mapping function,
+      which is removed as of SQLAlchemy 2.0.
+
+    .. versionadded:: 1.4
+
+    .. seealso::
+
+        :ref:`orm_mapping_classes_toplevel` - overview of class mapping
+        styles.
+
+    
 
 * add_field
 
@@ -467,6 +555,10 @@ The argument must be an iterable if specified.
 Return a statement to delete some element
 
 * entity_type
+
+* execute
+
+call SqlA execute method on the session
 
 * execute_sql_statement
 
@@ -622,7 +714,7 @@ return a Query object in order to get object from primary keys.
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         
 
 * update_sql_statement
@@ -672,6 +764,30 @@ Fields
 Attributes, methods and class methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ANYBLOK_FIELD_autoincrement
+
+* ANYBLOK_FIELD_code
+
+* ANYBLOK_FIELD_entity_type
+
+* ANYBLOK_FIELD_foreign_key
+
+* ANYBLOK_FIELD_ftype
+
+* ANYBLOK_FIELD_label
+
+* ANYBLOK_FIELD_model
+
+* ANYBLOK_FIELD_name
+
+* ANYBLOK_FIELD_nullable
+
+* ANYBLOK_FIELD_primary_key
+
+* ANYBLOK_FIELD_remote_model
+
+* ANYBLOK_FIELD_unique
+
 * _description
 
 * _format_field
@@ -681,6 +797,38 @@ Attributes, methods and class methods
 Tracks state information at the class level.
 
 * _sa_registry
+
+Generalized registry for mapping classes.
+
+    The :class:`_orm.registry` serves as the basis for maintaining a collection
+    of mappings, and provides configurational hooks used to map classes.
+
+    The three general kinds of mappings supported are Declarative Base,
+    Declarative Decorator, and Imperative Mapping.   All of these mapping
+    styles may be used interchangeably:
+
+    * :meth:`_orm.registry.generate_base` returns a new declarative base
+      class, and is the underlying implementation of the
+      :func:`_orm.declarative_base` function.
+
+    * :meth:`_orm.registry.mapped` provides a class decorator that will
+      apply declarative mapping to a class without the use of a declarative
+      base class.
+
+    * :meth:`_orm.registry.map_imperatively` will produce a
+      :class:`_orm.Mapper` for a class without scanning the class for
+      declarative class attributes. This method suits the use case historically
+      provided by the ``sqlalchemy.orm.mapper()`` classical mapping function,
+      which is removed as of SQLAlchemy 2.0.
+
+    .. versionadded:: 1.4
+
+    .. seealso::
+
+        :ref:`orm_mapping_classes_toplevel` - overview of class mapping
+        styles.
+
+    
 
 * add_field
 
@@ -736,6 +884,10 @@ The argument must be an iterable if specified.
 Return a statement to delete some element
 
 * entity_type
+
+* execute
+
+call SqlA execute method on the session
 
 * execute_sql_statement
 
@@ -906,7 +1058,7 @@ return a Query object in order to get object from primary keys.
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         
 
 * unique
@@ -960,6 +1112,30 @@ Fields
 Attributes, methods and class methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ANYBLOK_FIELD_code
+
+* ANYBLOK_FIELD_entity_type
+
+* ANYBLOK_FIELD_ftype
+
+* ANYBLOK_FIELD_label
+
+* ANYBLOK_FIELD_local_columns
+
+* ANYBLOK_FIELD_model
+
+* ANYBLOK_FIELD_name
+
+* ANYBLOK_FIELD_nullable
+
+* ANYBLOK_FIELD_remote
+
+* ANYBLOK_FIELD_remote_columns
+
+* ANYBLOK_FIELD_remote_model
+
+* ANYBLOK_FIELD_remote_name
+
 * _description
 
 * _format_field
@@ -969,6 +1145,38 @@ Attributes, methods and class methods
 Tracks state information at the class level.
 
 * _sa_registry
+
+Generalized registry for mapping classes.
+
+    The :class:`_orm.registry` serves as the basis for maintaining a collection
+    of mappings, and provides configurational hooks used to map classes.
+
+    The three general kinds of mappings supported are Declarative Base,
+    Declarative Decorator, and Imperative Mapping.   All of these mapping
+    styles may be used interchangeably:
+
+    * :meth:`_orm.registry.generate_base` returns a new declarative base
+      class, and is the underlying implementation of the
+      :func:`_orm.declarative_base` function.
+
+    * :meth:`_orm.registry.mapped` provides a class decorator that will
+      apply declarative mapping to a class without the use of a declarative
+      base class.
+
+    * :meth:`_orm.registry.map_imperatively` will produce a
+      :class:`_orm.Mapper` for a class without scanning the class for
+      declarative class attributes. This method suits the use case historically
+      provided by the ``sqlalchemy.orm.mapper()`` classical mapping function,
+      which is removed as of SQLAlchemy 2.0.
+
+    .. versionadded:: 1.4
+
+    .. seealso::
+
+        :ref:`orm_mapping_classes_toplevel` - overview of class mapping
+        styles.
+
+    
 
 * add_field
 
@@ -1015,6 +1223,10 @@ The argument must be an iterable if specified.
 Return a statement to delete some element
 
 * entity_type
+
+* execute
+
+call SqlA execute method on the session
 
 * execute_sql_statement
 
@@ -1182,7 +1394,7 @@ return a Query object in order to get object from primary keys.
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         
 
 * update_sql_statement
@@ -1238,6 +1450,18 @@ Fields
 Attributes, methods and class methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ANYBLOK_FIELD_author
+
+* ANYBLOK_FIELD_installed_version
+
+* ANYBLOK_FIELD_name
+
+* ANYBLOK_FIELD_order
+
+* ANYBLOK_FIELD_state
+
+* ANYBLOK_FIELD_version
+
 * STATES
 
 dict() -> new empty dictionary
@@ -1257,6 +1481,38 @@ dict(**kwargs) -> new dictionary initialized with the name=value pairs
 Tracks state information at the class level.
 
 * _sa_registry
+
+Generalized registry for mapping classes.
+
+    The :class:`_orm.registry` serves as the basis for maintaining a collection
+    of mappings, and provides configurational hooks used to map classes.
+
+    The three general kinds of mappings supported are Declarative Base,
+    Declarative Decorator, and Imperative Mapping.   All of these mapping
+    styles may be used interchangeably:
+
+    * :meth:`_orm.registry.generate_base` returns a new declarative base
+      class, and is the underlying implementation of the
+      :func:`_orm.declarative_base` function.
+
+    * :meth:`_orm.registry.mapped` provides a class decorator that will
+      apply declarative mapping to a class without the use of a declarative
+      base class.
+
+    * :meth:`_orm.registry.map_imperatively` will produce a
+      :class:`_orm.Mapper` for a class without scanning the class for
+      declarative class attributes. This method suits the use case historically
+      provided by the ``sqlalchemy.orm.mapper()`` classical mapping function,
+      which is removed as of SQLAlchemy 2.0.
+
+    .. versionadded:: 1.4
+
+    .. seealso::
+
+        :ref:`orm_mapping_classes_toplevel` - overview of class mapping
+        styles.
+
+    
 
 * add_in_table_args
 
@@ -1307,6 +1563,10 @@ The argument must be an iterable if specified.
 * delete_sql_statement
 
 Return a statement to delete some element
+
+* execute
+
+call SqlA execute method on the session
 
 * execute_sql_statement
 
@@ -1510,7 +1770,7 @@ return a Query object in order to get object from primary keys.
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         
 
 * short_description
@@ -1573,6 +1833,12 @@ Fields
 Attributes, methods and class methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ANYBLOK_FIELD_id
+
+* ANYBLOK_FIELD_method
+
+* ANYBLOK_FIELD_registry_name
+
 * _format_field
 
 * _sa_class_manager
@@ -1580,6 +1846,38 @@ Attributes, methods and class methods
 Tracks state information at the class level.
 
 * _sa_registry
+
+Generalized registry for mapping classes.
+
+    The :class:`_orm.registry` serves as the basis for maintaining a collection
+    of mappings, and provides configurational hooks used to map classes.
+
+    The three general kinds of mappings supported are Declarative Base,
+    Declarative Decorator, and Imperative Mapping.   All of these mapping
+    styles may be used interchangeably:
+
+    * :meth:`_orm.registry.generate_base` returns a new declarative base
+      class, and is the underlying implementation of the
+      :func:`_orm.declarative_base` function.
+
+    * :meth:`_orm.registry.mapped` provides a class decorator that will
+      apply declarative mapping to a class without the use of a declarative
+      base class.
+
+    * :meth:`_orm.registry.map_imperatively` will produce a
+      :class:`_orm.Mapper` for a class without scanning the class for
+      declarative class attributes. This method suits the use case historically
+      provided by the ``sqlalchemy.orm.mapper()`` classical mapping function,
+      which is removed as of SQLAlchemy 2.0.
+
+    .. versionadded:: 1.4
+
+    .. seealso::
+
+        :ref:`orm_mapping_classes_toplevel` - overview of class mapping
+        styles.
+
+    
 
 * add_in_table_args
 
@@ -1621,6 +1919,10 @@ Return a statement to delete some element
 
         :rtype: Boolean
         
+
+* execute
+
+call SqlA execute method on the session
 
 * execute_sql_statement
 
@@ -1822,7 +2124,7 @@ return a Query object in order to get object from primary keys.
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         
 
 * update_sql_statement
@@ -1864,6 +2166,12 @@ Fields
 Attributes, methods and class methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ANYBLOK_FIELD_key
+
+* ANYBLOK_FIELD_multi
+
+* ANYBLOK_FIELD_value
+
 * _format_field
 
 * _sa_class_manager
@@ -1871,6 +2179,38 @@ Attributes, methods and class methods
 Tracks state information at the class level.
 
 * _sa_registry
+
+Generalized registry for mapping classes.
+
+    The :class:`_orm.registry` serves as the basis for maintaining a collection
+    of mappings, and provides configurational hooks used to map classes.
+
+    The three general kinds of mappings supported are Declarative Base,
+    Declarative Decorator, and Imperative Mapping.   All of these mapping
+    styles may be used interchangeably:
+
+    * :meth:`_orm.registry.generate_base` returns a new declarative base
+      class, and is the underlying implementation of the
+      :func:`_orm.declarative_base` function.
+
+    * :meth:`_orm.registry.mapped` provides a class decorator that will
+      apply declarative mapping to a class without the use of a declarative
+      base class.
+
+    * :meth:`_orm.registry.map_imperatively` will produce a
+      :class:`_orm.Mapper` for a class without scanning the class for
+      declarative class attributes. This method suits the use case historically
+      provided by the ``sqlalchemy.orm.mapper()`` classical mapping function,
+      which is removed as of SQLAlchemy 2.0.
+
+    .. versionadded:: 1.4
+
+    .. seealso::
+
+        :ref:`orm_mapping_classes_toplevel` - overview of class mapping
+        styles.
+
+    
 
 * add_in_table_args
 
@@ -1900,6 +2240,10 @@ The argument must be an iterable if specified.
 * delete_sql_statement
 
 Return a statement to delete some element
+
+* execute
+
+call SqlA execute method on the session
 
 * execute_sql_statement
 
@@ -2093,7 +2437,7 @@ return a Query object in order to get object from primary keys.
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         
 
 * set
@@ -2176,13 +2520,9 @@ Fields
 
  **code** (system_sequence.code),  **model** (Model.System.Sequence),  **label** (Code),  **ftype** (String),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (False),  **remote_model** (None)
 
-* start
+* number
 
- **code** (system_sequence.start),  **model** (Model.System.Sequence),  **label** (Start),  **ftype** (Integer),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (True),  **remote_model** (None)
-
-* current
-
- **code** (system_sequence.current),  **model** (Model.System.Sequence),  **label** (Current),  **ftype** (Integer),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (True),  **remote_model** (None)
+ **code** (system_sequence.number),  **model** (Model.System.Sequence),  **label** (Number),  **ftype** (Integer),  **entity_type** (Model.System.Column),  **autoincrement** (False),  **foreign_key** (None),  **primary_key** (False),  **unique** (None),  **nullable** (False),  **remote_model** (None)
 
 * seq_name
 
@@ -2198,6 +2538,18 @@ Fields
 
 Attributes, methods and class methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* ANYBLOK_FIELD_code
+
+* ANYBLOK_FIELD_formater
+
+* ANYBLOK_FIELD_id
+
+* ANYBLOK_FIELD_no_gap
+
+* ANYBLOK_FIELD_number
+
+* ANYBLOK_FIELD_seq_name
 
 * _cls_seq_name
 
@@ -2219,6 +2571,38 @@ errors defaults to 'strict'.
 Tracks state information at the class level.
 
 * _sa_registry
+
+Generalized registry for mapping classes.
+
+    The :class:`_orm.registry` serves as the basis for maintaining a collection
+    of mappings, and provides configurational hooks used to map classes.
+
+    The three general kinds of mappings supported are Declarative Base,
+    Declarative Decorator, and Imperative Mapping.   All of these mapping
+    styles may be used interchangeably:
+
+    * :meth:`_orm.registry.generate_base` returns a new declarative base
+      class, and is the underlying implementation of the
+      :func:`_orm.declarative_base` function.
+
+    * :meth:`_orm.registry.mapped` provides a class decorator that will
+      apply declarative mapping to a class without the use of a declarative
+      base class.
+
+    * :meth:`_orm.registry.map_imperatively` will produce a
+      :class:`_orm.Mapper` for a class without scanning the class for
+      declarative class attributes. This method suits the use case historically
+      provided by the ``sqlalchemy.orm.mapper()`` classical mapping function,
+      which is removed as of SQLAlchemy 2.0.
+
+    .. versionadded:: 1.4
+
+    .. seealso::
+
+        :ref:`orm_mapping_classes_toplevel` - overview of class mapping
+        styles.
+
+    
 
 * add_in_table_args
 
@@ -2247,8 +2631,6 @@ Create the database sequence for an instance of Sequence Model.
         :rtype: dict
         
 
-* current
-
 * default_filter_on_sql_statement
 
 * define_mapper_args
@@ -2260,6 +2642,10 @@ Create the database sequence for an instance of Sequence Model.
 * delete_sql_statement
 
 Return a statement to delete some element
+
+* execute
+
+call SqlA execute method on the session
 
 * execute_sql_statement
 
@@ -2369,6 +2755,8 @@ Return next value of the first Sequence matching given criteria.
 
 * no_gap
 
+* number
+
 * postcommit_hook
 
  Same in the registry a hook to call just after the commit
@@ -2427,12 +2815,10 @@ return a Query object in order to get object from primary keys.
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         
 
 * seq_name
-
-* start
 
 * update_sql_statement
 

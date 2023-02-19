@@ -59,7 +59,7 @@ class Model:
         ftype = field.property.__class__.__name__
         if ftype == 'ColumnProperty':
             return cls.anyblok.System.Column
-        elif ftype == 'RelationshipProperty':
+        elif ftype in ('Relationship', 'RelationshipProperty'):
             return cls.anyblok.System.RelationShip
         else:
             raise Exception('Not implemented yet')  # pragma: no cover
