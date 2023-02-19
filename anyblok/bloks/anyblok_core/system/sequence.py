@@ -71,7 +71,6 @@ class Sequence:
     id = Integer(primary_key=True)
     code = String(nullable=False)
     number = Integer(nullable=False)
-    current = Integer(default=None)
     seq_name = String(nullable=False)
     """Name of the sequence in the database.
 
@@ -87,7 +86,6 @@ class Sequence:
     This format string is used in :meth:`nextval`. Within it, you can use the
     following variables:
 
-       * seq: current value of the underlying database sequence
        * code: :attr:`code` field
        * id: :attr:`id` field
     """
@@ -139,7 +137,7 @@ class Sequence:
             values.setdefault('seq_name', values.get("code", "no_gap_seq"))
         else:
             if seq_name is None:
-                seq_id = cls.anyblok.scalar(SQLASequence(cls._cls_seq_name))
+                seq_id = cls.anyblok.execute(SQLASequence(cls._cls_seq_name))
                 seq_name = '%s_%d' % (cls.__tablename__, seq_id)
                 values['seq_name'] = seq_name
 
@@ -166,8 +164,8 @@ class Sequence:
 
         :rtype: str
         """
+        cls = self.__class__
         if self.no_gap:
-            cls = self.__class__
             nextval = cls.execute_sql_statement(
                 cls.select_sql_statement(cls.number).with_for_update(
                     nowait=True).where(cls.id == self.id)).scalar()
@@ -178,7 +176,7 @@ class Sequence:
                 cls.update_sql_statement().where(
                     cls.id == self.id).values(number=nextval))
         else:
-            nextval = self.anyblok.scalar(SQLASequence(self.seq_name))
+            nextval = self.anyblok.execute(SQLASequence(self.seq_name))
 
         return self.formater.format(code=self.code, seq=nextval, id=self.id)
 

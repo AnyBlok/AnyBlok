@@ -30,8 +30,6 @@ class TestSystemSequence:
         Sequence = registry.System.Sequence
         Sequence.insert(code='test.sequence')
         seq = Sequence.insert(code='test.sequence')
-        current = seq.current
-        assert current is None
         assert seq.nextval() == '1'
         assert seq.nextval() == '2'
         assert seq.nextval() == '3'
@@ -40,8 +38,6 @@ class TestSystemSequence:
         registry = rollback_registry
         Sequence = registry.System.Sequence
         seq = Sequence.insert(code='test.sequence', formater="{seq}_suffix")
-        current = seq.current
-        assert current is None
         assert seq.nextval() == '%d_suffix' % 1
         assert seq.nextval() == '%d_suffix' % 2
         assert seq.nextval() == '%d_suffix' % 3
@@ -50,8 +46,6 @@ class TestSystemSequence:
         registry = rollback_registry
         Sequence = registry.System.Sequence
         seq = Sequence.insert(code='test.sequence', formater='prefix_{seq}')
-        current = seq.current
-        assert current is None
         assert seq.nextval() == 'prefix_%d' % 1
         assert seq.nextval() == 'prefix_%d' % 2
         assert seq.nextval() == 'prefix_%d' % 3
@@ -61,8 +55,6 @@ class TestSystemSequence:
         Sequence = registry.System.Sequence
         seq = Sequence.insert(code='test.sequence',
                               formater='prefix_{seq}_suffix')
-        current = seq.current
-        assert current is None
         assert seq.nextval() == 'prefix_%d_suffix' % 1
         assert seq.nextval() == 'prefix_%d_suffix' % 2
         assert seq.nextval() == 'prefix_%d_suffix' % 3
@@ -71,7 +63,7 @@ class TestSystemSequence:
         registry = rollback_registry
         Sequence = registry.System.Sequence
         seq = Sequence.insert(code='test.sequence')
-        number = seq.number
+        number = int(Sequence.nextvalBy(code=seq.code))
         assert Sequence.nextvalBy(code=seq.code) == str(number + 1)
         assert Sequence.nextvalBy(code=seq.code) == str(number + 2)
         assert Sequence.nextvalBy(code=seq.code) == str(number + 3)
@@ -80,7 +72,7 @@ class TestSystemSequence:
         registry = rollback_registry
         Sequence = registry.System.Sequence
         seq = Sequence.insert(code='test.sequence', no_gap=False)
-        number = seq.number
+        number = int(Sequence.nextvalBy(code=seq.code))
         assert Sequence.nextvalBy(code=seq.code) == str(number + 1)
         registry.commit()
         assert Sequence.nextvalBy(code=seq.code) == str(number + 2)
@@ -88,12 +80,21 @@ class TestSystemSequence:
         assert Sequence.nextvalBy(code=seq.code) == str(number + 3)
 
     def test_sequence_with_no_gap_rollback(self, rollback_registry):
+
+        class MyException(Exception):
+            pass
+
         registry = rollback_registry
         Sequence = registry.System.Sequence
         seq = Sequence.insert(code='test.sequence.nogap', no_gap=True)
         number = seq.number
-        assert Sequence.nextvalBy(code=seq.code) == str(number + 1)
-        registry.commit()
-        assert Sequence.nextvalBy(code=seq.code) == str(number + 2)
-        registry.rollback()
-        assert Sequence.nextvalBy(code=seq.code) == str(number + 2)
+        assert seq.nextval() == str(number + 1)
+
+        try:
+            with registry.begin_nested():
+                assert seq.nextval() == str(number + 2)
+                raise MyException('Test rollback')
+        except MyException:
+            pass
+
+        assert seq.nextval() == str(number + 2)

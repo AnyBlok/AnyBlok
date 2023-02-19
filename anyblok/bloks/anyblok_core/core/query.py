@@ -131,24 +131,24 @@ class Query:
         else:
             return val.to_dict()
 
-    # def dictfirst(self):
-    #     val = self.first()
-    #     field2get = self.get_field_names_in_column_description()
-    #     if field2get:
-    #         return {x: getattr(val, y) for x, y in field2get}
-    #     else:
-    #         return val.to_dict()
+    def dictfirst(self):
+        val = self.first()
+        field2get = self.get_field_names_in_column_description()
+        if field2get:
+            return {x: getattr(val, y) for x, y in field2get}
+        else:
+            return val.to_dict()
 
-    # def dictall(self):
-    #     vals = self.all()
-    #     if not vals:
-    #         return []
+    def dictall(self):
+        vals = self.all()
+        if not vals:
+            return []
 
-    #     field2get = self.get_field_names_in_column_description()
-    #     if field2get:
-    #         return [{x: getattr(y, z) for x, z in field2get} for y in vals]
-    #     else:
-    #         return vals.to_dict()
+        field2get = self.get_field_names_in_column_description()
+        if field2get:
+            return [{x: getattr(y, z) for x, z in field2get} for y in vals]
+        else:
+            return vals.to_dict()
 
     def get(self, primary_keys=None, **kwargs):
         """Return instance of the Model
