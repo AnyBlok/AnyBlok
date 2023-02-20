@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
@@ -9,20 +8,32 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from .logging import log
-from argparse import ArgumentParser, _ArgumentGroup, REMAINDER
-from configparser import ConfigParser
-import sys
-import os
 import json
-import yaml
+import os
+import sys
 import urllib
 import warnings
+from argparse import REMAINDER, ArgumentParser, _ArgumentGroup
+from configparser import ConfigParser
+from logging import (
+    CRITICAL,
+    DEBUG,
+    ERROR,
+    INFO,
+    NOTSET,
+    WARNING,
+    Logger,
+    basicConfig,
+    config,
+    getLogger,
+)
+from os.path import isfile, join
+
+import yaml
 from appdirs import AppDirs
-from os.path import join, isfile
 from sqlalchemy.engine.url import URL, make_url
-from logging import (getLogger, config, NOTSET, DEBUG, INFO, WARNING, ERROR,
-                     CRITICAL, basicConfig, Logger)
+
+from .logging import log
 
 logger = getLogger(__name__)
 
@@ -44,8 +55,8 @@ def get_db_name():
     :rtype: name of the database
     :exception: ConfigurationException
     """
-    url = Configuration.get('db_url', None)
-    db_name = Configuration.get('db_name', None)
+    url = Configuration.get("db_url", None)
+    db_name = Configuration.get("db_name", None)
 
     if db_name is not None:
         return db_name
@@ -88,14 +99,14 @@ def get_url(db_name=None):
     :rtype: SqlAlchemy URL
     :exception: ConfigurationException
     """
-    url = Configuration.get('db_url', None)
-    drivername = Configuration.get('db_driver_name', None)
-    username = Configuration.get('db_user_name', None)
-    password = Configuration.get('db_password', None)
-    host = Configuration.get('db_host', None)
-    port = Configuration.get('db_port', None)
-    database = Configuration.get('db_name', None)
-    query = Configuration.get('db_query', {})
+    url = Configuration.get("db_url", None)
+    drivername = Configuration.get("db_driver_name", None)
+    username = Configuration.get("db_user_name", None)
+    password = Configuration.get("db_password", None)
+    host = Configuration.get("db_host", None)
+    port = Configuration.get("db_port", None)
+    database = Configuration.get("db_name", None)
+    query = Configuration.get("db_query", {})
 
     if db_name is not None:
         database = db_name
@@ -112,11 +123,17 @@ def get_url(db_name=None):
         return url
 
     if drivername is None:
-        raise ConfigurationException('No driver name defined')
+        raise ConfigurationException("No driver name defined")
 
     return URL.create(
-        drivername, username=username, password=password, host=host,
-        port=port, database=database, query=query)
+        drivername,
+        username=username,
+        password=password,
+        host=host,
+        port=port,
+        database=database,
+        query=query,
+    )
 
 
 class ConfigurationException(LookupError):
@@ -132,9 +149,9 @@ def is_none(type, value):
     """
     if value is None:
         return True
-    if isinstance(value, str) and value.upper() == 'NONE':
+    if isinstance(value, str) and value.upper() == "NONE":
         return True
-    if value == '' and type is not str:
+    if value == "" and type is not str:
         return True
 
     return False
@@ -152,7 +169,7 @@ def cast_value(cast, value):
     elif not cast:
         return value
     elif cast is bool and isinstance(value, str):
-        if value.upper() == 'TRUE':
+        if value.upper() == "TRUE":
             return True
         else:
             return False
@@ -177,19 +194,20 @@ def nargs_type(key, nargs, cast):
         :exception ConfigurationException
         """
         if isinstance(val, str):
-            sep = ' '
-            if '\n' in val:
-                sep = '\n'
-            elif ',' in val:
-                sep = ','
+            sep = " "
+            if "\n" in val:
+                sep = "\n"
+            elif "," in val:
+                sep = ","
             val = [x.strip() for x in val.split(sep)]
 
         if not isinstance(val, list):
-            raise ConfigurationException("Waiting list not %r for %r "
-                                         "get: %r" % (type(val), key, val))
+            raise ConfigurationException(
+                "Waiting list not %r for %r " "get: %r" % (type(val), key, val)
+            )
 
         limit = len(val)
-        if nargs not in ('?', '+', '*', REMAINDER):
+        if nargs not in ("?", "+", "*", REMAINDER):
             limit = int(nargs)
 
         return [cast_value(cast, x) for x in val[:limit]]
@@ -198,7 +216,6 @@ def nargs_type(key, nargs, cast):
 
 
 class AnyBlokActionsContainer:
-
     def add_argument(self, *args, deprecated=None, removed=False, **kwargs):
         """Overload the method to add the entry in the configuration dict
 
@@ -207,22 +224,23 @@ class AnyBlokActionsContainer:
         :param deprecated: Deprecated message to display
         :return:
         """
-        default = kwargs.pop('default', None)
-        nargs = kwargs.get('nargs', None)
-        type = kwargs.get('type')
+        default = kwargs.pop("default", None)
+        nargs = kwargs.get("nargs", None)
+        type = kwargs.get("type")
 
         if deprecated is not None:
-            kwargs['help'] = '[DEPRECATED] {} : {}'.format(
-                kwargs.get('help', ''), deprecated)
+            kwargs["help"] = "[DEPRECATED] {} : {}".format(
+                kwargs.get("help", ""), deprecated
+            )
 
         if removed is True:
-            kwargs['help'] = '[REMOVED] {} : This is forbidden'.format(
-                kwargs.get('help', ''))
+            kwargs["help"] = "[REMOVED] {} : This is forbidden".format(
+                kwargs.get("help", "")
+            )
 
-        arg = super(AnyBlokActionsContainer, self).add_argument(
-            *args, **kwargs)
+        arg = super(AnyBlokActionsContainer, self).add_argument(*args, **kwargs)
         if type is None:
-            if kwargs.get('action') == 'store_true':
+            if kwargs.get("action") == "store_true":
                 type = bool
                 if default is None:
                     default = False
@@ -233,8 +251,9 @@ class AnyBlokActionsContainer:
         if nargs:
             type = nargs_type(dest, nargs, type)
 
-        Configuration.add_argument(dest, default, type=type,
-                                   deprecated=deprecated, removed=removed)
+        Configuration.add_argument(
+            dest, default, type=type, deprecated=deprecated, removed=removed
+        )
         return arg
 
     def set_defaults(self, **kwargs):
@@ -245,7 +264,7 @@ class AnyBlokActionsContainer:
         super(AnyBlokActionsContainer, self).set_defaults(**kwargs)
         for dest, default in kwargs.items():
             if not Configuration.has(dest):
-                raise KeyError('Option %s does not exist' % dest)
+                raise KeyError("Option %s does not exist" % dest)
 
             Configuration.set(dest, default)
 
@@ -288,7 +307,7 @@ def AnyBlokPlugin(import_definition):
     if not isinstance(import_definition, str):
         return import_definition
 
-    import_path, import_name = import_definition.split(':')
+    import_path, import_name = import_definition.split(":")
     module = __import__(import_path, fromlist=[import_name])
     if hasattr(module, import_name):
         return getattr(module, import_name)
@@ -297,7 +316,6 @@ def AnyBlokPlugin(import_definition):
 
 
 class ConfigOption:
-
     def __init__(self, value, type, deprecated=None, removed=False):
         self.type = type
         self.deprecated = deprecated
@@ -313,7 +331,8 @@ class ConfigOption:
         """
         if self.removed:
             raise ConfigurationException(
-                "This option is removed and can't be used")
+                "This option is removed and can't be used"
+            )
 
         if self.deprecated is not None:
             warnings.warn(self.deprecated, DeprecationWarning, stacklevel=2)
@@ -327,7 +346,8 @@ class ConfigOption:
         """
         if self.removed:
             raise ConfigurationException(
-                "This option is removed and can't be used")
+                "This option is removed and can't be used"
+            )
 
         if self.deprecated is not None:
             warnings.warn(self.deprecated, DeprecationWarning, stacklevel=2)
@@ -362,15 +382,16 @@ class Configuration:
     labels = {}
     configuration = {}
     applications = {
-        'default': {
-            'description': "[options] -- other arguments",
-            'configuration_groups': ['config', 'database'],
+        "default": {
+            "description": "[options] -- other arguments",
+            "configuration_groups": ["config", "database"],
         },
     }
 
     @classmethod
-    def add_application_properties(cls, application, new_groups,
-                                   add_default_group=True, **kwargs):
+    def add_application_properties(
+        cls, application, new_groups, add_default_group=True, **kwargs
+    ):
         """Add argparse properties for an application
 
         If the application does not exist, the application will be added in
@@ -391,20 +412,22 @@ class Configuration:
             app.update(kwargs)
 
         if new_groups:
-            if 'configuration_groups' not in app:
-                app['configuration_groups'] = []
+            if "configuration_groups" not in app:
+                app["configuration_groups"] = []
                 if add_default_group:
-                    app['configuration_groups'].extend(
-                        cls.applications['default']['configuration_groups'])
+                    app["configuration_groups"].extend(
+                        cls.applications["default"]["configuration_groups"]
+                    )
 
-            cg = app['configuration_groups']
+            cg = app["configuration_groups"]
             for new_group in new_groups:
                 if new_group not in cg:
                     cg.append(new_group)
 
     @classmethod
-    def add(cls, group, label=None, function_=None,
-            must_be_loaded_by_unittest=False):
+    def add(
+        cls, group, label=None, function_=None, must_be_loaded_by_unittest=False
+    ):
         """Add a function in a group.
 
         The ``function_`` must have two arguments:
@@ -451,15 +474,17 @@ class Configuration:
 
         if function_:
             if function_ not in cls.groups[group]:
-                function_.must_be_loaded_by_unittest = \
+                function_.must_be_loaded_by_unittest = (
                     must_be_loaded_by_unittest
+                )
                 cls.groups[group].append(function_)
         else:
 
             def wrapper(function):
                 if function not in cls.groups[group]:
-                    function.must_be_loaded_by_unittest = \
+                    function.must_be_loaded_by_unittest = (
                         must_be_loaded_by_unittest
+                    )
                     cls.groups[group].append(function)
                 return function
 
@@ -520,8 +545,10 @@ class Configuration:
             else:
                 cls.add_argument(opt, value, type(value))
         except Exception as e:  # pragma: no cover
-            logger.exception("Error while setting the value %r to the option "
-                             "%r" % (value, opt))
+            logger.exception(
+                "Error while setting the value %r to the option "
+                "%r" % (value, opt)
+            )
             raise e
 
     @classmethod
@@ -534,8 +561,9 @@ class Configuration:
         """
         if args:
             if len(args) > 1:
-                raise ConfigurationException("Too many args. "
-                                             "Only one expected")
+                raise ConfigurationException(
+                    "Too many args. " "Only one expected"
+                )
 
             if not isinstance(args[0], dict):
                 raise ConfigurationException("Wrong args type. Dict expected")
@@ -547,8 +575,7 @@ class Configuration:
             cls.set(k, v)
 
     @classmethod
-    def add_argument(cls, key, value, type=str, deprecated=None,
-                     removed=False):
+    def add_argument(cls, key, value, type=str, deprecated=None, removed=False):
         """Add a configuration option
 
         :param key:
@@ -558,7 +585,8 @@ class Configuration:
         :param removed: bool if True the option can't be set or get
         """
         cls.configuration[key] = ConfigOption(
-            value, type, deprecated=deprecated, removed=removed)
+            value, type, deprecated=deprecated, removed=removed
+        )
 
     @classmethod
     def remove_label(cls, group):
@@ -609,19 +637,17 @@ class Configuration:
                     if fnct.must_be_loaded_by_unittest:
                         fnct(parser)
 
-            ad = AppDirs('AnyBlok')
+            ad = AppDirs("AnyBlok")
             # load the global configuration file
-            cls.parse_configfile(
-                join(ad.site_config_dir, 'conf.cfg'), False)
+            cls.parse_configfile(join(ad.site_config_dir, "conf.cfg"), False)
             # load the user configuration file
-            cls.parse_configfile(
-                join(ad.user_config_dir, 'conf.cfg'), False)
-            configfile = cls.get('configfile')
+            cls.parse_configfile(join(ad.user_config_dir, "conf.cfg"), False)
+            configfile = cls.get("configfile")
             if configfile:
                 cls.parse_configfile(configfile, True)  # pragma: no cover
 
     @classmethod
-    @log(logger, level='debug')
+    @log(logger, level="debug")
     def load(cls, application, useseparator=False, **kwargs):
         """Load the argparse definition and parse them
 
@@ -636,18 +662,19 @@ class Configuration:
         if application in cls.applications:
             description.update(cls.applications[application])
         else:
-            description.update(cls.applications['default'])  # pragma: no cover
+            description.update(cls.applications["default"])  # pragma: no cover
 
         description.update(kwargs)
         configuration_groups = description.pop(
-            'configuration_groups',
-            cls.applications['default']['configuration_groups'])
+            "configuration_groups",
+            cls.applications["default"]["configuration_groups"],
+        )
 
         if useseparator:  # pragma: no cover
             parser = getParser(**description)
 
             try:
-                sep = sys.argv.index('--')
+                sep = sys.argv.index("--")
                 our_argv = sys.argv[1:sep]
             except ValueError:
                 pass
@@ -657,7 +684,7 @@ class Configuration:
         cls._load(parser, configuration_groups)
         args = parser.parse_args(our_argv)
         if sep is not None:
-            del sys.argv[1:sep + 1]
+            del sys.argv[1 : sep + 1]
 
         cls.parse_options(args)
 
@@ -686,41 +713,44 @@ class Configuration:
 
     @classmethod
     def initialize_logging(cls):
-        """Initialize logger and configure
-        """
+        """Initialize logger and configure"""
         level = {
-            'NOTSET': NOTSET,
-            'DEBUG': DEBUG,
-            'INFO': INFO,
-            'WARNING': WARNING,
-            'ERROR': ERROR,
-            'CRITICAL': CRITICAL
-        }.get(cls.get('logging_level'))
-        logging_configfile = cls.get('logging_configfile')
-        json_logging_configfile = cls.get('json_logging_configfile')
-        yaml_logging_configfile = cls.get('yaml_logging_configfile')
-        logging_level_qualnames = cls.get('logging_level_qualnames')
+            "NOTSET": NOTSET,
+            "DEBUG": DEBUG,
+            "INFO": INFO,
+            "WARNING": WARNING,
+            "ERROR": ERROR,
+            "CRITICAL": CRITICAL,
+        }.get(cls.get("logging_level"))
+        logging_configfile = cls.get("logging_configfile")
+        json_logging_configfile = cls.get("json_logging_configfile")
+        yaml_logging_configfile = cls.get("yaml_logging_configfile")
+        logging_level_qualnames = cls.get("logging_level_qualnames")
 
         if logging_configfile:
             config.fileConfig(logging_configfile)  # pragma: no cover
         elif json_logging_configfile:
-            with open(json_logging_configfile, 'rt') as f:  # pragma: no cover
+            with open(json_logging_configfile, "rt") as f:  # pragma: no cover
                 configfile = json.load(f.read())
                 config.dictConfig(configfile)
         elif yaml_logging_configfile:
-            with open(yaml_logging_configfile, 'rt') as f:  # pragma: no cover
+            with open(yaml_logging_configfile, "rt") as f:  # pragma: no cover
                 configfile = yaml.load(f.read())
                 config.dictConfig(configfile)
 
         if level:
             basicConfig(level=level)
             if logging_level_qualnames:
-                qualnames = set(x.split('.')[0]
-                                for x in Logger.manager.loggerDict.keys()
-                                if x in logging_level_qualnames)
+                qualnames = set(
+                    x.split(".")[0]
+                    for x in Logger.manager.loggerDict.keys()
+                    if x in logging_level_qualnames
+                )
             else:
-                qualnames = set(x.split('.')[0]  # pragma: no cover
-                                for x in Logger.manager.loggerDict.keys())
+                qualnames = set(
+                    x.split(".")[0]  # pragma: no cover
+                    for x in Logger.manager.loggerDict.keys()
+                )
 
             for qualname in qualnames:
                 getLogger(qualname).setLevel(level)  # pragma: no cover
@@ -735,11 +765,12 @@ class Configuration:
         """
         cur_cwd = os.getcwd()
         configfile = os.path.abspath(configfile)
-        print('Loading config file %r' % configfile)
+        print("Loading config file %r" % configfile)
         if not isfile(configfile):
             if required:
                 raise ConfigurationException(  # pragma: no cover
-                    "No such file or not a regular file: %r " % configfile)
+                    "No such file or not a regular file: %r " % configfile
+                )
 
             return
 
@@ -749,18 +780,21 @@ class Configuration:
             os.chdir(cwd_file)
             cparser = ConfigParser()
             cparser.read(configfile)
-            sections = cparser.items('AnyBlok')
+            sections = cparser.items("AnyBlok")
 
             for opt, value in sections:
-                if opt in ('logging_configfile', 'json_logging_configfile',
-                           'yaml_logging_configfile'):
+                if opt in (
+                    "logging_configfile",
+                    "json_logging_configfile",
+                    "yaml_logging_configfile",
+                ):
                     if value:  # pragma: no cover
                         value = os.path.abspath(value)
 
                 configuration[opt] = value
 
-            if 'extend' in configuration:
-                extend = configuration.pop('extend')
+            if "extend" in configuration:
+                extend = configuration.pop("extend")
                 if extend:
                     cls.parse_configfile(extend, True)
 
@@ -776,17 +810,14 @@ class Configuration:
         :param arguments:
         """
         if arguments._get_args():
-            raise ConfigurationException(
-                'Positional arguments are forbidden')
+            raise ConfigurationException("Positional arguments are forbidden")
 
-        ad = AppDirs('AnyBlok')
+        ad = AppDirs("AnyBlok")
         # load the global configuration file
-        cls.parse_configfile(
-            join(ad.site_config_dir, 'conf.cfg'), False)
+        cls.parse_configfile(join(ad.site_config_dir, "conf.cfg"), False)
         # load the user configuration file
-        cls.parse_configfile(
-            join(ad.user_config_dir, 'conf.cfg'), False)
-        if 'configfile' in dict(arguments._get_kwargs()).keys():
+        cls.parse_configfile(join(ad.user_config_dir, "conf.cfg"), False)
+        if "configfile" in dict(arguments._get_kwargs()).keys():
             if arguments.configfile:
                 cls.parse_configfile(arguments.configfile, True)
 
@@ -794,160 +825,210 @@ class Configuration:
             if opt not in cls.configuration or value:
                 cls.set(opt, value)
 
-        if 'logging_level' in cls.configuration:
+        if "logging_level" in cls.configuration:
             cls.initialize_logging()  # pragma: no cover
 
 
-@Configuration.add('config', must_be_loaded_by_unittest=True)
+@Configuration.add("config", must_be_loaded_by_unittest=True)
 def add_configuration_file(parser):
     """Add arguments to 'config' configuration group
 
     :param parser:
     """
-    parser.add_argument('-c', dest='configfile',
-                        default=os.environ.get('ANYBLOK_CONFIG_FILE'),
-                        help="Relative path of the config file")
-    parser.add_argument('--without-auto-migration', dest='withoutautomigration',
-                        action='store_true')
-    parser.add_argument('--ignore-migration-for-models', nargs="+",
-                        help="Models ignored by the migration")
-    parser.add_argument('--ignore-migration-for-schemas', nargs="+",
-                        help="Schemas ignored by the migration")
-    parser.add_argument('--isolation-level',
-                        default="READ_COMMITTED",
-                        choices=["SERIALIZABLE", "REPEATABLE_READ",
-                                 "READ_COMMITTED", "READ_UNCOMMITTED",
-                                 "AUTOCOMMIT"])
-    parser.add_argument('--default-timezone',
-                        default=os.environ.get('ANYBLOK_DEFAULT_TIMEZONE'),
-                        help="default timezone use by naive datetime "
-                             "(by default use the timezone of the serveur")
+    parser.add_argument(
+        "-c",
+        dest="configfile",
+        default=os.environ.get("ANYBLOK_CONFIG_FILE"),
+        help="Relative path of the config file",
+    )
+    parser.add_argument(
+        "--without-auto-migration",
+        dest="withoutautomigration",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--ignore-migration-for-models",
+        nargs="+",
+        help="Models ignored by the migration",
+    )
+    parser.add_argument(
+        "--ignore-migration-for-schemas",
+        nargs="+",
+        help="Schemas ignored by the migration",
+    )
+    parser.add_argument(
+        "--isolation-level",
+        default="READ_COMMITTED",
+        choices=[
+            "SERIALIZABLE",
+            "REPEATABLE_READ",
+            "READ_COMMITTED",
+            "READ_UNCOMMITTED",
+            "AUTOCOMMIT",
+        ],
+    )
+    parser.add_argument(
+        "--default-timezone",
+        default=os.environ.get("ANYBLOK_DEFAULT_TIMEZONE"),
+        help="default timezone use by naive datetime "
+        "(by default use the timezone of the serveur",
+    )
 
 
-@Configuration.add('database', label="Database",
-                   must_be_loaded_by_unittest=True)
+@Configuration.add(
+    "database", label="Database", must_be_loaded_by_unittest=True
+)
 def add_database(group):
     """Add arguments to 'database' configuration group
 
     :param group:
     """
-    group.add_argument('--db-name',
-                       default=os.environ.get('ANYBLOK_DATABASE_NAME'),
-                       help="Name of the database")
-    group.add_argument('--db-url',
-                       default=os.environ.get('ANYBLOK_DATABASE_URL'),
-                       help="Complete URL for connection with the database")
-    group.add_argument('--db-driver-name',
-                       default=os.environ.get('ANYBLOK_DATABASE_DRIVER'),
-                       help="the name of the database backend. This name "
-                            "will correspond to a module in "
-                            "sqlalchemy/databases or a third party plug-in")
-    group.add_argument('--db-user-name',
-                       default=os.environ.get('ANYBLOK_DATABASE_USER'),
-                       help="The user name")
-    group.add_argument('--db-password',
-                       default=os.environ.get('ANYBLOK_DATABASE_PASSWORD'),
-                       help="database password")
-    group.add_argument('--db-host',
-                       default=os.environ.get('ANYBLOK_DATABASE_HOST'),
-                       help="The name of the host")
-    group.add_argument('--db-port', type=int,
-                       default=os.environ.get('ANYBLOK_DATABASE_PORT'),
-                       help="The port number")
-    group.add_argument('--db-query', type=parse_qs,
-                       default=os.environ.get('ANYBLOK_DATABASE_QUERY'),
-                       help="Query string to add parameter to the connection")
-    group.add_argument('--db-echo', action="store_true",
-                       default=(os.environ.get(
-                           'ANYBLOK_DATABASE_ECHO') or False))
-    group.add_argument('--db-echo-pool', action="store_true", default=False)
-    group.add_argument('--db-max-overflow', type=int, default=10)
-    group.add_argument('--db-pool-size', type=int, default=5)
-    group.add_argument('--default-encrypt-key',
-                       default=os.environ.get('ANYBLOK_ENCRYPT_KEY'),
-                       help=("Default ey definition to encrypt column with "
-                             "encryp_key=True"))
+    group.add_argument(
+        "--db-name",
+        default=os.environ.get("ANYBLOK_DATABASE_NAME"),
+        help="Name of the database",
+    )
+    group.add_argument(
+        "--db-url",
+        default=os.environ.get("ANYBLOK_DATABASE_URL"),
+        help="Complete URL for connection with the database",
+    )
+    group.add_argument(
+        "--db-driver-name",
+        default=os.environ.get("ANYBLOK_DATABASE_DRIVER"),
+        help="the name of the database backend. This name "
+        "will correspond to a module in "
+        "sqlalchemy/databases or a third party plug-in",
+    )
+    group.add_argument(
+        "--db-user-name",
+        default=os.environ.get("ANYBLOK_DATABASE_USER"),
+        help="The user name",
+    )
+    group.add_argument(
+        "--db-password",
+        default=os.environ.get("ANYBLOK_DATABASE_PASSWORD"),
+        help="database password",
+    )
+    group.add_argument(
+        "--db-host",
+        default=os.environ.get("ANYBLOK_DATABASE_HOST"),
+        help="The name of the host",
+    )
+    group.add_argument(
+        "--db-port",
+        type=int,
+        default=os.environ.get("ANYBLOK_DATABASE_PORT"),
+        help="The port number",
+    )
+    group.add_argument(
+        "--db-query",
+        type=parse_qs,
+        default=os.environ.get("ANYBLOK_DATABASE_QUERY"),
+        help="Query string to add parameter to the connection",
+    )
+    group.add_argument(
+        "--db-echo",
+        action="store_true",
+        default=(os.environ.get("ANYBLOK_DATABASE_ECHO") or False),
+    )
+    group.add_argument("--db-echo-pool", action="store_true", default=False)
+    group.add_argument("--db-max-overflow", type=int, default=10)
+    group.add_argument("--db-pool-size", type=int, default=5)
+    group.add_argument(
+        "--default-encrypt-key",
+        default=os.environ.get("ANYBLOK_ENCRYPT_KEY"),
+        help=(
+            "Default ey definition to encrypt column with " "encryp_key=True"
+        ),
+    )
 
 
-@Configuration.add('create_db', must_be_loaded_by_unittest=True)
+@Configuration.add("create_db", must_be_loaded_by_unittest=True)
 def add_create_database(group):
     """Add arguments to 'create_db' configuration group
 
     :param group:
     """
     group.add_argument(
-        '--db-template-name',
-        default=os.environ.get('ANYBLOK_DATABASE_TEMPLATE_NAME'),
-        help="Name of the template")
+        "--db-template-name",
+        default=os.environ.get("ANYBLOK_DATABASE_TEMPLATE_NAME"),
+        help="Name of the template",
+    )
     group.add_argument(
-        '--with-demo',
-        default=os.environ.get('ANYBLOK_WITH_DEMO', False),
-        action='store_true',
+        "--with-demo",
+        default=os.environ.get("ANYBLOK_WITH_DEMO", False),
+        action="store_true",
         help="Call **update_demo** method define on bloks to import demo data "
-             "while installing the project. If this option is used at database "
-             "creation that information will be kept in the database then "
-             "**update_demo** method will be called while updating bloks as "
-             "well.",
+        "while installing the project. If this option is used at database "
+        "creation that information will be kept in the database then "
+        "**update_demo** method will be called while updating bloks as "
+        "well.",
     )
 
 
-@Configuration.add('install-bloks')
+@Configuration.add("install-bloks")
 def add_install_bloks(parser):
     """Add arguments to 'install-bloks' configuration group
 
     :param parser:
     """
-    parser.add_argument('--install-bloks', nargs="+", help="blok to install")
-    parser.add_argument('--install-all-bloks', action='store_true')
-    parser.add_argument('--test-blok-at-install', action='store_true')
+    parser.add_argument("--install-bloks", nargs="+", help="blok to install")
+    parser.add_argument("--install-all-bloks", action="store_true")
+    parser.add_argument("--test-blok-at-install", action="store_true")
 
 
-@Configuration.add('uninstall-bloks')
+@Configuration.add("uninstall-bloks")
 def add_uninstall_bloks(parser):
     """Add arguments to 'uninstall-bloks' configuration group
 
     :param parser:
     """
-    parser.add_argument('--uninstall-bloks', nargs="+",
-                        help="bloks to uninstall")
+    parser.add_argument(
+        "--uninstall-bloks", nargs="+", help="bloks to uninstall"
+    )
 
 
-@Configuration.add('install-or-update-bloks')
+@Configuration.add("install-or-update-bloks")
 def add_install_or_update_bloks(parser):
     """Add arguments to 'install-or-update-bloks' configuration group
 
     :param parser:
     """
-    parser.add_argument('--install-or-update-bloks', nargs="+",
-                        help="bloks to install or update")
+    parser.add_argument(
+        "--install-or-update-bloks",
+        nargs="+",
+        help="bloks to install or update",
+    )
 
 
-@Configuration.add('update-bloks', label='Update database')
+@Configuration.add("update-bloks", label="Update database")
 def add_update_bloks(parser):
     """Add arguments to 'update-bloks' configuration group
 
     :param parser:
     """
-    parser.add_argument('--update-bloks', nargs="+", help="bloks to update")
-    parser.add_argument('--update-all-bloks', action='store_true')
-    parser.add_argument('--reinit-all', action='store_true')
-    parser.add_argument('--reinit-tables', action='store_true')
-    parser.add_argument('--reinit-columns', action='store_true')
-    parser.add_argument('--reinit-indexes', action='store_true')
-    parser.add_argument('--reinit-constraints', action='store_true')
+    parser.add_argument("--update-bloks", nargs="+", help="bloks to update")
+    parser.add_argument("--update-all-bloks", action="store_true")
+    parser.add_argument("--reinit-all", action="store_true")
+    parser.add_argument("--reinit-tables", action="store_true")
+    parser.add_argument("--reinit-columns", action="store_true")
+    parser.add_argument("--reinit-indexes", action="store_true")
+    parser.add_argument("--reinit-constraints", action="store_true")
 
 
-@Configuration.add('interpreter')
+@Configuration.add("interpreter")
 def add_interpreter(parser):
     """Add arguments to 'interpreter' configuration group
 
     :param parser:
     """
-    parser.add_argument('--script', dest='python_script',
-                        help="Python script to execute")
+    parser.add_argument(
+        "--script", dest="python_script", help="Python script to execute"
+    )
 
 
-@Configuration.add('schema', label="Schema options")
+@Configuration.add("schema", label="Schema options")
 def add_schema(group):
     """Add arguments to 'schema' configuration group
 
@@ -955,55 +1036,72 @@ def add_schema(group):
     """
     from graphviz import FORMATS
 
-    group.add_argument('--schema-format',
-                       default='png', choices=tuple(FORMATS))
+    group.add_argument("--schema-format", default="png", choices=tuple(FORMATS))
 
 
-@Configuration.add('doc', label="Doc options")
+@Configuration.add("doc", label="Doc options")
 def add_doc(group):
     """Add arguments to 'doc' configuration group
 
     :param group:
     """
-    group.add_argument('--doc-format',
-                       default='RST', choices=('RST', 'UML', 'SQL'))
-    group.add_argument('--doc-output',
-                       default='anyblok-documentation')
-    group.add_argument('--doc-wanted-models', nargs='+',
-                       help='Detail only these models')
-    group.add_argument('--doc-unwanted-models', nargs='+',
-                       help='No detail these models')
+    group.add_argument(
+        "--doc-format", default="RST", choices=("RST", "UML", "SQL")
+    )
+    group.add_argument("--doc-output", default="anyblok-documentation")
+    group.add_argument(
+        "--doc-wanted-models", nargs="+", help="Detail only these models"
+    )
+    group.add_argument(
+        "--doc-unwanted-models", nargs="+", help="No detail these models"
+    )
 
 
-@Configuration.add('logging', label="Logging")
+@Configuration.add("logging", label="Logging")
 def add_logging(group):
     """Add arguments to 'logging' configuration group
 
     :param group:
     """
-    group.add_argument('--logging-level', dest='logging_level',
-                       choices=['NOTSET', 'DEBUG', 'INFO', 'WARNING',
-                                'ERROR', 'CRITICAL'])
-    group.add_argument('--logging-level-qualnames', nargs='+',
-                       help="Limit the log level on a qualnames list")
-    group.add_argument('--logging-config-file', dest='logging_configfile',
-                       help="Relative path of the logging config file")
-    group.add_argument('--logging-json-config-file',
-                       dest='json_logging_configfile',
-                       help="Relative path of the logging config file (json). "
-                            "Only if the logging config file doesn't filled")
-    group.add_argument('--logging-yaml-config-file',
-                       dest='yaml_logging_configfile',
-                       help="Relative path of the logging config file (yaml). "
-                            "Only if the logging and json config file doesn't "
-                            "filled")
+    group.add_argument(
+        "--logging-level",
+        dest="logging_level",
+        choices=["NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+    )
+    group.add_argument(
+        "--logging-level-qualnames",
+        nargs="+",
+        help="Limit the log level on a qualnames list",
+    )
+    group.add_argument(
+        "--logging-config-file",
+        dest="logging_configfile",
+        help="Relative path of the logging config file",
+    )
+    group.add_argument(
+        "--logging-json-config-file",
+        dest="json_logging_configfile",
+        help="Relative path of the logging config file (json). "
+        "Only if the logging config file doesn't filled",
+    )
+    group.add_argument(
+        "--logging-yaml-config-file",
+        dest="yaml_logging_configfile",
+        help="Relative path of the logging config file (yaml). "
+        "Only if the logging and json config file doesn't "
+        "filled",
+    )
 
 
-@Configuration.add('preload', label="Preload")
+@Configuration.add("preload", label="Preload")
 def define_preload_option(group):
     """Add arguments to 'preload' configuration group
 
     :param group:
     """
-    group.add_argument('--databases', dest='db_names', nargs="+",
-                       help='List of the database allow to be load')
+    group.add_argument(
+        "--databases",
+        dest="db_names",
+        nargs="+",
+        help="List of the database allow to be load",
+    )

@@ -8,14 +8,19 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 from copy import deepcopy
+
 import pytest
-from anyblok.testing import sgdb_in
+from sqlalchemy_utils.functions import (
+    create_database,
+    database_exists,
+    drop_database,
+)
+
 from anyblok.blok import BlokManager
 from anyblok.config import Configuration, get_url
 from anyblok.environment import EnvironmentManager
 from anyblok.registry import RegistryManager
-from sqlalchemy_utils.functions import (
-    drop_database, database_exists, create_database)
+from anyblok.testing import sgdb_in
 
 logger = logging.getLogger(__name__)
 
@@ -28,24 +33,24 @@ def init_registry_with_bloks(bloks, function, **kwargs):
     if isinstance(bloks, str):
         bloks = [bloks]
 
-    anyblok_test_name = 'anyblok-test'
+    anyblok_test_name = "anyblok-test"
     if anyblok_test_name not in bloks:
         bloks.append(anyblok_test_name)
 
     loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
     if function is not None:
-        EnvironmentManager.set('current_blok', anyblok_test_name)
+        EnvironmentManager.set("current_blok", anyblok_test_name)
         try:
             function(**kwargs)
         finally:
-            EnvironmentManager.set('current_blok', None)
+            EnvironmentManager.set("current_blok", None)
     try:
         registry = RegistryManager.get(
-            Configuration.get('db_name'),
-            unittest=True)
+            Configuration.get("db_name"), unittest=True
+        )
 
         # update required blok
-        registry_bloks = registry.get_bloks_by_states('installed', 'toinstall')
+        registry_bloks = registry.get_bloks_by_states("installed", "toinstall")
         toinstall = [x for x in bloks if x not in registry_bloks]
         toupdate = [x for x in bloks if x in registry_bloks]
         registry.upgrade(install=toinstall, update=toupdate)
@@ -61,12 +66,12 @@ def init_registry(function, **kwargs):
 
 @pytest.fixture(scope="session")
 def base_loaded(request, configuration_loaded):
-    if sgdb_in(['MySQL', 'MariaDB']):
+    if sgdb_in(["MySQL", "MariaDB"]):
         return
 
     url = get_url()
     if not database_exists(url):
-        db_template_name = Configuration.get('db_template_name', None)
+        db_template_name = Configuration.get("db_template_name", None)
         create_database(url, template=db_template_name)
 
     BlokManager.load()
@@ -85,16 +90,16 @@ def bloks_loaded(request, base_loaded):
 @pytest.fixture(scope="module")
 def testbloks_loaded(request, base_loaded):
     request.addfinalizer(BlokManager.unload)
-    BlokManager.load(entry_points=('bloks', 'test_bloks'))
+    BlokManager.load(entry_points=("bloks", "test_bloks"))
 
 
 def reset_db():
-    if sgdb_in(['MySQL', 'MariaDB']):
+    if sgdb_in(["MySQL", "MariaDB"]):
         url = get_url()
         if database_exists(url):
             drop_database(url)
 
-        db_template_name = Configuration.get('db_template_name', None)
+        db_template_name = Configuration.get("db_template_name", None)
         create_database(url, template=db_template_name)
 
 
@@ -125,16 +130,16 @@ def registry_testblok_func(request, testbloks_loaded):
 @pytest.fixture(
     scope="class",
     params=[
-        ('prefix', 'suffix'),
-        ('', ''),
-    ]
+        ("prefix", "suffix"),
+        ("", ""),
+    ],
 )
 def db_schema(request, bloks_loaded):
-    Configuration.set('prefix_db_schema.Model.*', request.param[0])
-    Configuration.set('suffix_db_schema.Model.*', request.param[1])
+    Configuration.set("prefix_db_schema.Model.*", request.param[0])
+    Configuration.set("suffix_db_schema.Model.*", request.param[1])
 
     def rollback():
-        Configuration.set('prefix_db_schema.Model.*', '')
-        Configuration.set('suffix_db_schema.Model.*', '')
+        Configuration.set("prefix_db_schema.Model.*", "")
+        Configuration.set("suffix_db_schema.Model.*", "")
 
     request.addfinalizer(rollback)

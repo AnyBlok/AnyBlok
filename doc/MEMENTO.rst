@@ -217,7 +217,7 @@ The ``Declarations`` has two main methods
 Model
 -----
 
-A Model is an AnyBlok class referenced in the registry. The registry of AnyBlok 
+A Model is an AnyBlok class referenced in the registry. The registry of AnyBlok
 is hierarchical. The model ``Foo`` is accessed by ``anyblok.Foo`` and the model
 ``Foo.Bar`` is accessed by ``anyblok.Foo.Bar``.
 
@@ -436,7 +436,7 @@ View Model
 
 A ``View Model`` as ``SQL Model``. Need the declaration of ``Column`` and / or
 ``RelationShip``. In the ``register`` the param ``factory`` must be
-``anyblok.model.factory.ViewFactory`` and the ``View Model`` must define the 
+``anyblok.model.factory.ViewFactory`` and the ``View Model`` must define the
 ``sqlalchemy_view_declaration`` classmethod.::
 
     from anyblok.model.factory import ViewFactory
@@ -768,7 +768,7 @@ Parameters of the ``Many2One`` field:
 
 ::
 
-    Many2One(model=The.Model, nullable=True, 
+    Many2One(model=The.Model, nullable=True,
              foreign_key_options={'ondelete': 'cascade'})
 
 

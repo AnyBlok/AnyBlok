@@ -5,22 +5,28 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from .plugins import ModelPluginBase
 from anyblok.common import apply_cache
+
+from .plugins import ModelPluginBase
 
 
 class CachePlugin(ModelPluginBase):
-
     def __init__(self, registry):
-        if not hasattr(registry, 'caches'):
+        if not hasattr(registry, "caches"):
             registry.caches = {}
 
         super(CachePlugin, self).__init__(registry)
 
-    def transform_base_attribute(self, attr, method, namespace, base,
-                                 transformation_properties,
-                                 new_type_properties):
-        """ Find the sqlalchemy hybrid methods in the base to save the
+    def transform_base_attribute(
+        self,
+        attr,
+        method,
+        namespace,
+        base,
+        transformation_properties,
+        new_type_properties,
+    ):
+        """Find the sqlalchemy hybrid methods in the base to save the
         namespace and the method in the registry
 
         :param attr: attribute name
@@ -30,6 +36,13 @@ class CachePlugin(ModelPluginBase):
         :param transformation_properties: the properties of the model
         :param new_type_properties: param to add in a new base if need
         """
-        new_type_properties.update(apply_cache(
-            attr, method, self.registry, namespace, base,
-            transformation_properties))
+        new_type_properties.update(
+            apply_cache(
+                attr,
+                method,
+                self.registry,
+                namespace,
+                base,
+                transformation_properties,
+            )
+        )

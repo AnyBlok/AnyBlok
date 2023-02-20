@@ -44,7 +44,7 @@ CHANGELOG
 1.3.1 (2021-08-25)
 ------------------
 
-* Fixed sphinx pluggin 
+* Fixed sphinx pluggin
 
 1.3.0 (2021-07-12)
 ------------------
@@ -66,7 +66,7 @@ CHANGELOG
 
 * Adapted to **SQLAlchemy >= 1.4**
 * Fixed Many2One with pycountry as primary key
-* Fixed Many2One with **primary_key=True**, when primary key is True, 
+* Fixed Many2One with **primary_key=True**, when primary key is True,
   this nullable is forced to False
 * Refactored hybrid_property to use the decorator mecanisme
 * Adapted SQLA.URL manipulation, which was became immutable
@@ -84,12 +84,12 @@ CHANGELOG
 1.1.0 (2021-03-22)
 ------------------
 
-* Fixed version of **SQLAlchemy < 1.4.0**, The next version of AnyBlok 
-  will be adapted to **SQLAlchemy >= 1.4.0 < 2.0.0**, and will prepare to 
+* Fixed version of **SQLAlchemy < 1.4.0**, The next version of AnyBlok
+  will be adapted to **SQLAlchemy >= 1.4.0 < 2.0.0**, and will prepare to
   **SQLAlchemy >= 2.0**, See issue #168
-* **SQLAlchemy 1.4.0** add a new attribut in the model **registry**, 
-  this attribute conflicts with the registry of AnyBlok. A new attribute 
-  **anyblok** is created on the model to call the registry of AnyBlok. 
+* **SQLAlchemy 1.4.0** add a new attribut in the model **registry**,
+  this attribute conflicts with the registry of AnyBlok. A new attribute
+  **anyblok** is created on the model to call the registry of AnyBlok.
   A modification of the attribute **registry** is done to use both attributes
   with the same name. A deprecation warning is added on the attibute **registry**
   of AnyBlok
@@ -103,10 +103,10 @@ CHANGELOG
 * Bug Fix on registry loading sequence. The **apply_model_schema_on_table**
   method called at registry initialisation has been splitted to make sqlalchemy
   ORM events registration independent from migration.
-* Added undefined blok behaviour. It is an important behaviour needed and 
+* Added undefined blok behaviour. It is an important behaviour needed and
   written in the roadmap where the goal is to defined blok which need another
   inexisting blok. this blok is installabled only if the blok exist. A package
-  can defined a group of bloks that depend of another packages. They bloks 
+  can defined a group of bloks that depend of another packages. They bloks
   are installabled if the another package is installed
 * It is now possible to place a "Model" in another schema on the SGDB
   ::
@@ -115,19 +115,19 @@ CHANGELOG
       class MyModelInOtherSchema:
           __db_schema__ = 'my_schema'
 
-* Now the Email, Selection, Country, Json, Decimal, Interval, LargeBinary 
+* Now the Email, Selection, Country, Json, Decimal, Interval, LargeBinary
   columns can be crypted
-* Removed compatibility with **Python 3.4** and **python 3.5**, because 
+* Removed compatibility with **Python 3.4** and **python 3.5**, because
   these versions are deprecated
 * Added *TimeStamp* column
 * Added *Enum* column
-* Added **ignore_migration** to protect the existing table or column again 
+* Added **ignore_migration** to protect the existing table or column again
   auto migration when then schema and this definition are diferents
 * Added capability with mssql+pyodbc
 * Fixed View: allow to add Many2One to a View
 * Added flag_modified method on SQLModel #72
-* Add in extra dependencies drivers used in unit tests for dialects tested 
-  with cPython 
+* Add in extra dependencies drivers used in unit tests for dialects tested
+  with cPython
 
   * postgres: psycopg2-binary
   * mysql: mysqlclient
@@ -162,15 +162,15 @@ CHANGELOG
 0.22.0 (2019-06-21)
 -------------------
 
-* Replaced the **nose test** by **pytest**. All the test was converted. 
-* Moved and renamed ``anyblok.tests.testcase.py`` to ``anyblok.testing.py``. 
+* Replaced the **nose test** by **pytest**. All the test was converted.
+* Moved and renamed ``anyblok.tests.testcase.py`` to ``anyblok.testing.py``.
   The file ``anyblok.tests.testcase.py`` import only the TestCase class to
   continue to maintain the compatibility with older tests. PR
   `#67 <https://github.com/AnyBlok/AnyBlok/pull/67>`_
 * the console script ``anyblok_nose`` raise an exception. Because this runner
   can't execute pytest tests. The goal is to use the nose plugin.
 * Removed the behviour ``test-bloks-at-install``
-* Added compatibility with `MySQL <https://www.mysql.com/>`_ and 
+* Added compatibility with `MySQL <https://www.mysql.com/>`_ and
   `MariaDB <https://mariadb.org/>`_. PR `#85 <https://github.com/AnyBlok/AnyBlok/pull/85>`_
 
 .. warning::
@@ -195,13 +195,13 @@ CHANGELOG
 0.21.0 (2019-03-15)
 -------------------
 
-* Fixed alias. The ``Model.aliased`` method now binds the registry to the alias. The goal is 
+* Fixed alias. The ``Model.aliased`` method now binds the registry to the alias. The goal is
   to use **hybrid_method** with alias in AnyBlok.
 * Fixed Column.Country, The latest version of pycountry does not raise a lookup exception
   When the countries does not exist. Now AnyBlok takes this change into consideration to raise the exception
   and keep the main behaviour
 * Fixed alias. Now the ``Model.aliased`` method links the registry instance into the aliased model.
-  The goal is to use `hybrid_method <https://docs.sqlalchemy.org/en/latest/orm/extensions/hybrid.html#sqlalchemy.ext.hybrid.hybrid_method>`_ 
+  The goal is to use `hybrid_method <https://docs.sqlalchemy.org/en/latest/orm/extensions/hybrid.html#sqlalchemy.ext.hybrid.hybrid_method>`_
   decorator with alias in AnyBlok.
 * Fixed #60: Now DateTime plugins verify also the DateTime columns of the dependencies of the Model
 * Removed **Python 3.3** compatibility
@@ -308,11 +308,11 @@ CHANGELOG
 -------------------
 
 * [FIX] fix remove field
-* [FIX] ``io`` formater model with external id. The error forbidden the 
+* [FIX] ``io`` formater model with external id. The error forbidden the
   none / empty value.
-* [FIX] option ``install_or_update_bloks``, if one blok is marked as 
+* [FIX] option ``install_or_update_bloks``, if one blok is marked as
   **toupdate**, then this blok will be not marked as **toinstall**
-* [FIX] ``Blok.import_file`` have not raise if does not found 
+* [FIX] ``Blok.import_file`` have not raise if does not found
   **error_found** in the result of the import
 * [FIX] ``Model.get_primary_keys`` with polymorphism (single table)
 * Remove ``column.uText``, ``column.uString``, ``column.SmallInteger``
@@ -325,12 +325,12 @@ CHANGELOG
 
 * [FIX] hasattr on field.Function
 * [IMP] Improve rich **Many2Many** to allow to have got a rich **Many2Many**
-  with the same model on the both side, Add also a new attribute 
+  with the same model on the both side, Add also a new attribute
   **join_model** to compute the real join table from the table name defined
   on the Model, In the case of join_model with column based on Many2One.
   Add an option to force recompute secondaryjoin and primaryjoin in the
   case where the model join have more than one foreign key to one of the
-  both model. the m2m_local_columns and m2m_remote_columns become required 
+  both model. the m2m_local_columns and m2m_remote_columns become required
   attribute
 * [ADD] New field.JsonRelated. The goal is to manipulate a json entry as a
   column
@@ -343,7 +343,7 @@ CHANGELOG
 0.17.0 (2018-02-23)
 -------------------
 
-* [FIX] **SQLAlchemy_Utils** changed the import path of **EncryptedType** in 
+* [FIX] **SQLAlchemy_Utils** changed the import path of **EncryptedType** in
   version **0.33.0**
 * [REF] Add default_time on configuration and **DateTime** column.
   Before this change a naive datetime get the timezone of server host, now
@@ -355,22 +355,22 @@ CHANGELOG
     2) default_timezone in configuration (if defined)
     3) timezone of the server
 
-  .. warning:: 
+  .. warning::
 
       This options are only use for naive datetime, to save them with a timezone.
       In the case of a datetime with timezone, this datetime keep their own datetime.
 
 * [REF] add a function in config to get the name of the database from Configuration
   **db_name** or **db_url**. The script **anyblok_createdb** and the plugin
-  use this function. 
-* [IMP] Add option **--anyblok-db-url** in plugin nose options. the options can have 
+  use this function.
+* [IMP] Add option **--anyblok-db-url** in plugin nose options. the options can have
   default value from environment variable **ANYBLOK_DATABASE_URL**
 * [IMP] add primary_key attibute on Many2One and One2One.
   Only when the column is created by the relationship Many2One or One2One.
-  The column created get the attribute primary_key gave to relationship and 
+  The column created get the attribute primary_key gave to relationship and
   apply it.
 * [IMP] add repr default method on all SqlModel and ViewSqlModel
-* [FIX] Encrypt columns, the custom type from  anyblok did not implement 
+* [FIX] Encrypt columns, the custom type from  anyblok did not implement
   the ``process_result_value`` need for decrypt value
 * [REF] Simplify Configuration, old and unused code are removed
 
@@ -385,7 +385,7 @@ CHANGELOG
   create the constraint on an existing and an unexisting columns
 * [IMP] add index attibute on Many2One and One2One.
   Only when the column is created by the relationship Many2One or One2One.
-  The column created get the attribute index gave to relationship and 
+  The column created get the attribute index gave to relationship and
   apply it.
 * [FIX] raise an ConfigurationException on wrong path
   if an inexisting configuration file is given the the exception is raised
@@ -398,9 +398,9 @@ CHANGELOG
   came from **anyblok.start**
 * [REF] The nose plugins take the **tests** directories in any location in the blok
   not only at the root of the blok
-* [REF] The options **test-blok-at-install** take the **tests** directory in any 
+* [REF] The options **test-blok-at-install** take the **tests** directory in any
   location in the blok not only at the root of the blok
-* [REF] The anyblok_nose console script to take the **tests** directories in any 
+* [REF] The anyblok_nose console script to take the **tests** directories in any
   location in the blok not only at the root of the blok
 
 0.16.1 (2018-01-29)
@@ -429,7 +429,7 @@ CHANGELOG
 -------------------
 
 * [REF] change log level, the instalation become less verbose
-* [REF] change namimg convention, dont check in function of 
+* [REF] change namimg convention, dont check in function of
   table and column name to know if it is an AnyBlok constraint
 * [FIX] check if a drop check constraint is not a add check constraint
   truncated
@@ -440,7 +440,7 @@ CHANGELOG
 0.13.0 (2018-01-09)
 -------------------
 
-* [FIX] check constraint must not be create at the same time that the column, 
+* [FIX] check constraint must not be create at the same time that the column,
   because the column of the constraint could have not exist yet
 * [REF] change namimg convention
 * [FIX] detect and apply drop check constraint in the migration
@@ -451,11 +451,11 @@ CHANGELOG
 
 * [FIX] name of the created class, before the fix anyblok use the tablename.
   In the case of polymorphism on single table, sqlalchemy found two two or more
-  mappers for a single mapper name. Now the class name is the registry name 
+  mappers for a single mapper name. Now the class name is the registry name
   without dot.
   This change have consequence only if the primary join is forced.
   In the case::
-      
+
       Test = registry.Test
       Test.id
 
@@ -464,7 +464,7 @@ CHANGELOG
       primaryjoin = 'test.id == ...'
 
   by::
-      
+
       primaryjoin = 'ModelTest.id == ...'
 
 * [FIX] name of the fakecolumn when a Many2One is added whitout
@@ -495,7 +495,7 @@ CHANGELOG
 * [ADD] Mixin to do readonly
 * [REMOVE] cron functionality, it will be add in another package **anyblok_dramatiq**
 * [FIX] Field.DateTime documentation, add ``is auto updated``
-* [REF] add entry point ``anyblok.session.event`` and additional_setting 
+* [REF] add entry point ``anyblok.session.event`` and additional_setting
   ``anyblok.session.event`` to add some events on the session
 * [FIX] clean foreign_key in some column type, now the foreign_key is made by Column class
 * [FIX] remove for System.Field and System.Model the removed fields
@@ -524,14 +524,14 @@ CHANGELOG
 0.10.0 (2017-11-14)
 -------------------
 
-* [ADD] ``anyblok_configuration.post_load`` to initialize some services in 
+* [ADD] ``anyblok_configuration.post_load`` to initialize some services in
   function of configuration
-* [REF] Update configuration groups to add ``dramatiq-broker`` by default. 
+* [REF] Update configuration groups to add ``dramatiq-broker`` by default.
   This configuration groups is filled by **anyblok_dramatiq** package
 * [FIX] when the applications configuration has not ``configuration_groups``
   then the configuration use the ``configuration_groups`` of the default
   application
-* [ADD] Add configuration group ``preload`` definition, but not used 
+* [ADD] Add configuration group ``preload`` definition, but not used
 * [ADD] Entry point ``anyblok.model.plugin`` to add behaviour on the model
 * [REF] **hybrid_method** become an ``anyblok.model.plugin``
 * [REF] adapter of mapper_args and table_args become an ``anyblok.model.plugin``
@@ -550,7 +550,7 @@ CHANGELOG
 * [IMP] add the the author in autodoc
 * [IMP] in the script blok the exclude and include model can use ``.*`` to take
   children in the namespace
-* [FIX] anyblok_doc with UML, don 't make agregation when the model doesn't 
+* [FIX] anyblok_doc with UML, don 't make agregation when the model doesn't
   exist
 
 0.9.9 (2017-09-19)

@@ -11,7 +11,6 @@ from anyblok.blok import BlokManager
 
 @Declarations.register(Declarations.Model.Documentation)
 class Blok:
-
     def __init__(self, blok):
         self.blok = blok
 
@@ -21,7 +20,7 @@ class Blok:
     @classmethod
     def filterBloks(cls, query):
         Blok = cls.anyblok.System.Blok
-        return query.filter(Blok.state == 'installed').order_by(Blok.order)
+        return query.filter(Blok.state == "installed").order_by(Blok.order)
 
     @classmethod
     def getelements(cls):
@@ -36,21 +35,21 @@ class Blok:
 
     @classmethod
     def footer2RST(cls, doc):
-
         pass
 
     def toRST(self, doc):
-        doc.write(self.blok.name + '\n' + '-' * len(self.blok.name) + '\n\n')
-        doc.write(self.blok.short_description + '\n\n')
+        doc.write(self.blok.name + "\n" + "-" * len(self.blok.name) + "\n\n")
+        doc.write(self.blok.short_description + "\n\n")
         self.toRST_write_params(doc)
-        doc.write(self.blok.long_description + '\n\n')
+        doc.write(self.blok.long_description + "\n\n")
 
     def toRST_get_field(self):
-        return ('author', 'version', 'installed_version')
+        return ("author", "version", "installed_version")
 
     def toRST_write_params(self, doc):
         fields = self.toRST_get_field()
         msg = "Parameter:\n\n* "
-        msg += '\n* '.join('**%s** = %s' % (f, getattr(self.blok, f))
-                           for f in fields)
-        doc.write(msg + '\n\n')
+        msg += "\n* ".join(
+            "**%s** = %s" % (f, getattr(self.blok, f)) for f in fields
+        )
+        doc.write(msg + "\n\n")

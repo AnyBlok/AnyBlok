@@ -6,38 +6,32 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from ..authorization.rule.base import deny_all
-from ..authorization.rule.base import RuleNotForModelClasses
-from anyblok.test_bloks.authorization import TestRuleOne
-from anyblok.test_bloks.authorization import TestRuleTwo
+
+from anyblok.test_bloks.authorization import TestRuleOne, TestRuleTwo
+
+from ..authorization.rule.base import RuleNotForModelClasses, deny_all
 
 
 class TestAuthorizationDeclaration:
-
     def test_association(self, registry_testblok_func):
         registry = registry_testblok_func
-        registry.upgrade(install=('test-blok7',))
-        record = registry.Test(id=23, label='Hop')
-        assert isinstance(registry.lookup_policy(record, 'Read'),
-                          TestRuleOne)
-        assert isinstance(registry.lookup_policy(record, 'Other'),
-                          TestRuleTwo)
+        registry.upgrade(install=("test-blok7",))
+        record = registry.Test(id=23, label="Hop")
+        assert isinstance(registry.lookup_policy(record, "Read"), TestRuleOne)
+        assert isinstance(registry.lookup_policy(record, "Other"), TestRuleTwo)
 
-        record = registry.Test2(id=2, label='Hop')
-        assert registry.lookup_policy(record, 'Read') is deny_all
+        record = registry.Test2(id=2, label="Hop")
+        assert registry.lookup_policy(record, "Read") is deny_all
 
     def test_override(self, registry_testblok_func):
         # test-blok8 depends on test-blok7
         registry = registry_testblok_func
-        registry.upgrade(install=('test-blok8',))
+        registry.upgrade(install=("test-blok8",))
         # lookup can be made on model itself
         model = registry.Test
-        assert isinstance(registry.lookup_policy(model, 'Read'),
-                          TestRuleOne)
-        assert isinstance(registry.lookup_policy(model, 'Other'),
-                          TestRuleOne)
-        assert isinstance(registry.lookup_policy(model, 'Write'),
-                          TestRuleTwo)
+        assert isinstance(registry.lookup_policy(model, "Read"), TestRuleOne)
+        assert isinstance(registry.lookup_policy(model, "Other"), TestRuleOne)
+        assert isinstance(registry.lookup_policy(model, "Write"), TestRuleTwo)
 
     def test_model_based_policy(self, registry_testblok_func):
         """Test the model based policy using the default Grant model.
@@ -47,51 +41,47 @@ class TestAuthorizationDeclaration:
         #TODO move this test to the 'model_authz' blok
         """
         registry = registry_testblok_func
-        registry.upgrade(install=('test-blok9',))
+        registry.upgrade(install=("test-blok9",))
         model = registry.Test2
         Grant = registry.Authorization.ModelPermissionGrant
-        Grant.insert(model='Model.Test2',
-                     principal="Franck",
-                     permission="Read")
+        Grant.insert(model="Model.Test2", principal="Franck", permission="Read")
 
         record = model.insert(id=2)
-        assert registry.check_permission(record, ('Franck',), 'Read')
-        assert not registry.check_permission(record, ('Franck',), 'Write')
+        assert registry.check_permission(record, ("Franck",), "Read")
+        assert not registry.check_permission(record, ("Franck",), "Write")
 
         # With this policy, permission can be checked on the model
-        assert registry.check_permission(model, ('Franck',), 'Read')
-        assert not registry.check_permission(model, ('Franck',), 'Write')
+        assert registry.check_permission(model, ("Franck",), "Read")
+        assert not registry.check_permission(model, ("Franck",), "Write")
 
         # This can be also called directly from the model class
-        assert model.has_model_perm(('Franck',), 'Read')
-        assert not model.has_model_perm(('Franck',), 'Write')
+        assert model.has_model_perm(("Franck",), "Read")
+        assert not model.has_model_perm(("Franck",), "Write")
         with pytest.raises(TypeError):
-            model.has_perm(('Franck',), 'Write')
+            model.has_perm(("Franck",), "Write")
 
         query = model.query().filter(model.id != 1)
         assert query.count() == 1
 
-        filtered = registry.wrap_query_permission(
-            query, ('Franck',), 'Read')
+        filtered = registry.wrap_query_permission(query, ("Franck",), "Read")
         assert filtered.count() == 1
         assert filtered.first().id == 2
         all_results = filtered.all()
         assert all_results[0].id == 2
 
-        filtered = registry.wrap_query_permission(
-            query, ('Franck',), 'Write')
+        filtered = registry.wrap_query_permission(query, ("Franck",), "Write")
         assert filtered.count() == 0
         assert filtered.first() is None
         assert len(filtered.all()) == 0
 
         # the same can be achieved from the query
-        filtered = query.with_perm(('Franck',), 'Read')
+        filtered = query.with_perm(("Franck",), "Read")
         assert filtered.count() == 1
         assert filtered.first().id == 2
         all_results = filtered.all()
         assert all_results[0].id == 2
 
-        filtered = query.with_perm(('Franck',), 'Write')
+        filtered = query.with_perm(("Franck",), "Write")
         assert filtered.count() == 0
         assert filtered.first() is None
         assert len(filtered.all()) == 0
@@ -105,58 +95,57 @@ class TestAuthorizationDeclaration:
         main code body.
         """
         registry = registry_testblok_func
-        registry.upgrade(install=('test-blok10',))
+        registry.upgrade(install=("test-blok10",))
         model = registry.Test2
         Grant = registry.Authorization.ModelPermissionGrant
-        Grant.insert(model='Model.Test2',
-                     principal="Franck",
-                     permission="Read")
-        Grant.insert(model='Model.Test2',
-                     principal="Georges",
-                     permission="Read")
+        Grant.insert(model="Model.Test2", principal="Franck", permission="Read")
+        Grant.insert(
+            model="Model.Test2", principal="Georges", permission="Read"
+        )
 
         # We also test that this entry is ignored, because it is
         # superseded by attribute-based policy
-        Grant.insert(model='Model.Test',
-                     principal="Franck",
-                     permission="Write")
+        Grant.insert(model="Model.Test", principal="Franck", permission="Write")
 
-        record = model.insert(id=1, owner='Georges')
-        assert registry.check_permission(record, ('Franck',), 'Read')
-        assert registry.check_permission(record, ('Georges',), 'Write')
-        assert not registry.check_permission(record, ('Franck',), 'Write')
+        record = model.insert(id=1, owner="Georges")
+        assert registry.check_permission(record, ("Franck",), "Read")
+        assert registry.check_permission(record, ("Georges",), "Write")
+        assert not registry.check_permission(record, ("Franck",), "Write")
 
         # The same checks can be done from the record
-        assert record.has_perm(('Franck',), 'Read')
-        assert record.has_perm(('Georges',), 'Write')
-        assert not record.has_perm(('Franck',), 'Write')
+        assert record.has_perm(("Franck",), "Read")
+        assert record.has_perm(("Georges",), "Write")
+        assert not record.has_perm(("Franck",), "Write")
 
         # With this policy, permission cannot be checked on the model
         with pytest.raises(RuleNotForModelClasses):
-            registry.check_permission(model, ('Franck',), 'Write')
+            registry.check_permission(model, ("Franck",), "Write")
 
         # ... unless one defines a model_rule to handle the case
         assert not registry.check_permission(
-            model, ('Franck',), 'PermWithModelRule')
+            model, ("Franck",), "PermWithModelRule"
+        )
 
         Grant = registry.Authorization.ModelPermissionGrant
-        Grant.insert(model=model.__registry_name__,
-                     principal="Franck",
-                     permission="PermWithModelRule")
+        Grant.insert(
+            model=model.__registry_name__,
+            principal="Franck",
+            permission="PermWithModelRule",
+        )
         assert registry.check_permission(
-            model, ('Franck',), 'PermWithModelRule')
-        assert not record.has_perm(('Franck',), 'PermWithModelRule')
+            model, ("Franck",), "PermWithModelRule"
+        )
+        assert not record.has_perm(("Franck",), "PermWithModelRule")
 
         # Query wrapping tests
 
-        model.insert(id=2, owner='Franck')
-        model.insert(id=3, owner='JS')
+        model.insert(id=2, owner="Franck")
+        model.insert(id=3, owner="JS")
 
         query = model.query()
         assert query.count() == 3
 
-        filtered = registry.wrap_query_permission(
-            query, ('Franck',), 'Write')
+        filtered = registry.wrap_query_permission(query, ("Franck",), "Write")
 
         assert filtered.count() == 1
         assert filtered.first().id == 2
@@ -164,18 +153,23 @@ class TestAuthorizationDeclaration:
         assert all_results[0].id == 2
 
         # The same can be achieved directly on query
-        filtered = query.with_perm(('Franck',), 'Write')
+        filtered = query.with_perm(("Franck",), "Write")
         assert filtered.count() == 1
         assert filtered.first().id == 2
         all_results = filtered.all()
         assert all_results[0].id == 2
 
-        filtered = registry.wrap_query_permission(
-            query, ('Franck',), 'Read')
+        filtered = registry.wrap_query_permission(query, ("Franck",), "Read")
         print(filtered.query.sql_statement)
         assert filtered.count() == 3
 
         filtered = registry.wrap_query_permission(
-            query, ('Franck', 'Georges',), 'Write')
+            query,
+            (
+                "Franck",
+                "Georges",
+            ),
+            "Write",
+        )
         assert filtered.count() == 2
         assert filtered.all().id == [1, 2]

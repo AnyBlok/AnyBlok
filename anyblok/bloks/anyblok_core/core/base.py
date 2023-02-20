@@ -6,27 +6,28 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
+
 from ..exceptions import CoreBaseException
+
 register = Declarations.register
 
 
 @register(Declarations.Core)
 class Base:
-    """ Inherited by all the models
-    """
+    """Inherited by all the models"""
 
     is_sql = False
 
     @classmethod
     def initialize_model(cls):
-        """ This method is called to initialize a model during the creation of
+        """This method is called to initialize a model during the creation of
         the registry
         """
         pass
 
     @classmethod
     def fire(cls, event, *args, **kwargs):
-        """ Call a specific event on the model
+        """Call a specific event on the model
 
         :param event: Name of the event
         """
@@ -43,16 +44,16 @@ class Base:
 
     @classmethod
     def get_primary_keys(cls, **pks):
-        """ No SQL Model has not primary key """
+        """No SQL Model has not primary key"""
         raise CoreBaseException("No primary key for No SQL Model")
 
     @classmethod
     def from_primary_keys(cls, **pks):
-        """ No SQL Model has not primary key """
+        """No SQL Model has not primary key"""
         raise CoreBaseException("No primary key for No SQL Model")
 
     def to_primary_keys(self):
-        """ No SQL Model has not primary key """
+        """No SQL Model has not primary key"""
         raise CoreBaseException("No primary key for No SQL Model")
 
     def has_perm(self, principals, permission):
@@ -74,7 +75,7 @@ class Base:
 
     @classmethod
     def precommit_hook(cls, method, *args, **kwargs):
-        """ Same in the registry a hook to call just before the commit
+        """Same in the registry a hook to call just before the commit
 
         .. warning::
 
@@ -85,11 +86,12 @@ class Base:
         :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
         """
         cls.anyblok.precommit_hook(
-            cls.__registry_name__, method, *args, **kwargs)
+            cls.__registry_name__, method, *args, **kwargs
+        )
 
     @classmethod
     def postcommit_hook(cls, method, *args, **kwargs):
-        """ Same in the registry a hook to call just after the commit
+        """Same in the registry a hook to call just after the commit
 
         you can choice if the hook is called in function of ``call_only_if``:
 
@@ -107,4 +109,5 @@ class Base:
         :param call_only_if: ['commited' (default), 'raised', 'always']
         """
         cls.anyblok.postcommit_hook(
-            cls.__registry_name__, method, *args, **kwargs)
+            cls.__registry_name__, method, *args, **kwargs
+        )

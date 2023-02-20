@@ -6,9 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok import Declarations
-from anyblok.column import String, Json, Boolean
-from ..exceptions import ParameterException
+from anyblok.column import Boolean, Json, String
 
+from ..exceptions import ParameterException
 
 register = Declarations.register
 System = Declarations.Model.System
@@ -36,7 +36,7 @@ class Parameter:
 
     @classmethod
     def set(cls, key, value):
-        """ Insert or update parameter value for a key.
+        """Insert or update parameter value for a key.
 
         .. note:: if the key already exists, the value will be updated
 
@@ -45,7 +45,7 @@ class Parameter:
         """
         multi = False
         if not isinstance(value, dict):
-            value = {'value': value}
+            value = {"value": value}
         else:
             multi = True
 
@@ -57,7 +57,7 @@ class Parameter:
 
     @classmethod
     def is_exist(cls, key):
-        """ Check if one parameter exist for the key
+        """Check if one parameter exist for the key
 
         :param key: key to check
         :rtype: bool
@@ -67,7 +67,7 @@ class Parameter:
 
     @classmethod
     def get_parameter(cls, key, default=NOT_PROVIDED, remove=False):
-        """ Return the value of the key
+        """Return the value of the key
 
         :param key: key whose value to retrieve
         :param default: default value if key does not exists
@@ -79,15 +79,14 @@ class Parameter:
         """
         if not cls.is_exist(key):
             if default is NOT_PROVIDED:
-                raise ParameterException(
-                    "unexisting key %r" % key)
+                raise ParameterException("unexisting key %r" % key)
             return default
 
         param = cls.from_primary_keys(key=key)
         if param.multi:
             res = param.value
         else:
-            res = param.value['value']
+            res = param.value["value"]
 
         if remove:
             param.delete()
@@ -96,7 +95,7 @@ class Parameter:
 
     @classmethod
     def get(cls, key, default=NOT_PROVIDED):
-        """ Return the value of the key
+        """Return the value of the key
 
         :param key: key whose value to retrieve
         :param default: default value if key does not exists

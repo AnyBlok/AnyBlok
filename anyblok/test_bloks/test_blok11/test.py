@@ -10,5 +10,6 @@ from anyblok import Declarations
 
 @Declarations.register(Declarations.Core)
 class Query:
-    """ Add new query to for unit test"""
+    """Add new query to for unit test"""
+
     is_a_test = True

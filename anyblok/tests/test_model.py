@@ -7,15 +7,22 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import pytest
-from anyblok.tests.testcase import LogCapture
 from logging import DEBUG
-from anyblok.registry import RegistryManager
-from anyblok.environment import EnvironmentManager
-from anyblok.model import (has_sql_fields, get_fields, ModelException,
-                           has_sqlalchemy_fields)
+
+import pytest
+
 from anyblok import Declarations
 from anyblok.column import Integer, String
+from anyblok.environment import EnvironmentManager
+from anyblok.model import (
+    ModelException,
+    get_fields,
+    has_sql_fields,
+    has_sqlalchemy_fields,
+)
+from anyblok.registry import RegistryManager
+from anyblok.tests.testcase import LogCapture
+
 from .conftest import init_registry, reset_db
 
 register = Declarations.register
@@ -24,60 +31,55 @@ Model = Declarations.Model
 
 
 class OneModel:
-    __tablename__ = 'test'
+    __tablename__ = "test"
 
 
 class TestModel:
-
     @pytest.fixture(scope="class", autouse=True)
     def init_env(self, request):
-
         def revert():
-            EnvironmentManager.set('current_blok', None)
-            del RegistryManager.loaded_bloks['testModel']
+            EnvironmentManager.set("current_blok", None)
+            del RegistryManager.loaded_bloks["testModel"]
 
         request.addfinalizer(revert)
-        RegistryManager.init_blok('testModel')
-        EnvironmentManager.set('current_blok', 'testModel')
+        RegistryManager.init_blok("testModel")
+        EnvironmentManager.set("current_blok", "testModel")
 
     @pytest.fixture(autouse=True)
     def init_blok(self):
-        blokname = 'testModel'
-        RegistryManager.loaded_bloks[blokname]['Model'] = {
-            'registry_names': []}
+        blokname = "testModel"
+        RegistryManager.loaded_bloks[blokname]["Model"] = {"registry_names": []}
 
     def assertInModel(self, *args):
-        blokname = 'testModel'
+        blokname = "testModel"
         blok = RegistryManager.loaded_bloks[blokname]
-        assert len(blok['Model']['Model.MyModel']['bases']) == len(args)
+        assert len(blok["Model"]["Model.MyModel"]["bases"]) == len(args)
         for cls_ in args:
-            has = cls_ in blok['Model']['Model.MyModel']['bases']
+            has = cls_ in blok["Model"]["Model.MyModel"]["bases"]
             assert has is True
 
     def assertInRemoved(self, cls):
-        core = RegistryManager.loaded_bloks['testModel']['removed']
+        core = RegistryManager.loaded_bloks["testModel"]["removed"]
         if cls in core:
             return True
 
-        self.fail('Not in removed')
+        self.fail("Not in removed")
 
     def test_add_interface(self):
-        register(Model, cls_=OneModel, name_='MyModel')
-        assert 'Model' == Model.MyModel.__declaration_type__
+        register(Model, cls_=OneModel, name_="MyModel")
+        assert "Model" == Model.MyModel.__declaration_type__
         self.assertInModel(OneModel)
         dir(Declarations.Model.MyModel)
 
     def test_add_interface_with_decorator(self):
-
         @register(Model)
         class MyModel:
             pass
 
-        assert 'Model' == Model.MyModel.__declaration_type__
+        assert "Model" == Model.MyModel.__declaration_type__
         self.assertInModel(MyModel)
 
     def test_add_two_interface(self):
-
         register(Model, cls_=OneModel, name_="MyModel")
 
         @register(Model)
@@ -87,7 +89,6 @@ class TestModel:
         self.assertInModel(OneModel, MyModel)
 
     def test_remove_interface_with_1_cls_in_registry(self):
-
         register(Model, cls_=OneModel, name_="MyModel")
         self.assertInModel(OneModel)
         unregister(Model.MyModel, OneModel)
@@ -95,7 +96,6 @@ class TestModel:
         self.assertInRemoved(OneModel)
 
     def test_remove_interface_with_2_cls_in_registry(self):
-
         register(Model, cls_=OneModel, name_="MyModel")
 
         @register(Model)
@@ -109,7 +109,6 @@ class TestModel:
 
 
 def simple_model():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
@@ -117,38 +116,34 @@ def simple_model():
 
 
 def simple_model_with_schema():
-
     @register(Model)
     class Test:
-        __db_schema__ = 'test_db_schema'
+        __db_schema__ = "test_db_schema"
 
         id = Integer(primary_key=True)
         name = String()
 
 
 def simple_model_with_tablename():
-
-    @register(Model, tablename='othername')
+    @register(Model, tablename="othername")
     class Test:
         id = Integer(primary_key=True)
         name = String()
 
 
 def simple_models_with_same_table():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
         name = String()
 
-    @register(Model, tablename='test')
+    @register(Model, tablename="test")
     class Test2:
         id = Integer(primary_key=True)
         name = String()
 
 
 def simple_models_with_same_table_by_declaration_model():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
@@ -161,7 +156,6 @@ def simple_models_with_same_table_by_declaration_model():
 
 
 def simple_models_with_same_table_by_inherit():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
@@ -172,13 +166,12 @@ def simple_models_with_same_table_by_inherit():
         id = Integer(primary_key=True)
         name = String()
 
-    @register(Model, tablename='test')  # noqa
+    @register(Model, tablename="test")  # noqa
     class Test2:  # noqa F811
         pass
 
 
 def simple_models_with_inherit_sqlmodel():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
@@ -194,26 +187,21 @@ def simple_models_with_inherit_sqlmodel():
 
 
 def model_with_foreign_key():
-
     @register(Model)
     class TestFk:
-
         name = String(primary_key=True)
 
     @register(Model)
     class Test:
-
         id = Integer(primary_key=True)
-        name = String(foreign_key=Model.TestFk.use('name'))
+        name = String(foreign_key=Model.TestFk.use("name"))
 
 
 class TestModel2:
-
     @pytest.fixture(autouse=True)
     def close_registry(self, request, bloks_loaded):
-
         def close():
-            if hasattr(self, 'registry'):
+            if hasattr(self, "registry"):
                 self.registry.close()
 
         request.addfinalizer(close)
@@ -233,17 +221,17 @@ class TestModel2:
 
     def test_str(self):
         registry = self.init_registry(simple_model)
-        test = registry.System.Model.query().get('Model.Test')
-        assert str(test) == 'Model.Test'
+        test = registry.System.Model.query().get("Model.Test")
+        assert str(test) == "Model.Test"
 
     def test_model_is_assembled(self):
-        with LogCapture('anyblok.registry', level=DEBUG) as logs:
+        with LogCapture("anyblok.registry", level=DEBUG) as logs:
             self.init_registry(None)
             messages = logs.get_debug_messages()
             assert "Assemble 'Model' entry" in messages
 
     def test_model_is_initialized(self):
-        with LogCapture('anyblok.registry', DEBUG) as logs:
+        with LogCapture("anyblok.registry", DEBUG) as logs:
             self.init_registry(None)
             messages = logs.get_debug_messages()
             assert "Initialize 'Model' entry" in messages
@@ -261,22 +249,22 @@ class TestModel2:
     def test_simple_model(self):
         registry = self.init_registry(simple_model)
         self.check_registry(registry.Test)
-        model = registry.System.Model.query().get('Model.Test')
-        assert model.table == 'test'
+        model = registry.System.Model.query().get("Model.Test")
+        assert model.table == "test"
         assert model.schema is None
 
     def test_simple_model_with_schema(self):
         registry = self.init_registry(simple_model_with_schema)
         self.check_registry(registry.Test)
-        model = registry.System.Model.query().get('Model.Test')
-        assert model.table == 'test'
-        assert model.schema == 'test_db_schema'
+        model = registry.System.Model.query().get("Model.Test")
+        assert model.table == "test"
+        assert model.schema == "test_db_schema"
 
     def test_simple_model_with_tablename(self):
         registry = self.init_registry(simple_model_with_tablename)
         self.check_registry(registry.Test)
-        assert registry.Test.__table__.name == 'othername'
-        assert registry.Test.__tablename__ == 'othername'
+        assert registry.Test.__table__.name == "othername"
+        assert registry.Test.__tablename__ == "othername"
 
     def test_simple_models_with_same_table(self):
         registry = self.init_registry(simple_models_with_same_table)
@@ -284,7 +272,8 @@ class TestModel2:
 
     def test_simple_models_with_same_table_by_declaration_model(self):
         registry = self.init_registry(
-            simple_models_with_same_table_by_declaration_model)
+            simple_models_with_same_table_by_declaration_model
+        )
         self.check_registry_same_table(registry.Test, registry.Test2)
 
     def test_simple_models_with_same_table_by_inherit(self):
@@ -300,42 +289,36 @@ class TestModel2:
 
         try:
             registry.Test.insert(name="test", other="other")
-            self.fail('No error when an inexisting colomn has filled')
+            self.fail("No error when an inexisting colomn has filled")
         except TypeError:
             pass
 
     def test_model_with_foreign_key(self):
         registry = self.init_registry(model_with_foreign_key)
-        registry.TestFk.insert(name='test')
+        registry.TestFk.insert(name="test")
         self.check_registry(registry.Test)
 
     def test_model_with_foreign_key_with_db_column_name(self):
-
         def model_with_foreign_key():
-
             @register(Model)
             class TestFk:
-
-                name = String(primary_key=True, db_column_name='other')
+                name = String(primary_key=True, db_column_name="other")
 
             @register(Model)
             class Test:
-
                 id = Integer(primary_key=True)
-                name = String(foreign_key=Model.TestFk.use('name'))
+                name = String(foreign_key=Model.TestFk.use("name"))
 
         registry = self.init_registry(model_with_foreign_key)
-        registry.TestFk.insert(name='test')
+        registry.TestFk.insert(name="test")
         self.check_registry(registry.Test)
 
     def test_table_args(self):
-        val = 'one arg'
+        val = "one arg"
 
         def add_in_registry():
-
             @register(Model)
             class Test:
-
                 @classmethod
                 def define_table_args(cls):
                     return (val,)
@@ -345,21 +328,18 @@ class TestModel2:
         assert registry.Test.__table_args__[0] == val
 
     def test_table_args_with_inherit(self):
-        val = 'first arg'
-        val2 = 'second arg'
+        val = "first arg"
+        val2 = "second arg"
 
         def add_in_registry():
-
             @register(Model)
             class Test:
-
                 @classmethod
                 def define_table_args(cls):
                     return (val,)
 
             @register(Model)
             class Test:  # noqa F811
-
                 @classmethod
                 def define_table_args(cls):
                     return super(Test, cls).define_table_args() + (val2,)
@@ -370,9 +350,7 @@ class TestModel2:
         assert val2 in registry.Test.__table_args__
 
     def test_table_args_in_cls_attribute(self):
-
         def add_in_registry():
-
             @register(Model)
             class Test:
                 __table_args__ = ()
@@ -381,13 +359,11 @@ class TestModel2:
             self.init_registry(add_in_registry)
 
     def test_mapper_args(self):
-        val = 'one arg'
+        val = "one arg"
 
         def add_in_registry():
-
             @register(Model)
             class Test:
-
                 @classmethod
                 def define_mapper_args(cls):
                     return {val: val}
@@ -397,21 +373,18 @@ class TestModel2:
         assert registry.Test.__mapper_args__[val] == val
 
     def test_mapper_args_with_inherit(self):
-        val = 'first arg'
-        val2 = 'second arg'
+        val = "first arg"
+        val2 = "second arg"
 
         def add_in_registry():
-
             @register(Model)
             class Test:
-
                 @classmethod
                 def define_mapper_args(cls):
                     return {val: val}
 
             @register(Model)
             class Test:  # noqa F811
-
                 @classmethod
                 def define_mapper_args(cls):
                     mapper_args = super(Test, cls).define_mapper_args()
@@ -424,9 +397,7 @@ class TestModel2:
         assert registry.Test.__mapper_args__[val2] == val2
 
     def test_mapper_args_in_cls_attribute(self):
-
         def add_in_registry():
-
             @register(Model)
             class Test:
                 __mapper_args__ = {}
@@ -435,10 +406,10 @@ class TestModel2:
             self.init_registry(add_in_registry)
 
     def test_with_sqlalchemy_fields(self):
-        from sqlalchemy import Column as SaC, String as SaS
+        from sqlalchemy import Column as SaC
+        from sqlalchemy import String as SaS
 
         def add_in_registry():
-
             @register(Model)
             class Test:
                 one_field = SaC(SaS(64))
@@ -449,19 +420,17 @@ class TestModel2:
     def test_update_0(self):
         registry = self.init_registry(None)
         t = registry.System.Blok.query().first()
-        t.update(**{'state': 'undefined'})
-        assert t.state == 'undefined'
+        t.update(**{"state": "undefined"})
+        assert t.state == "undefined"
 
     def test_update_1(self):
         registry = self.init_registry(None)
         t = registry.System.Blok.query().first()
-        t.update(state='undefined')
-        assert t.state == 'undefined'
+        t.update(state="undefined")
+        assert t.state == "undefined"
 
     def test_fix_issue_52(self):
-
         def add_in_registry():
-
             @register(Model)
             class Test:
                 id = Integer(primary_key=True)
@@ -472,30 +441,27 @@ class TestModel2:
 
 
 class TestModelAssembling:
-
     def test_has_sql_fields_ok(self):
-
         class MyModel:
             one_field = String()
 
         assert has_sql_fields([MyModel]) is True
 
     def test_has_sql_fields_ko(self):
-
         class MyModel:
             one_field = None
 
         assert has_sql_fields([MyModel]) is False
 
     def test_get_fields(self):
-
         class MyModel:
             one_field = String()
 
-        assert get_fields(MyModel) == {'one_field': MyModel.one_field}
+        assert get_fields(MyModel) == {"one_field": MyModel.one_field}
 
     def test_has_sqlalchemy_fields(self):
-        from sqlalchemy import Column as SaC, String as SaS
+        from sqlalchemy import Column as SaC
+        from sqlalchemy import String as SaS
 
         class MyModel:
             one_field = SaC(SaS(64))
@@ -503,7 +469,6 @@ class TestModelAssembling:
         assert has_sqlalchemy_fields(MyModel)
 
     def test_has_sqlalchemy_fields2(self):
-
         class MyModel:
             one_field = String()
 

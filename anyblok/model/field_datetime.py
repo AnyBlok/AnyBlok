@@ -5,16 +5,18 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from .plugins import ModelPluginBase
+from datetime import datetime
+
 from anyblok.column import DateTime
 from anyblok.mapper import ModelMapper
-from datetime import datetime
+
+from .plugins import ModelPluginBase
 
 
 class AutoUpdatePlugin(ModelPluginBase):
-
-    def after_model_construction(self, base, namespace,
-                                 transformation_properties):
+    def after_model_construction(
+        self, base, namespace, transformation_properties
+    ):
         """Add the sqlalchemy event
 
         :param base: the Model class
@@ -32,7 +34,7 @@ class AutoUpdatePlugin(ModelPluginBase):
                     fields.append(c)
 
         if fields:
-            e = ModelMapper(namespace, 'after_update')
+            e = ModelMapper(namespace, "after_update")
 
             def auto_update_listen(mapper, connection, target):
                 now = datetime.now()
@@ -40,4 +42,5 @@ class AutoUpdatePlugin(ModelPluginBase):
                     setattr(target, field, now)
 
             self.registry._sqlalchemy_known_events.append(
-                (e, namespace, auto_update_listen))
+                (e, namespace, auto_update_listen)
+            )

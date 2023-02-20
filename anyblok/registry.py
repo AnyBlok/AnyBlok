@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
@@ -9,26 +8,32 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from logging import getLogger
-from sqlalchemy import create_engine, event, MetaData, text
-from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import (ProgrammingError, OperationalError,
-                            InvalidRequestError)
-from sqlalchemy_utils.functions import database_exists
-from .config import Configuration, get_url
-from .migration import Migration
-from .blok import BlokManager
-from .environment import EnvironmentManager
-from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
-from anyblok.common import anyblok_column_prefix, naming_convention
+
 from pkg_resources import iter_entry_points
-from .version import parse_version
-from .logging import log
-from sqlalchemy.orm.session import close_all_sessions
+from sqlalchemy import MetaData, create_engine, event, text
+from sqlalchemy.exc import (
+    InvalidRequestError,
+    OperationalError,
+    ProgrammingError,
+)
+from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm.session import close_all_sessions
+from sqlalchemy_utils.functions import database_exists
+
+from anyblok.common import anyblok_column_prefix, naming_convention
+
+from .authorization.query import QUERY_WITH_NO_RESULTS, PostFilteredQuery
+from .blok import BlokManager
+from .config import Configuration, get_url
+from .environment import EnvironmentManager
+from .logging import log
+from .migration import Migration
+from .version import parse_version
 
 try:
     import pyodbc
+
     pyodbc.pooling = False
     PyODBCProgrammingError = pyodbc.ProgrammingError
 except ImportError:
@@ -36,23 +41,24 @@ except ImportError:
     class PyODBCProgrammingError(Exception):
         pass
 
+
 logger = getLogger(__name__)
 
 
 class RegistryManagerException(Exception):
-    """ Simple Exception for Registry """
+    """Simple Exception for Registry"""
 
 
 class RegistryException(Exception):
-    """ Simple Exception for Registry """
+    """Simple Exception for Registry"""
 
 
 class RegistryConflictingException(Exception):
-    """ Simple Exception for Registry """
+    """Simple Exception for Registry"""
 
 
 class RegistryManager:
-    """ Manage the global registry
+    """Manage the global registry
 
     Add new entry::
 
@@ -87,7 +93,7 @@ class RegistryManager:
 
     @classmethod
     def has_blok(cls, blok):
-        """ Return True if the blok is already loaded
+        """Return True if the blok is already loaded
 
         :param blok: name of the blok
         :rtype: boolean
@@ -97,7 +103,7 @@ class RegistryManager:
 
     @classmethod
     def clear(cls):
-        """ Clear the registry dict to force the creation of new registry """
+        """Clear the registry dict to force the creation of new registry"""
         registries = [r for r in cls.registries.values()]
         for registry in registries:
             registry.close()
@@ -106,13 +112,14 @@ class RegistryManager:
     def unload(cls):
         """Call all the unload callbacks"""
         for entry, unload_callback in cls.callback_unload_entries.items():
-            logger.info('Unload: %r' % entry)
+            logger.info("Unload: %r" % entry)
             unload_callback()  # pragma: no cover
 
     @classmethod
-    def get(cls, db_name, loadwithoutmigration=False, log_repeat=True,
-            **kwargs):
-        """ Return an existing Registry
+    def get(
+        cls, db_name, loadwithoutmigration=False, log_repeat=True, **kwargs
+    ):
+        """Return an existing Registry
 
         If the Registry doesn't exist then the Registry are created and added
         to registries dict
@@ -124,23 +131,26 @@ class RegistryManager:
                            migration, the warning is not logged
         :rtype: ``Registry``
         """
-        EnvironmentManager.set('db_name', db_name)
+        EnvironmentManager.set("db_name", db_name)
         if db_name in cls.registries:
             if loadwithoutmigration and log_repeat:
                 logger.warning(
                     "Ignoring loadwithoutmigration=True for database %r "
-                    "because its registry is already loaded", db_name)
+                    "because its registry is already loaded",
+                    db_name,
+                )
             return cls.registries[db_name]
 
         logger.info("Loading registry for database %r", db_name)
         registry = Registry(
-            db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
+            db_name, loadwithoutmigration=loadwithoutmigration, **kwargs
+        )
         cls.registries[db_name] = registry
         return registry
 
     @classmethod
     def reload(cls):
-        """ Reload the blok
+        """Reload the blok
 
         The purpose is to reload the python module to get changes in python
         file
@@ -157,7 +167,7 @@ class RegistryManager:
 
     @classmethod
     def declare_core(cls, core):
-        """ Add new core in the declared cores
+        """Add new core in the declared cores
 
         ::
 
@@ -186,11 +196,14 @@ class RegistryManager:
             cls.declared_cores.remove(core)
 
     @classmethod
-    def declare_entry(cls, entry,
-                      pre_assemble_callback=None,
-                      assemble_callback=None,
-                      initialize_callback=None):
-        """ Add new entry in the declared entries
+    def declare_entry(
+        cls,
+        entry,
+        pre_assemble_callback=None,
+        assemble_callback=None,
+        initialize_callback=None,
+    ):
+        """Add new entry in the declared entries
 
         ::
 
@@ -238,8 +251,7 @@ class RegistryManager:
         :param entry: declaration type name
         :param unload_callback: classmethod pointer
         """
-        cls.callback_unload_entries[  # pragma: no cover
-            entry] = unload_callback
+        cls.callback_unload_entries[entry] = unload_callback  # pragma: no cover
 
     @classmethod
     def undeclare_entry(cls, entry):
@@ -247,8 +259,7 @@ class RegistryManager:
             cls.declared_entries.remove(entry)
 
             if entry in cls.callback_pre_assemble_entries:
-                del cls.callback_pre_assemble_entries[  # pragma: no cover
-                    entry]
+                del cls.callback_pre_assemble_entries[entry]  # pragma: no cover
 
             if entry in cls.callback_assemble_entries:
                 del cls.callback_assemble_entries[entry]
@@ -258,7 +269,7 @@ class RegistryManager:
 
     @classmethod
     def init_blok(cls, blokname):
-        """ init one blok to be known by the RegistryManager
+        """init one blok to be known by the RegistryManager
 
         All bloks loaded must be initialized because the registry will be
         created with this information
@@ -266,27 +277,27 @@ class RegistryManager:
         :param blokname: name of the blok
         """
         blok = {
-            'Core': {core: [] for core in cls.declared_cores},
-            'properties': {},
-            'removed': [],
+            "Core": {core: [] for core in cls.declared_cores},
+            "properties": {},
+            "removed": [],
         }
         for de in cls.declared_entries:
-            blok[de] = {'registry_names': []}
+            blok[de] = {"registry_names": []}
 
         cls.loaded_bloks[blokname] = blok
 
     @classmethod
     def has_core_in_register(cls, blok, core):
-        """ Return True if One Class exist in this blok for this core
+        """Return True if One Class exist in this blok for this core
 
         :param blok: name of the blok
         :param core: is the existing core name
         """
-        return len(cls.loaded_bloks[blok]['Core'][core]) > 0
+        return len(cls.loaded_bloks[blok]["Core"][core]) > 0
 
     @classmethod
     def add_core_in_register(cls, core, cls_):
-        """ Load core in blok
+        """Load core in blok
 
         warning the global var current_blok must be filled on the good blok
 
@@ -295,23 +306,23 @@ class RegistryManager:
             registry
         """
 
-        current_blok = EnvironmentManager.get('current_blok')
-        cls.loaded_bloks[current_blok]['Core'][core].append(cls_)
+        current_blok = EnvironmentManager.get("current_blok")
+        cls.loaded_bloks[current_blok]["Core"][core].append(cls_)
 
     @classmethod
     def remove_in_register(cls, cls_):
-        """ Remove Class in blok and in entry
+        """Remove Class in blok and in entry
 
         :param ``cls_``: Class of the entry / key to remove in loaded blok
         """
-        current_blok = EnvironmentManager.get('current_blok')
-        removed = cls.loaded_bloks[current_blok]['removed']
+        current_blok = EnvironmentManager.get("current_blok")
+        removed = cls.loaded_bloks[current_blok]["removed"]
         if cls_ not in removed:
             removed.append(cls_)
 
     @classmethod
     def has_entry_in_register(cls, blok, entry, key):
-        """ Return True if One Class exist in this blok for this entry
+        """Return True if One Class exist in this blok for this entry
 
         :param blok: name of the blok
         :param entry: is the existing entry name
@@ -323,11 +334,11 @@ class RegistryManager:
         if key not in cls.loaded_bloks[blok][entry]:
             return False
 
-        return len(cls.loaded_bloks[blok][entry][key]['bases']) > 0
+        return len(cls.loaded_bloks[blok][entry][key]["bases"]) > 0
 
     @classmethod
     def add_entry_in_register(cls, entry, key, cls_, **kwargs):
-        """ Load entry in blok
+        """Load entry in blok
 
         warning the global var current_blok must be filled on the good blok
         :param entry: is the existing entry name
@@ -338,81 +349,81 @@ class RegistryManager:
         bases = []
 
         for base in cls_.__bases__:
-            if hasattr(base, '__registry_name__'):
+            if hasattr(base, "__registry_name__"):
                 bases.append(base)
 
-        setattr(cls_, '__anyblok_bases__', bases)
+        setattr(cls_, "__anyblok_bases__", bases)
 
-        cb = EnvironmentManager.get('current_blok')
+        cb = EnvironmentManager.get("current_blok")
 
         if key not in cls.loaded_bloks[cb][entry]:
             cls.loaded_bloks[cb][entry][key] = {
-                'bases': [],
-                'properties': {},
+                "bases": [],
+                "properties": {},
             }
 
-        cls.loaded_bloks[cb][entry][key]['properties'].update(kwargs)
+        cls.loaded_bloks[cb][entry][key]["properties"].update(kwargs)
         # Add before in registry because it is the same order than the
         # inheritance __bases__ and __mro__
-        cls.loaded_bloks[cb][entry][key]['bases'].insert(0, cls_)
+        cls.loaded_bloks[cb][entry][key]["bases"].insert(0, cls_)
 
-        if key not in cls.loaded_bloks[cb][entry]['registry_names']:
-            cls.loaded_bloks[cb][entry]['registry_names'].append(key)
+        if key not in cls.loaded_bloks[cb][entry]["registry_names"]:
+            cls.loaded_bloks[cb][entry]["registry_names"].append(key)
 
     @classmethod
     def get_entry_properties_in_register(cls, entry, key):
-        cb = EnvironmentManager.get('current_blok')
+        cb = EnvironmentManager.get("current_blok")
         if key not in cls.loaded_bloks[cb][entry]:
             return {}  # pragma: no cover
 
-        return cls.loaded_bloks[cb][entry][key]['properties'].copy()
+        return cls.loaded_bloks[cb][entry][key]["properties"].copy()
 
     @classmethod
     def has_blok_property(cls, property_):
-        """ Return True if the property exists in blok
+        """Return True if the property exists in blok
 
         :param property_: name of the property
         """
-        blok = EnvironmentManager.get('current_blok')
+        blok = EnvironmentManager.get("current_blok")
 
-        if property_ in cls.loaded_bloks[blok]['properties']:
+        if property_ in cls.loaded_bloks[blok]["properties"]:
             return True
 
         return False
 
     @classmethod
     def add_or_replace_blok_property(cls, property_, value):
-        """ Save the value in the properties
+        """Save the value in the properties
 
         :param property_: name of the property
         :param value: the value to save, the type is not important
         """
-        blok = EnvironmentManager.get('current_blok')
-        cls.loaded_bloks[blok]['properties'][property_] = value
+        blok = EnvironmentManager.get("current_blok")
+        cls.loaded_bloks[blok]["properties"][property_] = value
 
     @classmethod
     def get_blok_property(cls, property_, default=None):
-        """ Return the value in the properties
+        """Return the value in the properties
 
         :param property_: name of the property
         :param default: return default If not entry in the property
         """
-        blok = EnvironmentManager.get('current_blok')
-        return cls.loaded_bloks[blok]['properties'].get(property_, default)
+        blok = EnvironmentManager.get("current_blok")
+        return cls.loaded_bloks[blok]["properties"].get(property_, default)
 
     @classmethod
     def remove_blok_property(cls, property_):
-        """ Remove the property if exist
+        """Remove the property if exist
 
         :param property_: name of the property
         """
-        blok = EnvironmentManager.get('current_blok')
+        blok = EnvironmentManager.get("current_blok")
         if cls.has_blok_property(property_):
-            del cls.loaded_bloks[blok]['properties'][property_]
+            del cls.loaded_bloks[blok]["properties"][property_]
 
 
 class Registry:
-    """ Define one registry
+    """Define one registry
 
     A registry is linked to a database, and stores the definition of the
     installed Bloks, Models, Mixins for this database::
@@ -420,18 +431,21 @@ class Registry:
         registry = Registry('My database')
     """
 
-    def __init__(self, db_name, loadwithoutmigration=False, unittest=False,
-                 **kwargs):
+    def __init__(
+        self, db_name, loadwithoutmigration=False, unittest=False, **kwargs
+    ):
         self.db_name = db_name
         self.loadwithoutmigration = loadwithoutmigration
         self.unittest = unittest
         self.additional_setting = kwargs
         self.init_engine(db_name=db_name)
         self.init_bind()
-        self.registry_base = type("RegistryBase", tuple(), {
-            'anyblok': self,
-            'Env': EnvironmentManager})
-        self.withoutautomigration = Configuration.get('withoutautomigration')
+        self.registry_base = type(
+            "RegistryBase",
+            tuple(),
+            {"anyblok": self, "Env": EnvironmentManager},
+        )
+        self.withoutautomigration = Configuration.get("withoutautomigration")
         self.ini_var()
         self.Session = None
         self.blok_list_is_loaded = False
@@ -450,13 +464,13 @@ class Registry:
     def init_engine_options(self, url):
         """Define the options to initialize the engine"""
         return dict(
-            echo=Configuration.get('db_echo') or False,
-            max_overflow=Configuration.get('db_max_overflow') or 10,
-            echo_pool=Configuration.get('db_echo_pool') or False,
-            pool_size=Configuration.get('db_pool_size') or 5,
+            echo=Configuration.get("db_echo") or False,
+            max_overflow=Configuration.get("db_max_overflow") or 10,
+            echo_pool=Configuration.get("db_echo_pool") or False,
+            pool_size=Configuration.get("db_pool_size") or 5,
             isolation_level=self.additional_setting.get(
-                'isolation_level',
-                Configuration.get('isolation_level', 'READ_UNCOMMITTED')
+                "isolation_level",
+                Configuration.get("isolation_level", "READ_UNCOMMITTED"),
             ),
         )
 
@@ -467,7 +481,7 @@ class Registry:
         """
         url = get_url(db_name=db_name)
         kwargs = self.init_engine_options(url)
-        kwargs['future'] = True
+        kwargs["future"] = True
         self.rw_engine = create_engine(url, **kwargs)
         self.apply_engine_events(self.rw_engine)
 
@@ -480,17 +494,19 @@ class Registry:
         * entrypoints: ``anyblok.engine.event.**dialect's name**``
         * registry additional_setting: ``anyblok.engine.event``
         """
+
         def _apply_engine_events(key):
             for i in iter_entry_points(key):
-                logger.info('Update engine event for %s from entrypoint %r' % (
-                    key, i))
+                logger.info(
+                    "Update engine event for %s from entrypoint %r" % (key, i)
+                )
                 i.load()(engine)
 
-        _apply_engine_events('anyblok.engine.event')
-        _apply_engine_events('anyblok.engine.event.' + engine.dialect.name)
+        _apply_engine_events("anyblok.engine.event")
+        _apply_engine_events("anyblok.engine.event." + engine.dialect.name)
 
-        for funct in self.additional_setting.get('anyblok.engine.event', []):
-            logger.info('Update engine event %r' % funct)
+        for funct in self.additional_setting.get("anyblok.engine.event", []):
+            logger.info("Update engine event %r" % funct)
             funct(engine)
 
     @property
@@ -499,21 +515,23 @@ class Registry:
         return self.rw_engine
 
     def ini_var(self):
-        """ Initialize the var to load the registry """
+        """Initialize the var to load the registry"""
         self.loaded_namespaces = {}
         self.declarativebase = None
         self.loaded_bloks = {}
-        self.loaded_registries = {x + '_names': []
-                                  for x in RegistryManager.declared_entries}
-        self.loaded_cores = {core: []
-                             for core in RegistryManager.declared_cores}
+        self.loaded_registries = {
+            x + "_names": [] for x in RegistryManager.declared_entries
+        }
+        self.loaded_cores = {
+            core: [] for core in RegistryManager.declared_cores
+        }
         self.ordered_loaded_bloks = []
         self.loaded_namespaces = {}
         self.children_namespaces = {}
         self.properties = {}
         self.removed = []
-        EnvironmentManager.set('_precommit_hook', [])
-        EnvironmentManager.set('_postcommit_hook', [])
+        EnvironmentManager.set("_precommit_hook", [])
+        EnvironmentManager.set("_postcommit_hook", [])
         self._sqlalchemy_known_events = []
         self.expire_attributes = {}
 
@@ -524,40 +542,43 @@ class Registry:
     @classmethod
     def db_exists(cls, db_name=None):
         if not db_name:
-            raise RegistryException('db_name is required')
+            raise RegistryException("db_name is required")
 
         url = get_url(db_name=db_name)
         return database_exists(url)
 
     def listen_sqlalchemy_known_event(self):
         for e, namespace, method in self._sqlalchemy_known_events:
-            if hasattr(method, 'get_attribute'):
+            if hasattr(method, "get_attribute"):
                 method = method.get_attribute(self)
 
-            event.listen(e.mapper(self, namespace, usehybrid=False), e.event,
-                         method, *e.args, **e.kwargs)
+            event.listen(
+                e.mapper(self, namespace, usehybrid=False),
+                e.event,
+                method,
+                *e.args,
+                **e.kwargs,
+            )
 
     def remove_sqlalchemy_known_event(self):
         for e, namespace, method in self._sqlalchemy_known_events:
             try:
-                if hasattr(method, 'get_attribute'):
+                if hasattr(method, "get_attribute"):
                     method = method.get_attribute(self)
 
-                event.remove(e.mapper(self, namespace), e.event,
-                             method)
+                event.remove(e.mapper(self, namespace), e.event, method)
             except InvalidRequestError:
                 pass
 
     def get(self, namespace):
-        """ Return the namespace Class
+        """Return the namespace Class
 
         :param namespace: namespace to get from the registry str
         :rtype: namespace cls
         :exception: RegistryManagerException
         """
         if namespace not in self.loaded_namespaces:
-            raise RegistryManagerException(
-                "No namespace %r loaded" % namespace)
+            raise RegistryManagerException("No namespace %r loaded" % namespace)
 
         return self.loaded_namespaces[namespace]
 
@@ -565,7 +586,7 @@ class Registry:
         return True if namespace in self.loaded_namespaces else False
 
     def get_bloks_by_states(self, *states):
-        """ Return the bloks in these states
+        """Return the bloks in these states
 
         :param states: list of the states
         :rtype: list of blok's name
@@ -592,18 +613,18 @@ class Registry:
         return []
 
     def get_bloks_to_load(self):
-        """ Return the bloks to load by the registry
+        """Return the bloks to load by the registry
 
         :rtype: list of blok's name
         """
-        return self.get_bloks_by_states('installed', 'toupdate')
+        return self.get_bloks_by_states("installed", "toupdate")
 
     def get_bloks_to_install(self, loaded):
-        """ Return the bloks to install in the registry
+        """Return the bloks to install in the registry
 
         :rtype: list of blok's name
         """
-        toinstall = self.get_bloks_by_states('toinstall')
+        toinstall = self.get_bloks_by_states("toinstall")
         for blok in BlokManager.auto_install:
             if blok not in (toinstall + loaded):
                 toinstall.append(blok)
@@ -611,7 +632,8 @@ class Registry:
         if toinstall and self.withoutautomigration:
             raise RegistryManagerException(  # pragma: no cover
                 "Install modules %r is forbidden with no auto migration "
-                "mode" % toinstall)
+                "mode" % toinstall
+            )
 
         return toinstall
 
@@ -626,7 +648,8 @@ class Registry:
         :rtype: bool
         """
         return self.lookup_policy(target, permission).check(
-            target, principals, permission)
+            target, principals, permission
+        )
 
     def wrap_query_permission(self, query, principals, permission, models=()):
         """Wrap query to return only authorized results
@@ -657,18 +680,20 @@ class Registry:
         if not models:
             models = []
             for column in query.column_descriptions:
-                if column['aliased']:
+                if column["aliased"]:
                     # actually, think aliases could work almost direcly
                     # it's just a matter of documenting that what the policy
                     # gets may be an alias instead of a model.
                     raise NotImplementedError(  # pragma: no cover
                         "Sorry, table/model aliases aren't supported yet. "
-                        "Here's the unsupported column: %r" % column)
-                if not issubclass(column['type'], self.registry_base):
+                        "Here's the unsupported column: %r" % column
+                    )
+                if not issubclass(column["type"], self.registry_base):
                     raise NotImplementedError(  # pragma: no cover
                         "Sorry, only model columns are supported for now. "
-                        "Here is the unsupported one: %r" % column)
-                models.append(column['type'])
+                        "Here is the unsupported one: %r" % column
+                    )
+                models.append(column["type"])
 
         postfilters = {}
         for model in models:
@@ -678,7 +703,8 @@ class Registry:
                 return QUERY_WITH_NO_RESULTS
             if policy.postfilter is not None:  # pragma: no cover
                 postfilters[model] = lambda rec: policy.postfilter(
-                    rec, principals, permission)
+                    rec, principals, permission
+                )
         return PostFilteredQuery(query, postfilters)
 
     def lookup_policy(self, target, permission):
@@ -703,38 +729,38 @@ class Registry:
         return self._authz_policies.get(None)
 
     def load_entry(self, blok, entry):
-        """ load one entry type for one blok
+        """load one entry type for one blok
 
         :param blok: name of the blok
         :param entry: declaration type to load
         """
         _entry = RegistryManager.loaded_bloks[blok][entry]
-        for key in _entry['registry_names']:
+        for key in _entry["registry_names"]:
             v = _entry[key]
             if key not in self.loaded_registries:
-                self.loaded_registries[key] = {'properties': {}, 'bases': []}
+                self.loaded_registries[key] = {"properties": {}, "bases": []}
 
-            self.loaded_registries[key]['properties'].update(v['properties'])
-            old_bases = [] + self.loaded_registries[key]['bases']
-            self.loaded_registries[key]['bases'] = v['bases']
-            self.loaded_registries[key]['bases'] += old_bases
-            self.loaded_registries[entry + '_names'].append(key)
+            self.loaded_registries[key]["properties"].update(v["properties"])
+            old_bases = [] + self.loaded_registries[key]["bases"]
+            self.loaded_registries[key]["bases"] = v["bases"]
+            self.loaded_registries[key]["bases"] += old_bases
+            self.loaded_registries[entry + "_names"].append(key)
 
     def load_core(self, blok, core):
-        """ load one core type for one blok
+        """load one core type for one blok
 
         :param blok: name of the blok
         :param core: the core name to load
         """
-        if core in RegistryManager.loaded_bloks[blok]['Core']:
-            bases = RegistryManager.loaded_bloks[blok]['Core'][core]
+        if core in RegistryManager.loaded_bloks[blok]["Core"]:
+            bases = RegistryManager.loaded_bloks[blok]["Core"][core]
             for base in bases:
                 self.loaded_cores[core].insert(0, base)
         else:
-            logger.warning('No Core %r found' % core)
+            logger.warning("No Core %r found" % core)
 
     def load_properties(self, blok):
-        properties = RegistryManager.loaded_bloks[blok]['properties']
+        properties = RegistryManager.loaded_bloks[blok]["properties"]
         for k, v in properties.items():  # pragma: no cover
             if k not in self.properties:
                 self.properties[k] = v
@@ -746,7 +772,7 @@ class Registry:
                 self.properties[k] = v
 
     def load_removed(self, blok):
-        for removed in RegistryManager.loaded_bloks[blok]['removed']:
+        for removed in RegistryManager.loaded_bloks[blok]["removed"]:
             if removed not in self.removed:
                 self.removed.append(removed)
 
@@ -755,12 +781,13 @@ class Registry:
             if required:
                 if not self.load_blok(blok, toinstall, toload):
                     raise RegistryManagerException(  # pragma: no cover
-                        "Required blok %r not found" % blok)
+                        "Required blok %r not found" % blok
+                    )
             elif toinstall or blok in toload:
                 self.load_blok(blok, toinstall, toload)
 
     def load_blok(self, blok, toinstall, toload):
-        """ load on blok, load all the core and all the entry for one blok
+        """load on blok, load all the core and all the entry for one blok
 
         :param blok: name of the blok
         :exception: RegistryManagerException
@@ -797,14 +824,17 @@ class Registry:
 
         b = BlokManager.bloks[blok](self)
         for required in b.required:
-            if not self.check_dependencies(required, dependencies_to_install,
-                                           toinstall):
+            if not self.check_dependencies(
+                required, dependencies_to_install, toinstall
+            ):
                 raise RegistryManagerException(  # pragma: no cover
-                    "%r: Required blok not found %r" % (blok, required))
+                    "%r: Required blok not found %r" % (blok, required)
+                )
 
         for optional in b.optional:
             self.check_dependencies(
-                optional, dependencies_to_install, toinstall)
+                optional, dependencies_to_install, toinstall
+            )
 
         if blok not in toinstall:
             dependencies_to_install.append(blok)
@@ -837,7 +867,7 @@ class Registry:
         return False
 
     def execute(self, *args, **kwargs):
-        fetchall = kwargs.pop('fetchall', False)
+        fetchall = kwargs.pop("fetchall", False)
         if self.Session:
             res = self.session.execute(*args, **kwargs)
             if fetchall:
@@ -857,8 +887,8 @@ class Registry:
         if hasattr(parent, child) and getattr(parent, child):
             return getattr(parent, child)
 
-        tmpns = type(child, tuple(), {'children_namespaces': {}})
-        if hasattr(parent, 'children_namespaces'):
+        tmpns = type(child, tuple(), {"children_namespaces": {}})
+        if hasattr(parent, "children_namespaces"):
             parent.children_namespaces[child] = tmpns
 
         setattr(parent, child, tmpns)
@@ -871,22 +901,22 @@ class Registry:
             for ns, cns in other_base.items():
                 setattr(base, ns, cns)
 
-            if hasattr(parent, 'children_namespaces'):
+            if hasattr(parent, "children_namespaces"):
                 if child in parent.children_namespaces:
                     parent.children_namespaces[child] = base
 
-        elif hasattr(parent, 'children_namespaces'):
+        elif hasattr(parent, "children_namespaces"):
             parent.children_namespaces[child] = base
 
         setattr(parent, child, base)
 
     def add_in_registry(self, namespace, base):
-        """ Add a class as an attribute of the registry
+        """Add a class as an attribute of the registry
 
         :param namespace: tree path of the attribute
         :param base: class to add
         """
-        namespace = namespace.split('.')[1:]
+        namespace = namespace.split(".")[1:]
 
         def update_namespaces(parent, namespaces):
             if len(namespaces) == 1:
@@ -905,8 +935,8 @@ class Registry:
 
         and keep the compatibily between AnyBlok < 1.2 and AnyBlok >= 1.2
         """
-        query_bases = [] + self.loaded_cores['Query'] + [self.registry_base]
-        self.Query = type('Query', tuple(query_bases), {})
+        query_bases = [] + self.loaded_cores["Query"] + [self.registry_base]
+        self.Query = type("Query", tuple(query_bases), {})
 
     def create_session_factory(self):
         """Create the SQLA Session factory
@@ -927,15 +957,16 @@ class Registry:
 
             self.Session = scoped_session(
                 sessionmaker(bind=bind, future=True),
-                EnvironmentManager.scoped_function_for_session())
+                EnvironmentManager.scoped_function_for_session(),
+            )
 
             self.apply_session_events()
         else:
             self.flush()
 
-    @log(logger, level='debug')
+    @log(logger, level="debug")
     def load(self):
-        """ Load all the namespaces of the registry
+        """Load all the namespaces of the registry
 
         Create all the table, make the shema migration
         Update Blok, Model, Column rows
@@ -945,7 +976,8 @@ class Registry:
         try:
             self.declarativebase = declarative_base(
                 metadata=MetaData(naming_convention=naming_convention),
-                class_registry=dict(registry=self))
+                class_registry=dict(registry=self),
+            )
             toload = self.get_bloks_to_load()
             toinstall = self.get_bloks_to_install(toload)
             if self.update_to_install_blok_dependencies_state(toinstall):
@@ -959,10 +991,11 @@ class Registry:
                 blok2install = toinstall[0]
                 self.load_blok(blok2install, True, toload)
 
-            instrumentedlist_base = [] + self.loaded_cores['InstrumentedList']
+            instrumentedlist_base = [] + self.loaded_cores["InstrumentedList"]
             instrumentedlist_base += [list]
             self.InstrumentedList = type(
-                'InstrumentedList', tuple(instrumentedlist_base), {})
+                "InstrumentedList", tuple(instrumentedlist_base), {}
+            )
             self.assemble_entries()
             self.create_query_factory()
             self.create_session_factory()
@@ -991,31 +1024,33 @@ class Registry:
         * entrypoints: ``anyblok.session.event.**sgdb**``
         * registry additional_setting: ``anyblok.session.event``
         """
+
         def _apply_session_events(key):
             for i in iter_entry_points(key):
                 logger.info(
-                    'Update session event for %s from entrypoint %r' % (
-                        key, i))
+                    "Update session event for %s from entrypoint %r" % (key, i)
+                )
                 i.load()(self.session)  # pragma: no cover
 
-        _apply_session_events('anyblok.session.event')
+        _apply_session_events("anyblok.session.event")
         _apply_session_events(
-            'anyblok.session.event.' + self.engine.dialect.name)
+            "anyblok.session.event." + self.engine.dialect.name
+        )
 
-        for funct in self.additional_setting.get('anyblok.session.event', []):
-            logger.info('Update session event %r' % funct)
+        for funct in self.additional_setting.get("anyblok.session.event", []):
+            logger.info("Update session event %r" % funct)
             funct(self.session)
 
     def assemble_entries(self):
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_assemble_entries:
-                logger.debug('Assemble %r entry' % entry)
+                logger.debug("Assemble %r entry" % entry)
                 RegistryManager.callback_assemble_entries[entry](self)
 
     def pre_assemble_entries(self):
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_pre_assemble_entries:
-                logger.debug('Pre assemble %r entry' % entry)
+                logger.debug("Pre assemble %r entry" % entry)
                 RegistryManager.callback_pre_assemble_entries[entry](self)
 
     def apply_model_schema_on_table(self, blok2install):
@@ -1029,9 +1064,10 @@ class Registry:
         if self.loadwithoutmigration:
             return
 
-        if not self.withoutautomigration and blok2install == 'anyblok-core':
-            self.declarativebase.metadata.tables['system_blok'].create(
-                bind=self.connection(), checkfirst=True)
+        if not self.withoutautomigration and blok2install == "anyblok-core":
+            self.declarativebase.metadata.tables["system_blok"].create(
+                bind=self.connection(), checkfirst=True
+            )
 
         self.migration = Migration(self)
         query = """
@@ -1049,7 +1085,8 @@ class Registry:
                 parsed_version = (
                     parse_version(installed_version)
                     if installed_version is not None
-                    else None)
+                    else None
+                )
                 b.pre_migration(parsed_version)
 
             self.migration.auto_upgrade_database(schema_only=True)
@@ -1063,14 +1100,14 @@ class Registry:
                 parsed_version = (
                     parse_version(installed_version)
                     if installed_version is not None
-                    else None)
+                    else None
+                )
                 b.post_migration(parsed_version)
 
         else:
             self.migration.auto_upgrade_database()
 
     def is_reload_needed(self):
-
         """Determines whether a reload is needed or not."""
 
         if self.loadwithoutmigration:
@@ -1079,9 +1116,8 @@ class Registry:
         mustreload = False
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_initialize_entries:
-                logger.debug('Initialize %r entry' % entry)
-                r = RegistryManager.callback_initialize_entries[entry](
-                    self)
+                logger.debug("Initialize %r entry" % entry)
+                r = RegistryManager.callback_initialize_entries[entry](self)
                 mustreload = mustreload or r
 
         return mustreload
@@ -1100,15 +1136,18 @@ class Registry:
                 obj.__class__.get_hybrid_property_columns()
             )
             attribute_names = [
-                (anyblok_column_prefix + x
-                 if x in hybrid_property_columns else x)
+                (
+                    anyblok_column_prefix + x
+                    if x in hybrid_property_columns
+                    else x
+                )
                 for x in attribute_names
             ]
 
         self.session.expire(obj, attribute_names=attribute_names)
 
     def flag_modified(self, obj, attribute_names=None):
-        """ Flag the attributes as modified
+        """Flag the attributes as modified
         ::
 
             registry.flag_modified(instance, ['attr1', 'attr2', ...])
@@ -1157,9 +1196,13 @@ class Registry:
         """
         if attribute_names:
             attribute_names = [
-                (anyblok_column_prefix + x
-                 if x in obj.hybrid_property_columns else x)
-                for x in attribute_names]
+                (
+                    anyblok_column_prefix + x
+                    if x in obj.hybrid_property_columns
+                    else x
+                )
+                for x in attribute_names
+            ]
 
         self.session.refresh(
             obj,
@@ -1168,13 +1211,13 @@ class Registry:
         )
 
     def rollback(self, *args, **kwargs):
-        logger.debug('[ROLLBACK] with args=%r and kwargs = %r', args, kwargs)
+        logger.debug("[ROLLBACK] with args=%r and kwargs = %r", args, kwargs)
         self.session.rollback(*args, **kwargs)
-        EnvironmentManager.set('_precommit_hook', [])
-        EnvironmentManager.set('_postcommit_hook', [])
+        EnvironmentManager.set("_precommit_hook", [])
+        EnvironmentManager.set("_postcommit_hook", [])
 
     def close_session(self):
-        """ Close only the session, not the registry
+        """Close only the session, not the registry
         After the call of this method the registry won't be usable
         you should use close method which call this method
         """
@@ -1205,7 +1248,7 @@ class Registry:
         # TODO safe the call of session for reload
         if self.Session:
             session = self.Session()
-            if attribute == 'session':
+            if attribute == "session":
                 return session
             if hasattr(session, attribute):
                 return getattr(session, attribute)
@@ -1214,7 +1257,7 @@ class Registry:
             return super(Registry, self).__getattr__(attribute)
 
     def precommit_hook(self, registryname, method, *args, **kwargs):
-        """ Add a method in the precommit_hook list
+        """Add a method in the precommit_hook list
 
         a precommit hook is a method called just before the commit, it is used
         to call this method once, because a hook is saved only once
@@ -1224,10 +1267,10 @@ class Registry:
         :param put_at_the_end_if_exist: if true and hook allready exist then the
             hook are moved at the end
         """
-        put_at_the_end_if_exist = kwargs.pop('put_at_the_end_if_exist', False)
+        put_at_the_end_if_exist = kwargs.pop("put_at_the_end_if_exist", False)
 
         entry = (registryname, method, args, kwargs)
-        _precommit_hook = EnvironmentManager.get('_precommit_hook', [])
+        _precommit_hook = EnvironmentManager.get("_precommit_hook", [])
         if entry in _precommit_hook:
             if put_at_the_end_if_exist:
                 _precommit_hook.remove(entry)
@@ -1236,10 +1279,10 @@ class Registry:
         else:
             _precommit_hook.append(entry)
 
-        EnvironmentManager.set('_precommit_hook', _precommit_hook)
+        EnvironmentManager.set("_precommit_hook", _precommit_hook)
 
     def postcommit_hook(self, registryname, method, *args, **kwargs):
-        """ Add a method in the postcommit_hook list
+        """Add a method in the postcommit_hook list
 
         a precommit hook is a method called just after the commit, it is used
         to call this method once, because a hook is saved only once
@@ -1256,11 +1299,11 @@ class Registry:
             hook are moved at the end
         :param call_only_if: ['commited' (default), 'raised', 'always']
         """
-        put_at_the_end_if_exist = kwargs.pop('put_at_the_end_if_exist', False)
-        call_only_if = kwargs.pop('call_only_if', 'commited')
+        put_at_the_end_if_exist = kwargs.pop("put_at_the_end_if_exist", False)
+        call_only_if = kwargs.pop("call_only_if", "commited")
 
         entry = (registryname, method, call_only_if, args, kwargs)
-        _postcommit_hook = EnvironmentManager.get('_postcommit_hook', [])
+        _postcommit_hook = EnvironmentManager.get("_postcommit_hook", [])
         if entry in _postcommit_hook:
             if put_at_the_end_if_exist:
                 _postcommit_hook.remove(entry)
@@ -1269,11 +1312,11 @@ class Registry:
         else:
             _postcommit_hook.append(entry)
 
-        EnvironmentManager.set('_postcommit_hook', _postcommit_hook)
+        EnvironmentManager.set("_postcommit_hook", _postcommit_hook)
 
     def apply_precommit_hook(self):
         hooks = []
-        _precommit_hook = EnvironmentManager.get('_precommit_hook')
+        _precommit_hook = EnvironmentManager.get("_precommit_hook")
         if _precommit_hook:
             hooks.extend(_precommit_hook)
 
@@ -1287,17 +1330,17 @@ class Registry:
 
     def apply_postcommit_hook(self, withexception=False):
         hooks = []
-        _postcommit_hook = EnvironmentManager.get('_postcommit_hook')
+        _postcommit_hook = EnvironmentManager.get("_postcommit_hook")
         if _postcommit_hook:
             hooks.extend(_postcommit_hook)
 
         for hook in hooks:
             registryname, method, call_only_if, a, kw = hook
-            if withexception is False and call_only_if == 'raised':
+            if withexception is False and call_only_if == "raised":
                 _postcommit_hook.remove(hook)
                 continue
 
-            if withexception is True and call_only_if == 'commited':
+            if withexception is True and call_only_if == "commited":
                 _postcommit_hook.remove(hook)
                 continue
 
@@ -1309,10 +1352,10 @@ class Registry:
             finally:
                 _postcommit_hook.remove(hook)
 
-    @log(logger, level='debug')
+    @log(logger, level="debug")
     def commit(self, *args, **kwargs):
-        """ Overload the commit method of the SqlAlchemy session """
-        logger.debug('[COMMIT] with args=%r and kwargs = %r', args, kwargs)
+        """Overload the commit method of the SqlAlchemy session"""
+        logger.debug("[COMMIT] with args=%r and kwargs = %r", args, kwargs)
         try:
             self.apply_precommit_hook()
             self.session_commit(*args, **kwargs)
@@ -1338,21 +1381,21 @@ class Registry:
             session.commit(*args, **kwargs)
 
     def clean_model(self):
-        """ Clean the registry of all the namespaces """
+        """Clean the registry of all the namespaces"""
         for model in self.loaded_namespaces.keys():
-            name = model.split('.')[1]
+            name = model.split(".")[1]
             if hasattr(self, name) and getattr(self, name):
                 setattr(self, name, None)
 
-    @log(logger, level='debug')
+    @log(logger, level="debug")
     def complete_reload(self):
-        """ Reload the code and registry"""
+        """Reload the code and registry"""
         BlokManager.reload()
         RegistryManager.reload()
 
-    @log(logger, level='debug')
+    @log(logger, level="debug")
     def reload(self):
-        """ Reload the registry, close session, clean registry, reinit var """
+        """Reload the registry, close session, clean registry, reinit var"""
         # self.close_session()
         self.remove_sqlalchemy_known_event()
         self.clean_model()
@@ -1384,12 +1427,14 @@ class Registry:
         query = Blok.query()
         query = query.filter(Blok.name.in_(conflicting_bloks))
         query = query.filter(
-            Blok.state.in_(['installed', 'toinstall', 'toupdate']))
+            Blok.state.in_(["installed", "toinstall", "toupdate"])
+        )
         if query.count():
             raise RegistryConflictingException(
                 "Installation of the blok %r is forbidden, because the blok "
-                "%r conflict with the blok(s) : %r" % (
-                    blok, blok, [str(x) for x in query.all()]))
+                "%r conflict with the blok(s) : %r"
+                % (blok, blok, [str(x) for x in query.all()])
+            )
 
     def apply_state(self, blok_name, state, in_states):
         """Apply the state of the blok name
@@ -1404,33 +1449,35 @@ class Registry:
         blok = query.first()
         if blok is None:
             raise RegistryException(
-                "Blok %r not found in entry point declarations" %
-                blok_name)
+                "Blok %r not found in entry point declarations" % blok_name
+            )
 
         if blok.state == state:
-            logger.debug("Does not change state for blok %s because is the "
-                         "same %s" % (blok_name, state))
+            logger.debug(
+                "Does not change state for blok %s because is the "
+                "same %s" % (blok_name, state)
+            )
             return
 
         if blok.state not in in_states:
             raise RegistryException(
                 "Apply state %r is forbidden because the state %r of "
-                "blok %r is not one of %r" % (
-                    state, blok.state, blok_name, in_states))
+                "blok %r is not one of %r"
+                % (state, blok.state, blok_name, in_states)
+            )
 
-        logger.info("Change state %s => %s for blok %s" % (
-            blok.state, state, blok_name))
+        logger.info(
+            "Change state %s => %s for blok %s" % (blok.state, state, blok_name)
+        )
         self.execute(
             text(
                 "UPDATE system_blok SET state=:blok_state where name=:blok_name"
-            ).bindparams(
-                blok_state=state, blok_name=blok_name
-            )
+            ).bindparams(blok_state=state, blok_name=blok_name)
         )
 
-    @log(logger, level='debug', withargs=True)
+    @log(logger, level="debug", withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):
-        """ Upgrade the current registry
+        """Upgrade the current registry
 
         :param install: list of the blok to install
         :param update: list of the blok to update
@@ -1442,43 +1489,62 @@ class Registry:
         def upgrade_state_bloks(state):
             def wrap(bloks):
                 for blok in bloks:
-                    if state == 'toinstall':
+                    if state == "toinstall":
                         self.check_conflict_with(blok)
-                        self.apply_state(blok, state, ['uninstalled'])
+                        self.apply_state(blok, state, ["uninstalled"])
                         upgrade_state_bloks(state)(
                             self.get_bloks(
-                                blok,  ['undefined', 'uninstalled'],
-                                ['required', 'optional', 'conditional']))
-                    elif state == 'toupdate':
-                        self.apply_state(blok, state, ['installed'])
+                                blok,
+                                ["undefined", "uninstalled"],
+                                ["required", "optional", "conditional"],
+                            )
+                        )
+                    elif state == "toupdate":
+                        self.apply_state(blok, state, ["installed"])
                         upgrade_state_bloks(state)(
-                            self.get_bloks(blok, ['installed'], [
-                                'required_by', 'optional_by',
-                                'conditional_by']))
-                    elif state == 'touninstall':
+                            self.get_bloks(
+                                blok,
+                                ["installed"],
+                                [
+                                    "required_by",
+                                    "optional_by",
+                                    "conditional_by",
+                                ],
+                            )
+                        )
+                    elif state == "touninstall":
                         if Blok.check_if_the_conditional_are_installed(blok):
                             raise RegistryException(
                                 "the blok %r can not be unistalled because "
                                 "this blok is a conditional blok and all the "
                                 "bloks in his conditional list are installed "
-                                "You must uninstall one of them" % blok)
-                        self.apply_state(blok, state, ['installed'])
-                        upgrade_state_bloks(state)(self.get_bloks(blok, [
-                            'installed', 'toinstall', 'touninstall'], [
-                            'required_by', 'conditional_by']))
-                        upgrade_state_bloks('toupdate')(self.get_bloks(blok, [
-                            'installed', 'toinstall', 'touninstall'], [
-                            'optional_by']))
+                                "You must uninstall one of them" % blok
+                            )
+                        self.apply_state(blok, state, ["installed"])
+                        upgrade_state_bloks(state)(
+                            self.get_bloks(
+                                blok,
+                                ["installed", "toinstall", "touninstall"],
+                                ["required_by", "conditional_by"],
+                            )
+                        )
+                        upgrade_state_bloks("toupdate")(
+                            self.get_bloks(
+                                blok,
+                                ["installed", "toinstall", "touninstall"],
+                                ["optional_by"],
+                            )
+                        )
 
             return wrap
 
-        upgrade_state_bloks('touninstall')(uninstall or [])
-        upgrade_state_bloks('toinstall')(install or [])
-        upgrade_state_bloks('toupdate')(update or [])
+        upgrade_state_bloks("touninstall")(uninstall or [])
+        upgrade_state_bloks("toinstall")(install or [])
+        upgrade_state_bloks("toupdate")(update or [])
         self.reload()
         self.expire_all()
 
-    @log(logger, level='debug')
+    @log(logger, level="debug")
     def update_blok_list(self):
         if not self.blok_list_is_loaded:
             self.System.Blok.update_list()

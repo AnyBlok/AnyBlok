@@ -6,13 +6,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from logging import getLogger
+
 from anyblok.blok import Blok
 from anyblok.release import version
-from logging import getLogger
+
 logger = getLogger(__name__)
 
 
 class AnyBlokTest(Blok):
     version = version
     priority = 10000000
-    author = 'Suzanne Jean-Sébastien'
+    author = "Suzanne Jean-Sébastien"

@@ -16,31 +16,34 @@ blok tests, and :class:`DBTestCase`, whose primary purpose is to test anyblok
 itself, in so-called "framework tests".
 """
 
-import unittest
 import os
-from anyblok.config import Configuration, get_url
-from anyblok.registry import RegistryManager
-from anyblok.blok import BlokManager
-from anyblok.environment import EnvironmentManager
-import sqlalchemy
-from sqlalchemy.orm import clear_mappers
-from sqlalchemy import event
-from sqlalchemy_utils.functions import database_exists, create_database, orm
-from copy import copy
-from testfixtures import LogCapture as LC
+import unittest
 from contextlib import contextmanager
-from logging import getLogger, DEBUG, INFO, WARNING, ERROR, CRITICAL
-from .common import sgdb_in as sgdb_in_, DATABASES_CACHED
+from copy import copy
+from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING, getLogger
+
+import sqlalchemy
+from sqlalchemy import event
+from sqlalchemy.orm import clear_mappers
+from sqlalchemy_utils.functions import create_database, database_exists, orm
+from testfixtures import LogCapture as LC
+
 from anyblok import (
-    load_init_function_from_entry_points,
     configuration_post_load,
+    load_init_function_from_entry_points,
 )
+from anyblok.blok import BlokManager
+from anyblok.config import Configuration, get_url
+from anyblok.environment import EnvironmentManager
+from anyblok.registry import RegistryManager
+
+from .common import DATABASES_CACHED
+from .common import sgdb_in as sgdb_in_
 
 logger = getLogger(__name__)
 
 
 class MockParser:
-
     def _get_kwargs(self):
         return []
 
@@ -58,16 +61,16 @@ def load_configuration():
 def drop_database(url):
     url = copy(sqlalchemy.engine.url.make_url(url))
     database = url.database
-    if url.drivername.startswith('postgresql'):
-        url.database = 'postgres'
-    elif not url.drivername.startswith('sqlite'):
+    if url.drivername.startswith("postgresql"):
+        url.database = "postgres"
+    elif not url.drivername.startswith("sqlite"):
         url.database = None
 
     engine = sqlalchemy.create_engine(url)
-    if engine.dialect.name == 'sqlite' and url.database != ':memory:':
+    if engine.dialect.name == "sqlite" and url.database != ":memory:":
         os.remove(url.database)
     else:
-        text = 'DROP DATABASE {0}'.format(orm.quote(engine, database))
+        text = "DROP DATABASE {0}".format(orm.quote(engine, database))
         cnx = engine.connect()
         cnx.execute("ROLLBACK")
         cnx.execute(text)
@@ -85,10 +88,7 @@ def tmp_configuration(**values):
 
     :param **values: values to update
     """
-    old_values = {
-        x: Configuration.get(x)
-        for x in values.keys()
-    }
+    old_values = {x: Configuration.get(x) for x in values.keys()}
     Configuration.update(**values)
     try:
         yield
@@ -103,7 +103,7 @@ class TestCase(unittest.TestCase):
 
     @classmethod
     def init_configuration_manager(cls, **env):
-        """ Initialise the configuration manager with environ variable
+        """Initialise the configuration manager with environ variable
         to launch the test
 
         .. warning::
@@ -112,12 +112,14 @@ class TestCase(unittest.TestCase):
 
         :param env: add another dict to merge with environ variable
         """
-        db_name = Configuration.get('db_name') or 'test_anyblok'
-        db_driver_name = Configuration.get('db_driver_name') or 'postgresql'
-        env.update({
-            'db_name': db_name,
-            'db_driver_name': db_driver_name,
-        })
+        db_name = Configuration.get("db_name") or "test_anyblok"
+        db_driver_name = Configuration.get("db_driver_name") or "postgresql"
+        env.update(
+            {
+                "db_name": db_name,
+                "db_driver_name": db_driver_name,
+            }
+        )
         Configuration.update(**env)
 
     @classmethod
@@ -132,7 +134,7 @@ class TestCase(unittest.TestCase):
         :param keep_existing: If false drop the previous db before create it
         """
         url = get_url()
-        db_template_name = Configuration.get('db_template_name', None)
+        db_template_name = Configuration.get("db_template_name", None)
         if database_exists(url):
             if keep_existing:
                 return False
@@ -141,12 +143,13 @@ class TestCase(unittest.TestCase):
 
         create_database(url, template=db_template_name)
 
-        registry = RegistryManager.get(Configuration.get('db_name', None))
+        registry = RegistryManager.get(Configuration.get("db_name", None))
         if registry is None:
             return
 
         registry.System.Parameter.set(
-            "with-demo", Configuration.get('with_demo', with_demo))
+            "with-demo", Configuration.get("with_demo", with_demo)
+        )
 
         return True
 
@@ -180,8 +183,9 @@ class TestCase(unittest.TestCase):
         :rtype: registry instance
         """
         additional_setting = cls.additional_setting()
-        return RegistryManager.get(Configuration.get('db_name'),
-                                   **additional_setting)
+        return RegistryManager.get(
+            Configuration.get("db_name"), **additional_setting
+        )
 
     def setUp(self):
         super(TestCase, self).setUp()
@@ -195,7 +199,7 @@ class TestCase(unittest.TestCase):
         self.tearDown()
 
     def tearDown(self):
-        """ Roll back the session """
+        """Roll back the session"""
         super(TestCase, self).tearDown()
         self._transaction_case_teared_down = True
 
@@ -241,31 +245,30 @@ class DBTestCase(TestCase):
 
     """
 
-    blok_entry_points = ('bloks',)
+    blok_entry_points = ("bloks",)
     """setuptools entry points to load blok """
 
     @classmethod
     def setUpClass(cls):
-        """ Intialialise the configuration manager """
+        """Intialialise the configuration manager"""
 
         super(DBTestCase, cls).setUpClass()
         cls.init_configuration_manager()
         if cls.createdb(keep_existing=True):
-            BlokManager.load(entry_points=('bloks', 'test_bloks'))
+            BlokManager.load(entry_points=("bloks", "test_bloks"))
             registry = cls.getRegistry()
             registry.commit()
             registry.close()
             BlokManager.unload()
 
     def setUp(self):
-        """ Create a database and load the blok manager """
+        """Create a database and load the blok manager"""
         self.registry = None
         super(DBTestCase, self).setUp()
         BlokManager.load(entry_points=self.blok_entry_points)
 
     def tearDown(self):
-        """ Clear the registry, unload the blok manager and  drop the database
-        """
+        """Clear the registry, unload the blok manager and  drop the database"""
         if self.registry:
             self.registry.close()
 
@@ -275,7 +278,7 @@ class DBTestCase(TestCase):
         super(DBTestCase, self).tearDown()
 
     def init_registry(self, function, **kwargs):
-        """ call a function to filled the blok manager with new model
+        """call a function to filled the blok manager with new model
 
         :param function: function to call
         :param kwargs: kwargs for the function
@@ -284,7 +287,7 @@ class DBTestCase(TestCase):
         return self.init_registry_with_bloks(None, function, **kwargs)
 
     def init_registry_with_bloks(self, bloks, function, **kwargs):
-        """ call a function to filled the blok manager with new model and
+        """call a function to filled the blok manager with new model and
         bloks to install
 
         :param bloks: list of blok's names
@@ -298,17 +301,18 @@ class DBTestCase(TestCase):
         if isinstance(bloks, tuple):
             bloks = list(bloks)
 
-        if 'anyblok-test' not in bloks:
-            bloks.append('anyblok-test')
+        if "anyblok-test" not in bloks:
+            bloks.append("anyblok-test")
 
         from copy import deepcopy
+
         loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
         if function is not None:
-            EnvironmentManager.set('current_blok', 'anyblok-test')
+            EnvironmentManager.set("current_blok", "anyblok-test")
             try:
                 function(**kwargs)
             finally:
-                EnvironmentManager.set('current_blok', None)
+                EnvironmentManager.set("current_blok", None)
 
         try:
             self.registry = registry = self.__class__.getRegistry()
@@ -320,7 +324,7 @@ class DBTestCase(TestCase):
         return registry
 
     def reload_registry(self, registry, function, **kwargs):
-        """ call a function to filled the blok manager with new model and
+        """call a function to filled the blok manager with new model and
         before reload the registry
 
         :param bloks: list of blok's names
@@ -329,13 +333,14 @@ class DBTestCase(TestCase):
         :rtype: registry instance
         """
         from copy import deepcopy
+
         loaded_bloks = deepcopy(RegistryManager.loaded_bloks)
         if function is not None:
-            EnvironmentManager.set('current_blok', 'anyblok-test')
+            EnvironmentManager.set("current_blok", "anyblok-test")
             try:
                 function(**kwargs)
             finally:
-                EnvironmentManager.set('current_blok', None)
+                EnvironmentManager.set("current_blok", None)
 
         try:
             registry.reload()
@@ -396,16 +401,16 @@ class BlokTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """ Initialize the registry.
-        """
+        """Initialize the registry."""
         super(BlokTestCase, cls).setUpClass()
         additional_setting = cls.additional_setting()
         if cls.registry is None:
             if len(BlokManager.list()) == 0:
                 BlokManager.load()
 
-            cls.registry = RegistryManager.get(Configuration.get('db_name'),
-                                               **additional_setting)
+            cls.registry = RegistryManager.get(
+                Configuration.get("db_name"), **additional_setting
+            )
 
         cls.registry.commit()
 
@@ -432,7 +437,7 @@ class BlokTestCase(unittest.TestCase):
         self.tearDown()
 
     def tearDown(self):
-        """ Roll back the session """
+        """Roll back the session"""
         super(BlokTestCase, self).tearDown()
         try:
             self.registry.System.Cache.invalidate_all()
@@ -446,7 +451,6 @@ class BlokTestCase(unittest.TestCase):
 
 
 class SharedDataTestCase(BlokTestCase):
-
     @classmethod
     def setUpClass(cls):
         super(SharedDataTestCase, cls).setUpClass()
@@ -488,12 +492,15 @@ class SharedDataTestCase(BlokTestCase):
         super(SharedDataTestCase, cls).tearDownClass()
 
     def tearDown(self):
-        """Roll back the session """
+        """Roll back the session"""
         super(BlokTestCase, self).tearDown()
         self.case_savepoint.rollback()
         self.registry.System.Cache.invalidate_all()
-        event.remove(self.registry.session, "after_transaction_end",
-                     self.savepoint_restarter)
+        event.remove(
+            self.registry.session,
+            "after_transaction_end",
+            self.savepoint_restarter,
+        )
         self._transaction_case_teared_down = True
 
 
@@ -555,18 +562,22 @@ def skip_unless_bloks_installed(*bloks):
             # this test can now safely assume that wms-reservation is installed
 
     """
+
     def bloks_decorator(testmethod):
         def wrapped(self):
             Blok = self.registry.System.Blok
             for blok_name in bloks:
                 blok = Blok.query().get(blok_name)
-                if blok.state != 'installed':
+                if blok.state != "installed":
                     raise unittest.SkipTest(
-                        "Blok %r is not installed" % blok_name)
+                        "Blok %r is not installed" % blok_name
+                    )
             return testmethod(self)
+
         # necessary not to be ignored by test runner
         wrapped.__name__ = testmethod.__name__
         return wrapped
+
     return bloks_decorator
 
 
@@ -574,6 +585,6 @@ def sgdb_in(databases):
     if not DATABASES_CACHED:
         load_configuration()
 
-    url = get_url(db_name='')
+    url = get_url(db_name="")
     engine = sqlalchemy.create_engine(url)
     return sgdb_in_(engine, databases)

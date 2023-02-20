@@ -13,8 +13,8 @@ Blok and a very simple, non structural model, to exert the tests base
 classes.
 """
 import unittest
-from anyblok.tests.testcase import SharedDataTestCase, sgdb_in
-from anyblok.tests.testcase import BlokTestCase
+
+from anyblok.tests.testcase import BlokTestCase, SharedDataTestCase, sgdb_in
 
 
 class Helper:
@@ -37,16 +37,20 @@ class Helper:
         """Assert that the registry works and has no leftover test data."""
         # always True, but needs the DB and registry to work
         self.assertEqual(
-            self.registry.System.Blok.query().filter_by(
-                name='no-such-blok').count(),
-            0)
+            self.registry.System.Blok.query()
+            .filter_by(name="no-such-blok")
+            .count(),
+            0,
+        )
         # actual rollback of shared test data
         Grant = self.registry.Authorization.ModelPermissionGrant
         self.assertEqual(Grant.query().count(), 0)
 
 
-@unittest.skipIf(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
-                 "ShareDataTestCase doesn't work, issue #96")
+@unittest.skipIf(
+    sgdb_in(["MySQL", "MariaDB", "MsSQL"]),
+    "ShareDataTestCase doesn't work, issue #96",
+)
 class TestSharedDataTestCaseException(unittest.TestCase):
     """Test class with an exception in setUpSharedData.
 
@@ -65,48 +69,47 @@ class TestSharedDataTestCaseException(unittest.TestCase):
         run_order = []
 
         class SharedData(SharedDataTestCase, Helper):
-
             @classmethod
             def setUpSharedData(cls):
                 cls.Grant = cls.registry.Authorization.ModelPermissionGrant
-                cls.grant = cls.Grant.insert(model='abc',
-                                             principal='me',
-                                             permission='read')
+                cls.grant = cls.Grant.insert(
+                    model="abc", principal="me", permission="read"
+                )
 
             def test_normal(self):
                 """Changes the data, and should be rollbacked in tearDown."""
-                run_order.append('normal')
-                self.assertEqual(self.grant.principal, 'me')
-                self.grant.principal = 'changed'
+                run_order.append("normal")
+                self.assertEqual(self.grant.principal, "me")
+                self.grant.principal = "changed"
                 self.registry.flush()
                 self.assertEqual(
-                    self.Grant.query().filter_by(principal='changed').count(),
-                    1)
+                    self.Grant.query().filter_by(principal="changed").count(), 1
+                )
 
             def test_rollbacked(self):
                 """Previous test has been correctly rollbacked."""
-                run_order.append('rollbacked')
-                self.assertEqual(self.grant.principal, 'me')
+                run_order.append("rollbacked")
+                self.assertEqual(self.grant.principal, "me")
                 self.assertEqual(
-                    self.Grant.query().filter_by(principal='me').count(),
-                    1)
+                    self.Grant.query().filter_by(principal="me").count(), 1
+                )
 
         class AfterSharedData(BlokTestCase, Helper):
-
             def test_class_rollbacked(self):
-                run_order.append('class_rollbacked')
+                run_order.append("class_rollbacked")
                 self.assert_pristine_registry()
 
         result = unittest.TestResult()
 
         suite = unittest.TestSuite()
-        suite.addTest(SharedData('test_normal'))
-        suite.addTest(SharedData('test_rollbacked'))
-        suite.addTest(AfterSharedData('test_class_rollbacked'))
+        suite.addTest(SharedData("test_normal"))
+        suite.addTest(SharedData("test_rollbacked"))
+        suite.addTest(AfterSharedData("test_class_rollbacked"))
         suite.run(result)
 
-        self.assertEqual(run_order,
-                         ['normal', 'rollbacked', 'class_rollbacked'])
+        self.assertEqual(
+            run_order, ["normal", "rollbacked", "class_rollbacked"]
+        )
         self.assertEqual(result.testsRun, 3)
         self.assertFalse(result.failures)
         self.assertFalse(result.errors)
@@ -117,16 +120,15 @@ class TestSharedDataTestCaseException(unittest.TestCase):
         run_order = []
 
         class SharedData(SharedDataTestCase, Helper):
-
             @classmethod
             def setUpSharedData(cls):
                 cls.Grant = cls.registry.Authorization.ModelPermissionGrant
-                cls.grant = cls.Grant.insert(model='abc',
-                                             principal='me',
-                                             permission='read')
+                cls.grant = cls.Grant.insert(
+                    model="abc", principal="me", permission="read"
+                )
 
             def setUp(self):
-                run_order.append('error')
+                run_order.append("error")
                 super(SharedData, self).setUp()
                 self.break_registry()
 
@@ -134,19 +136,18 @@ class TestSharedDataTestCaseException(unittest.TestCase):
                 """Won't even be executed (error is in setUp)"""
 
         class AfterSharedData(BlokTestCase, Helper):
-
             def test_class_rollbacked(self):
-                run_order.append('class_rollbacked')
+                run_order.append("class_rollbacked")
                 self.assert_pristine_registry()
 
         result = unittest.TestResult()
 
         suite = unittest.TestSuite()
-        suite.addTest(SharedData('test_error'))
-        suite.addTest(AfterSharedData('test_class_rollbacked'))
+        suite.addTest(SharedData("test_error"))
+        suite.addTest(AfterSharedData("test_class_rollbacked"))
         suite.run(result)
 
-        self.assertEqual(run_order, ['error', 'class_rollbacked'])
+        self.assertEqual(run_order, ["error", "class_rollbacked"])
         self.assertEqual(result.testsRun, 2)
 
         self.assertEqual(len(result.errors), 1)
@@ -158,30 +159,28 @@ class TestSharedDataTestCaseException(unittest.TestCase):
         run_order = []
 
         class BadTest(SharedDataTestCase):
-
             @classmethod
             def setUpSharedData(cls):
-                run_order.append('test_error')
+                run_order.append("test_error")
                 cls.break_registry()
 
             def test_error(cls):
                 """Won't even be executed (is after error in setUpClass)"""
 
         class GoodTest(BlokTestCase, Helper):
-
             def test_ok(self):
                 """Test that registry and db connection work normally."""
-                run_order.append('test_ok')
+                run_order.append("test_ok")
                 self.assert_pristine_registry()
 
         result = unittest.TestResult()
 
         suite = unittest.TestSuite()
-        suite.addTest(BadTest('test_error'))
-        suite.addTest(GoodTest('test_ok'))
+        suite.addTest(BadTest("test_error"))
+        suite.addTest(GoodTest("test_ok"))
         suite.run(result)
 
-        self.assertEqual(run_order, ['test_error', 'test_ok'])
+        self.assertEqual(run_order, ["test_error", "test_ok"])
         # only test_ok could actually be run
         self.assertEqual(result.testsRun, 1)
         # but it succeeded

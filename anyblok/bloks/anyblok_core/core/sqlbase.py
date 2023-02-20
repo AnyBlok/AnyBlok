@@ -7,24 +7,25 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from sqlalchemy import and_, delete, inspect, or_, select
+from sqlalchemy import update as sqla_update
+from sqlalchemy.orm import ColumnProperty, aliased, load_only
+from sqlalchemy.orm.base import LoaderCallableStatus
+from sqlalchemy.orm.session import object_state
+from sqlalchemy.sql.expression import true
+from sqlalchemy_utils.models import NOT_LOADED_REPR
+
+from anyblok.column import Column
+from anyblok.common import anyblok_column_prefix
 from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
-from anyblok.column import Column
 from anyblok.mapper import FakeColumn, FakeRelationShip
-from anyblok.relationship import RelationShip, Many2Many
-from anyblok.common import anyblok_column_prefix
+from anyblok.relationship import Many2Many, RelationShip
+
 from ..exceptions import SqlBaseException
-from sqlalchemy.orm import aliased, ColumnProperty, load_only
-from sqlalchemy.sql.expression import true
-from sqlalchemy import or_, and_, inspect
-from sqlalchemy_utils.models import NOT_LOADED_REPR
-from sqlalchemy.orm.session import object_state
-from sqlalchemy.orm.base import LoaderCallableStatus
-from sqlalchemy import delete, select, update as sqla_update
 
 
 class uniquedict(dict):
-
     def add_in_res(self, key, attrs):
         if key not in self:
             self[key] = []
@@ -35,7 +36,6 @@ class uniquedict(dict):
 
 
 class SqlMixin:
-
     __db_schema__ = None
 
     def __repr__(self):
@@ -45,35 +45,41 @@ class SqlMixin:
         keys = list(fields_description.keys())
         keys.sort()
         for key in keys:
-            type_ = fields_description[key]['type']
+            type_ = fields_description[key]["type"]
             if key in state.attrs:
                 value = state.attrs.get(key).loaded_value
             elif (anyblok_column_prefix + key) in state.attrs:
                 value = state.attrs.get(
-                    anyblok_column_prefix + key).loaded_value
+                    anyblok_column_prefix + key
+                ).loaded_value
             else:
                 continue  # pragma: no cover
 
             if value == LoaderCallableStatus.NO_VALUE:
                 value = NOT_LOADED_REPR
-            elif value and type_ in ('One2Many', 'Many2Many'):
-                value = '<%s len(%d)>' % (
-                    fields_description[key]['model'],
-                    len(value)
+            elif value and type_ in ("One2Many", "Many2Many"):
+                value = "<%s len(%d)>" % (
+                    fields_description[key]["model"],
+                    len(value),
                 )
-            elif value and type_ in ('One2One', 'Many2One'):
-                value = '<%s(%s)>' % (
-                    fields_description[key]['model'],
-                    ', '.join(['='.join([x, str(y)])
-                               for x, y in value.to_primary_keys().items()])
+            elif value and type_ in ("One2One", "Many2One"):
+                value = "<%s(%s)>" % (
+                    fields_description[key]["model"],
+                    ", ".join(
+                        [
+                            "=".join([x, str(y)])
+                            for x, y in value.to_primary_keys().items()
+                        ]
+                    ),
                 )
             else:
                 value = repr(value)
 
-            field_reprs.append('='.join((key, value)))
+            field_reprs.append("=".join((key, value)))
 
-        return '<%s(%s)>' % (
-            self.__class__.__registry_name__, ', '.join(field_reprs)
+        return "<%s(%s)>" % (
+            self.__class__.__registry_name__,
+            ", ".join(field_reprs),
         )
 
     @classmethod
@@ -84,7 +90,7 @@ class SqlMixin:
     def define_table_kwargs(cls):
         res = {}
         if cls.__db_schema__ is not None:
-            res.update({'schema': cls.__db_schema__})
+            res.update({"schema": cls.__db_schema__})
 
         return res
 
@@ -100,7 +106,7 @@ class SqlMixin:
 
     @classmethod
     def query(cls, *elements):
-        """ Facility to do a SqlAlchemy query::
+        """Facility to do a SqlAlchemy query::
 
             query = MyModel.query()
 
@@ -116,7 +122,7 @@ class SqlMixin:
 
     @classmethod
     def select_sql_statement(cls, *elements):
-        """ Facility to do a SqlAlchemy query::
+        """Facility to do a SqlAlchemy query::
 
             stmt = MyModel.select()
 
@@ -165,7 +171,7 @@ class SqlMixin:
 
     @classmethod
     def aliased(cls, *args, **kwargs):
-        """ Facility to Apply an aliased on the model::
+        """Facility to Apply an aliased on the model::
 
             MyModelAliased = MyModel.aliased()
 
@@ -182,7 +188,7 @@ class SqlMixin:
 
     @classmethod
     def get_where_clause_from_primary_keys(cls, **pks):
-        """ return the where clause to find object from pks
+        """return the where clause to find object from pks
 
         :param _*_*pks: dict {primary_key: value, ...}
         :rtype: where clause
@@ -191,8 +197,10 @@ class SqlMixin:
         _pks = cls.get_primary_keys()
         for pk in _pks:
             if pk not in pks:  # pragma: no cover
-                raise SqlBaseException("No primary key %s filled for %r" % (
-                    pk, cls.__registry_name__))
+                raise SqlBaseException(
+                    "No primary key %s filled for %r"
+                    % (pk, cls.__registry_name__)
+                )
 
         return [getattr(cls, k) == v for k, v in pks.items()]
 
@@ -213,7 +221,7 @@ class SqlMixin:
 
     @classmethod
     def from_primary_keys(cls, **pks):
-        """ return the instance of the model from the primary keys
+        """return the instance of the model from the primary keys
 
         :param **pks: dict {primary_key: value, ...}
         :rtype: instance of the model
@@ -223,7 +231,7 @@ class SqlMixin:
 
     @classmethod
     def from_multi_primary_keys(cls, *pks):
-        """ return the instances of the model from the primary keys
+        """return the instances of the model from the primary keys
 
         :param _*pks: list of dict [{primary_key: value, ...}]
         :rtype: instances of the model
@@ -241,7 +249,7 @@ class SqlMixin:
         return query.all()
 
     def to_primary_keys(self):
-        """ return the primary keys and values for this instance
+        """return the primary keys and values for this instance
 
         :rtype: dict {primary key: value, ...}
         """
@@ -250,7 +258,7 @@ class SqlMixin:
 
     @classmethod_cache()
     def get_primary_keys(cls):
-        """ return the name of the primary keys of the model
+        """return the name of the primary keys of the model
 
         :type: list of the primary keys name
         """
@@ -264,7 +272,7 @@ class SqlMixin:
 
     @classmethod_cache()
     def _fields_description(cls):
-        """ Return the information of the Field, Column, RelationShip """
+        """Return the information of the Field, Column, RelationShip"""
         Field = cls.anyblok.System.Field
         res = {}
         for registry_name in cls.__depends__:
@@ -289,14 +297,15 @@ class SqlMixin:
         inherited model if they come from polymorphisme
         """
         hybrid_property_columns = cls.hybrid_property_columns
-        if 'polymorphic_identity' in cls.__mapper_args__:
+        if "polymorphic_identity" in cls.__mapper_args__:
             pks = cls.get_primary_keys()
             fd = cls.fields_description(pks)
             for pk in pks:
-                if fd[pk].get('model'):  # pragma: no cover
-                    Model = cls.anyblok.get(fd[pk]['model'])
+                if fd[pk].get("model"):  # pragma: no cover
+                    Model = cls.anyblok.get(fd[pk]["model"])
                     hybrid_property_columns.extend(
-                        Model.get_hybrid_property_columns())
+                        Model.get_hybrid_property_columns()
+                    )
 
         return hybrid_property_columns
 
@@ -310,21 +319,25 @@ class SqlMixin:
                 if related_fields is None:
                     related_fields = ()
                 elif not isinstance(related_fields, (tuple, list)):
-                    raise SqlBaseException("%r the related fields wanted "
-                                           "must be a tuple or empty or "
-                                           "None value" % related_fields)
+                    raise SqlBaseException(
+                        "%r the related fields wanted "
+                        "must be a tuple or empty or "
+                        "None value" % related_fields
+                    )
             else:
-                raise SqlBaseException("%r the number of argument is "
-                                       "wrong, waiting 1 or 2 arguments "
-                                       "(name of the relation[, (related "
-                                       "fields)])" % (field,))
+                raise SqlBaseException(
+                    "%r the number of argument is "
+                    "wrong, waiting 1 or 2 arguments "
+                    "(name of the relation[, (related "
+                    "fields)])" % (field,)
+                )
 
             field = field[0]
 
         return field, related_fields
 
     def to_dict(self, *fields):
-        """ Transform a record to the dict of value
+        """Transform a record to the dict of value
 
         :param fields: list of fields to put in dict; if not selected, fields
             then take them all. A field is either one of these:
@@ -401,7 +414,7 @@ class SqlMixin:
             # Get the actual data
             field_value, field_property = getattr(self, field), None
             try:
-                field_property = getattr(getattr(cls, field), 'property', None)
+                field_property = getattr(getattr(cls, field), "property", None)
             except FieldException:  # pragma: no cover
                 pass
 
@@ -422,8 +435,9 @@ class SqlMixin:
                     related_fields = related_fields.get_primary_keys()
                 # One2One, One2Many, Many2One or Many2Many ?
                 if field_property.uselist:
-                    result[field] = [r.to_dict(*related_fields)
-                                     for r in field_value]
+                    result[field] = [
+                        r.to_dict(*related_fields) for r in field_value
+                    ]
                 else:
                     result[field] = field_value.to_dict(*related_fields)
 
@@ -461,32 +475,44 @@ class SqlMixin:
             _field = model[field]
 
             if isinstance(_field, (Column, FakeColumn)):
-                _fields.extend(x for x, y in model.items()
-                               if (isinstance(y, RelationShip) and
-                                   not isinstance(y, Many2Many))
-                               for mapper in y.column_names
-                               if mapper.attribute_name == field)
+                _fields.extend(
+                    x
+                    for x, y in model.items()
+                    if (
+                        isinstance(y, RelationShip)
+                        and not isinstance(y, Many2Many)
+                    )
+                    for mapper in y.column_names
+                    if mapper.attribute_name == field
+                )
                 if (
                     isinstance(_field, Column) and _field.foreign_key
                 ):  # pragma: no cover
                     rmodel = cls.anyblok.loaded_namespaces_first_step[
-                        _field.foreign_key.model_name]
-                    for rc in [x for x, y in rmodel.items()
-                               if isinstance(y, RelationShip)
-                               for mapper in y.remote_columns
-                               if mapper.attribute_name == field]:
+                        _field.foreign_key.model_name
+                    ]
+                    for rc in [
+                        x
+                        for x, y in rmodel.items()
+                        if isinstance(y, RelationShip)
+                        for mapper in y.remote_columns
+                        if mapper.attribute_name == field
+                    ]:
                         rfield = rmodel[rc]
                         if isinstance(rfield, FakeRelationShip):
                             res.add_in_res(rfield.mapper.attribute_name, [rc])
-                        elif (isinstance(rfield, RelationShip) and
-                              'backref' in rfield.kwargs):
-                            res.add_in_res(
-                                rfield.kwargs['backref'][0], [rc])
+                        elif (
+                            isinstance(rfield, RelationShip)
+                            and "backref" in rfield.kwargs
+                        ):
+                            res.add_in_res(rfield.kwargs["backref"][0], [rc])
 
-            elif (isinstance(_field, RelationShip) and
-                  not isinstance(_field, Many2Many) and
-                  'backref' in _field.kwargs):
-                res.add_in_res(field, [_field.kwargs['backref'][0]])
+            elif (
+                isinstance(_field, RelationShip)
+                and not isinstance(_field, Many2Many)
+                and "backref" in _field.kwargs
+            ):
+                res.add_in_res(field, [_field.kwargs["backref"][0]])
             elif isinstance(_field, FakeRelationShip):  # pragma: no cover
                 res.add_in_res(field, [_field.mapper.attribute_name])
 
@@ -494,7 +520,7 @@ class SqlMixin:
 
     @classmethod_cache()
     def find_relationship(cls, *fields):
-        """ Find column and relation ship link with the column or relationship
+        """Find column and relation ship link with the column or relationship
         passed in fields.
 
         :param _*fields: lists of the attribute name
@@ -515,14 +541,19 @@ class SqlMixin:
             _field = model[field]
             res.append(field)
             if isinstance(_field, (Column, FakeColumn)):
-                _fields.extend(x
-                               for x, y in model.items()
-                               if (isinstance(y, RelationShip) and
-                                   not isinstance(y, Many2Many))
-                               for mapper in y.column_names
-                               if mapper.attribute_name == field)
-            elif (isinstance(_field, RelationShip) and
-                  not isinstance(_field, Many2Many)):
+                _fields.extend(
+                    x
+                    for x, y in model.items()
+                    if (
+                        isinstance(y, RelationShip)
+                        and not isinstance(y, Many2Many)
+                    )
+                    for mapper in y.column_names
+                    if mapper.attribute_name == field
+                )
+            elif isinstance(_field, RelationShip) and not isinstance(
+                _field, Many2Many
+            ):
                 for mapper in _field.column_names:
                     _fields.append(mapper.attribute_name)
 
@@ -531,7 +562,7 @@ class SqlMixin:
 
 def get_model_information(anyblok, registry_name):
     model = anyblok.loaded_namespaces_first_step[registry_name]
-    for depend in model['__depends__']:
+    for depend in model["__depends__"]:
         if depend != registry_name:
             for x, y in get_model_information(anyblok, depend).items():
                 if x not in model:
@@ -542,31 +573,31 @@ def get_model_information(anyblok, registry_name):
 
 @Declarations.register(Declarations.Core)
 class SqlBase(SqlMixin):
-    """ this class is inherited by all the SQL model
-    """
+    """this class is inherited by all the SQL model"""
 
     def get_modified_fields(self):
         """return the fields which have changed and their previous values"""
         state = object_state(self)
         modified_fields = {}
         for attr in state.manager.attributes:
-            if not hasattr(attr.impl, 'get_history'):
+            if not hasattr(attr.impl, "get_history"):
                 continue  # pragma: no cover
 
             added, unmodified, deleted = attr.impl.get_history(
-                state, state.dict)
+                state, state.dict
+            )
 
             if added or deleted:
                 field = attr.key
                 if field.startswith(anyblok_column_prefix):
-                    field = field[len(anyblok_column_prefix):]
+                    field = field[len(anyblok_column_prefix) :]
 
                 modified_fields[field] = deleted[0] if deleted else None
 
         return modified_fields
 
     def expire_relationship_mapped(self, mappers):
-        """ Expire the objects linked with this object, in function of
+        """Expire the objects linked with this object, in function of
         the mappers definition
         """
         for field_name, rfields in mappers.items():
@@ -579,7 +610,7 @@ class SqlBase(SqlMixin):
                     field.expire(*rfields)
 
     def refresh(self, *fields, with_for_update=None):
-        """ Expire and reload all the attribute of the instance
+        """Expire and reload all the attribute of the instance
 
         See: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.refresh
@@ -591,7 +622,7 @@ class SqlBase(SqlMixin):
         self.anyblok.session.expunge(self)
 
     def expire(self, *fields):
-        """ Expire the attribute of the instance, theses attributes will be
+        """Expire the attribute of the instance, theses attributes will be
         load at the next  call of the instance
 
         see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
@@ -600,7 +631,7 @@ class SqlBase(SqlMixin):
         self.anyblok.expire(self, fields)
 
     def flag_modified(self, *fields):
-        """ Flag the attributes as modified
+        """Flag the attributes as modified
 
         see: http://docs.sqlalchemy.org/en/latest/orm/session_api.html
         #sqlalchemy.orm.session.Session.expire
@@ -613,7 +644,7 @@ class SqlBase(SqlMixin):
         return cls.default_filter_on_sql_statement(delete(cls))
 
     def delete(self, byquery=False, flush=True):
-        """ Call the SqlAlchemy Query.delete method on the instance of the
+        """Call the SqlAlchemy Query.delete method on the instance of the
         model::
 
             self.delete()
@@ -630,11 +661,15 @@ class SqlBase(SqlMixin):
             self.execute_sql_statement(
                 delete(cls).where(
                     *cls.get_where_clause_from_primary_keys(
-                        **self.to_primary_keys())))
+                        **self.to_primary_keys()
+                    )
+                )
+            )
             self.expunge()
         else:
             model = self.anyblok.loaded_namespaces_first_step[
-                self.__registry_name__]
+                self.__registry_name__
+            ]
             fields = model.keys()
             mappers = self.__class__.find_remote_attribute_to_expire(*fields)
             self.expire_relationship_mapped(mappers)
@@ -648,7 +683,7 @@ class SqlBase(SqlMixin):
         return cls.default_filter_on_sql_statement(sqla_update(cls))
 
     def update(self, byquery=False, flush=False, **values):
-        """ Hight livel method to update the session for the instance
+        """Hight livel method to update the session for the instance
         ::
 
             self.update(val1=.., val2= ...)
@@ -662,9 +697,14 @@ class SqlBase(SqlMixin):
         if byquery:
             cls = self.__class__
             return self.execute_sql_statement(
-                sqla_update(cls).where(
+                sqla_update(cls)
+                .where(
                     *cls.get_where_clause_from_primary_keys(
-                        **self.to_primary_keys())).values(**values)).rowcount
+                        **self.to_primary_keys()
+                    )
+                )
+                .values(**values)
+            ).rowcount
 
         for x, v in values.items():
             setattr(self, x, v)
@@ -676,7 +716,7 @@ class SqlBase(SqlMixin):
 
     @classmethod
     def insert(cls, **kwargs):
-        """ Insert in the table of the model::
+        """Insert in the table of the model::
 
             MyModel.insert(...)
 
@@ -694,7 +734,7 @@ class SqlBase(SqlMixin):
 
     @classmethod
     def multi_insert(cls, *args):
-        """ Insert in the table one or more entry of the model::
+        """Insert in the table one or more entry of the model::
 
             MyModel.multi_insert([{...}, ...])
 

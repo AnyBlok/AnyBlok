@@ -60,7 +60,7 @@ the latest master is always available at https://github.com/AnyBlok/AnyBlok/arch
 Installation
 ------------
 
-Install released versions of AnyBlok from the Python package index with 
+Install released versions of AnyBlok from the Python package index with
 `pip <http://pypi.python.org/pypi/pip>`_ or a similar tool::
 
     pip install anyblok
@@ -123,5 +123,5 @@ Contributors
 Bugs
 ----
 
-Bugs and feature enhancements to AnyBlok should be reported on the `Issue 
+Bugs and feature enhancements to AnyBlok should be reported on the `Issue
 tracker <http://issue.anyblok.org>`_.

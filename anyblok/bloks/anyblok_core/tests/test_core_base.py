@@ -11,9 +11,8 @@ import pytest
 from ..exceptions import CoreBaseException
 
 
-@pytest.mark.usefixtures('rollback_registry')
+@pytest.mark.usefixtures("rollback_registry")
 class TestCoreBaseScope:
-
     def test_to_primary_keys(self, rollback_registry):
         registry = rollback_registry
         with pytest.raises(CoreBaseException):
@@ -33,5 +32,5 @@ class TestCoreBaseScope:
     def test_get_model(self, rollback_registry):
         registry = rollback_registry
         m = registry.System.Model
-        m2 = registry.System.get_model('Model.System.Model')
+        m2 = registry.System.get_model("Model.System.Model")
         assert m == m2

@@ -6,13 +6,14 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
+
 from anyblok.column import Integer
-from anyblok.relationship import Many2Many, One2Many, Many2One
+from anyblok.relationship import Many2Many, Many2One, One2Many
+
 from .conftest import init_registry, reset_db
 
 
 class TestInstrumentedListStdCase:
-
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_blok):
         transaction = registry_blok.begin_nested()
@@ -20,30 +21,29 @@ class TestInstrumentedListStdCase:
 
     def test_all_method_on_query_return_InstrumentedList(self, registry_blok):
         registry = registry_blok
-        check = isinstance(registry.System.Blok.query().all(),
-                           registry.InstrumentedList)
+        check = isinstance(
+            registry.System.Blok.query().all(), registry.InstrumentedList
+        )
         assert check
 
     def test_emulates(self, registry_blok):
         registry = registry_blok
-        assert not (hasattr(registry.InstrumentedList, '__emulates'))
+        assert not (hasattr(registry.InstrumentedList, "__emulates"))
 
     def test_empty_result_on_query_return_InstrumentedList(self, registry_blok):
         registry = registry_blok
         Blok = registry.System.Blok
-        bloks = Blok.query().filter(Blok.name == 'Unexisting blok').all()
+        bloks = Blok.query().filter(Blok.name == "Unexisting blok").all()
         check = isinstance(bloks, registry.InstrumentedList)
         assert check
         assert bloks.name == []
 
 
 class TestInstrumentedList:
-
     @pytest.fixture(autouse=True)
     def close_registry(self, request, bloks_loaded):
-
         def close():
-            if hasattr(self, 'registry'):
+            if hasattr(self, "registry"):
                 self.registry.close()
 
         request.addfinalizer(close)
@@ -54,10 +54,9 @@ class TestInstrumentedList:
         return self.registry
 
     def test_M2M_with_InstrumentedList(self):
-
         def m2m_with_instrumentedlist():
-
             from anyblok import Declarations
+
             Model = Declarations.Model
 
             @Declarations.register(Model)
@@ -81,10 +80,9 @@ class TestInstrumentedList:
         assert check
 
     def test_O2M_is_InstrumentedList(self):
-
         def o2m_with_instrumentedlist():
-
             from anyblok import Declarations
+
             Model = Declarations.Model
 
             @Declarations.register(Model)
@@ -94,7 +92,7 @@ class TestInstrumentedList:
             @Declarations.register(Model)
             class Test:
                 id = Integer(primary_key=True)
-                test2 = Integer(foreign_key=Model.Test2.use('id'))
+                test2 = Integer(foreign_key=Model.Test2.use("id"))
 
             @Declarations.register(Model)  # noqa
             class Test2:
@@ -109,10 +107,9 @@ class TestInstrumentedList:
         assert check
 
     def test_O2M_linked_is_InstrumentedList(self):
-
         def o2m_with_instrumentedlist():
-
             from anyblok import Declarations
+
             Model = Declarations.Model
 
             @Declarations.register(Model)
@@ -133,10 +130,9 @@ class TestInstrumentedList:
         assert check
 
     def test_call_column(self):
-
         def call_column():
-
             from anyblok import Declarations
+
             Model = Declarations.Model
 
             @Declarations.register(Model)
@@ -149,10 +145,9 @@ class TestInstrumentedList:
         assert registry.Test.query().all().id == [t.id]
 
     def test_call_method(self):
-
         def call_method():
-
             from anyblok import Declarations
+
             Model = Declarations.Model
 
             @Declarations.register(Model)
@@ -168,15 +163,13 @@ class TestInstrumentedList:
         assert registry.Test.query().all().foo() == [t.id]
 
     def test_inherit(self):
-
         def inherit():
-
             from anyblok import Declarations
+
             Core = Declarations.Core
 
             @Declarations.register(Core)
             class InstrumentedList:
-
                 def foo(self):
                     return True
 

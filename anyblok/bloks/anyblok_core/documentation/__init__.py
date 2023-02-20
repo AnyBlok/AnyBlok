@@ -10,7 +10,6 @@ from anyblok import Declarations, reload_module_if_blok_is_reloading
 
 @Declarations.register(Declarations.Mixin)
 class DocElement:
-
     def _auto_doc(self, Model, elements, *args, **kwargs):
         for el in Model.getelements(*args, **kwargs):
             _el = Model(el)
@@ -27,7 +26,6 @@ class DocElement:
 
 @Declarations.register(Declarations.Model)
 class Documentation(Declarations.Mixin.DocElement):
-
     def __init__(self):
         self.bloks = []
         self.models = []
@@ -53,9 +51,9 @@ class Documentation(Declarations.Mixin.DocElement):
         self.toRST_model(doc)
 
     def toRST(self, doc):
-        title = 'Documentation of the %s project' % self.Env.get('db_name')
+        title = "Documentation of the %s project" % self.Env.get("db_name")
         quote = "=" * len(title)
-        doc.write('\n'.join([quote, title, quote, '\n']))
+        doc.write("\n".join([quote, title, quote, "\n"]))
         self.header2RST(doc)
         self.chapter2RST(doc)
         self.footer2RST(doc)
@@ -82,6 +80,8 @@ class Documentation(Declarations.Mixin.DocElement):
 
 
 from . import blok  # noqa
+
 reload_module_if_blok_is_reloading(blok)
 from . import model  # noqa
+
 reload_module_if_blok_is_reloading(model)

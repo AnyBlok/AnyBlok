@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
@@ -12,8 +11,13 @@
 from pkg_resources import iter_entry_points
 from logging import getLogger
 from .schema import (  # noqa
-    ForeignKeyConstraint, UniqueConstraint, PrimaryKeyConstraint,
-    CheckConstraint, Index)
+    ForeignKeyConstraint,
+    UniqueConstraint,
+    PrimaryKeyConstraint,
+    CheckConstraint,
+    Index,
+)
+
 logger = getLogger(__name__)
 
 
@@ -41,8 +45,8 @@ def load_init_function_from_entry_points(unittest=False):
 
 
     """
-    for i in iter_entry_points('anyblok.init'):  # pragma: no cover
-        print('AnyBlok Load init: %r' % i)
+    for i in iter_entry_points("anyblok.init"):  # pragma: no cover
+        print("AnyBlok Load init: %r" % i)
         i.load()(unittest=unittest)
 
 
@@ -70,14 +74,19 @@ def configuration_post_load(unittest=False):
 
 
     """
-    for i in iter_entry_points('anyblok_configuration.post_load'):
-        logger.info('AnyBlok configuration post load: %r' % i)
+    for i in iter_entry_points("anyblok_configuration.post_load"):
+        logger.info("AnyBlok configuration post load: %r" % i)
         i.load()(unittest=unittest)  # pragma: no cover
 
 
-def start(processName, entry_points=None,
-          useseparator=False, loadwithoutmigration=False, config=None,
-          **kwargs):
+def start(
+    processName,
+    entry_points=None,
+    useseparator=False,
+    loadwithoutmigration=False,
+    config=None,
+    **kwargs,
+):
     """Function used to initialize the application
 
     ::
@@ -101,8 +110,7 @@ def start(processName, entry_points=None,
     if config is None:
         config = {}
 
-    Configuration.load(processName,
-                       useseparator=useseparator, **config)
+    Configuration.load(processName, useseparator=useseparator, **config)
 
     configuration_post_load()
     if entry_points:
@@ -110,15 +118,17 @@ def start(processName, entry_points=None,
     else:
         BlokManager.load()
 
-    db_name = Configuration.get('db_name')
+    db_name = Configuration.get("db_name")
     logger.debug("start(): db_name=%r", db_name)
     if not db_name:
-        logger.warning("start(): no database name in configuration, "
-                       "bailing out")
+        logger.warning(
+            "start(): no database name in configuration, " "bailing out"
+        )
         return None  # pragma: no cover
 
     registry = RegistryManager.get(
-        db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
+        db_name, loadwithoutmigration=loadwithoutmigration, **kwargs
+    )
     registry.commit()
     return registry
 

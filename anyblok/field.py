@@ -6,16 +6,17 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy.ext.hybrid import hybrid_property
+
 from anyblok.common import anyblok_column_prefix
 from anyblok.mapper import ModelRepr
 
 
 class FieldException(Exception):
-    """ Simple Exception for Field """
+    """Simple Exception for Field"""
 
 
 class Field:
-    """ Field class
+    """Field class
 
     This class must not be instanciated
     """
@@ -23,37 +24,38 @@ class Field:
     use_hybrid_property = False
 
     def __init__(self, *args, **kwargs):
-        """ Initialize the field
+        """Initialize the field
 
         :param label: label of this field
         :type label: str
         """
         self.forbid_instance(Field)
         self.label = None
-        self.ignore_migration = kwargs.pop('ignore_migration', False)
+        self.ignore_migration = kwargs.pop("ignore_migration", False)
 
-        if 'label' in kwargs:
-            self.label = kwargs.pop('label')
+        if "label" in kwargs:
+            self.label = kwargs.pop("label")
 
-        self.context = kwargs.pop('context', {})
+        self.context = kwargs.pop("context", {})
         self.args = args
         self.kwargs = kwargs
 
     def forbid_instance(self, cls):
-        """ Raise an exception if the cls is an instance of this __class__
+        """Raise an exception if the cls is an instance of this __class__
 
         :param cls: instance of the class
         :exception: FieldException
         """
         if self.__class__ is cls:
             raise FieldException(
-                "%r class must not be instanciated use a sub class" % cls)
+                "%r class must not be instanciated use a sub class" % cls
+            )
 
     def update_description(self, registry, model, res):
         res.update(self.context)
 
     def update_properties(self, registry, namespace, fieldname, properties):
-        """ Update the propertie use to add new column
+        """Update the propertie use to add new column
 
         :param registry: current registry
         :param namespace: name of the model
@@ -61,8 +63,9 @@ class Field:
         :param properties: properties known to the model
         """
         if self.ignore_migration:
-            table = registry.loaded_namespaces_first_step[
-                namespace]['__tablename__']
+            table = registry.loaded_namespaces_first_step[namespace][
+                "__tablename__"
+            ]
             ignore_migration_for = registry.ignore_migration_for.get(table)
             if ignore_migration_for is True:
                 return  # pragma: no cover
@@ -149,7 +152,8 @@ class Field:
             action_todos = set()
             if fieldname in model_self.loaded_columns:
                 action_todos = model_self.anyblok.expire_attributes.get(
-                    model_self.__registry_name__, {}).get(fieldname, set())
+                    model_self.__registry_name__, {}
+                ).get(fieldname, set())
 
             self.expire_related_attribute(model_self, action_todos)
             value = self.setter_format_value(value)
@@ -159,9 +163,10 @@ class Field:
 
         return setter_column
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
-                               properties):
-        """ Return the instance of the real field
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        """Return the instance of the real field
 
         :param registry: current registry
         :param namespace: name of the model
@@ -173,72 +178,78 @@ class Field:
         return self
 
     def format_label(self, fieldname):
-        """ Return the label for this field
+        """Return the label for this field
 
         :param fieldname: if no label filled, the fieldname will be capitalized
             and returned
         :rtype: the label for this field
         """
         if not self.label:
-            label = fieldname.replace('_', ' ')
+            label = fieldname.replace("_", " ")
             self.label = label.capitalize()
 
     def native_type(self, registry):
-        """ Return the native SqlAlchemy type
+        """Return the native SqlAlchemy type
 
         :exception: FieldException
         """
         raise FieldException(
-            "No native type for this field")  # pragma: no cover
+            "No native type for this field"
+        )  # pragma: no cover
 
     def must_be_declared_as_attr(self):
-        """ Return False, it is the default value """
+        """Return False, it is the default value"""
         return False
 
     def must_be_copied_before_declaration(self):
-        """ Return False, it is the default value """
+        """Return False, it is the default value"""
         return False
 
     def autodoc_get_properties(self):
-        res = {'Type': self.__class__}
-        res['Context'] = self.context
-        res['Label'] = self.label
+        res = {"Type": self.__class__}
+        res["Context"] = self.context
+        res["Label"] = self.label
         res.update(self.kwargs)
         return res
 
-    autodoc_omit_property_values = set((
-        ('Label', None),
-        ('Context', None),
-        ))
+    autodoc_omit_property_values = set(
+        (
+            ("Label", None),
+            ("Context", None),
+        )
+    )
 
     def autodoc_format_dict(self, key, value, level=0):
-        bullets = ['*', '+', '•', '‣']
+        bullets = ["*", "+", "•", "‣"]
         bullet = bullets[level]
-        padding = '  ' * level
+        padding = "  " * level
         key = key.strip()
         if isinstance(value, dict):  # pragma: no cover
-            res = padding + '%c ``%s``:\n\n' % (bullet, key)
-            res += '\n'.join(
-                [self.autodoc_format_dict(x, y, level=level + 1)
-                 for x, y in value.items()])
-            res += '\n'
+            res = padding + "%c ``%s``:\n\n" % (bullet, key)
+            res += "\n".join(
+                [
+                    self.autodoc_format_dict(x, y, level=level + 1)
+                    for x, y in value.items()
+                ]
+            )
+            res += "\n"
             return res
         elif isinstance(value, (list, tuple)):  # pragma: no cover
-            res = padding + '%c ``%s``:\n\n' % (bullet, key)
+            res = padding + "%c ``%s``:\n\n" % (bullet, key)
             next_bullet = bullets[level + 1]
-            res += '\n'.join(padding + '  %c ``%r``' % (next_bullet, x)
-                             for x in value)
-            res += '\n'
+            res += "\n".join(
+                padding + "  %c ``%r``" % (next_bullet, x) for x in value
+            )
+            res += "\n"
             return res
         else:
             if isinstance(value, type):
-                rst_val = ':class:`%s.%s`' % (value.__module__,
-                                              value.__name__)
+                rst_val = ":class:`%s.%s`" % (value.__module__, value.__name__)
             elif isinstance(value, ModelRepr):  # pragma: no cover
                 rst_val = value.model_name
             else:
-                rst_val = '``%r``' % value
-            return padding + '%c ``%s`` - %s' % (bullet, key, rst_val)
+                rst_val = "``%r``" % value
+            return padding + "%c ``%s`` - %s" % (bullet, key, rst_val)
 
     def autodoc_do_omit(self, k, v):
         """Maybe convert, then check in :attr:`autodoc_omit_property_values`
@@ -257,13 +268,15 @@ class Field:
         return (k, v) in self.autodoc_omit_property_values
 
     def autodoc(self):
-        return '\n'.join(self.autodoc_format_dict(x, y)
-                         for x, y in self.autodoc_get_properties().items()
-                         if not self.autodoc_do_omit(x, y))
+        return "\n".join(
+            self.autodoc_format_dict(x, y)
+            for x, y in self.autodoc_get_properties().items()
+            if not self.autodoc_do_omit(x, y)
+        )
 
 
 class Function(Field):
-    """ Function Field
+    """Function Field
 
     ::
 
@@ -283,8 +296,9 @@ class Function(Field):
 
     """
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
-                               properties):
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
         """Return the property of the field
 
         :param registry: current registry
@@ -299,7 +313,7 @@ class Function(Field):
                 return None
 
             def function_method(model_self, *args, **kwargs):
-                if method == 'fget':
+                if method == "fget":
                     cls = registry.get(model_self.__registry_name__)
                     if model_self is cls:
                         return hasattr(model_self, m)
@@ -309,11 +323,11 @@ class Function(Field):
             function_method.__name__ = fieldname
             return function_method
 
-        fget = wrap('fget')
-        fset = wrap('fset')
-        fdel = wrap('fdel')
-        fexpr = wrap('fexpr')
-        fuexpr = wrap('fuexpr')
+        fget = wrap("fget")
+        fset = wrap("fset")
+        fdel = wrap("fdel")
+        fexpr = wrap("fexpr")
+        fuexpr = wrap("fuexpr")
 
         hybrid = hybrid_property(fget)
         hybrid = hybrid.setter(fset)
@@ -322,7 +336,7 @@ class Function(Field):
         hybrid = hybrid.update_expression(fuexpr)
 
         self.format_label(fieldname)
-        properties['loaded_fields'][fieldname] = self.label
+        properties["loaded_fields"][fieldname] = self.label
         return hybrid
 
 
@@ -339,7 +353,7 @@ def format_struc(entry, keys):
 
 
 class JsonRelated(Field):
-    """ Json Related Field
+    """Json Related Field
 
     ::
 
@@ -354,20 +368,18 @@ class JsonRelated(Field):
             x = JsonRelated(json_column='properties', keys=['x'])
 
     """
+
     def __init__(self, *args, **kwargs):
-        self.json_column = kwargs.pop('json_column', None)
+        self.json_column = kwargs.pop("json_column", None)
         if self.json_column is None:
             raise FieldException(
-                "json_column is a required attribute for "
-                "JsonRelated"
+                "json_column is a required attribute for " "JsonRelated"
             )
-        self.keys = kwargs.pop('keys', None)
+        self.keys = kwargs.pop("keys", None)
         if self.keys is None:
-            raise FieldException(
-                "keys is a required attribute for JsonRelated"
-            )
-        self.get_adapter = kwargs.pop('get_adapter', None)
-        self.set_adapter = kwargs.pop('set_adapter', None)
+            raise FieldException("keys is a required attribute for JsonRelated")
+        self.get_adapter = kwargs.pop("get_adapter", None)
+        self.set_adapter = kwargs.pop("set_adapter", None)
         super(JsonRelated, self).__init__(*args, **kwargs)
 
     def get_fget(self):
@@ -441,8 +453,9 @@ class JsonRelated(Field):
 
         return fexpr
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
-                               properties):
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
         """Return the property of the field
 
         :param registry: current registry
@@ -451,7 +464,7 @@ class JsonRelated(Field):
         :param properties: properties known to the model
         """
         self.format_label(fieldname)
-        properties['loaded_fields'][fieldname] = self.label
+        properties["loaded_fields"][fieldname] = self.label
 
         fget = self.get_fget()
         fset = self.get_fset()
@@ -469,8 +482,10 @@ class JsonRelated(Field):
 
     def autodoc_get_properties(self):
         res = super(JsonRelated, self).autodoc_get_properties()
-        res.update({
-            'json_column': self.json_column,
-            'keys': ' -> '.join(self.keys),
-        })
+        res.update(
+            {
+                "json_column": self.json_column,
+                "keys": " -> ".join(self.keys),
+            }
+        )
         return res

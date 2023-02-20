@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
@@ -10,11 +9,10 @@ from sqlalchemy import event
 
 
 def mysql_no_autocommit(engine):
-
     def mysql_set_no_autocommit(dbapi_con, connection_record):
         cur = dbapi_con.cursor()
         cur.execute("SET autocommit=0;")
         cur.execute("SET SESSION sql_mode='TRADITIONAL';")
         cur = None
 
-    event.listen(engine, 'connect', mysql_set_no_autocommit)
+    event.listen(engine, "connect", mysql_set_no_autocommit)

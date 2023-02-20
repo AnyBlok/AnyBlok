@@ -6,32 +6,36 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from sqlalchemy import Table, Column, ForeignKeyConstraint
-from sqlalchemy.orm import (relationships, backref, relationship, base,
-                            attributes)
-from sqlalchemy.schema import Column as SA_Column
+from logging import getLogger
+from types import FunctionType
+from typing import Any, Dict
+
+from sqlalchemy import Column, ForeignKeyConstraint, Table
+from sqlalchemy import exc as sa_exc
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import exc as sa_exc
+from sqlalchemy.ext.orderinglist import OrderingList, _unsugar_count_from
+from sqlalchemy.orm import (
+    attributes,
+    backref,
+    base,
+    relationship,
+    relationships,
+)
+from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy_utils.functions import get_class_by_table
+
+from anyblok.common import anyblok_column_prefix
+
 from .field import Field, FieldException
 from .mapper import ModelAdapter, ModelAttribute, ModelRepr, format_schema
-from anyblok.common import anyblok_column_prefix
-from sqlalchemy.ext.orderinglist import OrderingList, _unsugar_count_from
-from types import FunctionType
-from typing import Any
-from typing import Dict
-
-from logging import getLogger
-
 
 logger = getLogger(__name__)
 
 
 class RelationshipProperty(relationships.RelationshipProperty):
-
     def __init__(self, *args, **kwargs):
-        self.relationship_field = kwargs.pop('relationship_field')
+        self.relationship_field = kwargs.pop("relationship_field")
         super(RelationshipProperty, self).__init__(*args, **kwargs)
 
     def _generate_backref(self) -> None:
@@ -117,21 +121,30 @@ class RelationshipProperty(relationships.RelationshipProperty):
             self._add_reverse_property(self.back_populates)
 
 
-def register_descriptor(class_, key, comparator=None,
-                        parententity=None, doc=None, relationship_field=None):
+def register_descriptor(
+    class_,
+    key,
+    comparator=None,
+    parententity=None,
+    doc=None,
+    relationship_field=None,
+):
     manager = base.manager_of_class(class_)
     descriptor = relationship_field.InstrumentedAttribute(
-        class_, key, comparator=comparator, parententity=parententity,
-        relationship_field=relationship_field)
+        class_,
+        key,
+        comparator=comparator,
+        parententity=parententity,
+        relationship_field=relationship_field,
+    )
     descriptor.__doc__ = doc
     manager.instrument_attribute(key, descriptor)
     return descriptor
 
 
 class RelationshipProperty2(relationships.RelationshipProperty):
-
     def __init__(self, *args, **kwargs):
-        self.relationship_field = kwargs.pop('relationship_field')
+        self.relationship_field = kwargs.pop("relationship_field")
         super(RelationshipProperty2, self).__init__(*args, **kwargs)
 
     def instrument_class(self, mapper):
@@ -146,7 +159,6 @@ class RelationshipProperty2(relationships.RelationshipProperty):
 
 
 class RelationShipList:  # don't inherit list
-
     def append(self, x):
         res = super(RelationShipList, self).append(x)
         self.relationship_field_append_value(x)
@@ -181,7 +193,7 @@ class RelationShipList:  # don't inherit list
 
 
 class RelationShip(Field):
-    """ RelationShip class
+    """RelationShip class
 
     The RelationShip class is used to define the type of SQL field Declarations
 
@@ -197,44 +209,49 @@ class RelationShip(Field):
 
     def __init__(self, *args, **kwargs):
         self.forbid_instance(RelationShip)
-        if 'model' in kwargs:
-            self.model = ModelAdapter(kwargs.pop('model'))
+        if "model" in kwargs:
+            self.model = ModelAdapter(kwargs.pop("model"))
         else:
             raise FieldException("model is required attribut")
 
         super(RelationShip, self).__init__(*args, **kwargs)
 
-        if 'info' not in self.kwargs:
-            self.kwargs['info'] = {}
+        if "info" not in self.kwargs:
+            self.kwargs["info"] = {}
 
-        self.kwargs['info']['remote_model'] = self.model.model_name
+        self.kwargs["info"]["remote_model"] = self.model.model_name
         self.backref_properties = {}
 
     def autodoc_get_properties(self):
         res = super(RelationShip, self).autodoc_get_properties()
-        res['model'] = self.model
+        res["model"] = self.model
         return res
 
     def apply_instrumentedlist(self, registry, namespace, fieldname):
-        """ Add the InstrumentedList class to replace List class as result
+        """Add the InstrumentedList class to replace List class as result
         of the query
 
         :param registry: current registry
         """
         InstrumentedList = registry.InstrumentedList
-        if self.kwargs.get('collection_class'):
-            collection_class = self.kwargs['collection_class']
+        if self.kwargs.get("collection_class"):
+            collection_class = self.kwargs["collection_class"]
             if isinstance(collection_class, FunctionType):
-                if getattr(
-                    collection_class, 'is_an_anyblok_instrumented_list', False
-                ) is True:
-                    InstrumentedList = self.kwargs['collection_class'](registry)
+                if (
+                    getattr(
+                        collection_class,
+                        "is_an_anyblok_instrumented_list",
+                        False,
+                    )
+                    is True
+                ):
+                    InstrumentedList = self.kwargs["collection_class"](registry)
 
-        self.kwargs['collection_class'] = InstrumentedList
-        self.backref_properties['collection_class'] = registry.InstrumentedList
+        self.kwargs["collection_class"] = InstrumentedList
+        self.backref_properties["collection_class"] = registry.InstrumentedList
 
     def define_backref_properties(self, registry, namespace, properties):
-        """ Add in the backref_properties, new property for the backref
+        """Add in the backref_properties, new property for the backref
 
         :param registry: current registry
         :param namespace: name of the model
@@ -243,7 +260,7 @@ class RelationShip(Field):
         pass
 
     def format_backref(self, registry, namespace, fieldname, properties):
-        """ Create the real backref, with the backref string and the
+        """Create the real backref, with the backref string and the
         backref properties
 
         :param registry: current registry
@@ -251,29 +268,35 @@ class RelationShip(Field):
         :param fieldname: name of the field
         :param properties: properties known of the model
         """
-        _backref = self.kwargs.get('backref')
+        _backref = self.kwargs.get("backref")
         if not _backref:
             return
 
         if isinstance(_backref, (list, tuple)):
             _backref, backref_properties = _backref
-            if backref_properties.get('collection_class'):
-                collection_class = backref_properties['collection_class']
+            if backref_properties.get("collection_class"):
+                collection_class = backref_properties["collection_class"]
                 if isinstance(collection_class, FunctionType):
-                    if getattr(
-                        collection_class, 'is_an_anyblok_instrumented_list',
-                        False
-                    ) is True:
+                    if (
+                        getattr(
+                            collection_class,
+                            "is_an_anyblok_instrumented_list",
+                            False,
+                        )
+                        is True
+                    ):
                         backref_properties[
-                            'collection_class'] = collection_class(registry)
+                            "collection_class"
+                        ] = collection_class(registry)
 
             self.backref_properties.update(backref_properties)
 
         self.define_backref_properties(registry, namespace, properties)
 
         if self.backref_properties:
-            self.kwargs['backref'] = backref(_backref,
-                                             **self.backref_properties)
+            self.kwargs["backref"] = backref(
+                _backref, **self.backref_properties
+            )
             mapper = ModelAttribute(self.model.model_name, _backref)
             if not mapper.is_declared(registry):
                 mapper.add_fake_relationship(registry, namespace, fieldname)
@@ -281,9 +304,10 @@ class RelationShip(Field):
     def get_relationship_cls(self):
         return relationship
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
-                               properties):
-        """ Return the instance of the real field
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        """Return the instance of the real field
 
         :param registry: current registry
         :param namespace: name of the model
@@ -293,15 +317,16 @@ class RelationShip(Field):
         """
         self.model.check_model(registry)
         self.format_label(fieldname)
-        self.kwargs['info']['label'] = self.label
-        self.kwargs['info']['rtype'] = self.__class__.__name__
+        self.kwargs["info"]["label"] = self.label
+        self.kwargs["info"]["rtype"] = self.__class__.__name__
         self.apply_instrumentedlist(registry, namespace, fieldname)
         self.format_backref(registry, namespace, fieldname, properties)
         return self.get_relationship_cls()(
-            self.model.modelname(registry), **self.kwargs)
+            self.model.modelname(registry), **self.kwargs
+        )
 
     def must_be_declared_as_attr(self):
-        """ Return True, because it is a relationship """
+        """Return True, because it is a relationship"""
         return True
 
     def init_expire_attributes(self, registry, namespace, fieldname):
@@ -319,11 +344,11 @@ class RelationShip(Field):
 
 
 class RelationShipListMany2One:
-
     def relationship_field_append_value(self, value):
         for model_field, rfield in self.relationship_fied.link_between_columns:
             self.relationship_fied.apply_value_to(
-                value, model_field, getattr(value, self.fieldname), rfield)
+                value, model_field, getattr(value, self.fieldname), rfield
+            )
 
     def relationship_field_remove_value(self, value):
         for model_field, rfield in self.relationship_fied.link_between_columns:
@@ -331,7 +356,7 @@ class RelationShipListMany2One:
 
 
 class Many2One(RelationShip):
-    """ Define a relationship attribute on the model
+    """Define a relationship attribute on the model
 
     ::
 
@@ -365,95 +390,105 @@ class Many2One(RelationShip):
     :param primary_key: If True, add the primary_key=True on the columns
     :param one2many: create the one2many link with this many2one
     """
+
     use_hybrid_property = True
 
     def __init__(self, **kwargs):
         super(Many2One, self).__init__(**kwargs)
 
         self._remote_columns = None
-        if 'remote_columns' in kwargs:
-            self._remote_columns = self.kwargs.pop('remote_columns')
+        if "remote_columns" in kwargs:
+            self._remote_columns = self.kwargs.pop("remote_columns")
             if not isinstance(self._remote_columns, (list, tuple)):
                 self._remote_columns = [self._remote_columns]
 
-        self.primary_key = self.kwargs.pop('primary_key', False)
-        self.kwargs['info']['primary_key'] = self.primary_key
+        self.primary_key = self.kwargs.pop("primary_key", False)
+        self.kwargs["info"]["primary_key"] = self.primary_key
 
         self.nullable = False if self.primary_key else True
-        nullable = self.kwargs.pop('nullable', True)
+        nullable = self.kwargs.pop("nullable", True)
         if not self.primary_key:
             self.nullable = nullable
 
-        self.kwargs['info']['nullable'] = self.nullable
+        self.kwargs["info"]["nullable"] = self.nullable
 
-        self.unique = self.kwargs.pop('unique', False)
-        self.kwargs['info']['unique'] = self.unique
+        self.unique = self.kwargs.pop("unique", False)
+        self.kwargs["info"]["unique"] = self.unique
 
-        self.index = self.kwargs.pop('index', False)
-        self.kwargs['info']['index'] = self.index
+        self.index = self.kwargs.pop("index", False)
+        self.kwargs["info"]["index"] = self.index
 
-        if 'one2many' in kwargs:
-            self.kwargs['backref'] = backref = self.kwargs.pop('one2many')
-            self.kwargs['info']['remote_name'] = backref
+        if "one2many" in kwargs:
+            self.kwargs["backref"] = backref = self.kwargs.pop("one2many")
+            self.kwargs["info"]["remote_name"] = backref
             if isinstance(backref, (list, tuple)):
-                self.kwargs['info']['remote_name'] = backref[0]
+                self.kwargs["info"]["remote_name"] = backref[0]
                 self.backref_properties.update(**backref[1])
 
         self._column_names = None
-        if 'column_names' in kwargs:
-            self._column_names = self.kwargs.pop('column_names')
+        if "column_names" in kwargs:
+            self._column_names = self.kwargs.pop("column_names")
             if not isinstance(self._column_names, (list, tuple)):
                 self._column_names = [self._column_names]
 
-        self.foreign_key_options = self.kwargs.pop('foreign_key_options', {})
-        self.cascade = self.kwargs.pop('cascade', 'save-update, merge')
+        self.foreign_key_options = self.kwargs.pop("foreign_key_options", {})
+        self.cascade = self.kwargs.pop("cascade", "save-update, merge")
 
     def autodoc_get_properties(self):
         res = super(Many2One, self).autodoc_get_properties()
-        res['remote_columns'] = self._remote_columns
-        res['column_names'] = self._column_names
-        res['unique'] = self.unique
-        res['index'] = self.index
-        res['primary_key'] = self.primary_key
+        res["remote_columns"] = self._remote_columns
+        res["column_names"] = self._column_names
+        res["unique"] = self.unique
+        res["index"] = self.index
+        res["primary_key"] = self.primary_key
         return res
 
-    autodoc_omit_property_values = Field.autodoc_omit_property_values.union((
-        ('remote_columns', None),
-        ('column_names', None),
-        ('unique', False),
-        ('primary_key', False),
-    ))
+    autodoc_omit_property_values = Field.autodoc_omit_property_values.union(
+        (
+            ("remote_columns", None),
+            ("column_names", None),
+            ("unique", False),
+            ("primary_key", False),
+        )
+    )
 
     def get_remote_columns(self, registry):
         if self._remote_columns is None:
             return self.model.primary_keys(registry)
 
-        return [ModelAttribute(self.model.model_name, x)
-                for x in self._remote_columns]
+        return [
+            ModelAttribute(self.model.model_name, x)
+            for x in self._remote_columns
+        ]
 
     def get_columns_names(self, registry, namespace, fieldname, remote_columns):
         if self._column_names is None:
             model = ModelRepr(namespace)
             column_names = model.foreign_keys_for(
-                registry, self.model.model_name)
+                registry, self.model.model_name
+            )
             if not column_names:
                 column_names = []
                 for x in remote_columns:
-                    cname = fieldname + '_' + x.attribute_name
+                    cname = fieldname + "_" + x.attribute_name
                     column_names.append(ModelAttribute(namespace, cname))
         else:
-            column_names = [ModelAttribute(namespace, x)
-                            for x in self._column_names]
+            column_names = [
+                ModelAttribute(namespace, x) for x in self._column_names
+            ]
 
         return column_names
 
-    def update_local_and_remote_columns_names(self, registry, namespace,
-                                              fieldname):
+    def update_local_and_remote_columns_names(
+        self, registry, namespace, fieldname
+    ):
         self.remote_columns = self.get_remote_columns(registry)
-        self.kwargs['info']['remote_columns'] = [x.attribute_name
-                                                 for x in self.remote_columns]
+        self.kwargs["info"]["remote_columns"] = [
+            x.attribute_name for x in self.remote_columns
+        ]
         self.column_names = self.get_columns_names(
-            registry, namespace, fieldname, self.remote_columns)
+            registry, namespace, fieldname, self.remote_columns
+        )
 
     def get_property(self, registry, namespace, fieldname, properties):
         """Return the property of the field
@@ -464,25 +499,27 @@ class Many2One(RelationShip):
         :param properties: properties known to the model
         """
         res = super(Many2One, self).get_property(
-            registry, namespace, fieldname, properties)
+            registry, namespace, fieldname, properties
+        )
         # force the info value in hybrid_property because since SQLAlchemy
         # 1.1.* the info is not propagate
-        res.info = self.kwargs['info']
+        res.info = self.kwargs["info"]
         return res
 
     def add_expire_attributes(self, registry, namespace, fieldname, cname):
         self.init_expire_attributes(registry, namespace, cname)
         registry.expire_attributes[namespace][cname].add((fieldname,))
-        if self.kwargs.get('backref'):
-            backref = self.kwargs['backref']
+        if self.kwargs.get("backref"):
+            backref = self.kwargs["backref"]
             if isinstance(backref, (list, tuple)):
                 backref = backref[0]
 
             registry.expire_attributes[namespace][cname].add(
-                (fieldname, backref))
+                (fieldname, backref)
+            )
 
     def update_properties(self, registry, namespace, fieldname, properties):
-        """ Create the column which has the foreign key if the column doesn't
+        """Create the column which has the foreign key if the column doesn't
         exist
 
         :param registry: the registry which load the relationship
@@ -494,18 +531,23 @@ class Many2One(RelationShip):
         self.link_between_columns = []
         self.model.check_model(registry)
         self.update_local_and_remote_columns_names(
-            registry, namespace, fieldname)
+            registry, namespace, fieldname
+        )
         if fieldname in [x.attribute_name for x in self.column_names]:
-            raise FieldException("The column_names and the fieldname %r are "
-                                 "the same, please choose another "
-                                 "column_names" % fieldname)
+            raise FieldException(
+                "The column_names and the fieldname %r are "
+                "the same, please choose another "
+                "column_names" % fieldname
+            )
 
-        self.kwargs['info']['local_columns'] = [
-            x.attribute_name for x in self.column_names]
-        remote_types = {x.attribute_name: x.native_type(registry)
-                        for x in self.remote_columns}
-        remote_columns = {x.attribute_name: x
-                          for x in self.remote_columns}
+        self.kwargs["info"]["local_columns"] = [
+            x.attribute_name for x in self.column_names
+        ]
+        remote_types = {
+            x.attribute_name: x.native_type(registry)
+            for x in self.remote_columns
+        }
+        remote_columns = {x.attribute_name: x for x in self.remote_columns}
         for cname in self.column_names:
             if cname.is_declared(registry):
                 del remote_types[cname.get_fk_column(registry)]
@@ -513,11 +555,13 @@ class Many2One(RelationShip):
         col_names = []
         fk_names = []
         for cname in self.column_names:
-            self.add_expire_attributes(registry, namespace, fieldname,
-                                       cname.attribute_name)
+            self.add_expire_attributes(
+                registry, namespace, fieldname, cname.attribute_name
+            )
             if not cname.is_declared(registry):
                 rc, remote_type = self.get_column_information(
-                    registry, cname, remote_types, fieldname)
+                    registry, cname, remote_types, fieldname
+                )
                 cname.add_fake_column(registry)
                 foreign_key = remote_columns[rc].get_fk_name(registry)
                 self.create_column(cname, remote_type, foreign_key, properties)
@@ -528,24 +572,26 @@ class Many2One(RelationShip):
 
             col_names.append(cname.attribute_name)
             fk_names.append(fk_name.get_fk_name(registry))
-            self.link_between_columns.append((cname.attribute_name,
-                                              fk_name.attribute_name))
+            self.link_between_columns.append(
+                (cname.attribute_name, fk_name.attribute_name)
+            )
 
         if namespace == self.model.model_name:
-            self.kwargs['remote_side'] = [
+            self.kwargs["remote_side"] = [
                 properties[anyblok_column_prefix + x.attribute_name]
-                for x in self.remote_columns]
+                for x in self.remote_columns
+            ]
 
         if (len(self.column_names) > 1 or add_fksc) and col_names and fk_names:
             self.col_names = col_names
             self.fk_names = fk_names
-            properties['add_in_table_args'].append(self)
+            properties["add_in_table_args"].append(self)
 
     def remote_model_is_a_table(self, registry):
         if self.model.model_name not in registry.loaded_namespaces:
             return True  # by default
 
-        return hasattr(registry.get(self.model.model_name), '__table__')
+        return hasattr(registry.get(self.model.model_name), "__table__")
 
     def update_table_args(self, registry, Model):
         """Add foreign key constraint in table args"""
@@ -553,8 +599,9 @@ class Many2One(RelationShip):
             return []  # pragma: no cover
 
         return [
-            ForeignKeyConstraint(self.col_names, self.fk_names,
-                                 **self.foreign_key_options)
+            ForeignKeyConstraint(
+                self.col_names, self.fk_names, **self.foreign_key_options
+            )
         ]
 
     def get_column_information(self, registry, cname, remote_types, fieldname):
@@ -564,49 +611,59 @@ class Many2One(RelationShip):
         else:
             rc = cname.get_fk_column(registry)
             if rc is None:
-                rc = cname.attribute_name[len(fieldname) + 1:]
+                rc = cname.attribute_name[len(fieldname) + 1 :]
 
             if rc in remote_types:
                 return rc, remote_types[rc]
             else:
                 cname.get_fk_column(registry)
-                raise FieldException("Can not create the local "
-                                     "column %r" % cname.attribute_name)
+                raise FieldException(
+                    "Can not create the local "
+                    "column %r" % cname.attribute_name
+                )
 
     def apply_instrumentedlist(self, registry, namespace, fieldname):
-        """ Add the InstrumentedList class to replace List class as result
+        """Add the InstrumentedList class to replace List class as result
         of the query
 
         :param registry: current registry
         """
-        properties = {
-            'fieldname': fieldname, 'relationship_fied': self}
+        properties = {"fieldname": fieldname, "relationship_fied": self}
 
-        collection_class = self.backref_properties.get('collection_class', None)
+        collection_class = self.backref_properties.get("collection_class", None)
         if (
             collection_class
             and isinstance(collection_class, FunctionType)
             and getattr(
-                collection_class, 'is_an_anyblok_instrumented_list', False
-            ) is True
+                collection_class, "is_an_anyblok_instrumented_list", False
+            )
+            is True
         ):
             InstrumentedList = collection_class(
-                registry, RelationShipListMany2One, RelationShipList,
-                **properties)
+                registry,
+                RelationShipListMany2One,
+                RelationShipList,
+                **properties,
+            )
         else:
             InstrumentedList = type(
-                'InstrumentedList', (RelationShipListMany2One, RelationShipList,
-                                     registry.InstrumentedList), properties)
+                "InstrumentedList",
+                (
+                    RelationShipListMany2One,
+                    RelationShipList,
+                    registry.InstrumentedList,
+                ),
+                properties,
+            )
 
-        self.backref_properties['collection_class'] = InstrumentedList
+        self.backref_properties["collection_class"] = InstrumentedList
 
         cascade = self.cascade
-        if self.foreign_key_options.get('ondelete') == 'cascade':
-            cascade += ', delete'
-        self.backref_properties['cascade'] = cascade
+        if self.foreign_key_options.get("ondelete") == "cascade":
+            cascade += ", delete"
+        self.backref_properties["cascade"] = cascade
 
     def create_column(self, cname, remote_type, foreign_key, properties):
-
         def wrapper(cls):
             return SA_Column(
                 cname.attribute_name,
@@ -615,12 +672,14 @@ class Many2One(RelationShip):
                 unique=self.unique,
                 index=self.index,
                 primary_key=self.primary_key,
-                info=dict(label=self.label, foreign_key=foreign_key))
+                info=dict(label=self.label, foreign_key=foreign_key),
+            )
 
-        properties[(anyblok_column_prefix +
-                    cname.attribute_name)] = declared_attr(wrapper)
-        properties['loaded_columns'].append(cname.attribute_name)
-        properties['hybrid_property_columns'].append(cname.attribute_name)
+        properties[
+            (anyblok_column_prefix + cname.attribute_name)
+        ] = declared_attr(wrapper)
+        properties["loaded_columns"].append(cname.attribute_name)
+        properties["hybrid_property_columns"].append(cname.attribute_name)
 
         fget = self.wrap_getter_column(cname.attribute_name)
         fset = super(Many2One, self).wrap_setter_column(cname.attribute_name)
@@ -634,9 +693,10 @@ class Many2One(RelationShip):
         hybrid = hybrid.expression(fexp)
         properties[cname.attribute_name] = hybrid
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
-                               properties):
-        """ Create the relationship
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        """Create the relationship
 
         :param registry: the registry which load the relationship
         :param namespace: the name space of the model
@@ -644,22 +704,24 @@ class Many2One(RelationShip):
         :param propertie: the properties known
         :rtype: Many2One relationship
         """
-        self.kwargs['foreign_keys'] = '[%s]' % ', '.join(
-            [x.get_complete_name(registry) for x in self.column_names])
+        self.kwargs["foreign_keys"] = "[%s]" % ", ".join(
+            [x.get_complete_name(registry) for x in self.column_names]
+        )
         if not self.remote_model_is_a_table(registry):
-            self.kwargs['viewonly'] = True  # pragma: no cover
+            self.kwargs["viewonly"] = True  # pragma: no cover
             # we used primaryjoin and let the userto defined the good one
             # The foreign key does not exist, we should fine a good way to
             # the the local and remote columns
 
         return super(Many2One, self).get_sqlalchemy_mapping(
-            registry, namespace, fieldname, properties)
+            registry, namespace, fieldname, properties
+        )
 
-    def apply_value_to(self, model_self, model_field, remote_self,
-                       remote_field):
+    def apply_value_to(
+        self, model_self, model_field, remote_self, remote_field
+    ):
         if remote_self:
-            value = getattr(remote_self,
-                            anyblok_column_prefix + remote_field)
+            value = getattr(remote_self, anyblok_column_prefix + remote_field)
         else:
             value = None
 
@@ -679,9 +741,8 @@ class Many2One(RelationShip):
 
 
 class InstrumentedAttribute_O2O(attributes.InstrumentedAttribute):
-
     def __init__(self, *args, **kwargs):
-        self.relationship_field = kwargs.pop('relationship_field')
+        self.relationship_field = kwargs.pop("relationship_field")
         super(InstrumentedAttribute_O2O, self).__init__(*args, **kwargs)
 
     def __set__(self, instance, value):
@@ -704,7 +765,7 @@ class InstrumentedAttribute_O2O(attributes.InstrumentedAttribute):
 
 
 class One2One(Many2One):
-    """ Define a relationship attribute on the model
+    """Define a relationship attribute on the model
 
     ::
 
@@ -738,37 +799,37 @@ class One2One(Many2One):
     def __init__(self, **kwargs):
         super(One2One, self).__init__(**kwargs)
 
-        if 'backref' not in kwargs:
+        if "backref" not in kwargs:
             raise FieldException("backref is a required argument")
 
-        if 'one2many' in kwargs:
+        if "one2many" in kwargs:
             raise FieldException("Unknow argmument 'one2many'")
 
-        self.kwargs['info']['remote_name'] = self.kwargs['backref']
+        self.kwargs["info"]["remote_name"] = self.kwargs["backref"]
 
     def define_backref_properties(self, registry, namespace, properties):
-        """ Add option uselist = False
+        """Add option uselist = False
 
         :param registry: the registry which load the relationship
         :param namespace: the name space of the model
         :param propertie: the properties known
         """
-        self.backref_properties.update({'uselist': False})
+        self.backref_properties.update({"uselist": False})
 
     def apply_instrumentedlist(self, registry, namespace, fieldname):
-        """ Add the InstrumentedList class to replace List class as result
+        """Add the InstrumentedList class to replace List class as result
         of the query
 
         :param registry: current registry
         """
 
     def get_relationship_cls(self):
-        self.kwargs['relationship_field'] = self
+        self.kwargs["relationship_field"] = self
         return RelationshipProperty
 
 
 class Many2Many(RelationShip):
-    """ Define a relationship attribute on the model
+    """Define a relationship attribute on the model
 
     ::
 
@@ -811,95 +872,105 @@ class Many2Many(RelationShip):
     def __init__(self, **kwargs):
         super(Many2Many, self).__init__(**kwargs)
 
-        self.join_table = self.kwargs.pop('join_table', None)
-        self.join_model = self.kwargs.pop('join_model', None)
+        self.join_table = self.kwargs.pop("join_table", None)
+        self.join_model = self.kwargs.pop("join_model", None)
         if self.join_model:
             self.join_model = ModelAdapter(self.join_model)
 
-        self.remote_columns = self.kwargs.pop('remote_columns', None)
-        if self.remote_columns and not isinstance(self.remote_columns,
-                                                  (list, tuple)):
+        self.remote_columns = self.kwargs.pop("remote_columns", None)
+        if self.remote_columns and not isinstance(
+            self.remote_columns, (list, tuple)
+        ):
             self.remote_columns = [self.remote_columns]
 
-        self.m2m_remote_columns = self.kwargs.pop('m2m_remote_columns', None)
-        if self.m2m_remote_columns and not isinstance(self.m2m_remote_columns,
-                                                      (list, tuple)):
+        self.m2m_remote_columns = self.kwargs.pop("m2m_remote_columns", None)
+        if self.m2m_remote_columns and not isinstance(
+            self.m2m_remote_columns, (list, tuple)
+        ):
             self.m2m_remote_columns = [self.m2m_remote_columns]
 
-        self.local_columns = self.kwargs.pop('local_columns', None)
-        if self.local_columns and not isinstance(self.local_columns,
-                                                 (list, tuple)):
+        self.local_columns = self.kwargs.pop("local_columns", None)
+        if self.local_columns and not isinstance(
+            self.local_columns, (list, tuple)
+        ):
             self.local_columns = [self.local_columns]
 
-        self.m2m_local_columns = self.kwargs.pop('m2m_local_columns', None)
-        if self.m2m_local_columns and not isinstance(self.m2m_local_columns,
-                                                     (list, tuple)):
+        self.m2m_local_columns = self.kwargs.pop("m2m_local_columns", None)
+        if self.m2m_local_columns and not isinstance(
+            self.m2m_local_columns, (list, tuple)
+        ):
             self.m2m_local_columns = [self.m2m_local_columns]
 
-        self.compute_join = self.kwargs.pop('compute_join', False)
-        self.kwargs['backref'] = backref = self.kwargs.pop('many2many', None)
-        self.kwargs['info']['remote_name'] = backref
+        self.compute_join = self.kwargs.pop("compute_join", False)
+        self.kwargs["backref"] = backref = self.kwargs.pop("many2many", None)
+        self.kwargs["info"]["remote_name"] = backref
         if isinstance(backref, (list, tuple)):
-            self.kwargs['info']['remote_name'] = backref[0]
+            self.kwargs["info"]["remote_name"] = backref[0]
             self.backref_properties.update(**backref[1])
 
-        self.schema = self.kwargs.pop('schema', None)
+        self.schema = self.kwargs.pop("schema", None)
 
     def autodoc_get_properties(self):
         res = super(Many2Many, self).autodoc_get_properties()
         if self.join_table:
-            res['join table'] = self.join_table
+            res["join table"] = self.join_table
 
         if self.join_model:
-            res['join model'] = self.join_model.model_name  # pragma: no cover
+            res["join model"] = self.join_model.model_name  # pragma: no cover
 
         if self.schema:
-            res['schema'] = self.schema
+            res["schema"] = self.schema
 
-        res['remote_columns'] = self.remote_columns
-        res['m2m_remote_columns'] = self.m2m_remote_columns
-        res['local_columns'] = self.local_columns
-        res['m2m_local_columns'] = self.m2m_local_columns
-        res['compute_join'] = self.compute_join
+        res["remote_columns"] = self.remote_columns
+        res["m2m_remote_columns"] = self.m2m_remote_columns
+        res["local_columns"] = self.local_columns
+        res["m2m_local_columns"] = self.m2m_local_columns
+        res["compute_join"] = self.compute_join
         return res
 
-    def get_m2m_columns(self, registry, columns, m2m_columns, modelname,
-                        suffix=""):
+    def get_m2m_columns(
+        self, registry, columns, m2m_columns, modelname, suffix=""
+    ):
         if m2m_columns is None:
             m2m_columns = [
-                x.get_fk_name(
-                    registry, with_schema=False).replace('.', '_') + suffix
-                for x in columns]
+                x.get_fk_name(registry, with_schema=False).replace(".", "_")
+                + suffix
+                for x in columns
+            ]
         elif self.join_model:
             m2m_columns_ = []
             first_step = registry.loaded_namespaces_first_step[
-                self.join_model.model_name]
+                self.join_model.model_name
+            ]
             for col in m2m_columns:
                 if col not in first_step:
                     m2m_columns_.append(col)  # pragma: no cover
                 elif isinstance(first_step[col], (Many2One, One2One)):
                     c = first_step[col]
                     remote_columns = c.get_remote_columns(registry)
-                    m2m_columns_.extend([
-                        x.attribute_name
-                        for x in c.get_columns_names(
-                            registry,
-                            self.join_model.model_name,
-                            col,
-                            remote_columns
-                        )
-                    ])
+                    m2m_columns_.extend(
+                        [
+                            x.attribute_name
+                            for x in c.get_columns_names(
+                                registry,
+                                self.join_model.model_name,
+                                col,
+                                remote_columns,
+                            )
+                        ]
+                    )
                 else:
                     m2m_columns_.append(col)
 
             m2m_columns = m2m_columns_
 
         if len(columns) != len(m2m_columns):
-            raise FieldException((
-                "The number of the column (%r) is not the same that the "
-                "number m2m column (%r)") % (
-                    columns, m2m_columns
+            raise FieldException(
+                (
+                    "The number of the column (%r) is not the same that the "
+                    "number m2m column (%r)"
                 )
+                % (columns, m2m_columns)
             )
 
         cols = []
@@ -913,29 +984,34 @@ class Many2Many(RelationShip):
             cols.append(Column(column, sqltype, primary_key=True))
             col_names.append(column)
             ref_cols.append(foreignkey)
-            primaryjoin.append(
-                modelname + '.' + column + ' == ' + completename)
+            primaryjoin.append(modelname + "." + column + " == " + completename)
 
-        primaryjoin = 'and_(' + ', '.join(primaryjoin) + ')'
+        primaryjoin = "and_(" + ", ".join(primaryjoin) + ")"
         return cols, ForeignKeyConstraint(col_names, ref_cols), primaryjoin
 
     def get_local_and_remote_columns(self, registry):
         if not self.local_columns:
             local_columns = self.local_model.primary_keys(registry)
         else:
-            local_columns = [ModelAttribute(self.local_model.model_name, x)
-                             for x in self.local_columns]
+            local_columns = [
+                ModelAttribute(self.local_model.model_name, x)
+                for x in self.local_columns
+            ]
 
         if not self.remote_columns:
             remote_columns = self.model.primary_keys(registry)
         else:
-            remote_columns = [ModelAttribute(self.model.model_name, x)
-                              for x in self.remote_columns]
+            remote_columns = [
+                ModelAttribute(self.model.model_name, x)
+                for x in self.remote_columns
+            ]
 
-        self.kwargs['info']['local_columns'] = [x.attribute_name
-                                                for x in local_columns]
-        self.kwargs['info']['remote_columns'] = [x.attribute_name
-                                                 for x in remote_columns]
+        self.kwargs["info"]["local_columns"] = [
+            x.attribute_name for x in local_columns
+        ]
+        self.kwargs["info"]["remote_columns"] = [
+            x.attribute_name for x in remote_columns
+        ]
 
         return local_columns, remote_columns
 
@@ -953,16 +1029,20 @@ class Many2Many(RelationShip):
         if self.join_model:
             join_model_table = self.join_model.tablename(registry)
 
-        if join_table and '.' in join_table:
-            schema, table = join_table.split('.')
+        if join_table and "." in join_table:
+            schema, table = join_table.split(".")
             schema = format_schema(schema, namespace)
-            join_table = '%s.%s' % (schema, table)
+            join_table = "%s.%s" % (schema, table)
 
         if join_table is None and join_model_table is None:
-            join_table = ('join_%s_and_%s_for_%s' % (
-                self.local_model.tablename(registry, with_schema=False),
-                self.model.tablename(registry, with_schema=False),
-                fieldname))[:63]
+            join_table = (
+                "join_%s_and_%s_for_%s"
+                % (
+                    self.local_model.tablename(registry, with_schema=False),
+                    self.model.tablename(registry, with_schema=False),
+                    fieldname,
+                )
+            )[:63]
 
         elif join_table and join_model_table and join_table != join_model_table:
             raise FieldException(
@@ -971,28 +1051,35 @@ class Many2Many(RelationShip):
                     "on model %r and many2many %r, "
                     "but the both table name are different and we can not "
                     "determinate which is the good table's name"
-                ) % (self.join_table, self.join_model.model_name,
-                     namespace, fieldname)
+                )
+                % (
+                    self.join_table,
+                    self.join_model.model_name,
+                    namespace,
+                    fieldname,
+                )
             )
 
         return join_table or join_model_table
 
-    def has_join_table_for_schema(self, registry, namespace, properties,
-                                  join_table):
+    def has_join_table_for_schema(
+        self, registry, namespace, properties, join_table
+    ):
         has_join_table = False
         schema = None
         tables = registry.declarativebase.metadata.tables
-        if '.' in join_table:
+        if "." in join_table:
             has_join_table = join_table in tables
         elif self.join_model:
             has_join_table = join_table in tables
         elif self.schema:
             schema = format_schema(self.schema, namespace)
-            has_join_table = self.schema + '.' + join_table in tables
-        elif properties.get('__db_schema__'):
-            schema = properties['__db_schema__']
+            has_join_table = self.schema + "." + join_table in tables
+        elif properties.get("__db_schema__"):
+            schema = properties["__db_schema__"]
             has_join_table = (
-                properties['__db_schema__'] + '.' + join_table in tables)
+                properties["__db_schema__"] + "." + join_table in tables
+            )
         elif join_table in tables:
             has_join_table = True
 
@@ -1008,7 +1095,8 @@ class Many2Many(RelationShip):
 
             field.local_model = self.model
             remote_join_table = field.get_join_table(
-                registry, remote_model, fieldname)
+                registry, remote_model, fieldname
+            )
             if join_table == remote_join_table:
                 return fieldname
 
@@ -1018,29 +1106,27 @@ class Many2Many(RelationShip):
         if not self.join_model:
             return
 
-        lnfs = registry.loaded_namespaces_first_step[
-            self.join_model.model_name]
+        lnfs = registry.loaded_namespaces_first_step[self.join_model.model_name]
         fieldnames = []
         for fieldname in lnfs:
             field = lnfs[fieldname]
             if not isinstance(field, Many2One):
                 continue
 
-            if field.model.model_name not in (
-                namespace, self.model.model_name
-            ):
+            if field.model.model_name not in (namespace, self.model.model_name):
                 continue  # pragma: no cover
 
             fieldnames.append(anyblok_column_prefix + fieldname)
 
         if fieldnames:
             # M2O on join model to M2M fields
-            self.kwargs['overlaps'] = ','.join(fieldnames)
-            self.backref_properties['overlaps'] = ','.join(fieldnames)
+            self.kwargs["overlaps"] = ",".join(fieldnames)
+            self.backref_properties["overlaps"] = ",".join(fieldnames)
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
-                               properties):
-        """ Create the relationship
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        """Create the relationship
 
         :param registry: the registry which load the relationship
         :param namespace: the name space of the model
@@ -1051,96 +1137,119 @@ class Many2Many(RelationShip):
         self.model.check_model(registry)
         self.local_model = ModelRepr(namespace)
         local_columns, remote_columns = self.get_local_and_remote_columns(
-            registry)
+            registry
+        )
         join_table = self.get_join_table(registry, namespace, fieldname)
         has_join_table, schema = self.has_join_table_for_schema(
-            registry, namespace, properties, join_table)
+            registry, namespace, properties, join_table
+        )
         if not has_join_table:
-            modelname = ''.join(x.capitalize() for x in join_table.split('_'))
+            modelname = "".join(x.capitalize() for x in join_table.split("_"))
             remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(
-                registry, remote_columns, self.m2m_remote_columns, modelname,
-                suffix="right" if namespace == self.model.model_name else ""
+                registry,
+                remote_columns,
+                self.m2m_remote_columns,
+                modelname,
+                suffix="right" if namespace == self.model.model_name else "",
             )
             local_columns, local_fk, primaryjoin = self.get_m2m_columns(
-                registry, local_columns, self.m2m_local_columns, modelname,
-                suffix="left" if namespace == self.model.model_name else ""
+                registry,
+                local_columns,
+                self.m2m_local_columns,
+                modelname,
+                suffix="left" if namespace == self.model.model_name else "",
             )
 
-            Node = Table(join_table, registry.declarativebase.metadata, *(
-                local_columns + remote_columns + [local_fk, remote_fk]),
-                schema=schema)
+            Node = Table(
+                join_table,
+                registry.declarativebase.metadata,
+                *(local_columns + remote_columns + [local_fk, remote_fk]),
+                schema=schema,
+            )
 
             if namespace == self.model.model_name:
-                type(modelname, (registry.declarativebase,), {
-                    '__table__': Node
-                })
-                self.kwargs['primaryjoin'] = primaryjoin
-                self.kwargs['secondaryjoin'] = secondaryjoin
+                type(
+                    modelname, (registry.declarativebase,), {"__table__": Node}
+                )
+                self.kwargs["primaryjoin"] = primaryjoin
+                self.kwargs["secondaryjoin"] = secondaryjoin
 
         elif namespace == self.model.model_name or self.compute_join:
             table = registry.declarativebase.metadata.tables[
-                '%s.%s' % (schema, join_table) if schema else join_table]
+                "%s.%s" % (schema, join_table) if schema else join_table
+            ]
             cls = get_class_by_table(registry.declarativebase, table)
             modelname = ModelRepr(cls.__registry_name__).modelname(registry)
             if (
-                self.m2m_local_columns is None and
-                self.m2m_remote_columns is None
+                self.m2m_local_columns is None
+                and self.m2m_remote_columns is None
             ):
                 raise FieldException(  # pragma: no cover
                     "No 'm2m_local_columns' and 'm2m_remote_columns' "
                     "attribute filled for many2many "
-                    "%r on model %r" % (fieldname, namespace))
+                    "%r on model %r" % (fieldname, namespace)
+                )
             elif self.m2m_local_columns is None:
                 raise FieldException(
                     "No 'm2m_local_columns' attribute filled for many2many "
-                    "%r on model %r" % (fieldname, namespace))
+                    "%r on model %r" % (fieldname, namespace)
+                )
             elif self.m2m_remote_columns is None:
                 raise FieldException(
                     "No 'm2m_remote_columns' attribute filled for many2many"
-                    " %r on model %r" % (fieldname, namespace))
+                    " %r on model %r" % (fieldname, namespace)
+                )
 
             remote_columns, remote_fk, secondaryjoin = self.get_m2m_columns(
-                registry, remote_columns, self.m2m_remote_columns,
+                registry,
+                remote_columns,
+                self.m2m_remote_columns,
                 modelname,
-                suffix="right" if namespace == self.model.model_name else ""
+                suffix="right" if namespace == self.model.model_name else "",
             )
 
             local_columns, local_fk, primaryjoin = self.get_m2m_columns(
-                registry, local_columns, self.m2m_local_columns, modelname,
-                suffix="left" if namespace == self.model.model_name else ""
+                registry,
+                local_columns,
+                self.m2m_local_columns,
+                modelname,
+                suffix="left" if namespace == self.model.model_name else "",
             )
-            self.kwargs['primaryjoin'] = primaryjoin
-            self.kwargs['secondaryjoin'] = secondaryjoin
+            self.kwargs["primaryjoin"] = primaryjoin
+            self.kwargs["secondaryjoin"] = secondaryjoin
 
         self.set_overlaps_properties(registry, namespace)
-        self.kwargs['secondary'] = (
-            '%s.%s' % (schema, join_table) if schema else join_table)
+        self.kwargs["secondary"] = (
+            "%s.%s" % (schema, join_table) if schema else join_table
+        )
         # definition of expiration
-        if self.kwargs.get('backref'):
+        if self.kwargs.get("backref"):
             self.init_expire_attributes(registry, namespace, fieldname)
-            backref = self.kwargs['backref']
+            backref = self.kwargs["backref"]
             if isinstance(backref, (tuple, list)):
                 backref = backref[0]
 
             registry.expire_attributes[namespace][fieldname].add(
-                ('x2m', fieldname, backref))
+                ("x2m", fieldname, backref)
+            )
             model_name = self.model.model_name
             self.init_expire_attributes(registry, model_name, backref)
             registry.expire_attributes[model_name][backref].add(
-                ('x2m', backref, fieldname))
+                ("x2m", backref, fieldname)
+            )
         else:
             m2m = self.get_back_populate_relationship(registry, join_table)
             if m2m:
-                self.kwargs['back_populates'] = m2m
+                self.kwargs["back_populates"] = m2m
 
         return super(Many2Many, self).get_sqlalchemy_mapping(
-            registry, namespace, fieldname, properties)
+            registry, namespace, fieldname, properties
+        )
 
 
 class InstrumentedAttribute_O2M(attributes.InstrumentedAttribute):
-
     def __init__(self, *args, **kwargs):
-        self.relationship_field = kwargs.pop('relationship_field')
+        self.relationship_field = kwargs.pop("relationship_field")
         super(InstrumentedAttribute_O2M, self).__init__(*args, **kwargs)
 
     def __set__(self, instance, value):
@@ -1154,7 +1263,7 @@ class InstrumentedAttribute_O2M(attributes.InstrumentedAttribute):
 
 
 class One2Many(RelationShip):
-    """ Define a relationship attribute on the model
+    """Define a relationship attribute on the model
 
     ::
 
@@ -1182,49 +1291,52 @@ class One2Many(RelationShip):
         super(One2Many, self).__init__(**kwargs)
 
         self.remote_columns = None
-        if 'remote_columns' in kwargs:
-            remote_columns = self.kwargs.pop('remote_columns')
+        if "remote_columns" in kwargs:
+            remote_columns = self.kwargs.pop("remote_columns")
             if not isinstance(remote_columns, (list, tuple)):
                 remote_columns = [remote_columns]
 
-            self.remote_columns = [ModelAttribute(self.model.model_name, x)
-                                   for x in remote_columns]
+            self.remote_columns = [
+                ModelAttribute(self.model.model_name, x) for x in remote_columns
+            ]
 
-        if 'many2one' in kwargs:
-            self.kwargs['backref'] = self.kwargs.pop('many2one')
-            self.kwargs['info']['remote_name'] = self.kwargs['backref']
+        if "many2one" in kwargs:
+            self.kwargs["backref"] = self.kwargs.pop("many2one")
+            self.kwargs["info"]["remote_name"] = self.kwargs["backref"]
 
     def autodoc_get_properties(self):
         res = super(One2Many, self).autodoc_get_properties()
-        res['remote_columns'] = self.remote_columns
+        res["remote_columns"] = self.remote_columns
         return res
 
     def add_expire_attributes(self, registry, namespace, fieldname):
-        if self.kwargs.get('backref'):
-            backref = self.kwargs['backref']
+        if self.kwargs.get("backref"):
+            backref = self.kwargs["backref"]
             if isinstance(backref, (list, tuple)):
                 backref = backref[0]
 
             model_name = self.model.model_name
             for rname in self.remote_columns:
                 self.init_expire_attributes(
-                    registry, model_name, rname.attribute_name)
+                    registry, model_name, rname.attribute_name
+                )
                 _rname = rname.attribute_name
                 registry.expire_attributes[model_name][_rname].add((backref,))
                 registry.expire_attributes[model_name][_rname].add(
-                    (backref, fieldname))
+                    (backref, fieldname)
+                )
 
     def format_join_from_remote_columns(self, registry, namespace, fieldname):
-
-        self.kwargs['info']['remote_columns'] = [x.attribute_name
-                                                 for x in self.remote_columns]
+        self.kwargs["info"]["remote_columns"] = [
+            x.attribute_name for x in self.remote_columns
+        ]
         self.link_between_columns = [
             (x.attribute_name, x.get_fk_mapper(registry).attribute_name)
             for x in self.remote_columns
             if x.get_fk_mapper(registry)
         ]
 
-        if 'primaryjoin' not in self.kwargs:
+        if "primaryjoin" not in self.kwargs:
             pjs_ = {}
             for cname in self.remote_columns:
                 remote = cname.get_complete_remote(registry)
@@ -1239,48 +1351,56 @@ class One2Many(RelationShip):
                 if len(v) == 1:
                     pjs.append("%s == %s" % (k, v[0]))
                 else:
-                    pj = 'or_(%s)' % ', '.join("%s == %s" % (k, y) for y in v)
+                    pj = "or_(%s)" % ", ".join("%s == %s" % (k, y) for y in v)
                     logger.warning(
-                        ("The One2Many %r on %r do a jointure on two identical "
-                         "primary key : %r"), fieldname, namespace, pj)
+                        "The One2Many %r on %r do a jointure on two identical "
+                        "primary key : %r",
+                        fieldname,
+                        namespace,
+                        pj,
+                    )
                     pjs.append(pj)
 
-            self.kwargs['primaryjoin'] = 'and_(' + ', '.join(pjs) + ')'
+            self.kwargs["primaryjoin"] = "and_(" + ", ".join(pjs) + ")"
 
     def format_join_and_remote_columns(self, registry, namespace, fieldname):
         many2ones = self.model.many2one_for(registry, namespace)
-        cmodel = self.model.model_name.replace('.', '')
-        model = namespace.replace('.', '')
+        cmodel = self.model.model_name.replace(".", "")
+        model = namespace.replace(".", "")
         pjs_ = {}
         self.link_between_columns = []
-        self.kwargs['info']['remote_columns'] = []
-        self.kwargs['info']['local_columns'] = []
+        self.kwargs["info"]["remote_columns"] = []
+        self.kwargs["info"]["local_columns"] = []
         for m2o_name, many2one in many2ones:
             remote_columns = many2one.get_remote_columns(registry)
             for x in remote_columns:
-                cname = m2o_name + '_' + x.attribute_name
+                cname = m2o_name + "_" + x.attribute_name
                 self.link_between_columns.append((cname, x.attribute_name))
-                self.kwargs['info']['remote_columns'].append(cname)
-                complete_name = cmodel + '.' + cname
-                remote_name = model + '.' + x.attribute_name
+                self.kwargs["info"]["remote_columns"].append(cname)
+                complete_name = cmodel + "." + cname
+                remote_name = model + "." + x.attribute_name
                 if remote_name in pjs_:
                     pjs_[remote_name].append(complete_name)
                 else:
                     pjs_[remote_name] = [complete_name]
 
-        if 'primaryjoin' not in self.kwargs:
+        if "primaryjoin" not in self.kwargs:
             pjs = []
             for k, v in pjs_.items():
                 if len(v) == 1:
                     pjs.append("%s == %s" % (k, v[0]))  # pragma: no cover
                 else:
-                    pj = 'or_(%s)' % ', '.join("%s == %s" % (k, y) for y in v)
+                    pj = "or_(%s)" % ", ".join("%s == %s" % (k, y) for y in v)
                     logger.warning(
-                        ("The One2Many %r on %r do a jointure on two identical "
-                         "primary key : %r"), fieldname, namespace, pj)
+                        "The One2Many %r on %r do a jointure on two identical "
+                        "primary key : %r",
+                        fieldname,
+                        namespace,
+                        pj,
+                    )
                     pjs.append(pj)
 
-            self.kwargs['primaryjoin'] = 'and_(' + ', '.join(pjs) + ')'
+            self.kwargs["primaryjoin"] = "and_(" + ", ".join(pjs) + ")"
 
     def get_back_populate_relationship(self, registry, namespace):
         remote_model = self.model.model_name
@@ -1294,16 +1414,17 @@ class One2Many(RelationShip):
             if field.model.model_name != namespace:
                 continue  # pragma: no cover
 
-            if field.kwargs.get('backref'):
+            if field.kwargs.get("backref"):
                 continue  # pragma: no cover
 
             fieldnames.append(anyblok_column_prefix + fieldname)
 
         return fieldnames
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname,
-                               properties):
-        """ Create the relationship
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        """Create the relationship
 
         :param registry: the registry which load the relationship
         :param namespace: the name space of the model
@@ -1314,31 +1435,34 @@ class One2Many(RelationShip):
         self.model.check_model(registry)
         if not self.remote_columns:
             self.remote_columns = self.model.foreign_keys_for(
-                registry, namespace)
+                registry, namespace
+            )
 
         if self.remote_columns:
             self.format_join_from_remote_columns(registry, namespace, fieldname)
         else:
             self.format_join_and_remote_columns(registry, namespace, fieldname)
 
-        self.kwargs['info']['local_columns'] = []
-        for rcol in self.kwargs['info']['remote_columns']:
-            col = ModelAttribute(
-                self.model.model_name, rcol).get_fk_column(registry)
+        self.kwargs["info"]["local_columns"] = []
+        for rcol in self.kwargs["info"]["remote_columns"]:
+            col = ModelAttribute(self.model.model_name, rcol).get_fk_column(
+                registry
+            )
             if col:
-                self.kwargs['info']['local_columns'].append(col)
+                self.kwargs["info"]["local_columns"].append(col)
 
-        if not self.kwargs.get('backref'):
+        if not self.kwargs.get("backref"):
             m2o = self.get_back_populate_relationship(registry, namespace)
             if m2o:
-                self.kwargs['overlaps'] = ','.join(m2o)
+                self.kwargs["overlaps"] = ",".join(m2o)
 
         self.add_expire_attributes(registry, namespace, fieldname)
         return super(One2Many, self).get_sqlalchemy_mapping(
-            registry, namespace, fieldname, properties)
+            registry, namespace, fieldname, properties
+        )
 
     def define_backref_properties(self, registry, namespace, properties):
-        """ Add option in the backref if both model and remote model are the
+        """Add option in the backref if both model and remote model are the
         same, it is for the One2Many on the same model
 
         :param registry: the registry which load the relationship
@@ -1347,12 +1471,17 @@ class One2Many(RelationShip):
         """
         if namespace == self.model.model_name:
             pks = ModelRepr(namespace).primary_keys(registry)
-            self.backref_properties.update({'remote_side': [
-                properties[anyblok_column_prefix + pk.attribute_name]
-                for pk in pks]})
+            self.backref_properties.update(
+                {
+                    "remote_side": [
+                        properties[anyblok_column_prefix + pk.attribute_name]
+                        for pk in pks
+                    ]
+                }
+            )
 
     def get_relationship_cls(self):
-        self.kwargs['relationship_field'] = self
+        self.kwargs["relationship_field"] = self
         return RelationshipProperty
 
 
@@ -1362,13 +1491,13 @@ def ordering_list(*args, **kwargs):
 
     def wrap(registry, *instrumented_list_bases, **properties):
         InstrumentedList = type(
-            'InstrumentedList',
+            "InstrumentedList",
             (
                 OrderingList.__mro__[0],
                 *instrumented_list_bases,
                 registry.InstrumentedList,
             ),
-            properties
+            properties,
         )
 
         kw = _unsugar_count_from(**fnct_kwargs)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file is a part of the AnyBlok project
 #
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
@@ -8,23 +7,26 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import warnings
-from pkg_resources import iter_entry_points
-from anyblok.imp import ImportManager
-from .logging import log
-from anyblok.environment import EnvironmentManager
-from time import sleep
-from sys import modules
-from os.path import dirname
 from logging import getLogger
+from os.path import dirname
+from sys import modules
+from time import sleep
+
+from pkg_resources import iter_entry_points
+
+from anyblok.environment import EnvironmentManager
+from anyblok.imp import ImportManager
+
+from .logging import log
 
 logger = getLogger(__name__)
 
 
 class BlokManagerException(LookupError):
-    """Simple exception class for BlokManager """
+    """Simple exception class for BlokManager"""
 
     def __init__(self, *args, **kwargs):
-        EnvironmentManager.set('current_blok', None)
+        EnvironmentManager.set("current_blok", None)
         super(BlokManagerException, self).__init__(*args, **kwargs)
 
 
@@ -73,7 +75,7 @@ class BlokManager:
         :exception: BlokManagerException
         """
         if not cls.has(blok):
-            raise BlokManagerException('%r not found' % blok)
+            raise BlokManagerException("%r not found" % blok)
 
         return cls.bloks[blok]
 
@@ -86,13 +88,13 @@ class BlokManager:
         :exception: BlokManagerException
         """
         if cls.has(blokname):
-            raise BlokManagerException('%r already present' % blokname)
+            raise BlokManagerException("%r already present" % blokname)
 
         cls.bloks[blokname] = blok
         cls.ordered_bloks.append(blokname)
 
     @classmethod
-    @log(logger, level='debug')
+    @log(logger, level="debug")
     def reload(cls):
         """Reload the entry points
 
@@ -103,7 +105,8 @@ class BlokManager:
         if cls.entry_points is None:
             raise BlokManagerException(
                 """You must use the ``load`` classmethod before using """
-                """``reload``""")
+                """``reload``"""
+            )
 
         entry_points = []
         entry_points += cls.entry_points
@@ -111,14 +114,15 @@ class BlokManager:
         cls.load(entry_points=entry_points)
 
     @classmethod
-    @log(logger, level='debug')
+    @log(logger, level="debug")
     def unload(cls):
-        """Unload all the bloks but not the registry """
+        """Unload all the bloks but not the registry"""
         cls.bloks = {}
         cls.ordered_bloks = []
         cls.entry_points = None
         cls.auto_install = []
         from .registry import RegistryManager
+
         RegistryManager.unload()
 
     @classmethod
@@ -146,7 +150,7 @@ class BlokManager:
 
     @classmethod
     def blok_importers(cls, blok):
-        EnvironmentManager.set('current_blok', blok)
+        EnvironmentManager.set("current_blok", blok)
 
         if not ImportManager.has(blok):
             # Import only if the blok doesn't exists, do not reload here
@@ -181,10 +185,15 @@ class BlokManager:
     @classmethod
     def add_undefined_blok(cls, name):
         blok = type(
-            'undefined-blok.%s' % name,
+            "undefined-blok.%s" % name,
             (UndefinedBlok,),
-            dict(name=name, required_by=[], optional_by=[], conditional_by=[],
-                 conflicting_by=[])
+            dict(
+                name=name,
+                required_by=[],
+                optional_by=[],
+                conditional_by=[],
+                conflicting_by=[],
+            ),
         )
         blok.__doc__ = "Blok undefined"
         cls.set(name, blok)
@@ -193,8 +202,8 @@ class BlokManager:
         cls.blok_importers(name)
 
     @classmethod
-    @log(logger, level='debug')
-    def load(cls, entry_points=('bloks',)):
+    @log(logger, level="debug")
+    def load(cls, entry_points=("bloks",)):
         """Load all the bloks and import them
 
         :param entry_points: Used by ``iter_entry_points`` to get the blok
@@ -205,11 +214,11 @@ class BlokManager:
 
         cls.entry_points = entry_points
 
-        if EnvironmentManager.get('current_blok'):
-            while EnvironmentManager.get('current_blok'):  # pragma: no cover
+        if EnvironmentManager.get("current_blok"):
+            while EnvironmentManager.get("current_blok"):  # pragma: no cover
                 sleep(0.1)
 
-        EnvironmentManager.set('current_blok', 'start')
+        EnvironmentManager.set("current_blok", "start")
 
         bloks = []
         for entry_point in entry_points:
@@ -227,7 +236,8 @@ class BlokManager:
 
             if not count:
                 raise BlokManagerException(
-                    "Invalid bloks group %r" % entry_point)
+                    "Invalid bloks group %r" % entry_point
+                )
 
         # Empty the ordered blok to reload it depending on the priority
         cls.ordered_bloks = []
@@ -239,7 +249,7 @@ class BlokManager:
                 cls.get_needed_blok(blok)
 
         finally:
-            EnvironmentManager.set('current_blok', None)
+            EnvironmentManager.set("current_blok", None)
 
     @classmethod
     def getPath(cls, blok):
@@ -271,8 +281,8 @@ class Blok:
     conditional = []
     conflicting = []
     name = None  # set by the BlokManager
-    author = ''
-    logo = ''
+    author = ""
+    logo = ""
 
     def __init__(self, registry):
         self.anyblok = registry
@@ -282,14 +292,15 @@ class Blok:
         warnings.warn(
             "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
             "own 'registry' attribute. Replace it by 'anyblok' attribute",
-            DeprecationWarning, stacklevel=2)
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         return self.anyblok
 
     @classmethod
     def import_declaration_module(cls):
-        """Do the python import for the Declaration of the model or other
-        """
+        """Do the python import for the Declaration of the model or other"""
 
     def update(self, latest_version):
         """Called on install or update
@@ -330,14 +341,11 @@ class Blok:
         """
 
     def uninstall(self):
-        """Called on uninstall
-        """
+        """Called on uninstall"""
 
     def load(self):
-        """Called on start / launch
-        """
+        """Called on start / launch"""
 
 
 class UndefinedBlok(Blok):
-
-    version = '0.0.0'
+    version = "0.0.0"
