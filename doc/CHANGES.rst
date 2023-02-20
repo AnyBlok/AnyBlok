@@ -17,7 +17,36 @@
 CHANGELOG
 =========
 
-1.3.0 (unreleased)
+2.0.0 (unreleased)
+------------------
+
+* Upgrade version of sqlalchemy to **2.0.0**
+* Upgrade version of sqlalchemy utils to **0.40.0**
+* Upgrade version of sqlalchemy views to **0.3.2**
+* The previsous deprecated configuration are placed as removed
+  theses configurations will be removed from the code in the next version
+* Added Sequence with *no gap* to provide functional sequence without gaps.
+
+1.4.0 (2022-02-17)
+------------------
+
+* Freeze version of SQLAlchemy < 2.0
+* Freeze version of SQLAlchemy_Util < 0.40.0
+* Forbid primary key on Float and Decimal
+* Replace setup packagin by pyproject.toml
+
+1.3.2 (2022-02-19)
+------------------
+
+* Fixed Graphviz dependencies #207
+* Fixed Mapper on column with **primary_key=False** #208
+
+1.3.1 (2021-08-25)
+------------------
+
+* Fixed sphinx pluggin 
+
+1.3.0 (2021-07-12)
 ------------------
 
 * Added deprecated name argument on the configuration to
@@ -27,6 +56,10 @@ CHANGELOG
   the sys arg
 * Added plugins to migrate DateTime to DateTime with MariaDB and MySQL
 * Added cache_ok attribute on Column Type
+* Fixed issue #195, the issue was due of a changement of the api of
+  the hybrid properties, Thanks @petrus-v for your help
+* Fixed issue #196, A setter on the deprecated attribut **registry**
+  do a setter on the attribute **anyblok**
 
 1.2.0 (2021-04-14)
 ------------------

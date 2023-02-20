@@ -211,6 +211,15 @@ class MigrationReport:
 
     def init_remove_index(self, diff):
         _, index = diff
+
+        if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
+            if index.table.schema in (
+                'mysql',
+                'performance_schema',
+                'percona',
+            ):
+                return True
+
         if self.ignore_migration_for(index.table.schema,
                                      index.table.name) is True:
             return True
@@ -380,6 +389,15 @@ class MigrationReport:
 
     def init_remove_table(self, diff):
         table = diff[1]
+
+        if sgdb_in(self.migration.conn.engine, ['MySQL', 'MariaDB']):
+            if table.schema in (
+                'mysql',
+                'performance_schema',
+                'percona',
+            ):
+                return True
+
         table_name = (
             '%s.%s' % (table.schema, table.name)
             if table.schema else table.name)
@@ -1397,9 +1415,11 @@ class MigrationSchema:
                 query = """
                     SELECT count(*)
                     FROM INFORMATION_SCHEMA.SCHEMATA
-                    WHERE SCHEMA_name='%s'
-                """ % self.name
-                return conn.execute(text(query)).fetchone()[0]
+                    WHERE SCHEMA_name=:schema_name
+                """
+                return conn.execute(text(query).bindparams(
+                    schema_name=self.name
+                )).fetchone()[0]
             else:
                 return self.migration.operation.impl.dialect.has_schema(
                     conn, self.name)

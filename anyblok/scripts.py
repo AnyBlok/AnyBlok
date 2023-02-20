@@ -11,7 +11,7 @@
 import anyblok
 from anyblok.release import version
 from anyblok.blok import BlokManager
-from anyblok.config import Configuration, get_db_name
+from anyblok.config import Configuration, get_db_name, get_url
 from anyblok.registry import RegistryManager
 from anyblok.common import return_list
 from anyblok._graphviz import ModelSchema, SQLSchema
@@ -97,7 +97,7 @@ def anyblok_createdb():
     db_name = get_db_name()
 
     db_template_name = Configuration.get('db_template_name', None)
-    url = Configuration.get('get_url')(db_name=db_name)
+    url = get_url(db_name=db_name)
     create_database(url, template=db_template_name)
     anyblok_registry = RegistryManager.get(db_name)
     if anyblok_registry is None:

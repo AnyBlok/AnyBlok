@@ -831,15 +831,14 @@ class TestBlokModel:
         assert registry.Test.query().count() == 1
 
 
-@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                    reason='Not for MySQL and MariaDB')
-class TestBlokSession:
+class TestBlokQuery:
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, registry_testblok_func):
-        request.addfinalizer(
-            registry_testblok_func.named_unittest_transaction[
-                'main'].rollback)
+    def transact(self, request, registry_testblok):
+        transaction = registry_testblok.named_unittest_transaction[
+            'main'].begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
 
     def test_session_with_no_change(self, registry_testblok_func):
         registry = registry_testblok_func
@@ -847,17 +846,11 @@ class TestBlokSession:
         registry.upgrade(install=('test-blok1',))
         assert Session is registry.Session
 
-    def test_session_with_change_query(self, registry_testblok_func):
-        registry = registry_testblok_func
-        Session = registry.Session
+    def test_session_with_change_query(self, registry_testblok):
+        registry = registry_testblok
+        assert not hasattr(registry.System.Blok.query(), 'is_a_test')
         registry.upgrade(install=('test-blok11',))
-        assert Session is not registry.Session
-
-    def test_session_with_change_session(self, registry_testblok_func):
-        registry = registry_testblok_func
-        Session = registry.Session
-        registry.upgrade(install=('test-blok12',))
-        assert Session is not registry.Session
+        assert registry.System.Blok.query().is_a_test is True
 
 
 @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
@@ -865,23 +858,25 @@ class TestBlokSession:
 class TestBlokInstallLifeCycle:
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, registry_testblok_func):
+    def transact(self, request, registry_testblok):
+        transaction = registry_testblok.named_unittest_transaction[
+            'main'].begin_nested()
+
         def clear_called_methods():
             BlokManager.get('test-blok16').called_methods = []
+
         request.addfinalizer(clear_called_methods)
-        request.addfinalizer(
-            registry_testblok_func.named_unittest_transaction[
-                'main'].rollback)
+        request.addfinalizer(transaction.rollback)
 
     @pytest.fixture()
-    def registry_blok16_installed(self, registry_testblok_func):
-        registry_testblok_func.upgrade(install=('test-blok16',))
+    def registry_blok16_installed(self, registry_testblok):
+        registry_testblok.upgrade(install=('test-blok16',))
         blok = BlokManager.get('test-blok16')
         blok.called_methods = []
-        return registry_testblok_func
+        return registry_testblok
 
-    def test_install_without_demo(self, registry_testblok_func):
-        registry = registry_testblok_func
+    def test_install_without_demo(self, registry_testblok):
+        registry = registry_testblok
         registry.System.Parameter.set("with-demo", False)
         registry.upgrade(install=('test-blok16',))
         blok = BlokManager.get('test-blok16')
@@ -889,8 +884,8 @@ class TestBlokInstallLifeCycle:
             "pre_migration", "post_migration", "update",
         ]
 
-    def test_install_with_demo(self, registry_testblok_func):
-        registry = registry_testblok_func
+    def test_install_with_demo(self, registry_testblok):
+        registry = registry_testblok
         registry.System.Parameter.set("with-demo", True)
         registry.upgrade(install=('test-blok16',))
         blok = BlokManager.get('test-blok16')

@@ -105,20 +105,6 @@ class TestMultiTablePoly:
         check_registry(registry.Engineer, engineer_name='An engineer')
         check_registry(registry.Manager, manager_name='An manager')
 
-    def test_query_with_polymorphic(self, registry_multi_table_poly):
-        registry = registry_multi_table_poly
-        registry.Employee.insert(name='employee')
-        registry.Engineer.insert(name='engineer', engineer_name='john')
-        registry.Manager.insert(name='manager', manager_name='doe')
-        assert registry.Employee.query().count() == 3
-        for mapper in (registry.Engineer,
-                       [registry.Engineer, registry.Manager], '*'):
-            query = registry.Employee.query().with_polymorphic(mapper)
-            query = query.filter(
-                registry.Engineer.engineer_name == 'john')
-            employee = query.one()
-            assert isinstance(employee, registry.Engineer)
-
     def test_getFieldType(self, registry_multi_table_poly):
         registry = registry_multi_table_poly
         assert registry.Employee.getFieldType('id') == 'Integer'
@@ -538,20 +524,6 @@ class TestPolymorphic:
         check_registry(registry.Employee, room=room)
         check_registry(registry.Engineer, engineer_name='An engineer',
                        room=room)
-
-    def test_query_with_polymorphic(self):
-        registry = self.init_registry(multi_table_poly)
-        registry.Employee.insert(name='employee')
-        registry.Engineer.insert(name='engineer', engineer_name='john')
-        registry.Manager.insert(name='manager', manager_name='doe')
-        assert registry.Employee.query().count() == 3
-        for mapper in (registry.Engineer,
-                       [registry.Engineer, registry.Manager], '*'):
-            query = registry.Employee.query().with_polymorphic(mapper)
-            query = query.filter(
-                registry.Engineer.engineer_name == 'john')
-            employee = query.one()
-            assert isinstance(employee, registry.Engineer)
 
     def test_getFieldType(self):
         registry = self.init_registry(multi_table_poly)

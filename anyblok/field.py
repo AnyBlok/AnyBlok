@@ -119,8 +119,8 @@ class Field:
         """
         attr_name = anyblok_column_prefix + fieldname
 
-        def expr_column(model_self):
-            return getattr(model_self, attr_name)
+        def expr_column(model_cls):
+            return getattr(model_cls, attr_name)
 
         return expr_column
 
@@ -273,11 +273,13 @@ class Function(Field):
 
         @Declarations.register(Declarations.Model)
         class Test:
-            x = Function(fget='fget', fset='fset', fdel='fdel', fexp='fexpr')
+            x = Function(fget='fget', fset='fset', fdel='fdel', fexp='fexpr',
+                         fuexpr='fuexpr')
 
         ..warning::
 
-            fexp must be a classmethod
+            fexpr must be a classmethod
+            fuexpr must be a classmethod
 
     """
 
@@ -304,16 +306,24 @@ class Function(Field):
 
                 return getattr(model_self, m)(*args, **kwargs)
 
+            function_method.__name__ = fieldname
             return function_method
 
         fget = wrap('fget')
         fset = wrap('fset')
         fdel = wrap('fdel')
         fexpr = wrap('fexpr')
+        fuexpr = wrap('fuexpr')
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.deleter(fdel)
+        hybrid = hybrid.expression(fexpr)
+        hybrid = hybrid.update_expression(fuexpr)
 
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
-        return hybrid_property(fget, fset, fdel=fdel, expr=fexpr)
+        return hybrid
 
 
 def format_struc(entry, keys):
@@ -422,8 +432,8 @@ class JsonRelated(Field):
         return fdel
 
     def get_fexpr(self):
-        def fexpr(model_self):
-            entry = getattr(model_self, self.json_column)
+        def fexpr(model_cls):
+            entry = getattr(model_cls, self.json_column)
             for key in self.keys:
                 entry = entry[key]
 
@@ -442,12 +452,20 @@ class JsonRelated(Field):
         """
         self.format_label(fieldname)
         properties['loaded_fields'][fieldname] = self.label
-        return hybrid_property(
-            self.get_fget(),
-            self.get_fset(),
-            fdel=self.get_fdel(),
-            expr=self.get_fexpr()
-        )
+
+        fget = self.get_fget()
+        fset = self.get_fset()
+        fdel = self.get_fdel()
+        fexpr = self.get_fexpr()
+
+        for func in (fget, fset, fdel, fexpr):
+            func.__name__ = fieldname
+
+        hybrid = hybrid_property(fget)
+        hybrid = hybrid.setter(fset)
+        hybrid = hybrid.deleter(fdel)
+        hybrid = hybrid.expression(fexpr)
+        return hybrid
 
     def autodoc_get_properties(self):
         res = super(JsonRelated, self).autodoc_get_properties()

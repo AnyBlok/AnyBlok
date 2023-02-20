@@ -9,7 +9,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from logging import getLogger
-import warnings
 from sqlalchemy import create_engine, event, MetaData, text
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import (ProgrammingError, OperationalError,
@@ -27,8 +26,7 @@ from .version import parse_version
 from .logging import log
 from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy.orm.decl_base import _declarative_constructor
-from sqlalchemy.orm.decl_api import DeclarativeMeta, registry as SQLARegistry
+from sqlalchemy.orm import declarative_base
 
 try:
     import pyodbc
@@ -135,10 +133,8 @@ class RegistryManager:
                     "because its registry is already loaded", db_name)
             return cls.registries[db_name]
 
-        _Registry = Configuration.get('Registry', Registry)
-        logger.info("Loading registry for database %r with class %r",
-                    db_name, _Registry)
-        registry = _Registry(
+        logger.info("Loading registry for database %r", db_name)
+        registry = Registry(
             db_name, loadwithoutmigration=loadwithoutmigration, **kwargs)
         cls.registries[db_name] = registry
         return registry
@@ -416,55 +412,6 @@ class RegistryManager:
             del cls.loaded_bloks[blok]['properties'][property_]
 
 
-class NewSQLARegistry(SQLARegistry):
-
-    def __getattr__(self, key):
-        sself = super(NewSQLARegistry, self)
-        if hasattr(sself, key):
-            return getattr(sself, key)  # pragma: no cover
-
-        warnings.warn(
-            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
-            "own 'registry' attribute. Replace it by 'anyblok' attribute",
-            DeprecationWarning, stacklevel=2)
-        return getattr(self._class_registry['registry'], key)
-
-
-class DeprecatedClassProperty:
-    def __init__(self, registry):
-        self.registry = registry
-
-    def __getattr__(self, key, **kw):  # pragma: no cover
-        warnings.warn(
-            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
-            "own 'registry' attribute. Replace it by 'anyblok' attribute",
-            DeprecationWarning, stacklevel=2)
-        return getattr(self.registry, key, **kw)
-
-
-def declarative_base(
-    bind=None,
-    metadata=None,
-    mapper=None,
-    cls=object,
-    name="Base",
-    constructor=_declarative_constructor,
-    class_registry=None,
-    metaclass=DeclarativeMeta,
-):
-    return NewSQLARegistry(
-        _bind=bind,
-        metadata=metadata,
-        class_registry=class_registry,
-        constructor=constructor,
-    ).generate_base(
-        mapper=mapper,
-        cls=cls,
-        name=name,
-        metaclass=metaclass,
-    )
-
-
 class Registry:
     """ Define one registry
 
@@ -484,12 +431,10 @@ class Registry:
         self.init_bind()
         self.registry_base = type("RegistryBase", tuple(), {
             'anyblok': self,
-            'registry': DeprecatedClassProperty(self),  # For Model No SQL
             'Env': EnvironmentManager})
         self.withoutautomigration = Configuration.get('withoutautomigration')
         self.ini_var()
         self.Session = None
-        self.nb_query_bases = self.nb_session_bases = 0
         self.blok_list_is_loaded = False
         self.pre_assemble_entries()
         self.load()
@@ -536,10 +481,10 @@ class Registry:
         """
         self.named_engines = {}
         for engine_name in self.get_engine_names():
-            url = Configuration.get('get_url', get_url)(
-                db_name=db_name, engine_name=engine_name)
+            url = get_url(db_name=db_name, engine_name=engine_name)
             self.ensure_db_schema_existe(url)
             kwargs = self.init_engine_options(url, engine_name)
+            kwargs['future'] = True
             engine = create_engine(url, **kwargs)
             self.apply_engine_events(engine)
             self.named_engines[engine_name] = engine
@@ -594,8 +539,7 @@ class Registry:
         if not db_name:
             raise RegistryException('db_name is required')
 
-        url = Configuration.get('get_url', get_url)(
-            db_name=db_name, engine_name=engine_name)
+        url = get_url(db_name=db_name, engine_name=engine_name)
         return database_exists(url)
 
     def listen_sqlalchemy_known_event(self):
@@ -645,10 +589,13 @@ class Registry:
         res = []
         query = """SELECT "order", name"""
         query += " FROM system_blok"
-        query += " WHERE state in ('%s')" % "', '".join(states)
+        query += " WHERE state in :states"
         try:
             bind = self.named_binds['main']
-            res = self.execute(text(query), fetchall=True, session_bind=bind)
+            res = self.execute(
+                text(query).bindparams(states=states),
+                fetchall=True, session_bind=bind
+            )
         except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
             pass
@@ -889,13 +836,16 @@ class Registry:
             query = """
                 update system_blok
                 set state='toinstall'
-                where name in ('%s')
-                and state = 'uninstalled'""" % "', '".join(
-                dependencies_to_install)
-
+                where name in :bloks_name
+                and state = 'uninstalled'"""
             bind = self.named_binds['main']
             try:
-                self.execute(query, session_bind=bind)
+                self.execute(
+                    text(query).bindparams(
+                        bloks_name=tuple(dependencies_to_install),
+                    ),
+                    session_bind=bind
+                )
             except (ProgrammingError, OperationalError):  # pragma: no cover
                 pass
 
@@ -968,12 +918,23 @@ class Registry:
 
         update_namespaces(self, namespace)
 
+    def create_query_factory(self):
+        """Create a wrapper for select statement
+
+        The goal is to emulate old legacy query behaviour with the
+        uniquify select statement.
+
+        and keep the compatibily between AnyBlok < 1.2 and AnyBlok >= 1.2
+        """
+        query_bases = [] + self.loaded_cores['Query'] + [self.registry_base]
+        self.Query = type('Query', tuple(query_bases), {})
+
     def create_session_factory(self):
         """Create the SQLA Session factory
 
         in function of the Core Session class ans the Core Qery class
         """
-        if self.Session is None or self.must_recreate_session_factory():
+        if self.Session is None:
             binds = {
                 x: x.get_bind()
                 for x in self.loaded_namespaces.values()
@@ -989,38 +950,14 @@ class Registry:
                 # because the instance are cached
                 self.Session.remove()
 
-            query_bases = [] + self.loaded_cores['Query']
-            query_bases += [self.registry_base]
-            Query = type('Query', tuple(query_bases), {})
-            session_bases = [self.registry_base] + self.loaded_cores['Session']
-            Session = type('Session', tuple(session_bases), {
-                'registry_query': Query})
-
-            sm = sessionmaker(class_=Session, future=True)
+            sm = sessionmaker(future=True),
             sm.configure(binds=binds)
             self.Session = scoped_session(
                 sm, EnvironmentManager.scoped_function_for_session())
 
-            self.nb_query_bases = len(self.loaded_cores['Query'])
-            self.nb_session_bases = len(self.loaded_cores['Session'])
             self.apply_session_events()
         else:
             self.flush()
-
-    def must_recreate_session_factory(self):
-        """Check if the SQLA Session Factory must be destroy and recreate
-
-        :rtype: Boolean, True if nb Core Session/Query inheritance change
-        """
-        nb_query_bases = len(self.loaded_cores['Query'])
-        if nb_query_bases != self.nb_query_bases:
-            return True
-
-        nb_session_bases = len(self.loaded_cores['Session'])
-        if nb_session_bases != self.nb_session_bases:
-            return True
-
-        return False
 
     @log(logger, level='debug')
     def load(self):
@@ -1053,6 +990,7 @@ class Registry:
             self.InstrumentedList = type(
                 'InstrumentedList', tuple(instrumentedlist_base), {})
             self.assemble_entries()
+            self.create_query_factory()
             self.create_session_factory()
 
             self.apply_model_schema_on_table(blok2install)
@@ -1125,18 +1063,19 @@ class Registry:
 
         self.named_migrations = {}
         for name in self.named_engines:
-            self.named_migrations[name] = Configuration.get(
-                'Migration', Migration)(self, engine_name=name)
+            self.named_migrations[name] = Migration(self, engine_name=name)
 
         query = """
             SELECT name, installed_version
             FROM system_blok
             WHERE
-                (state = 'toinstall' AND name = '%s')
-                OR state = 'toupdate'""" % blok2install
-
-        res = self.execute(query, fetchall=True,
-                           bind=self.named_binds[engine_name])
+                (state = 'toinstall' AND name = :bloks_name)
+                OR state = 'toupdate'"""
+        res = self.execute(
+            text(query).bindparams(bloks_name=blok2install),
+            fetchall=True,
+            bind=self.named_binds[engine_name]
+        )
         if res:
             for blok, installed_version in res:
                 b = BlokManager.get(blok)(self)
@@ -1555,12 +1494,15 @@ class Registry:
 
         logger.info("Change state %s => %s for blok %s" % (
             blok.state, state, blok_name))
-        Q = "UPDATE system_blok SET state='%s' where name='%s';" % (
-            state, blok_name)
-
         bind = self.named_binds['main']
-        self.execute(Q, session_bind=bind)
-        # blok.update(state=state)
+        self.execute(
+            text(
+                "UPDATE system_blok SET state=:blok_state where name=:blok_name"
+            ).bindparams(
+                blok_state=state, blok_name=blok_name
+            ),
+            session_bind=bind,
+        )
 
     @log(logger, level='debug', withargs=True)
     def upgrade(self, install=None, update=None, uninstall=None):

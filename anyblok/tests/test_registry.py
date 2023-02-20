@@ -114,11 +114,11 @@ class TestRegistry:
 
     def test_load_core(self):
         RegistryManager.loaded_bloks['blok'] = {
-            'Core': {'Session': [TestCase]},
+            'Core': {'Query': [TestCase]},
         }
         registry = self.init_registry(None)
-        registry.load_core('blok', 'Session')
-        assert TestCase in registry.loaded_cores['Session']
+        registry.load_core('blok', 'Query')
+        assert TestCase in registry.loaded_cores['Query']
 
     def test_load_blok(self):
 
@@ -128,11 +128,10 @@ class TestRegistry:
         registry = self.init_registry(None)
         BlokManager.bloks['blok'] = BlokTest
         RegistryManager.loaded_bloks['blok'] = {
-            'Core': {'Session': [TestCase],
+            'Core': {'Query': [TestCase],
                      'Base': [],
                      'SqlBase': [],
                      'SqlViewBase': [],
-                     'Query': [],
                      'InstrumentedList': []},
             'removed': [],
             'properties': {},
@@ -142,7 +141,7 @@ class TestRegistry:
                 'registry_names': []}
 
         registry.load_blok('blok', False, [])
-        assert TestCase in registry.loaded_cores['Session']
+        assert TestCase in registry.loaded_cores['Query']
 
     def check_added_in_regisry(self, registry):
         assert registry.Test is Test
@@ -204,12 +203,10 @@ class TestRegistry:
         self.check_added_in_regisry(registry)
 
     def test_registry_db_exist(self):
-        assert Configuration.get('Registry').db_exists(
-            db_name=Configuration.get('db_name'))
+        assert Registry.db_exists(db_name=Configuration.get('db_name'))
 
     def test_registry_db_unexist(self):
-        assert not (Configuration.get('Registry').db_exists(
-            db_name='wrong_db_name'))
+        assert not Registry.db_exists(db_name='wrong_db_name')
 
 
 class TestRegistry2:

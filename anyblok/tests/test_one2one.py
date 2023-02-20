@@ -13,7 +13,7 @@ from anyblok.config import Configuration
 from anyblok.field import FieldException
 from anyblok.column import Integer, String
 from anyblok.relationship import One2One
-from sqlalchemy import ForeignKeyConstraint
+from anyblok import ForeignKeyConstraint
 from .conftest import init_registry, reset_db
 
 register = Declarations.register

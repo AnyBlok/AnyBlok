@@ -172,6 +172,7 @@ class TestAuthorizationDeclaration:
 
         filtered = registry.wrap_query_permission(
             query, ('Franck',), 'Read')
+        print(filtered.query.sql_statement)
         assert filtered.count() == 3
 
         filtered = registry.wrap_query_permission(

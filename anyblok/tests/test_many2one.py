@@ -16,19 +16,18 @@ from anyblok.config import Configuration
 from sqlalchemy.exc import IntegrityError
 from anyblok.field import FieldException
 from anyblok.column import (
-    Integer, String, BigInteger, Float, Decimal, Boolean, DateTime, Date, Time,
+    Integer, String, BigInteger, Boolean, DateTime, Date, Time,
     Sequence, Email, UUID, URL, Country, Color, PhoneNumber, Selection,
     TimeStamp)
 from anyblok.relationship import Many2One, ordering_list
-from sqlalchemy import ForeignKeyConstraint, inspect
+from sqlalchemy import inspect
+from anyblok import ForeignKeyConstraint
 from .conftest import init_registry_with_bloks, init_registry, reset_db
 
 
 COLUMNS = [
     Integer,
     BigInteger,
-    Float,
-    Decimal,
     String,
     Boolean,
     Date,
@@ -536,7 +535,7 @@ class TestMany2OneOld:
         with pytest.raises(FieldException):
             self.init_registry(_many2one_with_same_name_for_column_names)
 
-    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB', 'MsSQL']),
+    @pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
                         reason='ISSUE #89')
     def test_minimum_many2one_on_sequence(self):
 
@@ -585,8 +584,8 @@ class TestMany2OneOld:
 
                 id = Integer(primary_key=True)
 
-            @register(Model)  # noqa
-            class Test:
+            @register(Model)
+            class Test:  # noqa
 
                 parent = Many2One(model='Model.Test', one2many='children')
 
@@ -595,6 +594,23 @@ class TestMany2OneOld:
         t2 = registry.Test.insert(parent=t1)
         assert t2.parent is t1
         assert t1.children[0] is t2
+
+    def test_with_primary_key_eq_False(self):
+        def add_in_registry():
+
+            @register(Model)
+            class Test1:
+
+                id = Integer(primary_key=True)
+                id2 = Integer(primary_key=False)
+
+            @register(Model)
+            class Test2:
+
+                id = Integer(primary_key=True)
+                parent = Many2One(model='Model.Test1')
+
+        self.init_registry(add_in_registry)
 
     def test_same_model_pk_by_mixin(self):
         def add_in_registry():

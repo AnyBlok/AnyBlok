@@ -11,7 +11,6 @@ from anyblok import config
 from anyblok.config import (
     Configuration,
     add_configuration_file,
-    add_plugins,
     add_database,
     add_named_database,
     add_install_bloks,
@@ -628,8 +627,7 @@ class TestConfiguration:
             Configuration.applications['test_add_application_properties'] ==
             {
                 'configuration_groups': [
-                    'config', 'database', 'named-database', 'plugins',
-                    'logging'],
+                    'config', 'database', 'named-database', 'logging'],
                 'description': 'Just a test'
             })
 
@@ -667,7 +665,6 @@ def group(parser):
 class TestConfigurationOption:
     function = {
         'add_configuration_file': add_configuration_file,
-        'add_plugins': add_plugins,
         'add_database': add_database,
         'add_named_database': add_named_database,
         'add_install_bloks': add_install_bloks,
@@ -683,9 +680,6 @@ class TestConfigurationOption:
 
     def test_add_configuration_file(self, parser):
         self.function['add_configuration_file'](parser)
-
-    def test_add_plugins(self, group):
-        self.function['add_plugins'](group)
 
     def test_add_database(self, group):
         self.function['add_database'](group)

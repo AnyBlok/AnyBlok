@@ -9,6 +9,7 @@ from .plugins import ModelPluginBase
 from .exceptions import ModelException
 from sqlalchemy import ForeignKeyConstraint, CheckConstraint
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.exc import NoInspectionAvailable
 from ..common import sgdb_in
 
 
@@ -147,7 +148,16 @@ class TableMapperPlugin(ModelPluginBase):
         ):
 
             def __table_args__(cls_):
-                res = cls_.define_table_args() + (cls_.define_table_kwargs(),)
+                try:
+                    res = cls_.define_table_args() + (
+                        cls_.define_table_kwargs(),)
+                except NoInspectionAvailable:
+                    raise ModelException(
+                        'A Index  or constraint on the model '
+                        f'"{cls_.__registry_name__}" if defined with SQLAlchemy'
+                        'class use the anyblok Index or constraint'
+                    )
+
                 return res
 
             new_base.__table_args__ = declared_attr(__table_args__)
@@ -173,6 +183,11 @@ class TableMapperPlugin(ModelPluginBase):
         if transformation_properties['mapper_args']:
 
             def __mapper_args__(cls_):
-                return cls_.define_mapper_args()
+                res = cls_.define_mapper_args()
+                if 'polymorphic_on' in res and res['polymorphic_on']:
+                    column = res['polymorphic_on']
+                    res['polymorphic_on'] = column.descriptor.sqla_column
+
+                return res
 
             new_base.__mapper_args__ = declared_attr(__mapper_args__)

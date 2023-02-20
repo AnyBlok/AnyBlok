@@ -15,7 +15,7 @@ from sqlalchemy import text
 
 
 """Define the prefix for the mapper attribute of the column"""
-anyblok_column_prefix = '__anyblok_field_'
+anyblok_column_prefix = 'ANYBLOK_FIELD_'
 
 
 def all_column_name(constraint, table):

@@ -18,7 +18,7 @@ from sqlalchemy import (
     MetaData, Table, Column, Integer, String, CheckConstraint, ForeignKey,
     text)
 from anyblok import Declarations
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_url
 from .conftest import init_registry, drop_database, create_database, reset_db
 from anyblok.common import naming_convention
 from .test_column import simple_column
@@ -29,7 +29,7 @@ from anyblok.testing import tmp_configuration
 def clean_db(request, configuration_loaded):
 
     def clean():
-        url = Configuration.get('get_url')()
+        url = get_url()
         drop_database(url)
         db_template_name = Configuration.get('db_template_name', None)
         create_database(url, template=db_template_name)

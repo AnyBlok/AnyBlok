@@ -11,6 +11,9 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from pkg_resources import iter_entry_points
 from logging import getLogger
+from .schema import (  # noqa
+    ForeignKeyConstraint, UniqueConstraint, PrimaryKeyConstraint,
+    CheckConstraint, Index)
 logger = getLogger(__name__)
 
 

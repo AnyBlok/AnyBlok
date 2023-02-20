@@ -8,6 +8,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.blok import Blok
 from anyblok.common import sgdb_in
+from sqlalchemy import text
 
 
 class TestBlok(Blok):
@@ -29,23 +30,23 @@ class TestBlok(Blok):
         engine = self.anyblok.named_engines['main']
         bind = self.anyblok.named_binds['main']
         if sgdb_in(engine, ['PostgreSQL']):
-            return bool(self.anyblok.execute("""
+            return bool(self.anyblok.execute(text("""
                 select count(*)
                 from pg_catalog.pg_tables
                 where tablename = 'test';
-            """, session_bind=bind).fetchone()[0])
+            """, session_bind=bind)).fetchone()[0])
         elif sgdb_in(engine, ['MySQL']):
-            return bool(self.anyblok.execute("""
+            return bool(self.anyblok.execute(text("""
                 show tables like 'test';
-            """, session_bind=bind).fetchall())
+            """, session_bind=bind)).fetchall())
         elif sgdb_in(engine, ['MsSQL']):
-            query = """
+            query = text("""
                 SELECT count(*)
                 FROM INFORMATION_SCHEMA.TABLES
                 WHERE TABLE_TYPE = 'BASE TABLE'
                       AND TABLE_CATALOG='%s'
                       AND TABLE_NAME='test'
-            """ % self.anyblok.db_name
+            """ % self.anyblok.db_name)
             return bool(self.anyblok.execute(
                 query, session_bind=bind).fetchall()[0][0])
 

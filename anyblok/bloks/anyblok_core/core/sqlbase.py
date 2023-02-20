@@ -17,8 +17,9 @@ from ..exceptions import SqlBaseException
 from sqlalchemy.orm import aliased, ColumnProperty, load_only
 from sqlalchemy.sql.expression import true
 from sqlalchemy import or_, and_, inspect
-from sqlalchemy_utils.models import NO_VALUE, NOT_LOADED_REPR
+from sqlalchemy_utils.models import NOT_LOADED_REPR
 from sqlalchemy.orm.session import object_state
+from sqlalchemy.orm.base import LoaderCallableStatus
 from sqlalchemy import delete, select, update as sqla_update
 
 
@@ -53,7 +54,7 @@ class SqlMixin:
             else:
                 continue  # pragma: no cover
 
-            if value == NO_VALUE:
+            if value == LoaderCallableStatus.NO_VALUE:
                 value = NOT_LOADED_REPR
             elif value and type_ in ('One2Many', 'Many2Many'):
                 value = '<%s len(%d)>' % (
@@ -113,31 +114,13 @@ class SqlMixin:
 
         is equal at::
 
-            query = self.anyblok.session.query(MyModel)
+            query = self.anyblok.Query(MyModel)
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: AnyBlok Query
         """
-        res = []
-        for f in elements:
-            if isinstance(f, str):
-                res.append(getattr(cls, f).label(f))
-            else:
-                res.append(f)
-
-        if res:
-            query = cls.anyblok.query(*res)
-        else:
-            query = cls.anyblok.query(cls)
-
-        query.set_Model(cls)
-        return query
-
-    @classmethod
-    def execute_sql_statement(cls, *args, **kwargs):
-        """call SqlA execute method on the session"""
-        return cls.anyblok.execute(*args, **kwargs)
+        return cls.anyblok.Query(cls, *elements)
 
     @classmethod
     def select_sql_statement(cls, *elements):
@@ -156,7 +139,7 @@ class SqlMixin:
 
         :param elements: pass at the SqlAlchemy query, if the element is a
                          string then thet are see as field of the model
-        :rtype: SqlAlchemy Query
+        :rtype: SqlAlchemy select statement
         """
         res = []
         for f in elements:
@@ -173,8 +156,18 @@ class SqlMixin:
         return cls.default_filter_on_sql_statement(stmt)
 
     @classmethod
+    def execute(cls, *args, **kwargs):
+        """call SqlA execute method on the session"""
+        return cls.anyblok.session.execute(*args, **kwargs)
+
+    @classmethod
     def default_filter_on_sql_statement(cls, statement):
         return statement
+
+    @classmethod
+    def execute_sql_statement(cls, *args, **kwargs):
+        """call SqlA execute method on the session"""
+        return cls.anyblok.execute(*args, **kwargs)
 
     is_sql = True
 

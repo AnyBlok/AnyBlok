@@ -24,16 +24,17 @@ from sqlalchemy.dialects.mysql.types import TINYINT, DATETIME
 from sqlalchemy.dialects.mssql.base import BIT
 from anyblok import Declarations
 from sqlalchemy.exc import IntegrityError
-from anyblok.config import Configuration
+from anyblok.config import Configuration, get_url
 from .conftest import (
-    init_registry, drop_database, create_database, database_exists)
+    init_registry, drop_database, create_database, database_exists
+)
 from anyblok.common import naming_convention
 from mock import patch
 
 
 @pytest.fixture(scope="module")
 def clean_db(request, configuration_loaded):
-    url = Configuration.get('get_url')()
+    url = get_url()
     url2 = get_named_url()
 
     def drop_and_create(url_):
@@ -285,7 +286,7 @@ class TestMigrationCmd:
         t.column().add(Column('new_column', Integer, default=100))
         t.column('new_column')
         res = [x for x in registry.execute(
-            "select count(*) from test where new_column is null",
+            text("select count(*) from test where new_column is null"),
             bind=registry.named_binds[engine_name],
         )][0][0]
         assert res == 0
