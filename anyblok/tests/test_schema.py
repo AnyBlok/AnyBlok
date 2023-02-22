@@ -8,13 +8,17 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-
 from sqlalchemy.exc import IntegrityError
+
 from anyblok import Declarations
 from anyblok.column import Integer, String
 from anyblok.schema import (
-    ForeignKeyConstraint, UniqueConstraint, PrimaryKeyConstraint, Index,
+    ForeignKeyConstraint,
+    Index,
+    PrimaryKeyConstraint,
+    UniqueConstraint,
 )
+
 from .conftest import init_registry, reset_db
 
 register = Declarations.register
@@ -23,7 +27,6 @@ Model = Declarations.Model
 
 
 def registry_foreign_keys():
-
     @register(Model)
     class Test1:
         id = Integer(primary_key=True)
@@ -41,13 +44,13 @@ def registry_foreign_keys():
             Test1 = cls.anyblok.Test1
             return table_args + (
                 ForeignKeyConstraint(
-                    [cls.test_id, cls.test_code], [Test1.id, Test1.code],
+                    [cls.test_id, cls.test_code],
+                    [Test1.id, Test1.code],
                 ),
             )
 
 
 def registry_unique():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
@@ -56,13 +59,10 @@ def registry_unique():
         @classmethod
         def define_table_args(cls):
             table_args = super().define_table_args()
-            return table_args + (
-                UniqueConstraint(cls.code),
-            )
+            return table_args + (UniqueConstraint(cls.code),)
 
 
 def registry_pk():
-
     @register(Model)
     class Test:
         id = Integer()
@@ -71,13 +71,10 @@ def registry_pk():
         @classmethod
         def define_table_args(cls):
             table_args = super().define_table_args()
-            return table_args + (
-                PrimaryKeyConstraint(cls.id, cls.code),
-            )
+            return table_args + (PrimaryKeyConstraint(cls.id, cls.code),)
 
 
 def registry_index():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
@@ -86,13 +83,10 @@ def registry_index():
         @classmethod
         def define_table_args(cls):
             table_args = super().define_table_args()
-            return table_args + (
-                Index('idx_code', cls.code),
-            )
+            return table_args + (Index("idx_code", cls.code),)
 
 
 class TestSchema:
-
     @pytest.fixture(autouse=True)
     def close_registry(self, request, bloks_loaded):
         def close():
