@@ -77,7 +77,7 @@ def add_in_registry():
     @register(Model)
     class Test2PKs:
         integer = Int(primary_key=True)
-        code = Str(primary_key=True, default='test')
+        code = Str(primary_key=True, default="test")
         other = Str()
 
     @register(Model)
@@ -288,7 +288,7 @@ class TestMigration:
     def test_add_column_in_filled_table_with_default_callable_value_and_2_pk(
         self, registry
     ):
-        self.fill_test_table(registry, namespace='Model.Test2PKs')
+        self.fill_test_table(registry, namespace="Model.Test2PKs")
         t = registry.migration.table("test2pks")
 
         def default_method():

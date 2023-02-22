@@ -919,20 +919,21 @@ class MigrationColumn:
                 Column = self.table.migration.metadata.tables["system_column"]
                 query_pks = select(Column.c.name)
                 query_pks = query_pks.join(
-                    Table, Column.c.model == Table.c.name)
-                query_pks = query_pks.where(
-                    Table.c.table == self.table.name)
-                query_pks = query_pks.where(
-                    Column.c.primary_key.is_(True))
+                    Table, Column.c.model == Table.c.name
+                )
+                query_pks = query_pks.where(Table.c.table == self.table.name)
+                query_pks = query_pks.where(Column.c.primary_key.is_(True))
                 columns = [x[0] for x in execute(query_pks).fetchall()]
 
                 query_count = select(func.count()).select_from(table)
                 query_count = query_count.where(cname.is_(None))
                 nb_row = self.table.migration.conn.execute(
-                    query_count).fetchone()[0]
+                    query_count
+                ).fetchone()[0]
                 for offset in range(nb_row):
                     query = select(
-                        *[getattr(table.c, x).label(x) for x in columns])
+                        *[getattr(table.c, x).label(x) for x in columns]
+                    )
                     query = query.where(cname.is_(None))
                     query = query.limit(1)
                     res = execute(query).fetchone()
