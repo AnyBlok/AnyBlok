@@ -1798,7 +1798,7 @@ class Migration:
 
     def render_item(self, type_, obj, autogen_context):
         logger.debug("%r, %r, %r" % (type_, obj, autogen_context))
-        return False
+        return False  # pragma: no cover
 
     def compare_type(
         self,
