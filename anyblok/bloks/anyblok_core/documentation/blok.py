@@ -49,7 +49,5 @@ class Blok:
     def toRST_write_params(self, doc):
         fields = self.toRST_get_field()
         msg = "Parameter:\n\n* "
-        msg += "\n* ".join(
-            "**%s** = %s" % (f, getattr(self.blok, f)) for f in fields
-        )
+        msg += "\n* ".join("**%s** = %s" % (f, getattr(self.blok, f)) for f in fields)
         doc.write(msg + "\n\n")

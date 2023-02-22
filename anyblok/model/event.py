@@ -89,9 +89,7 @@ class SQLAlchemyEventPlugin(ModelPluginBase):
 
 
 class AutoSQLAlchemyORMEventPlugin(ModelPluginBase):
-    def after_model_construction(
-        self, base, namespace, transformation_properties
-    ):
+    def after_model_construction(self, base, namespace, transformation_properties):
         for eventtype in (
             "before_insert",
             "after_insert",

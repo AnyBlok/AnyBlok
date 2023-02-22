@@ -183,9 +183,7 @@ class TestCase(unittest.TestCase):
         :rtype: registry instance
         """
         additional_setting = cls.additional_setting()
-        return RegistryManager.get(
-            Configuration.get("db_name"), **additional_setting
-        )
+        return RegistryManager.get(Configuration.get("db_name"), **additional_setting)
 
     def setUp(self):
         super(TestCase, self).setUp()
@@ -518,9 +516,7 @@ class LogCapture(LC):
         :rtype: list of formated message
         """
         return [
-            self.format(r)
-            for r in self.records
-            if (not levels or r.levelno in levels)
+            self.format(r) for r in self.records if (not levels or r.levelno in levels)
         ]
 
     def get_debug_messages(self):
@@ -569,9 +565,7 @@ def skip_unless_bloks_installed(*bloks):
             for blok_name in bloks:
                 blok = Blok.query().get(blok_name)
                 if blok.state != "installed":
-                    raise unittest.SkipTest(
-                        "Blok %r is not installed" % blok_name
-                    )
+                    raise unittest.SkipTest("Blok %r is not installed" % blok_name)
             return testmethod(self)
 
         # necessary not to be ignored by test runner

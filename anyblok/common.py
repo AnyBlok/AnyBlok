@@ -99,9 +99,7 @@ def python_version():  # pragma: no cover
 
 
 class TypeList(list):
-    def __init__(
-        self, Model, registry, namespace, transformation_properties=None
-    ):
+    def __init__(self, Model, registry, namespace, transformation_properties=None):
         super(TypeList, self).__init__()
         self.Model = Model
         self.registry = registry
@@ -193,9 +191,7 @@ def sgdb_in(engine, databases):
                     DATABASES_CACHED["MySQL"] = True
 
                 with engine.connect() as conn:
-                    res = conn.execute(
-                        text("show variables like 'version'")
-                    ).fetchone()
+                    res = conn.execute(text("show variables like 'version'")).fetchone()
                     if res and database in res[1]:
                         # MariaDB
                         DATABASES_CACHED[database] = True  # pragma: no cover
@@ -205,10 +201,7 @@ def sgdb_in(engine, databases):
                 and database == "PostgreSQL"
             ):
                 DATABASES_CACHED["PostgreSQL"] = True
-            if (
-                engine.url.drivername.startswith("mssql")
-                and database == "MsSQL"
-            ):
+            if engine.url.drivername.startswith("mssql") and database == "MsSQL":
                 DATABASES_CACHED["MsSQL"] = True  # pragma: no cover
 
         if DATABASES_CACHED[database]:

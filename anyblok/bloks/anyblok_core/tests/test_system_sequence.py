@@ -23,9 +23,7 @@ class TestSystemSequence:
         assert seq.nextval() == str(number + 2)
         assert seq.nextval() == str(number + 3)
 
-    def test_nextval_without_prefix_without_suffix_two_time(
-        self, rollback_registry
-    ):
+    def test_nextval_without_prefix_without_suffix_two_time(self, rollback_registry):
         registry = rollback_registry
         Sequence = registry.System.Sequence
         Sequence.insert(code="test.sequence")
@@ -61,9 +59,7 @@ class TestSystemSequence:
     def test_nextval_with_prefix_with_suffix(self, rollback_registry):
         registry = rollback_registry
         Sequence = registry.System.Sequence
-        seq = Sequence.insert(
-            code="test.sequence", formater="prefix_{seq}_suffix"
-        )
+        seq = Sequence.insert(code="test.sequence", formater="prefix_{seq}_suffix")
         assert seq.nextval() == "prefix_%d_suffix" % 1
         assert seq.nextval() == "prefix_%d_suffix" % 2
         assert seq.nextval() == "prefix_%d_suffix" % 3

@@ -41,8 +41,7 @@ class ModelAccessRule(AuthorizationRule):
             raise RuntimeError(
                 "To use %s with no explicit Grant "
                 "model, you must install the model_access blok, "
-                "that provides the default %r"
-                % (cls.__name__, cls.grant_model_name)
+                "that provides the default %r" % (cls.__name__, cls.grant_model_name)
             )
 
     def check_on_model(self, model, principals, permission):
@@ -59,9 +58,7 @@ class ModelAccessRule(AuthorizationRule):
         )
 
     def check(self, record, principals, permission):
-        return self.check_on_model(
-            record.__registry_name__, principals, permission
-        )
+        return self.check_on_model(record.__registry_name__, principals, permission)
 
     def filter(self, model, query, principals, permission):
         if self.check_on_model(model.__registry_name__, principals, permission):

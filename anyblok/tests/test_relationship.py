@@ -154,8 +154,6 @@ class TestComplexeRelationShipCase:
         registry = registry_relationship_multiple_foreign_keys
         address_1 = registry.Address.insert()
         address_2 = registry.Address.insert()
-        person = registry.Person.insert(
-            address_1=address_1, address_2=address_2
-        )
+        person = registry.Person.insert(address_1=address_1, address_2=address_2)
         assert address_1.persons == [person]
         assert address_2.persons == [person]

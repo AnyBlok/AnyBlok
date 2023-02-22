@@ -432,8 +432,7 @@ class TestMany2Many:
 
         jt = registry.declarativebase.metadata.tables
         join_table_exist = (
-            "%s.join_person_and_address_for_addresses"
-            % (registry.Person.__db_schema__)
+            "%s.join_person_and_address_for_addresses" % (registry.Person.__db_schema__)
             in jt
         )
         assert join_table_exist
@@ -517,9 +516,7 @@ class TestMany2Many:
 
         assert person.addresses == [address]
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #90"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #90")
     def test_declared_in_mixin_inherit_by_two_models(self):
         def add_in_registry():
             _minimum_many2many_by_mixin()
@@ -768,9 +765,7 @@ class TestMany2Many:
 
     def assert_rich_many2many_complete_config(self, registry):
         person = registry.Person.insert(name="jssuzanne")
-        address = registry.Address.insert(
-            street="somewhere", zip="75001", city="Paris"
-        )
+        address = registry.Address.insert(street="somewhere", zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
         assert personaddress.a_id == address.id
@@ -791,12 +786,8 @@ class TestMany2Many:
             @register(Model)
             class PersonAddress:
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -869,12 +860,8 @@ class TestMany2Many:
                 __db_schema__ = "test_db_m2m_schema"
 
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -896,9 +883,7 @@ class TestMany2Many:
         registry = self.init_registry(add_in_registry)
         self.assert_rich_many2many_complete_config(registry)
 
-    def test_rich_many2many_complete_config_with_different_schema(
-        self, db_schema
-    ):
+    def test_rich_many2many_complete_config_with_different_schema(self, db_schema):
         def add_in_registry():
             @register(Model)
             class Address:
@@ -914,12 +899,8 @@ class TestMany2Many:
                 __db_schema__ = "test_db_m2m_schema2"
 
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -953,12 +934,8 @@ class TestMany2Many:
             @register(Model)
             class PersonAddress:
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -973,9 +950,7 @@ class TestMany2Many:
 
         registry = self.init_registry(add_in_registry)
         person = registry.Person.insert(name="jssuzanne")
-        address = registry.Address.insert(
-            street="somewhere", zip="75001", city="Paris"
-        )
+        address = registry.Address.insert(street="somewhere", zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
         assert personaddress.a_id == address.id
@@ -996,12 +971,8 @@ class TestMany2Many:
             @register(Model)
             class PersonAddress:
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -1016,9 +987,7 @@ class TestMany2Many:
 
         registry = self.init_registry(add_in_registry)
         person = registry.Person.insert(name="jssuzanne")
-        address = registry.Address.insert(
-            street="somewhere", zip="75001", city="Paris"
-        )
+        address = registry.Address.insert(street="somewhere", zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
         assert personaddress.a_id == address.id
@@ -1027,9 +996,7 @@ class TestMany2Many:
         assert personaddress.create_at
         assert personaddress.foo == "bar"
 
-    def test_rich_many2many_minimum_config_on_join_model_with_schema(
-        self, db_schema
-    ):
+    def test_rich_many2many_minimum_config_on_join_model_with_schema(self, db_schema):
         def add_in_registry():
             @register(Model)
             class Address:
@@ -1045,12 +1012,8 @@ class TestMany2Many:
                 __db_schema__ = "test_db_m2m_schema"
 
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -1067,9 +1030,7 @@ class TestMany2Many:
 
         registry = self.init_registry(add_in_registry)
         person = registry.Person.insert(name="jssuzanne")
-        address = registry.Address.insert(
-            street="somewhere", zip="75001", city="Paris"
-        )
+        address = registry.Address.insert(street="somewhere", zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
         assert personaddress.a_id == address.id
@@ -1096,12 +1057,8 @@ class TestMany2Many:
                 __db_schema__ = "test_db_m2m_schema2"
 
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -1118,9 +1075,7 @@ class TestMany2Many:
 
         registry = self.init_registry(add_in_registry)
         person = registry.Person.insert(name="jssuzanne")
-        address = registry.Address.insert(
-            street="somewhere", zip="75001", city="Paris"
-        )
+        address = registry.Address.insert(street="somewhere", zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
         assert personaddress.a_id == address.id
@@ -1145,12 +1100,8 @@ class TestMany2Many:
             @register(Model)
             class PersonAddress:
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -1167,9 +1118,7 @@ class TestMany2Many:
 
         registry = self.init_registry(add_in_registry)
         person = registry.Person.insert(name="jssuzanne")
-        address = registry.Address.insert(
-            street="somewhere", zip="75001", city="Paris"
-        )
+        address = registry.Address.insert(street="somewhere", zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
         assert personaddress.a_id == address.id
@@ -1214,9 +1163,7 @@ class TestMany2Many:
 
         registry = self.init_registry(add_in_registry)
         person = registry.Person.insert(name="jssuzanne")
-        address = registry.Address.insert(
-            street="somewhere", zip="75001", city="Paris"
-        )
+        address = registry.Address.insert(street="somewhere", zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
         assert personaddress.address_id == address.id
@@ -1262,9 +1209,7 @@ class TestMany2Many:
 
         registry = self.init_registry(add_in_registry)
         person = registry.Person.insert(name="jssuzanne")
-        address = registry.Address.insert(
-            street="somewhere", zip="75001", city="Paris"
-        )
+        address = registry.Address.insert(street="somewhere", zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
         assert personaddress.address_id == address.id
@@ -1284,12 +1229,8 @@ class TestMany2Many:
             @register(Model)
             class PersonAddress:
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -1304,9 +1245,7 @@ class TestMany2Many:
 
         registry = self.init_registry(add_in_registry)
         person = registry.Person.insert(name="jssuzanne")
-        address = registry.Address.insert(
-            street="somewhere", zip="75001", city="Paris"
-        )
+        address = registry.Address.insert(street="somewhere", zip="75001", city="Paris")
         person.addresses.append(address)
         personaddress = registry.PersonAddress.query().one()
         assert personaddress.a_id == address.id
@@ -1327,12 +1266,8 @@ class TestMany2Many:
             @register(Model)
             class PersonAddress:
                 id = Integer(primary_key=True)
-                a_id = Integer(
-                    foreign_key=Model.Address.use("id"), nullable=False
-                )
-                p_name = String(
-                    foreign_key="Model.Person=>name", nullable=False
-                )
+                a_id = Integer(foreign_key=Model.Address.use("id"), nullable=False)
+                p_name = String(foreign_key="Model.Person=>name", nullable=False)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 
@@ -1349,9 +1284,7 @@ class TestMany2Many:
         with pytest.raises(FieldException):
             self.init_registry(add_in_registry)
 
-    def test_rich_many2many_complete_config_on_self_with_schema(
-        self, db_schema
-    ):
+    def test_rich_many2many_complete_config_on_self_with_schema(self, db_schema):
         def add_in_registry():
             @register(Model)
             class TestLink:
@@ -1605,12 +1538,8 @@ class TestMany2Many:
         def add_in_registry():
             @register(Model)
             class TestLink:
-                left = Many2One(
-                    model="Model.Test", nullable=False, primary_key=True
-                )
-                right = Many2One(
-                    model="Model.Test", nullable=False, primary_key=True
-                )
+                left = Many2One(model="Model.Test", nullable=False, primary_key=True)
+                right = Many2One(model="Model.Test", nullable=False, primary_key=True)
                 create_at = DateTime(default=datetime.now)
                 foo = String(default="bar")
 

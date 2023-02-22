@@ -63,9 +63,7 @@ class Column(System.Field):
         autoincrement = c.autoincrement
 
         if autoincrement == "auto":
-            autoincrement = (
-                True if c.primary_key and ftype == "Integer" else False
-            )
+            autoincrement = True if c.primary_key and ftype == "Integer" else False
 
         vals = dict(
             autoincrement=autoincrement,
@@ -99,9 +97,7 @@ class Column(System.Field):
         autoincrement = c.autoincrement
 
         if autoincrement == "auto":
-            autoincrement = (
-                True if c.primary_key and ftype == "Integer" else False
-            )
+            autoincrement = True if c.primary_key and ftype == "Integer" else False
 
         if column.autoincrement != autoincrement:
             column.autoincrement = autoincrement  # pragma: no cover

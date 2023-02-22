@@ -42,10 +42,7 @@ class TestModelAttribute:
     def test_get_attribute(self, registry_blok):
         registry = registry_blok
         ma = ModelAttribute("Model.System.Model", "name")
-        assert (
-            ma.get_attribute(registry)
-            == registry.get("Model.System.Model").name
-        )
+        assert ma.get_attribute(registry) == registry.get("Model.System.Model").name
 
     def test_without_attribute(self, registry_blok):
         with pytest.raises(ModelAttributeException):
@@ -101,9 +98,7 @@ class TestModelAttribute:
 
     def test_get_fk_with_options(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Model", "name").options(
-            ondelete="cascade"
-        )
+        ma = ModelAttribute("Model.System.Model", "name").options(ondelete="cascade")
         mafk = ma.get_fk(registry)
         assert isinstance(mafk, ForeignKey)
 
@@ -135,9 +130,7 @@ class TestModelAttribute:
     def test_existing_FakeRelationShip(self, registry_blok):
         registry = registry_blok
         ma = ModelAttribute("Model.System.Field", "name")
-        assert (
-            ma.add_fake_relationship(registry, "Model.System", "test") is None
-        )
+        assert ma.add_fake_relationship(registry, "Model.System", "test") is None
 
     def test_get_column_name(self, registry_blok):
         registry = registry_blok
@@ -208,8 +201,7 @@ class TestModelRepr:
     def test_mapper_self(self, registry_blok):
         mm = ModelMapper("SELF", None)
         assert (
-            mm.mapper(registry_blok, "Model.System.Blok")
-            is registry_blok.System.Blok
+            mm.mapper(registry_blok, "Model.System.Blok") is registry_blok.System.Blok
         )
 
 

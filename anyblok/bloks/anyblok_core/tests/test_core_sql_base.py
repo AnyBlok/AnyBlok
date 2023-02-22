@@ -150,9 +150,7 @@ class TestCoreSqlBase:
             }
         }
         assert Model.fields_description(fields=["table"]) == res
-        column = Column.from_primary_keys(
-            model="Model.System.Model", name="table"
-        )
+        column = Column.from_primary_keys(model="Model.System.Model", name="table")
         column.label = "Test"
         assert Model.fields_description(fields=["table"]) == res
         Model.fire("Update Model", "Model.System.Model")

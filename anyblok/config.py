@@ -330,9 +330,7 @@ class ConfigOption:
         :return:
         """
         if self.removed:
-            raise ConfigurationException(
-                "This option is removed and can't be used"
-            )
+            raise ConfigurationException("This option is removed and can't be used")
 
         if self.deprecated is not None:
             warnings.warn(self.deprecated, DeprecationWarning, stacklevel=2)
@@ -345,9 +343,7 @@ class ConfigOption:
         :param value:
         """
         if self.removed:
-            raise ConfigurationException(
-                "This option is removed and can't be used"
-            )
+            raise ConfigurationException("This option is removed and can't be used")
 
         if self.deprecated is not None:
             warnings.warn(self.deprecated, DeprecationWarning, stacklevel=2)
@@ -425,9 +421,7 @@ class Configuration:
                     cg.append(new_group)
 
     @classmethod
-    def add(
-        cls, group, label=None, function_=None, must_be_loaded_by_unittest=False
-    ):
+    def add(cls, group, label=None, function_=None, must_be_loaded_by_unittest=False):
         """Add a function in a group.
 
         The ``function_`` must have two arguments:
@@ -474,17 +468,13 @@ class Configuration:
 
         if function_:
             if function_ not in cls.groups[group]:
-                function_.must_be_loaded_by_unittest = (
-                    must_be_loaded_by_unittest
-                )
+                function_.must_be_loaded_by_unittest = must_be_loaded_by_unittest
                 cls.groups[group].append(function_)
         else:
 
             def wrapper(function):
                 if function not in cls.groups[group]:
-                    function.must_be_loaded_by_unittest = (
-                        must_be_loaded_by_unittest
-                    )
+                    function.must_be_loaded_by_unittest = must_be_loaded_by_unittest
                     cls.groups[group].append(function)
                 return function
 
@@ -546,8 +536,7 @@ class Configuration:
                 cls.add_argument(opt, value, type(value))
         except Exception as e:  # pragma: no cover
             logger.exception(
-                "Error while setting the value %r to the option "
-                "%r" % (value, opt)
+                "Error while setting the value %r to the option " "%r" % (value, opt)
             )
             raise e
 
@@ -561,9 +550,7 @@ class Configuration:
         """
         if args:
             if len(args) > 1:
-                raise ConfigurationException(
-                    "Too many args. " "Only one expected"
-                )
+                raise ConfigurationException("Too many args. " "Only one expected")
 
             if not isinstance(args[0], dict):
                 raise ConfigurationException("Wrong args type. Dict expected")
@@ -875,9 +862,7 @@ def add_configuration_file(parser):
     )
 
 
-@Configuration.add(
-    "database", label="Database", must_be_loaded_by_unittest=True
-)
+@Configuration.add("database", label="Database", must_be_loaded_by_unittest=True)
 def add_database(group):
     """Add arguments to 'database' configuration group
 
@@ -938,9 +923,7 @@ def add_database(group):
     group.add_argument(
         "--default-encrypt-key",
         default=os.environ.get("ANYBLOK_ENCRYPT_KEY"),
-        help=(
-            "Default ey definition to encrypt column with " "encryp_key=True"
-        ),
+        help=("Default ey definition to encrypt column with " "encryp_key=True"),
     )
 
 
@@ -984,9 +967,7 @@ def add_uninstall_bloks(parser):
 
     :param parser:
     """
-    parser.add_argument(
-        "--uninstall-bloks", nargs="+", help="bloks to uninstall"
-    )
+    parser.add_argument("--uninstall-bloks", nargs="+", help="bloks to uninstall")
 
 
 @Configuration.add("install-or-update-bloks")
@@ -1045,9 +1026,7 @@ def add_doc(group):
 
     :param group:
     """
-    group.add_argument(
-        "--doc-format", default="RST", choices=("RST", "UML", "SQL")
-    )
+    group.add_argument("--doc-format", default="RST", choices=("RST", "UML", "SQL"))
     group.add_argument("--doc-output", default="anyblok-documentation")
     group.add_argument(
         "--doc-wanted-models", nargs="+", help="Detail only these models"

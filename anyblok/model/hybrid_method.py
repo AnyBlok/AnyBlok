@@ -65,13 +65,11 @@ class HybridMethodPlugin(ModelPluginBase):
             def wrapper(self, *args, **kwargs):
                 self_ = self.anyblok.loaded_namespaces[self.__registry_name__]
                 if self is self_:
-                    return getattr(super(new_base, self), attr)(
+                    return getattr(super(new_base, self), attr)(self, *args, **kwargs)
+                elif hasattr(self, "_aliased_insp"):
+                    return getattr(super(new_base, self._aliased_insp._target), attr)(
                         self, *args, **kwargs
                     )
-                elif hasattr(self, "_aliased_insp"):
-                    return getattr(
-                        super(new_base, self._aliased_insp._target), attr
-                    )(self, *args, **kwargs)
                 else:
                     return getattr(super(new_base, self), attr)(*args, **kwargs)
 

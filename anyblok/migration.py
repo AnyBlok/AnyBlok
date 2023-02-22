@@ -167,9 +167,7 @@ class MigrationReport:
     def init_remove_constraint(self, diff):
         _, constraint = diff
         if (
-            self.ignore_migration_for(
-                constraint.table.schema, constraint.table.name
-            )
+            self.ignore_migration_for(constraint.table.schema, constraint.table.name)
             is True
         ):
             return True
@@ -199,9 +197,7 @@ class MigrationReport:
         self.raise_if_withoutautomigration()
         _, constraint = diff
         if (
-            self.ignore_migration_for(
-                constraint.table.schema, constraint.table.name
-            )
+            self.ignore_migration_for(constraint.table.schema, constraint.table.name)
             is True
         ):
             return True  # pragma: no cover
@@ -226,10 +222,7 @@ class MigrationReport:
             ):
                 return True
 
-        if (
-            self.ignore_migration_for(index.table.schema, index.table.name)
-            is True
-        ):
+        if self.ignore_migration_for(index.table.schema, index.table.name) is True:
             return True
 
         self.log_names.append("Drop index %s on %s" % (index.name, index.table))
@@ -257,8 +250,7 @@ class MigrationReport:
                 to_.append(fk_.target_fullname)
 
         self.log_names.append(
-            "Add Foreign keys on (%s) => (%s)"
-            % (", ".join(from_), ", ".join(to_))
+            "Add Foreign keys on (%s) => (%s)" % (", ".join(from_), ", ".join(to_))
         )
 
     def init_remove_fk(self, diff):
@@ -292,9 +284,7 @@ class MigrationReport:
         if ck.table.schema:
             table = ck.table.schema + "." + table
 
-        self.log_names.append(
-            "Add check constraint %s on %s" % (ck.name, table)
-        )
+        self.log_names.append("Add check constraint %s on %s" % (ck.name, table))
 
     def init_remove_ck(self, diff):
         _, table, ck = diff
@@ -304,9 +294,7 @@ class MigrationReport:
         if ck["schema"]:
             table = ck["schema"] + "." + table
 
-        self.log_names.append(
-            "Drop check constraint %s on %s" % (ck["name"], table)
-        )
+        self.log_names.append("Drop check constraint %s on %s" % (ck["name"], table))
 
         if not self.can_remove_check_constraints(ck["name"]):
             return True
@@ -319,9 +307,7 @@ class MigrationReport:
         columns = []
 
         if (
-            self.ignore_migration_for(
-                constraint.table.schema, constraint.table.name
-            )
+            self.ignore_migration_for(constraint.table.schema, constraint.table.name)
             is True
         ):
             return True
@@ -349,10 +335,7 @@ class MigrationReport:
 
     def init_remove_column(self, diff):
         column = diff[3]
-        if (
-            self.ignore_migration_for(column.table.schema, column.table.name)
-            is True
-        ):
+        if self.ignore_migration_for(column.table.schema, column.table.name) is True:
             return True
 
         msg = "Drop Column %s.%s" % (column.table.name, column.name)
@@ -451,8 +434,7 @@ class MigrationReport:
 
         table = "%s.%s" % diff[1:3] if diff[1] else diff[2]
         self.log_names.append(
-            "Modify column type %s.%s : %s => %s"
-            % (table, diff[3], diff[5], diff[6])
+            "Modify column type %s.%s : %s => %s" % (table, diff[3], diff[5], diff[6])
         )
         return False
 
@@ -494,9 +476,7 @@ class MigrationReport:
         plugins = sorted(
             (
                 entry_point.load()
-                for entry_point in iter_entry_points(
-                    MIGRATION_TYPE_PLUGINS_NAMESPACE
-                )
+                for entry_point in iter_entry_points(MIGRATION_TYPE_PLUGINS_NAMESPACE)
             ),
             key=dialect_sort,
         )
@@ -539,9 +519,7 @@ class MigrationReport:
         self.plugins = self.init_plugins()
         self.ignore_migration_for_table_from_configuration = [
             self.migration.loaded_namespaces[x].__tablename__
-            for x in return_list(
-                Configuration.get("ignore_migration_for_models")
-            )
+            for x in return_list(Configuration.get("ignore_migration_for_models"))
             if (
                 x in self.migration.loaded_namespaces
                 and self.migration.loaded_namespaces[x].is_sql
@@ -638,9 +616,7 @@ class MigrationReport:
         else:
             t = self.migration.table(table)
 
-        t.column(column).alter(
-            nullable=newvalue, existing_nullable=oldvalue, **kwargs
-        )
+        t.column(column).alter(nullable=newvalue, existing_nullable=oldvalue, **kwargs)
 
     def apply_change_modify_type(self, action):
         _, schema, table, column, kwargs, oldvalue, newvalue = action
@@ -653,9 +629,7 @@ class MigrationReport:
         if selected_plugin is not None:
             selected_plugin.apply(t.column(column), **kwargs)
         else:
-            t.column(column).alter(
-                type_=newvalue, existing_type=oldvalue, **kwargs
-            )
+            t.column(column).alter(type_=newvalue, existing_type=oldvalue, **kwargs)
 
     def apply_change_modify_default(self, action):
         _, schema, table, column, kwargs, oldvalue, newvalue = action
@@ -918,22 +892,16 @@ class MigrationColumn:
                 Table = self.table.migration.metadata.tables["system_model"]
                 Column = self.table.migration.metadata.tables["system_column"]
                 query_pks = select(Column.c.name)
-                query_pks = query_pks.join(
-                    Table, Column.c.model == Table.c.name
-                )
+                query_pks = query_pks.join(Table, Column.c.model == Table.c.name)
                 query_pks = query_pks.where(Table.c.table == self.table.name)
                 query_pks = query_pks.where(Column.c.primary_key.is_(True))
                 columns = [x[0] for x in execute(query_pks).fetchall()]
 
                 query_count = select(func.count()).select_from(table)
                 query_count = query_count.where(cname.is_(None))
-                nb_row = self.table.migration.conn.execute(
-                    query_count
-                ).fetchone()[0]
+                nb_row = self.table.migration.conn.execute(query_count).fetchone()[0]
                 for offset in range(nb_row):
-                    query = select(
-                        *[getattr(table.c, x).label(x) for x in columns]
-                    )
+                    query = select(*[getattr(table.c, x).label(x) for x in columns])
                     query = query.where(cname.is_(None))
                     query = query.limit(1)
                     res = execute(query).fetchone()
@@ -951,9 +919,7 @@ class MigrationColumn:
                     query_update = query_update.values({cname: val(None)})
                     execute(query_update)
             else:
-                query = (
-                    update(table).where(cname.is_(None)).values({cname: val})
-                )
+                query = update(table).where(cname.is_(None)).values({cname: val})
                 execute(query)
 
     def add(self, column):
@@ -1035,9 +1001,7 @@ class MigrationColumn:
                     )
                     else kwargs.get(
                         "existing_autoincrement",
-                        self.autoincrement
-                        if "autoincrement" not in kwargs
-                        else None,
+                        self.autoincrement if "autoincrement" not in kwargs else None,
                     )
                 ),
                 "existing_comment": kwargs.get(
@@ -1065,9 +1029,7 @@ class MigrationColumn:
 
         if "nullable" in kwargs:
             nullable = kwargs["nullable"]
-            vals["existing_nullable"] = (
-                self.nullable if "nullable" in kwargs else None
-            )
+            vals["existing_nullable"] = self.nullable if "nullable" in kwargs else None
             savepoint = "%s_not_null" % name
             try:
                 self.table.migration.savepoint(savepoint)
@@ -1409,9 +1371,7 @@ class MigrationTable:
                     % (table.schema, table.name, self.schema)
                 )
 
-            self.migration.metadata.create_all(
-                bind=self.migration.conn, tables=[table]
-            )
+            self.migration.metadata.create_all(bind=self.migration.conn, tables=[table])
         else:
             self.migration.operation.create_table(name, schema=self.schema)
 
@@ -1468,14 +1428,10 @@ class MigrationTable:
         :exception: MigrationException
         """
         if "name" not in kwargs:
-            raise MigrationException(  # pragma: no cover
-                "Table can only alter name"
-            )
+            raise MigrationException("Table can only alter name")  # pragma: no cover
 
         name = kwargs["name"]
-        self.migration.operation.rename_table(
-            self.name, name, schema=self.schema
-        )
+        self.migration.operation.rename_table(self.name, name, schema=self.schema)
         return MigrationTable(self.migration, name, schema=self.schema)
 
     def foreign_key(self, name):
@@ -1526,9 +1482,7 @@ class MigrationSchema:
                     text(query).bindparams(schema_name=self.name)
                 ).fetchone()[0]
             else:
-                return self.migration.operation.impl.dialect.has_schema(
-                    conn, self.name
-                )
+                return self.migration.operation.impl.dialect.has_schema(conn, self.name)
 
     def add(self, name):
         """Add a new schema
@@ -1582,9 +1536,7 @@ class Migration:
         self.loaded_namespaces = registry.loaded_namespaces
         self.loaded_views = registry.loaded_views
         self.metadata = registry.declarativebase.metadata
-        self.ddl_compiler = self.conn.dialect.ddl_compiler(
-            self.conn.dialect, None
-        )
+        self.ddl_compiler = self.conn.dialect.ddl_compiler(self.conn.dialect, None)
         self.ignore_migration_for = registry.ignore_migration_for
 
         opts = {
@@ -1633,9 +1585,7 @@ class Migration:
             diff = self.detect_added_new_schema(inspector)
         else:
             diff = compare_metadata(self.context, self.metadata)
-            diff.extend(
-                self.detect_undetected_constraint_from_alembic(inspector)
-            )
+            diff.extend(self.detect_undetected_constraint_from_alembic(inspector))
 
         return MigrationReport(self, diff)
 
@@ -1664,9 +1614,7 @@ class Migration:
         this method check if the truncated name is the same that no truncated
         name and if the constraint text is the same: return True else False
         """
-        truncated_name = self.ddl_compiler.preparer.format_constraint(
-            constraint
-        )
+        truncated_name = self.ddl_compiler.preparer.format_constraint(constraint)
         if truncated_name == reflected_constraint["name"]:
             return True
 
@@ -1688,9 +1636,7 @@ class Migration:
 
                 reflected_constraints = {
                     ck["name"]: ck
-                    for ck in inspector.get_check_constraints(
-                        table, schema=schema
-                    )
+                    for ck in inspector.get_check_constraints(table, schema=schema)
                 }
                 constraints = {
                     ck.name: ck
@@ -1698,12 +1644,8 @@ class Migration:
                     if isinstance(ck, CheckConstraint)
                     if ck.name != "_unnamed_"
                 }
-                todrop = set(reflected_constraints.keys()) - set(
-                    constraints.keys()
-                )
-                toadd = set(constraints.keys()) - set(
-                    reflected_constraints.keys()
-                )
+                todrop = set(reflected_constraints.keys()) - set(constraints.keys())
+                toadd = set(constraints.keys()) - set(reflected_constraints.keys())
 
                 # check a constraint have not been truncated
                 todrop_ = todrop.copy()
@@ -1736,17 +1678,13 @@ class Migration:
                 if table_ not in self.metadata.tables:
                     continue
 
-                reflected_constraint = inspector.get_pk_constraint(
-                    table, schema=schema
-                )
+                reflected_constraint = inspector.get_pk_constraint(table, schema=schema)
                 constraint = [
                     pk
                     for pk in self.metadata.tables[table_].constraints
                     if isinstance(pk, PrimaryKeyConstraint)
                 ][0]
-                reflected_columns = set(
-                    reflected_constraint["constrained_columns"]
-                )
+                reflected_columns = set(reflected_constraint["constrained_columns"])
                 columns = set(x.name for x in constraint.columns)
                 if columns != reflected_columns:
                     diff.append(("change_pk", table, constraint))
@@ -1809,8 +1747,6 @@ class Migration:
         metadata_type,
     ):
         if hasattr(metadata_type, "compare_type"):
-            return metadata_type.compare_type(  # pragma: no cover
-                inspected_type
-            )
+            return metadata_type.compare_type(inspected_type)  # pragma: no cover
 
         return None

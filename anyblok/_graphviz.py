@@ -88,9 +88,7 @@ class TableSchema:
         :param type_: the type of the column
         :param primary_key: if True, 'PK' argument will be added
         """
-        self.column.append(
-            "%s%s (%s)" % ("PK " if primary_key else "", name, type_)
-        )
+        self.column.append("%s%s (%s)" % ("PK " if primary_key else "", name, type_))
 
     def add_foreign_key(self, node, label=None, nullable=True):
         """Add a new foreign key

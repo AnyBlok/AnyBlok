@@ -113,9 +113,7 @@ COLUMNS = [
     pytest.param(
         (
             DateTime,
-            datetime.datetime.now().replace(
-                tzinfo=pytz.timezone(time.tzname[0])
-            ),
+            datetime.datetime.now().replace(tzinfo=pytz.timezone(time.tzname[0])),
             {},
         ),
         id="DateTime",
@@ -166,9 +164,7 @@ if not sgdb_in(["MsSQL"]):
         pytest.param(
             (
                 TimeStamp,
-                datetime.datetime.now().replace(
-                    tzinfo=pytz.timezone(time.tzname[0])
-                ),
+                datetime.datetime.now().replace(tzinfo=pytz.timezone(time.tzname[0])),
                 {},
             ),
             id="TimeStamp",
@@ -194,9 +190,7 @@ try:
     import colour
 
     has_colour = True
-    COLUMNS.append(
-        pytest.param((Color, colour.Color("#123456"), {}), id="Color")
-    )
+    COLUMNS.append(pytest.param((Color, colour.Color("#123456"), {}), id="Color"))
 except Exception:
     has_colour = False
 
@@ -231,9 +225,7 @@ try:
 
     has_pycountry = True
     COLUMNS.append(
-        pytest.param(
-            (Country, pycountry.countries.get(alpha_2="FR"), {}), id="Country"
-        )
+        pytest.param((Country, pycountry.countries.get(alpha_2="FR"), {}), id="Country")
     )
 except Exception:
     has_pycountry = False
@@ -345,9 +337,7 @@ class TestColumns:
 
     def test_insert_columns(self, column_definition):
         column, value, kwargs = column_definition
-        registry = self.init_registry(
-            simple_column, ColumnType=column, **kwargs
-        )
+        registry = self.init_registry(simple_column, ColumnType=column, **kwargs)
         test = registry.Test.insert(col=value)
         assert test.col == value
 
@@ -370,8 +360,7 @@ class TestColumns:
         registry.Test.insert(name="test")
         registry.Test2.insert(test="test")
         assert (
-            ModelAttribute("Model.Test2", "test").get_fk_remote(registry)
-            == "test.name"
+            ModelAttribute("Model.Test2", "test").get_fk_remote(registry) == "test.name"
         )
 
     def test_column_with_foreign_key_with_schema(self, db_schema):
@@ -404,9 +393,7 @@ class TestColumns:
         assert test.col == D("1.0")
 
     def test_boolean_with_default(self):
-        registry = self.init_registry(
-            simple_column, ColumnType=Boolean, default=False
-        )
+        registry = self.init_registry(simple_column, ColumnType=Boolean, default=False)
         test = registry.Test.insert()
         assert test.col is False
 
@@ -432,16 +419,12 @@ class TestColumns:
         Test = registry.Test
         test = Test.insert()
         Test.execute_sql_statement(
-            Test.update_sql_statement()
-            .where(Test.id == test.id)
-            .values(col=False)
+            Test.update_sql_statement().where(Test.id == test.id).values(col=False)
         )
         self.registry.expire(test, ["col"])
         assert test.col == ""
 
-    @pytest.mark.skipif(
-        not has_cryptography, reason="cryptography is not installed"
-    )
+    @pytest.mark.skipif(not has_cryptography, reason="cryptography is not installed")
     def test_string_with_encrypt_key_defined_by_configuration(self):
         Configuration.set("default_encrypt_key", "secretkey")
         registry = self.init_registry(
@@ -450,16 +433,12 @@ class TestColumns:
         test = registry.Test.insert(col="col")
         registry.session.commit()
         assert test.col == "col"
-        res = registry.execute(
-            text("select col from test where id = %s" % test.id)
-        )
+        res = registry.execute(text("select col from test where id = %s" % test.id))
         res = res.fetchall()[0][0]
         assert res != "col"
         del Configuration.configuration["default_encrypt_key"]
 
-    @pytest.mark.skipif(
-        not has_cryptography, reason="cryptography is not installed"
-    )
+    @pytest.mark.skipif(not has_cryptography, reason="cryptography is not installed")
     def test_string_with_encrypt_key_by_class_method(self):
         registry = self.init_registry(
             simple_column, ColumnType=String, encrypt_key="meth_secretkey"
@@ -467,16 +446,12 @@ class TestColumns:
         test = registry.Test.insert(col="col")
         registry.session.commit()
         assert test.col == "col"
-        res = registry.execute(
-            text("select col from test where id = %s" % test.id)
-        )
+        res = registry.execute(text("select col from test where id = %s" % test.id))
         res = res.fetchall()[0][0]
         assert res != "col"
 
     def test_string_with_size(self):
-        registry = self.init_registry(
-            simple_column, ColumnType=String, size=100
-        )
+        registry = self.init_registry(simple_column, ColumnType=String, size=100)
         test = registry.Test.insert(col="col")
         assert test.col == "col"
 
@@ -489,10 +464,7 @@ class TestColumns:
         )
         test = registry.Test.insert(col="col")
         assert test.col == "col"
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0]
-            != "col"
-        )
+        assert registry.execute(text("Select col from test")).fetchone()[0] != "col"
 
     @pytest.mark.skipif(not has_passlib, reason="passlib is not installed")
     def test_password_with_foreign_key(self):
@@ -526,9 +498,7 @@ class TestColumns:
         Test = registry.Test
         test = Test.insert()
         Test.execute_sql_statement(
-            Test.update_sql_statement()
-            .where(Test.id == test.id)
-            .values(col=False)
+            Test.update_sql_statement().where(Test.id == test.id).values(col=False)
         )
         self.registry.expire(test, ["col"])
         assert test.col == ""
@@ -630,9 +600,7 @@ class TestColumns:
         Test.execute_sql_statement(Test.update_sql_statement().values(col=None))
         assert test.col is None
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87")
     def test_datetime_str_conversion_1_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
@@ -647,9 +615,7 @@ class TestColumns:
         registry.expire(test, ["col"])
         assert test.col == now
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87")
     def test_datetime_str_conversion_2_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -664,9 +630,7 @@ class TestColumns:
         registry.expire(test, ["col"])
         assert test.col == now
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87")
     def test_datetime_str_conversion_3_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -674,16 +638,12 @@ class TestColumns:
         Test = registry.Test
         test = Test.insert()
         Test.execute_sql_statement(
-            Test.update_sql_statement().values(
-                col=now.strftime("%Y-%m-%d %H:%M:%S.%f")
-            )
+            Test.update_sql_statement().values(col=now.strftime("%Y-%m-%d %H:%M:%S.%f"))
         )
         registry.expire(test, ["col"])
         assert test.col == now
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87")
     def test_datetime_str_conversion_4_by_query(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -691,16 +651,12 @@ class TestColumns:
         Test = registry.Test
         test = Test.insert()
         Test.execute_sql_statement(
-            Test.update_sql_statement().values(
-                col=now.strftime("%Y-%m-%d %H:%M:%S")
-            )
+            Test.update_sql_statement().values(col=now.strftime("%Y-%m-%d %H:%M:%S"))
         )
         registry.expire(test, ["col"])
         assert test.col == now.replace(microsecond=0)
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87")
     def test_datetime_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
@@ -709,9 +665,7 @@ class TestColumns:
         Test = registry.Test
         assert Test.query().filter(Test.col == now).one() is test
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87")
     def test_datetime_str_conversion_1_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
@@ -725,9 +679,7 @@ class TestColumns:
             is test
         )
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87")
     def test_datetime_str_conversion_2_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -741,9 +693,7 @@ class TestColumns:
             is test
         )
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87")
     def test_datetime_str_conversion_3_by_query_filter(self, dt_column_type):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
@@ -751,9 +701,7 @@ class TestColumns:
         test = registry.Test.insert(col=now)
         Test = registry.Test
         assert (
-            Test.query()
-            .filter(Test.col == now.strftime("%Y-%m-%d %H:%M:%S.%f"))
-            .one()
+            Test.query().filter(Test.col == now.strftime("%Y-%m-%d %H:%M:%S.%f")).one()
             is test
         )
 
@@ -850,9 +798,7 @@ class TestColumns:
         timezone = pytz.timezone("Asia/Tokyo")
         now = datetime.datetime.now()
         with tmp_configuration(default_timezone="Asia/Tokyo"):
-            registry = self.init_registry(
-                simple_column, ColumnType=dt_column_type
-            )
+            registry = self.init_registry(simple_column, ColumnType=dt_column_type)
 
         field = registry.loaded_namespaces_first_step["Model.Test"]["col"]
         assert field.default_timezone is timezone
@@ -929,9 +875,7 @@ class TestColumns:
         t = registry.Test.insert()
         assert t.col is None
 
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #90"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #90")
     def test_selection_change_by_query(self):
         SELECTIONS = [("admin", "Admin"), ("regular-user", "Regular user")]
 
@@ -941,9 +885,7 @@ class TestColumns:
         registry.Test.insert(col=SELECTIONS[0][0])
         with pytest.raises(StatementError):
             registry.execute(
-                registry.Test.update_sql_statement().values(
-                    {"col": "bad value"}
-                )
+                registry.Test.update_sql_statement().values({"col": "bad value"})
             )
 
     def test_selection_like_comparator(self):
@@ -1012,10 +954,7 @@ class TestColumns:
         Test.insert(col={"a": "test"})
         Test.insert(col={"b": "test"})
         assert (
-            Test.query()
-            .filter(Test.col["a"].cast(SA_String) == '"test"')
-            .count()
-            == 2
+            Test.query().filter(Test.col["a"].cast(SA_String) == '"test"').count() == 2
         )
 
     def test_json_null(self):
@@ -1215,9 +1154,7 @@ class TestColumns:
 
     def test_uuid_char32(self):
         uuid = uuid1()
-        registry = self.init_registry(
-            simple_column, ColumnType=UUID, binary=False
-        )
+        registry = self.init_registry(simple_column, ColumnType=UUID, binary=False)
         test = registry.Test.insert(col=uuid)
         assert test.col is uuid
 
@@ -1254,9 +1191,7 @@ class TestColumns:
         test = Test.query().filter(Test.col == f).one()
         assert test.col.url == f.url
 
-    @pytest.mark.skipif(
-        not has_phonenumbers, reason="phonenumbers is not installed"
-    )
+    @pytest.mark.skipif(not has_phonenumbers, reason="phonenumbers is not installed")
     def test_phonenumbers_at_insert(self):
         registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
         test = registry.Test.insert(col="+120012301")
@@ -1264,9 +1199,7 @@ class TestColumns:
         getted = registry.execute(text("Select col from test")).fetchone()[0]
         assert getted == "+120012301"
 
-    @pytest.mark.skipif(
-        not has_phonenumbers, reason="phonenumbers is not installed"
-    )
+    @pytest.mark.skipif(not has_phonenumbers, reason="phonenumbers is not installed")
     def test_phonenumbers_at_setter(self):
         registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
         test = registry.Test.insert()
@@ -1276,9 +1209,7 @@ class TestColumns:
         getted = registry.execute(text("Select col from test")).fetchone()[0]
         assert getted == "+120012301"
 
-    @pytest.mark.skipif(
-        not has_phonenumbers, reason="phonenumbers is not installed"
-    )
+    @pytest.mark.skipif(not has_phonenumbers, reason="phonenumbers is not installed")
     def test_phonenumbers_obj_at_insert(self):
         registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
         col = PN("+120012301", None)
@@ -1287,9 +1218,7 @@ class TestColumns:
         getted = registry.execute(text("Select col from test")).fetchone()[0]
         assert getted == "+120012301"
 
-    @pytest.mark.skipif(
-        not has_phonenumbers, reason="phonenumbers is not installed"
-    )
+    @pytest.mark.skipif(not has_phonenumbers, reason="phonenumbers is not installed")
     def test_phonenumbers_obj_at_setter(self):
         registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
         test = registry.Test.insert()
@@ -1299,28 +1228,21 @@ class TestColumns:
         getted = registry.execute(text("Select col from test")).fetchone()[0]
         assert getted == "+120012301"
 
-    @pytest.mark.skipif(
-        not has_phonenumbers, reason="phonenumbers is not installed"
-    )
+    @pytest.mark.skipif(not has_phonenumbers, reason="phonenumbers is not installed")
     def test_phonenumbers_obj_at_setter_with_empty_value(self):
         registry = self.init_registry(simple_column, ColumnType=PhoneNumber)
         test = registry.Test.insert()
         test.col = ""
         assert test.col == ""
         registry.flush()
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0] == ""
-        )
+        assert registry.execute(text("Select col from test")).fetchone()[0] == ""
 
     def test_email_at_setter(self):
         registry = self.init_registry(simple_column, ColumnType=Email)
         test = registry.Test.insert()
         test.col = "John.Smith@foo.com"
         assert test.col == "john.smith@foo.com"
-        assert (
-            registry.Test.query().filter_by(col="John.Smith@foo.com").count()
-            == 1
-        )
+        assert registry.Test.query().filter_by(col="John.Smith@foo.com").count() == 1
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert(self):
@@ -1328,10 +1250,7 @@ class TestColumns:
         test = registry.Test.insert(col="FR")
         assert test.col is pycountry.countries.get(alpha_2="FR")
         assert test.col.name == "France"
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0]
-            == "FRA"
-        )
+        assert registry.execute(text("Select col from test")).fetchone()[0] == "FRA"
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_obj(self):
@@ -1340,23 +1259,15 @@ class TestColumns:
         test = registry.Test.insert(col=fr)
         assert test.col is pycountry.countries.get(alpha_2="FR")
         assert test.col.name == "France"
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0]
-            == "FRA"
-        )
+        assert registry.execute(text("Select col from test")).fetchone()[0] == "FRA"
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_alpha_3(self):
-        registry = self.init_registry(
-            simple_column, ColumnType=Country, mode="alpha_3"
-        )
+        registry = self.init_registry(simple_column, ColumnType=Country, mode="alpha_3")
         test = registry.Test.insert(col="FRA")
         assert test.col is pycountry.countries.get(alpha_2="FR")
         assert test.col.name == "France"
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0]
-            == "FRA"
-        )
+        assert registry.execute(text("Select col from test")).fetchone()[0] == "FRA"
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_object(self):
@@ -1365,10 +1276,7 @@ class TestColumns:
         test = registry.Test.insert(col=fr)
         assert test.col is fr
         assert test.col.name == "France"
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0]
-            == "FRA"
-        )
+        assert registry.execute(text("Select col from test")).fetchone()[0] == "FRA"
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_update(self):
@@ -1378,25 +1286,17 @@ class TestColumns:
         registry.flush()
         assert test.col is pycountry.countries.get(alpha_2="FR")
         assert test.col.name == "France"
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0]
-            == "FRA"
-        )
+        assert registry.execute(text("Select col from test")).fetchone()[0] == "FRA"
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_update_with_alpha_3(self):
-        registry = self.init_registry(
-            simple_column, ColumnType=Country, mode="alpha_3"
-        )
+        registry = self.init_registry(simple_column, ColumnType=Country, mode="alpha_3")
         test = registry.Test.insert()
         test.col = "FRA"
         registry.flush()
         assert test.col is pycountry.countries.get(alpha_2="FR")
         assert test.col.name == "France"
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0]
-            == "FRA"
-        )
+        assert registry.execute(text("Select col from test")).fetchone()[0] == "FRA"
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_update_with_object(self):
@@ -1407,10 +1307,7 @@ class TestColumns:
         registry.flush()
         assert test.col is fr
         assert test.col.name == "France"
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0]
-            == "FRA"
-        )
+        assert registry.execute(text("Select col from test")).fetchone()[0] == "FRA"
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_query_is_with_object(self):
@@ -1434,17 +1331,13 @@ class TestColumns:
             registry.Test.insert(col="WG")
 
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #90"
-    )
+    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #90")
     def test_pycoundtry_query_insert_by_wrong_query(self):
         registry = self.init_registry(simple_column, ColumnType=Country)
         with pytest.raises(Exception):
             registry.execute(text("insert into test (col) values ('WG2')"))
 
-    @pytest.mark.skipif(
-        not has_cryptography, reason="cryptography is not installed"
-    )
+    @pytest.mark.skipif(not has_cryptography, reason="cryptography is not installed")
     def test_insert_encrypt_key_columns(self, column_definition):
         column, value, kwargs = column_definition
         registry = self.init_registry(
@@ -1457,9 +1350,7 @@ class TestColumns:
         else:
             assert test.col == value
 
-        res = registry.execute(
-            text("select col from test where id = %s" % test.id)
-        )
+        res = registry.execute(text("select col from test where id = %s" % test.id))
         res = res.fetchall()[0][0]
         assert res != test.col
 
@@ -1528,9 +1419,7 @@ class TestColumnsAutoDoc:
         column, _, kwargs = column_definition
         self.call_autodoc(column, **kwargs)
 
-    @pytest.mark.skipif(
-        not has_cryptography, reason="cryptography is not installed"
-    )
+    @pytest.mark.skipif(not has_cryptography, reason="cryptography is not installed")
     def test_autodoc_with_encrypt_key(self, column_definition):
         column, _, kwargs = column_definition
         self.call_autodoc(column, encrypt_key="secretkey", **kwargs)
@@ -1622,9 +1511,7 @@ class TestCompareColumn:
         self.same_type(String(), Selection(selections={"foo": "Bar"}))
 
     def test_string_to_selection_with_diff_size(self):
-        self.diff_type(
-            String(size=10), Selection(selections={"foo": "Bar"}, size=20)
-        )
+        self.diff_type(String(size=10), Selection(selections={"foo": "Bar"}, size=20))
 
     def test_string_to_sequence_with_default_size(self):
         self.same_type(String(), Sequence())

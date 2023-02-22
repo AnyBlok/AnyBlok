@@ -41,9 +41,7 @@ class TestRegistryManager:
             "Query",
             "InstrumentedList",
         ):
-            assert (
-                core in RegistryManager.loaded_bloks["newblok"]["Core"].keys()
-            )
+            assert core in RegistryManager.loaded_bloks["newblok"]["Core"].keys()
             assert RegistryManager.loaded_bloks["newblok"]["Core"][core] == []
 
         assert RegistryManager.loaded_bloks["newblok"]["Model"] == {
@@ -67,9 +65,7 @@ class TestRegistryManager:
             "Query",
             "InstrumentedList",
         ):
-            assert (
-                core in RegistryManager.loaded_bloks["newblok"]["Core"].keys()
-            )
+            assert core in RegistryManager.loaded_bloks["newblok"]["Core"].keys()
             assert RegistryManager.loaded_bloks["newblok"]["Core"][core] == []
 
         assert RegistryManager.loaded_bloks["newblok"]["Model"] == {

@@ -163,21 +163,15 @@ class TestHybridMethod:
                 return self.val == val
 
     def test_inherit_core(self):
-        registry = self.init_registry(
-            self.add_inherited_hybrid_method, withcore=True
-        )
+        registry = self.init_registry(self.add_inherited_hybrid_method, withcore=True)
         self.check_hybrid_method(registry.Test)
 
     def test_inherit_mixin(self):
-        registry = self.init_registry(
-            self.add_inherited_hybrid_method, withmixin=True
-        )
+        registry = self.init_registry(self.add_inherited_hybrid_method, withmixin=True)
         self.check_hybrid_method(registry.Test)
 
     def test_inherit_model(self):
-        registry = self.init_registry(
-            self.add_inherited_hybrid_method, withmodel=True
-        )
+        registry = self.init_registry(self.add_inherited_hybrid_method, withmodel=True)
         self.check_hybrid_method(registry.Test)
 
     def test_inherit_core_and_mixin(self):

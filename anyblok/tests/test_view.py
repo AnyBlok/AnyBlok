@@ -200,9 +200,9 @@ def view_with_relationship_on_self():
             TP = cls.anyblok.T1.aliased()
             T2 = cls.anyblok.T2
             subquery = union(
-                select(
-                    T1.code.label("code"), TP.code.label("parent_code")
-                ).where(T1.parent_id == TP.id),
+                select(T1.code.label("code"), TP.code.label("parent_code")).where(
+                    T1.parent_id == TP.id
+                ),
                 select(
                     T1.code.label("code"),
                     expression.literal_column("null as parent_code"),

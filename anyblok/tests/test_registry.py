@@ -79,9 +79,7 @@ class TestRegistry:
 
     def test_get_the_same_registry(self):
         registry = self.init_registry(None)
-        registry2 = RegistryManager.get(
-            Configuration.get("db_name"), unittest=True
-        )
+        registry2 = RegistryManager.get(Configuration.get("db_name"), unittest=True)
         assert registry is registry2
 
     def test_reload(self):
@@ -415,9 +413,7 @@ class TestRegistry2:
     def test_check_define_cls_with_inherit_mixin2(self):
         def add_in_registry():
             self.define_cls(typename="Mixin", name="MTest", val=3)
-            self.define_cls(
-                typename="Mixin", name="MTest", val=3, usesuper=True
-            )
+            self.define_cls(typename="Mixin", name="MTest", val=3, usesuper=True)
             self.define_cls(val=3, usesuper=True, inherit="MTest")
 
         registry = self.init_registry(add_in_registry)
@@ -438,9 +434,7 @@ class TestRegistry2:
     def test_remove_core(self):
         def add_in_registry():
             self.define_cls(typename="Core", name="Base", val=2)
-            cls_ = self.define_cls(
-                typename="Core", name="Base", val=2, usesuper=True
-            )
+            cls_ = self.define_cls(typename="Core", name="Base", val=2, usesuper=True)
             self.define_cls(val=2, usesuper=True)
             from anyblok import Declarations
 
@@ -452,9 +446,7 @@ class TestRegistry2:
     def test_remove_mixin(self):
         def add_in_registry():
             self.define_cls(typename="Mixin", name="MTest", val=3)
-            cls_ = self.define_cls(
-                typename="Mixin", name="MTest", val=3, usesuper=True
-            )
+            cls_ = self.define_cls(typename="Mixin", name="MTest", val=3, usesuper=True)
             self.define_cls(val=3, usesuper=True, inherit="MTest")
             from anyblok import Declarations
 
@@ -538,9 +530,7 @@ class TestRegistry2:
             "_postcommit_hook1",
             "_postcommit_hook2",
         ]
-        registry.Test.postcommit_hook(
-            "_postcommit_hook1", put_at_the_end_if_exist=True
-        )
+        registry.Test.postcommit_hook("_postcommit_hook1", put_at_the_end_if_exist=True)
         assert [x[1] for x in EnvironmentManager.get("_postcommit_hook")] == [
             "_postcommit_hook2",
             "_postcommit_hook1",
@@ -759,9 +749,7 @@ class TestRegistry2:
             "_precommit_hook1",
             "_precommit_hook2",
         ]
-        registry.Test.precommit_hook(
-            "_precommit_hook1", put_at_the_end_if_exist=True
-        )
+        registry.Test.precommit_hook("_precommit_hook1", put_at_the_end_if_exist=True)
         assert [x[1] for x in EnvironmentManager.get("_precommit_hook")] == [
             "_precommit_hook2",
             "_precommit_hook1",
@@ -791,9 +779,7 @@ class TestRegistry3:
             "anyblok.session.event", []
         )
         additional_setting.append(fake_event)
-        registry.additional_setting[
-            "anyblok.session.event"
-        ] = additional_setting
+        registry.additional_setting["anyblok.session.event"] = additional_setting
         with pytest.raises(FakeException):
             registry.apply_session_events()
 
@@ -819,9 +805,7 @@ class TestRegistry3:
     def test_apply_engine_events_from_setting(self, registry_blok):
         registry = registry_blok
 
-        additional_setting = registry.additional_setting.get(
-            "anyblok.engine.event", []
-        )
+        additional_setting = registry.additional_setting.get("anyblok.engine.event", [])
         additional_setting.append(fake_event)
         registry.additional_setting["anyblok.engine.event"] = additional_setting
         with pytest.raises(FakeException):
@@ -836,7 +820,4 @@ class TestRegistry3:
 
     def test_apply_the_same_state(self, registry_blok):
         registry = registry_blok
-        assert (
-            registry.apply_state("anyblok-core", "installed", ["installed"])
-            is None
-        )
+        assert registry.apply_state("anyblok-core", "installed", ["installed"]) is None

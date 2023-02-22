@@ -122,9 +122,7 @@ def _minimum_one2one_on_mapper_2(**kwargs):
     @register(Model, tablename="y")
     class Person:
         name = String(primary_key=True, db_column_name="y1")
-        address_id = Integer(
-            db_column_name="y2", foreign_key=Model.Address.use("id")
-        )
+        address_id = Integer(db_column_name="y2", foreign_key=Model.Address.use("id"))
         address = One2One(model=Model.Address, backref="person")
 
 
@@ -159,18 +157,14 @@ class TestMinimumOne2One:
         assert hasattr(registry.Person, "address")
         assert hasattr(registry.Person, "address_id")
         address = registry.Address.insert()
-        person = registry.Person.insert(
-            name="Jean-sébastien SUZANNE", address=address
-        )
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE", address=address)
 
         assert address.person is person
 
     def test_one2one_multi_entry_for_same(self, registry_minimum_one2one):
         registry = registry_minimum_one2one
         address = registry.Address.insert()
-        p1 = registry.Person.insert(
-            name="Jean-sébastien SUZANNE", address=address
-        )
+        p1 = registry.Person.insert(name="Jean-sébastien SUZANNE", address=address)
         assert p1.address is address
         p2 = registry.Person.insert(name="Franck BRET", address=address)
         assert p2.address is address
@@ -178,12 +172,10 @@ class TestMinimumOne2One:
 
     def test_minimum_one2one_expire_field(self, registry_minimum_one2one):
         registry = registry_minimum_one2one
-        assert ("address",) in registry.expire_attributes["Model.Person"][
+        assert ("address",) in registry.expire_attributes["Model.Person"]["address_id"]
+        assert ("address", "person") in registry.expire_attributes["Model.Person"][
             "address_id"
         ]
-        assert ("address", "person") in registry.expire_attributes[
-            "Model.Person"
-        ]["address_id"]
 
 
 def _multi_fk_one2one():
@@ -229,12 +221,8 @@ class TestMultiFKOne2One:
     def test_multi_o2o_one2one_expire_field(self, registry_multi_fk_one2one):
         registry = registry_multi_fk_one2one
         assert ("test",) in registry.expire_attributes["Model.Test2"]["test_id"]
-        assert ("test", "test2") in registry.expire_attributes["Model.Test2"][
-            "test_id"
-        ]
-        assert ("test",) in registry.expire_attributes["Model.Test2"][
-            "test_id2"
-        ]
+        assert ("test", "test2") in registry.expire_attributes["Model.Test2"]["test_id"]
+        assert ("test",) in registry.expire_attributes["Model.Test2"]["test_id2"]
         assert ("test", "test2") in registry.expire_attributes["Model.Test2"][
             "test_id2"
         ]
@@ -303,9 +291,7 @@ def _minimum_one2one_with_one2many(**kwargs):
     @register(Model)
     class Person:
         name = String(primary_key=True)
-        address = One2One(
-            model=Model.Address, backref="person", one2many="persons"
-        )
+        address = One2One(model=Model.Address, backref="person", one2many="persons")
 
 
 @pytest.mark.relationship
@@ -330,9 +316,7 @@ class TestOne2One:
         address = registry.Address.insert(
             street="14-16 rue soleillet", zip="75020", city="Paris"
         )
-        person = registry.Person.insert(
-            name="Jean-sébastien SUZANNE", address=address
-        )
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE", address=address)
 
         assert address.person is person
 
@@ -343,9 +327,7 @@ class TestOne2One:
         address = registry.Address.insert(
             street="14-16 rue soleillet", zip="75020", city="Paris"
         )
-        person = registry.Person.insert(
-            name="Jean-sébastien SUZANNE", address=address
-        )
+        person = registry.Person.insert(name="Jean-sébastien SUZANNE", address=address)
 
         assert address.person is person
 
@@ -376,12 +358,8 @@ class TestOne2One:
                     )
 
                 id = Integer(primary_key=True)
-                test_id = Integer(
-                    foreign_key=Model.Test.use("id"), nullable=False
-                )
-                test_id2 = String(
-                    foreign_key=Model.Test.use("id2"), nullable=False
-                )
+                test_id = Integer(foreign_key=Model.Test.use("id"), nullable=False)
+                test_id2 = String(foreign_key=Model.Test.use("id2"), nullable=False)
                 test = One2One(
                     model=Model.Test,
                     remote_columns=("id", "id2"),
@@ -405,12 +383,8 @@ class TestOne2One:
             @register(Model)
             class Test2:
                 id = Integer(primary_key=True)
-                test_id = Integer(
-                    foreign_key=Model.Test.use("id"), nullable=False
-                )
-                test_id2 = String(
-                    foreign_key=Model.Test.use("id2"), nullable=False
-                )
+                test_id = Integer(foreign_key=Model.Test.use("id"), nullable=False)
+                test_id2 = String(foreign_key=Model.Test.use("id2"), nullable=False)
                 test = One2One(
                     model=Model.Test,
                     remote_columns=("id", "id2"),
@@ -434,12 +408,8 @@ class TestOne2One:
             @register(Model)
             class Test2:
                 id = Integer(primary_key=True)
-                test_id = Integer(
-                    foreign_key=Model.Test.use("id"), nullable=False
-                )
-                test_id2 = String(
-                    foreign_key=Model.Test.use("id2"), nullable=False
-                )
+                test_id = Integer(foreign_key=Model.Test.use("id"), nullable=False)
+                test_id2 = String(foreign_key=Model.Test.use("id2"), nullable=False)
                 test = One2One(model=Model.Test, backref="test2")
 
         registry = self.init_registry(add_in_registry)

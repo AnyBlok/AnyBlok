@@ -14,9 +14,7 @@ from anyblok.registry import RegistryConflictingException, RegistryException
 from anyblok.testing import sgdb_in
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlok:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
@@ -84,9 +82,7 @@ class TestBlok:
             registry.upgrade(update=("test-blok1",))
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlokRequired:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
@@ -199,9 +195,7 @@ class TestBlokRequired:
         assert testblok2.installed_version == "2.0.0"
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlokRequired2:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
@@ -400,9 +394,7 @@ class TestBlokRequired2:
         assert testblok3.installed_version == "2.0.0"
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlokConditionnal:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
@@ -518,9 +510,7 @@ class TestBlokConditionnal:
         assert testblok5.installed_version == "2.0.0"
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlokOptional:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
@@ -620,9 +610,7 @@ class TestBlokOptional:
         assert testblok6.installed_version == "2.0.0"
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlokConflicting:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
@@ -647,9 +635,7 @@ class TestBlokConflicting:
         with pytest.raises(RegistryConflictingException):
             registry.upgrade(install=("test-blok1", "test-blok13"))
 
-    def test_uninstall_first_and_intall_another_in_two_step(
-        self, registry_testblok
-    ):
+    def test_uninstall_first_and_intall_another_in_two_step(self, registry_testblok):
         registry = registry_testblok
         Blok = registry.System.Blok
         testblok1 = Blok.query().filter(Blok.name == "test-blok1").first()
@@ -677,9 +663,7 @@ class TestBlokConflicting:
         assert testblok13.state == "installed"
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlokUndefined:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
@@ -724,9 +708,7 @@ class TestBlokUndefined:
             registry.upgrade(install=("test-undefined",))
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlokOrder:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
@@ -756,9 +738,7 @@ class TestBlokOrder:
 
         def uninstall(self):
             cls = self.__class__
-            uninstalled.extend(
-                [x for x, y in BlokManager.bloks.items() if y is cls]
-            )
+            uninstalled.extend([x for x, y in BlokManager.bloks.items() if y is cls])
 
         try:
             Blok.uninstall = uninstall
@@ -773,9 +753,7 @@ class TestBlokOrder:
         registry = registry_testblok
         registry.upgrade(install=("test-blok3",))
         registry.upgrade(update=("test-blok1",))
-        self.check_order(
-            registry, "update", ["test-blok1", "test-blok2", "test-blok3"]
-        )
+        self.check_order(registry, "update", ["test-blok1", "test-blok2", "test-blok3"])
 
     def test_load(self, registry_testblok):
         registry = registry_testblok
@@ -787,9 +765,7 @@ class TestBlokOrder:
         )
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlokModel:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):
@@ -811,9 +787,7 @@ class TestBlokModel:
                 )
 
         registry.upgrade(uninstall=("test-blok8",))
-        registry.Test2.execute_sql_statement(
-            registry.Test2.delete_sql_statement()
-        )
+        registry.Test2.execute_sql_statement(registry.Test2.delete_sql_statement())
 
     def test_auto_migration_is_between_pre_and_post_migration_1(
         self, registry_testblok
@@ -854,9 +828,7 @@ class TestBlokQuery:
         assert registry.System.Blok.query().is_a_test is True
 
 
-@pytest.mark.skipif(
-    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
-)
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB")
 class TestBlokInstallLifeCycle:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok):

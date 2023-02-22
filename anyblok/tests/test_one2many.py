@@ -225,12 +225,10 @@ class TestCompleteOne2Many:
 
     def test_complete_one2many_expire_field(self, registry_complete_one2many):
         registry = registry_complete_one2many
-        assert ("address",) in registry.expire_attributes["Model.Person"][
+        assert ("address",) in registry.expire_attributes["Model.Person"]["address_id"]
+        assert ("address", "persons") in registry.expire_attributes["Model.Person"][
             "address_id"
         ]
-        assert ("address", "persons") in registry.expire_attributes[
-            "Model.Person"
-        ]["address_id"]
 
     def test_get_field_description(self, registry_complete_one2many):
         registry = registry_complete_one2many
@@ -288,17 +286,11 @@ class TestMultiFkOne2Many:
         assert len(t1.test2) == 1
         assert t1.test2[0] is t2
 
-    def test_with_multi_foreign_key_expire_field(
-        self, registry_multi_fk_one2many
-    ):
+    def test_with_multi_foreign_key_expire_field(self, registry_multi_fk_one2many):
         registry = registry_multi_fk_one2many
         assert ("test",) in registry.expire_attributes["Model.Test2"]["test_id"]
-        assert ("test", "test2") in registry.expire_attributes["Model.Test2"][
-            "test_id"
-        ]
-        assert ("test",) in registry.expire_attributes["Model.Test2"][
-            "test_id2"
-        ]
+        assert ("test", "test2") in registry.expire_attributes["Model.Test2"]["test_id"]
+        assert ("test",) in registry.expire_attributes["Model.Test2"]["test_id2"]
         assert ("test", "test2") in registry.expire_attributes["Model.Test2"][
             "test_id2"
         ]
@@ -331,9 +323,7 @@ def one2many_on_mapper(**kwargs):
     @register(Model, tablename="y")
     class Person:
         name = String(primary_key=True, db_column_name="y1")
-        address_id = Integer(
-            foreign_key=Model.Address.use("id"), db_column_name="y2"
-        )
+        address_id = Integer(foreign_key=Model.Address.use("id"), db_column_name="y2")
 
 
 def _minimum_one2many_with_schema(**kwargs):

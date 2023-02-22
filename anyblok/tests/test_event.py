@@ -170,15 +170,11 @@ class TestEvent:
         assert registry.Test.x == 0
 
     def test_inherited_with_event_on_core(self):
-        registry = self.init_registry(
-            self.add_in_registry_inherited, withcore=True
-        )
+        registry = self.init_registry(self.add_in_registry_inherited, withcore=True)
         self.check_event(registry)
 
     def test_inherited_with_event_on_mixin(self):
-        registry = self.init_registry(
-            self.add_in_registry_inherited, withmixin=True
-        )
+        registry = self.init_registry(self.add_in_registry_inherited, withmixin=True)
         assert len(registry.events["Model.Event"]["fireevent"]) == 1
         self.check_event(registry)
 

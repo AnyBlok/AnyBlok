@@ -135,10 +135,7 @@ class Blok:
                 elif is_undefined:  # pragma: no cover
                     if b.state not in ("uninstalled", "undefined"):
                         raise BlokManagerException(
-                            (
-                                "Change state %r => 'undefined' for %s is "
-                                "forbidden"
-                            )
+                            ("Change state %r => 'undefined' for %s is " "forbidden")
                             % (b.state, blok)
                         )
 
@@ -164,9 +161,7 @@ class Blok:
             elif b.state == "toupdate":
                 b.upgrade()
 
-        uninstalled_bloks = (
-            cls.query().filter(cls.state == "uninstalled").all().name
-        )
+        uninstalled_bloks = cls.query().filter(cls.state == "uninstalled").all().name
 
         conditional_bloks_to_install = []
         for blok in uninstalled_bloks:
@@ -287,13 +282,8 @@ class Blok:
 
     @classmethod_cache()
     def is_installed(cls, blok_name):
-        return (
-            cls.query().filter_by(name=blok_name, state="installed").count()
-            != 0
-        )
+        return cls.query().filter_by(name=blok_name, state="installed").count() != 0
 
     @listen("Model.System.Blok", "Update installed blok")
     def listen_update_installed_blok(cls):
-        cls.anyblok.System.Cache.invalidate(
-            cls.__registry_name__, "is_installed"
-        )
+        cls.anyblok.System.Cache.invalidate(cls.__registry_name__, "is_installed")

@@ -45,9 +45,7 @@ def init_registry_with_bloks(bloks, function, **kwargs):
         finally:
             EnvironmentManager.set("current_blok", None)
     try:
-        registry = RegistryManager.get(
-            Configuration.get("db_name"), unittest=True
-        )
+        registry = RegistryManager.get(Configuration.get("db_name"), unittest=True)
 
         # update required blok
         registry_bloks = registry.get_bloks_by_states("installed", "toinstall")

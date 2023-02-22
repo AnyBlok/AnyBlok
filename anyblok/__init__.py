@@ -121,9 +121,7 @@ def start(
     db_name = Configuration.get("db_name")
     logger.debug("start(): db_name=%r", db_name)
     if not db_name:
-        logger.warning(
-            "start(): no database name in configuration, " "bailing out"
-        )
+        logger.warning("start(): no database name in configuration, " "bailing out")
         return None  # pragma: no cover
 
     registry = RegistryManager.get(

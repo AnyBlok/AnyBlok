@@ -197,9 +197,7 @@ class Model:
         kwargs["__tablename__"] = tablename
         update_factory(kwargs)
 
-        RegistryManager.add_entry_in_register(
-            "Model", _registryname, cls_, **kwargs
-        )
+        RegistryManager.add_entry_in_register("Model", _registryname, cls_, **kwargs)
         setattr(cls_, "__anyblok_kwargs__", kwargs)
 
     @classmethod
@@ -258,9 +256,7 @@ class Model:
             )
 
         if field.use_hybrid_property:
-            properties[name] = field.get_property(
-                registry, namespace, name, properties
-            )
+            properties[name] = field.get_property(registry, namespace, name, properties)
             properties[name].sqla_column = properties[attr_name]
 
             properties["hybrid_property_columns"].append(name)
@@ -337,9 +333,7 @@ class Model:
     @classmethod
     def raise_if_has_sqlalchemy(cls, base):
         if has_sqlalchemy_fields(base):
-            raise ModelException(
-                "the base %r have an SQLAlchemy attribute" % base
-            )
+            raise ModelException("the base %r have an SQLAlchemy attribute" % base)
 
     @classmethod
     def load_namespace_first_step(cls, registry, namespace):
@@ -368,9 +362,7 @@ class Model:
                 if b_ns.__registry_name__.startswith("Model."):
                     properties["__depends__"].add(b_ns.__registry_name__)
 
-                ps = cls.load_namespace_first_step(
-                    registry, b_ns.__registry_name__
-                )
+                ps = cls.load_namespace_first_step(registry, b_ns.__registry_name__)
                 ps = ps.copy()
                 ps.update(properties)
                 properties.update(ps)
@@ -383,9 +375,7 @@ class Model:
                     properties[p] = f
 
             if hasattr(b, "__db_schema__"):
-                properties["__db_schema__"] = format_schema(
-                    b.__db_schema__, namespace
-                )
+                properties["__db_schema__"] = format_schema(b.__db_schema__, namespace)
 
         if "__tablename__" in ns["properties"]:
             properties["__tablename__"] = ns["properties"]["__tablename__"]

@@ -14,9 +14,7 @@ from .plugins import ModelPluginBase
 
 
 class AutoUpdatePlugin(ModelPluginBase):
-    def after_model_construction(
-        self, base, namespace, transformation_properties
-    ):
+    def after_model_construction(self, base, namespace, transformation_properties):
         """Add the sqlalchemy event
 
         :param base: the Model class

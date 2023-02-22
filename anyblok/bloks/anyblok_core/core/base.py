@@ -85,9 +85,7 @@ class Base:
         :param method: the method to call on this model
         :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
         """
-        cls.anyblok.precommit_hook(
-            cls.__registry_name__, method, *args, **kwargs
-        )
+        cls.anyblok.precommit_hook(cls.__registry_name__, method, *args, **kwargs)
 
     @classmethod
     def postcommit_hook(cls, method, *args, **kwargs):
@@ -108,6 +106,4 @@ class Base:
         :param put_at_the_end_if_exist: If ``True`` the hook is move at the end
         :param call_only_if: ['commited' (default), 'raised', 'always']
         """
-        cls.anyblok.postcommit_hook(
-            cls.__registry_name__, method, *args, **kwargs
-        )
+        cls.anyblok.postcommit_hook(cls.__registry_name__, method, *args, **kwargs)

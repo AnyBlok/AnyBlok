@@ -235,29 +235,21 @@ class TestSimpleCache:
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
         self.check_method_cached(registry.Test, "Model.Test")
 
     def test_mixin2(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
         from anyblok import Declarations
 
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin_chain(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin_chain
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin_chain)
         self.check_method_cached(registry.Test, "Model.Test")
 
     def test_mixin_chain2(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin_chain
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin_chain)
         from anyblok import Declarations
 
         self.check_method_cached(registry.Test, Declarations.Model.Test)
@@ -324,9 +316,7 @@ class TestSimpleCache:
         self.check_method_cached_invalidate_all(registry.Test)
 
     def test_invalidate_all_check_mixin(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
         self.check_method_cached_invalidate_all(registry.Test)
 
     def add_model_with_method_core_cached_with_two_model(self):
@@ -496,29 +486,21 @@ class TestClassMethodCache:
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
         self.check_method_cached(registry.Test, "Model.Test")
 
     def test_mixin2(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
         from anyblok import Declarations
 
         self.check_method_cached(registry.Test, Declarations.Model.Test)
 
     def test_mixin_chain(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin_chain
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin_chain)
         self.check_method_cached(registry.Test, "Model.Test")
 
     def test_mixin_chain2(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin_chain
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin_chain)
         from anyblok import Declarations
 
         self.check_method_cached(registry.Test, Declarations.Model.Test)
@@ -753,9 +735,7 @@ class TestInheritedCache:
         self.check_inherited_method_cached(registry.Test)
 
     def test_mixin(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
         self.check_method_cached(registry.Test)
 
     def test_mixin2(self):
@@ -902,9 +882,7 @@ class TestInheritedClassMethodCache:
         self.check_inherited_method_cached(registry.Test)
 
     def test_mixin(self):
-        registry = self.init_registry(
-            self.add_model_with_method_cached_by_mixin
-        )
+        registry = self.init_registry(self.add_model_with_method_cached_by_mixin)
         self.check_method_cached(registry.Test)
 
     def test_mixin2(self):

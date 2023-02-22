@@ -99,9 +99,7 @@ class TestAuthorizationDeclaration:
         model = registry.Test2
         Grant = registry.Authorization.ModelPermissionGrant
         Grant.insert(model="Model.Test2", principal="Franck", permission="Read")
-        Grant.insert(
-            model="Model.Test2", principal="Georges", permission="Read"
-        )
+        Grant.insert(model="Model.Test2", principal="Georges", permission="Read")
 
         # We also test that this entry is ignored, because it is
         # superseded by attribute-based policy
@@ -122,9 +120,7 @@ class TestAuthorizationDeclaration:
             registry.check_permission(model, ("Franck",), "Write")
 
         # ... unless one defines a model_rule to handle the case
-        assert not registry.check_permission(
-            model, ("Franck",), "PermWithModelRule"
-        )
+        assert not registry.check_permission(model, ("Franck",), "PermWithModelRule")
 
         Grant = registry.Authorization.ModelPermissionGrant
         Grant.insert(
@@ -132,9 +128,7 @@ class TestAuthorizationDeclaration:
             principal="Franck",
             permission="PermWithModelRule",
         )
-        assert registry.check_permission(
-            model, ("Franck",), "PermWithModelRule"
-        )
+        assert registry.check_permission(model, ("Franck",), "PermWithModelRule")
         assert not record.has_perm(("Franck",), "PermWithModelRule")
 
         # Query wrapping tests

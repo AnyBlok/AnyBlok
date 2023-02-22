@@ -31,8 +31,7 @@ def autodoc_registration(declaration, cls):
         if ab_bases:
             res.extend(["- Inherited Models or Mixins:", ""])
             res.extend(
-                "  * :class:`%s.%s`" % (c.__module__, c.__name__)
-                for c in ab_bases
+                "  * :class:`%s.%s`" % (c.__module__, c.__name__) for c in ab_bases
             )
             res.append("")
     res.extend(("", ""))
@@ -55,9 +54,7 @@ class AnyBlokDeclarationDocumenter(ClassDocumenter):
         if lines is not None:
             return lines
 
-        doc = super(AnyBlokDeclarationDocumenter, self).get_doc(
-            ignore=ignore, **kwargs
-        )
+        doc = super(AnyBlokDeclarationDocumenter, self).get_doc(ignore=ignore, **kwargs)
 
         registry_name = self.get_attr(self.object, "__registry_name__", None)
         declaration = self.get_attr(self.object, "__declaration__", None)
@@ -81,9 +78,7 @@ class AnyBlokMethodDocumenter(MethodDocumenter):
         if lines is not None:
             return lines
 
-        doc = super(AnyBlokMethodDocumenter, self).get_doc(
-            ignore=ignore, **kwargs
-        )
+        doc = super(AnyBlokMethodDocumenter, self).get_doc(ignore=ignore, **kwargs)
         autodocs = self.get_attr(self.object, "autodocs", [])
         for autodoc in autodocs:
             doc.append(prepare_docstring(autodoc, ignore))
