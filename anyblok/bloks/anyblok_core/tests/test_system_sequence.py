@@ -34,6 +34,14 @@ class TestSystemSequence:
         assert seq.nextval() == "2"
         assert seq.nextval() == "3"
 
+    def test_nextval_with_number(self, rollback_registry):
+        registry = rollback_registry
+        Sequence = registry.System.Sequence
+        seq = Sequence.insert(code="test.sequence.number", number=10)
+        assert seq.nextval() == "10"
+        assert seq.nextval() == "11"
+        assert seq.nextval() == "12"
+
     def test_nextval_without_prefix_with_suffix(self, rollback_registry):
         registry = rollback_registry
         Sequence = registry.System.Sequence

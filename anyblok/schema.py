@@ -33,7 +33,7 @@ class ForeignKeyConstraint(SQLAForeignKeyConstraint):
 class UniqueConstraint(SQLAUniqueConstraint):
     def __init__(self, *columns, **kwargs):
         super().__init__(
-            [convert_hybrid_property_to_column(col) for col in columns],
+            *[convert_hybrid_property_to_column(col) for col in columns],
             **kwargs,
         )
 
@@ -41,7 +41,7 @@ class UniqueConstraint(SQLAUniqueConstraint):
 class PrimaryKeyConstraint(SQLAPrimaryKeyConstraint):
     def __init__(self, *columns, **kwargs):
         super().__init__(
-            [convert_hybrid_property_to_column(col) for col in columns],
+            *[convert_hybrid_property_to_column(col) for col in columns],
             **kwargs,
         )
 
@@ -49,6 +49,6 @@ class PrimaryKeyConstraint(SQLAPrimaryKeyConstraint):
 class Index(SQLAIndex):
     def __init__(self, *columns, **kwargs):
         super().__init__(
-            [convert_hybrid_property_to_column(col) for col in columns],
+            *[convert_hybrid_property_to_column(col) for col in columns],
             **kwargs,
         )

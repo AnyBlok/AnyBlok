@@ -75,6 +75,12 @@ def add_in_registry():
         other = Str()
 
     @register(Model)
+    class Test2PKs:
+        integer = Int(primary_key=True)
+        code = Str(primary_key=True, default="test")
+        other = Str()
+
+    @register(Model)
     class TestUnique:
         integer = Int(primary_key=True)
         other = Str(unique=True)
@@ -161,6 +167,7 @@ def registry(request, clean_db, bloks_loaded):
         for table in (
             "reltable",
             "test",
+            "test2pks",
             "test2",
             "othername",
             "testfk",
@@ -208,8 +215,8 @@ class TestMigration:
         registry.migration.table().add("test2")
         registry.migration.table("test2")
 
-    def fill_test_table(self, registry):
-        Test = registry.Test
+    def fill_test_table(self, registry, namespace="Model.Test"):
+        Test = registry.get(namespace)
         vals = [{"other": "test %d" % x} for x in range(10)]
         Test.multi_insert(*vals)
 
@@ -255,6 +262,44 @@ class TestMigration:
             x
             for x in registry.execute(
                 text("select count(*) from test where new_column is null")
+            )
+        ][0][0]
+        assert res == 0
+
+    def test_add_column_in_filled_table_with_default_callable_value(
+        self, registry
+    ):
+        self.fill_test_table(registry)
+        t = registry.migration.table("test")
+
+        def default_method():
+            return 1
+
+        t.column().add(Column("new_column", Integer, default=default_method))
+        t.column("new_column")
+        res = [
+            x
+            for x in registry.execute(
+                text("select count(*) from test where new_column is null")
+            )
+        ][0][0]
+        assert res == 0
+
+    def test_add_column_in_filled_table_with_default_callable_value_and_2_pk(
+        self, registry
+    ):
+        self.fill_test_table(registry, namespace="Model.Test2PKs")
+        t = registry.migration.table("test2pks")
+
+        def default_method():
+            return 1
+
+        t.column().add(Column("new_column", Integer, default=default_method))
+        t.column("new_column")
+        res = [
+            x
+            for x in registry.execute(
+                text("select count(*) from test2pks where new_column is null")
             )
         ][0][0]
         assert res == 0

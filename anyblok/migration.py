@@ -18,7 +18,7 @@ from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
 from pkg_resources import iter_entry_points
-from sqlalchemy import and_, func, inspect, join, select, text, update
+from sqlalchemy import and_, func, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import (
@@ -914,30 +914,42 @@ class MigrationColumn:
             table = self.table.migration.metadata.tables[self.table.name]
             table.append_column(column)
             cname = getattr(table.c, column.name)
-            if column.default.is_callable:  # pragma: no cover
+            if column.default.is_callable:
                 Table = self.table.migration.metadata.tables["system_model"]
                 Column = self.table.migration.metadata.tables["system_column"]
-                j1 = join(Table, Column, Table.c.name == Column.c.model)
-                query = select([Column.c.name]).select_from(j1)
-                query = query.where(Column.c.primary_key.is_(True))
-                query = query.where(Table.c.table == self.table.name)
-                columns = [x[0] for x in execute(query).fetchall()]
+                query_pks = select(Column.c.name)
+                query_pks = query_pks.join(
+                    Table, Column.c.model == Table.c.name
+                )
+                query_pks = query_pks.where(Table.c.table == self.table.name)
+                query_pks = query_pks.where(Column.c.primary_key.is_(True))
+                columns = [x[0] for x in execute(query_pks).fetchall()]
 
-                query = select([func.count()]).select_from(table)
-                query = query.where(cname.is_(None))
-                nb_row = self.table.migration.conn.execute(query).fetchone()[0]
+                query_count = select(func.count()).select_from(table)
+                query_count = query_count.where(cname.is_(None))
+                nb_row = self.table.migration.conn.execute(
+                    query_count
+                ).fetchone()[0]
                 for offset in range(nb_row):
-                    query = select(columns).select_from(table)
-                    query = query.where(cname.is_(None)).limit(1)
+                    query = select(
+                        *[getattr(table.c, x).label(x) for x in columns]
+                    )
+                    query = query.where(cname.is_(None))
+                    query = query.limit(1)
                     res = execute(query).fetchone()
-                    where = and_(
-                        *[getattr(table.c, x) == res[x] for x in columns]
-                    )
-                    query = (
-                        update(table).where(where).values({cname: val(None)})
-                    )
-                    execute(query)
+                    where = []
+                    for index, col in enumerate(columns):
+                        where.append(getattr(table.c, col) == res[index])
 
+                    if len(where) == 1:
+                        where = where[0]
+                    else:
+                        where = and_(*where)
+
+                    query_update = update(table)
+                    query_update = query_update.where(where)
+                    query_update = query_update.values({cname: val(None)})
+                    execute(query_update)
             else:
                 query = (
                     update(table).where(cname.is_(None)).values({cname: val})
@@ -1259,7 +1271,7 @@ class MigrationConstraintPrimaryKey:
             )
 
         if sgdb_in(self.table.migration.conn.engine, ["MsSQL"]):
-            for column in columns:
+            for column in columns:  # pragma: no cover
                 if column.nullable:
                     column.alter(nullable=False)
 
@@ -1786,7 +1798,7 @@ class Migration:
 
     def render_item(self, type_, obj, autogen_context):
         logger.debug("%r, %r, %r" % (type_, obj, autogen_context))
-        return False
+        return False  # pragma: no cover
 
     def compare_type(
         self,

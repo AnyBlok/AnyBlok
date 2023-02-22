@@ -209,7 +209,7 @@ def sgdb_in(engine, databases):
                 engine.url.drivername.startswith("mssql")
                 and database == "MsSQL"
             ):
-                DATABASES_CACHED["MsSQL"] = True
+                DATABASES_CACHED["MsSQL"] = True  # pragma: no cover
 
         if DATABASES_CACHED[database]:
             return True

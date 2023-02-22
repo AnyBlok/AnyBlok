@@ -158,7 +158,7 @@ class TableMapperPlugin(ModelPluginBase):
                     res = cls_.define_table_args() + (
                         cls_.define_table_kwargs(),
                     )
-                except NoInspectionAvailable:
+                except NoInspectionAvailable:  # pragma: no cover
                     raise ModelException(
                         "A Index  or constraint on the model "
                         f'"{cls_.__registry_name__}" if defined with SQLAlchemy'

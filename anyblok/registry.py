@@ -34,8 +34,8 @@ from .version import parse_version
 try:
     import pyodbc
 
-    pyodbc.pooling = False
-    PyODBCProgrammingError = pyodbc.ProgrammingError
+    pyodbc.pooling = False  # pragma: no cover
+    PyODBCProgrammingError = pyodbc.ProgrammingError  # pragma: no cover
 except ImportError:
 
     class PyODBCProgrammingError(Exception):

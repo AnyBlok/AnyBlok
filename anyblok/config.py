@@ -38,7 +38,7 @@ from .logging import log
 logger = getLogger(__name__)
 
 
-def parse_qs(entry):
+def parse_qs(entry):  # pragma: no cover
     res = urllib.parse.parse_qs(entry)
     for k, v in res.items():
         if len(v) == 1:
