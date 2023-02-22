@@ -1271,7 +1271,7 @@ class MigrationConstraintPrimaryKey:
             )
 
         if sgdb_in(self.table.migration.conn.engine, ["MsSQL"]):
-            for column in columns:
+            for column in columns:  # pragma: no cover
                 if column.nullable:
                     column.alter(nullable=False)
 

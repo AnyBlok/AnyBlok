@@ -51,7 +51,7 @@ class BooleanToBitMsSQL(MigrationColumnTypePlugin):
 
     def need_to_modify_type(self):
         """Boolean are Bit in MsSQL DataBases"""
-        return False
+        return False  # pragma: no cover
 
     def apply(self, column, **kwargs):
         """Boolean are Bit in MsSQL DataBases"""
