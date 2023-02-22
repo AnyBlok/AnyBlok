@@ -56,19 +56,19 @@ class Query:
         return self.Model.execute(stmt).scalars().first()
 
     def delete(self, *args, **kwargs):
-        raise NotImplementedError(
+        raise NotImplementedError(  # pragma: no cover
             "You have to use Model.delete_sql_statement()"
         )
 
     def update(self, *args, **kwargs):
-        raise NotImplementedError(
+        raise NotImplementedError(  # pragma: no cover
             "You have to use Model.update_sql_statement()"
         )
 
     def first(self):
         try:
             return self._execute().first()
-        except NoResultFound as exc:
+        except NoResultFound as exc:  # pragma: no cover
             logger.debug(
                 "On Model %r: exc %s: query %s",
                 self.Model.__registry_name__,
@@ -160,7 +160,7 @@ class Query:
     def dictall(self):
         vals = self.all()
         if not vals:
-            return []
+            return []  # pragma: no cover
 
         field2get = self.get_field_names_in_column_description()
         if field2get:
