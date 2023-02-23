@@ -84,14 +84,18 @@ class TestFieldFunction:
 
     def test_field_function_fget(self, registry_field_function):
         registry = registry_field_function
-        t = registry.Test.insert(first_name="Jean-Sebastien", last_name="SUZANNE")
+        t = registry.Test.insert(
+            first_name="Jean-Sebastien", last_name="SUZANNE"
+        )
         assert t.name == "Jean-Sebastien SUZANNE"
         t = registry.Test.query().first()
         assert t.name == "Jean-Sebastien SUZANNE"
 
     def test_field_function_fdel(self, registry_field_function):
         registry = registry_field_function
-        t = registry.Test.insert(first_name="jean-sebastien", last_name="suzanne")
+        t = registry.Test.insert(
+            first_name="jean-sebastien", last_name="suzanne"
+        )
         del t.name
         assert t.first_name is None
         assert t.last_name is None
@@ -144,7 +148,9 @@ def registry_json_related(request, bloks_loaded):
     return registry
 
 
-@pytest.mark.skipif(sgdb_in(["MariaDB"]), reason="JSON is not existing in this SGDB")
+@pytest.mark.skipif(
+    sgdb_in(["MariaDB"]), reason="JSON is not existing in this SGDB"
+)
 @pytest.mark.field
 class TestJsonRelated:
     @pytest.fixture(autouse=True)
@@ -272,7 +278,9 @@ def registry_json_related2(request, bloks_loaded):
     return registry
 
 
-@pytest.mark.skipif(sgdb_in(["MariaDB"]), reason="JSON is not existing in this SGDB")
+@pytest.mark.skipif(
+    sgdb_in(["MariaDB"]), reason="JSON is not existing in this SGDB"
+)
 @pytest.mark.field
 class TestJsonRelated2:
     @pytest.fixture(autouse=True)
@@ -343,7 +351,9 @@ class TestField2:
             class Test:
                 id = Integer(primary_key=True)
                 _name = String()
-                name = Function(fget="fget", fset="fset", fdel="fdel", fexpr="fexpr")
+                name = Function(
+                    fget="fget", fset="fset", fdel="fdel", fexpr="fexpr"
+                )
 
                 def fget(self):
                     return self._name

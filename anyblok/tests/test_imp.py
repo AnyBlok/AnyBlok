@@ -108,11 +108,15 @@ class TestImportManager:
             with open(join(tests_path, "mockfile.py"), "w") as fp:
                 fp.write(initial_file)
 
-            with open(join(tests_path, "mockpackage", "mockfile1.py"), "w") as fp:
+            with open(
+                join(tests_path, "mockpackage", "mockfile1.py"), "w"
+            ) as fp:
                 fp.write(initial_file)
 
             with open(
-                join(tests_path, "mockpackage", "submockpackage", "mockfile2.py"),
+                join(
+                    tests_path, "mockpackage", "submockpackage", "mockfile2.py"
+                ),
                 "w",
             ) as fp:
                 fp.write(initial_file)

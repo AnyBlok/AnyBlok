@@ -45,7 +45,9 @@ class TestRegistryEntry:
 
         RegistryManager.add_entry_in_register("Other", "test", test)
         self.assertInEntry("test", test)
-        assert RegistryManager.has_entry_in_register("testEntry", "Other", "test")
+        assert RegistryManager.has_entry_in_register(
+            "testEntry", "Other", "test"
+        )
 
     def test_remove_entry(self):
         class test:
@@ -68,8 +70,12 @@ class TestRegistryEntry:
         class test:
             pass
 
-        RegistryManager.add_entry_in_register("Other", "test", test, property1="test")
-        properties = RegistryManager.get_entry_properties_in_register("Other", "test")
+        RegistryManager.add_entry_in_register(
+            "Other", "test", test, property1="test"
+        )
+        properties = RegistryManager.get_entry_properties_in_register(
+            "Other", "test"
+        )
 
         hasproperty1 = "property1" in properties
         assert hasproperty1

@@ -141,7 +141,9 @@ def anyblok_updatedb():
             required_install_bloks.append(blok)
 
     if Configuration.get("install_all_bloks"):
-        install_bloks = anyblok_registry.System.Blok.list_by_state("uninstalled")
+        install_bloks = anyblok_registry.System.Blok.list_by_state(
+            "uninstalled"
+        )
     else:
         install_bloks = Configuration.get("install_bloks") or []
         install_bloks = list(set(install_bloks + required_install_bloks))
@@ -239,7 +241,9 @@ def anyblok_nose():
     anyblok_registry = anyblok.start("nose", useseparator=True, unittest=True)
 
     if anyblok_registry:
-        installed_bloks = anyblok_registry.System.Blok.list_by_state("installed")
+        installed_bloks = anyblok_registry.System.Blok.list_by_state(
+            "installed"
+        )
         selected_bloks = (
             return_list(Configuration.get("selected_bloks")) or installed_bloks
         )

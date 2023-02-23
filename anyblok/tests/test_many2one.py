@@ -372,7 +372,9 @@ def many2one_on_mapping_model_and_column_2(**kwargs):
     @register(Model, tablename="y")
     class Person:
         name = String(primary_key=True, db_column_name="y1")
-        address_id = Integer(db_column_name="y2", foreign_key=Model.Address.use("id"))
+        address_id = Integer(
+            db_column_name="y2", foreign_key=Model.Address.use("id")
+        )
         address = Many2One(model=Model.Address)
 
 
@@ -419,7 +421,9 @@ class TestMany2One:
             street="14-16 rue soleillet", zip="75020", city="Paris"
         )
 
-        person = registry.Person.insert(name="Jean-sébastien SUZANNE", address=address)
+        person = registry.Person.insert(
+            name="Jean-sébastien SUZANNE", address=address
+        )
 
         if has_one2many:
             assert address.persons == [person]
@@ -452,7 +456,9 @@ def _auto_detect_type(ColumnType=None, **kwargs):
 @pytest.fixture(scope="class", params=COLUMNS)
 def registry_many2one_auto_detect(request, bloks_loaded):
     reset_db()
-    registry = init_registry_with_bloks([], _auto_detect_type, ColumnType=request.param)
+    registry = init_registry_with_bloks(
+        [], _auto_detect_type, ColumnType=request.param
+    )
     request.addfinalizer(registry.close)
     return registry
 
@@ -679,8 +685,12 @@ class TestMany2OneOld:
                     )
 
                 id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=Model.Test.use("id"), nullable=False)
-                test_id2 = String(foreign_key=Model.Test.use("id2"), nullable=False)
+                test_id = Integer(
+                    foreign_key=Model.Test.use("id"), nullable=False
+                )
+                test_id2 = String(
+                    foreign_key=Model.Test.use("id2"), nullable=False
+                )
                 test = Many2One(
                     model=Model.Test,
                     remote_columns=("id", "id2"),
@@ -703,8 +713,12 @@ class TestMany2OneOld:
             @register(Model)
             class Test2:
                 id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=Model.Test.use("id"), nullable=False)
-                test_id2 = String(foreign_key=Model.Test.use("id2"), nullable=False)
+                test_id = Integer(
+                    foreign_key=Model.Test.use("id"), nullable=False
+                )
+                test_id2 = String(
+                    foreign_key=Model.Test.use("id2"), nullable=False
+                )
                 test = Many2One(
                     model=Model.Test,
                     remote_columns=("id", "id2"),
@@ -727,8 +741,12 @@ class TestMany2OneOld:
             @register(Model)
             class Test2:
                 id = Integer(primary_key=True)
-                test_id = Integer(foreign_key=Model.Test.use("id"), nullable=False)
-                test_id2 = String(foreign_key=Model.Test.use("id2"), nullable=False)
+                test_id = Integer(
+                    foreign_key=Model.Test.use("id"), nullable=False
+                )
+                test_id2 = String(
+                    foreign_key=Model.Test.use("id2"), nullable=False
+                )
                 test = Many2One(model=Model.Test)
 
         registry = self.init_registry(add_in_registry)
@@ -771,7 +789,9 @@ class TestMany2OneOld:
     def test_many2one_with_multi_fk_expire_field(self):
         registry = self.init_registry(_two_remote_primary_keys)
         assert ("test",) in registry.expire_attributes["Model.Test2"]["test_id"]
-        assert ("test",) in registry.expire_attributes["Model.Test2"]["test_id2"]
+        assert ("test",) in registry.expire_attributes["Model.Test2"][
+            "test_id2"
+        ]
 
     def test_with_multi_foreign_key_on_unexisting_named_column(self):
         def add_in_registry():
@@ -783,7 +803,9 @@ class TestMany2OneOld:
             @register(Model)
             class Test2:
                 id = Integer(primary_key=True)
-                test = Many2One(model=Model.Test, column_names=("test_id", "test_id2"))
+                test = Many2One(
+                    model=Model.Test, column_names=("test_id", "test_id2")
+                )
 
         registry = self.init_registry(add_in_registry)
         test = registry.Test.insert(id2="10")

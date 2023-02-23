@@ -33,7 +33,9 @@ def init_session(request, configuration_loaded):
 
     if len(BlokManager.list()) == 0:
         BlokManager.load()
-    registry = RegistryManager.get(Configuration.get("db_name"), **additional_setting)
+    registry = RegistryManager.get(
+        Configuration.get("db_name"), **additional_setting
+    )
     registry.commit()
     # Add savepoint
     registry.begin_nested()

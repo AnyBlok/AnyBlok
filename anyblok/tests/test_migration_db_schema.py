@@ -88,7 +88,9 @@ def add_in_registry():
             @classmethod
             def define_table_args(cls):
                 table_args = super(TestCheck, cls).define_table_args()
-                return table_args + (CheckConstraint("integer > 0", name="test"),)
+                return table_args + (
+                    CheckConstraint("integer > 0", name="test"),
+                )
 
     @register(Model)
     class TestFKTarget:
@@ -109,7 +111,9 @@ def add_in_registry():
 
         integer = Int(primary_key=True)
         other = Int(
-            foreign_key=Model.TestFKTarget.use("integer").options(ondelete="cascade")
+            foreign_key=Model.TestFKTarget.use("integer").options(
+                ondelete="cascade"
+            )
         )
 
 
@@ -413,7 +417,9 @@ class TestMigrationDbSchema:
         report.apply_change()
         report = registry.migration.detect_changed()
         assert not (
-            report.log_has("Drop index anyblok_ix_test__other on test_db_schema.test")
+            report.log_has(
+                "Drop index anyblok_ix_test__other on test_db_schema.test"
+            )
         )
 
     def test_detect_type(self, registry):
@@ -478,7 +484,9 @@ class TestMigrationDbSchema:
         with cnx(registry) as conn:
             registry.TestFK2.__table__.drop(bind=conn)
             meta = MetaData()
-            meta._add_table("testfktarget", None, registry.TestFKTarget.__table__)
+            meta._add_table(
+                "testfktarget", None, registry.TestFKTarget.__table__
+            )
             registry.TestFK2.__table__ = Table(
                 "testfk2",
                 meta,
@@ -553,7 +561,9 @@ class TestMigrationDbSchema:
         report = registry.migration.detect_changed()
         assert not report.log_has(message)
 
-    @pytest.mark.skipif(sgdb_in(["MsSQL"]), reason="MsSQL does not add unique #121")
+    @pytest.mark.skipif(
+        sgdb_in(["MsSQL"]), reason="MsSQL does not add unique #121"
+    )
     def test_detect_add_unique_constraint(self, registry):
         with cnx(registry) as conn:
             registry.TestUnique.__table__.drop(bind=conn)
@@ -570,9 +580,13 @@ class TestMigrationDbSchema:
         assert report.log_has("Add unique constraint on testunique (other)")
         report.apply_change()
         report = registry.migration.detect_changed()
-        assert not (report.log_has("Add unique constraint on testunique (other)"))
+        assert not (
+            report.log_has("Add unique constraint on testunique (other)")
+        )
 
-    @pytest.mark.skipif(sgdb_in(["MsSQL"]), reason="MsSQL does not add unique #121")
+    @pytest.mark.skipif(
+        sgdb_in(["MsSQL"]), reason="MsSQL does not add unique #121"
+    )
     def test_detect_add_column_with_unique_constraint(self, registry):
         with cnx(registry) as conn:
             registry.TestUnique.__table__.drop(bind=conn)
@@ -588,13 +602,17 @@ class TestMigrationDbSchema:
         assert report.log_has("Add unique constraint on testunique (other)")
         report.apply_change()
         report = registry.migration.detect_changed()
-        assert not (report.log_has("Add unique constraint on testunique (other)"))
+        assert not (
+            report.log_has("Add unique constraint on testunique (other)")
+        )
 
     @pytest.mark.skipif(
         sgdb_in(["MySQL", "MariaDB"]),
         reason="MySQL transform unique constraint on index",
     )
-    @pytest.mark.skipif(sgdb_in(["MsSQL"]), reason="MsSQL does not drop unique #121")
+    @pytest.mark.skipif(
+        sgdb_in(["MsSQL"]), reason="MsSQL does not drop unique #121"
+    )
     def test_detect_drop_unique_anyblok_constraint(self, registry):
         with cnx(registry) as conn:
             registry.Test.__table__.drop(bind=conn)
@@ -666,12 +684,14 @@ class TestMigrationDbSchema:
 
         report = registry.migration.detect_changed()
         assert report.log_has(
-            "Drop check constraint anyblok_ck_test__check " "on test_db_schema.test"
+            "Drop check constraint anyblok_ck_test__check "
+            "on test_db_schema.test"
         )
         report.apply_change()
         report = registry.migration.detect_changed()
         assert not (
             report.log_has(
-                "Drop check constraint anyblok_ck_test__check " "on test_db_schema.test"
+                "Drop check constraint anyblok_ck_test__check "
+                "on test_db_schema.test"
             )
         )

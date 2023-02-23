@@ -37,7 +37,9 @@ class Helper:
         """Assert that the registry works and has no leftover test data."""
         # always True, but needs the DB and registry to work
         self.assertEqual(
-            self.registry.System.Blok.query().filter_by(name="no-such-blok").count(),
+            self.registry.System.Blok.query()
+            .filter_by(name="no-such-blok")
+            .count(),
             0,
         )
         # actual rollback of shared test data
@@ -105,7 +107,9 @@ class TestSharedDataTestCaseException(unittest.TestCase):
         suite.addTest(AfterSharedData("test_class_rollbacked"))
         suite.run(result)
 
-        self.assertEqual(run_order, ["normal", "rollbacked", "class_rollbacked"])
+        self.assertEqual(
+            run_order, ["normal", "rollbacked", "class_rollbacked"]
+        )
         self.assertEqual(result.testsRun, 3)
         self.assertFalse(result.failures)
         self.assertFalse(result.errors)

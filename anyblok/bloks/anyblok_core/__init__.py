@@ -70,7 +70,9 @@ class AnyBlokCore(Blok):
         )
         system_field = self.anyblok.migration.table("system_field")
         system_field.column().add(self.anyblok.System.Field.entity_type)
-        self.anyblok.execute("UPDATE system_field SET entity_type='Model.System.Field'")
+        self.anyblok.execute(
+            "UPDATE system_field SET entity_type='Model.System.Field'"
+        )
         query = """
             INSERT INTO system_field (
                 name,
@@ -89,7 +91,8 @@ class AnyBlokCore(Blok):
             FROM %(table)s
         """
         self.anyblok.execute(
-            query % {"entity_type": "Model.System.Column", "table": "system_column"}
+            query
+            % {"entity_type": "Model.System.Column", "table": "system_column"}
         )
         self.anyblok.execute(
             query
@@ -102,7 +105,9 @@ class AnyBlokCore(Blok):
         system_column.column("code").drop()
         system_column.column("ftype").drop()
         system_column.column("label").drop()
-        system_relationship = self.anyblok.migration.table("system_relationship")
+        system_relationship = self.anyblok.migration.table(
+            "system_relationship"
+        )
         system_relationship.column("code").drop()
         system_relationship.column("ftype").drop()
         system_relationship.column("label").drop()

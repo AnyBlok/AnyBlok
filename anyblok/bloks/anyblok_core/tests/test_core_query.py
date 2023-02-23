@@ -13,7 +13,9 @@ import pytest
 class TestQueryScope:
     def test_dictone(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Model.query().filter_by(name="Model.System.Blok")
+        query = registry.System.Model.query().filter_by(
+            name="Model.System.Blok"
+        )
         model = query.one()
         assert query.dictone() == {
             "name": model.name,

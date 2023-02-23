@@ -49,7 +49,9 @@ class SqlMixin:
             if key in state.attrs:
                 value = state.attrs.get(key).loaded_value
             elif (anyblok_column_prefix + key) in state.attrs:
-                value = state.attrs.get(anyblok_column_prefix + key).loaded_value
+                value = state.attrs.get(
+                    anyblok_column_prefix + key
+                ).loaded_value
             else:
                 continue  # pragma: no cover
 
@@ -196,7 +198,8 @@ class SqlMixin:
         for pk in _pks:
             if pk not in pks:  # pragma: no cover
                 raise SqlBaseException(
-                    "No primary key %s filled for %r" % (pk, cls.__registry_name__)
+                    "No primary key %s filled for %r"
+                    % (pk, cls.__registry_name__)
                 )
 
         return [getattr(cls, k) == v for k, v in pks.items()]
@@ -300,7 +303,9 @@ class SqlMixin:
             for pk in pks:
                 if fd[pk].get("model"):  # pragma: no cover
                     Model = cls.anyblok.get(fd[pk]["model"])
-                    hybrid_property_columns.extend(Model.get_hybrid_property_columns())
+                    hybrid_property_columns.extend(
+                        Model.get_hybrid_property_columns()
+                    )
 
         return hybrid_property_columns
 
@@ -430,7 +435,9 @@ class SqlMixin:
                     related_fields = related_fields.get_primary_keys()
                 # One2One, One2Many, Many2One or Many2Many ?
                 if field_property.uselist:
-                    result[field] = [r.to_dict(*related_fields) for r in field_value]
+                    result[field] = [
+                        r.to_dict(*related_fields) for r in field_value
+                    ]
                 else:
                     result[field] = field_value.to_dict(*related_fields)
 
@@ -471,7 +478,10 @@ class SqlMixin:
                 _fields.extend(
                     x
                     for x, y in model.items()
-                    if (isinstance(y, RelationShip) and not isinstance(y, Many2Many))
+                    if (
+                        isinstance(y, RelationShip)
+                        and not isinstance(y, Many2Many)
+                    )
                     for mapper in y.column_names
                     if mapper.attribute_name == field
                 )
@@ -534,11 +544,16 @@ class SqlMixin:
                 _fields.extend(
                     x
                     for x, y in model.items()
-                    if (isinstance(y, RelationShip) and not isinstance(y, Many2Many))
+                    if (
+                        isinstance(y, RelationShip)
+                        and not isinstance(y, Many2Many)
+                    )
                     for mapper in y.column_names
                     if mapper.attribute_name == field
                 )
-            elif isinstance(_field, RelationShip) and not isinstance(_field, Many2Many):
+            elif isinstance(_field, RelationShip) and not isinstance(
+                _field, Many2Many
+            ):
                 for mapper in _field.column_names:
                     _fields.append(mapper.attribute_name)
 
@@ -568,7 +583,9 @@ class SqlBase(SqlMixin):
             if not hasattr(attr.impl, "get_history"):
                 continue  # pragma: no cover
 
-            added, unmodified, deleted = attr.impl.get_history(state, state.dict)
+            added, unmodified, deleted = attr.impl.get_history(
+                state, state.dict
+            )
 
             if added or deleted:
                 field = attr.key
@@ -643,12 +660,16 @@ class SqlBase(SqlMixin):
             cls = self.__class__
             self.execute_sql_statement(
                 delete(cls).where(
-                    *cls.get_where_clause_from_primary_keys(**self.to_primary_keys())
+                    *cls.get_where_clause_from_primary_keys(
+                        **self.to_primary_keys()
+                    )
                 )
             )
             self.expunge()
         else:
-            model = self.anyblok.loaded_namespaces_first_step[self.__registry_name__]
+            model = self.anyblok.loaded_namespaces_first_step[
+                self.__registry_name__
+            ]
             fields = model.keys()
             mappers = self.__class__.find_remote_attribute_to_expire(*fields)
             self.expire_relationship_mapped(mappers)
@@ -678,7 +699,9 @@ class SqlBase(SqlMixin):
             return self.execute_sql_statement(
                 sqla_update(cls)
                 .where(
-                    *cls.get_where_clause_from_primary_keys(**self.to_primary_keys())
+                    *cls.get_where_clause_from_primary_keys(
+                        **self.to_primary_keys()
+                    )
                 )
                 .values(**values)
             ).rowcount

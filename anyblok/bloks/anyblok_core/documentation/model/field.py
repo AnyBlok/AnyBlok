@@ -45,7 +45,9 @@ class Field:
     @classmethod
     def getelements(cls, model):
         query = cls.filterField(cls.anyblok.System.Field.query())
-        return query.filter(cls.anyblok.System.Field.model == model.model.name).all()
+        return query.filter(
+            cls.anyblok.System.Field.model == model.model.name
+        ).all()
 
     @classmethod
     def header2RST(cls, doc):
@@ -77,7 +79,9 @@ class Field:
             self.toUML_field(dot)
         elif self.field.entity_type == "Model.System.Column":
             self.toUML_column(dot)
-        elif self.field.entity_type == "Model.System.RelationShip":  # pragma: no cover
+        elif (
+            self.field.entity_type == "Model.System.RelationShip"
+        ):  # pragma: no cover
             self.toUML_relationship(dot)
         else:
             logger.warning("Unknown entity type %r" % self.field.entity_type)
@@ -126,7 +130,9 @@ class Field:
             self.toSQL_field(dot)
         elif self.field.entity_type == "Model.System.Column":
             self.toSQL_column(dot)
-        elif self.field.entity_type == "Model.System.RelationShip":  # pragma: no cover
+        elif (
+            self.field.entity_type == "Model.System.RelationShip"
+        ):  # pragma: no cover
             self.toSQL_relationship(dot)
         else:
             logger.warning("Unknown entity type %r" % self.field.entity_type)
@@ -144,7 +150,9 @@ class Field:
         if self.field.foreign_key:  # pragma: no cover
             remote_table = dot.get_table(self.field.foreign_key.split(".")[0])
             if remote_table is None:
-                remote_table = dot.add_label(self.field.foreign_key.split(".")[0])
+                remote_table = dot.add_label(
+                    self.field.foreign_key.split(".")[0]
+                )
 
             table.add_foreign_key(
                 remote_table,

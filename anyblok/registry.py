@@ -116,7 +116,9 @@ class RegistryManager:
             unload_callback()  # pragma: no cover
 
     @classmethod
-    def get(cls, db_name, loadwithoutmigration=False, log_repeat=True, **kwargs):
+    def get(
+        cls, db_name, loadwithoutmigration=False, log_repeat=True, **kwargs
+    ):
         """Return an existing Registry
 
         If the Registry doesn't exist then the Registry are created and added
@@ -429,7 +431,9 @@ class Registry:
         registry = Registry('My database')
     """
 
-    def __init__(self, db_name, loadwithoutmigration=False, unittest=False, **kwargs):
+    def __init__(
+        self, db_name, loadwithoutmigration=False, unittest=False, **kwargs
+    ):
         self.db_name = db_name
         self.loadwithoutmigration = loadwithoutmigration
         self.unittest = unittest
@@ -493,7 +497,9 @@ class Registry:
 
         def _apply_engine_events(key):
             for i in iter_entry_points(key):
-                logger.info("Update engine event for %s from entrypoint %r" % (key, i))
+                logger.info(
+                    "Update engine event for %s from entrypoint %r" % (key, i)
+                )
                 i.load()(engine)
 
         _apply_engine_events("anyblok.engine.event")
@@ -516,7 +522,9 @@ class Registry:
         self.loaded_registries = {
             x + "_names": [] for x in RegistryManager.declared_entries
         }
-        self.loaded_cores = {core: [] for core in RegistryManager.declared_cores}
+        self.loaded_cores = {
+            core: [] for core in RegistryManager.declared_cores
+        }
         self.ordered_loaded_bloks = []
         self.loaded_namespaces = {}
         self.children_namespaces = {}
@@ -591,7 +599,9 @@ class Registry:
         query += " FROM system_blok"
         query += " WHERE state in :states"
         try:
-            res = self.execute(text(query).bindparams(states=states), fetchall=True)
+            res = self.execute(
+                text(query).bindparams(states=states), fetchall=True
+            )
         except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
             pass
@@ -822,7 +832,9 @@ class Registry:
                 )
 
         for optional in b.optional:
-            self.check_dependencies(optional, dependencies_to_install, toinstall)
+            self.check_dependencies(
+                optional, dependencies_to_install, toinstall
+            )
 
         if blok not in toinstall:
             dependencies_to_install.append(blok)
@@ -1015,11 +1027,15 @@ class Registry:
 
         def _apply_session_events(key):
             for i in iter_entry_points(key):
-                logger.info("Update session event for %s from entrypoint %r" % (key, i))
+                logger.info(
+                    "Update session event for %s from entrypoint %r" % (key, i)
+                )
                 i.load()(self.session)  # pragma: no cover
 
         _apply_session_events("anyblok.session.event")
-        _apply_session_events("anyblok.session.event." + self.engine.dialect.name)
+        _apply_session_events(
+            "anyblok.session.event." + self.engine.dialect.name
+        )
 
         for funct in self.additional_setting.get("anyblok.session.event", []):
             logger.info("Update session event %r" % funct)
@@ -1116,9 +1132,15 @@ class Registry:
         :param attribute_names: list of string, names of the attr to expire
         """
         if attribute_names:
-            hybrid_property_columns = obj.__class__.get_hybrid_property_columns()
+            hybrid_property_columns = (
+                obj.__class__.get_hybrid_property_columns()
+            )
             attribute_names = [
-                (anyblok_column_prefix + x if x in hybrid_property_columns else x)
+                (
+                    anyblok_column_prefix + x
+                    if x in hybrid_property_columns
+                    else x
+                )
                 for x in attribute_names
             ]
 
@@ -1134,7 +1156,9 @@ class Registry:
         :param attribute_names: list of string, names of the attr to expire
         """
         if attribute_names:
-            hybrid_property_columns = obj.__class__.get_hybrid_property_columns()
+            hybrid_property_columns = (
+                obj.__class__.get_hybrid_property_columns()
+            )
             for attribute_name in attribute_names:
                 if attribute_name in hybrid_property_columns:
                     attribute_name = anyblok_column_prefix + attribute_name
@@ -1172,7 +1196,11 @@ class Registry:
         """
         if attribute_names:
             attribute_names = [
-                (anyblok_column_prefix + x if x in obj.hybrid_property_columns else x)
+                (
+                    anyblok_column_prefix + x
+                    if x in obj.hybrid_property_columns
+                    else x
+                )
                 for x in attribute_names
             ]
 
@@ -1398,7 +1426,9 @@ class Registry:
 
         query = Blok.query()
         query = query.filter(Blok.name.in_(conflicting_bloks))
-        query = query.filter(Blok.state.in_(["installed", "toinstall", "toupdate"]))
+        query = query.filter(
+            Blok.state.in_(["installed", "toinstall", "toupdate"])
+        )
         if query.count():
             raise RegistryConflictingException(
                 "Installation of the blok %r is forbidden, because the blok "
@@ -1432,7 +1462,8 @@ class Registry:
         if blok.state not in in_states:
             raise RegistryException(
                 "Apply state %r is forbidden because the state %r of "
-                "blok %r is not one of %r" % (state, blok.state, blok_name, in_states)
+                "blok %r is not one of %r"
+                % (state, blok.state, blok_name, in_states)
             )
 
         logger.info(

@@ -103,11 +103,15 @@ class TableMapperPlugin(ModelPluginBase):
         def fnct(cls_):
             if cls_.__registry_name__ == namespace:
                 res = super(new_base, cls_).define_table_args()
-                fks = [x.name for x in res if isinstance(x, ForeignKeyConstraint)]
+                fks = [
+                    x.name for x in res if isinstance(x, ForeignKeyConstraint)
+                ]
 
                 t_args = []
                 for field in table_args:
-                    for constraint in field.update_table_args(self.registry, cls_):
+                    for constraint in field.update_table_args(
+                        self.registry, cls_
+                    ):
                         if (
                             not isinstance(constraint, ForeignKeyConstraint)
                             or constraint.name not in fks
@@ -151,7 +155,9 @@ class TableMapperPlugin(ModelPluginBase):
 
             def __table_args__(cls_):
                 try:
-                    res = cls_.define_table_args() + (cls_.define_table_kwargs(),)
+                    res = cls_.define_table_args() + (
+                        cls_.define_table_kwargs(),
+                    )
                 except NoInspectionAvailable:  # pragma: no cover
                     raise ModelException(
                         "A Index  or constraint on the model "

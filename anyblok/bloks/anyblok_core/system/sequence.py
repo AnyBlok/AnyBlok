@@ -105,7 +105,9 @@ class Sequence:
         seq = SQLASequence(cls._cls_seq_name)
         seq.create(cls.anyblok.bind)
 
-        to_create = getattr(cls.anyblok, "_need_sequence_to_create_if_not_exist", ())
+        to_create = getattr(
+            cls.anyblok, "_need_sequence_to_create_if_not_exist", ()
+        )
         if to_create is None:
             return
 

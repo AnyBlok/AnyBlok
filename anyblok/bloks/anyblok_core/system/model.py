@@ -47,9 +47,13 @@ class Model:
         cls.anyblok.System.Cache.invalidate(model, "_fields_description")
         cls.anyblok.System.Cache.invalidate(model, "getFieldType")
         cls.anyblok.System.Cache.invalidate(model, "get_primary_keys")
-        cls.anyblok.System.Cache.invalidate(model, "find_remote_attribute_to_expire")
+        cls.anyblok.System.Cache.invalidate(
+            model, "find_remote_attribute_to_expire"
+        )
         cls.anyblok.System.Cache.invalidate(model, "find_relationship")
-        cls.anyblok.System.Cache.invalidate(model, "get_hybrid_property_columns")
+        cls.anyblok.System.Cache.invalidate(
+            model, "get_hybrid_property_columns"
+        )
 
     @classmethod
     def get_field_model(cls, field):
@@ -153,7 +157,9 @@ class Model:
 
         # remove model and field which are not in loaded_namespaces
         query = cls.query()
-        query = query.filter(cls.name.notin_(cls.anyblok.loaded_namespaces.keys()))
+        query = query.filter(
+            cls.name.notin_(cls.anyblok.loaded_namespaces.keys())
+        )
         Field = cls.anyblok.System.Field
         for model_ in query.all():
             Q = Field.query().filter(Field.model == model_.name)

@@ -117,15 +117,21 @@ class ViewFactory(BaseFactory):
                 view._columns.replace(col)
 
             metadata = self.registry.declarativebase.metadata
-            event.listen(metadata, "before_create", DropView(view, if_exists=True))
+            event.listen(
+                metadata, "before_create", DropView(view, if_exists=True)
+            )
             event.listen(metadata, "after_create", CreateView(view, selectable))
-            event.listen(metadata, "before_drop", DropView(view, if_exists=True))
+            event.listen(
+                metadata, "before_drop", DropView(view, if_exists=True)
+            )
             self.registry.loaded_views[tablename] = view
 
         pks = [
             col
             for col in properties["loaded_columns"]
-            if getattr(getattr(base, anyblok_column_prefix + col), "primary_key", False)
+            if getattr(
+                getattr(base, anyblok_column_prefix + col), "primary_key", False
+            )
         ]
 
         if not pks:
@@ -141,20 +147,30 @@ class ViewFactory(BaseFactory):
     def get_mapper_properties(self, base, view, properties):
         mapper_properties = base.define_mapper_args()
         for field in properties["loaded_columns"]:
-            if not hasattr(properties[anyblok_column_prefix + field], "anyblok_field"):
+            if not hasattr(
+                properties[anyblok_column_prefix + field], "anyblok_field"
+            ):
                 mapper_properties[field] = getattr(view.c, field)
                 continue
 
-            anyblok_field = properties[anyblok_column_prefix + field].anyblok_field
+            anyblok_field = properties[
+                anyblok_column_prefix + field
+            ].anyblok_field
             kwargs = anyblok_field.kwargs.copy()
             if "foreign_keys" in kwargs:
                 foreign_keys = kwargs["foreign_keys"][1:][:-1].split(", ")
-                foreign_keys = [getattr(view.c, x.split(".")[1]) for x in foreign_keys]
+                foreign_keys = [
+                    getattr(view.c, x.split(".")[1]) for x in foreign_keys
+                ]
                 kwargs["foreign_keys"] = foreign_keys
 
             if anyblok_field.model.model_name == base.__registry_name__:
-                remote_columns = get_columns(view, kwargs["info"]["remote_columns"])
-                local_columns = get_columns(view, kwargs["info"]["local_columns"])
+                remote_columns = get_columns(
+                    view, kwargs["info"]["remote_columns"]
+                )
+                local_columns = get_columns(
+                    view, kwargs["info"]["local_columns"]
+                )
 
                 assert len(remote_columns) == len(local_columns)
                 primaryjoin = []

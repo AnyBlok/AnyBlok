@@ -269,7 +269,9 @@ class TestSingleTablePoly:
             Manager.insert(name="Manager %d" % index)
 
         assert (
-            Employee.execute_sql_statement(Employee.delete_sql_statement()).rowcount
+            Employee.execute_sql_statement(
+                Employee.delete_sql_statement()
+            ).rowcount
             == 9
         )
 
@@ -284,7 +286,9 @@ class TestSingleTablePoly:
             Manager.insert(name="Manager %d" % index)
 
         assert (
-            Engineer.execute_sql_statement(Engineer.delete_sql_statement()).rowcount
+            Engineer.execute_sql_statement(
+                Engineer.delete_sql_statement()
+            ).rowcount
             == 9
         )
 
@@ -299,7 +303,10 @@ class TestSingleTablePoly:
             Manager.insert(name="Manager %d" % index)
 
         assert (
-            Manager.execute_sql_statement(Manager.delete_sql_statement()).rowcount == 3
+            Manager.execute_sql_statement(
+                Manager.delete_sql_statement()
+            ).rowcount
+            == 3
         )
 
 
@@ -450,7 +457,9 @@ class TestMultiTablePolyFk:
         registry = registry_multi_table_poly_fk
         room = registry.Room.insert()
         check_registry(registry.Employee, room=room)
-        check_registry(registry.Engineer, engineer_name="An engineer", room=room)
+        check_registry(
+            registry.Engineer, engineer_name="An engineer", room=room
+        )
 
     def test_getFieldType_with_relationship(self, registry_multi_table_poly_fk):
         registry = registry_multi_table_poly_fk
@@ -562,7 +571,9 @@ class TestPolymorphic:
         )
         room = registry.Room.insert()
         check_registry(registry.Employee, room=room)
-        check_registry(registry.Engineer, engineer_name="An engineer", room=room)
+        check_registry(
+            registry.Engineer, engineer_name="An engineer", room=room
+        )
 
     def test_getFieldType(self):
         registry = self.init_registry(multi_table_poly)
@@ -633,7 +644,9 @@ class TestPolymorphic:
 
         registry = self.init_registry(single_table_with_datetime_auto_update)
         check_registry(registry.Employee)
-        engineer = check_registry(registry.Engineer, engineer_name="An engineer")
+        engineer = check_registry(
+            registry.Engineer, engineer_name="An engineer"
+        )
         assert engineer.update_at is None
         manager = check_registry(registry.Manager, manager_name="An manager")
         assert manager.update_at is None
@@ -653,7 +666,9 @@ class TestPolymorphic:
 
         registry = self.init_registry(multi_table_with_datetime_auto_update)
         check_registry(registry.Employee)
-        engineer = check_registry(registry.Engineer, engineer_name="An engineer")
+        engineer = check_registry(
+            registry.Engineer, engineer_name="An engineer"
+        )
         assert engineer.update_at is None
         manager = check_registry(registry.Manager, manager_name="An manager")
         assert manager.update_at is None

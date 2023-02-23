@@ -150,7 +150,9 @@ class ModelAttribute:
         """
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
-        col = registry.loaded_namespaces_first_step[self.model_name][column_name]
+        col = registry.loaded_namespaces_first_step[self.model_name][
+            column_name
+        ]
         return col
 
     def get_fk_column(self, registry):
@@ -436,7 +438,8 @@ def ModelAttributeAdapter(Model):
     if isinstance(Model, str):
         if "=>" not in Model:
             raise ModelAttributeAdapterException(
-                "Wrong value %r impossible to find model and attribtue" % (Model)
+                "Wrong value %r impossible to find model and attribtue"
+                % (Model)
             )
         model, attribute = Model.split("=>")
         return ModelAttribute(model, attribute)

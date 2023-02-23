@@ -63,7 +63,9 @@ class Field:
         :param properties: properties known to the model
         """
         if self.ignore_migration:
-            table = registry.loaded_namespaces_first_step[namespace]["__tablename__"]
+            table = registry.loaded_namespaces_first_step[namespace][
+                "__tablename__"
+            ]
             ignore_migration_for = registry.ignore_migration_for.get(table)
             if ignore_migration_for is True:
                 return  # pragma: no cover
@@ -161,7 +163,9 @@ class Field:
 
         return setter_column
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname, properties):
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
         """Return the instance of the real field
 
         :param registry: current registry
@@ -189,7 +193,9 @@ class Field:
 
         :exception: FieldException
         """
-        raise FieldException("No native type for this field")  # pragma: no cover
+        raise FieldException(
+            "No native type for this field"
+        )  # pragma: no cover
 
     def must_be_declared_as_attr(self):
         """Return False, it is the default value"""
@@ -231,7 +237,9 @@ class Field:
         elif isinstance(value, (list, tuple)):  # pragma: no cover
             res = padding + "%c ``%s``:\n\n" % (bullet, key)
             next_bullet = bullets[level + 1]
-            res += "\n".join(padding + "  %c ``%r``" % (next_bullet, x) for x in value)
+            res += "\n".join(
+                padding + "  %c ``%r``" % (next_bullet, x) for x in value
+            )
             res += "\n"
             return res
         else:
@@ -288,7 +296,9 @@ class Function(Field):
 
     """
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname, properties):
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
         """Return the property of the field
 
         :param registry: current registry
@@ -443,7 +453,9 @@ class JsonRelated(Field):
 
         return fexpr
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname, properties):
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
         """Return the property of the field
 
         :param registry: current registry

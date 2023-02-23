@@ -16,7 +16,9 @@ class Model(Declarations.Mixin.DocElement):
         self.fields = []
         self.attributes = []
         if self.exist():
-            self._auto_doc(self.anyblok.Documentation.Model.Field, self.fields, self)
+            self._auto_doc(
+                self.anyblok.Documentation.Model.Field, self.fields, self
+            )
             self._auto_doc(
                 self.anyblok.Documentation.Model.Attribute,
                 self.attributes,
@@ -52,7 +54,9 @@ class Model(Declarations.Mixin.DocElement):
         unwanted_models = Configuration.get("doc_unwanted_models")
         if unwanted_models:  # pragma: no cover
             unwanted_models = cls.get_all_models(unwanted_models)
-            unwanted_models = [x for x in unwanted_models if x not in wanted_models]
+            unwanted_models = [
+                x for x in unwanted_models if x not in wanted_models
+            ]
             query = query.filter(Model.name.notin_(unwanted_models))
 
         return query
@@ -82,7 +86,9 @@ class Model(Declarations.Mixin.DocElement):
 
     def toRST_field(self, doc):
         if self.fields:
-            self._toRST(doc, self.anyblok.Documentation.Model.Field, self.fields)
+            self._toRST(
+                doc, self.anyblok.Documentation.Model.Field, self.fields
+            )
 
     def toRST_method(self, doc):
         if self.attributes:

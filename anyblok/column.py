@@ -253,7 +253,9 @@ class Column(Field):
 
         return args
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname, properties):
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
         """Return the instance of the real field
 
         :param registry: current registry
@@ -267,7 +269,9 @@ class Column(Field):
         kwargs = self.kwargs.copy()
         if "info" not in kwargs:
             kwargs["info"] = {}
-        args = self.format_foreign_key(registry, namespace, fieldname, args, kwargs)
+        args = self.format_foreign_key(
+            registry, namespace, fieldname, args, kwargs
+        )
 
         kwargs["info"]["label"] = self.label
         if self.sequence:
@@ -280,7 +284,9 @@ class Column(Field):
 
         if self.default_val is not NoDefaultValue:
             if isinstance(self.default_val, str):
-                kwargs["default"] = wrap_default(registry, namespace, self.default_val)
+                kwargs["default"] = wrap_default(
+                    registry, namespace, self.default_val
+                )
             elif isinstance(self.default_val, ColumnDefaultValue):
                 kwargs["default"] = self.default_val.get_default_callable(
                     registry, namespace, fieldname, properties
@@ -349,7 +355,9 @@ class Column(Field):
 class ForbiddenPrimaryKey:
     """Mixin to forbid primary key on column type"""
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname, properties):
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
         if self.kwargs.get("primary_key") is True:
             raise FieldException(
                 f"{self.__class__} column `{namespace}.{fieldname}` "
@@ -703,7 +711,10 @@ class Interval(Column):
     def setter_format_value(self, value):
         if self.encrypt_key:
             value = dumps(
-                {x: getattr(value, x) for x in ["days", "seconds", "microseconds"]}
+                {
+                    x: getattr(value, x)
+                    for x in ["days", "seconds", "microseconds"]
+                }
             )
 
         return value
@@ -856,7 +867,9 @@ class Password(Column):
         if "foreign_key" in kwargs:
             raise FieldException("Column Password can not have a foreign key")
 
-        self.sqlalchemy_type = PasswordType(max_length=self.size, **crypt_context)
+        self.sqlalchemy_type = PasswordType(
+            max_length=self.size, **crypt_context
+        )
         super(Password, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
@@ -1085,7 +1098,9 @@ class Selection(Column):
 
         return value
 
-    def get_sqlalchemy_mapping(self, registry, namespace, fieldname, properties):
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
         """Return sqlalchmy mapping
 
         :param registry: the current registry
@@ -1344,7 +1359,9 @@ class Sequence(String):
                 " %r" % kwargs["foreign_key"]
             )
         if "default" in kwargs:
-            raise FieldException("Sequence column can not define a default " "value")
+            raise FieldException(
+                "Sequence column can not define a default " "value"
+            )
         kwargs["default"] = ColumnDefaultValue(self.wrap_default)
 
         self.code = kwargs.pop("code") if "code" in kwargs else None
@@ -1544,7 +1561,9 @@ class PhoneNumber(Column):
         self.max_length = max_length
         kwargs.pop("type_", None)
 
-        self.sqlalchemy_type = PhoneNumberType(region=region, max_length=max_length)
+        self.sqlalchemy_type = PhoneNumberType(
+            region=region, max_length=max_length
+        )
         super(PhoneNumber, self).__init__(*args, **kwargs)
 
     def setter_format_value(self, value):
@@ -1663,7 +1682,8 @@ class Country(Column):
             )
 
         self.choices = {
-            getattr(country, mode): country.name for country in pycountry.countries
+            getattr(country, mode): country.name
+            for country in pycountry.countries
         }
         super(Country, self).__init__(*args, **kwargs)
 

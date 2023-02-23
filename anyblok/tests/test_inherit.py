@@ -474,7 +474,9 @@ class TestInherit:
         self.check_registry(registry.Test)
 
     def test_mixin_one_model_with_subclass_and_subclass_mixin(self):
-        registry = self.init_registry(mixin_one_model_with_subclass_and_subclass_mixin)
+        registry = self.init_registry(
+            mixin_one_model_with_subclass_and_subclass_mixin
+        )
         self.check_registry(registry.Test)
 
     def test_inherit_by_another_model(self):
@@ -487,7 +489,9 @@ class TestInherit:
         self.check_registry(registry.Test2)
 
     def test_inherit_by_another_model_and_subclass_mainmodel(self):
-        registry = self.init_registry(inherit_by_another_model_and_subclass_mainmodel)
+        registry = self.init_registry(
+            inherit_by_another_model_and_subclass_mainmodel
+        )
         self.check_registry(registry.Test)
 
     def check_inherit_base(self, function, value):
@@ -499,13 +503,17 @@ class TestInherit:
         self.check_inherit_base(inherit_base_and_add_method, 4)
 
     def test_inherit_base_and_add_method_after_create_model(self):
-        self.check_inherit_base(inherit_base_and_add_method_after_create_model, 4)
+        self.check_inherit_base(
+            inherit_base_and_add_method_after_create_model, 4
+        )
 
     def test_inherit_base_and_add_method_sub_classes(self):
         self.check_inherit_base(inherit_base_and_add_method_sub_classes, 7)
 
     def test_inherit_base_and_add_method_sub_classes_by_mixin(self):
-        self.check_inherit_base(inherit_base_and_add_method_sub_classes_by_mixin, 7)
+        self.check_inherit_base(
+            inherit_base_and_add_method_sub_classes_by_mixin, 7
+        )
 
     def check_inherit_sql_base(self, function, value):
         registry = self.init_registry(function)

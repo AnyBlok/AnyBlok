@@ -57,7 +57,9 @@ class TestCoreSQLBase:
         Test = registry_declare_model.Test
         t1 = Test.insert(id2=1)
         assert (
-            Test.execute_sql_statement(Test.select_sql_statement()).scalars().first()
+            Test.execute_sql_statement(Test.select_sql_statement())
+            .scalars()
+            .first()
             == t1
         )
 
@@ -87,7 +89,10 @@ class TestCoreSQLBase:
         registry.Test.multi_insert(*[{"id2": x} for x in range(nb_value)])
         assert registry.Test.query().count() == nb_value
         for x in range(nb_value):
-            assert registry.Test.query().filter(registry.Test.id2 == x).count() == 1
+            assert (
+                registry.Test.query().filter(registry.Test.id2 == x).count()
+                == 1
+            )
 
     def test_classmethod_delete(self, registry_declare_model):
         registry = registry_declare_model
@@ -96,7 +101,9 @@ class TestCoreSQLBase:
         Test.multi_insert(*[{"id2": x} for x in range(nb_value)])
         assert Test.query().count() == nb_value
         id2 = 1
-        Test.execute_sql_statement(Test.delete_sql_statement().where(Test.id2 == id2))
+        Test.execute_sql_statement(
+            Test.delete_sql_statement().where(Test.id2 == id2)
+        )
         assert registry.Test.query().count() == nb_value - 1
         assert (
             registry.Test.query().filter(registry.Test.id2 != id2).count()
@@ -178,7 +185,9 @@ class TestCoreSQLBase:
             ).rowcount
             == 1
         )
-        assert registry.Test.query().filter(registry.Test.id2 == 100).first() == t
+        assert (
+            registry.Test.query().filter(registry.Test.id2 == 100).first() == t
+        )
 
     def test_update(self, registry_declare_model):
         registry = registry_declare_model
@@ -186,7 +195,9 @@ class TestCoreSQLBase:
         registry.Test.multi_insert(*[{"id2": x} for x in range(nb_value)])
         t = registry.Test.query().first()
         assert t.update(id2=100) == 1
-        assert registry.Test.query().filter(registry.Test.id2 == 100).first() == t
+        assert (
+            registry.Test.query().filter(registry.Test.id2 == 100).first() == t
+        )
 
     def test_update_byquery(self, registry_declare_model):
         registry = registry_declare_model
@@ -194,7 +205,9 @@ class TestCoreSQLBase:
         registry.Test.multi_insert(*[{"id2": x} for x in range(nb_value)])
         t = registry.Test.query().first()
         assert t.update(byquery=True, id2=100) == 1
-        assert registry.Test.query().filter(registry.Test.id2 == 100).first() == t
+        assert (
+            registry.Test.query().filter(registry.Test.id2 == 100).first() == t
+        )
 
     def test_get_primary_keys(self, registry_declare_model):
         registry = registry_declare_model
@@ -249,7 +262,9 @@ class TestCoreSQLBaseM2O:
         request.addfinalizer(transaction.rollback)
         return
 
-    def test_delete_entry_added_in_relationship(self, registry_declare_model_with_m2o):
+    def test_delete_entry_added_in_relationship(
+        self, registry_declare_model_with_m2o
+    ):
         registry = registry_declare_model_with_m2o
         t1 = registry.Test.insert(name="t1")
         t2 = registry.Test2.insert(name="t2", test=t1)
@@ -307,7 +322,9 @@ class TestCoreSQLBaseM2O:
             "test2": [{"name": "t2"}],
         }
 
-    def test_to_dict_m2o_with_all_columns(self, registry_declare_model_with_m2o):
+    def test_to_dict_m2o_with_all_columns(
+        self, registry_declare_model_with_m2o
+    ):
         registry = registry_declare_model_with_m2o
         t1 = registry.Test.insert(name="t1")
         t2 = registry.Test2.insert(name="t2", test=t1)
@@ -324,7 +341,9 @@ class TestCoreSQLBaseM2O:
             "test": {"name": "t1", "id": t1.id, "test2": [{"id": t2.id}]},
         }
 
-    def test_to_dict_o2m_with_all_columns(self, registry_declare_model_with_m2o):
+    def test_to_dict_o2m_with_all_columns(
+        self, registry_declare_model_with_m2o
+    ):
         registry = registry_declare_model_with_m2o
         t1 = registry.Test.insert(name="t1")
         t2 = registry.Test2.insert(name="t2", test=t1)
@@ -438,7 +457,9 @@ class TestCoreSQLBaseM2O:
         assert t2.test_id is None
         assert t3.test2 == []
 
-    def test_find_relationship_by_relationship(self, registry_declare_model_with_m2o):
+    def test_find_relationship_by_relationship(
+        self, registry_declare_model_with_m2o
+    ):
         registry = registry_declare_model_with_m2o
         fields = registry.Test2.find_relationship("test")
         assert "test" in fields
@@ -525,7 +546,9 @@ class TestCoreSQLBaseo2O:
             "test2": {"name": "t2"},
         }
 
-    def test_to_dict_o2o_with_all_columns(self, registry_declare_model_with_o2o):
+    def test_to_dict_o2o_with_all_columns(
+        self, registry_declare_model_with_o2o
+    ):
         registry = registry_declare_model_with_o2o
         t1 = registry.Test.insert(name="t1")
         t2 = registry.Test2.insert(name="t2", test=t1)
@@ -740,7 +763,9 @@ class TestCoreSQLBasem2m:
             "test2": [{"name": "t2"}],
         }
 
-    def test_to_dict_m2m_with_all_columns(self, registry_declare_model_with_m2m):
+    def test_to_dict_m2m_with_all_columns(
+        self, registry_declare_model_with_m2m
+    ):
         registry = registry_declare_model_with_m2m
         t1 = registry.Test.insert(name="t1")
         t2 = registry.Test2.insert(name="t2")
@@ -819,5 +844,7 @@ class TestCoreSQLBasem2m:
         t1 = registry.Test.insert(name="t1")
         t2 = registry.Test2.insert(name="t2")
         t2.test.append(t1)
-        wanted = "<Model.Test2(id=%s, name='t2', test=<Model.Test len(1)>)>" % t2.id
+        wanted = (
+            "<Model.Test2(id=%s, name='t2', test=<Model.Test len(1)>)>" % t2.id
+        )
         assert repr(t2) == wanted

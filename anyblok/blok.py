@@ -235,7 +235,9 @@ class BlokManager:
                 bloks.append((blok.priority, i.name))
 
             if not count:
-                raise BlokManagerException("Invalid bloks group %r" % entry_point)
+                raise BlokManagerException(
+                    "Invalid bloks group %r" % entry_point
+                )
 
         # Empty the ordered blok to reload it depending on the priority
         cls.ordered_bloks = []

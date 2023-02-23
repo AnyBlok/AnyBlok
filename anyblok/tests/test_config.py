@@ -158,8 +158,12 @@ class TestConfiguration:
         self.assertAdded("new-group", function_=fnct_configuration)
 
     def test_add_with_label(self):
-        Configuration.add("new-group", label="One label", function_=fnct_configuration)
-        self.assertAdded("new-group", label="One label", function_=fnct_configuration)
+        Configuration.add(
+            "new-group", label="One label", function_=fnct_configuration
+        )
+        self.assertAdded(
+            "new-group", label="One label", function_=fnct_configuration
+        )
 
     def test_add_decorator(self):
         @Configuration.add("new-group")
@@ -181,20 +185,26 @@ class TestConfiguration:
 
     def test_fnct_plugins_config(self):
         option = "anyblok.tests.test_config:MockPluginFnct"
-        Configuration.configuration["option"] = ConfigOption(option, AnyBlokPlugin)
+        Configuration.configuration["option"] = ConfigOption(
+            option, AnyBlokPlugin
+        )
         res = Configuration.get("option")
         assert MockPluginFnct is res
 
     def test_class_plugins_config(self):
         option = "anyblok.tests.test_config:MockPluginClass"
-        Configuration.configuration["option"] = ConfigOption(option, AnyBlokPlugin)
+        Configuration.configuration["option"] = ConfigOption(
+            option, AnyBlokPlugin
+        )
         res = Configuration.get("option")
         assert MockPluginClass is res
 
     def test_wrong_plugins_config(self):
         option = "anyblok.tests.test_config:MockPluginWrong"
         with pytest.raises(ImportError):
-            Configuration.configuration["option"] = ConfigOption(option, AnyBlokPlugin)
+            Configuration.configuration["option"] = ConfigOption(
+                option, AnyBlokPlugin
+            )
 
     def test_update(self):
         Configuration.update(one_option=1)
@@ -442,7 +452,9 @@ class TestConfiguration:
         assert Configuration.groups["new-group"] == [fnct_other_configuration]
 
     def test_remove_label(self):
-        Configuration.add("new-group", label="One label", function_=fnct_configuration)
+        Configuration.add(
+            "new-group", label="One label", function_=fnct_configuration
+        )
         Configuration.remove_label("new-group")
         with pytest.raises(KeyError):
             Configuration.labels["AnyBlok"]["new-group"]
@@ -493,7 +505,9 @@ class TestConfiguration:
         )
 
     def test_parse_option_configuration_with_extend(self):
-        args = MockArgParseArguments(configfile="mockblok/mock_configuration_file.cfg")
+        args = MockArgParseArguments(
+            configfile="mockblok/mock_configuration_file.cfg"
+        )
         Configuration.parse_options(args)
         self.assertConfig(
             {
@@ -536,7 +550,9 @@ class TestConfiguration:
     def test_add_deprecated_argument(self):
         parser = self.get_parser()
         with pytest.warns(DeprecationWarning) as record:
-            parser.add_argument("--value", dest="value", deprecated="test deprecated")
+            parser.add_argument(
+                "--value", dest="value", deprecated="test deprecated"
+            )
             assert str(record.list[0].message) == "test deprecated"
 
         with pytest.warns(DeprecationWarning) as record:
@@ -589,7 +605,10 @@ class TestConfiguration:
         assert Configuration.get("value") == "2"
 
     def test_add_application_properties(self):
-        assert Configuration.applications.get("test_add_application_properties") is None
+        assert (
+            Configuration.applications.get("test_add_application_properties")
+            is None
+        )
         Configuration.add_application_properties(
             "test_add_application_properties",
             ["logging"],
@@ -599,7 +618,9 @@ class TestConfiguration:
             Configuration.applications.get("test_add_application_properties")
             is not None
         )
-        assert Configuration.applications["test_add_application_properties"] == {
+        assert Configuration.applications[
+            "test_add_application_properties"
+        ] == {
             "configuration_groups": ["config", "database", "logging"],
             "description": "Just a test",
         }
