@@ -7,9 +7,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 from logging import getLogger
 
-import os
 import pytest
 import sqlalchemy
 from sqlalchemy import event
@@ -32,8 +32,9 @@ def init_session(request, configuration_loaded):
     # Init registry
     additional_setting = {
         "unittest": True,
-        "loadwithoutmigration": eval(os.environ.get(
-            "ANYBLOK_UNITTEST_WITHOUT_MIGRATION", "False")),
+        "loadwithoutmigration": eval(
+            os.environ.get("ANYBLOK_UNITTEST_WITHOUT_MIGRATION", "False")
+        ),
     }
 
     if len(BlokManager.list()) == 0:

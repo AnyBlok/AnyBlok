@@ -88,6 +88,15 @@ class TestCache:
         cache = caches[0]
         assert cache.indentify == ("Model.Test", "method_cached")
 
+    def test_clear_invalidate_cache(self, registry_method_cached):
+        registry = registry_method_cached
+        Cache = registry.System.Cache
+        # call it before to clear cache and to be predictible
+        Cache.get_invalidation()
+        Cache.insert(registry_name="Model.Test", method="method_cached")
+        Cache.clear_invalidate_cache()
+        assert not len(Cache.get_invalidation())
+
 
 class TestSimpleCache:
     @pytest.fixture(autouse=True)

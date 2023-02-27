@@ -162,17 +162,15 @@ def apply_cache(attr, method, registry, namespace, base, properties):
     :rtype: new base
     """
     if hasattr(method, "is_cache_method") and method.is_cache_method is True:
-        if namespace not in registry.caches:
-            registry.caches[namespace] = {attr: []}
-        elif attr not in registry.caches[namespace]:
-            registry.caches[namespace][attr] = []
+        cmodel = registry.caches.setdefault(namespace, {attr: []})
+        cattr = cmodel.setdefault(attr, [])
 
         @lru_cache(maxsize=method.size)
         def wrapper(*args, **kwargs):
             return method(*args, **kwargs)
 
         wrapper.indentify = (namespace, attr)
-        registry.caches[namespace][attr].append(wrapper)
+        cattr.append(wrapper)
         if method.is_cache_classmethod:
             return {attr: classmethod(wrapper)}
         else:
