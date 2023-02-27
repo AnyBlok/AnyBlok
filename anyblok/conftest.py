@@ -9,6 +9,7 @@
 
 from logging import getLogger
 
+import os
 import pytest
 import sqlalchemy
 from sqlalchemy import event
@@ -29,7 +30,11 @@ def configuration_loaded(request):
 @pytest.fixture(scope="session")
 def init_session(request, configuration_loaded):
     # Init registry
-    additional_setting = {"unittest": True}
+    additional_setting = {
+        "unittest": True,
+        "loadwithoutmigration": eval(os.environ.get(
+            "ANYBLOK_UNITTEST_WITHOUT_MIGRATION", "False")),
+    }
 
     if len(BlokManager.list()) == 0:
         BlokManager.load()

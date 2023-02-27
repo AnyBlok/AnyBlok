@@ -17,7 +17,6 @@ System = Declarations.Model.System
 @register(System)
 class Cache:
     last_cache_id = None
-    lrus = {}
 
     id = Integer(primary_key=True)
     registry_name = String(nullable=False)
@@ -42,13 +41,14 @@ class Cache:
     def invalidate_all(cls):
         res = []
         for registry_name, methods in cls.anyblok.caches.items():
-            for method in methods.keys():
+            for method, caches in methods.items():
                 res.append(dict(registry_name=registry_name, method=method))
+                for cache in caches:
+                    cache.cache_clear()
 
         if res:
-            cls.multi_insert(*res)
-
-        cls.clear_invalidate_cache()
+            instances = cls.multi_insert(*res)
+            cls.last_cache_id = max(i.id for i in instances)
 
     @classmethod
     def invalidate(cls, registry_name, method):
@@ -63,7 +63,10 @@ class Cache:
         def insert(registry_name=None, method=None):
             if registry_name in caches:
                 if method in caches[registry_name]:
-                    cls.insert(registry_name=registry_name, method=method)
+                    cls.last_cache_id = cls.insert(
+                        registry_name=registry_name, method=method).id
+                    for cache in caches[registry_name][method]:
+                        cache.cache_clear()
                 else:
                     raise CacheException(  # pragma: no cover
                         "Unknown cached method %r" % method
@@ -76,28 +79,29 @@ class Cache:
         elif hasattr(registry_name, "__registry_name__"):
             insert(registry_name=registry_name.__registry_name__, method=method)
 
-        cls.clear_invalidate_cache()
+    # @classmethod
+    # def detect_invalidation(cls):
+    #     """Return True if a new invalidation is found in the table
 
-    @classmethod
-    def detect_invalidation(cls):
-        """Return True if a new invalidation is found in the table
-
-        :rtype: Boolean
-        """
-        if cls.last_cache_id is None:
-            cls.last_cache_id = 0
-        return cls.last_cache_id < cls.get_last_id()
+    #     :rtype: Boolean
+    #     """
+    #     if cls.last_cache_id is None:
+    #         cls.last_cache_id = 0
+    #     return cls.last_cache_id < cls.get_last_id()
 
     @classmethod
     def get_invalidation(cls):
         """Return the pointer of the method to invalidate"""
         res = []
-        if cls.detect_invalidation():
-            caches = cls.anyblok.caches
-            for i in cls.query().filter(cls.id > cls.last_cache_id).all():
-                res.extend(caches[i.registry_name][i.method])
+        query = cls.select_sql_statement(cls.registry_name, cls.method)
+        query = query.group_by(cls.registry_name, cls.method)
+        query = query.where(cls.id > cls.last_cache_id)
+        query_res = cls.execute_sql_statement(query)
+        caches = cls.anyblok.caches
+        for registry_name, method in query_res:
+            res.extend(caches[registry_name][method])
 
-            cls.last_cache_id = cls.get_last_id()
+        cls.last_cache_id = cls.get_last_id()
 
         return res
 

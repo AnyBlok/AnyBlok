@@ -39,6 +39,10 @@ class Query:
 
         return wrapper
 
+    def __iter__(self):
+        for res in self._execute():
+            yield res
+
     def _execute(self):
         res = self.Model.execute(self.sql_statement)
         if self.elements:

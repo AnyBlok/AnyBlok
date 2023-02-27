@@ -980,7 +980,10 @@ class Registry:
             )
             toload = self.get_bloks_to_load()
             toinstall = self.get_bloks_to_install(toload)
-            if self.update_to_install_blok_dependencies_state(toinstall):
+            if (
+                not self.loadwithoutmigration
+                and self.update_to_install_blok_dependencies_state(toinstall)
+            ):
                 toinstall = self.get_bloks_to_install(toload)
             if self.loadwithoutmigration and not toload and toinstall:
                 logger.warning("Impossible to use loadwithoumigration")
