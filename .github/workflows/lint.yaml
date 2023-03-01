@@ -4,8 +4,6 @@ jobs:
   test:
     name: Lint
     runs-on: self-hosted
-    env:
-      AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
