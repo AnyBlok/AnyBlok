@@ -55,7 +55,7 @@ jobs:
           #   run: pip install .
       - name: Create db
         env:
-          PGHOST: postgres_db
+          PGHOST: ${{ postgres_db }}
           PGPASSWORD: postgres
           PGPORT: 5432
         run: psql -U postgres -c 'CREATE DATABASE anyblok_test;'
