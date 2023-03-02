@@ -41,28 +41,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install postgres package
         run: bash .ci/install_postgres.sh
-          # - name: Install graphviz package
-          #   run: bash .ci/install_graphviz.sh
-          # - name: Install Wheel
-          #   run: pip install -U pip wheel
-          # - name: Install psycopg2-binary
-          #   run: pip install psycopg2-binary
-          # - name: Install pytest
-          #   run: pip install pytest pytest-cov mock coverage-lcov
-          # - name: Install extra dependencies
-          #   run: pip install colour passlib furl phonenumbers pycountry cryptography
-          # - name: Install AnyBlok
-          #   run: pip install .
-      - name: Create db
-        env:
-          PGHOST: github-action-runner.famille-suzanne.fr
-          PGPASSWORD: postgres
-          PGPORT: 5432
-        run: echo "psql -U postgres -c 'CREATE DATABASE anyblok_test_${{ github.run_id }}-${{ matrix.python-version }};'"
+      - name: Install graphviz package
+        run: bash .ci/install_graphviz.sh
+      - name: Install Wheel
+        run: pip install -U pip wheel
+      - name: Install psycopg2-binary
+        run: pip install psycopg2-binary
+      - name: Install pytest
+        run: pip install pytest pytest-cov mock coverage-lcov
+      - name: Install extra dependencies
+        run: pip install colour passlib furl phonenumbers pycountry cryptography
+      - name: Install AnyBlok
+        run: pip install .
       - name: Run framework tests
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
           ANYBLOK_DATABASE_PORT: 5432
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
@@ -73,11 +67,11 @@ jobs:
           PGHOST: localhost
           PGPASSWORD: postgres
           PGPORT: 5432
-        run: psql -U postgres -c 'DROP DATABASE anyblok_test;'
+        run: echo "psql -U postgres -c 'DROP DATABASE anyblok_test_${{ github.run_id }}-${{ matrix.python-version }};'"
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
           ANYBLOK_DATABASE_PORT: 5432
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
@@ -86,7 +80,7 @@ jobs:
       - name: Run anyblok_updatedb
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
           ANYBLOK_DATABASE_PORT: 5432
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
@@ -95,7 +89,7 @@ jobs:
       - name: Run bloks tests
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: anyblok_test
+          ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
           ANYBLOK_DATABASE_PORT: 5432
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
