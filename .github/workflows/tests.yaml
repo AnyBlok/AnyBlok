@@ -56,7 +56,7 @@ jobs:
       - name: Run framework tests
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
+          ANYBLOK_DATABASE_NAME: anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}
           ANYBLOK_DATABASE_PORT: 5432
           ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: postgres
@@ -71,7 +71,7 @@ jobs:
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
+          ANYBLOK_DATABASE_NAME: anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}
           ANYBLOK_DATABASE_PORT: 5432
           ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: postgres
@@ -80,7 +80,7 @@ jobs:
       - name: Run anyblok_updatedb
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
+          ANYBLOK_DATABASE_NAME: anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}
           ANYBLOK_DATABASE_PORT: 5432
           ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: postgres
@@ -89,7 +89,7 @@ jobs:
       - name: Run bloks tests
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
+          ANYBLOK_DATABASE_NAME: anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}
           ANYBLOK_DATABASE_PORT: 5432
           ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: postgres
