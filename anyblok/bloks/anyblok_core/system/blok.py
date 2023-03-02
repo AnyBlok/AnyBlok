@@ -282,7 +282,7 @@ class Blok:
         """Load all the installed bloks"""
         query = cls.select_sql_statement()
         query = query.where(cls.state == "installed")
-        query = query.order_by(cls.state)
+        query = query.order_by(cls.order)
 
         query_res = cls.execute_sql_statement(query).scalars()
         for blok in query_res:
