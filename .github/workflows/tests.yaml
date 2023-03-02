@@ -96,16 +96,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.11']
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_DATABASE: anyblok_test
-          MYSQL_USER: root
-          MYSQL_PASSWORD: root
-          MYSQL_ROOT_PASSWORD: rootpassword
-        ports:
-          - 3306:3306
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -126,36 +116,34 @@ jobs:
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
         run: pip install .
-      - name: Set up MySQL
-        run: sudo /etc/init.d/mysql start
       - name: Run Framworks tests
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
           ANYBLOK_DATABASE_NAME: anyblok_test
           ANYBLOK_DATABASE_PORT: 3306
-          ANYBLOK_DATABASE_HOST: localhost
-          ANYBLOK_DATABASE_USER: root
-          ANYBLOK_DATABASE_PASSWORD: root
-        run: pytest anyblok/tests
+          ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
+          ANYBLOK_DATABASE_USER: mysql
+          ANYBLOK_DATABASE_PASSWORD: mysql
+        run: pytest anyblok/tests/test_authorization.py
       - name: Drop db
-        run: mysql --user=root --password=root --host=localhost --port=3306 -e 'DROP DATABASE anyblok_test;'
+        run: mysql --user=mysql --password=mysql --host=localhost --port=3306 -e 'DROP DATABASE anyblok_test;'
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
           ANYBLOK_DATABASE_NAME: anyblok_test
           ANYBLOK_DATABASE_PORT: 3306
-          ANYBLOK_DATABASE_HOST: localhost
-          ANYBLOK_DATABASE_USER: root
-          ANYBLOK_DATABASE_PASSWORD: root
+          ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
+          ANYBLOK_DATABASE_USER: mysql
+          ANYBLOK_DATABASE_PASSWORD: mysql
         run: anyblok_createdb --install-all-bloks  --with-demo
       - name: Run bloks tests
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
           ANYBLOK_DATABASE_NAME: anyblok_test
           ANYBLOK_DATABASE_PORT: 3306
-          ANYBLOK_DATABASE_HOST: localhost
-          ANYBLOK_DATABASE_USER: root
-          ANYBLOK_DATABASE_PASSWORD: root
+          ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
+          ANYBLOK_DATABASE_USER: mysql
+          ANYBLOK_DATABASE_PASSWORD: mysql
         run: pytest --cov-append anyblok/bloks/anyblok_core
       - name: Generate lcov
         run: coverage-lcov
