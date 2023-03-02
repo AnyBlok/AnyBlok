@@ -67,7 +67,7 @@ jobs:
           PGHOST: github-action-runner.famille-suzanne.fr
           PGPASSWORD: postgres
           PGPORT: 5432
-        run: psql -U postgres -c echo 'DROP DATABASE "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}";'
+        run: dropdb -U postgres anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
