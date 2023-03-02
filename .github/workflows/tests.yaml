@@ -58,13 +58,13 @@ jobs:
           ANYBLOK_DATABASE_DRIVER: postgresql
           ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
           ANYBLOK_DATABASE_PORT: 5432
-          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
         run: pytest anyblok/tests/test_authorization.py
       - name: Drop db
         env:
-          PGHOST: localhost
+          PGHOST: github-action-runner.famille-suzanne.fr
           PGPASSWORD: postgres
           PGPORT: 5432
         run: echo "psql -U postgres -c 'DROP DATABASE anyblok_test_${{ github.run_id }}-${{ matrix.python-version }};'"
@@ -73,7 +73,7 @@ jobs:
           ANYBLOK_DATABASE_DRIVER: postgresql
           ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
           ANYBLOK_DATABASE_PORT: 5432
-          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
         run: anyblok_createdb --install-all-bloks  --with-demo
@@ -82,7 +82,7 @@ jobs:
           ANYBLOK_DATABASE_DRIVER: postgresql
           ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
           ANYBLOK_DATABASE_PORT: 5432
-          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
         run: anyblok_updatedb --update-all-bloks
@@ -91,7 +91,7 @@ jobs:
           ANYBLOK_DATABASE_DRIVER: postgresql
           ANYBLOK_DATABASE_NAME: echo "anyblok_test_${{ github.run_id }}-${{ matrix.python-version }}"
           ANYBLOK_DATABASE_PORT: 5432
-          ANYBLOK_DATABASE_HOST: localhost
+          ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
         run: pytest --cov-append anyblok/bloks/anyblok_core
