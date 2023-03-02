@@ -129,7 +129,7 @@ jobs:
         env:
           MYSQL_HOST: github-action-runner.famille-suzanne.fr
           MYSQL_TCP_PORT: 3306
-        run: mysql --user=root --password=rootpassword  -e echo "'DROP DATABASE anyblok_test_${{ github.run_id }};'"
+        run: mysql --user=root --password=rootpassword  -e echo "DROP DATABASE anyblok_test_${{ github.run_id }};"
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
