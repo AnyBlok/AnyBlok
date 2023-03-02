@@ -1,2 +1,2 @@
-sudo apt-get update
-sudo apt-get install graphviz -Y
+sudo apt update
+sudo  ACCEPT_EULA=Y apt -y install graphviz
