@@ -126,7 +126,7 @@ jobs:
           ANYBLOK_DATABASE_PASSWORD: rootpassword
         run: pytest anyblok/tests/test_authorization.py
       - name: Drop db
-        run: mysqladmin --user=root --password=rootpassword -h github-action-runner.famille-suzanne.fr drop anyblok_test_${{ github.run_id }}
+        run: mysqladmin --user=root --password=rootpassword -h github-action-runner.famille-suzanne.fr -f drop anyblok_test_${{ github.run_id }}
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
