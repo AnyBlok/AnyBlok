@@ -55,10 +55,10 @@ jobs:
           #   run: pip install .
       - name: Create db
         env:
-          PGHOST: ${{ POSTGRES_DB }}
+          PGHOST: github-action-runner.famille-suzanne.fr
           PGPASSWORD: postgres
           PGPORT: 5432
-        run: psql -U postgres -c 'CREATE DATABASE anyblok_test;'
+        run: echo "psql -U postgres -c 'CREATE DATABASE anyblok_test_${{ github.workflow }}-${{ github.ref }}-${{ matrix.python-version }};'"
       - name: Run framework tests
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
