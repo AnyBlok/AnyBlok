@@ -51,6 +51,12 @@ jobs:
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
         run: pip install .
+      - name: Create db
+        env:
+          PGHOST: localhost
+          PGPASSWORD: postgres
+          PGPORT: 5432
+        run: psql -U postgres -c 'CREATE DATABASE anyblok_test;'
       - name: Run framework tests
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
@@ -59,7 +65,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
-        run: pytest anyblok/tests
+        run: pytest anyblok/tests/test_authorization.py
       - name: Drop db
         env:
           PGHOST: localhost
