@@ -50,7 +50,8 @@ class AnyBlokDeclarationDocumenter(ClassDocumenter):
     objtype = "anyblok-declaration"
     directivetype = "class"
 
-    def get_doc(self, ignore=1, **kwargs):
+    def get_doc(self, **kwargs):
+        ignore = kwargs.get('ignore', 1) or 1
         lines = getattr(self, "_new_docstrings", None)
         if lines is not None:
             return lines
