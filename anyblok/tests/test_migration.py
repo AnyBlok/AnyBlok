@@ -266,6 +266,7 @@ class TestMigration:
         ][0][0]
         assert res == 0
 
+    @pytest.mark.skipif(sgdb_in(["MsSQL"]), reason="Not rollback to savepoint")
     def test_add_column_in_filled_table_with_default_callable_value(
         self, registry
     ):
@@ -285,6 +286,7 @@ class TestMigration:
         ][0][0]
         assert res == 0
 
+    @pytest.mark.skipif(sgdb_in(["MsSQL"]), reason="Not rollback to savepoint")
     def test_add_column_in_filled_table_with_default_callable_value_and_2_pk(
         self, registry
     ):

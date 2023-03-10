@@ -1095,7 +1095,9 @@ class TestColumns:
         t = registry.Test.insert()
         assert t.val == "val"
 
-    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="ISSUE #89")
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #89"
+    )
     def test_sequence(self):
         registry = self.init_registry(simple_column, ColumnType=Sequence)
         assert registry.Test.insert().col == "1"
@@ -1105,7 +1107,9 @@ class TestColumns:
         Seq = registry.System.Sequence
         assert Seq.query().filter(Seq.code == "Model.Test=>col").count() == 1
 
-    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="ISSUE #89")
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #89"
+    )
     def test_sequence_with_primary_key(self):
         registry = self.init_registry(
             simple_column, ColumnType=Sequence, primary_key=True
@@ -1113,7 +1117,9 @@ class TestColumns:
         assert registry.Test.insert().col == "1"
         assert registry.Test.insert().col == "2"
 
-    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="ISSUE #89")
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #89"
+    )
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(
             simple_column,
@@ -1150,7 +1156,6 @@ class TestColumns:
                 simple_column, ColumnType=Sequence, default="default value"
             )
 
-    @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="ISSUE #89")
     def test_sequence_with_nogap(self):
         registry = self.init_registry(
             simple_column,
