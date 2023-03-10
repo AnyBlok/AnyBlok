@@ -956,16 +956,6 @@ class Registry:
         """
         if self.Session is None:
             bind = self.bind
-            if self.Session:
-                if not self.withoutautomigration:
-                    # this is the only case to use commit in the construction
-                    # of the registry
-                    self.commit()
-
-                # remove all existing instance to create a new instance
-                # because the instance are cached
-                self.Session.remove()
-
             self.Session = scoped_session(
                 sessionmaker(bind=bind, future=True),
                 EnvironmentManager.scoped_function_for_session(),
