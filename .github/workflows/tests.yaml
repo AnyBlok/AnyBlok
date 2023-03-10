@@ -229,7 +229,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: sa
           ANYBLOK_DATABASE_PASSWORD: dbatools.I0
-          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 18 for SQL Server'
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
         run: anyblok_createdb --install-all-bloks  --with-demo
       - name: Run bloks tests
         env:
@@ -239,7 +239,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: sa
           ANYBLOK_DATABASE_PASSWORD: dbatools.I0
-          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 18 for SQL Server'
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
         run: pytest --cov-append anyblok/bloks/anyblok_core
       - name: Generate lcov
         run: coverage-lcov
