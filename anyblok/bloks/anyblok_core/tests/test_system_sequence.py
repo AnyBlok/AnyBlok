@@ -14,10 +14,13 @@ from anyblok.testing import sgdb_in
 @pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="ISSUE #89")
 @pytest.mark.usefixtures("rollback_registry")
 class TestSystemSequence:
+
     def test_nextval_without_prefix_without_suffix(self, rollback_registry):
         registry = rollback_registry
         Sequence = registry.System.Sequence
-        seq = Sequence.insert(code="test.sequence")
+        seq = Sequence.insert(
+            code="test.sequence.without_prefix_without_suffix"
+        )
         number = seq.number
         assert seq.nextval() == str(number + 1)
         assert seq.nextval() == str(number + 2)
@@ -28,7 +31,6 @@ class TestSystemSequence:
     ):
         registry = rollback_registry
         Sequence = registry.System.Sequence
-        Sequence.insert(code="test.sequence")
         seq = Sequence.insert(code="test.sequence")
         assert seq.nextval() == "1"
         assert seq.nextval() == "2"
