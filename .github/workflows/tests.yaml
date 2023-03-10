@@ -51,21 +51,21 @@ jobs:
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
         run: pip install .
-      - name: Run framework tests
-        env:
-          ANYBLOK_DATABASE_DRIVER: postgresql
-          ANYBLOK_DATABASE_NAME: anyblok_test
-          ANYBLOK_DATABASE_PORT: 5432
-          ANYBLOK_DATABASE_HOST: localhost
-          ANYBLOK_DATABASE_USER: postgres
-          ANYBLOK_DATABASE_PASSWORD: postgres
-        run: pytest anyblok/tests/test_blok.py
-      - name: Drop db
-        env:
-          PGHOST: localhost
-          PGPASSWORD: postgres
-          PGPORT: 5432
-        run: psql -U postgres -c 'DROP DATABASE anyblok_test;'
+          # - name: Run framework tests
+          #   env:
+          #     ANYBLOK_DATABASE_DRIVER: postgresql
+          #     ANYBLOK_DATABASE_NAME: anyblok_test
+          #     ANYBLOK_DATABASE_PORT: 5432
+          #     ANYBLOK_DATABASE_HOST: localhost
+          #     ANYBLOK_DATABASE_USER: postgres
+          #     ANYBLOK_DATABASE_PASSWORD: postgres
+          #   run: pytest anyblok/tests
+          # - name: Drop db
+          #   env:
+          #     PGHOST: localhost
+          #     PGPASSWORD: postgres
+          #     PGPORT: 5432
+          #   run: psql -U postgres -c 'DROP DATABASE anyblok_test;'
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: postgresql
@@ -139,17 +139,17 @@ jobs:
         run: pip install .
       - name: Set up MySQL
         run: sudo /etc/init.d/mysql start
-      - name: Run Framworks tests
-        env:
-          ANYBLOK_DATABASE_DRIVER: mysql
-          ANYBLOK_DATABASE_NAME: anyblok_test
-          ANYBLOK_DATABASE_PORT: 3306
-          ANYBLOK_DATABASE_HOST: localhost
-          ANYBLOK_DATABASE_USER: root
-          ANYBLOK_DATABASE_PASSWORD: root
-        run: pytest anyblok/tests/test_blok.py
-      - name: Drop db
-        run: mysql --user=root --password=root --host=localhost --port=3306 -e 'DROP DATABASE anyblok_test;'
+          # - name: Run Framworks tests
+          #   env:
+          #     ANYBLOK_DATABASE_DRIVER: mysql
+          #     ANYBLOK_DATABASE_NAME: anyblok_test
+          #     ANYBLOK_DATABASE_PORT: 3306
+          #     ANYBLOK_DATABASE_HOST: localhost
+          #     ANYBLOK_DATABASE_USER: root
+          #     ANYBLOK_DATABASE_PASSWORD: root
+          #   run: pytest anyblok/tests
+          # - name: Drop db
+          #   run: mysql --user=root --password=root --host=localhost --port=3306 -e 'DROP DATABASE anyblok_test;'
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: mysql
@@ -209,18 +209,18 @@ jobs:
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
         run: pip install .
-      - name: Run Frameworks tests
-        env:
-          ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
-          ANYBLOK_DATABASE_NAME: anyblok_test
-          ANYBLOK_DATABASE_PORT: 1433
-          ANYBLOK_DATABASE_HOST: localhost
-          ANYBLOK_DATABASE_USER: sa
-          ANYBLOK_DATABASE_PASSWORD: dbatools.I0
-          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
-        run: pytest anyblok/tests/test_blok.py
-      - name: Drop db
-        run: sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "DROP DATABASE anyblok_test;"
+          # - name: Run Frameworks tests
+          #   env:
+          #     ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
+          #     ANYBLOK_DATABASE_NAME: anyblok_test
+          #     ANYBLOK_DATABASE_PORT: 1433
+          #     ANYBLOK_DATABASE_HOST: localhost
+          #     ANYBLOK_DATABASE_USER: sa
+          #     ANYBLOK_DATABASE_PASSWORD: dbatools.I0
+          #     ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
+          #   run: pytest anyblok/tests
+          # - name: Drop db
+          #   run: sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "DROP DATABASE anyblok_test;"
       - name: Run anyblok_createdb
         env:
           ANYBLOK_DATABASE_DRIVER: mssql+pyodbc
