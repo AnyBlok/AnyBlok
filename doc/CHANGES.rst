@@ -26,8 +26,9 @@ CHANGELOG
 * The previsous deprecated configuration are placed as removed
   theses configurations will be removed from the code in the next version
 * Added Sequence with *no gap* to provide functional sequence without gaps.
+* Fixed sphinx pluggin
 
-1.4.0 (2022-02-17)
+1.4.0 (2023-02-17)
 ------------------
 
 * Freeze version of SQLAlchemy < 2.0
