@@ -613,7 +613,7 @@ class Registry:
         query += f" WHERE {where}"
         try:
             res = self.execute(
-                text(query).bindparams(**params), fetchall=True
+                text(query), params, fetchall=True,
             )
         except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
