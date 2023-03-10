@@ -31,8 +31,7 @@ def autodoc_registration(declaration, cls):
         if ab_bases:
             res.extend(["- Inherited Models or Mixins:", ""])
             res.extend(
-                "  * :class:`%s.%s`" % (c.__module__, c.__name__)
-                for c in ab_bases
+                "  * :class:`%s.%s`" % (c.__module__, c.__name__) for c in ab_bases
             )
             res.append("")
     res.extend(("", ""))
@@ -51,7 +50,7 @@ class AnyBlokDeclarationDocumenter(ClassDocumenter):
     directivetype = "class"
 
     def get_doc(self, *args, **kwargs):
-        ignore = kwargs.get('ignore', 1) or 1
+        ignore = kwargs.get("ignore", 1) or 1
         lines = getattr(self, "_new_docstrings", None)
         if lines is not None:
             return lines
@@ -78,7 +77,7 @@ class AnyBlokDeclarationDocumenter(ClassDocumenter):
 
 class AnyBlokMethodDocumenter(MethodDocumenter):
     def get_doc(self, *args, **kwargs):
-        ignore = kwargs.get('ignore', 1) or 1
+        ignore = kwargs.get("ignore", 1) or 1
         lines = getattr(self, "_new_docstrings", None)
         if lines is not None:
             return lines
