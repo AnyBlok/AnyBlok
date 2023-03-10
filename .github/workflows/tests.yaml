@@ -192,13 +192,13 @@ jobs:
       - name: Run the action
         uses: potatoqualitee/mssqlsuite@v1.7
         with:
-          install: sqlengine, sqlpackage, sqlclient
+          install: sqlengine, sqlpackage
       - name: Run sqlclient
         run: sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "SELECT @@version;"
       - name: Install graphviz package
         run: bash .ci/install_graphviz.sh
-          # - name: Install mssql package
-          #   run: bash .ci/install_mssql.sh
+      - name: Install mssql package
+        run: bash .ci/install_mssql.sh
       - name: Install Wheel
         run: pip install -U pip wheel
       - name: Install pyodbc
@@ -217,7 +217,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: sa
           ANYBLOK_DATABASE_PASSWORD: dbatools.I0
-          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 19 for SQL Server'
+          ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
         run: pytest anyblok/tests/test_migration.py
       - name: Drop db
         run: sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "DROP DATABASE anyblok_test;"
