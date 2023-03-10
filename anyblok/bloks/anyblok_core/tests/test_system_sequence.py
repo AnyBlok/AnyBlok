@@ -11,7 +11,7 @@ import pytest
 from anyblok.testing import sgdb_in
 
 
-@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB"]), reason="ISSUE #89")
+@pytest.mark.skipif(sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #89")
 @pytest.mark.usefixtures("rollback_registry")
 class TestSystemSequence:
     def test_nextval_without_prefix_without_suffix(self, rollback_registry):
