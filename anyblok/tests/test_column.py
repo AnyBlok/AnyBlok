@@ -1108,7 +1108,8 @@ class TestColumns:
         assert Seq.query().filter(Seq.code == "Model.Test=>col").count() == 1
 
     @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #89")
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #89"
+    )
     def test_sequence_with_primary_key(self):
         registry = self.init_registry(
             simple_column, ColumnType=Sequence, primary_key=True
@@ -1117,7 +1118,8 @@ class TestColumns:
         assert registry.Test.insert().col == "2"
 
     @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #89")
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #89"
+    )
     def test_sequence_with_code_and_formater(self):
         registry = self.init_registry(
             simple_column,
