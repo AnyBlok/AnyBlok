@@ -46,7 +46,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
-        run: pytest anyblok/tests/test_authorization.py
+        run: pytest anyblok/tests
       - name: Drop db
         env:
           PGHOST: github-action-runner.famille-suzanne.fr
@@ -124,7 +124,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: github-action-runner.famille-suzanne.fr
           ANYBLOK_DATABASE_USER: root
           ANYBLOK_DATABASE_PASSWORD: rootpassword
-        run: pytest anyblok/tests/test_authorization.py
+        run: pytest anyblok/tests
       - name: Drop db
         run: mysqladmin --user=root --password=rootpassword -h github-action-runner.famille-suzanne.fr -f drop anyblok_test_${{ github.run_id }}
       - name: Run anyblok_createdb
