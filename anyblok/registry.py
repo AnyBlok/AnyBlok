@@ -594,16 +594,31 @@ class Registry:
         if not states:
             return []
 
+        params = {}
+        where = []
+
+        for i, state in enumerate(states):
+            var = f'state_{i}'
+            params[var] = state
+            where.append(f'state = :{var}')
+
+        if len(where) == 1:
+            where = where[0]
+        else:
+            where = ' OR '.join(where)
+
         res = []
         query = """SELECT "order", name"""
         query += " FROM system_blok"
-        query += " WHERE state in :states"
+        query += f" WHERE {where}"
         try:
             res = self.execute(
-                text(query).bindparams(states=states), fetchall=True
+                text(query).bindparams(**params), fetchall=True
             )
         except (ProgrammingError, OperationalError, PyODBCProgrammingError):
             # During the first connection the database is empty
+            import ipdb
+            ipdb.set_trace()
             pass
 
         if res:
