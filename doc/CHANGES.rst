@@ -9,6 +9,8 @@
 ..    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..    Copyright (C) 2020 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+..    Copyright (C) 2022 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+..    Copyright (C) 2023 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 ..
 .. This Source Code Form is subject to the terms of the Mozilla Public License,
 .. v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -17,7 +19,7 @@
 CHANGELOG
 =========
 
-2.0.0 (unreleased)
+2.0.0 (2023-03-11)
 ------------------
 
 * Upgrade version of sqlalchemy to **2.0.0**
@@ -26,7 +28,7 @@ CHANGELOG
 * The previsous deprecated configuration are placed as removed
   theses configurations will be removed from the code in the next version
 * Added Sequence with *no gap* to provide functional sequence without gaps.
-* Fixed sphinx pluggin
+* Fixed sphinx plugins
 
 1.4.0 (2023-02-17)
 ------------------
