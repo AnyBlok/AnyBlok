@@ -9,6 +9,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import inspect
 from copy import deepcopy
 
 from sqlalchemy import inspection
@@ -37,8 +38,8 @@ def has_sqlalchemy_fields(base):
     return False
 
 
-def is_in_mro(cls, base, attr):
-    return cls in getattr(base, attr).__class__.__mro__
+def is_in_mro(cls, attr):
+    return cls in attr.__class__.__mro__
 
 
 def get_fields(
@@ -56,20 +57,24 @@ def get_fields(
     :rtype: dict with name of the field in key and instance of Field in value
     """
     fields = {}
-    for p in base.__dict__.keys():
+    for p in base.__dict__:
+        if p.startswith("__"):
+            continue
+
         try:
-            if hasattr(getattr(base, p), "__class__"):
-                if without_relationship and is_in_mro(RelationShip, base, p):
+            attr = getattr(base, p)
+            if hasattr(attr, "__class__"):
+                if without_relationship and is_in_mro(RelationShip, attr):
                     continue
 
-                if without_column and is_in_mro(Column, base, p):
+                if without_column and is_in_mro(Column, attr):
                     continue
 
-                if only_relationship and not is_in_mro(RelationShip, base, p):
+                if only_relationship and not is_in_mro(RelationShip, attr):
                     continue
 
-                if is_in_mro(Field, base, p):
-                    fields[p] = getattr(base, p)
+                if is_in_mro(Field, attr):
+                    fields[p] = attr
 
         except FieldException:  # pragma: no cover
             pass
@@ -148,13 +153,18 @@ class Model:
 
     @classmethod
     def pre_assemble_callback(cls, registry):
-        plugins = get_model_plugins(registry)
+        plugins_by = {}
+        for plugin in get_model_plugins(registry):
+            for attr, func in inspect.getmembers(
+                plugin, predicate=inspect.ismethod
+            ):
+                by = plugins_by.setdefault(attr, [])
+                by.append(func)
 
         def call_plugins(method, *args, **kwargs):
             """call the method on each plugin"""
-            for plugin in plugins:
-                if hasattr(plugin, method):
-                    getattr(plugin, method)(*args, **kwargs)
+            for func in plugins_by.get(method, []):
+                func(*args, **kwargs)
 
         registry.call_plugins = call_plugins
 
@@ -288,11 +298,13 @@ class Model:
         :rtype: new base
         """
         new_type_properties = {}
-        for attr in dir(base):
+        for attr, method in inspect.getmembers(base):
             if attr in ("registry", "anyblok", "_sa_registry"):
                 continue
 
-            method = getattr(base, attr)
+            if attr.startswith("__"):
+                continue
+
             registry.call_plugins(
                 "transform_base_attribute",
                 attr,
@@ -354,7 +366,6 @@ class Model:
         if namespace in registry.loaded_namespaces_first_step:
             return registry.loaded_namespaces_first_step[namespace]
 
-        bases = []
         properties = {
             "__depends__": set(),
             "__db_schema__": format_schema(None, namespace),
@@ -362,7 +373,7 @@ class Model:
         ns = registry.loaded_registries[namespace]
 
         for b in ns["bases"]:
-            bases.append(b)
+            cls.raise_if_has_sqlalchemy(b)
 
             for b_ns in b.__anyblok_bases__:
                 if b_ns.__registry_name__.startswith("Model."):
@@ -375,8 +386,6 @@ class Model:
                 ps.update(properties)
                 properties.update(ps)
 
-        for b in bases:
-            cls.raise_if_has_sqlalchemy(b)
             fields = get_fields(b)
             for p, f in fields.items():
                 if p not in properties:

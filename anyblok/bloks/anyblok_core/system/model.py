@@ -85,7 +85,7 @@ class Model:
         query = Field.query()
         query = query.filter(Field.model == model)
         query = query.filter(Field.name.notin_(m.loaded_columns))
-        for model_ in query.all():
+        for model_ in query:
             if model_.entity_type == "Model.System.RelationShip":
                 if model_.remote:
                     continue
@@ -161,9 +161,9 @@ class Model:
             cls.name.notin_(cls.anyblok.loaded_namespaces.keys())
         )
         Field = cls.anyblok.System.Field
-        for model_ in query.all():
+        for model_ in query:
             Q = Field.query().filter(Field.model == model_.name)
-            for field in Q.all():
+            for field in Q:
                 field.delete()
 
             model_.delete()

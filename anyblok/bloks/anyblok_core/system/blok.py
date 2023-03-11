@@ -280,10 +280,13 @@ class Blok:
     @classmethod
     def load_all(cls):
         """Load all the installed bloks"""
-        query = cls.query().filter(cls.state == "installed")
-        bloks = query.order_by(cls.order).all()
-        if bloks:
-            bloks.load()
+        query = cls.select_sql_statement()
+        query = query.where(cls.state == "installed")
+        query = query.order_by(cls.state)
+
+        query_res = cls.execute_sql_statement(query).scalars()
+        for blok in query_res:
+            blok.load()
 
     @classmethod_cache()
     def is_installed(cls, blok_name):

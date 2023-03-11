@@ -77,19 +77,6 @@ class TestCache:
         with pytest.raises(CacheException):
             Cache.invalidate("Model.Test2", "method_cached")
 
-    def test_detect_cache_invalidation(self, registry_method_cached):
-        registry = registry_method_cached
-        Cache = registry.System.Cache
-        assert not Cache.detect_invalidation()
-        Cache.insert(registry_name="Model.Test", method="method_cached")
-        assert Cache.detect_invalidation()
-
-    def test_detect_cache_invalidation_first_call(self, registry_method_cached):
-        registry = registry_method_cached
-        Cache = registry.System.Cache
-        Cache.last_cache_id = None
-        assert Cache.detect_invalidation()
-
     def test_get_invalidation(self, registry_method_cached):
         registry = registry_method_cached
         Cache = registry.System.Cache
@@ -100,6 +87,15 @@ class TestCache:
         assert len(caches) == 1
         cache = caches[0]
         assert cache.indentify == ("Model.Test", "method_cached")
+
+    def test_clear_invalidate_cache(self, registry_method_cached):
+        registry = registry_method_cached
+        Cache = registry.System.Cache
+        # call it before to clear cache and to be predictible
+        Cache.get_invalidation()
+        Cache.insert(registry_name="Model.Test", method="method_cached")
+        Cache.clear_invalidate_cache()
+        assert not len(Cache.get_invalidation())
 
 
 class TestSimpleCache:

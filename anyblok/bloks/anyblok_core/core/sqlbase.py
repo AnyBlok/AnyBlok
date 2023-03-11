@@ -9,7 +9,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy import and_, delete, inspect, or_, select
 from sqlalchemy import update as sqla_update
-from sqlalchemy.orm import ColumnProperty, aliased, load_only
+from sqlalchemy.orm import ColumnProperty, aliased
 from sqlalchemy.orm.base import LoaderCallableStatus
 from sqlalchemy.orm.session import object_state
 from sqlalchemy.sql.expression import true
@@ -263,12 +263,12 @@ class SqlMixin:
         :type: list of the primary keys name
         """
         C = cls.anyblok.System.Column
-        query = C.query()
-        query = query.options(load_only(C.name))
-        query = query.filter(C.model.in_(cls.get_all_registry_names()))
-        query = query.filter(C.primary_key == true())
-        # DISTINCT does not works on MySQL/MsSQL
-        return list(set(query.all().name))
+        query = C.select_sql_statement(C.name)
+        query = query.group_by(C.name)
+        query = query.where(C.model.in_(cls.get_all_registry_names()))
+        query = query.where(C.primary_key == true())
+        query_res = cls.execute_sql_statement(query)
+        return [x[0] for x in query_res]
 
     @classmethod_cache()
     def _fields_description(cls):
@@ -277,10 +277,10 @@ class SqlMixin:
         res = {}
         for registry_name in cls.__depends__:
             query = Field.query().filter(Field.model == registry_name)
-            res.update({x.name: x._description() for x in query.all()})
+            res.update({x.name: x._description() for x in query})
 
         query = Field.query().filter(Field.model == cls.__registry_name__)
-        res.update({x.name: x._description() for x in query.all()})
+        res.update({x.name: x._description() for x in query})
         return res
 
     @classmethod
@@ -743,15 +743,16 @@ class SqlBase(SqlMixin):
         :exception: SqlBaseException
         """
         instances = cls.anyblok.InstrumentedList()
+        session = cls.anyblok.session
         for kwargs in args:
             if not isinstance(kwargs, dict):  # pragma: no cover
                 raise SqlBaseException("multi_insert method wait list of dict")
 
             instance = cls(**kwargs)
-            cls.anyblok.add(instance)
+            session.add(instance)
             instances.append(instance)
 
         if instances:
-            cls.anyblok.flush()
+            session.flush()
 
         return instances

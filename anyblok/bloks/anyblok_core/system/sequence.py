@@ -69,7 +69,7 @@ class Sequence:
     _cls_seq_name = "system_sequence_seq_name"
 
     id = Integer(primary_key=True)
-    code = String(nullable=False)
+    code = String(nullable=False, index=True)
     number = Integer(nullable=False)
     seq_name = String(nullable=False)
     """Name of the sequence in the database.

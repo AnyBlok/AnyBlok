@@ -7,6 +7,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 from logging import getLogger
 
 import pytest
@@ -29,7 +30,12 @@ def configuration_loaded(request):
 @pytest.fixture(scope="session")
 def init_session(request, configuration_loaded):
     # Init registry
-    additional_setting = {"unittest": True}
+    additional_setting = {
+        "unittest": True,
+        "loadwithoutmigration": eval(
+            os.environ.get("ANYBLOK_UNITTEST_WITHOUT_MIGRATION", "False")
+        ),
+    }
 
     if len(BlokManager.list()) == 0:
         BlokManager.load()

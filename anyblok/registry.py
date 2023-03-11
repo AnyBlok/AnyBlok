@@ -956,16 +956,6 @@ class Registry:
         """
         if self.Session is None:
             bind = self.bind
-            if self.Session:
-                if not self.withoutautomigration:
-                    # this is the only case to use commit in the construction
-                    # of the registry
-                    self.commit()
-
-                # remove all existing instance to create a new instance
-                # because the instance are cached
-                self.Session.remove()
-
             self.Session = scoped_session(
                 sessionmaker(bind=bind, future=True),
                 EnvironmentManager.scoped_function_for_session(),
@@ -991,7 +981,10 @@ class Registry:
             )
             toload = self.get_bloks_to_load()
             toinstall = self.get_bloks_to_install(toload)
-            if self.update_to_install_blok_dependencies_state(toinstall):
+            if (
+                not self.loadwithoutmigration
+                and self.update_to_install_blok_dependencies_state(toinstall)
+            ):
                 toinstall = self.get_bloks_to_install(toload)
             if self.loadwithoutmigration and not toload and toinstall:
                 logger.warning("Impossible to use loadwithoumigration")

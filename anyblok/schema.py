@@ -13,9 +13,6 @@ from sqlalchemy.schema import UniqueConstraint as SQLAUniqueConstraint
 
 
 def convert_hybrid_property_to_column(hp):
-    if isinstance(hp, str):
-        return hp
-
     if hasattr(hp, "descriptor"):
         if hasattr(hp.descriptor, "sqla_column"):
             col = hp.descriptor.sqla_column
