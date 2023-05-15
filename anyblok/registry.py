@@ -1075,9 +1075,6 @@ class Registry:
         # new connection, this new connection have not acknowedge of the
         # data in the session.connection, and risk of bad lock on the
         # tables
-        if blok2install is None:
-            return
-
         if self.loadwithoutmigration:
             return
 
