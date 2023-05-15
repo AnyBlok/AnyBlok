@@ -614,7 +614,12 @@ class Registry:
         query += f" WHERE {where}"
         try:
             res = self.execute(text(query).bindparams(**params), fetchall=True)
-        except (ProgrammingError, OperationalError, PyODBCProgrammingError, InternalError):
+        except (
+            ProgrammingError,
+            OperationalError,
+            PyODBCProgrammingError,
+            InternalError,
+        ):
             # During the first connection the database is empty
             pass
 
@@ -863,9 +868,9 @@ class Registry:
             params = {}
             where = []
             for i, dep in enumerate(dependencies_to_install):
-                key = f'blok_{i}'
+                key = f"blok_{i}"
                 params[key] = dep
-                where.append(f'name = :{key}')
+                where.append(f"name = :{key}")
 
             if len(where) == 1:
                 where = where[0]
@@ -877,9 +882,7 @@ class Registry:
                 set state='toinstall'
                 where ({where}) and state = 'uninstalled'"""
             try:
-                self.execute(
-                    text(query).bindparams(**params)
-                )
+                self.execute(text(query).bindparams(**params))
             except (ProgrammingError, OperationalError):  # pragma: no cover
                 pass
 
