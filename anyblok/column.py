@@ -637,6 +637,14 @@ class DateTime(Column):
         return res
 
 
+class TimeStampType(DateTimeType):
+    impl = types.TIMESTAMP(timezone=True)
+
+    @property
+    def python_type(self):
+        return time  # pragma: no cover
+
+
 class TimeStamp(DateTime):
     """TimeStamp column
 
@@ -656,7 +664,7 @@ class TimeStamp(DateTime):
 
     def __init__(self, *args, **kwargs):
         super(TimeStamp, self).__init__(*args, **kwargs)
-        self.sqlalchemy_type = types.TIMESTAMP(timezone=True)
+        self.sqlalchemy_type = TimeStampType(self)
 
     def getter_format_value(self, value):
         value = convert_string_to_datetime(value)

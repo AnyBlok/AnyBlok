@@ -12,6 +12,7 @@ from logging import getLogger
 from pkg_resources import iter_entry_points
 from sqlalchemy import MetaData, create_engine, event, text
 from sqlalchemy.exc import (
+    InternalError,
     InvalidRequestError,
     OperationalError,
     ProgrammingError,
@@ -613,7 +614,12 @@ class Registry:
         query += f" WHERE {where}"
         try:
             res = self.execute(text(query).bindparams(**params), fetchall=True)
-        except (ProgrammingError, OperationalError, PyODBCProgrammingError):
+        except (
+            ProgrammingError,
+            OperationalError,
+            PyODBCProgrammingError,
+            InternalError,
+        ):
             # During the first connection the database is empty
             pass
 
@@ -859,17 +865,24 @@ class Registry:
             self.check_dependencies(blok, dependencies_to_install, toinstall)
 
         if dependencies_to_install:
-            query = """
+            params = {}
+            where = []
+            for i, dep in enumerate(dependencies_to_install):
+                key = f"blok_{i}"
+                params[key] = dep
+                where.append(f"name = :{key}")
+
+            if len(where) == 1:
+                where = where[0]
+            else:
+                where = " OR ".join(where)
+
+            query = f"""
                 update system_blok
                 set state='toinstall'
-                where name in :bloks_name
-                and state = 'uninstalled'"""
+                where ({where}) and state = 'uninstalled'"""
             try:
-                self.execute(
-                    text(query).bindparams(
-                        bloks_name=tuple(dependencies_to_install),
-                    )
-                )
+                self.execute(text(query).bindparams(**params))
             except (ProgrammingError, OperationalError):  # pragma: no cover
                 pass
 
