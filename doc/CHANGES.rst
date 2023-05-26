@@ -19,6 +19,12 @@
 CHANGELOG
 =========
 
+2.1.0 (unreleased)
+------------------
+
+* Implement psycopg3 capability
+* Improved TimeStamp field
+
 2.0.0 (2023-03-11)
 ------------------
 
