@@ -43,6 +43,12 @@ class Query:
         for res in self._execute():
             yield res
 
+    def __str__(self):
+        return str(self.sql_statement)
+
+    def __repr__(self):
+        return str(self.sql_statement)
+
     def _execute(self):
         res = self.Model.execute(self.sql_statement)
         if self.elements:
