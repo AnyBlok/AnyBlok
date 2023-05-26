@@ -139,3 +139,13 @@ class TestQueryScope:
         M = registry.System.Field
         entry = M.query().get(name="name", model="Model.System.Blok")
         assert entry is not None
+
+    def test_str(self, rollback_registry):
+        registry = rollback_registry
+        query = registry.System.Field.query()
+        assert str(query) == str(query.sql_statement)
+
+    def test_repr(self, rollback_registry):
+        registry = rollback_registry
+        query = registry.System.Field.query()
+        assert repr(query) == str(query.sql_statement)

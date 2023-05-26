@@ -639,6 +639,7 @@ class DateTime(Column):
 
 class TimeStampType(DateTimeType):
     impl = types.TIMESTAMP(timezone=True)
+    cache_ok = True
 
     @property
     def python_type(self):

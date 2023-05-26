@@ -34,6 +34,8 @@ logger = getLogger(__name__)
 
 
 class RelationshipProperty(relationships.RelationshipProperty):
+    inherit_cache = True
+
     def __init__(self, *args, **kwargs):
         self.relationship_field = kwargs.pop("relationship_field")
         super(RelationshipProperty, self).__init__(*args, **kwargs)
@@ -143,6 +145,8 @@ def register_descriptor(
 
 
 class RelationshipProperty2(relationships.RelationshipProperty):
+    inherit_cache = True
+
     def __init__(self, *args, **kwargs):
         self.relationship_field = kwargs.pop("relationship_field")
         super(RelationshipProperty2, self).__init__(*args, **kwargs)
