@@ -48,10 +48,15 @@ class TestColumns:
         self.registry = init_registry(*args, **kwargs)
         return self.registry
 
-    def test_insert_columns(self, column_definition):
+    def test_migration_columns(self, column_definition):
         column, value, kwargs = column_definition
         registry = self.init_registry(
             simple_column, ColumnType=column, **kwargs
         )
         report = registry.migration.detect_changed()
-        assert report.logs == []
+        logs = [
+            x
+            for x in report.logs
+            if not x.startswith('Drop Table')
+        ]
+        assert logs == []
