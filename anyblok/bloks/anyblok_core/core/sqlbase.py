@@ -19,7 +19,7 @@ from anyblok.column import Column
 from anyblok.common import anyblok_column_prefix
 from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
-from anyblok.mapper import FakeColumn, FakeRelationShip
+from anyblok.mapper import FakeColumn, FakeRelationShip, ModelAdapter
 from anyblok.relationship import Many2Many, RelationShip
 
 from ..exceptions import SqlBaseException
@@ -262,13 +262,11 @@ class SqlMixin:
 
         :type: list of the primary keys name
         """
-        C = cls.anyblok.System.Column
-        query = C.select_sql_statement(C.name)
-        query = query.group_by(C.name)
-        query = query.where(C.model.in_(cls.get_all_registry_names()))
-        query = query.where(C.primary_key == true())
-        query_res = cls.execute_sql_statement(query)
-        return [x[0] for x in query_res]
+        return list({
+            pk.attribute_name
+            for model in cls.get_all_registry_names()
+            for pk in ModelAdapter(model).primary_keys(cls.anyblok)
+        })
 
     @classmethod_cache()
     def _fields_description(cls):
