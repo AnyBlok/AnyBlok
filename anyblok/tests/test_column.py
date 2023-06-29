@@ -903,7 +903,7 @@ class TestColumns:
         registry = self.init_registry(
             simple_column, ColumnType=Selection, selections=SELECTIONS
         )
-        description = registry.Test.fields_description('col')['col']
+        description = registry.Test.fields_description("col")["col"]
         assert description == {
             "id": "col",
             "label": "Col",

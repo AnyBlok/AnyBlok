@@ -296,14 +296,13 @@ class SqlMixin:
                 model=None,
             )
             fsp[cname].update_description(
-                cls.anyblok, cls.__registry_name__, res[cname])
+                cls.anyblok, cls.__registry_name__, res[cname]
+            )
 
         for field in cls.SQLAMapper.relationships:
             ftype = fsp[field.key].__class__.__name__
-            local_columns = ",".join(field.info.get(
-                "local_columns", []))
-            remote_columns = ",".join(field.info.get(
-                "remote_columns", []))
+            local_columns = ",".join(field.info.get("local_columns", []))
+            remote_columns = ",".join(field.info.get("remote_columns", []))
             nullable = field.info.get("nullable", True)
             res[field.key] = dict(
                 id=field.key,
@@ -316,7 +315,8 @@ class SqlMixin:
                 remote_name=field.info.get("remote_name"),
             )
             fsp[field.key].update_description(
-                cls.anyblok, cls.__registry_name__, res[field.key])
+                cls.anyblok, cls.__registry_name__, res[field.key]
+            )
 
         for field in cls.SQLAMapper.columns:
             ftype = fsp[field.key].__class__.__name__
@@ -329,7 +329,8 @@ class SqlMixin:
                 model=field.info.get("remote_model"),
             )
             fsp[field.key].update_description(
-                cls.anyblok, cls.__registry_name__, res[field.key])
+                cls.anyblok, cls.__registry_name__, res[field.key]
+            )
 
         return res
 
