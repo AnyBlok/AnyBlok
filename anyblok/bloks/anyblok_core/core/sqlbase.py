@@ -300,12 +300,17 @@ class SqlMixin:
             )
 
         for field in cls.SQLAMapper.relationships:
-            ftype = fsp[field.key].__class__.__name__
+            key = (
+                field.key[len(anyblok_column_prefix) :]
+                if field.key.startswith(anyblok_column_prefix)
+                else field.key
+            )
+            ftype = fsp[key].__class__.__name__
             local_columns = ",".join(field.info.get("local_columns", []))
             remote_columns = ",".join(field.info.get("remote_columns", []))
             nullable = field.info.get("nullable", True)
-            res[field.key] = dict(
-                id=field.key,
+            res[key] = dict(
+                id=key,
                 label=field.info.get("label"),
                 type=ftype,
                 nullable=nullable,
@@ -314,8 +319,8 @@ class SqlMixin:
                 remote_columns=remote_columns,
                 remote_name=field.info.get("remote_name"),
             )
-            fsp[field.key].update_description(
-                cls.anyblok, cls.__registry_name__, res[field.key]
+            fsp[key].update_description(
+                cls.anyblok, cls.__registry_name__, res[key]
             )
 
         for field in cls.SQLAMapper.columns:
