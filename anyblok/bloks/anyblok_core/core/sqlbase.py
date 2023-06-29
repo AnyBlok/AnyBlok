@@ -3,6 +3,7 @@
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2023 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -12,7 +13,6 @@ from sqlalchemy import update as sqla_update
 from sqlalchemy.orm import ColumnProperty, aliased
 from sqlalchemy.orm.base import LoaderCallableStatus
 from sqlalchemy.orm.session import object_state
-from sqlalchemy.sql.expression import true
 from sqlalchemy_utils.models import NOT_LOADED_REPR
 
 from anyblok.column import Column
@@ -262,11 +262,13 @@ class SqlMixin:
 
         :type: list of the primary keys name
         """
-        return list({
-            pk.attribute_name
-            for model in cls.get_all_registry_names()
-            for pk in ModelAdapter(model).primary_keys(cls.anyblok)
-        })
+        return list(
+            {
+                pk.attribute_name
+                for model in cls.get_all_registry_names()
+                for pk in ModelAdapter(model).primary_keys(cls.anyblok)
+            }
+        )
 
     @classmethod_cache()
     def _fields_description(cls):
