@@ -306,15 +306,15 @@ class SqlMixin:
                 else field.key
             )
             ftype = fsp[key].__class__.__name__
-            if ftype == 'FakeRelationShip':
+            if ftype == "FakeRelationShip":
                 Model = field.mapper.entity
                 model = Model.__registry_name__
                 nullable = True
-                remote_name = field.back_populates[len(anyblok_column_prefix):]
+                remote_name = field.back_populates[len(anyblok_column_prefix) :]
                 remote = getattr(Model, remote_name)
                 remote_columns = remote.info.get("local_columns", [])
                 local_columns = remote.info.get("remote_columns", [])
-                rtype = remote.info['rtype']
+                rtype = remote.info["rtype"]
                 if rtype == "Many2One":
                     ftype = "One2Many"
                 elif rtype == "Many2Many":
@@ -531,7 +531,7 @@ class SqlMixin:
         :param name: name of the column
         :rtype: String, the name of the Type of column used
         """
-        return cls.fields_description(name)[name]['type']
+        return cls.fields_description(name)[name]["type"]
 
     @classmethod_cache()
     def find_remote_attribute_to_expire(cls, *fields):
