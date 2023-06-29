@@ -1147,7 +1147,7 @@ class TestColumns:
             self.init_registry(
                 simple_column,
                 ColumnType=Sequence,
-                foreign_key=Model.System.Model.use("name"),
+                foreign_key=Model.System.Blok.use("name"),
             )
 
     def test_sequence_with_default(self):

@@ -19,7 +19,7 @@ from anyblok.column import Column
 from anyblok.common import anyblok_column_prefix
 from anyblok.declarations import Declarations, classmethod_cache
 from anyblok.field import FieldException
-from anyblok.mapper import FakeColumn, FakeRelationShip, ModelAdapter
+from anyblok.mapper import FakeColumn, FakeRelationShip
 from anyblok.relationship import Many2Many, RelationShip
 
 from ..exceptions import SqlBaseException
@@ -81,6 +81,11 @@ class SqlMixin:
             self.__class__.__registry_name__,
             ", ".join(field_reprs),
         )
+
+    @classmethod
+    def initialize_model(cls):
+        super().initialize_model()
+        cls.SQLAMapper = inspect(cls)
 
     @classmethod
     def define_table_args(cls):
@@ -264,23 +269,79 @@ class SqlMixin:
         """
         return list(
             {
-                pk.attribute_name
+                column.key
                 for model in cls.get_all_registry_names()
-                for pk in ModelAdapter(model).primary_keys(cls.anyblok)
+                for column in cls.anyblok.get(model).SQLAMapper.primary_key
             }
         )
 
     @classmethod_cache()
     def _fields_description(cls):
         """Return the information of the Field, Column, RelationShip"""
-        Field = cls.anyblok.System.Field
         res = {}
         for registry_name in cls.__depends__:
-            query = Field.query().filter(Field.model == registry_name)
-            res.update({x.name: x._description() for x in query})
+            Depend = cls.anyblok.get(registry_name)
+            res.update(Depend._fields_description())
 
-        query = Field.query().filter(Field.model == cls.__registry_name__)
-        res.update({x.name: x._description() for x in query})
+        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
+
+        for cname in cls.loaded_fields:
+            ftype = fsp[cname].__class__.__name__
+            res[cname] = dict(
+                id=cname,
+                label=cls.loaded_fields[cname],
+                type=ftype,
+                nullable=True,
+                primary_key=False,
+                model=None,
+            )
+            fsp[cname].update_description(
+                cls.anyblok, cls.__registry_name__, res[cname])
+
+        for field in cls.SQLAMapper.relationships:
+            ftype = fsp[field.key].__class__.__name__
+            local_columns = ",".join(field.info.get(
+                "local_columns", []))
+            remote_columns = ",".join(field.info.get(
+                "remote_columns", []))
+            nullable = field.info.get("nullable", True)
+            res[field.key] = dict(
+                id=field.key,
+                label=field.info.get("label"),
+                type=ftype,
+                nullable=nullable,
+                model=field.info.get("remote_model"),
+                local_columns=local_columns,
+                remote_columns=remote_columns,
+                remote_name=field.info.get("remote_name"),
+            )
+            fsp[field.key].update_description(
+                cls.anyblok, cls.__registry_name__, res[field.key])
+
+        for field in cls.SQLAMapper.columns:
+            ftype = fsp[field.key].__class__.__name__
+
+            autoincrement = field.autoincrement
+            if autoincrement == "auto":
+                autoincrement = (
+                    True
+                    if field.primary_key and ftype == "Integer"
+                    else False
+                )
+            res[field.key] = dict(
+                id=field.key,
+                label=field.info.get("label"),
+                type=ftype,
+                nullable=field.nullable,
+                primary_key=field.primary_key,
+                model=field.info.get("remote_model"),
+                unique=field.unique,
+                autoincrement=autoincrement,
+                foreign_key=field.info.get("foreign_key"),
+            )
+            fsp[field.key].update_description(
+                cls.anyblok, cls.__registry_name__, res[field.key])
+
         return res
 
     @classmethod
