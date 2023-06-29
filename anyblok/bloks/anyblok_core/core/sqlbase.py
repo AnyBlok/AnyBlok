@@ -306,18 +306,37 @@ class SqlMixin:
                 else field.key
             )
             ftype = fsp[key].__class__.__name__
-            local_columns = ",".join(field.info.get("local_columns", []))
-            remote_columns = ",".join(field.info.get("remote_columns", []))
-            nullable = field.info.get("nullable", True)
+            if ftype == 'FakeRelationShip':
+                Model = field.mapper.entity
+                model = Model.__registry_name__
+                nullable = True
+                remote_name = field.back_populates[len(anyblok_column_prefix):]
+                remote = getattr(Model, remote_name)
+                remote_columns = remote.info.get("local_columns", [])
+                local_columns = remote.info.get("remote_columns", [])
+                rtype = remote.info['rtype']
+                if rtype == "Many2One":
+                    ftype = "One2Many"
+                elif rtype == "Many2Many":
+                    ftype = "Many2Many"
+                elif rtype == "One2One":
+                    ftype = "One2One"
+            else:
+                local_columns = field.info.get("local_columns", [])
+                remote_columns = field.info.get("remote_columns", [])
+                nullable = field.info.get("nullable", True)
+                model = field.info.get("remote_model")
+                remote_name = field.info.get("remote_name")
+
             res[key] = dict(
                 id=key,
                 label=field.info.get("label"),
                 type=ftype,
                 nullable=nullable,
-                model=field.info.get("remote_model"),
+                model=model,
                 local_columns=local_columns,
                 remote_columns=remote_columns,
-                remote_name=field.info.get("remote_name"),
+                remote_name=remote_name,
             )
             fsp[key].update_description(
                 cls.anyblok, cls.__registry_name__, res[key]
@@ -512,12 +531,7 @@ class SqlMixin:
         :param name: name of the column
         :rtype: String, the name of the Type of column used
         """
-        Field = cls.anyblok.System.Field
-        query = Field.query()
-        query = query.filter(Field.name == name)
-        query = query.filter(Field.model.in_(cls.get_all_registry_names()))
-        query = query.limit(1)
-        return query.one().ftype
+        return cls.fields_description(name)[name]['type']
 
     @classmethod_cache()
     def find_remote_attribute_to_expire(cls, *fields):
