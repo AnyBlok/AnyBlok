@@ -320,14 +320,6 @@ class SqlMixin:
 
         for field in cls.SQLAMapper.columns:
             ftype = fsp[field.key].__class__.__name__
-
-            autoincrement = field.autoincrement
-            if autoincrement == "auto":
-                autoincrement = (
-                    True
-                    if field.primary_key and ftype == "Integer"
-                    else False
-                )
             res[field.key] = dict(
                 id=field.key,
                 label=field.info.get("label"),
@@ -335,9 +327,6 @@ class SqlMixin:
                 nullable=field.nullable,
                 primary_key=field.primary_key,
                 model=field.info.get("remote_model"),
-                unique=field.unique,
-                autoincrement=autoincrement,
-                foreign_key=field.info.get("foreign_key"),
             )
             fsp[field.key].update_description(
                 cls.anyblok, cls.__registry_name__, res[field.key])

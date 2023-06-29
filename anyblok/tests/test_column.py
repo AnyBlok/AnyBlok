@@ -903,12 +903,8 @@ class TestColumns:
         registry = self.init_registry(
             simple_column, ColumnType=Selection, selections=SELECTIONS
         )
-        column = (
-            registry.System.Column.query()
-            .filter_by(model="Model.Test", name="col")
-            .one()
-        )
-        assert column._description() == {
+        description = registry.Test.fields_description('col')['col']
+        assert description == {
             "id": "col",
             "label": "Col",
             "model": None,
