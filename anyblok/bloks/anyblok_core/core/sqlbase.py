@@ -275,16 +275,10 @@ class SqlMixin:
             }
         )
 
-    @classmethod_cache()
-    def _fields_description(cls):
-        """Return the information of the Field, Column, RelationShip"""
+    @classmethod
+    def _fields_description_field(cls):
         res = {}
-        for registry_name in cls.__depends__:
-            Depend = cls.anyblok.get(registry_name)
-            res.update(Depend._fields_description())
-
         fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
-
         for cname in cls.loaded_fields:
             ftype = fsp[cname].__class__.__name__
             res[cname] = dict(
@@ -299,6 +293,35 @@ class SqlMixin:
                 cls.anyblok, cls.__registry_name__, res[cname]
             )
 
+        return res
+
+    @classmethod
+    def _fields_description_column(cls):
+        res = {}
+        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
+        for field in cls.SQLAMapper.columns:
+            if field.key not in fsp:
+                continue
+
+            ftype = fsp[field.key].__class__.__name__
+            res[field.key] = dict(
+                id=field.key,
+                label=field.info.get("label"),
+                type=ftype,
+                nullable=field.nullable,
+                primary_key=field.primary_key,
+                model=field.info.get("remote_model"),
+            )
+            fsp[field.key].update_description(
+                cls.anyblok, cls.__registry_name__, res[field.key]
+            )
+
+        return res
+
+    @classmethod
+    def _fields_description_relationship(cls):
+        res = {}
+        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
         for field in cls.SQLAMapper.relationships:
             key = (
                 field.key[len(anyblok_column_prefix) :]
@@ -346,20 +369,19 @@ class SqlMixin:
                 cls.anyblok, cls.__registry_name__, res[key]
             )
 
-        for field in cls.SQLAMapper.columns:
-            ftype = fsp[field.key].__class__.__name__
-            res[field.key] = dict(
-                id=field.key,
-                label=field.info.get("label"),
-                type=ftype,
-                nullable=field.nullable,
-                primary_key=field.primary_key,
-                model=field.info.get("remote_model"),
-            )
-            fsp[field.key].update_description(
-                cls.anyblok, cls.__registry_name__, res[field.key]
-            )
+        return res
 
+    @classmethod_cache()
+    def _fields_description(cls):
+        """Return the information of the Field, Column, RelationShip"""
+        res = {}
+        for registry_name in cls.__depends__:
+            Depend = cls.anyblok.get(registry_name)
+            res.update(Depend._fields_description())
+
+        res.update(cls._fields_description_field())
+        res.update(cls._fields_description_column())
+        res.update(cls._fields_description_relationship())
         return res
 
     @classmethod
