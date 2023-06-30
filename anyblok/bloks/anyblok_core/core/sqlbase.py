@@ -310,7 +310,10 @@ class SqlMixin:
                 Model = field.mapper.entity
                 model = Model.__registry_name__
                 nullable = True
-                remote_name = field.back_populates[len(anyblok_column_prefix) :]
+                remote_name = field.back_populates
+                if remote_name.startswith(anyblok_column_prefix):
+                    remote_name = remote_name[len(anyblok_column_prefix) :]
+
                 remote = getattr(Model, remote_name)
                 remote_columns = remote.info.get("local_columns", [])
                 local_columns = remote.info.get("remote_columns", [])
@@ -337,6 +340,7 @@ class SqlMixin:
                 local_columns=local_columns,
                 remote_columns=remote_columns,
                 remote_name=remote_name,
+                primary_key=False,
             )
             fsp[key].update_description(
                 cls.anyblok, cls.__registry_name__, res[key]
