@@ -137,26 +137,22 @@ class TestCoreSqlBase:
 
     def test_fields_description_cache(self, rollback_registry):
         registry = rollback_registry
-        Model = registry.System.Model
-        Column = registry.System.Column
+        Blok = registry.System.Blok
         res = {
-            "table": {
-                "id": "table",
-                "label": "Table",
+            "short_description": {
+                "id": "short_description",
+                "label": "Short description",
                 "model": None,
                 "nullable": True,
                 "primary_key": False,
-                "type": "String",
+                "type": "Function",
             }
         }
-        assert Model.fields_description(fields=["table"]) == res
-        column = Column.from_primary_keys(
-            model="Model.System.Model", name="table"
-        )
-        column.label = "Test"
-        assert Model.fields_description(fields=["table"]) == res
-        Model.fire("Update Model", "Model.System.Model")
-        assert Model.fields_description(fields=["table"]) != res
+        assert Blok.fields_description(fields=["short_description"]) == res
+        Blok.loaded_fields["short_description"] = "Test"
+        assert Blok.fields_description(fields=["short_description"]) == res
+        Blok.clear_all_model_caches()
+        assert Blok.fields_description(fields=["short_description"]) != res
 
     def test_to_dict(self, rollback_registry):
         registry = rollback_registry

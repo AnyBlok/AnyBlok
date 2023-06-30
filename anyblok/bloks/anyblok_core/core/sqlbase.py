@@ -86,6 +86,17 @@ class SqlMixin:
     def initialize_model(cls):
         super().initialize_model()
         cls.SQLAMapper = inspect(cls)
+        cls.clear_all_model_caches()
+
+    @classmethod
+    def clear_all_model_caches(cls):
+        Cache = cls.anyblok.System.Cache
+        Cache.invalidate(cls, "_fields_description")
+        Cache.invalidate(cls, "getFieldType")
+        Cache.invalidate(cls, "get_primary_keys")
+        Cache.invalidate(cls, "find_remote_attribute_to_expire")
+        Cache.invalidate(cls, "find_relationship")
+        Cache.invalidate(cls, "get_hybrid_property_columns")
 
     @classmethod
     def define_table_args(cls):
