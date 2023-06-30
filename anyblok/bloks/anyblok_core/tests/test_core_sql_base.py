@@ -36,104 +36,84 @@ class TestCoreSqlBase:
 
     def test_from_primary_key(self, rollback_registry):
         registry = rollback_registry
-        Model = registry.System.Model
-        model = Model.query().first()
-        model2 = Model.from_primary_keys(name=model.name)
-        assert model == model2
+        Blok = registry.System.Blok
+        blok = Blok.query().first()
+        blok2 = Blok.from_primary_keys(name=blok.name)
+        assert blok == blok2
 
     def test_from_primary_keys(self, rollback_registry):
         registry = rollback_registry
-        Column = registry.System.Column
-        column = Column.query().first()
-        column2 = Column.from_primary_keys(model=column.model, name=column.name)
-        assert column == column2
+        Cache = registry.System.Cache
+        cache = Cache.query().first()
+        cache2 = Cache.from_primary_keys(id=cache.id)
+        assert cache == cache2
 
     def test_get_primary_key(self, rollback_registry):
         registry = rollback_registry
-        assert registry.System.Model.get_primary_keys() == ["name"]
+        assert registry.System.Blok.get_primary_keys() == ["name"]
 
     def test_get_primary_keys(self, rollback_registry):
         registry = rollback_registry
-        pks = registry.System.Column.get_primary_keys()
-        model_in_pks = "model" in pks
-        name_in_pks = "name" in pks
-        assert model_in_pks is True
-        assert name_in_pks is True
+        pks = registry.System.Cache.get_primary_keys()
+        assert "id" in pks
 
     def test_to_primary_key(self, rollback_registry):
         registry = rollback_registry
-        model = registry.System.Model.query().first()
-        assert model.to_primary_keys() == dict(name=model.name)
+        blok = registry.System.Blok.query().first()
+        assert blok.to_primary_keys() == dict(name=blok.name)
 
     def test_to_primary_keys(self, rollback_registry):
         registry = rollback_registry
-        column = registry.System.Column.query().first()
-        assert column.to_primary_keys() == {
-            "model": column.model,
-            "name": column.name,
+        cache = registry.System.Cache.query().first()
+        assert cache.to_primary_keys() == {
+            "id": cache.id,
         }
 
     def test_fields_description(self, rollback_registry):
         registry = rollback_registry
-        Model = registry.System.Model
+        Cache = registry.System.Cache
         res = {
-            "description": {
-                "id": "description",
-                "label": "Description",
-                "model": None,
-                "nullable": True,
-                "primary_key": False,
-                "type": "Function",
-            },
-            "is_sql_model": {
-                "id": "is_sql_model",
-                "label": "Is a SQL model",
-                "model": None,
-                "nullable": True,
-                "primary_key": False,
-                "type": "Boolean",
-            },
-            "name": {
-                "id": "name",
-                "label": "Name",
+            "id": {
+                "id": "id",
+                "label": "Id",
                 "model": None,
                 "nullable": False,
                 "primary_key": True,
-                "type": "String",
+                "type": "Integer",
             },
-            "table": {
-                "id": "table",
-                "label": "Table",
+            "method": {
+                "id": "method",
+                "label": "Method",
                 "model": None,
-                "nullable": True,
+                "nullable": False,
                 "primary_key": False,
                 "type": "String",
             },
-            "schema": {
-                "id": "schema",
-                "label": "Schema",
+            "registry_name": {
+                "id": "registry_name",
+                "label": "Registry name",
                 "model": None,
-                "nullable": True,
+                "nullable": False,
                 "primary_key": False,
                 "type": "String",
             },
         }
-        assert Model.fields_description() == res
+        assert Cache.fields_description() == res
 
     def test_fields_description_limited_field(self, rollback_registry):
         registry = rollback_registry
-        Model = registry.System.Model
+        Blok = registry.System.Blok
         res = {
-            "table": {
-                "id": "table",
-                "label": "Table",
+            "installed_version": {
+                "id": "installed_version",
+                "label": "Installed version",
                 "model": None,
                 "nullable": True,
                 "primary_key": False,
                 "type": "String",
             }
         }
-        assert Model.fields_description(fields=["table"]) == res
+        assert Blok.fields_description(fields=["installed_version"]) == res
 
     def test_fields_description_cache(self, rollback_registry):
         registry = rollback_registry
@@ -156,23 +136,21 @@ class TestCoreSqlBase:
 
     def test_to_dict(self, rollback_registry):
         registry = rollback_registry
-        M = registry.System.Model
-        model = M.query().first()
-        assert model.to_dict() == {
-            "name": model.name,
-            "table": model.table,
-            "schema": model.schema,
-            "is_sql_model": model.is_sql_model,
-            "description": model.description,
+        Cache = registry.System.Cache
+        cache = Cache.query().first()
+        assert cache.to_dict() == {
+            "id": cache.id,
+            "method": cache.method,
+            "registry_name": cache.registry_name,
         }
 
     def test_to_dict_on_some_columns(self, rollback_registry):
         registry = rollback_registry
-        M = registry.System.Model
-        model = M.query().first()
-        assert model.to_dict("name", "table") == {
-            "name": model.name,
-            "table": model.table,
+        Blok = registry.System.Blok
+        blok = Blok.query().first()
+        assert blok.to_dict("name", "installed_version") == {
+            "name": blok.name,
+            "installed_version": blok.installed_version,
         }
 
     def test_select_sql_statement_with_column(self, rollback_registry):
@@ -201,16 +179,14 @@ class TestCoreSqlBase:
 
     def test_get_hybrid_property_columns(self, rollback_registry):
         registry = rollback_registry
-        Column = registry.System.Column
-        columns = Column.get_hybrid_property_columns()
+        Blok = registry.System.Blok
+        columns = Blok.get_hybrid_property_columns()
         for x in [
             "name",
-            "model",
-            "autoincrement",
-            "foreign_key",
-            "primary_key",
-            "unique",
-            "nullable",
-            "remote_model",
+            "state",
+            "author",
+            "order",
+            "version",
+            "installed_version",
         ]:
             assert x in columns

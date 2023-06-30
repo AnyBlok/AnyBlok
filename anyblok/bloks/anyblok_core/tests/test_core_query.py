@@ -13,139 +13,134 @@ import pytest
 class TestQueryScope:
     def test_dictone(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Model.query().filter_by(
-            name="Model.System.Blok"
-        )
-        model = query.one()
+        query = registry.System.Cache.query().limit(1)
+        cache = query.one()
         assert query.dictone() == {
-            "name": model.name,
-            "table": model.table,
-            "schema": model.schema,
-            "is_sql_model": model.is_sql_model,
-            "description": model.description,
+            "id": cache.id,
+            "method": cache.method,
+            "registry_name": cache.registry_name,
         }
 
     def test_dictone_on_some_column(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Model.query("name", "table").filter(
-            registry.System.Model.name == "Model.System.Blok"
-        )
-        model = query.one()
+        query = registry.System.Cache.query("id", "method").limit(1)
+        cache = query.one()
         assert query.dictone() == {
-            "name": model.name,
-            "table": model.table,
+            "id": cache.id,
+            "method": cache.method,
         }
 
     def test_dictone_on_some_column_with_label(self, rollback_registry):
         registry = rollback_registry
-        M = registry.System.Model
-        query = M.query(M.name.label("n2"), M.table.label("t2")).filter(
-            registry.System.Model.name == "Model.System.Blok"
-        )
-        model = query.one()
+        Cache = registry.System.Cache
+        query = Cache.query(
+            Cache.id.label("n1"),
+            Cache.method.label("t2"),
+        ).limit(1)
+        cache = query.one()
         assert query.dictone() == {
-            "n2": model.n2,
-            "t2": model.t2,
+            "n1": cache.n1,
+            "t2": cache.t2,
         }
 
     def test_dictfirst(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Model.query()
-        model = query.first()
+        query = registry.System.Cache.query()
+        cache = query.first()
         assert query.dictfirst() == {
-            "name": model.name,
-            "table": model.table,
-            "schema": model.schema,
-            "is_sql_model": model.is_sql_model,
-            "description": model.description,
+            "id": cache.id,
+            "method": cache.method,
+            "registry_name": cache.registry_name,
         }
 
     def test_dictfirst_on_some_column(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Model.query("name", "table")
-        model = query.first()
+        query = registry.System.Cache.query("id", "method")
+        cache = query.first()
         assert query.dictfirst() == {
-            "name": model.name,
-            "table": model.table,
+            "id": cache.id,
+            "method": cache.method,
         }
 
     def test_dictfirst_on_some_column_with_label(self, rollback_registry):
         registry = rollback_registry
-        M = registry.System.Model
-        query = M.query(M.name.label("n2"), M.table.label("t2"))
-        model = query.first()
+        Cache = registry.System.Cache
+        query = Cache.query(
+            Cache.id.label("n1"),
+            Cache.method.label("t2"),
+        )
+        cache = query.first()
         assert query.dictfirst() == {
-            "n2": model.n2,
-            "t2": model.t2,
+            "n1": cache.n1,
+            "t2": cache.t2,
         }
 
     def test_dictall(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Model.query().limit(2)
-        models = query.all()
+        query = registry.System.Cache.query().limit(2)
+        caches = query.all()
 
-        def to_dict(model):
+        def to_dict(cache):
             return {
-                "name": model.name,
-                "table": model.table,
-                "schema": model.schema,
-                "is_sql_model": model.is_sql_model,
-                "description": model.description,
+                "id": cache.id,
+                "method": cache.method,
+                "registry_name": cache.registry_name,
             }
 
         dictall = query.dictall()
         for i in range(2):
-            assert to_dict(models[i]) in dictall
+            assert to_dict(caches[i]) in dictall
 
     def test_dictall_on_some_column(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Model.query("name", "table").limit(2)
-        models = query.all()
+        query = registry.System.Cache.query("id", "method").limit(2)
+        caches = query.all()
 
-        def to_dict(model):
+        def to_dict(cache):
             return {
-                "name": model.name,
-                "table": model.table,
+                "id": cache.id,
+                "method": cache.method,
             }
 
         dictall = query.dictall()
         for i in range(2):
-            assert to_dict(models[i]) in dictall
+            assert to_dict(caches[i]) in dictall
 
     def test_dictall_on_some_column_with_label(self, rollback_registry):
         registry = rollback_registry
-        M = registry.System.Model
-        query = M.query(M.name.label("n2"), M.table.label("t2")).limit(2)
-        models = query.all()
+        Cache = registry.System.Cache
+        query = Cache.query(
+            Cache.id.label("n1"),
+            Cache.method.label("t2"),
+        ).limit(2)
+        caches = query.all()
 
-        def to_dict(model):
+        def to_dict(cache):
             return {
-                "n2": model.n2,
-                "t2": model.t2,
+                "n1": cache.n1,
+                "t2": cache.t2,
             }
 
         dictall = query.dictall()
         for i in range(2):
-            assert to_dict(models[i]) in dictall
+            assert to_dict(caches[i]) in dictall
 
     def test_get_with_dict_use_prefix(self, rollback_registry):
         registry = rollback_registry
-        M = registry.System.Field
-        entry = M.query().get({"name": "name", "model": "Model.System.Blok"})
+        entry = registry.System.Blok.query().get({"name": "anyblok-core"})
         assert entry is not None
 
     def test_get_with_kwargs(self, rollback_registry):
         registry = rollback_registry
-        M = registry.System.Field
-        entry = M.query().get(name="name", model="Model.System.Blok")
+        entry = registry.System.Blok.query().get(name="anyblok-core")
         assert entry is not None
 
     def test_str(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Field.query()
+        query = registry.System.Sequence.query()
         assert str(query) == str(query.sql_statement)
 
     def test_repr(self, rollback_registry):
         registry = rollback_registry
-        query = registry.System.Field.query()
+        query = registry.System.Sequence.query()
         assert repr(query) == str(query.sql_statement)
