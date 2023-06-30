@@ -28,6 +28,7 @@ from sqlalchemy.schema import (
     UniqueConstraint,
 )
 from sqlalchemy.sql.ddl import CreateSchema, DropSchema
+from sqlalchemy_utils import get_mapper
 
 from anyblok.config import Configuration
 
@@ -915,15 +916,7 @@ class MigrationColumn:
             table.append_column(column)
             cname = getattr(table.c, column.name)
             if column.default.is_callable:
-                Table = self.table.migration.metadata.tables["system_model"]
-                Column = self.table.migration.metadata.tables["system_column"]
-                query_pks = select(Column.c.name)
-                query_pks = query_pks.join(
-                    Table, Column.c.model == Table.c.name
-                )
-                query_pks = query_pks.where(Table.c.table == self.table.name)
-                query_pks = query_pks.where(Column.c.primary_key.is_(True))
-                columns = [x[0] for x in execute(query_pks).fetchall()]
+                columns = get_mapper(table).entity.get_primary_keys()
 
                 query_count = select(func.count()).select_from(table)
                 query_count = query_count.where(cname.is_(None))
@@ -1586,6 +1579,7 @@ class Migration:
             self.conn.dialect, None
         )
         self.ignore_migration_for = registry.ignore_migration_for
+        self.registry = registry
 
         opts = {
             "include_schemas": True,
