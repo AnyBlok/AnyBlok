@@ -13,11 +13,8 @@ from anyblok.field import FieldException
 
 @Declarations.register(Declarations.Model.Documentation.Model)
 class Attribute:
-    def __init__(self, attribute):
+    def __init__(self, attribute, parent):
         self.name, self.attribute = attribute
-
-    def exist(self, model):
-        return model.exist()
 
     @classmethod
     def filterAttribute(cls, model, name):
@@ -58,7 +55,7 @@ class Attribute:
     @classmethod
     def getelements(cls, model):
         res = []
-        Model = cls.anyblok.get(model.model.name)
+        Model = cls.anyblok.get(model.model)
         try:
             for k, v in getmembers(Model):
                 if ismodule(v) or isclass(v):
