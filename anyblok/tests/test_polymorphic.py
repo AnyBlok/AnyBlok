@@ -473,6 +473,27 @@ class TestMultiTablePolyFk:
         assert registry.Engineer.getFieldType("engineer_name") == "String"
         assert registry.Engineer.getFieldType("room") == "Many2One"
 
+    def test_hybrid_property_column_with_relationship(
+        self, registry_multi_table_poly_fk
+    ):
+        registry = registry_multi_table_poly_fk
+        hb_cols = registry.Employee.get_hybrid_property_columns()
+        assert "name" in hb_cols
+        assert "type_entity" in hb_cols
+        assert "room" in hb_cols
+
+        hb_cols = registry.Engineer.get_hybrid_property_columns()
+        assert "name" in hb_cols
+        assert "type_entity" in hb_cols
+        assert "room" in hb_cols
+
+    def test_get_model_information(self, registry_multi_table_poly_fk):
+        registry = registry_multi_table_poly_fk
+        res = registry.Employee.find_remote_attribute_to_expire("room")
+        assert res == {"room": ["employees"]}
+        res = registry.Engineer.find_remote_attribute_to_expire("room")
+        assert res == {"room": ["employees"]}
+
 
 def multi_table_foreign_key_with_one_define_mapper_args():
     @register(Model)

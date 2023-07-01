@@ -148,9 +148,12 @@ class TestCoreSqlBase:
         registry = rollback_registry
         Blok = registry.System.Blok
         blok = Blok.query().first()
-        assert blok.to_dict("name", "installed_version") == {
+        assert blok.to_dict(
+            "name", "installed_version", "short_description"
+        ) == {
             "name": blok.name,
             "installed_version": blok.installed_version,
+            "short_description": "",
         }
 
     def test_select_sql_statement_with_column(self, rollback_registry):

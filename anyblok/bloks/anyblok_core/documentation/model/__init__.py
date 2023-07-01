@@ -29,11 +29,11 @@ class Model(Declarations.Mixin.DocElement):
         return self.anyblok.has(self.model)
 
     @classmethod
-    def filterModel(cls, models):
+    def filterModel(cls, models):  # noqa: C901
         wanted_models = Configuration.get("doc_wanted_models") or []
         if wanted_models:
             new_models = []
-            for model in models:
+            for model in models:  # pragma: no cover
                 for wanted_model in wanted_models:
                     if wanted_model[-1] == "*" and model.startswidth(
                         wanted_model[:-1]

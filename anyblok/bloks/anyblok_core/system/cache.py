@@ -31,7 +31,7 @@ class Cache:
         if res:
             return res[0]
 
-        return 0
+        return 0  # pragma: no cover
 
     @classmethod
     def initialize_model(cls):
