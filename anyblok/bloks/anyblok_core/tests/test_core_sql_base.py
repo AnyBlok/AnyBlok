@@ -153,7 +153,7 @@ class TestCoreSqlBase:
         ) == {
             "name": blok.name,
             "installed_version": blok.installed_version,
-            "short_description": "",
+            "short_description": blok.short_description,
         }
 
     def test_select_sql_statement_with_column(self, rollback_registry):
