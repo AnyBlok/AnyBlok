@@ -21,13 +21,12 @@ class TestQueryScope:
             "registry_name": cache.registry_name,
         }
 
-    def test_dictone(self, rollback_registry):
+    def test_iteration(self, rollback_registry):
         registry = rollback_registry
         query = registry.System.Blok.query()
         has_iteration = False
         for blok in query:
             has_iteration = True
-            print(" ===> blok", blok)
 
         if has_iteration is False:
             pytest.fail("No iteration")
