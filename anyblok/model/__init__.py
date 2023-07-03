@@ -660,6 +660,8 @@ class Model:
 
         Blok = registry.System.Blok
         if not registry.withoutautomigration:
+            Model = registry.System.Model
+            Model.update_list()
             registry.update_blok_list()
 
         bloks = Blok.list_by_state("touninstall")
