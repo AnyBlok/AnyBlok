@@ -25,6 +25,8 @@ CHANGELOG
 * Implement psycopg3 capability
 * Improved TimeStamp field
 * Fixed #227 str and repr of the query call str query.sql_statement
+* Refactored main methods to get the description of the models and fields
+  without used the existing table
 
 2.0.0 (2023-03-11)
 ------------------
