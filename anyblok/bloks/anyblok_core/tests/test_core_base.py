@@ -31,6 +31,6 @@ class TestCoreBaseScope:
 
     def test_get_model(self, rollback_registry):
         registry = rollback_registry
-        m = registry.System.Model
-        m2 = registry.System.get_model("Model.System.Model")
-        assert m == m2
+        Blok = registry.System.Blok
+        Blok2 = registry.System.get_model("Model.System.Blok")
+        assert Blok == Blok2

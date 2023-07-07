@@ -12,9 +12,7 @@ from anyblok import Declarations, reload_module_if_blok_is_reloading
 class DocElement:
     def _auto_doc(self, Model, elements, *args, **kwargs):
         for el in Model.getelements(*args, **kwargs):
-            _el = Model(el)
-            if _el.exist(*args, **kwargs):
-                elements.append(_el)
+            elements.append(Model(el, self))
 
     def _toRST(self, doc, Model, elements):
         Model.header2RST(doc)

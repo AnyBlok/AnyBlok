@@ -11,7 +11,7 @@ from anyblok.config import Configuration
 
 @Declarations.register(Declarations.Model.Documentation)
 class Model(Declarations.Mixin.DocElement):
-    def __init__(self, model):
+    def __init__(self, model, parent):
         self.model = model
         self.fields = []
         self.attributes = []
@@ -26,44 +26,49 @@ class Model(Declarations.Mixin.DocElement):
             )
 
     def exist(self):
-        return self.anyblok.has(self.model.name)
+        return self.anyblok.has(self.model)
 
     @classmethod
-    def get_all_models(cls, models):  # pragma: no cover
-        Model = cls.anyblok.System.Model
-        res = []
-        for model in models:
-            if model[-2:] == ".*":
-                query = Model.query().filter(Model.name.like(model[:-1] + "%"))
-                res.extend(query.all().name)
-            else:
-                res.append(model)
-
-        return res
-
-    @classmethod
-    def filterModel(cls, query):
-        Model = cls.anyblok.System.Model
-        wanted_models = Configuration.get("doc_wanted_models")
+    def filterModel(cls, models):  # noqa: C901
+        wanted_models = Configuration.get("doc_wanted_models") or []
         if wanted_models:  # pragma: no cover
-            wanted_models = cls.get_all_models(wanted_models)
-            query = query.filter(Model.name.in_(wanted_models))
-        else:
-            wanted_models = []
+            new_models = []
+            for model in models:
+                for wanted_model in wanted_models:
+                    if wanted_model[-1] == "*" and model.startswidth(
+                        wanted_model[:-1]
+                    ):
+                        new_models.append(model)
+                    elif wanted_model == model:
+                        new_models.append(model)
+            models = new_models
 
-        unwanted_models = Configuration.get("doc_unwanted_models")
+        unwanted_models = Configuration.get("doc_unwanted_models") or []
         if unwanted_models:  # pragma: no cover
-            unwanted_models = cls.get_all_models(unwanted_models)
             unwanted_models = [
                 x for x in unwanted_models if x not in wanted_models
             ]
-            query = query.filter(Model.name.notin_(unwanted_models))
+            new_models = []
+            for model in models:
+                for unwanted_model in unwanted_models:
+                    if unwanted_model[-1] == "*" and model.startswidth(
+                        unwanted_model[:-1]
+                    ):
+                        continue
+                    elif unwanted_model == model:
+                        continue
 
-        return query
+                    new_models.append(model)
+
+            models = new_models
+
+        return models
 
     @classmethod
     def getelements(cls):
-        return cls.filterModel(cls.anyblok.System.Model.query()).all()
+        return cls.filterModel(
+            [x for x in cls.anyblok.loaded_namespaces.keys()]
+        )
 
     @classmethod
     def header2RST(cls, doc):
@@ -78,7 +83,7 @@ class Model(Declarations.Mixin.DocElement):
         pass
 
     def toRST(self, doc):
-        doc.write(self.model.name + "\n" + "-" * len(self.model.name) + "\n\n")
+        doc.write(self.model + "\n" + "-" * len(self.model) + "\n\n")
         self.toRST_docstring(doc)
         self.toRST_properties(doc)
         self.toRST_field(doc)
@@ -97,12 +102,12 @@ class Model(Declarations.Mixin.DocElement):
             )
 
     def toRST_docstring(self, doc):
-        Model = self.anyblok.get(self.model.name)
+        Model = self.anyblok.get(self.model)
         if hasattr(Model, "__doc__") and Model.__doc__:
             doc.write(Model.__doc__ + "\n\n")
 
     def toRST_properties_get(self):
-        Model = self.anyblok.get(self.model.name)
+        Model = self.anyblok.get(self.model)
         tablename = getattr(Model, "__tablename__", "No table")
         return {
             "table name": tablename,
@@ -116,22 +121,22 @@ class Model(Declarations.Mixin.DocElement):
         doc.write(msg + "\n\n")
 
     def toUML_add_model(self, dot):
-        dot.add_class(self.model.name)
+        dot.add_class(self.model)
 
     def toUML_add_attributes(self, dot):
         for f in self.fields:
             f.toUML(dot)
 
         for attr in self.attributes:
-            attr.toUML(dot, self.model.name)
+            attr.toUML(dot, self.model)
 
     def toSQL_add_table(self, dot):
-        Model = self.anyblok.get(self.model.name)
+        Model = self.anyblok.get(self.model)
         if hasattr(Model, "__tablename__"):
             dot.add_table(Model.__tablename__)
 
     def toSQL_add_fields(self, dot):
-        Model = self.anyblok.get(self.model.name)
+        Model = self.anyblok.get(self.model)
         if hasattr(Model, "__tablename__"):
             for f in self.fields:
                 f.toSQL(dot)

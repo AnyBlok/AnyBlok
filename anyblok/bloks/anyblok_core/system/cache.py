@@ -31,7 +31,7 @@ class Cache:
         if res:
             return res[0]
 
-        return 0
+        return 0  # pragma: no cover
 
     @classmethod
     def initialize_model(cls):
@@ -62,25 +62,22 @@ class Cache:
         """
         caches = cls.anyblok.caches
 
-        def insert(registry_name=None, method=None):
-            if registry_name in caches:
-                if method in caches[registry_name]:
-                    cls.last_cache_id = cls.insert(
-                        registry_name=registry_name, method=method
-                    ).id
-                    for cache in caches[registry_name][method]:
-                        cache.cache_clear()
-                else:
-                    raise CacheException(  # pragma: no cover
-                        "Unknown cached method %r" % method
-                    )
-            else:
-                raise CacheException("Unknown cached model %r" % registry_name)
+        if hasattr(registry_name, "__registry_name__"):
+            registry_name = registry_name.__registry_name__
 
-        if isinstance(registry_name, str):
-            insert(registry_name=registry_name, method=method)
-        elif hasattr(registry_name, "__registry_name__"):
-            insert(registry_name=registry_name.__registry_name__, method=method)
+        if registry_name in caches:
+            if method in caches[registry_name]:
+                cls.last_cache_id = cls.insert(
+                    registry_name=registry_name, method=method
+                ).id
+                for cache in caches[registry_name][method]:
+                    cache.cache_clear()
+            else:
+                raise CacheException(  # pragma: no cover
+                    "Unknown cached method %r" % method
+                )
+        else:
+            raise CacheException("Unknown cached model %r" % registry_name)
 
     @classmethod
     def get_invalidation(cls):

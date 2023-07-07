@@ -25,29 +25,17 @@ class Field:
         ("One2One", False): ("o2o", "o2o"),
     }
 
-    def exist(self, model):
-        if not model.exist():
-            return False  # pragma: no cover
-
-        M = self.anyblok.get(model.model.name)
-        if self.field.name in M.loaded_columns:
-            return True
-
-        return False  # pragma: no cover
-
-    def __init__(self, field):
+    def __init__(self, field, parent):
         self.field = field
-
-    @classmethod
-    def filterField(cls, query):
-        return query
+        self.model = parent.model
 
     @classmethod
     def getelements(cls, model):
-        query = cls.filterField(cls.anyblok.System.Field.query())
-        return query.filter(
-            cls.anyblok.System.Field.model == model.model.name
-        ).all()
+        Model = cls.anyblok.get(model.model)
+        if Model.is_sql:
+            return Model.fields_description().values()
+
+        return []
 
     @classmethod
     def header2RST(cls, doc):
@@ -58,7 +46,7 @@ class Field:
         pass
 
     def toRST(self, doc):
-        doc.write("* " + self.field.name + "\n\n")
+        doc.write("* " + self.field["id"] + "\n\n")
         self.toRST_docstring(doc)
         self.toRST_properties(doc)
 
@@ -67,7 +55,7 @@ class Field:
             doc.write(self.field.__doc__ + "\n\n")  # pragma: no cover
 
     def toRST_properties_get(self):
-        return {x: y for x, y in self.field.to_dict().items() if x != "name"}
+        return {x: y for x, y in self.field.items() if x != "id"}
 
     def toRST_properties(self, doc):
         properties = self.toRST_properties_get()
@@ -75,38 +63,28 @@ class Field:
         doc.write(msg + "\n\n")
 
     def toUML(self, dot):
-        if self.field.entity_type == "Model.System.Field":
-            self.toUML_field(dot)
-        elif self.field.entity_type == "Model.System.Column":
-            self.toUML_column(dot)
-        elif (
-            self.field.entity_type == "Model.System.RelationShip"
-        ):  # pragma: no cover
-            self.toUML_relationship(dot)
+        if "remote_name" in self.field:
+            self.toUML_relationship(dot)  # pragma: no cover
         else:
-            logger.warning("Unknown entity type %r" % self.field.entity_type)
-
-    def toUML_field(self, dot):
-        model = dot.get_class(self.field.model)
-        model.add_column(self.field.name)
+            self.toUML_column(dot)
 
     def toUML_column(self, dot):
-        model = dot.get_class(self.field.model)
-        name = self.field.name
-        if self.field.primary_key:
+        model = dot.get_class(self.model)
+        name = self.field["id"]
+        if self.field["primary_key"]:
             name = "+PK+ " + name
 
-        if self.field.remote_model:  # pragma: no cover
-            remote_model = dot.get_class(self.field.remote_model)
+        if self.field["model"]:  # pragma: no cover
+            remote_model = dot.get_class(self.field["model"])
             multiplicity = "1"
-            if self.field.nullable:
+            if self.field["nullable"]:
                 multiplicity = "0..1"
 
             model.aggregate(
                 remote_model, label_from=name, multiplicity_from=multiplicity
             )
         else:
-            name += " (%s)" % self.field.ftype
+            name += " (%s)" % self.field["type"]
             model.add_column(name)
 
     def toUML_relationship(self, dot):  # pragma: no cover
@@ -126,28 +104,22 @@ class Field:
         )
 
     def toSQL(self, dot):
-        if self.field.entity_type == "Model.System.Field":
-            self.toSQL_field(dot)
-        elif self.field.entity_type == "Model.System.Column":
-            self.toSQL_column(dot)
-        elif (
-            self.field.entity_type == "Model.System.RelationShip"
-        ):  # pragma: no cover
-            self.toSQL_relationship(dot)
+        if "remote_name" in self.field:
+            self.toSQL_relationship(dot)  # pragma: no cover
         else:
-            logger.warning("Unknown entity type %r" % self.field.entity_type)
-
-    def toSQL_field(self, dot):
-        # DO NOTHING
-        pass
+            self.toSQL_column(dot)
 
     def toSQL_relationship(self, dot):
         # TODO
         pass  # pragma: no cover
 
     def toSQL_column(self, dot):
-        table = dot.get_table(self.anyblok.get(self.field.model).__tablename__)
-        if self.field.foreign_key:  # pragma: no cover
+        Model = self.anyblok.get(self.model)
+        if self.field["id"] in Model.loaded_fields:
+            return
+
+        table = dot.get_table(self.anyblok.get(self.model).__tablename__)
+        if self.field.get("foreign_key"):  # pragma: no cover
             remote_table = dot.get_table(self.field.foreign_key.split(".")[0])
             if remote_table is None:
                 remote_table = dot.add_label(
@@ -161,7 +133,7 @@ class Field:
             )
         else:
             table.add_column(
-                self.field.name,
-                self.field.ftype,
-                primary_key=self.field.primary_key,
+                self.field["id"],
+                self.field["type"],
+                primary_key=self.field["primary_key"],
             )
