@@ -74,42 +74,6 @@ System Models
 .. autoanyblok-declaration:: Cache
     :members:
 
-.. automodule:: anyblok.bloks.anyblok_core.system.field
-
-.. autoanyblok-declaration:: Field
-    :members:
-
-.. warning::
-
-    Deprecated
-
-.. automodule:: anyblok.bloks.anyblok_core.system.column
-
-.. autoanyblok-declaration:: Column
-    :members:
-
-.. warning::
-
-    Deprecated
-
-.. automodule:: anyblok.bloks.anyblok_core.system.relationship
-
-.. autoanyblok-declaration:: RelationShip
-    :members:
-
-.. warning::
-
-    Deprecated
-
-.. automodule:: anyblok.bloks.anyblok_core.system.model
-
-.. autoanyblok-declaration:: Model
-    :members:
-
-.. warning::
-
-    Deprecated
-
 .. automodule:: anyblok.bloks.anyblok_core.system.parameter
 
 .. autoanyblok-declaration:: Parameter
