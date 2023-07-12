@@ -11,7 +11,6 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 import decimal
 import time
-import warnings
 from base64 import b64decode, b64encode
 from datetime import date, datetime, timedelta
 from hashlib import md5
@@ -238,18 +237,6 @@ class Column(Field):
         :return:
         """
         if self.foreign_key:
-            if self.foreign_key.model_name in (
-                "Model.System.Model",
-                "Model.System.Field",
-                "Model.System.Column",
-                "Model.System.Relationship",
-            ):
-                warnings.warn(
-                    f"A foreign key to {self.foreign_key.model_name} "
-                    "is depecated becauses this Model will be removed",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
 
             CompareType.validate(
                 ModelAttribute(namespace, fieldname),
