@@ -19,12 +19,12 @@ from .plugins import ModelPluginBase
 def check_deprecated_foreign_keys(res):
     for entry in res:
         if isinstance(entry, ForeignKeyConstraint):
-            table = entry.elements[0].target_fullname.split('.')[0]
+            table = entry.elements[0].target_fullname.split(".")[0]
             if table in (
-                'system_model',
-                'system_field',
-                'system_column',
-                'system_relationship',
+                "system_model",
+                "system_field",
+                "system_column",
+                "system_relationship",
             ):
                 warnings.warn(
                     f"A foreign key to {table} is depecated becauses this "

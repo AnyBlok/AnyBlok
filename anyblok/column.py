@@ -12,7 +12,6 @@
 import decimal
 import time
 import warnings
-
 from base64 import b64decode, b64encode
 from datetime import date, datetime, timedelta
 from hashlib import md5
@@ -240,10 +239,10 @@ class Column(Field):
         """
         if self.foreign_key:
             if self.foreign_key.model_name in (
-                'Model.System.Model',
-                'Model.System.Field',
-                'Model.System.Column',
-                'Model.System.Relationship',
+                "Model.System.Model",
+                "Model.System.Field",
+                "Model.System.Column",
+                "Model.System.Relationship",
             ):
                 warnings.warn(
                     f"A foreign key to {self.foreign_key.model_name} "

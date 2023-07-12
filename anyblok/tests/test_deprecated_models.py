@@ -9,17 +9,15 @@ import pytest
 
 from anyblok import Declarations
 from anyblok.column import Integer, String
-from anyblok.relationship import Many2One, One2One, Many2Many
+from anyblok.relationship import Many2Many, Many2One, One2One
 
 from .conftest import init_registry, reset_db
-
 
 Model = Declarations.Model
 register = Declarations.register
 
 
 def column_with_foreign_key():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
@@ -27,7 +25,6 @@ def column_with_foreign_key():
 
 
 def _minimum_many2one():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
@@ -35,7 +32,6 @@ def _minimum_many2one():
 
 
 def _minimum_one2one():
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
@@ -43,7 +39,6 @@ def _minimum_one2one():
 
 
 def _minimum_many2many(**kwargs):
-
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
