@@ -5,6 +5,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+import warnings
+
 from sqlalchemy import CheckConstraint, ForeignKeyConstraint
 from sqlalchemy.exc import NoInspectionAvailable
 from sqlalchemy.ext.declarative import declared_attr
@@ -12,6 +14,26 @@ from sqlalchemy.ext.declarative import declared_attr
 from ..common import sgdb_in
 from .exceptions import ModelException
 from .plugins import ModelPluginBase
+
+
+def check_deprecated_foreign_keys(res):
+    for entry in res:
+        if isinstance(entry, ForeignKeyConstraint):
+            table = entry.elements[0].target_fullname.split('.')[0]
+            if table in (
+                'system_model',
+                'system_field',
+                'system_column',
+                'system_relationship',
+            ):
+                warnings.warn(
+                    f"A foreign key to {table} is depecated becauses this "
+                    "Model will be removed",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
+    return res
 
 
 class TableMapperPlugin(ModelPluginBase):
@@ -165,19 +187,19 @@ class TableMapperPlugin(ModelPluginBase):
                         "class use the anyblok Index or constraint"
                     )
 
-                return res
+                return check_deprecated_foreign_keys(res)
 
             new_base.__table_args__ = declared_attr(__table_args__)
         elif transformation_properties["table_args"]:
 
             def __table_args__(cls_):
-                return cls_.define_table_args()
+                return check_deprecated_foreign_keys(cls_.define_table_args())
 
             new_base.__table_args__ = declared_attr(__table_args__)
         elif transformation_properties["table_kwargs"]:  # pragma: no cover
 
             def __table_args__(cls_):
-                return cls_.define_table_kwargs()
+                return check_deprecated_foreign_keys(cls_.define_table_kwargs())
 
             new_base.__table_args__ = declared_attr(__table_args__)
 
