@@ -13,18 +13,6 @@ class System:
     pass
 
 
-from . import model  # noqa
-
-reload_module_if_blok_is_reloading(model)
-from . import field  # noqa
-
-reload_module_if_blok_is_reloading(field)
-from . import column  # noqa
-
-reload_module_if_blok_is_reloading(column)
-from . import relationship  # noqa
-
-reload_module_if_blok_is_reloading(relationship)
 from . import blok  # noqa
 
 reload_module_if_blok_is_reloading(blok)
