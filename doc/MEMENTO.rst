@@ -1316,7 +1316,7 @@ Get the registry
 You can get the registry in any method of Models with the attribute **anyblok**::
 
     Model = self.anyblok.System.Model
-    assert Model.__registry_name__ == 'Model.System.Model'
+    assert Model.__registry_name__ == 'Model.System.Blok'
 
 .. warning::
 
