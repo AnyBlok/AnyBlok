@@ -237,7 +237,6 @@ class Column(Field):
         :return:
         """
         if self.foreign_key:
-
             CompareType.validate(
                 ModelAttribute(namespace, fieldname),
                 self,
