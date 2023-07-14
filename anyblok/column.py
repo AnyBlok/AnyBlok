@@ -1855,14 +1855,14 @@ class ModelSelectionType(types.TypeDecorator):
 
     def __init__(self, validator, registry=None, namespace=None):
         super(ModelSelectionType, self).__init__(length=256)
+
         if validator is None:
             validator = model_validator_all
-        elif isinstance(validator, str):
-            validator = getattr(registry.get(namespace), validator)
-
-        self.validator = validator
 
         def _validator(obj, Model):
+            if isinstance(validator, str):
+                return getattr(registry.get(namespace), validator)(Model)
+
             return validator(Model)
 
         self._StrModelSelection = type(
@@ -1891,6 +1891,7 @@ class ModelSelectionType(types.TypeDecorator):
 class ModelSelection(Column):
     """ModelSelection column
 
+    Allow to Reference an AnyBlok Model
     ::
 
         from anyblok.declarations import Declarations
@@ -1904,6 +1905,10 @@ class ModelSelection(Column):
                 default='Model.System.Blok',
                 validator="_get_validator"
             )
+
+            @classmethod
+            def _get_validator(cls, Model):
+                return True or False
 
     """
 
