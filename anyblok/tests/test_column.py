@@ -1537,6 +1537,7 @@ def add_modelselection_in_registry():
     class Test:
         id = Integer(primary_key=True)
         col = ModelSelection(validator="my_validator")
+        col2 = ModelSelection()
 
         @classmethod
         def my_validator(cls, Model):
@@ -1578,6 +1579,15 @@ class TestColumnModelSelection:
             ],
             "type": "ModelSelection",
         }
+
+    def test_description2(self, registry_modelselection):
+        description = registry_modelselection.Test.fields_description(
+            ["col", "col2"]
+        )
+        assert (
+            description["col"]["selections"]
+            != description["col2"]["selections"]
+        )
 
     def test_setter_model_validator_all(self, registry_modelselection):
         assert model_validator_all(registry_modelselection.System) is True

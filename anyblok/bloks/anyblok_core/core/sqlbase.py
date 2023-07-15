@@ -86,10 +86,10 @@ class SqlMixin:
     def initialize_model(cls):
         super().initialize_model()
         cls.SQLAMapper = inspect(cls)
-        cls.clear_all_model_caches()
 
     @classmethod
     def clear_all_model_caches(cls):
+        super().clear_all_model_caches()
         Cache = cls.anyblok.System.Cache
         Cache.invalidate(cls, "_fields_description")
         Cache.invalidate(cls, "getFieldType")

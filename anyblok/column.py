@@ -1817,17 +1817,21 @@ class StrModelSelection(str):
 
     validator = None
     registry = None
+    selections = None
 
     def get_selections(self):
         """Return a dict of selections
 
         :return: selections dict
         """
-        return {
-            k: v.__doc__ and v.__doc__.split("\n")[0] or k
-            for k, v in self.registry.loaded_namespaces.items()
-            if self.validator(v)
-        }
+        if not self.selections:
+            self.__class__.selections = {
+                k: v.__doc__ and v.__doc__.split("\n")[0] or k
+                for k, v in self.registry.loaded_namespaces.items()
+                if self.validator(v)
+            }
+
+        return self.selections
 
     def validate(self):
         """Validate if the key is in the selections
@@ -1871,6 +1875,7 @@ class ModelSelectionType(types.TypeDecorator):
             {
                 "validator": _validator,
                 "registry": registry,
+                "selections": None,
             },
         )
 
