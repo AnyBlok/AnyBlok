@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from sqlalchemy import func
 
-from anyblok.column import Integer, String
+from anyblok.column import Integer, ModelSelection, String
 from anyblok.declarations import Declarations
 
 from ..exceptions import CacheException
@@ -21,7 +21,7 @@ class Cache:
     last_cache_id = None
 
     id = Integer(primary_key=True)
-    registry_name = String(nullable=False)
+    registry_name = ModelSelection(nullable=False)
     method = String(nullable=False)
 
     @classmethod

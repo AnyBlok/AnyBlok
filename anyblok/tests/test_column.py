@@ -43,6 +43,7 @@ from anyblok.column import (
     Interval,
     Json,
     LargeBinary,
+    ModelSelection,
     Password,
     PhoneNumber,
     Selection,
@@ -53,6 +54,13 @@ from anyblok.column import (
     TimeStamp,
     add_timezone_on_datetime,
     convert_string_to_datetime,
+    model_validator_all,
+    model_validator_in_namespace,
+    model_validator_is_not_sql,
+    model_validator_is_not_view,
+    model_validator_is_sql,
+    model_validator_is_view,
+    model_validator_merge,
 )
 from anyblok.config import Configuration
 from anyblok.field import FieldException
@@ -155,6 +163,10 @@ COLUMNS = [
     pytest.param(
         (Json, {"name": "test"}, {}),
         id="Json",
+    ),
+    pytest.param(
+        (ModelSelection, "Model.System.Blok", {}),
+        id="ModelSelection",
     ),
 ]
 
@@ -1520,6 +1532,140 @@ class TestColumns:
         ) == str(ex.value), "Column name should be part of raised message"
 
 
+def add_modelselection_in_registry():
+    @register(Model)
+    class Test:
+        id = Integer(primary_key=True)
+        col = ModelSelection(validator="my_validator")
+        col2 = ModelSelection()
+
+        @classmethod
+        def my_validator(cls, Model):
+            return Model.__registry_name__ == "Model.System.Blok"
+
+
+@pytest.fixture(scope="class")
+def registry_modelselection(request, bloks_loaded):
+    reset_db()
+    registry = init_registry(add_modelselection_in_registry)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+@pytest.mark.relationship
+class TestColumnModelSelection:
+    def test_setter_use_method(self, registry_modelselection):
+        test = registry_modelselection.Test.insert()
+        assert test.col is None
+
+        with pytest.raises(FieldException):
+            test.col = "Model.System"
+
+        test.col = "Model.System.Blok"
+        assert test.col.Model is registry_modelselection.System.Blok
+
+    def test_description(self, registry_modelselection):
+        description = registry_modelselection.Test.fields_description("col")[
+            "col"
+        ]
+        assert description == {
+            "id": "col",
+            "label": "Col",
+            "model": None,
+            "nullable": True,
+            "primary_key": False,
+            "selections": [
+                ("Model.System.Blok", "Model.System.Blok"),
+            ],
+            "type": "ModelSelection",
+        }
+
+    def test_description2(self, registry_modelselection):
+        description = registry_modelselection.Test.fields_description(
+            ["col", "col2"]
+        )
+        assert (
+            description["col"]["selections"]
+            != description["col2"]["selections"]
+        )
+
+    def test_setter_model_validator_all(self, registry_modelselection):
+        assert model_validator_all(registry_modelselection.System) is True
+
+    def test_modelselection_setter_model_validator_is_sql(
+        self, registry_modelselection
+    ):
+        assert model_validator_is_sql(registry_modelselection.System) is False
+        assert (
+            model_validator_is_sql(registry_modelselection.System.Blok) is True
+        )
+
+    def test_modelselection_setter_model_validator_is_not_sql(
+        self, registry_modelselection
+    ):
+        assert (
+            model_validator_is_not_sql(registry_modelselection.System) is True
+        )
+        assert (
+            model_validator_is_not_sql(registry_modelselection.System.Blok)
+            is False
+        )
+
+    def test_modelselection_setter_model_validator_is_view(
+        self, registry_modelselection
+    ):
+        assert model_validator_is_view(registry_modelselection.System) is False
+        assert (
+            model_validator_is_view(registry_modelselection.System.Blok)
+            is False
+        )
+
+    def test_modelselection_setter_model_validator_is_not_view(
+        self, registry_modelselection
+    ):
+        assert (
+            model_validator_is_not_view(registry_modelselection.System) is True
+        )
+        assert (
+            model_validator_is_not_view(registry_modelselection.System.Blok)
+            is True
+        )
+
+    def test_modelselection_setter_model_validator_in_namespace(
+        self, registry_modelselection
+    ):
+        assert (
+            model_validator_in_namespace(Model.System)(
+                registry_modelselection.Test
+            )
+            is False
+        )
+        assert (
+            model_validator_in_namespace(Model.System)(
+                registry_modelselection.System
+            )
+            is False
+        )
+        assert (
+            model_validator_in_namespace(Model.System)(
+                registry_modelselection.System.Blok
+            )
+            is True
+        )
+
+    def test_modelselection_setter_model_validator_merge(
+        self, registry_modelselection
+    ):
+        validator = model_validator_merge(
+            model_validator_is_sql,
+            model_validator_is_not_view,
+            model_validator_in_namespace(Model.System),
+        )
+        assert validator(registry_modelselection.Test) is False
+        assert validator(registry_modelselection.System) is False
+        assert validator(registry_modelselection.System.Blok) is True
+
+
 class TestColumnsAutoDoc:
     def call_autodoc(self, column, **kwargs):
         col = column(**kwargs)
@@ -1569,6 +1715,9 @@ class TestColumnsAutoDoc:
     @pytest.mark.skipif(not has_pycountry, reason="pycountry is not installed")
     def test_pycoundtry_at_insert_with_alpha_3(self):
         self.call_autodoc(Country, mode="alpha_3")
+
+    def test_modelselection(self):
+        self.call_autodoc(ModelSelection)
 
 
 class Test_convert_string_to_datetime:

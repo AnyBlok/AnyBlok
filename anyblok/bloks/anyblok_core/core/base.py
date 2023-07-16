@@ -26,6 +26,11 @@ class Base:
         pass
 
     @classmethod
+    def clear_all_model_caches(cls):
+        """Clear all caches in the case of bloks changes"""
+        pass
+
+    @classmethod
     def fire(cls, event, *args, **kwargs):
         """Call a specific event on the model
 

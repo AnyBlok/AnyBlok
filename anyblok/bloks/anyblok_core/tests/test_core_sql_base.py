@@ -72,6 +72,10 @@ class TestCoreSqlBase:
     def test_fields_description(self, rollback_registry):
         registry = rollback_registry
         Cache = registry.System.Cache
+        selections = [
+            (k, v.__doc__ and v.__doc__.split("\n")[0] or k)
+            for k, v in registry.loaded_namespaces.items()
+        ]
         res = {
             "id": {
                 "id": "id",
@@ -95,7 +99,8 @@ class TestCoreSqlBase:
                 "model": None,
                 "nullable": False,
                 "primary_key": False,
-                "type": "String",
+                "type": "ModelSelection",
+                "selections": selections,
             },
         }
         assert Cache.fields_description() == res
