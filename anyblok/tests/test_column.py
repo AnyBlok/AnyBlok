@@ -1554,6 +1554,12 @@ def registry_modelselection(request, bloks_loaded):
 
 @pytest.mark.relationship
 class TestColumnModelSelection:
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_modelselection):
+        transaction = registry_modelselection.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
     def test_setter_use_method(self, registry_modelselection):
         test = registry_modelselection.Test.insert()
         assert test.col is None
@@ -1664,6 +1670,30 @@ class TestColumnModelSelection:
         assert validator(registry_modelselection.Test) is False
         assert validator(registry_modelselection.System) is False
         assert validator(registry_modelselection.System.Blok) is True
+
+    def test_search_with_str(self, registry_modelselection):
+        test = registry_modelselection.Test.insert()
+        test.col = 'Model.System.Blok'
+        registry_modelselection.flush()
+        test2 = registry_modelselection.Test.query().filter_by(
+            col='Model.System.Blok').one()
+        assert test is test2
+
+    def test_search_with_model(self, registry_modelselection):
+        test = registry_modelselection.Test.insert()
+        test.col = registry_modelselection.System.Blok
+        registry_modelselection.flush()
+        test2 = registry_modelselection.Test.query().filter_by(
+            col=registry_modelselection.System.Blok).one()
+        assert test is test2
+
+    def test_search_with_declaration_model(self, registry_modelselection):
+        test = registry_modelselection.Test.insert()
+        test.col = Model.System.Blok
+        registry_modelselection.flush()
+        test2 = registry_modelselection.Test.query().filter_by(
+            col=Model.System.Blok).one()
+        assert test is test2
 
 
 class TestColumnsAutoDoc:

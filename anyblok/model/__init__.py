@@ -275,6 +275,17 @@ class Model:
 
             properties["hybrid_property_columns"].append(name)
 
+        def field_description(self):
+            return registry.get(namespace).field_description(name)[name]
+
+        def from_model(self):
+            return registry.get(namespace)
+
+        properties[name].anyblok_field_name = name
+        properties[name].anyblok_registry_name = namespace
+        properties[name].field_description = field_description
+        properties[name].from_model = from_model
+
         registry.call_plugins(
             "declare_field",
             name,

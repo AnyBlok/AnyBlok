@@ -1851,7 +1851,7 @@ class StrModelSelection(str):
         return self.registry.get(a)
 
 
-class ModelSelectionType(types.TypeDecorator):
+class ModelSelectionType(ScalarCoercible, types.TypeDecorator):
     """Generic type for Column ModelSelection"""
 
     impl = types.String
@@ -1885,11 +1885,20 @@ class ModelSelectionType(types.TypeDecorator):
 
     def process_bind_param(self, value, engine):
         if value is not None:
+            if hasattr(value, '__registry_name__'):
+                value = value.__registry_name__
+
             value = self.python_type(value)
 
         return value
 
     def process_result_value(self, value, dialect):
+        return self._coerce(value)
+
+    def _coerce(self, value):
+        if value is not None and not isinstance(value, self._StrModelSelection):
+            value = self.python_type(value)
+
         return value
 
 
@@ -1954,6 +1963,10 @@ class ModelSelection(Column):
         :return:
         """
         if value is not None:
+
+            if hasattr(value, '__registry_name__'):
+                value = value.__registry_name__
+
             val = self.sqlalchemy_type.python_type(value)
             if not val.validate():
                 raise FieldException(
