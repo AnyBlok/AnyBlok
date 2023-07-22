@@ -537,7 +537,7 @@ class TestInherit:
                 id = Integer(primary_key=True)
                 test = Many2One(
                     model=Model.Test,
-                    one2many=("test2", dict(enable_typechecks=False))
+                    one2many=("test2", dict(enable_typechecks=False)),
                 )
 
             @register(Model)
@@ -564,7 +564,7 @@ class TestInherit:
                 test_id = Integer(foreign_key=Model.Test.use("id"))
                 test = Many2One(
                     model=Model.Test,
-                    one2many=("test2", dict(enable_typechecks=False))
+                    one2many=("test2", dict(enable_typechecks=False)),
                 )
 
             @register(Model)

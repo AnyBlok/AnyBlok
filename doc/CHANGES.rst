@@ -29,7 +29,7 @@ CHANGELOG
   without used the existing table
 * Added new column type **ModelSelection** this role is to replace a column
   with a foreigh key to the deprecated model **Model.System.Model**
-* Added new column type **ModelFieldSelection** this role is to replace a 
+* Added new column type **ModelFieldSelection** this role is to replace a
   column with a foreigh key to the deprecated model **Model.System.Field**,
   **Model.System.Column** or **Model.System.Relationship**
 

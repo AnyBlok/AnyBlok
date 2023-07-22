@@ -1885,7 +1885,7 @@ class ModelSelectionType(ScalarCoercible, types.TypeDecorator):
 
     def process_bind_param(self, value, engine):
         if value is not None:
-            if hasattr(value, '__registry_name__'):
+            if hasattr(value, "__registry_name__"):
                 value = value.__registry_name__
 
             value = self.python_type(value)
@@ -1963,8 +1963,7 @@ class ModelSelection(Column):
         :return:
         """
         if value is not None:
-
-            if hasattr(value, '__registry_name__'):
+            if hasattr(value, "__registry_name__"):
                 value = value.__registry_name__
 
             val = self.sqlalchemy_type.python_type(value)
