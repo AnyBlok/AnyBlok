@@ -1917,11 +1917,11 @@ class ModelSelection(Column):
 
             x = ModelSelection(
                 default='Model.System.Blok',
-                validator="_get_validator"
+                validator="_x_validator"
             )
 
             @classmethod
-            def _get_validator(cls, Model):
+            def _x_validator(cls, Model):
                 return True or False
 
     """
