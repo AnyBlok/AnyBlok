@@ -43,6 +43,7 @@ from anyblok.column import (
     Interval,
     Json,
     LargeBinary,
+    ModelFieldSelection,
     ModelSelection,
     Password,
     PhoneNumber,
@@ -54,13 +55,13 @@ from anyblok.column import (
     TimeStamp,
     add_timezone_on_datetime,
     convert_string_to_datetime,
+    merge_validators,
     model_validator_all,
     model_validator_in_namespace,
     model_validator_is_not_sql,
     model_validator_is_not_view,
     model_validator_is_sql,
     model_validator_is_view,
-    model_validator_merge,
 )
 from anyblok.config import Configuration
 from anyblok.field import FieldException
@@ -167,6 +168,10 @@ COLUMNS = [
     pytest.param(
         (ModelSelection, "Model.System.Blok", {}),
         id="ModelSelection",
+    ),
+    pytest.param(
+        (ModelFieldSelection, "Model.System.Blok=>name", {}),
+        id="ModelFieldSelection",
     ),
 ]
 
@@ -1537,7 +1542,7 @@ def add_modelselection_in_registry():
     class Test:
         id = Integer(primary_key=True)
         col = ModelSelection(validator="my_validator")
-        col2 = ModelSelection()
+        col2 = ModelSelection(default=Model.System.Blok)
 
         @classmethod
         def my_validator(cls, Model):
@@ -1563,6 +1568,7 @@ class TestColumnModelSelection:
     def test_setter_use_method(self, registry_modelselection):
         test = registry_modelselection.Test.insert()
         assert test.col is None
+        assert test.col2 == "Model.System.Blok"
 
         with pytest.raises(FieldException):
             test.col = "Model.System"
@@ -1662,7 +1668,7 @@ class TestColumnModelSelection:
     def test_modelselection_setter_model_validator_merge(
         self, registry_modelselection
     ):
-        validator = model_validator_merge(
+        validator = merge_validators(
             model_validator_is_sql,
             model_validator_is_not_view,
             model_validator_in_namespace(Model.System),
@@ -1703,6 +1709,84 @@ class TestColumnModelSelection:
             .one()
         )
         assert test is test2
+
+
+def add_modelfieldselection_in_registry():
+    @register(Model)
+    class Test:
+        id = Integer(primary_key=True)
+        col = ModelFieldSelection(
+            model_validator="my_model_validator",
+            field_validator="my_field_validator",
+        )
+        col2 = ModelSelection()
+
+        @classmethod
+        def my_model_validator(cls, Model):
+            return Model.__registry_name__ == "Model.System.Blok"
+
+        @classmethod
+        def my_field_validator(cls, field):
+            return field.anyblok_field_name == "name"
+
+
+@pytest.fixture(scope="class")
+def registry_modelfieldselection(request, bloks_loaded):
+    reset_db()
+    registry = init_registry(add_modelfieldselection_in_registry)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+@pytest.mark.relationship
+class TestColumnModelFieldSelection:
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_modelfieldselection):
+        transaction = registry_modelfieldselection.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_setter_use_method(self, registry_modelfieldselection):
+        test = registry_modelfieldselection.Test.insert()
+        assert test.col is None
+
+        with pytest.raises(FieldException):
+            test.col = "Model.System.Blok=>version"
+
+        test.col = "Model.System.Blok=>name"
+        assert (
+            test.col.field.anyblok_registry_name
+            is registry_modelfieldselection.System.Blok.name.anyblok_registry_name
+        )
+        assert (
+            test.col.field.anyblok_field_name
+            is registry_modelfieldselection.System.Blok.name.anyblok_field_name
+        )
+
+    def test_description(self, registry_modelfieldselection):
+        description = registry_modelfieldselection.Test.fields_description(
+            "col"
+        )["col"]
+        assert description == {
+            "id": "col",
+            "label": "Col",
+            "model": None,
+            "nullable": True,
+            "primary_key": False,
+            "selections": [
+                ("Model.System.Blok=>name", "Model.System.Blok : name"),
+            ],
+            "type": "ModelFieldSelection",
+        }
+
+    def test_description2(self, registry_modelfieldselection):
+        description = registry_modelfieldselection.Test.fields_description(
+            ["col", "col2"]
+        )
+        assert (
+            description["col"]["selections"]
+            != description["col2"]["selections"]
+        )
 
 
 class TestColumnsAutoDoc:

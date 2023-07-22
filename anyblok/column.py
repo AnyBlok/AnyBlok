@@ -1805,9 +1805,9 @@ def model_validator_in_namespace(namespace):
     return validator
 
 
-def model_validator_merge(*validators):
-    def validator(Model):
-        return all(v(Model) for v in validators)
+def merge_validators(*validators):
+    def validator(obj):
+        return all(v(obj) for v in validators)
 
     return validator
 
@@ -1848,7 +1848,10 @@ class StrModelSelection(str):
         :return:
         """
         a = super(StrModelSelection, self).__str__()
-        return self.registry.get(a)
+        if a:
+            return self.registry.get(a)
+
+        return None
 
 
 class ModelSelectionType(ScalarCoercible, types.TypeDecorator):
@@ -1934,6 +1937,8 @@ class ModelSelection(Column):
         self.sqlalchemy_type = "tmp value for assert"
 
         super(ModelSelection, self).__init__(*args, **kwargs)
+        if self.default_val and hasattr(self.default_val, "__registry_name__"):
+            self.default_val = self.default_val.__registry_name__
 
     def autodoc_get_properties(self):
         """Return properties for autodoc
@@ -1941,7 +1946,7 @@ class ModelSelection(Column):
         :return: autodoc properties
         """
         res = super(ModelSelection, self).autodoc_get_properties()
-        res["selections"] = str(self.validator)
+        res["validator"] = str(self.validator)
         return res
 
     def getter_format_value(self, value):
@@ -2012,6 +2017,272 @@ class ModelSelection(Column):
             self.validator, registry=registry, namespace=model
         )
         values = sqlalchemy_type._StrModelSelection().get_selections()
+        res["selections"] = [(k, v) for k, v in values.items()]
+
+
+def field_validator_all(Model):
+    return True
+
+
+class StrModelFieldSelection(str):
+    """Class representing the data of one column ModelFieldSelection"""
+
+    model_validator = None
+    field_validator = None
+    registry = None
+    selections = None
+
+    def get_selections(self):
+        """Return a dict of selections
+
+        :return: selections dict
+        """
+        if not self.selections:
+            self.__class__.selections = {
+                f"{namespace}=>{field}": (
+                    Model.__doc__ and Model.__doc__.split("\n")[0] or namespace
+                )
+                + " : "
+                + field
+                for namespace, Model in self.registry.loaded_namespaces.items()
+                if self.model_validator(Model)
+                for field in Model.fields_name()
+                if self.field_validator(getattr(Model, field))
+            }
+
+        return self.selections
+
+    def validate(self):
+        """Validate if the key is in the selections
+
+        :return: True or False
+        """
+        a = super(StrModelFieldSelection, self).__str__()
+        return a in self.get_selections().keys()
+
+    @property
+    def field(self):
+        """Return the class corresponding to the selection key
+
+        :return:
+        """
+        a = super(StrModelFieldSelection, self).__str__()
+        if a:
+            namespace, name = a.split("=>")
+            return getattr(self.registry.get(namespace), name)
+
+        return None
+
+    @property
+    def Field(self):
+        """Return the class corresponding to the selection key
+
+        :return:
+        """
+        a = super(StrModelFieldSelection, self).__str__()
+        if a:
+            namespace, name = a.split("=>")
+            return self.registry.loaded_namespaces_first_step[namespace][name]
+
+        return None
+
+
+class ModelFieldSelectionType(ScalarCoercible, types.TypeDecorator):
+    """Generic type for Column ModelFieldSelection"""
+
+    impl = types.String
+    cache_ok = True
+
+    def __init__(
+        self, model_validator, field_validator, registry=None, namespace=None
+    ):
+        super(ModelFieldSelectionType, self).__init__(length=256)
+
+        if model_validator is None:
+            model_validator = model_validator_is_sql
+
+        if field_validator is None:
+            field_validator = field_validator_all
+
+        def _model_validator(obj, Model):
+            if isinstance(model_validator, str):
+                return getattr(registry.get(namespace), model_validator)(Model)
+
+            return model_validator(Model)
+
+        def _field_validator(obj, field):
+            if isinstance(field_validator, str):
+                return getattr(registry.get(namespace), field_validator)(field)
+
+            return field_validator(field)
+
+        self._StrModelFieldSelection = type(
+            "StrModelFieldSelection",
+            (StrModelFieldSelection,),
+            {
+                "model_validator": _model_validator,
+                "field_validator": _field_validator,
+                "registry": registry,
+                "selections": None,
+            },
+        )
+
+    @property
+    def python_type(self):
+        return self._StrModelFieldSelection
+
+    def process_bind_param(self, value, engine):
+        if value is not None:
+            if hasattr(value, "anyblok_field_name"):
+                value = (
+                    f"{value.anyblok_registry_name}=>{value.anyblok_field_name}"
+                )
+
+            value = self.python_type(value)
+
+        return value
+
+    def process_result_value(self, value, dialect):
+        return self._coerce(value)
+
+    def _coerce(self, value):
+        if value is not None and not isinstance(
+            value, self._StrModelFieldSelection
+        ):
+            value = self.python_type(value)
+
+        return value
+
+
+class ModelFieldSelection(Column):
+    """ModelFieldSelection column
+
+    Allow to Reference an AnyBlok Model
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import ModelFieldSelection
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = ModelFieldSelection(
+                default='Model.System.Blok=>name',
+                model_validator="_x_model_validator",
+                field_validator="_x_field_validator",
+            )
+
+            @classmethod
+            def _x_model_validator(cls, Model):
+                return True or False
+
+            @classmethod
+            def _x_field_validator(cls, field):
+                return True or False
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.model_validator = None
+        if "model_validator" in kwargs:
+            self.model_validator = kwargs.pop("model_validator")
+
+        self.field_validator = None
+        if "field_validator" in kwargs:
+            self.field_validator = kwargs.pop("field_validator")
+
+        self.sqlalchemy_type = "tmp value for assert"
+
+        super(ModelFieldSelection, self).__init__(*args, **kwargs)
+
+    def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
+        res = super(ModelFieldSelection, self).autodoc_get_properties()
+        res["model_validator"] = str(self.model_validator)
+        res["field_validator"] = str(self.field_validator)
+        return res
+
+    def getter_format_value(self, value):
+        """Return formatted value
+
+        :param value:
+        :return:
+        """
+        if value is None:
+            return None
+
+        return self.sqlalchemy_type.python_type(value)
+
+    def setter_format_value(self, value):
+        """Return value or raise exception if the given value is invalid
+
+        :param value:
+        :exception FieldException
+        :return:
+        """
+        if value is not None:
+            if hasattr(value, "anyblok_field_name"):
+                value = (
+                    f"{value.anyblok_registry_name}=>{value.anyblok_field_name}"
+                )
+
+            val = self.sqlalchemy_type.python_type(value)
+            if not val.validate():
+                raise FieldException(
+                    "%r is not in the selections (%s)"
+                    % (value, ", ".join(val.get_selections()))
+                )
+
+        return value
+
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        """Return sqlalchmy mapping
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
+        :return: instance of the real field
+        """
+        self.sqlalchemy_type = ModelFieldSelectionType(
+            self.model_validator,
+            self.field_validator,
+            registry=registry,
+            namespace=namespace,
+        )
+        return super(ModelFieldSelection, self).get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties
+        )
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ["MySQL", "MariaDB"]):
+            sqlalchemy_type.impl = types.String(265)
+
+        return sqlalchemy_type
+
+    def update_description(self, registry, model, res):
+        """Update model description
+
+        :param registry: the current registry
+        :param model:
+        :param res:
+        """
+        super(ModelFieldSelection, self).update_description(
+            registry, model, res
+        )
+        sqlalchemy_type = ModelFieldSelectionType(
+            self.model_validator,
+            self.field_validator,
+            registry=registry,
+            namespace=model,
+        )
+        values = sqlalchemy_type._StrModelFieldSelection().get_selections()
         res["selections"] = [(k, v) for k, v in values.items()]
 
 

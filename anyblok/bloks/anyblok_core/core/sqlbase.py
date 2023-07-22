@@ -92,6 +92,7 @@ class SqlMixin:
         super().clear_all_model_caches()
         Cache = cls.anyblok.System.Cache
         Cache.invalidate(cls, "_fields_description")
+        Cache.invalidate(cls, "fields_name")
         Cache.invalidate(cls, "getFieldType")
         Cache.invalidate(cls, "get_primary_keys")
         Cache.invalidate(cls, "find_remote_attribute_to_expire")
@@ -394,6 +395,38 @@ class SqlMixin:
         res.update(cls._fields_description_column())
         res.update(cls._fields_description_relationship())
         return res
+
+    @classmethod
+    def _fields_name_field(cls):
+        return [cname for cname in cls.loaded_fields]
+
+    @classmethod
+    def _fields_name_column(cls):
+        return [field.key for field in cls.SQLAMapper.columns]
+
+    @classmethod
+    def _fields_name_relationship(cls):
+        return [
+            (
+                field.key[len(anyblok_column_prefix) :]
+                if field.key.startswith(anyblok_column_prefix)
+                else field.key
+            )
+            for field in cls.SQLAMapper.relationships
+        ]
+
+    @classmethod_cache()
+    def fields_name(cls):
+        """Return the name of the Field, Column, RelationShip"""
+        res = []
+        for registry_name in cls.__depends__:
+            Depend = cls.anyblok.get(registry_name)
+            res.extend(Depend.fields_name())
+
+        res.extend(cls._fields_name_field())
+        res.extend(cls._fields_name_column())
+        res.extend(cls._fields_name_relationship())
+        return list(set(res))
 
     @classmethod
     def fields_description(cls, fields=None):
