@@ -1127,9 +1127,6 @@ class Registry:
     def is_reload_needed(self):
         """Determines whether a reload is needed or not."""
 
-        if self.loadwithoutmigration:
-            return
-
         mustreload = False
         for entry in RegistryManager.declared_entries:
             if entry in RegistryManager.callback_initialize_entries:

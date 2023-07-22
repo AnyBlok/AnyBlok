@@ -657,6 +657,11 @@ class Model:
         """
         for Model in registry.loaded_namespaces.values():
             Model.initialize_model()
+            if not registry.loadwithoutmigration:
+                Model.clear_all_model_caches()
+
+        if registry.loadwithoutmigration:
+            return False
 
         Blok = registry.System.Blok
         if not registry.withoutautomigration:

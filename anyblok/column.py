@@ -1761,6 +1761,234 @@ class Country(Column):
         return [CheckConstraint(constraint, name=name)]
 
 
+def model_validator_all(Model):
+    return True
+
+
+def model_validator_is_sql(Model):
+    return Model.is_sql is True
+
+
+def model_validator_is_not_sql(Model):
+    return not model_validator_is_sql(Model)
+
+
+def model_validator_is_view(Model):
+    return hasattr(Model, "__view__")
+
+
+def model_validator_is_not_view(Model):
+    return not model_validator_is_view(Model)
+
+
+def model_validator_in_namespace(namespace):
+    if hasattr(namespace, "__registry_name__"):
+        namespace = f"{namespace.__registry_name__}."
+
+    def validator(Model):
+        return Model.__registry_name__.startswith(namespace)
+
+    return validator
+
+
+def model_validator_merge(*validators):
+    def validator(Model):
+        return all(v(Model) for v in validators)
+
+    return validator
+
+
+class StrModelSelection(str):
+    """Class representing the data of one column ModelSelection"""
+
+    validator = None
+    registry = None
+    selections = None
+
+    def get_selections(self):
+        """Return a dict of selections
+
+        :return: selections dict
+        """
+        if not self.selections:
+            self.__class__.selections = {
+                k: v.__doc__ and v.__doc__.split("\n")[0] or k
+                for k, v in self.registry.loaded_namespaces.items()
+                if self.validator(v)
+            }
+
+        return self.selections
+
+    def validate(self):
+        """Validate if the key is in the selections
+
+        :return: True or False
+        """
+        a = super(StrModelSelection, self).__str__()
+        return a in self.get_selections().keys()
+
+    @property
+    def Model(self):
+        """Return the class corresponding to the selection key
+
+        :return:
+        """
+        a = super(StrModelSelection, self).__str__()
+        return self.registry.get(a)
+
+
+class ModelSelectionType(types.TypeDecorator):
+    """Generic type for Column ModelSelection"""
+
+    impl = types.String
+    cache_ok = True
+
+    def __init__(self, validator, registry=None, namespace=None):
+        super(ModelSelectionType, self).__init__(length=256)
+
+        if validator is None:
+            validator = model_validator_all
+
+        def _validator(obj, Model):
+            if isinstance(validator, str):
+                return getattr(registry.get(namespace), validator)(Model)
+
+            return validator(Model)
+
+        self._StrModelSelection = type(
+            "StrModelSelection",
+            (StrModelSelection,),
+            {
+                "validator": _validator,
+                "registry": registry,
+                "selections": None,
+            },
+        )
+
+    @property
+    def python_type(self):
+        return self._StrModelSelection
+
+    def process_bind_param(self, value, engine):
+        if value is not None:
+            value = self.python_type(value)
+
+        return value
+
+    def process_result_value(self, value, dialect):
+        return value
+
+
+class ModelSelection(Column):
+    """ModelSelection column
+
+    Allow to Reference an AnyBlok Model
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import ModelSelection
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = ModelSelection(
+                default='Model.System.Blok',
+                validator="_get_validator"
+            )
+
+            @classmethod
+            def _get_validator(cls, Model):
+                return True or False
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.validator = None
+        if "validator" in kwargs:
+            self.validator = kwargs.pop("validator")
+
+        self.sqlalchemy_type = "tmp value for assert"
+
+        super(ModelSelection, self).__init__(*args, **kwargs)
+
+    def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
+        res = super(ModelSelection, self).autodoc_get_properties()
+        res["selections"] = str(self.validator)
+        return res
+
+    def getter_format_value(self, value):
+        """Return formatted value
+
+        :param value:
+        :return:
+        """
+        if value is None:
+            return None
+
+        return self.sqlalchemy_type.python_type(value)
+
+    def setter_format_value(self, value):
+        """Return value or raise exception if the given value is invalid
+
+        :param value:
+        :exception FieldException
+        :return:
+        """
+        if value is not None:
+            val = self.sqlalchemy_type.python_type(value)
+            if not val.validate():
+                raise FieldException(
+                    "%r is not in the selections (%s)"
+                    % (value, ", ".join(val.get_selections()))
+                )
+
+        return value
+
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        """Return sqlalchmy mapping
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
+        :return: instance of the real field
+        """
+        self.sqlalchemy_type = ModelSelectionType(
+            self.validator, registry=registry, namespace=namespace
+        )
+        return super(ModelSelection, self).get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties
+        )
+
+    def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
+        sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
+        if sgdb_in(registry.engine, ["MySQL", "MariaDB"]):
+            sqlalchemy_type.impl = types.String(265)
+
+        return sqlalchemy_type
+
+    def update_description(self, registry, model, res):
+        """Update model description
+
+        :param registry: the current registry
+        :param model:
+        :param res:
+        """
+        super(ModelSelection, self).update_description(registry, model, res)
+        sqlalchemy_type = ModelSelectionType(
+            self.validator, registry=registry, namespace=model
+        )
+        values = sqlalchemy_type._StrModelSelection().get_selections()
+        res["selections"] = [(k, v) for k, v in values.items()]
+
+
 @CompareType.add_comparator(String, String)
 @CompareType.add_comparator(String, Selection)
 @CompareType.add_comparator(String, Sequence)

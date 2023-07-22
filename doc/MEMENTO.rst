@@ -312,9 +312,6 @@ Here are the parameters of the ``register`` method for ``Model``:
 |                  |   Declarations.Bar                                            |
 |                  |                                                               |
 +------------------+---------------------------------------------------------------+
-| is_sql_view      | Boolean flag, which indicateis if the model is based on a SQL |
-|                  | view. Deprecated use factory                                  |
-+------------------+---------------------------------------------------------------+
 | factory          | Factory class to build the Model class.                       |
 |                  | Default : ``anyblok.model.factory.ModelFactory``              |
 +------------------+---------------------------------------------------------------+
@@ -501,6 +498,7 @@ List of the column type:
  * ``PhoneNumber``: use sqlalchemy_utils.PhoneNumber
  * ``Email``
  * ``Country``: use pycountry
+ * ``ModelSelection``
 
 All the columns have the following optional parameters:
 
@@ -670,6 +668,26 @@ Other attribute for ``PhoneNumber``:
 +----------------------+------------------------------------------------------+
 | ``max_length``       | max size of the column in the database (20)          |
 +----------------------+------------------------------------------------------+
+
+Other attribute for ``ModelSelection``:
+
++----------------+------------------------------------------------------------+
+| Param          | Description                                                |
++================+============================================================+
+| ``validator``  | function of name of the method on the Model. their goal    |
+|                | is to defined which models can be used. Some function      |
+|                | exist in anyblok.column:                                   |
+|                |                                                            |
+|                | * model_validator_all: All models                          |
+|                | * model_validator_is_sql: Only SQL models                  |
+|                | * model_validator_is_not_sql: Not the SQL models           |
+|                | * model_validator_is_view: Only models with factory view   |
+|                | * model_validator_is_not_view: Not the model with factory  |
+|                |   view                                                     |
+|                | * model_validator_in_namespace: filter by namespace        |
+|                | * model_validator_merge: Do a and between validators       |
+|                |                                                            |
++----------------+------------------------------------------------------------+
 
 RelationShip
 ------------
@@ -1079,20 +1097,6 @@ Overloads the SQLAlchemy ``Query`` class.
 
     @Declarations.register(Declarations.Core)
     class Query
-        pass
-
-Session
-~~~~~~~
-
-Overloads the SQLAlchemy ``Session`` class.
-
-::
-
-    from anyblok import Declarations
-
-
-    @Declarations.register(Declarations.Core)
-    class Session
         pass
 
 InstrumentedList
