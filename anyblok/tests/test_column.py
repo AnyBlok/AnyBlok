@@ -55,6 +55,8 @@ from anyblok.column import (
     TimeStamp,
     add_timezone_on_datetime,
     convert_string_to_datetime,
+    field_cast,
+    field_validator_all,
     merge_validators,
     model_validator_all,
     model_validator_in_namespace,
@@ -1719,7 +1721,7 @@ def add_modelfieldselection_in_registry():
             model_validator="my_model_validator",
             field_validator="my_field_validator",
         )
-        col2 = ModelSelection()
+        col2 = ModelFieldSelection(default=Model.System.Blok.use("name"))
 
         @classmethod
         def my_model_validator(cls, Model):
@@ -1749,19 +1751,13 @@ class TestColumnModelFieldSelection:
     def test_setter_use_method(self, registry_modelfieldselection):
         test = registry_modelfieldselection.Test.insert()
         assert test.col is None
+        assert test.col2 == "Model.System.Blok => name"
 
         with pytest.raises(FieldException):
-            test.col = "Model.System.Blok=>version"
+            test.col = "Model.System.Blok => version"
 
-        test.col = "Model.System.Blok=>name"
-        assert (
-            test.col.field.anyblok_registry_name
-            is registry_modelfieldselection.System.Blok.name.anyblok_registry_name
-        )
-        assert (
-            test.col.field.anyblok_field_name
-            is registry_modelfieldselection.System.Blok.name.anyblok_field_name
-        )
+        test.col = "Model.System.Blok => name"
+        assert test.col.field == registry_modelfieldselection.System.Blok.name
 
     def test_description(self, registry_modelfieldselection):
         description = registry_modelfieldselection.Test.fields_description(
@@ -1774,7 +1770,7 @@ class TestColumnModelFieldSelection:
             "nullable": True,
             "primary_key": False,
             "selections": [
-                ("Model.System.Blok=>name", "Model.System.Blok : name"),
+                ("Model.System.Blok => name", "Model.System.Blok : name"),
             ],
             "type": "ModelFieldSelection",
         }
@@ -1787,6 +1783,138 @@ class TestColumnModelFieldSelection:
             description["col"]["selections"]
             != description["col2"]["selections"]
         )
+
+    def test_setter_field_validator_all(self, registry_modelfieldselection):
+        assert (
+            field_validator_all(registry_modelfieldselection.System.Blok.name)
+            is True
+        )
+
+    def test_setter_field_validator_is_field(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_field(
+                registry_modelfieldselection.System.Blok.logo
+            )
+            is True
+        )
+
+    def test_setter_field_validator_is_not_field(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_not_field(
+                registry_modelfieldselection.System.Blok.logo
+            )
+            is False
+        )
+
+    def test_setter_field_validator_is_column(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_column(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is True
+        )
+
+    def test_setter_field_validator_is_not_column(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_not_column(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is False
+        )
+
+    def test_setter_field_validator_is_relationship(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_relationship(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is False
+        )
+
+    def test_setter_field_validator_is_not_relationship(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_not_relationship(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is True
+        )
+
+    def test_setter_field_validator_is_named(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_named("name")(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is True
+        )
+
+    def test_setter_field_validator_is_from_types(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_from_types("String", "Many2One")(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is True
+        )
+
+    def test_modelselection_setter_validator_merge(
+        self, registry_modelfieldselection
+    ):
+        validator = merge_validators(
+            field_validator_is_column,
+            field_validator_is_from_types("String"),
+        )
+        assert validator(registry_modelfieldselection.Test.id) is False
+        assert validator(registry_modelfieldselection.System.Blok.name) is True
+
+    def test_search_with_str(self, registry_modelfieldselection):
+        test = registry_modelfieldselection.Test.insert()
+        test.col = "Model.System.Blok => name"
+        registry_modelfieldselection.flush()
+        test2 = (
+            registry_modelfieldselection.Test.query()
+            .filter_by(col="Model.System.Blok => name")
+            .one()
+        )
+        assert test is test2
+
+    def test_search_with_model(self, registry_modelfieldselection):
+        test = registry_modelfieldselection.Test.insert()
+        test.col = registry_modelfieldselection.System.Blok.name
+        registry_modelfieldselection.flush()
+        print("search")
+        test2 = (
+            registry_modelfieldselection.Test.query()
+            .filter_by(
+                col=field_cast(registry_modelfieldselection.System.Blok.name)
+            )
+            .one()
+        )
+        assert test is test2
+
+    def test_search_with_declaration_model(self, registry_modelfieldselection):
+        test = registry_modelfieldselection.Test.insert()
+        test.col = Model.System.Blok.use("name")
+        registry_modelfieldselection.flush()
+        test2 = (
+            registry_modelfieldselection.Test.query()
+            .filter_by(col=Model.System.Blok.use("name"))
+            .one()
+        )
+        assert test is test2
 
 
 class TestColumnsAutoDoc:

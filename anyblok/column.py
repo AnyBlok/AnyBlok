@@ -2020,6 +2020,18 @@ class ModelSelection(Column):
         res["selections"] = [(k, v) for k, v in values.items()]
 
 
+def field_cast(field):
+    if hasattr(field, "anyblok_field_name"):
+        field = str(
+            ModelAttribute(
+                field.anyblok_registry_name,
+                field.anyblok_field_name,
+            )
+        )
+
+    return field
+
+
 def field_validator_all(Model):
     return True
 
@@ -2039,7 +2051,7 @@ class StrModelFieldSelection(str):
         """
         if not self.selections:
             self.__class__.selections = {
-                f"{namespace}=>{field}": (
+                str(ModelAttribute(namespace, field)): (
                     Model.__doc__ and Model.__doc__.split("\n")[0] or namespace
                 )
                 + " : "
@@ -2068,21 +2080,7 @@ class StrModelFieldSelection(str):
         """
         a = super(StrModelFieldSelection, self).__str__()
         if a:
-            namespace, name = a.split("=>")
-            return getattr(self.registry.get(namespace), name)
-
-        return None
-
-    @property
-    def Field(self):
-        """Return the class corresponding to the selection key
-
-        :return:
-        """
-        a = super(StrModelFieldSelection, self).__str__()
-        if a:
-            namespace, name = a.split("=>")
-            return self.registry.loaded_namespaces_first_step[namespace][name]
+            return ModelAttributeAdapter(a).get_attribute(self.registry)
 
         return None
 
@@ -2133,12 +2131,7 @@ class ModelFieldSelectionType(ScalarCoercible, types.TypeDecorator):
 
     def process_bind_param(self, value, engine):
         if value is not None:
-            if hasattr(value, "anyblok_field_name"):
-                value = (
-                    f"{value.anyblok_registry_name}=>{value.anyblok_field_name}"
-                )
-
-            value = self.python_type(value)
+            value = self.python_type(field_cast(value))
 
         return value
 
@@ -2168,7 +2161,7 @@ class ModelFieldSelection(Column):
         class Test:
 
             x = ModelFieldSelection(
-                default='Model.System.Blok=>name',
+                default='Model.System.Blok => name',
                 model_validator="_x_model_validator",
                 field_validator="_x_field_validator",
             )
@@ -2225,8 +2218,11 @@ class ModelFieldSelection(Column):
         """
         if value is not None:
             if hasattr(value, "anyblok_field_name"):
-                value = (
-                    f"{value.anyblok_registry_name}=>{value.anyblok_field_name}"
+                value = str(
+                    ModelAttribute(
+                        value.anyblok_registry_name,
+                        value.anyblok_field_name,
+                    )
                 )
 
             val = self.sqlalchemy_type.python_type(value)
