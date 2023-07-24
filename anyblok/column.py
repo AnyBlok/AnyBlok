@@ -1851,7 +1851,7 @@ class StrModelSelection(str):
         if a:
             return self.registry.get(a)
 
-        return None
+        return None  # pragma: no cover
 
 
 class ModelSelectionType(ScalarCoercible, types.TypeDecorator):
@@ -2035,10 +2035,9 @@ def field_validator_all(field):
 
 
 def field_validator_is_field(field):
-    return (
-        field_validator_is_not_column(field)
-        and field_validator_is_not_relationship(field)
-    )
+    return field_validator_is_not_column(
+        field
+    ) and field_validator_is_not_relationship(field)
 
 
 def field_validator_is_not_field(field):
@@ -2048,7 +2047,7 @@ def field_validator_is_not_field(field):
 def field_validator_is_column(field):
     return isinstance(
         fieldToModelAttribute(field).get_type(field.from_model().anyblok),
-        Column
+        Column,
     )
 
 
@@ -2058,9 +2057,10 @@ def field_validator_is_not_column(field):
 
 def field_validator_is_relationship(field):
     from .relationship import RelationShip
+
     return isinstance(
         fieldToModelAttribute(field).get_type(field.from_model().anyblok),
-        RelationShip
+        RelationShip,
     )
 
 
@@ -2079,7 +2079,7 @@ def field_validator_is_from_types(*types):
     def validator(field):
         return isinstance(
             fieldToModelAttribute(field).get_type(field.from_model().anyblok),
-            types
+            types,
         )
 
     return validator
@@ -2131,19 +2131,7 @@ class StrModelFieldSelection(str):
         if a:
             return ModelAttributeAdapter(a).get_attribute(self.registry)
 
-        return None
-
-    @property
-    def Field(self):
-        """Return the type corresponding to the selection key
-
-        :return:
-        """
-        a = super(StrModelFieldSelection, self).__str__()
-        if a:
-            return ModelAttributeAdapter(a).get_type(self.registry)
-
-        return None
+        return None  # pragma: no cover
 
 
 class ModelFieldSelectionType(ScalarCoercible, types.TypeDecorator):

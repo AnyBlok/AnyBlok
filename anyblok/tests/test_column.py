@@ -55,16 +55,16 @@ from anyblok.column import (
     TimeStamp,
     add_timezone_on_datetime,
     convert_string_to_datetime,
-    fieldToModelAttribute,
     field_validator_all,
-    field_validator_is_field,
-    field_validator_is_not_field,
     field_validator_is_column,
-    field_validator_is_not_column,
-    field_validator_is_relationship,
-    field_validator_is_not_relationship,
-    field_validator_is_named,
+    field_validator_is_field,
     field_validator_is_from_types,
+    field_validator_is_named,
+    field_validator_is_not_column,
+    field_validator_is_not_field,
+    field_validator_is_not_relationship,
+    field_validator_is_relationship,
+    fieldToModelAttribute,
     merge_validators,
     model_validator_all,
     model_validator_in_namespace,
@@ -73,14 +73,13 @@ from anyblok.column import (
     model_validator_is_sql,
     model_validator_is_view,
 )
-from anyblok.relationship import Many2One
 from anyblok.config import Configuration
 from anyblok.field import FieldException
 from anyblok.mapper import ModelAttribute
+from anyblok.relationship import Many2One
 from anyblok.testing import sgdb_in, tmp_configuration
 
 from .conftest import init_registry, reset_db
-
 
 time_params = [DateTime]
 
@@ -1349,14 +1348,16 @@ class TestColumnDT:
         timezone = pytz.timezone(time.tzname[0])
         now = datetime.datetime.now().replace(tzinfo=timezone)
         test = registry_dt.Test.insert(
-            col=now.strftime("%Y-%m-%d %H:%M:%S.%f%z"))
+            col=now.strftime("%Y-%m-%d %H:%M:%S.%f%z")
+        )
         assert test.col == now
 
     def test_str_conversion_2(self, registry_dt):
         timezone = pytz.timezone(time.tzname[0])
         now = timezone.localize(datetime.datetime.now())
         test = registry_dt.Test.insert(
-            col=now.strftime("%Y-%m-%d %H:%M:%S.%f%Z"))
+            col=now.strftime("%Y-%m-%d %H:%M:%S.%f%Z")
+        )
         assert test.col == now
 
     def test_str_conversion_3(self, registry_dt):

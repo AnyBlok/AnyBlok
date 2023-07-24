@@ -276,7 +276,7 @@ class Model:
             properties["hybrid_property_columns"].append(name)
 
         def field_description():
-            return registry.get(namespace).field_description(name)[name]
+            return registry.get(namespace).fields_description(name)[name]
 
         def from_model():
             return registry.get(namespace)
