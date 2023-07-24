@@ -275,10 +275,10 @@ class Model:
 
             properties["hybrid_property_columns"].append(name)
 
-        def field_description(self):
+        def field_description():
             return registry.get(namespace).field_description(name)[name]
 
-        def from_model(self):
+        def from_model():
             return registry.get(namespace)
 
         properties[name].anyblok_field_name = name

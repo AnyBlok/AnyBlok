@@ -2020,20 +2020,69 @@ class ModelSelection(Column):
         res["selections"] = [(k, v) for k, v in values.items()]
 
 
-def field_cast(field):
+def fieldToModelAttribute(field):
     if hasattr(field, "anyblok_field_name"):
-        field = str(
-            ModelAttribute(
-                field.anyblok_registry_name,
-                field.anyblok_field_name,
-            )
+        field = ModelAttribute(
+            field.anyblok_registry_name,
+            field.anyblok_field_name,
         )
 
     return field
 
 
-def field_validator_all(Model):
+def field_validator_all(field):
     return True
+
+
+def field_validator_is_field(field):
+    return (
+        field_validator_is_not_column(field)
+        and field_validator_is_not_relationship(field)
+    )
+
+
+def field_validator_is_not_field(field):
+    return not field_validator_is_field(field)
+
+
+def field_validator_is_column(field):
+    return isinstance(
+        fieldToModelAttribute(field).get_type(field.from_model().anyblok),
+        Column
+    )
+
+
+def field_validator_is_not_column(field):
+    return not field_validator_is_column(field)
+
+
+def field_validator_is_relationship(field):
+    from .relationship import RelationShip
+    return isinstance(
+        fieldToModelAttribute(field).get_type(field.from_model().anyblok),
+        RelationShip
+    )
+
+
+def field_validator_is_not_relationship(field):
+    return not field_validator_is_relationship(field)
+
+
+def field_validator_is_named(*names):
+    def validator(field):
+        return field.anyblok_field_name in names
+
+    return validator
+
+
+def field_validator_is_from_types(*types):
+    def validator(field):
+        return isinstance(
+            fieldToModelAttribute(field).get_type(field.from_model().anyblok),
+            types
+        )
+
+    return validator
 
 
 class StrModelFieldSelection(str):
@@ -2084,6 +2133,18 @@ class StrModelFieldSelection(str):
 
         return None
 
+    @property
+    def Field(self):
+        """Return the type corresponding to the selection key
+
+        :return:
+        """
+        a = super(StrModelFieldSelection, self).__str__()
+        if a:
+            return ModelAttributeAdapter(a).get_type(self.registry)
+
+        return None
+
 
 class ModelFieldSelectionType(ScalarCoercible, types.TypeDecorator):
     """Generic type for Column ModelFieldSelection"""
@@ -2131,7 +2192,7 @@ class ModelFieldSelectionType(ScalarCoercible, types.TypeDecorator):
 
     def process_bind_param(self, value, engine):
         if value is not None:
-            value = self.python_type(field_cast(value))
+            value = self.python_type(fieldToModelAttribute(value))
 
         return value
 
