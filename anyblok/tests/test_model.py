@@ -246,12 +246,12 @@ class TestModel2:
         self.check_registry(registry.Test)
         assert registry.Test.__db_schema__ is None
         assert registry.Test.id.field_description() == {
-            'id': 'id',
-            'label': 'Id',
-            'model': None,
-            'nullable': False,
-            'primary_key': True,
-            'type': 'Integer'
+            "id": "id",
+            "label": "Id",
+            "model": None,
+            "nullable": False,
+            "primary_key": True,
+            "type": "Integer",
         }
 
     def test_simple_model_with_schema(self):
