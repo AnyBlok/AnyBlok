@@ -499,6 +499,7 @@ List of the column type:
  * ``Email``
  * ``Country``: use pycountry
  * ``ModelSelection``
+ * ``ModelFieldSelection``
 
 All the columns have the following optional parameters:
 
@@ -669,12 +670,20 @@ Other attribute for ``PhoneNumber``:
 | ``max_length``       | max size of the column in the database (20)          |
 +----------------------+------------------------------------------------------+
 
+Other attribute for ``Country``:
+
++-----------+-----------------------------------------------------------------+
+| Param     | Description                                                     |
++===========+=================================================================+
+| ``mode``  | Define the mode by default to store in the DB (default alpha_2) |
++-----------+-----------------------------------------------------------------+
+
 Other attribute for ``ModelSelection``:
 
 +----------------+------------------------------------------------------------+
 | Param          | Description                                                |
 +================+============================================================+
-| ``validator``  | function of name of the method on the Model. their goal    |
+| ``validator``  | function or name of the method on the Model. their goal    |
 |                | is to defined which models can be used. Some function      |
 |                | exist in anyblok.column:                                   |
 |                |                                                            |
@@ -685,9 +694,49 @@ Other attribute for ``ModelSelection``:
 |                | * model_validator_is_not_view: Not the model with factory  |
 |                |   view                                                     |
 |                | * model_validator_in_namespace: filter by namespace        |
-|                | * model_validator_merge: Do a and between validators       |
+|                | * merge_validators: Do a and between validators            |
 |                |                                                            |
 +----------------+------------------------------------------------------------+
+
+Other attribute for ``ModelFieldSelection``:
+
++---------------------+-------------------------------------------------------+
+| Param               | Description                                           |
++=====================+=======================================================+
+| ``model_validator`` | function or name of the method on the Model. their    |
+|                     | goal is to defined which models can be used. Some     |
+|                     | function exist in anyblok.column:                     |
+|                     |                                                       |
+|                     | * model_validator_all: All models                     |
+|                     | * model_validator_is_sql: Only SQL models             |
+|                     | * model_validator_is_not_sql: Not the SQL models      |
+|                     | * model_validator_is_view: Only models with factory   |
+|                     |   view                                                |
+|                     | * model_validator_is_not_view: Not the model with     |
+|                     |   factory view                                        |
+|                     | * model_validator_in_namespace: filter by namespace   |
+|                     | * merge_validators: Do a and between validators       |
+|                     |                                                       |
++---------------------+-------------------------------------------------------+
+| ``field_validator`` | function or name of the method on the Model. their    |
+|                     | goal is to defined which field can be used. Some      |
+|                     | function exist in anyblok.column:                     |
+|                     |                                                       |
+|                     | * field_validator_all: All fields on the model        |
+|                     | * field_validator_is_field: Only no SQL field         |
+|                     | * field_validator_is_not_field: Not the SQL fields    |
+|                     | * field_validator_is_column: Only the Column field    |
+|                     | * field_validator_is_not_column: Not the Column field |
+|                     | * field_validator_is_relationship: Only the           |
+|                     |   relationsship (Many2One, One2One, One2Many,         |
+|                     |   Many2Many)                                          |
+|                     | * field_validator_is_not_relationship: Not the        |
+|                     |   RelationShip                                        |
+|                     | * field_validator_is_named: filter by names of field  |
+|                     | * field_validator_is_from_types: filter by Field      |
+|                     |   Types                                               |
+|                     |                                                       |
++---------------------+-------------------------------------------------------+
 
 RelationShip
 ------------
@@ -928,6 +977,18 @@ Parameters for ``Field.Function``
 |                   |   def fexp(self):                                       |
 |                   |       return func.concat(cls.first_name, ' ',           |
 |                   |                          cls.last_name)                 |
+|                   |                                                         |
++-------------------+---------------------------------------------------------+
+| ``fuexp``         | name of the class method to update the field from query |
+|                   | ::                                                      |
+|                   |                                                         |
+|                   |   @classmethod                                          |
+|                   |   def fuexp(self):                                      |
+|                   |       fname, lname = value.split(" ", 1)                |
+|                   |       return [                                          |
+|                   |           (cls.first_name, fname),                      |
+|                   |           (cls.last_name, lname),                       |
+|                   |       ]                                                 |
 |                   |                                                         |
 +-------------------+---------------------------------------------------------+
 

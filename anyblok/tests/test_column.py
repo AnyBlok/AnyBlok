@@ -43,6 +43,7 @@ from anyblok.column import (
     Interval,
     Json,
     LargeBinary,
+    ModelFieldSelection,
     ModelSelection,
     Password,
     PhoneNumber,
@@ -54,17 +55,28 @@ from anyblok.column import (
     TimeStamp,
     add_timezone_on_datetime,
     convert_string_to_datetime,
+    field_validator_all,
+    field_validator_is_column,
+    field_validator_is_field,
+    field_validator_is_from_types,
+    field_validator_is_named,
+    field_validator_is_not_column,
+    field_validator_is_not_field,
+    field_validator_is_not_relationship,
+    field_validator_is_relationship,
+    fieldToModelAttribute,
+    merge_validators,
     model_validator_all,
     model_validator_in_namespace,
     model_validator_is_not_sql,
     model_validator_is_not_view,
     model_validator_is_sql,
     model_validator_is_view,
-    model_validator_merge,
 )
 from anyblok.config import Configuration
 from anyblok.field import FieldException
 from anyblok.mapper import ModelAttribute
+from anyblok.relationship import Many2One
 from anyblok.testing import sgdb_in, tmp_configuration
 
 from .conftest import init_registry, reset_db
@@ -167,6 +179,10 @@ COLUMNS = [
     pytest.param(
         (ModelSelection, "Model.System.Blok", {}),
         id="ModelSelection",
+    ),
+    pytest.param(
+        (ModelFieldSelection, "Model.System.Blok => name", {}),
+        id="ModelFieldSelection",
     ),
 ]
 
@@ -544,230 +560,6 @@ class TestColumns:
         )
         self.registry.expire(test, ["col"])
         assert test.col == ""
-
-    def test_datetime_none_value(self, dt_column_type):
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert(col=None)
-        assert test.col is None
-
-    def test_datetime_str_conversion_1(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert(col=now.strftime("%Y-%m-%d %H:%M:%S.%f%z"))
-        assert test.col == now
-
-    def test_datetime_str_conversion_2(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert(col=now.strftime("%Y-%m-%d %H:%M:%S.%f%Z"))
-        assert test.col == now
-
-    def test_datetime_str_conversion_3(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert(col=now.strftime("%Y-%m-%d %H:%M:%S.%f"))
-        assert test.col == now
-
-    def test_datetime_str_conversion_4(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert(col=now.strftime("%Y-%m-%d %H:%M:%S"))
-        assert test.col == now.replace(microsecond=0)
-
-    def test_datetime_by_property(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        test.col = now
-        assert test.col == now
-
-    def test_datetime_by_property_none_value(self, dt_column_type):
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        test.col = None
-        assert test.col is None
-
-    def test_datetime_str_conversion_1_by_property(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        test.col = now.strftime("%Y-%m-%d %H:%M:%S.%f%z")
-        assert test.col == now
-
-    def test_datetime_str_conversion_2_by_property(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        test.col = now.strftime("%Y-%m-%d %H:%M:%S.%f%Z")
-        assert test.col == now
-
-    def test_datetime_str_conversion_3_by_property(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        test.col = now.strftime("%Y-%m-%d %H:%M:%S.%f")
-        assert test.col == now
-
-    def test_datetime_str_conversion_4_by_property(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert()
-        test.col = now.strftime("%Y-%m-%d %H:%M:%S")
-        assert test.col == now.replace(microsecond=0)
-
-    def test_datetime_by_query(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        d = datetime.datetime(2020, 7, 3, 18, 59, 0)
-        d = add_timezone_on_datetime(d, timezone)
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        Test = registry.Test
-        test = Test.insert()
-        Test.execute_sql_statement(Test.update_sql_statement().values(col=d))
-        registry.refresh(test)
-        assert test.col == d
-
-    def test_datetime_by_query_none_value(self, dt_column_type):
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        Test = registry.Test
-        test = Test.insert()
-        Test.execute_sql_statement(Test.update_sql_statement().values(col=None))
-        assert test.col is None
-
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
-    def test_datetime_str_conversion_1_by_query(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        Test = registry.Test
-        test = Test.insert()
-        Test.execute_sql_statement(
-            Test.update_sql_statement().values(
-                col=now.strftime("%Y-%m-%d %H:%M:%S.%f%z")
-            )
-        )
-        registry.expire(test, ["col"])
-        assert test.col == now
-
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
-    def test_datetime_str_conversion_2_by_query(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        Test = registry.Test
-        test = Test.insert()
-        Test.execute_sql_statement(
-            Test.update_sql_statement().values(
-                col=now.strftime("%Y-%m-%d %H:%M:%S.%f%Z")
-            )
-        )
-        registry.expire(test, ["col"])
-        assert test.col == now
-
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
-    def test_datetime_str_conversion_3_by_query(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        Test = registry.Test
-        test = Test.insert()
-        Test.execute_sql_statement(
-            Test.update_sql_statement().values(
-                col=now.strftime("%Y-%m-%d %H:%M:%S.%f")
-            )
-        )
-        registry.expire(test, ["col"])
-        assert test.col == now
-
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
-    def test_datetime_str_conversion_4_by_query(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        Test = registry.Test
-        test = Test.insert()
-        Test.execute_sql_statement(
-            Test.update_sql_statement().values(
-                col=now.strftime("%Y-%m-%d %H:%M:%S")
-            )
-        )
-        registry.expire(test, ["col"])
-        assert test.col == now.replace(microsecond=0)
-
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
-    def test_datetime_by_query_filter(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert(col=now)
-        Test = registry.Test
-        assert Test.query().filter(Test.col == now).one() is test
-
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
-    def test_datetime_str_conversion_1_by_query_filter(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = datetime.datetime.now().replace(tzinfo=timezone)
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert(col=now)
-        Test = registry.Test
-        assert (
-            Test.query()
-            .filter(Test.col == now.strftime("%Y-%m-%d %H:%M:%S.%f%z"))
-            .one()
-            is test
-        )
-
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
-    def test_datetime_str_conversion_2_by_query_filter(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert(col=now)
-        Test = registry.Test
-        assert (
-            Test.query()
-            .filter(Test.col == now.strftime("%Y-%m-%d %H:%M:%S.%f%Z"))
-            .one()
-            is test
-        )
-
-    @pytest.mark.skipif(
-        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
-    )
-    def test_datetime_str_conversion_3_by_query_filter(self, dt_column_type):
-        timezone = pytz.timezone(time.tzname[0])
-        now = timezone.localize(datetime.datetime.now())
-        registry = self.init_registry(simple_column, ColumnType=dt_column_type)
-        test = registry.Test.insert(col=now)
-        Test = registry.Test
-        assert (
-            Test.query()
-            .filter(Test.col == now.strftime("%Y-%m-%d %H:%M:%S.%f"))
-            .one()
-            is test
-        )
 
     def test_datetime_without_auto_update_1(self, dt_column_type):
         def add_in_registry():
@@ -1532,12 +1324,236 @@ class TestColumns:
         ) == str(ex.value), "Column name should be part of raised message"
 
 
+@pytest.fixture(params=time_params, scope="class")
+def registry_dt(request):
+    reset_db()
+    registry = init_registry(simple_column, ColumnType=request.param)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+@pytest.mark.relationship
+class TestColumnDT:
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_dt):
+        transaction = registry_dt.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_none_value(self, registry_dt):
+        test = registry_dt.Test.insert(col=None)
+        assert test.col is None
+
+    def test_str_conversion_1(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        test = registry_dt.Test.insert(
+            col=now.strftime("%Y-%m-%d %H:%M:%S.%f%z")
+        )
+        assert test.col == now
+
+    def test_str_conversion_2(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        test = registry_dt.Test.insert(
+            col=now.strftime("%Y-%m-%d %H:%M:%S.%f%Z")
+        )
+        assert test.col == now
+
+    def test_str_conversion_3(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        test = registry_dt.Test.insert(col=now.strftime("%Y-%m-%d %H:%M:%S.%f"))
+        assert test.col == now
+
+    def test_str_conversion_4(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        test = registry_dt.Test.insert(col=now.strftime("%Y-%m-%d %H:%M:%S"))
+        assert test.col == now.replace(microsecond=0)
+
+    def test_by_property(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        test = registry_dt.Test.insert()
+        test.col = now
+        assert test.col == now
+
+    def test_by_property_none_value(self, registry_dt):
+        test = registry_dt.Test.insert()
+        test.col = None
+        assert test.col is None
+
+    def test_str_conversion_1_by_property(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        test = registry_dt.Test.insert()
+        test.col = now.strftime("%Y-%m-%d %H:%M:%S.%f%z")
+        assert test.col == now
+
+    def test_str_conversion_2_by_property(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        test = registry_dt.Test.insert()
+        test.col = now.strftime("%Y-%m-%d %H:%M:%S.%f%Z")
+        assert test.col == now
+
+    def test_str_conversion_3_by_property(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        test = registry_dt.Test.insert()
+        test.col = now.strftime("%Y-%m-%d %H:%M:%S.%f")
+        assert test.col == now
+
+    def test_str_conversion_4_by_property(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        test = registry_dt.Test.insert()
+        test.col = now.strftime("%Y-%m-%d %H:%M:%S")
+        assert test.col == now.replace(microsecond=0)
+
+    def test_by_query(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        d = datetime.datetime(2020, 7, 3, 18, 59, 0)
+        d = add_timezone_on_datetime(d, timezone)
+        Test = registry_dt.Test
+        test = Test.insert()
+        Test.execute_sql_statement(Test.update_sql_statement().values(col=d))
+        registry_dt.refresh(test)
+        assert test.col == d
+
+    def test_by_query_none_value(self, registry_dt):
+        Test = registry_dt.Test
+        test = Test.insert()
+        Test.execute_sql_statement(Test.update_sql_statement().values(col=None))
+        assert test.col is None
+
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
+    )
+    def test_str_conversion_1_by_query(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        Test = registry_dt.Test
+        test = Test.insert()
+        Test.execute_sql_statement(
+            Test.update_sql_statement().values(
+                col=now.strftime("%Y-%m-%d %H:%M:%S.%f%z")
+            )
+        )
+        registry_dt.expire(test, ["col"])
+        assert test.col == now
+
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
+    )
+    def test_str_conversion_2_by_query(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        Test = registry_dt.Test
+        test = Test.insert()
+        Test.execute_sql_statement(
+            Test.update_sql_statement().values(
+                col=now.strftime("%Y-%m-%d %H:%M:%S.%f%Z")
+            )
+        )
+        registry_dt.expire(test, ["col"])
+        assert test.col == now
+
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
+    )
+    def test_str_conversion_3_by_query(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        Test = registry_dt.Test
+        test = Test.insert()
+        Test.execute_sql_statement(
+            Test.update_sql_statement().values(
+                col=now.strftime("%Y-%m-%d %H:%M:%S.%f")
+            )
+        )
+        registry_dt.expire(test, ["col"])
+        assert test.col == now
+
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
+    )
+    def test_datetime_str_conversion_4_by_query(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        Test = registry_dt.Test
+        test = Test.insert()
+        Test.execute_sql_statement(
+            Test.update_sql_statement().values(
+                col=now.strftime("%Y-%m-%d %H:%M:%S")
+            )
+        )
+        registry_dt.expire(test, ["col"])
+        assert test.col == now.replace(microsecond=0)
+
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
+    )
+    def test_datetime_by_query_filter(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        test = registry_dt.Test.insert(col=now)
+        Test = registry_dt.Test
+        assert Test.query().filter(Test.col == now).one() is test
+
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
+    )
+    def test_datetime_str_conversion_1_by_query_filter(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = datetime.datetime.now().replace(tzinfo=timezone)
+        test = registry_dt.Test.insert(col=now)
+        Test = registry_dt.Test
+        assert (
+            Test.query()
+            .filter(Test.col == now.strftime("%Y-%m-%d %H:%M:%S.%f%z"))
+            .one()
+            is test
+        )
+
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
+    )
+    def test_str_conversion_2_by_query_filter(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        test = registry_dt.Test.insert(col=now)
+        Test = registry_dt.Test
+        assert (
+            Test.query()
+            .filter(Test.col == now.strftime("%Y-%m-%d %H:%M:%S.%f%Z"))
+            .one()
+            is test
+        )
+
+    @pytest.mark.skipif(
+        sgdb_in(["MySQL", "MariaDB", "MsSQL"]), reason="ISSUE #87"
+    )
+    def test_str_conversion_3_by_query_filter(self, registry_dt):
+        timezone = pytz.timezone(time.tzname[0])
+        now = timezone.localize(datetime.datetime.now())
+        test = registry_dt.Test.insert(col=now)
+        Test = registry_dt.Test
+        assert (
+            Test.query()
+            .filter(Test.col == now.strftime("%Y-%m-%d %H:%M:%S.%f"))
+            .one()
+            is test
+        )
+
+
 def add_modelselection_in_registry():
     @register(Model)
     class Test:
         id = Integer(primary_key=True)
         col = ModelSelection(validator="my_validator")
-        col2 = ModelSelection()
+        col2 = ModelSelection(default=Model.System.Blok)
 
         @classmethod
         def my_validator(cls, Model):
@@ -1554,9 +1570,16 @@ def registry_modelselection(request, bloks_loaded):
 
 @pytest.mark.relationship
 class TestColumnModelSelection:
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_modelselection):
+        transaction = registry_modelselection.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
     def test_setter_use_method(self, registry_modelselection):
         test = registry_modelselection.Test.insert()
         assert test.col is None
+        assert test.col2 == "Model.System.Blok"
 
         with pytest.raises(FieldException):
             test.col = "Model.System"
@@ -1656,7 +1679,7 @@ class TestColumnModelSelection:
     def test_modelselection_setter_model_validator_merge(
         self, registry_modelselection
     ):
-        validator = model_validator_merge(
+        validator = merge_validators(
             model_validator_is_sql,
             model_validator_is_not_view,
             model_validator_in_namespace(Model.System),
@@ -1664,6 +1687,244 @@ class TestColumnModelSelection:
         assert validator(registry_modelselection.Test) is False
         assert validator(registry_modelselection.System) is False
         assert validator(registry_modelselection.System.Blok) is True
+
+    def test_search_with_str(self, registry_modelselection):
+        test = registry_modelselection.Test.insert()
+        test.col = "Model.System.Blok"
+        registry_modelselection.flush()
+        test2 = (
+            registry_modelselection.Test.query()
+            .filter_by(col="Model.System.Blok")
+            .one()
+        )
+        assert test is test2
+
+    def test_search_with_model(self, registry_modelselection):
+        test = registry_modelselection.Test.insert()
+        test.col = registry_modelselection.System.Blok
+        registry_modelselection.flush()
+        test2 = (
+            registry_modelselection.Test.query()
+            .filter_by(col=registry_modelselection.System.Blok)
+            .one()
+        )
+        assert test is test2
+
+    def test_search_with_declaration_model(self, registry_modelselection):
+        test = registry_modelselection.Test.insert()
+        test.col = Model.System.Blok
+        registry_modelselection.flush()
+        test2 = (
+            registry_modelselection.Test.query()
+            .filter_by(col=Model.System.Blok)
+            .one()
+        )
+        assert test is test2
+
+
+def add_modelfieldselection_in_registry():
+    @register(Model)
+    class Test:
+        id = Integer(primary_key=True)
+        col = ModelFieldSelection(
+            model_validator="my_model_validator",
+            field_validator="my_field_validator",
+        )
+        col2 = ModelFieldSelection(default=Model.System.Blok.use("name"))
+
+        @classmethod
+        def my_model_validator(cls, Model):
+            return Model.__registry_name__ == "Model.System.Blok"
+
+        @classmethod
+        def my_field_validator(cls, field):
+            return field.anyblok_field_name == "name"
+
+
+@pytest.fixture(scope="class")
+def registry_modelfieldselection(request, bloks_loaded):
+    reset_db()
+    registry = init_registry(add_modelfieldselection_in_registry)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+@pytest.mark.relationship
+class TestColumnModelFieldSelection:
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_modelfieldselection):
+        transaction = registry_modelfieldselection.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_setter_use_method(self, registry_modelfieldselection):
+        test = registry_modelfieldselection.Test.insert()
+        assert test.col is None
+        assert test.col2 == "Model.System.Blok => name"
+
+        with pytest.raises(FieldException):
+            test.col = "Model.System.Blok => version"
+
+        test.col = "Model.System.Blok => name"
+        assert test.col.field == registry_modelfieldselection.System.Blok.name
+
+    def test_description(self, registry_modelfieldselection):
+        description = registry_modelfieldselection.Test.fields_description(
+            "col"
+        )["col"]
+        assert description == {
+            "id": "col",
+            "label": "Col",
+            "model": None,
+            "nullable": True,
+            "primary_key": False,
+            "selections": [
+                ("Model.System.Blok => name", "Model.System.Blok : name"),
+            ],
+            "type": "ModelFieldSelection",
+        }
+
+    def test_description2(self, registry_modelfieldselection):
+        description = registry_modelfieldselection.Test.fields_description(
+            ["col", "col2"]
+        )
+        assert (
+            description["col"]["selections"]
+            != description["col2"]["selections"]
+        )
+
+    def test_setter_field_validator_all(self, registry_modelfieldselection):
+        assert (
+            field_validator_all(registry_modelfieldselection.System.Blok.name)
+            is True
+        )
+
+    def test_setter_field_validator_is_field(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_field(
+                registry_modelfieldselection.System.Blok.logo
+            )
+            is True
+        )
+
+    def test_setter_field_validator_is_not_field(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_not_field(
+                registry_modelfieldselection.System.Blok.logo
+            )
+            is False
+        )
+
+    def test_setter_field_validator_is_column(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_column(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is True
+        )
+
+    def test_setter_field_validator_is_not_column(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_not_column(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is False
+        )
+
+    def test_setter_field_validator_is_relationship(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_relationship(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is False
+        )
+
+    def test_setter_field_validator_is_not_relationship(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_not_relationship(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is True
+        )
+
+    def test_setter_field_validator_is_named(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_named("name")(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is True
+        )
+
+    def test_setter_field_validator_is_from_types(
+        self, registry_modelfieldselection
+    ):
+        assert (
+            field_validator_is_from_types(String, Many2One)(
+                registry_modelfieldselection.System.Blok.name
+            )
+            is True
+        )
+
+    def test_modelselection_setter_validator_merge(
+        self, registry_modelfieldselection
+    ):
+        validator = merge_validators(
+            field_validator_is_column,
+            field_validator_is_from_types(String),
+        )
+        assert validator(registry_modelfieldselection.Test.id) is False
+        assert validator(registry_modelfieldselection.System.Blok.name) is True
+
+    def test_search_with_str(self, registry_modelfieldselection):
+        test = registry_modelfieldselection.Test.insert()
+        test.col = "Model.System.Blok => name"
+        registry_modelfieldselection.flush()
+        test2 = (
+            registry_modelfieldselection.Test.query()
+            .filter_by(col="Model.System.Blok => name")
+            .one()
+        )
+        assert test is test2
+
+    def test_search_with_model(self, registry_modelfieldselection):
+        test = registry_modelfieldselection.Test.insert()
+        test.col = registry_modelfieldselection.System.Blok.name
+        registry_modelfieldselection.flush()
+        test2 = (
+            registry_modelfieldselection.Test.query()
+            .filter_by(
+                col=fieldToModelAttribute(
+                    registry_modelfieldselection.System.Blok.name
+                )
+            )
+            .one()
+        )
+        assert test is test2
+
+    def test_search_with_declaration_model(self, registry_modelfieldselection):
+        test = registry_modelfieldselection.Test.insert()
+        test.col = Model.System.Blok.use("name")
+        registry_modelfieldselection.flush()
+        test2 = (
+            registry_modelfieldselection.Test.query()
+            .filter_by(col=Model.System.Blok.use("name"))
+            .one()
+        )
+        assert test is test2
 
 
 class TestColumnsAutoDoc:
