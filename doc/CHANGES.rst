@@ -22,7 +22,7 @@ CHANGELOG
 2.2.0 (unreleased)
 ------------------
 
-* Removed tables **system_model**, **system_field**, **system_column**, 
+* Removed tables **system_model**, **system_field**, **system_column**,
   **system_relationship**, this action can break the compatibility.
   You must use the **ModelSelection** or **ModelFieldSelection**
   column to give the same behaviour
