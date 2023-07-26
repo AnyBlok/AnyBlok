@@ -19,7 +19,7 @@
 CHANGELOG
 =========
 
-2.1.0 (unreleased)
+2.1.0 (2023-07-26)
 ------------------
 
 * Implement psycopg3 capability
@@ -29,6 +29,9 @@ CHANGELOG
   without used the existing table
 * Added new column type **ModelSelection** this role is to replace a column
   with a foreigh key to the deprecated model **Model.System.Model**
+* Added new column type **ModelFieldSelection** this role is to replace a
+  column with a foreigh key to the deprecated model **Model.System.Field**,
+  **Model.System.Column** or **Model.System.Relationship**
 
 2.0.0 (2023-03-11)
 ------------------

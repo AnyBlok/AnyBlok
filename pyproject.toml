@@ -8,7 +8,7 @@ description = "Anyblok is a dynamic injection blok framework"
 authors = [
     { name = "Jean-Sébastien Suzanne", email = "jssuzanne@anybox.fr" },
 ]
-version = "2.0.0"
+version = "2.1.0"
 license = { text = "MPL2" }
 requires-python = ">=3.7"
 dependencies = [
