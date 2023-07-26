@@ -6,7 +6,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import warnings
 from logging import getLogger
 from types import FunctionType
 from typing import Any, Dict
@@ -218,19 +217,6 @@ class RelationShip(Field):
             self.model = ModelAdapter(kwargs.pop("model"))
         else:
             raise FieldException("model is required attribut")
-
-        if self.model.model_name in (
-            "Model.System.Model",
-            "Model.System.Field",
-            "Model.System.Column",
-            "Model.System.Relationship",
-        ):
-            warnings.warn(
-                f"A foreign key to {self.model.model_name} "
-                "is depecated becauses this Model will be removed",
-                DeprecationWarning,
-                stacklevel=2,
-            )
 
         super(RelationShip, self).__init__(*args, **kwargs)
 

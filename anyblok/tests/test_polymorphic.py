@@ -97,13 +97,25 @@ class TestMultiTablePoly:
         transaction = registry_multi_table_poly.begin_nested()
         request.addfinalizer(transaction.rollback)
 
-    def test_field_description(self, registry_multi_table_poly):
+    def test_fields_description(self, registry_multi_table_poly):
         registry = registry_multi_table_poly
         fd_employee = list(registry.Employee.fields_description().keys())
         fd_employee.sort()
         fd_engineer = list(registry.Engineer.fields_description().keys())
         fd_engineer.sort()
         fd_manager = list(registry.Manager.fields_description().keys())
+        fd_manager.sort()
+        assert fd_employee == ["id", "name", "type_entity"]
+        assert fd_engineer == ["engineer_name", "id", "name", "type_entity"]
+        assert fd_manager == ["id", "manager_name", "name", "type_entity"]
+
+    def test_fields_name(self, registry_multi_table_poly):
+        registry = registry_multi_table_poly
+        fd_employee = registry.Employee.fields_name()
+        fd_employee.sort()
+        fd_engineer = registry.Engineer.fields_name()
+        fd_engineer.sort()
+        fd_manager = registry.Manager.fields_name()
         fd_manager.sort()
         assert fd_employee == ["id", "name", "type_entity"]
         assert fd_engineer == ["engineer_name", "id", "name", "type_entity"]
