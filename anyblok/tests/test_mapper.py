@@ -41,15 +41,14 @@ class TestModelAttribute:
 
     def test_get_attribute(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Model", "name")
+        ma = ModelAttribute("Model.System.Blok", "name")
         assert (
-            ma.get_attribute(registry)
-            == registry.get("Model.System.Model").name
+            ma.get_attribute(registry) == registry.get("Model.System.Blok").name
         )
 
     def test_without_attribute(self, registry_blok):
         with pytest.raises(ModelAttributeException):
-            ModelAttribute("Model.System.Model", None)
+            ModelAttribute("Model.System.Blok", None)
 
     def test_without_model(self, registry_blok):
         with pytest.raises(ModelAttributeException):
@@ -67,7 +66,7 @@ class TestModelAttribute:
 
     def test_get_attribute_unexisting_attribute(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Model", "id")
+        ma = ModelAttribute("Model.System.Blok", "id")
         with pytest.raises(ModelAttributeException):
             ma.get_attribute(registry)
 
@@ -85,63 +84,63 @@ class TestModelAttribute:
 
     def test_get_fk_name_unexisting_attribute(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Model", "id")
+        ma = ModelAttribute("Model.System.Blok", "id")
         with pytest.raises(ModelAttributeException):
             ma.get_fk_name(registry)
 
     def test_get_fk_name(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Model", "name")
-        assert ma.get_fk_name(registry) == "system_model.name"
+        ma = ModelAttribute("Model.System.Blok", "name")
+        assert ma.get_fk_name(registry) == "system_blok.name"
 
     def test_get_fk(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Model", "name")
+        ma = ModelAttribute("Model.System.Blok", "name")
         assert isinstance(ma.get_fk(registry), ForeignKey)
 
     def test_get_fk_with_options(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Model", "name").options(
+        ma = ModelAttribute("Model.System.Blok", "name").options(
             ondelete="cascade"
         )
         mafk = ma.get_fk(registry)
         assert isinstance(mafk, ForeignKey)
 
     def test_use(self, registry_blok):
-        ma = Declarations.Model.System.Model.use("name")
+        ma = Declarations.Model.System.Blok.use("name")
         assert isinstance(ma, ModelAttribute)
-        assert ma.model_name == "Model.System.Model"
+        assert ma.model_name == "Model.System.Blok"
         assert ma.attribute_name == "name"
 
     def test_str(self, registry_blok):
-        ma = ModelAttribute("Model.System.Model", "name")
-        assert str(ma) == "Model.System.Model => name"
+        ma = ModelAttribute("Model.System.Blok", "name")
+        assert str(ma) == "Model.System.Blok => name"
 
     def test_get_fk_remote(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Column", "name")
+        ma = ModelAttribute("Model.System.Blok", "name")
         assert ma.get_fk_remote(registry) is None
 
     def test_get_complete_remote(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Field", "name")
+        ma = ModelAttribute("Model.System.Blok", "name")
         assert ma.get_complete_remote(registry) is None
 
     def test_existing_FakeColumn(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Field", "name")
+        ma = ModelAttribute("Model.System.Blok", "name")
         assert ma.add_fake_column(registry) is None
 
     def test_existing_FakeRelationShip(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Field", "name")
+        ma = ModelAttribute("Model.System.Blok", "name")
         assert (
             ma.add_fake_relationship(registry, "Model.System", "test") is None
         )
 
     def test_get_column_name(self, registry_blok):
         registry = registry_blok
-        ma = ModelAttribute("Model.System.Field", "name")
+        ma = ModelAttribute("Model.System.Blok", "name")
         assert ma.get_column_name(registry) == "name"
 
     def test_check_model_in_first_step_no_sql_model(self, registry_blok):
@@ -153,19 +152,19 @@ class TestModelAttribute:
 
 class TestModelAttributeAdapter:
     def test_from_declaration(self):
-        ma = ModelAttribute("Model.System.Model", "name")
+        ma = ModelAttribute("Model.System.Blok", "name")
         maa = ModelAttributeAdapter(ma)
         assert maa is ma
 
     def test_from_registry_name(self):
-        maa = ModelAttributeAdapter("Model.System.Model=>name")
+        maa = ModelAttributeAdapter("Model.System.Blok=>name")
         assert isinstance(maa, ModelAttribute)
-        assert maa.model_name == "Model.System.Model"
+        assert maa.model_name == "Model.System.Blok"
         assert maa.attribute_name == "name"
 
     def test_from_registry_name_without_attribute(self):
         with pytest.raises(ModelAttributeAdapterException):
-            ModelAttributeAdapter("Model.System.Model")
+            ModelAttributeAdapter("Model.System.Blok")
 
 
 class TestModelRepr:
@@ -183,20 +182,20 @@ class TestModelRepr:
 
     def test_get_tablename(self, registry_blok):
         registry = registry_blok
-        mr = ModelRepr("Model.System.Model")
-        assert mr.tablename(registry) == "system_model"
+        mr = ModelRepr("Model.System.Blok")
+        assert mr.tablename(registry) == "system_blok"
 
     def test_get_registry_name(self, registry_blok):
-        mr = ModelRepr("Model.System.Model")
-        assert mr.model_name == "Model.System.Model"
+        mr = ModelRepr("Model.System.Blok")
+        assert mr.model_name == "Model.System.Blok"
 
     def test_str(self, registry_blok):
-        mr = ModelRepr("Model.System.Model")
-        assert str(mr) == "Model.System.Model"
+        mr = ModelRepr("Model.System.Blok")
+        assert str(mr) == "Model.System.Blok"
 
     def test_get_primary_keys(self, registry_blok):
         registry = registry_blok
-        mr = ModelRepr("Model.System.Model")
+        mr = ModelRepr("Model.System.Blok")
         mas = mr.primary_keys(registry)
         assert len(mas) == 1
         assert [x.attribute_name for x in mas] == ["name"]
@@ -215,14 +214,14 @@ class TestModelRepr:
 
 class TestModelAdapter:
     def test_from_declaration(self):
-        mr = ModelRepr("Model.System.Model")
+        mr = ModelRepr("Model.System.Blok")
         mra = ModelAdapter(mr)
         assert mr is mra
 
     def test_from_registry_name(self):
-        mra = ModelAdapter("Model.System.Model")
+        mra = ModelAdapter("Model.System.Blok")
         assert isinstance(mra, ModelRepr)
-        assert mra.model_name == "Model.System.Model"
+        assert mra.model_name == "Model.System.Blok"
 
 
 class TestModelMapper:
@@ -230,32 +229,32 @@ class TestModelMapper:
         assert not (ModelMapper.capable(None))
 
     def test_capable_by_declaration(self):
-        assert ModelMapper.capable(Model.System.Model)
+        assert ModelMapper.capable(Model.System.Blok)
 
     def test_capable_by_registry_name(self):
-        assert ModelMapper.capable("Model.System.Model")
+        assert ModelMapper.capable("Model.System.Blok")
 
     def test_capable_by_model_repr(self):
-        assert ModelMapper.capable(ModelRepr("Model.System.Model"))
+        assert ModelMapper.capable(ModelRepr("Model.System.Blok"))
 
     def test_model_repr(self):
-        assert ModelMapper(ModelRepr("Model.System.Model"), None)
+        assert ModelMapper(ModelRepr("Model.System.Blok"), None)
 
     def test_by_declaration(self):
-        mm = ModelMapper(Model.System.Model, "even")
+        mm = ModelMapper(Model.System.Blok, "even")
         assert isinstance(mm.model, ModelRepr)
-        assert mm.model.model_name, "Model.System.Model"
+        assert mm.model.model_name, "Model.System.Blok"
 
     def test_by_registry_name(self):
-        mm = ModelMapper("Model.System.Model", "event")
+        mm = ModelMapper("Model.System.Blok", "event")
         assert isinstance(mm.model, ModelRepr)
-        assert mm.model.model_name, "Model.System.Model"
+        assert mm.model.model_name, "Model.System.Blok"
 
     def test_listen_sqlalchemy(self):
         def method():
             pass
 
-        mm = ModelMapper(Model.System.Model, "before_insert")
+        mm = ModelMapper(Model.System.Blok, "before_insert")
         mm.listen(method)
         assert method.is_an_sqlalchemy_event_listener
         assert method.sqlalchemy_listener is mm
@@ -264,41 +263,41 @@ class TestModelMapper:
         def method():
             pass
 
-        mm = ModelMapper(Model.System.Model, "event")
+        mm = ModelMapper(Model.System.Blok, "event")
         mm.listen(method)
         assert method.is_an_event_listener
-        assert method.model == "Model.System.Model"
+        assert method.model == "Model.System.Blok"
         assert method.event == "event"
 
 
 class TestModelAttributeMapper:
     def test_not_str_capable(self):
-        assert not (ModelAttributeMapper.capable("Model.System.Model"))
+        assert not (ModelAttributeMapper.capable("Model.System.Blok"))
 
     def test_not_capable(self):
         assert not (ModelAttributeMapper.capable(None))
 
     def test_capable_by_declaration(self):
-        assert ModelAttributeMapper.capable(Model.System.Model.use("name"))
+        assert ModelAttributeMapper.capable(Model.System.Blok.use("name"))
 
     def test_capable_by_registry_name(self):
-        assert ModelAttributeMapper.capable("Model.System.Model=>name")
+        assert ModelAttributeMapper.capable("Model.System.Blok=>name")
 
     def test_by_declaration(self):
-        mam = ModelAttributeMapper(Model.System.Model.use("name"), "event")
+        mam = ModelAttributeMapper(Model.System.Blok.use("name"), "event")
         assert isinstance(mam.attribute, ModelAttribute)
-        assert mam.attribute.model_name == "Model.System.Model"
+        assert mam.attribute.model_name == "Model.System.Blok"
 
     def test_by_registry_name(self):
-        mam = ModelAttributeMapper("Model.System.Model=>name", "event")
+        mam = ModelAttributeMapper("Model.System.Blok=>name", "event")
         assert isinstance(mam.attribute, ModelAttribute)
-        assert mam.attribute.model_name == "Model.System.Model"
+        assert mam.attribute.model_name == "Model.System.Blok"
 
     def test_listen(self):
         def method():
             pass
 
-        mam = ModelAttributeMapper(Model.System.Model.use("name"), "set")
+        mam = ModelAttributeMapper(Model.System.Blok.use("name"), "set")
         mam.listen(method)
         assert method.is_an_sqlalchemy_event_listener
         assert method.sqlalchemy_listener is mam
@@ -306,11 +305,11 @@ class TestModelAttributeMapper:
 
 class TestMapperAdapter:
     def test_model_mapper(self):
-        mam = MapperAdapter("Model.System.Model", "event")
+        mam = MapperAdapter("Model.System.Blok", "event")
         assert isinstance(mam, ModelMapper)
 
     def test_model_attribute_mapper(self):
-        mam = MapperAdapter("Model.System.Model=>name", "event")
+        mam = MapperAdapter("Model.System.Blok=>name", "event")
         assert isinstance(mam, ModelAttributeMapper)
 
     def test_no_mapper(self):
@@ -361,16 +360,16 @@ class TestMapperOther:
 
     def test_get_mapper(self):
         registry = self.init_registry(None)
-        mm = ModelMapper(Model.System.Model, "even")
-        assert mm.mapper(registry, None) is registry.System.Model
+        mm = ModelMapper(Model.System.Blok, "even")
+        assert mm.mapper(registry, None) is registry.System.Blok
 
     def test_get_attribute_mapper(self):
         registry = self.init_registry(None)
-        mam = ModelAttributeMapper(Model.System.Model.use("name"), "set")
+        mam = ModelAttributeMapper(Model.System.Blok.use("name"), "set")
         # We can't compare that the column are the same, because is the case
         # of the call are in the class attribute (no instance) SQLAlchemy
         # Wrap the result for each call, then each call return a différent
         # object, but it is not an error
         getted = str(mam.mapper(registry, None) == "test")
-        wanted = str(registry.System.Model.name == "test")
+        wanted = str(registry.System.Blok.name == "test")
         assert getted == wanted

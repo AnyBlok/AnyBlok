@@ -215,14 +215,9 @@ class TestModel2:
         registry = self.init_registry(simple_model)
         self.check_registry(registry.Test)
         assert registry.System.anyblok is registry
-        assert registry.System.Model.anyblok is registry
+        assert registry.System.Blok.anyblok is registry
         t2 = registry.Test.query().first()
-        registry.System.Model.anyblok.refresh(t2)
-
-    def test_str(self):
-        registry = self.init_registry(simple_model)
-        test = registry.System.Model.query().get("Model.Test")
-        assert str(test) == "Model.Test"
+        registry.System.Blok.anyblok.refresh(t2)
 
     def test_model_is_assembled(self):
         with LogCapture("anyblok.registry", level=DEBUG) as logs:
@@ -249,16 +244,20 @@ class TestModel2:
     def test_simple_model(self):
         registry = self.init_registry(simple_model)
         self.check_registry(registry.Test)
-        model = registry.System.Model.query().get("Model.Test")
-        assert model.table == "test"
-        assert model.schema is None
+        assert registry.Test.__db_schema__ is None
+        assert registry.Test.id.field_description() == {
+            "id": "id",
+            "label": "Id",
+            "model": None,
+            "nullable": False,
+            "primary_key": True,
+            "type": "Integer",
+        }
 
     def test_simple_model_with_schema(self):
         registry = self.init_registry(simple_model_with_schema)
         self.check_registry(registry.Test)
-        model = registry.System.Model.query().get("Model.Test")
-        assert model.table == "test"
-        assert model.schema == "test_db_schema"
+        assert registry.Test.__db_schema__ == "test_db_schema"
 
     def test_simple_model_with_tablename(self):
         registry = self.init_registry(simple_model_with_tablename)

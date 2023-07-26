@@ -199,10 +199,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10']
+        db-type: ['mysql', 'mariadb']
     services:
       mysql:
-        image: mysql:latest
+        image: ${{ matrix.db-type }}:latest
         env:
           MYSQL_DATABASE: anyblok_test
           MYSQL_USER: root
@@ -215,7 +215,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.10'
       - name: Install graphviz package
         run: bash .ci/install_graphviz.sh
       - name: Install Wheel
@@ -272,14 +272,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        python-version: ['3.10']
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.10'
       - name: Run the action
         uses: potatoqualitee/mssqlsuite@v1.7
         with:

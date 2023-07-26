@@ -3,6 +3,7 @@
 #    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
 #    Copyright (C) 2019 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #    Copyright (C) 2021 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
+#    Copyright (C) 2023 Jean-Sebastien SUZANNE <js.suzanne@gmail.com>
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
@@ -12,7 +13,6 @@ from sqlalchemy import update as sqla_update
 from sqlalchemy.orm import ColumnProperty, aliased
 from sqlalchemy.orm.base import LoaderCallableStatus
 from sqlalchemy.orm.session import object_state
-from sqlalchemy.sql.expression import true
 from sqlalchemy_utils.models import NOT_LOADED_REPR
 
 from anyblok.column import Column
@@ -81,6 +81,23 @@ class SqlMixin:
             self.__class__.__registry_name__,
             ", ".join(field_reprs),
         )
+
+    @classmethod
+    def initialize_model(cls):
+        super().initialize_model()
+        cls.SQLAMapper = inspect(cls)
+
+    @classmethod
+    def clear_all_model_caches(cls):
+        super().clear_all_model_caches()
+        Cache = cls.anyblok.System.Cache
+        Cache.invalidate(cls, "_fields_description")
+        Cache.invalidate(cls, "fields_name")
+        Cache.invalidate(cls, "getFieldType")
+        Cache.invalidate(cls, "get_primary_keys")
+        Cache.invalidate(cls, "find_remote_attribute_to_expire")
+        Cache.invalidate(cls, "find_relationship")
+        Cache.invalidate(cls, "get_hybrid_property_columns")
 
     @classmethod
     def define_table_args(cls):
@@ -262,26 +279,154 @@ class SqlMixin:
 
         :type: list of the primary keys name
         """
-        C = cls.anyblok.System.Column
-        query = C.select_sql_statement(C.name)
-        query = query.group_by(C.name)
-        query = query.where(C.model.in_(cls.get_all_registry_names()))
-        query = query.where(C.primary_key == true())
-        query_res = cls.execute_sql_statement(query)
-        return [x[0] for x in query_res]
+        return list(
+            {
+                column.key
+                for model in cls.get_all_registry_names()
+                for column in cls.anyblok.get(model).SQLAMapper.primary_key
+            }
+        )
+
+    @classmethod
+    def _fields_description_field(cls):
+        res = {}
+        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
+        for cname in cls.loaded_fields:
+            ftype = fsp[cname].__class__.__name__
+            res[cname] = dict(
+                id=cname,
+                label=cls.loaded_fields[cname],
+                type=ftype,
+                nullable=True,
+                primary_key=False,
+                model=None,
+            )
+            fsp[cname].update_description(
+                cls.anyblok, cls.__registry_name__, res[cname]
+            )
+
+        return res
+
+    @classmethod
+    def _fields_description_column(cls):
+        res = {}
+        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
+        for field in cls.SQLAMapper.columns:
+            if field.key not in fsp:
+                continue
+
+            ftype = fsp[field.key].__class__.__name__
+            res[field.key] = dict(
+                id=field.key,
+                label=field.info.get("label"),
+                type=ftype,
+                nullable=field.nullable,
+                primary_key=field.primary_key,
+                model=field.info.get("remote_model"),
+            )
+            fsp[field.key].update_description(
+                cls.anyblok, cls.__registry_name__, res[field.key]
+            )
+
+        return res
+
+    @classmethod
+    def _fields_description_relationship(cls):
+        res = {}
+        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
+        for field in cls.SQLAMapper.relationships:
+            key = (
+                field.key[len(anyblok_column_prefix) :]
+                if field.key.startswith(anyblok_column_prefix)
+                else field.key
+            )
+            ftype = fsp[key].__class__.__name__
+            if ftype == "FakeRelationShip":
+                Model = field.mapper.entity
+                model = Model.__registry_name__
+                nullable = True
+                remote_name = field.back_populates
+                if remote_name.startswith(anyblok_column_prefix):
+                    remote_name = remote_name[len(anyblok_column_prefix) :]
+
+                remote = getattr(Model, remote_name)
+                remote_columns = remote.info.get("local_columns", [])
+                local_columns = remote.info.get("remote_columns", [])
+                rtype = remote.info["rtype"]
+                if rtype == "Many2One":
+                    ftype = "One2Many"
+                elif rtype == "Many2Many":
+                    ftype = "Many2Many"
+                elif rtype == "One2One":
+                    ftype = "One2One"
+            else:
+                local_columns = field.info.get("local_columns", [])
+                remote_columns = field.info.get("remote_columns", [])
+                nullable = field.info.get("nullable", True)
+                model = field.info.get("remote_model")
+                remote_name = field.info.get("remote_name")
+
+            res[key] = dict(
+                id=key,
+                label=field.info.get("label"),
+                type=ftype,
+                nullable=nullable,
+                model=model,
+                local_columns=local_columns,
+                remote_columns=remote_columns,
+                remote_name=remote_name,
+                primary_key=False,
+            )
+            fsp[key].update_description(
+                cls.anyblok, cls.__registry_name__, res[key]
+            )
+
+        return res
 
     @classmethod_cache()
     def _fields_description(cls):
         """Return the information of the Field, Column, RelationShip"""
-        Field = cls.anyblok.System.Field
         res = {}
         for registry_name in cls.__depends__:
-            query = Field.query().filter(Field.model == registry_name)
-            res.update({x.name: x._description() for x in query})
+            Depend = cls.anyblok.get(registry_name)
+            res.update(Depend._fields_description())
 
-        query = Field.query().filter(Field.model == cls.__registry_name__)
-        res.update({x.name: x._description() for x in query})
+        res.update(cls._fields_description_field())
+        res.update(cls._fields_description_column())
+        res.update(cls._fields_description_relationship())
         return res
+
+    @classmethod
+    def _fields_name_field(cls):
+        return [cname for cname in cls.loaded_fields]
+
+    @classmethod
+    def _fields_name_column(cls):
+        return [field.key for field in cls.SQLAMapper.columns]
+
+    @classmethod
+    def _fields_name_relationship(cls):
+        return [
+            (
+                field.key[len(anyblok_column_prefix) :]
+                if field.key.startswith(anyblok_column_prefix)
+                else field.key
+            )
+            for field in cls.SQLAMapper.relationships
+        ]
+
+    @classmethod_cache()
+    def fields_name(cls):
+        """Return the name of the Field, Column, RelationShip"""
+        res = []
+        for registry_name in cls.__depends__:
+            Depend = cls.anyblok.get(registry_name)
+            res.extend(Depend.fields_name())
+
+        res.extend(cls._fields_name_field())
+        res.extend(cls._fields_name_column())
+        res.extend(cls._fields_name_relationship())
+        return list(set(res))
 
     @classmethod
     def fields_description(cls, fields=None):
@@ -456,12 +601,7 @@ class SqlMixin:
         :param name: name of the column
         :rtype: String, the name of the Type of column used
         """
-        Field = cls.anyblok.System.Field
-        query = Field.query()
-        query = query.filter(Field.name == name)
-        query = query.filter(Field.model.in_(cls.get_all_registry_names()))
-        query = query.limit(1)
-        return query.one().ftype
+        return cls.fields_description(name)[name]["type"]
 
     @classmethod_cache()
     def find_remote_attribute_to_expire(cls, *fields):

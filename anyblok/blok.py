@@ -6,7 +6,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-import warnings
 from logging import getLogger
 from os.path import dirname
 from sys import modules
@@ -286,17 +285,6 @@ class Blok:
 
     def __init__(self, registry):
         self.anyblok = registry
-
-    @property
-    def registry(self):  # pragma: no cover
-        warnings.warn(
-            "'registry' attribute is deprecated because SQLAlchemy 1.4 add is "
-            "own 'registry' attribute. Replace it by 'anyblok' attribute",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        return self.anyblok
 
     @classmethod
     def import_declaration_module(cls):

@@ -312,9 +312,6 @@ Here are the parameters of the ``register`` method for ``Model``:
 |                  |   Declarations.Bar                                            |
 |                  |                                                               |
 +------------------+---------------------------------------------------------------+
-| is_sql_view      | Boolean flag, which indicateis if the model is based on a SQL |
-|                  | view. Deprecated use factory                                  |
-+------------------+---------------------------------------------------------------+
 | factory          | Factory class to build the Model class.                       |
 |                  | Default : ``anyblok.model.factory.ModelFactory``              |
 +------------------+---------------------------------------------------------------+
@@ -501,6 +498,8 @@ List of the column type:
  * ``PhoneNumber``: use sqlalchemy_utils.PhoneNumber
  * ``Email``
  * ``Country``: use pycountry
+ * ``ModelSelection``
+ * ``ModelFieldSelection``
 
 All the columns have the following optional parameters:
 
@@ -670,6 +669,74 @@ Other attribute for ``PhoneNumber``:
 +----------------------+------------------------------------------------------+
 | ``max_length``       | max size of the column in the database (20)          |
 +----------------------+------------------------------------------------------+
+
+Other attribute for ``Country``:
+
++-----------+-----------------------------------------------------------------+
+| Param     | Description                                                     |
++===========+=================================================================+
+| ``mode``  | Define the mode by default to store in the DB (default alpha_2) |
++-----------+-----------------------------------------------------------------+
+
+Other attribute for ``ModelSelection``:
+
++----------------+------------------------------------------------------------+
+| Param          | Description                                                |
++================+============================================================+
+| ``validator``  | function or name of the method on the Model. their goal    |
+|                | is to defined which models can be used. Some function      |
+|                | exist in anyblok.column:                                   |
+|                |                                                            |
+|                | * model_validator_all: All models                          |
+|                | * model_validator_is_sql: Only SQL models                  |
+|                | * model_validator_is_not_sql: Not the SQL models           |
+|                | * model_validator_is_view: Only models with factory view   |
+|                | * model_validator_is_not_view: Not the model with factory  |
+|                |   view                                                     |
+|                | * model_validator_in_namespace: filter by namespace        |
+|                | * merge_validators: Do a and between validators            |
+|                |                                                            |
++----------------+------------------------------------------------------------+
+
+Other attribute for ``ModelFieldSelection``:
+
++---------------------+-------------------------------------------------------+
+| Param               | Description                                           |
++=====================+=======================================================+
+| ``model_validator`` | function or name of the method on the Model. their    |
+|                     | goal is to defined which models can be used. Some     |
+|                     | function exist in anyblok.column:                     |
+|                     |                                                       |
+|                     | * model_validator_all: All models                     |
+|                     | * model_validator_is_sql: Only SQL models             |
+|                     | * model_validator_is_not_sql: Not the SQL models      |
+|                     | * model_validator_is_view: Only models with factory   |
+|                     |   view                                                |
+|                     | * model_validator_is_not_view: Not the model with     |
+|                     |   factory view                                        |
+|                     | * model_validator_in_namespace: filter by namespace   |
+|                     | * merge_validators: Do a and between validators       |
+|                     |                                                       |
++---------------------+-------------------------------------------------------+
+| ``field_validator`` | function or name of the method on the Model. their    |
+|                     | goal is to defined which field can be used. Some      |
+|                     | function exist in anyblok.column:                     |
+|                     |                                                       |
+|                     | * field_validator_all: All fields on the model        |
+|                     | * field_validator_is_field: Only no SQL field         |
+|                     | * field_validator_is_not_field: Not the SQL fields    |
+|                     | * field_validator_is_column: Only the Column field    |
+|                     | * field_validator_is_not_column: Not the Column field |
+|                     | * field_validator_is_relationship: Only the           |
+|                     |   relationsship (Many2One, One2One, One2Many,         |
+|                     |   Many2Many)                                          |
+|                     | * field_validator_is_not_relationship: Not the        |
+|                     |   RelationShip                                        |
+|                     | * field_validator_is_named: filter by names of field  |
+|                     | * field_validator_is_from_types: filter by Field      |
+|                     |   Types                                               |
+|                     |                                                       |
++---------------------+-------------------------------------------------------+
 
 RelationShip
 ------------
@@ -912,6 +979,18 @@ Parameters for ``Field.Function``
 |                   |                          cls.last_name)                 |
 |                   |                                                         |
 +-------------------+---------------------------------------------------------+
+| ``fuexp``         | name of the class method to update the field from query |
+|                   | ::                                                      |
+|                   |                                                         |
+|                   |   @classmethod                                          |
+|                   |   def fuexp(self):                                      |
+|                   |       fname, lname = value.split(" ", 1)                |
+|                   |       return [                                          |
+|                   |           (cls.first_name, fname),                      |
+|                   |           (cls.last_name, lname),                       |
+|                   |       ]                                                 |
+|                   |                                                         |
++-------------------+---------------------------------------------------------+
 
 Parameters for ``Field.JsonRelated``
 
@@ -1079,20 +1158,6 @@ Overloads the SQLAlchemy ``Query`` class.
 
     @Declarations.register(Declarations.Core)
     class Query
-        pass
-
-Session
-~~~~~~~
-
-Overloads the SQLAlchemy ``Session`` class.
-
-::
-
-    from anyblok import Declarations
-
-
-    @Declarations.register(Declarations.Core)
-    class Session
         pass
 
 InstrumentedList
@@ -1316,7 +1381,7 @@ Get the registry
 You can get the registry in any method of Models with the attribute **anyblok**::
 
     Model = self.anyblok.System.Model
-    assert Model.__registry_name__ == 'Model.System.Model'
+    assert Model.__registry_name__ == 'Model.System.Blok'
 
 .. warning::
 

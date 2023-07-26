@@ -442,7 +442,7 @@ def ModelAttributeAdapter(Model):
                 % (Model)
             )
         model, attribute = Model.split("=>")
-        return ModelAttribute(model, attribute)
+        return ModelAttribute(model.strip(), attribute.strip())
     else:
         return Model
 
