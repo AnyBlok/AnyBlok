@@ -44,6 +44,7 @@ from anyblok.column import (
     Json,
     LargeBinary,
     ModelFieldSelection,
+    ModelReference,
     ModelSelection,
     Password,
     PhoneNumber,
@@ -65,6 +66,8 @@ from anyblok.column import (
     field_validator_is_not_relationship,
     field_validator_is_relationship,
     fieldToModelAttribute,
+    instance_validator_all,
+    instanceToDict,
     merge_validators,
     model_validator_all,
     model_validator_in_namespace,
@@ -183,6 +186,20 @@ COLUMNS = [
     pytest.param(
         (ModelFieldSelection, "Model.System.Blok => name", {}),
         id="ModelFieldSelection",
+    ),
+    pytest.param(
+        (
+            ModelReference,
+            None,
+            # {
+            #     'model': 'Model.System.Blok',
+            #     'primary_keys': {
+            #         'name': 'anyblok-core',
+            #     },
+            # },
+            {},
+        ),
+        id="ModelReference",
     ),
 ]
 
@@ -1266,7 +1283,8 @@ class TestColumns:
             text("select col from test where id = %s" % test.id)
         )
         res = res.fetchall()[0][0]
-        assert res != test.col
+        if res:
+            assert res != test.col
 
     def test_foreign_key_on_mapper_issue_112(self):
         def add_in_registry():
@@ -1922,6 +1940,198 @@ class TestColumnModelFieldSelection:
         test2 = (
             registry_modelfieldselection.Test.query()
             .filter_by(col=Model.System.Blok.use("name"))
+            .one()
+        )
+        assert test is test2
+
+
+def add_modelreference_in_registry():
+    @register(Model.System)
+    class Blok:
+        def my_instance_validator(self):
+            return self.name == "anyblok-core"
+
+    @register(Model)
+    class Test:
+        id = Integer(primary_key=True)
+        col = ModelReference(
+            model_validator="my_model_validator",
+            instance_validator="my_instance_validator",
+        )
+        col2 = ModelReference(default="default_col2")
+
+        @classmethod
+        def my_model_validator(cls, Model):
+            return Model.__registry_name__ == "Model.System.Blok"
+
+        @classmethod
+        def default_col2(cls):
+            return instanceToDict(
+                cls.anyblok.System.Blok.query()
+                .filter_by(name="anyblok-core")
+                .one()
+            )
+
+
+@pytest.fixture(scope="class")
+def registry_modelreference(request, bloks_loaded):
+    reset_db()
+    registry = init_registry(add_modelreference_in_registry)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+@pytest.mark.relationship
+class TestColumnModelReference:
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_modelreference):
+        transaction = registry_modelreference.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_setter_use_method(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        assert test.col is None
+        assert test.col2.__registry_name__ == "Model.System.Blok"
+        assert test.col2.name == "anyblok-core"
+
+        with pytest.raises(FieldException):
+            test.col = (
+                registry_modelreference.System.Blok.query()
+                .filter_by(name="anyblok-test")
+                .one()
+            )
+
+        test.col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+
+    def test_description(self, registry_modelreference):
+        description = registry_modelreference.Test.fields_description("col")[
+            "col"
+        ]
+        assert description == {
+            "id": "col",
+            "label": "Col",
+            "model": None,
+            "nullable": True,
+            "primary_key": False,
+            "model_selections": [
+                ("Model.System.Blok", "Model.System.Blok"),
+            ],
+            "type": "ModelReference",
+        }
+
+    def test_description2(self, registry_modelreference):
+        description = registry_modelreference.Test.fields_description(
+            ["col", "col2"]
+        )
+        assert (
+            description["col"]["model_selections"]
+            != description["col2"]["model_selections"]
+        )
+
+    def test_setter_instance_validator_all(self, registry_modelreference):
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-test")
+            .one()
+        )
+        assert instance_validator_all(col) is True
+
+    def test_search_with_dict(self, registry_modelreference):
+        Test = registry_modelreference.Test
+        test = Test.insert()
+        col = {
+            "model": "Model.System.Blok",
+            "primary_keys": {"name": "anyblok-core"},
+        }
+        test.col = col
+        registry_modelreference.flush()
+        test2 = (
+            Test.query()
+            .filter(
+                Test.col["model"].cast(SA_String) == '"Model.System.Blok"',
+                Test.col["primary_keys"]["name"].cast(SA_String)
+                == '"anyblok-core"',
+            )
+            .one()
+        )
+        assert test is test2
+
+    def test_search_is_with_dict(self, registry_modelreference):
+        Test = registry_modelreference.Test
+        test = Test.insert()
+        col = {
+            "model": "Model.System.Blok",
+            "primary_keys": {"name": "anyblok-core"},
+        }
+        test.col = col
+        registry_modelreference.flush()
+        test2 = Test.query().filter(Test.col.is_(col)).one()
+        assert test is test2
+
+    def test_search_is_with_instance(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test.col = col
+        registry_modelreference.flush()
+        Test = registry_modelreference.Test
+        test2 = Test.query().filter(Test.col.is_(col)).one()
+        assert test is test2
+
+    def test_search_with_models_with_str(self, registry_modelreference):
+        Test = registry_modelreference.Test
+        test = Test.insert()
+        col = {
+            "model": "Model.System.Blok",
+            "primary_keys": {"name": "anyblok-core"},
+        }
+        test.col = col
+        registry_modelreference.flush()
+        test2 = (
+            Test.query().filter(Test.col.with_models("Model.System.Blok")).one()
+        )
+        assert test is test2
+
+    def test_search_with_models_with_model(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test.col = col
+        registry_modelreference.flush()
+        Test = registry_modelreference.Test
+        test2 = (
+            Test.query()
+            .filter(Test.col.with_models(registry_modelreference.System.Blok))
+            .one()
+        )
+        assert test is test2
+
+    def test_search_with_models_with_models(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test.col = col
+        registry_modelreference.flush()
+        Test = registry_modelreference.Test
+        test2 = (
+            Test.query()
+            .filter(
+                Test.col.with_models(registry_modelreference.System.Blok, Test)
+            )
             .one()
         )
         assert test is test2

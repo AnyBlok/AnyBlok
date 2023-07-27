@@ -24,14 +24,14 @@ from anyblok.column import (
     DateTime,
     Email,
     Integer,
+    ModelFieldSelection,
+    ModelSelection,
     PhoneNumber,
     Selection,
     Sequence,
     String,
     Time,
     TimeStamp,
-    ModelSelection,
-    ModelFieldSelection,
 )
 from anyblok.config import Configuration
 from anyblok.field import FieldException
