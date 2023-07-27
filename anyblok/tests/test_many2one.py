@@ -30,6 +30,8 @@ from anyblok.column import (
     String,
     Time,
     TimeStamp,
+    ModelSelection,
+    ModelFieldSelection,
 )
 from anyblok.config import Configuration
 from anyblok.field import FieldException
@@ -48,6 +50,8 @@ COLUMNS = [
     Email,
     UUID,
     Selection,
+    ModelSelection,
+    ModelFieldSelection,
 ]
 
 
