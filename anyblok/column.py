@@ -2522,7 +2522,10 @@ class ModelReference(Json):
         :exception FieldException
         :return:
         """
-        return self.validate_dict(instanceToDict(value))
+        if value is not None:
+            value = self.validate_dict(instanceToDict(value))
+
+        return value
 
     def get_sqlalchemy_mapping(
         self, registry, namespace, fieldname, properties
