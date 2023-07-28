@@ -21,12 +21,10 @@ from logging import getLogger
 import pytz
 from dateutil.parser import parse
 from sqlalchemy import JSON as SA_JSON
-from sqlalchemy import CheckConstraint  # , func
-# from sqlalchemy import String as SA_String
+from sqlalchemy import CheckConstraint
 from sqlalchemy import and_, or_, types
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.schema import Sequence as SA_Sequence
-# from sqlalchemy_utils import JSONType
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.encrypted.encrypted_type import StringEncryptedType
@@ -1245,13 +1243,6 @@ class Json(Column):
 
     sqlalchemy_type = types.JSON(none_as_null=True)
 
-    # def native_type(self, registry):
-    #     """Return the native SqlAlchemy type"""
-    #     if sgdb_in(registry.engine, ["MariaDB", "MsSQL"]):
-    #         return JSONType
-
-    #     return self.sqlalchemy_type
-
     def setter_format_value(self, value):
         if self.encrypt_key:
             value = dumps(value)
@@ -2334,75 +2325,7 @@ def instance_validator_all(instance):
     return True
 
 
-class ModelReferenceTypeMixin:
-    def __init__(
-        self,
-        model_validator,
-        instance_validator,
-        registry=None,
-        namespace=None,
-        **kwargs,
-    ):
-        if model_validator is None:
-            model_validator = model_validator_is_sql
-
-        if instance_validator is None:
-            instance_validator = instance_validator_all
-
-        def validate_model(value):
-            Model = registry.get(value)
-            if isinstance(model_validator, str):
-                return getattr(registry.get(namespace), model_validator)(Model)
-
-            return model_validator(Model)
-
-        def validate_instance(value):
-            instance = registry.get(value["model"]).from_primary_keys(
-                **value["primary_keys"]
-            )
-
-            if isinstance(instance_validator, str):
-                return getattr(instance, instance_validator)()
-
-            return instance_validator(instance)
-
-        self.validate_model = validate_model
-        self.validate_instance = validate_instance
-        self.model_selections = None
-        self.model_validator = model_validator
-        self.instance_validator = instance_validator
-        self.registry = registry
-        self.namespace = namespace
-        self.kwargs = kwargs
-        super(ModelReferenceTypeMixin, self).__init__(**kwargs)
-
-    def get_instance(self, value):
-        if value:
-            if value.get("model") and value.get("primary_keys"):
-                return self.registry.get(value["model"]).from_primary_keys(
-                    **value["primary_keys"]
-                )
-
-        return None
-
-    def get_model_selections(self):
-        """Return a dict of selections
-
-        :return: selections dict
-        """
-        if not self.model_selections:
-            self.model_selections = {
-                namespace: (
-                    Model.__doc__ and Model.__doc__.split("\n")[0] or namespace
-                )
-                for namespace, Model in self.registry.loaded_namespaces.items()
-                if self.validate_model(namespace)
-            }
-
-        return self.model_selections
-
-
-class ModelReferenceType(ModelReferenceTypeMixin, types.JSON):
+class ModelReferenceType(types.JSON):
     """Generic type for Column ModelFieldSelection"""
 
     cache_ok = True
@@ -2438,39 +2361,69 @@ class ModelReferenceType(ModelReferenceTypeMixin, types.JSON):
 
             return or_(*filters)
 
-    def __init__(self, *args, **kwargs):
-        if "none_as_null" not in kwargs:
-            kwargs["none_as_null"] = True
+    def __init__(
+        self,
+        model_validator,
+        instance_validator,
+        registry=None,
+        namespace=None,
+    ):
+        if model_validator is None:
+            model_validator = model_validator_is_sql
 
-        super(ModelReferenceType, self).__init__(*args, **kwargs)
+        if instance_validator is None:
+            instance_validator = instance_validator_all
 
+        def validate_model(value):
+            Model = registry.get(value)
+            if isinstance(model_validator, str):
+                return getattr(registry.get(namespace), model_validator)(Model)
 
-# class ModelReferenceType2(ModelReferenceTypeMixin, JSONType):
-#     """Generic type for Column ModelFieldSelection"""
-#
-#     cache_ok = True
-#
-#     class comparator_factory(SA_JSON.Comparator):
-#         def is_(self, instance):
-#             value = dumps(instanceToDict(instance))
-#             return func.cast(self.expr, SA_String) == value
-#
-#         def with_models(self, *namespaces):
-#             filters = []
-#             for namespace in namespaces:
-#                 if hasattr(namespace, "__registry_name__"):
-#                     namespace = namespace.__registry_name__
-#
-#                 filters.append(
-#                     func.cast(self.expr, SA_String).like(
-#                         '{"model": "' + namespace + '", "primary_keys": {%'
-#                     )
-#                 )
-#
-#             if len(filters) == 1:
-#                 return filters[0]
-#
-#             return or_(*filters)
+            return model_validator(Model)
+
+        def validate_instance(value):
+            instance = registry.get(value["model"]).from_primary_keys(
+                **value["primary_keys"]
+            )
+
+            if isinstance(instance_validator, str):
+                return getattr(instance, instance_validator)()
+
+            return instance_validator(instance)
+
+        self.validate_model = validate_model
+        self.validate_instance = validate_instance
+        self.model_selections = None
+        self.model_validator = model_validator
+        self.instance_validator = instance_validator
+        self.registry = registry
+        self.namespace = namespace
+        super(ModelReferenceType, self).__init__(none_as_null=True)
+
+    def get_instance(self, value):
+        if value:
+            if value.get("model") and value.get("primary_keys"):
+                return self.registry.get(value["model"]).from_primary_keys(
+                    **value["primary_keys"]
+                )
+
+        return None
+
+    def get_model_selections(self):
+        """Return a dict of selections
+
+        :return: selections dict
+        """
+        if not self.model_selections:
+            self.model_selections = {
+                namespace: (
+                    Model.__doc__ and Model.__doc__.split("\n")[0] or namespace
+                )
+                for namespace, Model in self.registry.loaded_namespaces.items()
+                if self.validate_model(namespace)
+            }
+
+        return self.model_selections
 
 
 class ModelReference(Json):
@@ -2498,6 +2451,11 @@ class ModelReference(Json):
             @classmethod
             def _x_instance_validator(cls, field):
                 return True or False
+
+        ==========
+
+        anyblok.Test.query().filter(Test.x.is_(instance))
+        anyblok.Test.query().filter(Test.x.with_models(anyblok.System.Blok))
     """
 
     def __init__(self, *args, **kwargs):
@@ -2562,12 +2520,6 @@ class ModelReference(Json):
         """Return the native SqlAlchemy type"""
         return self.sqlalchemy_type
 
-    def get_type(self, registry):
-        # if sgdb_in(registry.engine, ["MariaDB", "MsSQL"]):
-        #     return ModelReferenceType2
-
-        return ModelReferenceType
-
     def get_sqlalchemy_mapping(
         self, registry, namespace, fieldname, properties
     ):
@@ -2579,8 +2531,7 @@ class ModelReference(Json):
         :param properties: the properties of the model
         :return: instance of the real field
         """
-        Type = self.get_type(registry)
-        self._sqlalchemy_type = self.sqlalchemy_type = Type(
+        self._sqlalchemy_type = self.sqlalchemy_type = ModelReferenceType(
             self.model_validator,
             self.instance_validator,
             registry=registry,
@@ -2598,8 +2549,7 @@ class ModelReference(Json):
         :param res:
         """
         super(ModelReference, self).update_description(registry, model, res)
-        Type = self.get_type(registry)
-        sqlalchemy_type = Type(
+        sqlalchemy_type = ModelReferenceType(
             self.model_validator,
             self.instance_validator,
             registry=registry,

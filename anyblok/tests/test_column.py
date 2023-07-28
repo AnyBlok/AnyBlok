@@ -19,7 +19,6 @@ from uuid import uuid1
 import pytest
 import pytz
 from sqlalchemy import Integer as SA_Integer
-from sqlalchemy import String as SA_String
 from sqlalchemy import text
 from sqlalchemy.exc import StatementError
 
@@ -818,10 +817,6 @@ class TestColumns:
         test.col["b"] = "test"
         assert test.col == {"a": "test", "b": "test"}
 
-    # @pytest.mark.skipif(
-    #     sgdb_in(["MariaDB", "MsSQL"]),
-    #     reason="JSON is not existing in this SGDB",
-    # )
     def test_json_simple_filter(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test

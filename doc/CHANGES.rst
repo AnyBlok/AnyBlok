@@ -26,6 +26,10 @@ CHANGELOG
   **system_relationship**, this action can break the compatibility.
   You must use the **ModelSelection** or **ModelFieldSelection**
   column to give the same behaviour
+* Added new column type **ModelReference**. This column is used to replace
+  the Many2One when the target could be coming from any Model validate by
+  the model_validator choosen. If you have only one targeted Model use the
+  relationship ManyToOne
 
 2.1.0 (2023-07-26)
 ------------------
