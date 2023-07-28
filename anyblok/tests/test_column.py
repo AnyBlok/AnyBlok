@@ -2292,3 +2292,15 @@ class TestCompareColumn:
     @pytest.mark.skipif(not has_colour, reason="colour is not installed")
     def test_string_to_color_with_diff_size(self):
         self.diff_type(String(size=10), Color(size=20))
+
+    def test_string_to_modelselection(self):
+        self.same_type(String(size=256), ModelSelection())
+
+    def test_string_to_modelselection_with_diff_size(self):
+        self.diff_type(String(), ModelSelection())
+
+    def test_string_to_modelfieldselection(self):
+        self.same_type(String(size=256), ModelFieldSelection())
+
+    def test_string_to_modelfieldselection_with_diff_size(self):
+        self.diff_type(String(), ModelFieldSelection())

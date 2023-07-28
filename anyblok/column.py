@@ -1909,6 +1909,7 @@ class ModelSelection(Column):
     """
 
     def __init__(self, *args, **kwargs):
+        self.size = 256  # used by comparator
         self.validator = None
         if "validator" in kwargs:
             self.validator = kwargs.pop("validator")
@@ -1980,7 +1981,7 @@ class ModelSelection(Column):
     def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
         if sgdb_in(registry.engine, ["MySQL", "MariaDB"]):
-            sqlalchemy_type.impl = types.String(265)
+            sqlalchemy_type.impl = types.String(256)
 
         return sqlalchemy_type
 
@@ -2204,6 +2205,7 @@ class ModelFieldSelection(Column):
     """
 
     def __init__(self, *args, **kwargs):
+        self.size = 256  # used by comparator
         self.model_validator = None
         if "model_validator" in kwargs:
             self.model_validator = kwargs.pop("model_validator")
@@ -2286,7 +2288,7 @@ class ModelFieldSelection(Column):
     def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
         if sgdb_in(registry.engine, ["MySQL", "MariaDB"]):
-            sqlalchemy_type.impl = types.String(265)
+            sqlalchemy_type.impl = types.String(256)
 
         return sqlalchemy_type
 
@@ -2582,13 +2584,15 @@ class ModelReference(Json):
 @CompareType.add_comparator(String, String)
 @CompareType.add_comparator(String, Selection)
 @CompareType.add_comparator(String, Sequence)
+@CompareType.add_comparator(String, ModelSelection)
+@CompareType.add_comparator(String, ModelFieldSelection)
 def compare_strings(col1, type1, col2, type2):
     if type1.size != type2.size:
         raise FieldException(
             "You can't add a foreign key using based String columns with "
             "different size `{model1!s}.{col1!s}` pointing to "
             "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
-            "-> ({type2!r}){size2:d}".format(
+            "-> {type2!r}({size2:d})".format(
                 model1=col1.model_name,
                 col1=col1.attribute_name,
                 model2=col2.model_name,
@@ -2608,7 +2612,7 @@ def compare_string_to_color(col1, type1, col2, type2):
             "You can't add a foreign key using based String columns with "
             "different size `{model1!s}.{col1!s}` pointing to "
             "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
-            "-> ({type2!r}){size2:d}".format(
+            "-> {type2!r}({size2:d})".format(
                 model1=col1.model_name,
                 col1=col1.attribute_name,
                 model2=col2.model_name,
