@@ -2041,6 +2041,10 @@ class TestColumnModelReference:
         )
         assert instance_validator_all(col) is True
 
+    @pytest.mark.skipif(
+        sgdb_in(["MsSQL"]),
+        reason="JSON is not existing in this SGDB",
+    )
     def test_search_with_dict(self, registry_modelreference):
         Test = registry_modelreference.Test
         test = Test.insert()

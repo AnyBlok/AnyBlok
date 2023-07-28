@@ -21,7 +21,7 @@ from logging import getLogger
 import pytz
 from dateutil.parser import parse
 from sqlalchemy import JSON as SA_JSON
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, func
 from sqlalchemy import String as SA_String
 from sqlalchemy import and_, or_, types
 from sqlalchemy.schema import Column as SA_Column
@@ -2450,6 +2450,28 @@ class ModelReferenceType2(ModelReferenceTypeMixin, JSONType):
     """Generic type for Column ModelFieldSelection"""
 
     cache_ok = True
+
+    class comparator_factory(SA_JSON.Comparator):
+        def is_(self, instance):
+            value = dumps(instanceToDict(instance))
+            return func.cast(self.expr, SA_String) == value
+
+        def with_models(self, *namespaces):
+            filters = []
+            for namespace in namespaces:
+                if hasattr(namespace, "__registry_name__"):
+                    namespace = namespace.__registry_name__
+
+                filters.append(
+                    func.cast(self.expr, SA_String).like(
+                        '{"model": "' + namespace + '", "primary_keys": {%'
+                    )
+                )
+
+            if len(filters) == 1:
+                return filters[0]
+
+            return or_(*filters)
 
 
 class ModelReference(Json):
