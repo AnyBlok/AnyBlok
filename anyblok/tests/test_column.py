@@ -818,10 +818,10 @@ class TestColumns:
         test.col["b"] = "test"
         assert test.col == {"a": "test", "b": "test"}
 
-    @pytest.mark.skipif(
-        sgdb_in(["MariaDB", "MsSQL"]),
-        reason="JSON is not existing in this SGDB",
-    )
+    # @pytest.mark.skipif(
+    #     sgdb_in(["MariaDB", "MsSQL"]),
+    #     reason="JSON is not existing in this SGDB",
+    # )
     def test_json_simple_filter(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test
@@ -830,7 +830,7 @@ class TestColumns:
         Test.insert(col={"b": "test"})
         assert (
             Test.query()
-            .filter(Test.col["a"].cast(SA_String) == '"test"')
+            .filter(Test.col["a"].as_string() == "test")
             .count()
             == 2
         )
@@ -2041,10 +2041,6 @@ class TestColumnModelReference:
         )
         assert instance_validator_all(col) is True
 
-    @pytest.mark.skipif(
-        sgdb_in(["MsSQL"]),
-        reason="JSON is not existing in this SGDB",
-    )
     def test_search_with_dict(self, registry_modelreference):
         Test = registry_modelreference.Test
         test = Test.insert()
@@ -2057,9 +2053,9 @@ class TestColumnModelReference:
         test2 = (
             Test.query()
             .filter(
-                Test.col["model"].cast(SA_String) == '"Model.System.Blok"',
-                Test.col["primary_keys"]["name"].cast(SA_String)
-                == '"anyblok-core"',
+                Test.col["model"].as_string() == "Model.System.Blok",
+                Test.col["primary_keys"]["name"].as_string()
+                == "anyblok-core",
             )
             .one()
         )

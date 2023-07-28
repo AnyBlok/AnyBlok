@@ -21,12 +21,12 @@ from logging import getLogger
 import pytz
 from dateutil.parser import parse
 from sqlalchemy import JSON as SA_JSON
-from sqlalchemy import CheckConstraint, func
-from sqlalchemy import String as SA_String
+from sqlalchemy import CheckConstraint  # , func
+# from sqlalchemy import String as SA_String
 from sqlalchemy import and_, or_, types
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.schema import Sequence as SA_Sequence
-from sqlalchemy_utils import JSONType
+# from sqlalchemy_utils import JSONType
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.encrypted.encrypted_type import StringEncryptedType
@@ -1245,12 +1245,12 @@ class Json(Column):
 
     sqlalchemy_type = types.JSON(none_as_null=True)
 
-    def native_type(self, registry):
-        """Return the native SqlAlchemy type"""
-        if sgdb_in(registry.engine, ["MariaDB", "MsSQL"]):
-            return JSONType
+    # def native_type(self, registry):
+    #     """Return the native SqlAlchemy type"""
+    #     if sgdb_in(registry.engine, ["MariaDB", "MsSQL"]):
+    #         return JSONType
 
-        return self.sqlalchemy_type
+    #     return self.sqlalchemy_type
 
     def setter_format_value(self, value):
         if self.encrypt_key:
@@ -2413,13 +2413,12 @@ class ModelReferenceType(ModelReferenceTypeMixin, types.JSON):
             filters = []
             if value.get("model"):
                 filters.append(
-                    self.expr["model"].cast(SA_String) == dumps(value["model"])
+                    self.expr["model"].as_string() == value["model"]
                 )
 
             for pk, value in value.get("primary_keys", {}).items():
                 filters.append(
-                    self.expr["primary_keys"][pk].cast(SA_String)
-                    == dumps(value)
+                    self.expr["primary_keys"][pk].as_string() == value
                 )
 
             return and_(*filters)
@@ -2431,7 +2430,7 @@ class ModelReferenceType(ModelReferenceTypeMixin, types.JSON):
                     namespace = namespace.__registry_name__
 
                 filters.append(
-                    self.expr["model"].cast(SA_String) == dumps(namespace)
+                    self.expr["model"].as_string() == namespace
                 )
 
             if len(filters) == 1:
@@ -2446,32 +2445,32 @@ class ModelReferenceType(ModelReferenceTypeMixin, types.JSON):
         super(ModelReferenceType, self).__init__(*args, **kwargs)
 
 
-class ModelReferenceType2(ModelReferenceTypeMixin, JSONType):
-    """Generic type for Column ModelFieldSelection"""
-
-    cache_ok = True
-
-    class comparator_factory(SA_JSON.Comparator):
-        def is_(self, instance):
-            value = dumps(instanceToDict(instance))
-            return func.cast(self.expr, SA_String) == value
-
-        def with_models(self, *namespaces):
-            filters = []
-            for namespace in namespaces:
-                if hasattr(namespace, "__registry_name__"):
-                    namespace = namespace.__registry_name__
-
-                filters.append(
-                    func.cast(self.expr, SA_String).like(
-                        '{"model": "' + namespace + '", "primary_keys": {%'
-                    )
-                )
-
-            if len(filters) == 1:
-                return filters[0]
-
-            return or_(*filters)
+# class ModelReferenceType2(ModelReferenceTypeMixin, JSONType):
+#     """Generic type for Column ModelFieldSelection"""
+#
+#     cache_ok = True
+#
+#     class comparator_factory(SA_JSON.Comparator):
+#         def is_(self, instance):
+#             value = dumps(instanceToDict(instance))
+#             return func.cast(self.expr, SA_String) == value
+#
+#         def with_models(self, *namespaces):
+#             filters = []
+#             for namespace in namespaces:
+#                 if hasattr(namespace, "__registry_name__"):
+#                     namespace = namespace.__registry_name__
+#
+#                 filters.append(
+#                     func.cast(self.expr, SA_String).like(
+#                         '{"model": "' + namespace + '", "primary_keys": {%'
+#                     )
+#                 )
+#
+#             if len(filters) == 1:
+#                 return filters[0]
+#
+#             return or_(*filters)
 
 
 class ModelReference(Json):
@@ -2564,8 +2563,8 @@ class ModelReference(Json):
         return self.sqlalchemy_type
 
     def get_type(self, registry):
-        if sgdb_in(registry.engine, ["MariaDB", "MsSQL"]):
-            return ModelReferenceType2
+        # if sgdb_in(registry.engine, ["MariaDB", "MsSQL"]):
+        #     return ModelReferenceType2
 
         return ModelReferenceType
 
