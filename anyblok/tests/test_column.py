@@ -824,9 +824,7 @@ class TestColumns:
         Test.insert(col={"a": "test"})
         Test.insert(col={"b": "test"})
         assert (
-            Test.query()
-            .filter(Test.col["a"].as_string() == "test")
-            .count()
+            Test.query().filter(Test.col["a"].as_string() == "test").count()
             == 2
         )
 
@@ -1954,6 +1952,14 @@ def add_modelreference_in_registry():
             instance_validator="my_instance_validator",
         )
         col2 = ModelReference(default="default_col2")
+        col3 = ModelReference(
+            default={
+                "model": "Model.System.Blok",
+                "primary_keys": {
+                    "name": "anyblok-test",
+                },
+            }
+        )
 
         @classmethod
         def my_model_validator(cls, Model):
@@ -1987,8 +1993,6 @@ class TestColumnModelReference:
     def test_setter_use_method(self, registry_modelreference):
         test = registry_modelreference.Test.insert()
         assert test.col is None
-        assert test.col2.__registry_name__ == "Model.System.Blok"
-        assert test.col2.name == "anyblok-core"
 
         with pytest.raises(FieldException):
             test.col = (
@@ -2002,6 +2006,24 @@ class TestColumnModelReference:
             .filter_by(name="anyblok-core")
             .one()
         )
+
+    def test_setter_not_an_existing_entry(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        col = {
+            "model": "Model.System.Blok",
+            "primary_keys": {"name": "unexisting"},
+        }
+
+        with pytest.raises(FieldException):
+            test.col2 = col
+
+    def test_default_value(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        assert test.col is None
+        assert test.col2.__registry_name__ == "Model.System.Blok"
+        assert test.col2.name == "anyblok-core"
+        assert test.col3.__registry_name__ == "Model.System.Blok"
+        assert test.col3.name == "anyblok-test"
 
     def test_description(self, registry_modelreference):
         description = registry_modelreference.Test.fields_description("col")[
@@ -2036,6 +2058,14 @@ class TestColumnModelReference:
         )
         assert instance_validator_all(col) is True
 
+    def test_instanceToDict_without_model(self, registry_modelreference):
+        with pytest.raises(FieldException):
+            instanceToDict({"primary_keys": {}})
+
+    def test_instanceToDict_without_primary_keys(self, registry_modelreference):
+        with pytest.raises(FieldException):
+            instanceToDict({"model": "model"})
+
     def test_search_with_dict(self, registry_modelreference):
         Test = registry_modelreference.Test
         test = Test.insert()
@@ -2049,8 +2079,7 @@ class TestColumnModelReference:
             Test.query()
             .filter(
                 Test.col["model"].as_string() == "Model.System.Blok",
-                Test.col["primary_keys"]["name"].as_string()
-                == "anyblok-core",
+                Test.col["primary_keys"]["name"].as_string() == "anyblok-core",
             )
             .one()
         )
@@ -2079,6 +2108,14 @@ class TestColumnModelReference:
         registry_modelreference.flush()
         Test = registry_modelreference.Test
         test2 = Test.query().filter(Test.col.is_(col)).one()
+        assert test is test2
+
+    def test_search_is_with_instance2(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        test.col2 = test
+        registry_modelreference.flush()
+        Test = registry_modelreference.Test
+        test2 = Test.query().filter(Test.col2.is_(test)).one()
         assert test is test2
 
     def test_search_with_models_with_str(self, registry_modelreference):

@@ -21,8 +21,7 @@ from logging import getLogger
 import pytz
 from dateutil.parser import parse
 from sqlalchemy import JSON as SA_JSON
-from sqlalchemy import CheckConstraint
-from sqlalchemy import and_, or_, types
+from sqlalchemy import CheckConstraint, and_, or_, types
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.schema import Sequence as SA_Sequence
 from sqlalchemy_utils.types.color import ColorType
@@ -2317,6 +2316,12 @@ def instanceToDict(instance):
             model=instance.__registry_name__,
             primary_keys=instance.to_primary_keys(),
         )
+    elif "model" not in instance:
+        raise FieldException("The model entry is required : %r" % instance)
+    elif "primary_keys" not in instance:
+        raise FieldException(
+            "The primary_keys entry is required : %r" % instance
+        )
 
     return instance
 
@@ -2333,15 +2338,12 @@ class ModelReferenceType(types.JSON):
     class comparator_factory(SA_JSON.Comparator):
         def is_(self, instance):
             value = instanceToDict(instance)
-            filters = []
-            if value.get("model"):
-                filters.append(
-                    self.expr["model"].as_string() == value["model"]
-                )
-
+            filters = [
+                self.expr["model"].as_string() == value["model"],
+            ]
             for pk, value in value.get("primary_keys", {}).items():
                 filters.append(
-                    self.expr["primary_keys"][pk].as_string() == value
+                    self.expr["primary_keys"][pk].as_string() == str(value)
                 )
 
             return and_(*filters)
@@ -2352,9 +2354,7 @@ class ModelReferenceType(types.JSON):
                 if hasattr(namespace, "__registry_name__"):
                     namespace = namespace.__registry_name__
 
-                filters.append(
-                    self.expr["model"].as_string() == namespace
-                )
+                filters.append(self.expr["model"].as_string() == namespace)
 
             if len(filters) == 1:
                 return filters[0]
@@ -2402,10 +2402,10 @@ class ModelReferenceType(types.JSON):
 
     def get_instance(self, value):
         if value:
-            if value.get("model") and value.get("primary_keys"):
-                return self.registry.get(value["model"]).from_primary_keys(
-                    **value["primary_keys"]
-                )
+            value = instanceToDict(value)
+            return self.registry.get(value["model"]).from_primary_keys(
+                **value["primary_keys"]
+            )
 
         return None
 
@@ -2467,6 +2467,10 @@ class ModelReference(Json):
         if "instance_validator" in kwargs:
             self.instance_validator = kwargs.pop("instance_validator")
 
+        if "default" in kwargs:
+            self.real_default_value = kwargs.pop("default")
+            kwargs["default"] = ColumnDefaultValue(self.wrap_default)
+
         super(ModelReference, self).__init__(*args, **kwargs)
 
     def autodoc_get_properties(self):
@@ -2504,21 +2508,18 @@ class ModelReference(Json):
         if value is not None:
             value = instanceToDict(value)
 
-            if value.get("model"):
-                if not self._sqlalchemy_type.validate_model(value["model"]):
-                    raise FieldException(
-                        "The model of %r is not in the selections" % value
-                    )
+            if not self._sqlalchemy_type.validate_model(value["model"]):
+                raise FieldException(
+                    "The model of %r is not in the selections" % value
+                )
 
-            if value.get("primary_keys"):
-                if not self._sqlalchemy_type.validate_instance(value):
-                    raise FieldException("%r is not a valid choice" % value)
+            if not self._sqlalchemy_type.get_instance(value):
+                raise FieldException("%r is not existing" % value)
+
+            if not self._sqlalchemy_type.validate_instance(value):
+                raise FieldException("%r is not a valid choice" % value)
 
         return value
-
-    def native_type(self, registry):
-        """Return the native SqlAlchemy type"""
-        return self.sqlalchemy_type
 
     def get_sqlalchemy_mapping(
         self, registry, namespace, fieldname, properties
@@ -2557,6 +2558,25 @@ class ModelReference(Json):
         )
         values = sqlalchemy_type.get_model_selections()
         res["model_selections"] = [(k, v) for k, v in values.items()]
+
+    def wrap_default(self, registry, namespace, fieldname, properties):
+        """Return default wrapper
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :return:
+        """
+
+        def default_value():
+            if isinstance(self.real_default_value, str):
+                return instanceToDict(
+                    wrap_default(registry, namespace, self.real_default_value)()
+                )
+
+            return instanceToDict(self.real_default_value)
+
+        return default_value
 
 
 @CompareType.add_comparator(String, String)
