@@ -2405,11 +2405,11 @@ class ModelReferenceType(types.JSON):
     def get_instance(self, value):
         if value:
             value = instanceToDict(value)
-            return self.registry.get(value["model"]).from_primary_keys(
+            value = self.registry.get(value["model"]).from_primary_keys(
                 **value["primary_keys"]
             )
 
-        return None
+        return value
 
     def get_model_selections(self):
         """Return a dict of selections
@@ -2496,20 +2496,12 @@ class ModelReference(Json):
             return None
 
         if isinstance(value, dict):
-            return self._sqlalchemy_type.get_instance(value)
+            value = self._sqlalchemy_type.get_instance(value)
 
         return value
 
-    def setter_format_value(self, value):
-        """Return value or raise exception if the given value is invalid
-
-        :param value:
-        :exception FieldException
-        :return:
-        """
+    def validate_dict(self, value):
         if value is not None:
-            value = instanceToDict(value)
-
             if not self._sqlalchemy_type.validate_model(value["model"]):
                 raise FieldException(
                     "The model of %r is not in the selections" % value
@@ -2522,6 +2514,15 @@ class ModelReference(Json):
                 raise FieldException("%r is not a valid choice" % value)
 
         return value
+
+    def setter_format_value(self, value):
+        """Return value or raise exception if the given value is invalid
+
+        :param value:
+        :exception FieldException
+        :return:
+        """
+        return self.validate_dict(instanceToDict(value))
 
     def get_sqlalchemy_mapping(
         self, registry, namespace, fieldname, properties
@@ -2572,11 +2573,15 @@ class ModelReference(Json):
 
         def default_value():
             if isinstance(self.real_default_value, str):
-                return instanceToDict(
-                    wrap_default(registry, namespace, self.real_default_value)()
+                return self.validate_dict(
+                    instanceToDict(
+                        wrap_default(
+                            registry, namespace, self.real_default_value
+                        )()
+                    )
                 )
 
-            return instanceToDict(self.real_default_value)
+            return self.validate_dict(instanceToDict(self.real_default_value))
 
         return default_value
 

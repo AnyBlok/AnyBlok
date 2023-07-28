@@ -190,12 +190,6 @@ COLUMNS = [
         (
             ModelReference,
             None,
-            # {
-            #     'model': 'Model.System.Blok',
-            #     'primary_keys': {
-            #         'name': 'anyblok-core',
-            #     },
-            # },
             {},
         ),
         id="ModelReference",
@@ -1579,7 +1573,6 @@ def registry_modelselection(request, bloks_loaded):
     return registry
 
 
-@pytest.mark.relationship
 class TestColumnModelSelection:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_modelselection):
@@ -1760,7 +1753,6 @@ def registry_modelfieldselection(request, bloks_loaded):
     return registry
 
 
-@pytest.mark.relationship
 class TestColumnModelFieldSelection:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_modelfieldselection):
@@ -1982,13 +1974,30 @@ def registry_modelreference(request, bloks_loaded):
     return registry
 
 
-@pytest.mark.relationship
 class TestColumnModelReference:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_modelreference):
         transaction = registry_modelreference.begin_nested()
         request.addfinalizer(transaction.rollback)
         return
+
+    def test_insert_dict(self, registry_modelreference):
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test = registry_modelreference.Test.insert(col=instanceToDict(col))
+        assert test.col is col
+
+    def test_insert_instance(self, registry_modelreference):
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test = registry_modelreference.Test.insert(col=col)
+        assert test.col is col
 
     def test_setter_use_method(self, registry_modelreference):
         test = registry_modelreference.Test.insert()
@@ -2000,6 +2009,9 @@ class TestColumnModelReference:
                 .filter_by(name="anyblok-test")
                 .one()
             )
+
+        with pytest.raises(FieldException):
+            test.col = test
 
         test.col = (
             registry_modelreference.System.Blok.query()

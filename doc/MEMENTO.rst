@@ -718,7 +718,7 @@ the validator. This column is used to replace a many2one to the removed Model
 Other attribute for ``ModelFieldSelection``:
 
 Save the field information in the a column. The model can be limited by the
-the validators on the model or on himself. This column is used to replace a 
+the validators on the model or on himself. This column is used to replace a
 many2one to the removed Models **Model.System.Field**, **Model.System.column**
 or **Model.System.RelationShip**
 
@@ -776,7 +776,7 @@ or **Model.System.RelationShip**
 Other attribute for ``ModelReference``:
 
 Save the instance information in the a column. The model can be limited by the
-the validators on the model or on himself. This column is used to replace a 
+the validators on the model or on himself. This column is used to replace a
 Many2One when more than Model can be choose. Prefere the Many2One because Many2One
 use the foreign key constraint on the column. ModelReference can not use a foreign
 key
