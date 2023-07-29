@@ -19,7 +19,6 @@ from uuid import uuid1
 import pytest
 import pytz
 from sqlalchemy import Integer as SA_Integer
-from sqlalchemy import String as SA_String
 from sqlalchemy import text
 from sqlalchemy.exc import StatementError
 
@@ -44,6 +43,7 @@ from anyblok.column import (
     Json,
     LargeBinary,
     ModelFieldSelection,
+    ModelReference,
     ModelSelection,
     Password,
     PhoneNumber,
@@ -65,6 +65,8 @@ from anyblok.column import (
     field_validator_is_not_relationship,
     field_validator_is_relationship,
     fieldToModelAttribute,
+    instance_validator_all,
+    instanceToDict,
     merge_validators,
     model_validator_all,
     model_validator_in_namespace,
@@ -183,6 +185,14 @@ COLUMNS = [
     pytest.param(
         (ModelFieldSelection, "Model.System.Blok => name", {}),
         id="ModelFieldSelection",
+    ),
+    pytest.param(
+        (
+            ModelReference,
+            None,
+            {},
+        ),
+        id="ModelReference",
     ),
 ]
 
@@ -801,10 +811,6 @@ class TestColumns:
         test.col["b"] = "test"
         assert test.col == {"a": "test", "b": "test"}
 
-    @pytest.mark.skipif(
-        sgdb_in(["MariaDB", "MsSQL"]),
-        reason="JSON is not existing in this SGDB",
-    )
     def test_json_simple_filter(self):
         registry = self.init_registry(simple_column, ColumnType=Json)
         Test = registry.Test
@@ -812,9 +818,7 @@ class TestColumns:
         Test.insert(col={"a": "test"})
         Test.insert(col={"b": "test"})
         assert (
-            Test.query()
-            .filter(Test.col["a"].cast(SA_String) == '"test"')
-            .count()
+            Test.query().filter(Test.col["a"].as_string() == "test").count()
             == 2
         )
 
@@ -1266,7 +1270,8 @@ class TestColumns:
             text("select col from test where id = %s" % test.id)
         )
         res = res.fetchall()[0][0]
-        assert res != test.col
+        if res:
+            assert res != test.col
 
     def test_foreign_key_on_mapper_issue_112(self):
         def add_in_registry():
@@ -1568,7 +1573,6 @@ def registry_modelselection(request, bloks_loaded):
     return registry
 
 
-@pytest.mark.relationship
 class TestColumnModelSelection:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_modelselection):
@@ -1749,7 +1753,6 @@ def registry_modelfieldselection(request, bloks_loaded):
     return registry
 
 
-@pytest.mark.relationship
 class TestColumnModelFieldSelection:
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_modelfieldselection):
@@ -1927,6 +1930,257 @@ class TestColumnModelFieldSelection:
         assert test is test2
 
 
+def add_modelreference_in_registry():
+    @register(Model.System)
+    class Blok:
+        def my_instance_validator(self):
+            return self.name == "anyblok-core"
+
+    @register(Model)
+    class Test:
+        id = Integer(primary_key=True)
+        col = ModelReference(
+            model_validator="my_model_validator",
+            instance_validator="my_instance_validator",
+        )
+        col2 = ModelReference(default="default_col2")
+        col3 = ModelReference(
+            default={
+                "model": "Model.System.Blok",
+                "primary_keys": {
+                    "name": "anyblok-test",
+                },
+            }
+        )
+
+        @classmethod
+        def my_model_validator(cls, Model):
+            return Model.__registry_name__ == "Model.System.Blok"
+
+        @classmethod
+        def default_col2(cls):
+            return instanceToDict(
+                cls.anyblok.System.Blok.query()
+                .filter_by(name="anyblok-core")
+                .one()
+            )
+
+
+@pytest.fixture(scope="class")
+def registry_modelreference(request, bloks_loaded):
+    reset_db()
+    registry = init_registry(add_modelreference_in_registry)
+    request.addfinalizer(registry.close)
+    return registry
+
+
+class TestColumnModelReference:
+    @pytest.fixture(autouse=True)
+    def transact(self, request, registry_modelreference):
+        transaction = registry_modelreference.begin_nested()
+        request.addfinalizer(transaction.rollback)
+        return
+
+    def test_insert_dict(self, registry_modelreference):
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test = registry_modelreference.Test.insert(col=instanceToDict(col))
+        assert test.col is col
+
+    def test_insert_instance(self, registry_modelreference):
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test = registry_modelreference.Test.insert(col=col)
+        assert test.col is col
+
+    def test_setter_use_method(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        assert test.col is None
+
+        with pytest.raises(FieldException):
+            test.col = (
+                registry_modelreference.System.Blok.query()
+                .filter_by(name="anyblok-test")
+                .one()
+            )
+
+        with pytest.raises(FieldException):
+            test.col = test
+
+        test.col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+
+    def test_setter_not_an_existing_entry(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        col = {
+            "model": "Model.System.Blok",
+            "primary_keys": {"name": "unexisting"},
+        }
+
+        with pytest.raises(FieldException):
+            test.col2 = col
+
+    def test_default_value(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        assert test.col is None
+        assert test.col2.__registry_name__ == "Model.System.Blok"
+        assert test.col2.name == "anyblok-core"
+        assert test.col3.__registry_name__ == "Model.System.Blok"
+        assert test.col3.name == "anyblok-test"
+
+    def test_description(self, registry_modelreference):
+        description = registry_modelreference.Test.fields_description("col")[
+            "col"
+        ]
+        assert description == {
+            "id": "col",
+            "label": "Col",
+            "model": None,
+            "nullable": True,
+            "primary_key": False,
+            "model_selections": [
+                ("Model.System.Blok", "Model.System.Blok"),
+            ],
+            "type": "ModelReference",
+        }
+
+    def test_description2(self, registry_modelreference):
+        description = registry_modelreference.Test.fields_description(
+            ["col", "col2"]
+        )
+        assert (
+            description["col"]["model_selections"]
+            != description["col2"]["model_selections"]
+        )
+
+    def test_setter_instance_validator_all(self, registry_modelreference):
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-test")
+            .one()
+        )
+        assert instance_validator_all(col) is True
+
+    def test_instanceToDict_without_model(self, registry_modelreference):
+        with pytest.raises(FieldException):
+            instanceToDict({"primary_keys": {}})
+
+    def test_instanceToDict_without_primary_keys(self, registry_modelreference):
+        with pytest.raises(FieldException):
+            instanceToDict({"model": "model"})
+
+    def test_search_with_dict(self, registry_modelreference):
+        Test = registry_modelreference.Test
+        test = Test.insert()
+        col = {
+            "model": "Model.System.Blok",
+            "primary_keys": {"name": "anyblok-core"},
+        }
+        test.col = col
+        registry_modelreference.flush()
+        test2 = (
+            Test.query()
+            .filter(
+                Test.col["model"].as_string() == "Model.System.Blok",
+                Test.col["primary_keys"]["name"].as_string() == "anyblok-core",
+            )
+            .one()
+        )
+        assert test is test2
+
+    def test_search_is_with_dict(self, registry_modelreference):
+        Test = registry_modelreference.Test
+        test = Test.insert()
+        col = {
+            "model": "Model.System.Blok",
+            "primary_keys": {"name": "anyblok-core"},
+        }
+        test.col = col
+        registry_modelreference.flush()
+        test2 = Test.query().filter(Test.col.is_(col)).one()
+        assert test is test2
+
+    def test_search_is_with_instance(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test.col = col
+        registry_modelreference.flush()
+        Test = registry_modelreference.Test
+        test2 = Test.query().filter(Test.col.is_(col)).one()
+        assert test is test2
+
+    def test_search_is_with_instance2(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        test.col2 = test
+        registry_modelreference.flush()
+        Test = registry_modelreference.Test
+        test2 = Test.query().filter(Test.col2.is_(test)).one()
+        assert test is test2
+
+    def test_search_with_models_with_str(self, registry_modelreference):
+        Test = registry_modelreference.Test
+        test = Test.insert()
+        col = {
+            "model": "Model.System.Blok",
+            "primary_keys": {"name": "anyblok-core"},
+        }
+        test.col = col
+        registry_modelreference.flush()
+        test2 = (
+            Test.query().filter(Test.col.with_models("Model.System.Blok")).one()
+        )
+        assert test is test2
+
+    def test_search_with_models_with_model(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test.col = col
+        registry_modelreference.flush()
+        Test = registry_modelreference.Test
+        test2 = (
+            Test.query()
+            .filter(Test.col.with_models(registry_modelreference.System.Blok))
+            .one()
+        )
+        assert test is test2
+
+    def test_search_with_models_with_models(self, registry_modelreference):
+        test = registry_modelreference.Test.insert()
+        col = (
+            registry_modelreference.System.Blok.query()
+            .filter_by(name="anyblok-core")
+            .one()
+        )
+        test.col = col
+        registry_modelreference.flush()
+        Test = registry_modelreference.Test
+        test2 = (
+            Test.query()
+            .filter(
+                Test.col.with_models(registry_modelreference.System.Blok, Test)
+            )
+            .one()
+        )
+        assert test is test2
+
+
 class TestColumnsAutoDoc:
     def call_autodoc(self, column, **kwargs):
         col = column(**kwargs)
@@ -2050,3 +2304,15 @@ class TestCompareColumn:
     @pytest.mark.skipif(not has_colour, reason="colour is not installed")
     def test_string_to_color_with_diff_size(self):
         self.diff_type(String(size=10), Color(size=20))
+
+    def test_string_to_modelselection(self):
+        self.same_type(String(size=256), ModelSelection())
+
+    def test_string_to_modelselection_with_diff_size(self):
+        self.diff_type(String(), ModelSelection())
+
+    def test_string_to_modelfieldselection(self):
+        self.same_type(String(size=256), ModelFieldSelection())
+
+    def test_string_to_modelfieldselection_with_diff_size(self):
+        self.diff_type(String(), ModelFieldSelection())

@@ -500,6 +500,7 @@ List of the column type:
  * ``Country``: use pycountry
  * ``ModelSelection``
  * ``ModelFieldSelection``
+ * ``ModelReference``
 
 All the columns have the following optional parameters:
 
@@ -680,6 +681,22 @@ Other attribute for ``Country``:
 
 Other attribute for ``ModelSelection``:
 
+Save the a model namespace in the a column. The model can be limited by the
+the validator. This column is used to replace a many2one to the removed Model
+**Model.System.Table**
+
+::
+    from anyblok.declarations import Declarations
+    from anyblok.column import ModelSelection
+
+
+    @Declarations.register(Declaration.Model)
+    class MyModel:
+
+        id = Integer(primary_key=True)
+        model = ModelSelection()
+
+
 +----------------+------------------------------------------------------------+
 | Param          | Description                                                |
 +================+============================================================+
@@ -699,6 +716,23 @@ Other attribute for ``ModelSelection``:
 +----------------+------------------------------------------------------------+
 
 Other attribute for ``ModelFieldSelection``:
+
+Save the field information in the a column. The model can be limited by the
+the validators on the model or on himself. This column is used to replace a
+many2one to the removed Models **Model.System.Field**, **Model.System.column**
+or **Model.System.RelationShip**
+
+::
+    from anyblok.declarations import Declarations
+    from anyblok.column import ModelFieldSelection
+
+
+    @Declarations.register(Declaration.Model)
+    class MyModel:
+
+        id = Integer(primary_key=True)
+        field = ModelFieldSelection()
+
 
 +---------------------+-------------------------------------------------------+
 | Param               | Description                                           |
@@ -735,8 +769,56 @@ Other attribute for ``ModelFieldSelection``:
 |                     | * field_validator_is_named: filter by names of field  |
 |                     | * field_validator_is_from_types: filter by Field      |
 |                     |   Types                                               |
+|                     | * merge_validators: Do a and between validators       |
 |                     |                                                       |
 +---------------------+-------------------------------------------------------+
+
+Other attribute for ``ModelReference``:
+
+Save the instance information in the a column. The model can be limited by the
+the validators on the model or on himself. This column is used to replace a
+Many2One when more than Model can be choose. Prefere the Many2One because Many2One
+use the foreign key constraint on the column. ModelReference can not use a foreign
+key
+
+::
+    from anyblok.declarations import Declarations
+    from anyblok.column import ModelReference
+
+
+    @Declarations.register(Declaration.Model)
+    class MyModel:
+
+        id = Integer(primary_key=True)
+        instance = ModelReference()
+
++------------------------+----------------------------------------------------+
+| Param                  | Description                                        |
++========================+====================================================+
+| ``model_validator``    | function or name of the method on the Model. their |
+|                        | goal is to defined which models can be used. Some  |
+|                        | function exist in anyblok.column:                  |
+|                        |                                                    |
+|                        | * model_validator_all: All models                  |
+|                        | * model_validator_is_sql: Only SQL models          |
+|                        | * model_validator_is_not_sql: Not the SQL models   |
+|                        | * model_validator_is_view: Only models with        |
+|                        |   factory view                                     |
+|                        | * model_validator_is_not_view: Not the model with  |
+|                        |   factory view                                     |
+|                        | * model_validator_in_namespace: filter by          |
+|                        |   namespace                                        |
+|                        | * merge_validators: Do a and between validators    |
+|                        |                                                    |
++------------------------+----------------------------------------------------+
+| ``instance_validator`` | function or name of the method on the Model. their |
+|                        | goal is to defined which instance of the Model can |
+|                        | be used. Some function exist in anyblok.column:    |
+|                        |                                                    |
+|                        | * instance_validator_all: All fields on the model  |
+|                        | * merge_validators: Do a and between validators    |
+|                        |                                                    |
++------------------------+----------------------------------------------------+
 
 RelationShip
 ------------

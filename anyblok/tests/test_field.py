@@ -7,7 +7,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from sqlalchemy import func, types
+from sqlalchemy import func
 
 from anyblok import Declarations
 from anyblok.column import Integer, Json, String
@@ -159,10 +159,6 @@ class TestJsonRelated:
         request.addfinalizer(transaction.rollback)
         return
 
-    @pytest.mark.skipif(
-        sgdb_in(["MariaDB", "MsSQL"]),
-        reason="JSON is not existing in this SGDB",
-    )
     def test_field_json_related_hasattr(self, registry_json_related):
         registry = registry_json_related
         registry.Test.name
@@ -213,49 +209,37 @@ class TestJsonRelated:
         t.name = "jssuzanne"
         assert t.properties == {"name": "jssuzanne"}
 
-    @pytest.mark.skipif(
-        sgdb_in(["MariaDB", "MsSQL"]),
-        reason="JSON is not existing in this SGDB",
-    )
+    # @pytest.mark.skipif(
+    #     sgdb_in(["MariaDB", "MsSQL"]),
+    #     reason="JSON is not existing in this SGDB",
+    # )
     def test_field_json_related_exp_1(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
         Test.insert()
         query = registry.Test.query().filter(
-            Test.name.cast(types.String) == '"jssuzanne"'
+            Test.name.as_string() == "jssuzanne"
         )
         assert not (query.count())
 
-    @pytest.mark.skipif(
-        sgdb_in(["MariaDB", "MsSQL"]),
-        reason="JSON is not existing in this SGDB",
-    )
     def test_field_json_related_exp_2(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
         Test.insert(properties={})
         query = registry.Test.query().filter(
-            Test.name.cast(types.String) == '"jssuzanne"'
+            Test.name.as_string() == "jssuzanne"
         )
         assert not (query.count())
 
-    @pytest.mark.skipif(
-        sgdb_in(["MariaDB", "MsSQL"]),
-        reason="JSON is not existing in this SGDB",
-    )
     def test_field_json_related_exp_3(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
         Test.insert(properties={"name": "jssuzanne"})
         query = registry.Test.query().filter(
-            Test.name.cast(types.String) == '"jssuzanne"'
+            Test.name.as_string() == "jssuzanne"
         )
         assert query.count()
 
-    @pytest.mark.skipif(
-        sgdb_in(["MariaDB", "MsSQL"]),
-        reason="JSON is not existing in this SGDB",
-    )
     def test_with_subquery(self, registry_json_related):
         registry = registry_json_related
         Test = registry.Test
@@ -307,16 +291,12 @@ class TestJsonRelated2:
         t.name = "jssuzanne"
         assert t.properties == {"sub": {"name": "jssuzanne"}}
 
-    @pytest.mark.skipif(
-        sgdb_in(["MariaDB", "MsSQL"]),
-        reason="JSON is not existing in this SGDB",
-    )
     def test_field_json_related_exp_4(self, registry_json_related2):
         registry = registry_json_related2
         Test = registry.Test
         Test.insert(properties={"sub": {"name": "jssuzanne"}})
         query = registry.Test.query().filter(
-            Test.name.cast(types.String) == '"jssuzanne"'
+            Test.name.as_string() == "jssuzanne"
         )
         assert query.count()
 

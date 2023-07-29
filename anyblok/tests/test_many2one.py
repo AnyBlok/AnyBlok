@@ -24,6 +24,8 @@ from anyblok.column import (
     DateTime,
     Email,
     Integer,
+    ModelFieldSelection,
+    ModelSelection,
     PhoneNumber,
     Selection,
     Sequence,
@@ -48,6 +50,8 @@ COLUMNS = [
     Email,
     UUID,
     Selection,
+    ModelSelection,
+    ModelFieldSelection,
 ]
 
 

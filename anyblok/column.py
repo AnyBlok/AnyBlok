@@ -20,10 +20,10 @@ from logging import getLogger
 
 import pytz
 from dateutil.parser import parse
-from sqlalchemy import CheckConstraint, types
+from sqlalchemy import JSON as SA_JSON
+from sqlalchemy import CheckConstraint, and_, or_, types
 from sqlalchemy.schema import Column as SA_Column
 from sqlalchemy.schema import Sequence as SA_Sequence
-from sqlalchemy_utils import JSONType
 from sqlalchemy_utils.types.color import ColorType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.encrypted.encrypted_type import StringEncryptedType
@@ -1242,13 +1242,6 @@ class Json(Column):
 
     sqlalchemy_type = types.JSON(none_as_null=True)
 
-    def native_type(self, registry):
-        """Return the native SqlAlchemy type"""
-        if sgdb_in(registry.engine, ["MariaDB", "MsSQL"]):
-            return JSONType
-
-        return self.sqlalchemy_type
-
     def setter_format_value(self, value):
         if self.encrypt_key:
             value = dumps(value)
@@ -1916,6 +1909,7 @@ class ModelSelection(Column):
     """
 
     def __init__(self, *args, **kwargs):
+        self.size = 256  # used by comparator
         self.validator = None
         if "validator" in kwargs:
             self.validator = kwargs.pop("validator")
@@ -1987,7 +1981,7 @@ class ModelSelection(Column):
     def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
         if sgdb_in(registry.engine, ["MySQL", "MariaDB"]):
-            sqlalchemy_type.impl = types.String(265)
+            sqlalchemy_type.impl = types.String(256)
 
         return sqlalchemy_type
 
@@ -2211,6 +2205,7 @@ class ModelFieldSelection(Column):
     """
 
     def __init__(self, *args, **kwargs):
+        self.size = 256  # used by comparator
         self.model_validator = None
         if "model_validator" in kwargs:
             self.model_validator = kwargs.pop("model_validator")
@@ -2293,7 +2288,7 @@ class ModelFieldSelection(Column):
     def get_encrypt_key_type(self, registry, sqlalchemy_type, encrypt_key):
         sqlalchemy_type = StringEncryptedType(sqlalchemy_type, encrypt_key)
         if sgdb_in(registry.engine, ["MySQL", "MariaDB"]):
-            sqlalchemy_type.impl = types.String(265)
+            sqlalchemy_type.impl = types.String(256)
 
         return sqlalchemy_type
 
@@ -2317,16 +2312,295 @@ class ModelFieldSelection(Column):
         res["selections"] = [(k, v) for k, v in values.items()]
 
 
+def instanceToDict(instance):
+    if not isinstance(instance, dict):
+        return dict(
+            model=instance.__registry_name__,
+            primary_keys=instance.to_primary_keys(),
+        )
+    elif "model" not in instance:
+        raise FieldException("The model entry is required : %r" % instance)
+    elif "primary_keys" not in instance:
+        raise FieldException(
+            "The primary_keys entry is required : %r" % instance
+        )
+
+    return instance
+
+
+def instance_validator_all(instance):
+    return True
+
+
+class ModelReferenceType(types.JSON):
+    """Generic type for Column ModelFieldSelection"""
+
+    cache_ok = True
+
+    class comparator_factory(SA_JSON.Comparator):
+        def is_(self, instance):
+            value = instanceToDict(instance)
+            filters = [
+                self.expr["model"].as_string() == value["model"],
+            ]
+            for pk, value in value.get("primary_keys", {}).items():
+                filters.append(
+                    self.expr["primary_keys"][pk].as_string() == str(value)
+                )
+
+            return and_(*filters)
+
+        def with_models(self, *namespaces):
+            filters = []
+            for namespace in namespaces:
+                if hasattr(namespace, "__registry_name__"):
+                    namespace = namespace.__registry_name__
+
+                filters.append(self.expr["model"].as_string() == namespace)
+
+            if len(filters) == 1:
+                return filters[0]
+
+            return or_(*filters)
+
+    def __init__(
+        self,
+        model_validator,
+        instance_validator,
+        registry=None,
+        namespace=None,
+    ):
+        if model_validator is None:
+            model_validator = model_validator_is_sql
+
+        if instance_validator is None:
+            instance_validator = instance_validator_all
+
+        def validate_model(value):
+            Model = registry.get(value)
+            if isinstance(model_validator, str):
+                return getattr(registry.get(namespace), model_validator)(Model)
+
+            return model_validator(Model)
+
+        def validate_instance(value):
+            instance = registry.get(value["model"]).from_primary_keys(
+                **value["primary_keys"]
+            )
+
+            if isinstance(instance_validator, str):
+                return getattr(instance, instance_validator)()
+
+            return instance_validator(instance)
+
+        self.validate_model = validate_model
+        self.validate_instance = validate_instance
+        self.model_selections = None
+        self.model_validator = model_validator
+        self.instance_validator = instance_validator
+        self.registry = registry
+        self.namespace = namespace
+        super(ModelReferenceType, self).__init__(none_as_null=True)
+
+    def get_instance(self, value):
+        if value:
+            value = instanceToDict(value)
+            value = self.registry.get(value["model"]).from_primary_keys(
+                **value["primary_keys"]
+            )
+
+        return value
+
+    def get_model_selections(self):
+        """Return a dict of selections
+
+        :return: selections dict
+        """
+        if not self.model_selections:
+            self.model_selections = {
+                namespace: (
+                    Model.__doc__ and Model.__doc__.split("\n")[0] or namespace
+                )
+                for namespace, Model in self.registry.loaded_namespaces.items()
+                if self.validate_model(namespace)
+            }
+
+        return self.model_selections
+
+
+class ModelReference(Json):
+    """ModelReference column
+
+    Allow to Reference an AnyBlok instance of Model
+    ::
+
+        from anyblok.declarations import Declarations
+        from anyblok.column import ModelReference
+
+
+        @Declarations.register(Declarations.Model)
+        class Test:
+
+            x = ModelReference(
+                model_validator="_x_model_validator",
+                instance_validator="_x_instance_validator",
+            )
+
+            @classmethod
+            def _x_model_validator(cls, Model):
+                return True or False
+
+            @classmethod
+            def _x_instance_validator(cls, field):
+                return True or False
+
+        ==========
+
+        anyblok.Test.query().filter(Test.x.is_(instance))
+        anyblok.Test.query().filter(Test.x.with_models(anyblok.System.Blok))
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.model_validator = None
+        if "model_validator" in kwargs:
+            self.model_validator = kwargs.pop("model_validator")
+
+        self.instance_validator = None
+        if "instance_validator" in kwargs:
+            self.instance_validator = kwargs.pop("instance_validator")
+
+        if "default" in kwargs:
+            self.real_default_value = kwargs.pop("default")
+            kwargs["default"] = ColumnDefaultValue(self.wrap_default)
+
+        super(ModelReference, self).__init__(*args, **kwargs)
+
+    def autodoc_get_properties(self):
+        """Return properties for autodoc
+
+        :return: autodoc properties
+        """
+        res = super(ModelReference, self).autodoc_get_properties()
+        res["model_validator"] = str(self.model_validator)
+        res["instance_validator"] = str(self.instance_validator)
+        return res
+
+    def getter_format_value(self, value):
+        """Return formatted value
+
+        :param value:
+        :return:
+        """
+        value = super(ModelReference, self).getter_format_value(value)
+        if value is None:
+            return None
+
+        if isinstance(value, dict):
+            value = self._sqlalchemy_type.get_instance(value)
+
+        return value
+
+    def validate_dict(self, value):
+        if value is not None:
+            if not self._sqlalchemy_type.validate_model(value["model"]):
+                raise FieldException(
+                    "The model of %r is not in the selections" % value
+                )
+
+            if not self._sqlalchemy_type.get_instance(value):
+                raise FieldException("%r is not existing" % value)
+
+            if not self._sqlalchemy_type.validate_instance(value):
+                raise FieldException("%r is not a valid choice" % value)
+
+        return value
+
+    def setter_format_value(self, value):
+        """Return value or raise exception if the given value is invalid
+
+        :param value:
+        :exception FieldException
+        :return:
+        """
+        if value is not None:
+            value = self.validate_dict(instanceToDict(value))
+
+        return value
+
+    def get_sqlalchemy_mapping(
+        self, registry, namespace, fieldname, properties
+    ):
+        """Return sqlalchmy mapping
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :param properties: the properties of the model
+        :return: instance of the real field
+        """
+        self._sqlalchemy_type = self.sqlalchemy_type = ModelReferenceType(
+            self.model_validator,
+            self.instance_validator,
+            registry=registry,
+            namespace=namespace,
+        )
+        return super(ModelReference, self).get_sqlalchemy_mapping(
+            registry, namespace, fieldname, properties
+        )
+
+    def update_description(self, registry, model, res):
+        """Update model description
+
+        :param registry: the current registry
+        :param model:
+        :param res:
+        """
+        super(ModelReference, self).update_description(registry, model, res)
+        sqlalchemy_type = ModelReferenceType(
+            self.model_validator,
+            self.instance_validator,
+            registry=registry,
+            namespace=model,
+        )
+        values = sqlalchemy_type.get_model_selections()
+        res["model_selections"] = [(k, v) for k, v in values.items()]
+
+    def wrap_default(self, registry, namespace, fieldname, properties):
+        """Return default wrapper
+
+        :param registry: the current registry
+        :param namespace: the namespace of the model
+        :param fieldname: the fieldname of the model
+        :return:
+        """
+
+        def default_value():
+            if isinstance(self.real_default_value, str):
+                return self.validate_dict(
+                    instanceToDict(
+                        wrap_default(
+                            registry, namespace, self.real_default_value
+                        )()
+                    )
+                )
+
+            return self.validate_dict(instanceToDict(self.real_default_value))
+
+        return default_value
+
+
 @CompareType.add_comparator(String, String)
 @CompareType.add_comparator(String, Selection)
 @CompareType.add_comparator(String, Sequence)
+@CompareType.add_comparator(String, ModelSelection)
+@CompareType.add_comparator(String, ModelFieldSelection)
 def compare_strings(col1, type1, col2, type2):
     if type1.size != type2.size:
         raise FieldException(
             "You can't add a foreign key using based String columns with "
             "different size `{model1!s}.{col1!s}` pointing to "
             "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
-            "-> ({type2!r}){size2:d}".format(
+            "-> {type2!r}({size2:d})".format(
                 model1=col1.model_name,
                 col1=col1.attribute_name,
                 model2=col2.model_name,
@@ -2346,7 +2620,7 @@ def compare_string_to_color(col1, type1, col2, type2):
             "You can't add a foreign key using based String columns with "
             "different size `{model1!s}.{col1!s}` pointing to "
             "`{model2!s}.{col2!s}` have different sizes  {type1!r}({size1:d}) "
-            "-> ({type2!r}){size2:d}".format(
+            "-> {type2!r}({size2:d})".format(
                 model1=col1.model_name,
                 col1=col1.attribute_name,
                 model2=col2.model_name,
