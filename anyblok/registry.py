@@ -967,16 +967,39 @@ class Registry:
 
         in function of the Core Session class ans the Core Qery class
         """
-        if self.Session is None:
+        if self.Session is None or self.must_recreate_session_factory():
             bind = self.bind
+            if self.Session:
+                if not self.withoutautomigration:
+                    # this is the only case to use commit in the construction
+                    # of the registry
+                    self.commit()
+                # remove all existing instance to create a new instance
+                # because the instance are cached
+                self.Session.remove()
+
+            session_bases = [self.registry_base] + self.loaded_cores['Session']
+            Session = type('Session', tuple(session_bases), {})
+
             self.Session = scoped_session(
-                sessionmaker(bind=bind, future=True),
+                sessionmaker(bind=bind, class_=Session, future=True),
                 EnvironmentManager.scoped_function_for_session(),
             )
 
+            self.nb_session_bases = len(self.loaded_cores['Session'])
             self.apply_session_events()
         else:
             self.flush()
+
+    def must_recreate_session_factory(self):
+        """Check if the SQLA Session Factory must be destroy and recreate
+        :rtype: Boolean, True if nb Core Session/Query inheritance change
+        """
+        nb_session_bases = len(self.loaded_cores['Session'])
+        if nb_session_bases != self.nb_session_bases:
+            return True
+
+        return False
 
     @log(logger, level="debug")
     def load(self):
