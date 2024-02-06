@@ -854,25 +854,26 @@ class TestBlokQuery:
         assert registry.System.Blok.query().is_a_test is True
 
 
-@pytest.mark.skipif(sgdb_in(['MySQL', 'MariaDB']),
-                    reason='Not for MySQL and MariaDB')
+@pytest.mark.skipif(
+    sgdb_in(["MySQL", "MariaDB"]), reason="Not for MySQL and MariaDB"
+)
 class TestBlokSession:
-
     @pytest.fixture(autouse=True)
     def transact(self, request, registry_testblok_func):
         request.addfinalizer(
-            registry_testblok_func.unittest_transaction.rollback)
+            registry_testblok_func.unittest_transaction.rollback
+        )
 
     def test_session_with_no_change(self, registry_testblok_func):
         registry = registry_testblok_func
         Session = registry.Session
-        registry.upgrade(install=('test-blok1',))
+        registry.upgrade(install=("test-blok1",))
         assert Session is registry.Session
 
     def test_session_with_change_session(self, registry_testblok_func):
         registry = registry_testblok_func
         Session = registry.Session
-        registry.upgrade(install=('test-blok12',))
+        registry.upgrade(install=("test-blok12",))
         assert Session is not registry.Session
 
 

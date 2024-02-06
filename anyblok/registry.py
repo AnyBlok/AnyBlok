@@ -978,15 +978,15 @@ class Registry:
                 # because the instance are cached
                 self.Session.remove()
 
-            session_bases = [self.registry_base] + self.loaded_cores['Session']
-            Session = type('Session', tuple(session_bases), {})
+            session_bases = [self.registry_base] + self.loaded_cores["Session"]
+            Session = type("Session", tuple(session_bases), {})
 
             self.Session = scoped_session(
                 sessionmaker(bind=bind, class_=Session, future=True),
                 EnvironmentManager.scoped_function_for_session(),
             )
 
-            self.nb_session_bases = len(self.loaded_cores['Session'])
+            self.nb_session_bases = len(self.loaded_cores["Session"])
             self.apply_session_events()
         else:
             self.flush()
@@ -995,7 +995,7 @@ class Registry:
         """Check if the SQLA Session Factory must be destroy and recreate
         :rtype: Boolean, True if nb Core Session/Query inheritance change
         """
-        nb_session_bases = len(self.loaded_cores['Session'])
+        nb_session_bases = len(self.loaded_cores["Session"])
         if nb_session_bases != self.nb_session_bases:
             return True
 
