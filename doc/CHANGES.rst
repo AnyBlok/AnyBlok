@@ -30,6 +30,8 @@ CHANGELOG
   the Many2One when the target could be coming from any Model validate by
   the model_validator choosen. If you have only one targeted Model use the
   relationship ManyToOne
+* Reverted the deletion of the core.Session
+* removed dependencies of pkg_ressource for entrypoints and use importlib.
 
 2.1.0 (2023-07-26)
 ------------------

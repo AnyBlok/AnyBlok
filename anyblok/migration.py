@@ -12,12 +12,12 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from contextlib import contextmanager
+from importlib.metadata import entry_points
 from logging import getLogger
 
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
-from pkg_resources import iter_entry_points
 from sqlalchemy import and_, func, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.compiler import compiles
@@ -494,8 +494,8 @@ class MigrationReport:
         plugins = sorted(
             (
                 entry_point.load()
-                for entry_point in iter_entry_points(
-                    MIGRATION_TYPE_PLUGINS_NAMESPACE
+                for entry_point in entry_points(
+                    group=MIGRATION_TYPE_PLUGINS_NAMESPACE
                 )
             ),
             key=dialect_sort,
