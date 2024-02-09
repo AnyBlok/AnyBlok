@@ -57,5 +57,6 @@ class Core:
 RegistryManager.declare_core("Base")
 RegistryManager.declare_core("SqlBase")
 RegistryManager.declare_core("SqlViewBase")
+RegistryManager.declare_core("Session")
 RegistryManager.declare_core("Query")
 RegistryManager.declare_core("InstrumentedList")
