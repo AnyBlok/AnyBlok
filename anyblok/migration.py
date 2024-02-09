@@ -12,7 +12,12 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from contextlib import contextmanager
-from importlib.metadata import entry_points
+
+try:
+    from importlib.metadata import entry_points
+except ImportError:
+    from importlib_metadata import entry_points
+
 from logging import getLogger
 
 from alembic.autogenerate import compare_metadata

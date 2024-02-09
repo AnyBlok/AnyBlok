@@ -26,6 +26,7 @@ dependencies = [
     'python-dateutil',
     'texttable',
     'testfixtures',
+    'importlib_metadata',
 ]
 dynamic = ["readme"]
 keywords = [
