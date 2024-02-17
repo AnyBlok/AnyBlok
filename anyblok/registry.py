@@ -141,7 +141,7 @@ class RegistryManager:
             for i in iter_entry_points(
                 "anyblok.registry.mixin"
             ):  # pragma: no cover
-                logger.error("AnyBlok Load registry mixin: %r" % i)
+                logger.info("AnyBlok Load registry mixin: %r" % i)
                 cls.register_mixin(i.name, i.load())
                 cls.__loaded_entry_point = True
 
