@@ -11,7 +11,8 @@ from anyblok.blok import BlokManager
 from anyblok.common import return_list
 from anyblok.environment import EnvironmentManager
 from anyblok.model import Model
-from anyblok.registry import RegistryManager
+from anyblok.registry import RegistryManager, Registry
+from anyblok.config import Configuration
 
 from .conftest import init_registry
 
@@ -232,3 +233,23 @@ class TestRegistryManager:
 
     def test_return_list_2(self):
         assert return_list(["plop"]) == ["plop"]
+
+    def test_register_mixins_and_unregister_mixins(self, registry_mixins):
+        db_name = Configuration.get('db_name')
+
+        class A:
+            @classmethod
+            def db_exists(cls, db_name):
+                return db_name, super().db_exists(db_name)
+
+        RegistryManager.register_mixin("A", A)
+        RegistryCls = RegistryManager.build_registry_class(force_create=True)
+        assert A in RegistryCls.__mro__
+        assert Registry in RegistryCls.__mro__
+        assert RegistryCls.db_exists(db_name) == (db_name, True)
+
+        RegistryManager.unregister_mixin("A")
+        RegistryCls = RegistryManager.build_registry_class(force_create=True)
+        assert A not in RegistryCls.__mro__
+        assert Registry in RegistryCls.__mro__
+        assert RegistryCls.db_exists(db_name) is True

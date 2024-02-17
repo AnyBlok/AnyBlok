@@ -143,3 +143,14 @@ def db_schema(request, bloks_loaded):
         Configuration.set("suffix_db_schema.Model.*", "")
 
     request.addfinalizer(rollback)
+
+
+@pytest.fixture(scope="function")
+def registry_mixins(request):
+    mixins = RegistryManager.mixins.copy()
+
+    def rollback():
+        RegistryManager.mixins = mixins
+        RegistryManager.build_registry_class(force_create=True)
+
+    request.addfinalizer(rollback)

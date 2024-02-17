@@ -95,6 +95,9 @@ class RegistryManager:
     callback_initialize_entries = {}
     callback_unload_entries = {}
     registries = {}
+    mixins = {}
+    RegistryClass = None
+    __loaded_entry_point = False
 
     @classmethod
     def has_blok(cls, blok):
@@ -119,6 +122,35 @@ class RegistryManager:
         for entry, unload_callback in cls.callback_unload_entries.items():
             logger.info("Unload: %r" % entry)
             unload_callback()  # pragma: no cover
+
+    @classmethod
+    def register_mixin(cls, name, klass):
+        if name in cls.mixins:
+            logger.warning(
+                f'A mixins with name {name} already exist and will be overload'
+            )
+        cls.mixins[name] = klass
+
+    @classmethod
+    def unregister_mixin(cls, name):
+        del cls.mixins[name]
+
+    @classmethod
+    def build_registry_class(cls, force_create=False):
+        if not cls.__loaded_entry_point:
+            for i in iter_entry_points(
+                "anyblok.registry.mixin"
+            ):  # pragma: no cover
+                logger.error("AnyBlok Load registry mixin: %r" % i)
+                cls.register_mixin(i.name, i.load())
+                cls.__loaded_entry_point = True
+
+        if not cls.RegistryClass or force_create:
+            bases = [klass for klass in cls.mixins.values()]
+            bases.append(Registry)
+            cls.RegistryClass = type('RegistryKlass', tuple(bases), dict())
+
+        return cls.RegistryClass
 
     @classmethod
     def get(
@@ -147,7 +179,8 @@ class RegistryManager:
             return cls.registries[db_name]
 
         logger.info("Loading registry for database %r", db_name)
-        registry = Registry(
+        RegistryClass = cls.build_registry_class()
+        registry = RegistryClass(
             db_name, loadwithoutmigration=loadwithoutmigration, **kwargs
         )
         cls.registries[db_name] = registry
