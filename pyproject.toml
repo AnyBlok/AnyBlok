@@ -132,3 +132,7 @@ src_paths = ["anyblok", "anyblok_nose"]
 filter_files = true
 line_length = 80
 skip = ["anyblok/__init__.py"]
+
+[tool.coverage.run]
+# Whether to measure branch coverage in addition to statement coverage
+branch = false
