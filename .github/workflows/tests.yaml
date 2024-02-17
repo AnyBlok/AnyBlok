@@ -59,6 +59,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
+          COVERAGE_CORE: sysmon
         run: pytest anyblok/tests
       - name: Drop db
         env:
@@ -92,6 +93,7 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
+          COVERAGE_CORE: sysmon
         run: pytest --cov-append anyblok/bloks/anyblok_core
       - name: Generate lcov
         run: coverage-lcov
