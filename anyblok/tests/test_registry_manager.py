@@ -9,10 +9,10 @@ import pytest
 
 from anyblok.blok import BlokManager
 from anyblok.common import return_list
+from anyblok.config import Configuration
 from anyblok.environment import EnvironmentManager
 from anyblok.model import Model
-from anyblok.registry import RegistryManager, Registry
-from anyblok.config import Configuration
+from anyblok.registry import Registry, RegistryManager
 
 from .conftest import init_registry
 
@@ -235,7 +235,7 @@ class TestRegistryManager:
         assert return_list(["plop"]) == ["plop"]
 
     def test_register_mixins_and_unregister_mixins(self, registry_mixins):
-        db_name = Configuration.get('db_name')
+        db_name = Configuration.get("db_name")
 
         class A:
             @classmethod

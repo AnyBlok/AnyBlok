@@ -31,7 +31,7 @@ CHANGELOG
   the model_validator choosen. If you have only one targeted Model use the
   relationship ManyToOne
 * Reverted the deletion of the core.Session
-* With python > 3.11, removed dependencies of pkg_ressource for entrypoints 
+* With python > 3.11, removed dependencies of pkg_ressource for entrypoints
   and use importlib.
 * Added the capability to add mixin to build the Registry Class.
 

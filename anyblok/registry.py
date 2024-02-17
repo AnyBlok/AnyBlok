@@ -127,7 +127,7 @@ class RegistryManager:
     def register_mixin(cls, name, klass):
         if name in cls.mixins:
             logger.warning(
-                f'A mixins with name {name} already exist and will be overload'
+                f"A mixins with name {name} already exist and will be overload"
             )
         cls.mixins[name] = klass
 
@@ -148,7 +148,7 @@ class RegistryManager:
         if not cls.RegistryClass or force_create:
             bases = [klass for klass in cls.mixins.values()]
             bases.append(Registry)
-            cls.RegistryClass = type('RegistryKlass', tuple(bases), dict())
+            cls.RegistryClass = type("RegistryKlass", tuple(bases), dict())
 
         return cls.RegistryClass
 
