@@ -1,14 +1,15 @@
-# This file is a part of the AnyBlok project
+# this file is a part of the anyblok project
 #
-#    Copyright (C) 2014 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
-#    Copyright (C) 2015 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
-#    Copyright (C) 2016 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
-#    Copyright (C) 2017 Jean-Sebastien SUZANNE <jssuzanne@anybox.fr>
+#    copyright (c) 2014 jean-sebastien suzanne <jssuzanne@anybox.fr>
+#    copyright (c) 2015 jean-sebastien suzanne <jssuzanne@anybox.fr>
+#    copyright (c) 2016 jean-sebastien suzanne <jssuzanne@anybox.fr>
+#    copyright (c) 2017 jean-sebastien suzanne <jssuzanne@anybox.fr>
+#    copyright (c) 2024 jean-sebastien suzanne <js.suzanne@gmail.com>
 #
-# This Source Code Form is subject to the terms of the Mozilla Public License,
-# v. 2.0. If a copy of the MPL was not distributed with this file,You can
-# obtain one at http://mozilla.org/MPL/2.0/.
-from pkg_resources import iter_entry_points
+# this source code form is subject to the terms of the mozilla public license,
+# v. 2.0. if a copy of the mpl was not distributed with this file,you can
+# obtain one at http://mozilla.org/mpl/2.0/.
+from .pkg_metadata import iter_entry_points
 from logging import getLogger
 from .schema import (  # noqa
     ForeignKeyConstraint,

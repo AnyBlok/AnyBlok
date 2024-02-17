@@ -7,7 +7,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from logging import getLogger
 
-from pkg_resources import iter_entry_points
+from ..pkg_metadata import iter_entry_points
 
 logger = getLogger(__name__)
 

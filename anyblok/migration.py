@@ -17,7 +17,6 @@ from logging import getLogger
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
-from pkg_resources import iter_entry_points
 from sqlalchemy import and_, func, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.compiler import compiles
@@ -32,6 +31,7 @@ from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 from anyblok.config import Configuration
 
 from .common import return_list, sgdb_in
+from .pkg_metadata import iter_entry_points
 
 logger = getLogger(__name__)
 

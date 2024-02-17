@@ -7,9 +7,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+# try:
+#     from importlib.metadata import entry_points
+# except ImportError:
+#     from importlib_metadata import entry_points
 from logging import getLogger
 
-from pkg_resources import iter_entry_points
 from sqlalchemy import MetaData, create_engine, event, text
 from sqlalchemy.exc import (
     InternalError,
@@ -30,6 +33,7 @@ from .config import Configuration, get_url
 from .environment import EnvironmentManager
 from .logging import log
 from .migration import Migration
+from .pkg_metadata import iter_entry_points
 from .version import parse_version
 
 try:

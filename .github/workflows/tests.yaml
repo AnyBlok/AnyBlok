@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
     services:
       postgres:
         image: postgres:latest
@@ -59,6 +59,8 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
+          COVERAGE_CORE: sysmon
+          PYDEVD_DISABLE_FILE_VALIDATION: 1
         run: pytest anyblok/tests
       - name: Drop db
         env:
@@ -92,6 +94,8 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
+          COVERAGE_CORE: sysmon
+          PYDEVD_DISABLE_FILE_VALIDATION: 1
         run: pytest --cov-append anyblok/bloks/anyblok_core
       - name: Generate lcov
         run: coverage-lcov

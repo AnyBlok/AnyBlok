@@ -26,6 +26,7 @@ dependencies = [
     'python-dateutil',
     'texttable',
     'testfixtures',
+    'importlib_metadata',
 ]
 dynamic = ["readme"]
 keywords = [
@@ -41,6 +42,7 @@ classifiers = [
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
     'Programming Language :: Python :: Implementation :: CPython',
     'Programming Language :: Python :: Implementation :: PyPy',
     "Topic :: Database",
@@ -130,3 +132,7 @@ src_paths = ["anyblok", "anyblok_nose"]
 filter_files = true
 line_length = 80
 skip = ["anyblok/__init__.py"]
+
+[tool.coverage.run]
+# Whether to measure branch coverage in addition to statement coverage
+branch = false

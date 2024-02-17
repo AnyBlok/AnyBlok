@@ -11,12 +11,11 @@ from os.path import dirname
 from sys import modules
 from time import sleep
 
-from pkg_resources import iter_entry_points
-
 from anyblok.environment import EnvironmentManager
 from anyblok.imp import ImportManager
 
 from .logging import log
+from .pkg_metadata import iter_entry_points
 
 logger = getLogger(__name__)
 
