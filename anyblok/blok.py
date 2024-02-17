@@ -6,10 +6,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-try:
-    from importlib.metadata import entry_points as iter_entry_points
-except ImportError:
-    from importlib_metadata import entry_points as iter_entry_points
+# try:
+#     from importlib.metadata import entry_points as iter_entry_points
+# except ImportError:
+#     from importlib_metadata import entry_points as iter_entry_points
+from .pkg_metadata import iter_entry_points
 
 from logging import getLogger
 from os.path import dirname
@@ -225,7 +226,7 @@ class BlokManager:
         bloks = []
         for entry_point in entry_points:
             count = 0
-            for i in iter_entry_points(group=entry_point):
+            for i in iter_entry_points(entry_point):
                 count += 1
                 blok = i.load()
                 blok.required_by = []

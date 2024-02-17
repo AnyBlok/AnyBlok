@@ -13,10 +13,7 @@
 # obtain one at http://mozilla.org/MPL/2.0/.
 from contextlib import contextmanager
 
-try:
-    from importlib.metadata import entry_points
-except ImportError:
-    from importlib_metadata import entry_points
+from .pkg_metadata import iter_entry_points
 
 from logging import getLogger
 
@@ -499,9 +496,8 @@ class MigrationReport:
         plugins = sorted(
             (
                 entry_point.load()
-                for entry_point in entry_points(
-                    group=MIGRATION_TYPE_PLUGINS_NAMESPACE
-                )
+                for entry_point in iter_entry_points(
+                    MIGRATION_TYPE_PLUGINS_NAMESPACE)
             ),
             key=dialect_sort,
         )

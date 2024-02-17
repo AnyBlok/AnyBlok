@@ -5,11 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-try:
-    from importlib.metadata import entry_points
-except ImportError:
-    from importlib_metadata import entry_points
-
+from ..pkg_metadata import iter_entry_points
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -17,7 +13,7 @@ logger = getLogger(__name__)
 
 def get_model_plugins(registry):
     res = []
-    for i in entry_points(group="anyblok.model.plugin"):
+    for i in iter_entry_points("anyblok.model.plugin"):
         logger.info("AnyBlok Load model plugin: %r" % i)
         res.append(i.load()(registry))
 

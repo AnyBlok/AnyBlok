@@ -7,10 +7,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-try:
-    from importlib.metadata import entry_points
-except ImportError:
-    from importlib_metadata import entry_points
+# try:
+#     from importlib.metadata import entry_points
+# except ImportError:
+#     from importlib_metadata import entry_points
+from .pkg_metadata import iter_entry_points
 
 from logging import getLogger
 
@@ -501,7 +502,7 @@ class Registry:
         """
 
         def _apply_engine_events(key):
-            for i in entry_points(group=key):
+            for i in iter_entry_points(key):
                 logger.info(
                     "Update engine event for %s from entrypoint %r" % (key, i)
                 )
@@ -1070,7 +1071,7 @@ class Registry:
         """
 
         def _apply_session_events(key):
-            for i in entry_points(group=key):
+            for i in iter_entry_points(key):
                 logger.info(
                     "Update session event for %s from entrypoint %r" % (key, i)
                 )
