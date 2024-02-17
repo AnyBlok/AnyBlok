@@ -19,7 +19,6 @@ dependencies = [
     'argparse',
     'alembic',
     'graphviz',
-    'lxml',
     'PyYAML',
     'appdirs',
     'pytz',
