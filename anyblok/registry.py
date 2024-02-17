@@ -11,8 +11,6 @@
 #     from importlib.metadata import entry_points
 # except ImportError:
 #     from importlib_metadata import entry_points
-from .pkg_metadata import iter_entry_points
-
 from logging import getLogger
 
 from sqlalchemy import MetaData, create_engine, event, text
@@ -35,6 +33,7 @@ from .config import Configuration, get_url
 from .environment import EnvironmentManager
 from .logging import log
 from .migration import Migration
+from .pkg_metadata import iter_entry_points
 from .version import parse_version
 
 try:

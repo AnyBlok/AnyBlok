@@ -6,12 +6,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-# try:
-#     from importlib.metadata import entry_points as iter_entry_points
-# except ImportError:
-#     from importlib_metadata import entry_points as iter_entry_points
-from .pkg_metadata import iter_entry_points
-
 from logging import getLogger
 from os.path import dirname
 from sys import modules
@@ -21,6 +15,7 @@ from anyblok.environment import EnvironmentManager
 from anyblok.imp import ImportManager
 
 from .logging import log
+from .pkg_metadata import iter_entry_points
 
 logger = getLogger(__name__)
 

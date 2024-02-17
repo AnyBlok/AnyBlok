@@ -12,9 +12,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from contextlib import contextmanager
-
-from .pkg_metadata import iter_entry_points
-
 from logging import getLogger
 
 from alembic.autogenerate import compare_metadata
@@ -34,6 +31,7 @@ from sqlalchemy.sql.ddl import CreateSchema, DropSchema
 from anyblok.config import Configuration
 
 from .common import return_list, sgdb_in
+from .pkg_metadata import iter_entry_points
 
 logger = getLogger(__name__)
 
@@ -497,7 +495,8 @@ class MigrationReport:
             (
                 entry_point.load()
                 for entry_point in iter_entry_points(
-                    MIGRATION_TYPE_PLUGINS_NAMESPACE)
+                    MIGRATION_TYPE_PLUGINS_NAMESPACE
+                )
             ),
             key=dialect_sort,
         )
