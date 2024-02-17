@@ -19,7 +19,7 @@
 CHANGELOG
 =========
 
-2.2.0 (unreleased)
+2.2.0 (2024-02-18)
 ------------------
 
 * Removed tables **system_model**, **system_field**, **system_column**,
