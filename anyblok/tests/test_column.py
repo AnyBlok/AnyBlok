@@ -533,6 +533,23 @@ class TestColumns:
         )
 
     @pytest.mark.skipif(not has_passlib, reason="passlib is not installed")
+    def test_password_set_with_hash(self):
+        registry = self.init_registry(
+            simple_column,
+            ColumnType=Password,
+            crypt_context={"schemes": ["bcrypt"]},
+        )
+        bcrypt_password_hash = (
+            "$2y$10$Crnf9zkl67BugBmA4ASoU.phSGda4ir4JzaU64jpg2h.s92dSsaUu"
+        )
+        test = registry.Test.insert(col=bcrypt_password_hash)
+        assert test.col == "password"
+        assert (
+            registry.execute(text("Select col from test")).fetchone()[0]
+            != bcrypt_password_hash
+        )
+
+    @pytest.mark.skipif(not has_passlib, reason="passlib is not installed")
     def test_password_with_foreign_key(self):
         with pytest.raises(FieldException):
             self.init_registry(
