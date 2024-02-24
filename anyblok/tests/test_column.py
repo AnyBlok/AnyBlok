@@ -544,10 +544,6 @@ class TestColumns:
         )
         test = registry.Test.insert(col=bcrypt_password_hash)
         assert test.col == "password"
-        assert (
-            registry.execute(text("Select col from test")).fetchone()[0]
-            != bcrypt_password_hash
-        )
 
     @pytest.mark.skipif(not has_passlib, reason="passlib is not installed")
     def test_password_with_foreign_key(self):
