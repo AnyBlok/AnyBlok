@@ -18,6 +18,11 @@
 
 CHANGELOG
 =========
+2.3.0 (UNRELEASED)
+------------------
+
+* Password column can be set using hash (only scheme using defined in field
+  definition).
 
 2.2.0 (2024-02-18)
 ------------------

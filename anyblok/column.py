@@ -846,7 +846,7 @@ class Password(Column):
         @Declarations.register(Declarations.Model)
         class Test:
 
-            x = Password(crypt_context={'schemes': ['md5_crypt']})
+            x = Password(crypt_context={'schemes': ['bcrypt']})
 
         =========================================
 
@@ -855,6 +855,8 @@ class Password(Column):
 
         test.x
         ==> Password object with encrypt value, the value can not be read
+
+        test.x = "$2y$10$KlpJgedTiIH7SSBFOdooJuS4Gnoqv9qEUwDfqkxZ7iB2DRhg758li"
 
         test.x == 'mypassword'
         ==> True
@@ -887,7 +889,9 @@ class Password(Column):
         :param value:
         :return:
         """
-        value = self.sqlalchemy_type.context.hash(value).encode("utf8")
+        if not self.sqlalchemy_type.context.identify(value):
+            value = self.sqlalchemy_type.context.hash(value).encode("utf8")
+
         value = SAU_PWD(value, context=self.sqlalchemy_type.context)
         return value
 
