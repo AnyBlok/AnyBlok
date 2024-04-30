@@ -137,7 +137,7 @@ class RegistryManager:
             for i in iter_entry_points(
                 "anyblok.registry.mixin"
             ):  # pragma: no cover
-                logger.info("AnyBlok Load registry mixin: %r" % i)
+                logger.info("AnyBlok Load registry mixin: %r", i)
                 cls.register_mixin(i.name, i.load())
                 cls.__loaded_entry_point = True
 
@@ -532,7 +532,11 @@ class Registry:
         def _apply_engine_events(key):
             for i in iter_entry_points(key):
                 logger.info(
-                    "Update engine event for %s from entrypoint %r" % (key, i)
+                    "Update engine event for %s from entrypoint %r",
+                    (
+                        key,
+                        i,
+                    ),
                 )
                 i.load()(engine)
 
@@ -1101,7 +1105,11 @@ class Registry:
         def _apply_session_events(key):
             for i in iter_entry_points(key):
                 logger.info(
-                    "Update session event for %s from entrypoint %r" % (key, i)
+                    "Update session event for %s from entrypoint %r",
+                    (
+                        key,
+                        i,
+                    ),
                 )
                 i.load()(self.session)  # pragma: no cover
 

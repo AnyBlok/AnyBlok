@@ -15,7 +15,7 @@ logger = getLogger(__name__)
 def get_model_plugins(registry):
     res = []
     for i in iter_entry_points("anyblok.model.plugin"):
-        logger.info("AnyBlok Load model plugin: %r" % i)
+        logger.info("AnyBlok Load model plugin: %r", i)
         res.append(i.load()(registry))
 
     return res
