@@ -533,10 +533,8 @@ class Registry:
             for i in iter_entry_points(key):
                 logger.info(
                     "Update engine event for %s from entrypoint %r",
-                    (
-                        key,
-                        i,
-                    ),
+                    key,
+                    i,
                 )
                 i.load()(engine)
 
@@ -1106,10 +1104,8 @@ class Registry:
             for i in iter_entry_points(key):
                 logger.info(
                     "Update session event for %s from entrypoint %r",
-                    (
-                        key,
-                        i,
-                    ),
+                    key,
+                    i,
                 )
                 i.load()(self.session)  # pragma: no cover
 
