@@ -6,9 +6,10 @@
 # v. 2.0. if a copy of the mpl was not distributed with this file,you can
 # obtain one at http://mozilla.org/mpl/2.0/.
 try:
-    from pkg_resources import iter_entry_points
+    from importlib_metadata import entry_points
 except ImportError:
     from importlib.metadata import entry_points
 
-    def iter_entry_points(group):
-        return entry_points(group=group)
+
+def iter_entry_points(group):
+    return entry_points(group=group)

@@ -7,10 +7,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-# try:
-#     from importlib.metadata import entry_points
-# except ImportError:
-#     from importlib_metadata import entry_points
 from logging import getLogger
 
 from sqlalchemy import MetaData, create_engine, event, text
@@ -141,7 +137,7 @@ class RegistryManager:
             for i in iter_entry_points(
                 "anyblok.registry.mixin"
             ):  # pragma: no cover
-                logger.info("AnyBlok Load registry mixin: %r" % i)
+                logger.info("AnyBlok Load registry mixin: %r", i)
                 cls.register_mixin(i.name, i.load())
                 cls.__loaded_entry_point = True
 
@@ -536,7 +532,9 @@ class Registry:
         def _apply_engine_events(key):
             for i in iter_entry_points(key):
                 logger.info(
-                    "Update engine event for %s from entrypoint %r" % (key, i)
+                    "Update engine event for %s from entrypoint %r",
+                    key,
+                    i,
                 )
                 i.load()(engine)
 
@@ -1105,7 +1103,9 @@ class Registry:
         def _apply_session_events(key):
             for i in iter_entry_points(key):
                 logger.info(
-                    "Update session event for %s from entrypoint %r" % (key, i)
+                    "Update session event for %s from entrypoint %r",
+                    key,
+                    i,
                 )
                 i.load()(self.session)  # pragma: no cover
 

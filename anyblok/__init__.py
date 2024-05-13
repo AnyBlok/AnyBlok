@@ -48,7 +48,7 @@ def load_init_function_from_entry_points(unittest=False):
 
     """
     for i in iter_entry_points("anyblok.init"):  # pragma: no cover
-        print("AnyBlok Load init: %r" % i)
+        print("AnyBlok Load init: %r", i)
         i.load()(unittest=unittest)
 
 
@@ -77,7 +77,7 @@ def configuration_post_load(unittest=False):
 
     """
     for i in iter_entry_points("anyblok_configuration.post_load"):
-        logger.info("AnyBlok configuration post load: %r" % i)
+        logger.info("AnyBlok configuration post load: %r", i)
         i.load()(unittest=unittest)  # pragma: no cover
 
 
