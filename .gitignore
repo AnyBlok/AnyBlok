@@ -31,3 +31,4 @@ test_doc_output
 
 gmon.out
 .idea
+coverage.lcov

@@ -34,9 +34,9 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install graphviz package
@@ -46,7 +46,7 @@ jobs:
       - name: Install psycopg2
         run: pip install psycopg2
       - name: Install pytest
-        run: pip install pytest pytest-cov mock coverage-lcov
+        run: pip install pytest pytest-cov mock
       - name: Install extra dependencies
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
@@ -96,23 +96,22 @@ jobs:
           ANYBLOK_DATABASE_PASSWORD: postgres
           COVERAGE_CORE: sysmon
           PYDEVD_DISABLE_FILE_VALIDATION: 1
-        run: pytest --cov-append anyblok/bloks/anyblok_core
-      - name: Generate lcov
-        run: coverage-lcov
+        run: pytest --cov-append --cov-report=lcov --cov-report=term-missing  anyblok/bloks/anyblok_core
       - name: Coveralls
-        uses: coverallsapp/github-action@1.1.3
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           flag-name: ${{ github.job }}
-          path-to-lcov: lcov.info
+          file: coverage.lcov
+          format: lcov
 
   Postgres-psycopg3:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10']
+        python-version: ['3.11']
     services:
       postgres:
         image: postgres:latest
@@ -129,9 +128,9 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install graphviz package
@@ -141,7 +140,7 @@ jobs:
       - name: Install psycopg 3
         run: pip install psycopg[binary]
       - name: Install pytest
-        run: pip install pytest pytest-cov mock coverage-lcov
+        run: pip install pytest pytest-cov mock
       - name: Install extra dependencies
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
@@ -187,16 +186,15 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: postgres
           ANYBLOK_DATABASE_PASSWORD: postgres
-        run: pytest --cov-append anyblok/bloks/anyblok_core
-      - name: Generate lcov
-        run: coverage-lcov
+        run: pytest --cov-append --cov-report=lcov --cov-report=term-missing  anyblok/bloks/anyblok_core
       - name: Coveralls
-        uses: coverallsapp/github-action@1.1.3
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           flag-name: ${{ github.job }}
-          path-to-lcov: lcov.info
+          file: coverage.lcov
+          format: lcov
 
   MySQL:
     runs-on: ubuntu-latest
@@ -215,11 +213,11 @@ jobs:
         ports:
           - 3306:3306
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install graphviz package
         run: bash .ci/install_graphviz.sh
       - name: Install Wheel
@@ -227,7 +225,7 @@ jobs:
       - name: Install mysqlclient
         run: pip install mysqlclient
       - name: Install pytest
-        run: pip install pytest pytest-cov mock coverage-lcov
+        run: pip install pytest pytest-cov mock
       - name: Install extra dependencies
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
@@ -262,26 +260,25 @@ jobs:
           ANYBLOK_DATABASE_HOST: localhost
           ANYBLOK_DATABASE_USER: root
           ANYBLOK_DATABASE_PASSWORD: root
-        run: pytest --cov-append anyblok/bloks/anyblok_core
-      - name: Generate lcov
-        run: coverage-lcov
+        run: pytest --cov-append --cov-report=lcov --cov-report=term-missing anyblok/bloks/anyblok_core
       - name: Coveralls
-        uses: coverallsapp/github-action@1.1.3
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           flag-name: ${{ github.job }}
-          path-to-lcov: lcov.info
+          file: coverage.lcov
+          format: lcov
   MsSQL:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Run the action
         uses: potatoqualitee/mssqlsuite@v1.7
         with:
@@ -297,7 +294,7 @@ jobs:
       - name: Install pyodbc
         run: pip install pyodbc
       - name: Install pytest
-        run: pip install pytest pytest-cov mock coverage-lcov
+        run: pip install pytest pytest-cov mock
       - name: Install extra dependencies
         run: pip install colour passlib furl phonenumbers pycountry cryptography
       - name: Install AnyBlok
@@ -333,24 +330,24 @@ jobs:
           ANYBLOK_DATABASE_USER: sa
           ANYBLOK_DATABASE_PASSWORD: dbatools.I0
           ANYBLOK_DATABASE_QUERY: 'driver=ODBC Driver 17 for SQL Server'
-        run: pytest --cov-append anyblok/bloks/anyblok_core
-      - name: Generate lcov
-        run: coverage-lcov
+        run: pytest --cov-append --cov-report=lcov --cov-report=term-missing anyblok/bloks/anyblok_core
       - name: Coveralls
-        uses: coverallsapp/github-action@1.1.3
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           flag-name: ${{ github.job }}
-          path-to-lcov: lcov.info
+          file: coverage.lcov
+          format: lcov
 
   finish:
     needs: [Postgres, Postgres-psycopg3, MySQL, MsSQL]
     runs-on: ubuntu-20.04
     steps:
       - name: Coveralls Finished
-        uses: coverallsapp/github-action@1.1.3
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
-          path-to-lcov: lcov.info
+          format: lcov
+          file: coverage.lcov
