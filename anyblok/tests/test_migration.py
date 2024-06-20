@@ -1267,7 +1267,7 @@ class TestMigrationPlugin:
         assert res is True
 
     @pytest.mark.skipif(
-        not sgdb_in(["PostgreSQL"]), reason="Plugin for MsSQL only"
+        not sgdb_in(["PostgreSQL"]), reason="Plugin for Postgres only"
     )
     def test_boolean_with_postgres(self, registry_plugin):
         report = MigrationReport(registry_plugin.migration, [])
