@@ -227,7 +227,7 @@ class TestMany2ManyComplete:
 
     def test_many2many_autodoc(self, registry_many2many):
         registry = registry_many2many
-        registry.loaded_namespaces_first_step["Model.Person"][
+        registry.loaded_namespaces_first_step["Model.Person"]["relationships"][
             "addresses"
         ].autodoc_get_properties()
 

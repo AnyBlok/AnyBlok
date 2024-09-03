@@ -149,11 +149,16 @@ class ModelAttribute:
         :rtype: instance of the attribute
         """
         Model = self.check_model_in_first_step(registry)
-        column_name = self.check_column_in_first_step(registry, Model)
-        col = registry.loaded_namespaces_first_step[self.model_name][
-            column_name
-        ]
-        return col
+        alls = {}
+        alls.update(Model["fields"])
+        alls.update(Model["columns"])
+        if self.attribute_name in alls:
+            return alls[self.attribute_name]
+
+        raise ModelAttributeException(
+            "the Model %r has not got attribute %r"
+            % (self.model_name, self.attribute_name)
+        )
 
     def get_fk_column(self, registry):
         """Return the foreign key which represent the attribute in the data
@@ -178,8 +183,8 @@ class ModelAttribute:
         Model = self.check_model_in_first_step(registry)
         try:
             column_name = self.check_column_in_first_step(registry, Model)
-            if Model[column_name].foreign_key:
-                return Model[column_name].foreign_key
+            if Model["columns"][column_name].foreign_key:
+                return Model["columns"][column_name].foreign_key
         except ModelAttributeException:
             pass
 
@@ -216,8 +221,8 @@ class ModelAttribute:
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
         tablename = Model["__tablename__"]
-        if Model[self.attribute_name].db_column_name:
-            column_name = Model[self.attribute_name].db_column_name
+        if Model["columns"][self.attribute_name].db_column_name:
+            column_name = Model["columns"][self.attribute_name].db_column_name
 
         if with_schema and Model.get("__db_schema__"):
             return "%s.%s.%s" % (Model["__db_schema__"], tablename, column_name)
@@ -242,7 +247,7 @@ class ModelAttribute:
     def get_fk_remote(self, registry):
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
-        remote = Model[column_name].foreign_key
+        remote = Model["columns"][column_name].foreign_key
         if not remote:
             return None
 
@@ -251,24 +256,21 @@ class ModelAttribute:
     def get_complete_remote(self, registry):
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
-        remote = Model[column_name].foreign_key
+        remote = Model["columns"][column_name].foreign_key
         if not remote:
             return None
 
         return remote.get_complete_name(registry)
 
     def add_fake_column(self, registry):
-        Model = self.check_model_in_first_step(registry)
+        Model = self.check_model_in_first_step(registry)["columns"]
         if self.attribute_name in Model:
             return
 
         Model[self.attribute_name] = FakeColumn()
 
     def add_fake_relationship(self, registry, namespace, fieldname):
-        Model = self.check_model_in_first_step(registry)
-        if self.attribute_name in Model:
-            return
-
+        Model = self.check_model_in_first_step(registry)["relationships"]
         Model[self.attribute_name] = FakeRelationShip(
             ModelAttribute(namespace, fieldname)
         )
@@ -285,9 +287,11 @@ class ModelAttribute:
         """
         Model = self.check_model_in_first_step(registry)
         column_name = self.check_column_in_first_step(registry, Model)
-        if hasattr(Model[self.attribute_name], "db_column_name"):
-            if Model[self.attribute_name].db_column_name:
-                column_name = Model[self.attribute_name].db_column_name
+        if hasattr(Model["columns"][self.attribute_name], "db_column_name"):
+            if Model["columns"][self.attribute_name].db_column_name:
+                column_name = Model["columns"][
+                    self.attribute_name
+                ].db_column_name
 
         return column_name
 
@@ -296,8 +300,7 @@ class ModelAttribute:
             raise ModelAttributeException("Unknow model %r" % self.model_name)
 
         Model = registry.loaded_namespaces_first_step[self.model_name]
-        if len(Model.keys()) == 3:
-            # (__depends__, __db_schema__, __tablename__)
+        if not Model["columns"]:
             # No column found, so is not an sql model
             raise ModelAttributeException(
                 "The Model %r is not an SQL Model" % self.model_name
@@ -305,7 +308,7 @@ class ModelAttribute:
         return Model
 
     def check_column_in_first_step(self, registry, Model):
-        if self.attribute_name not in Model:
+        if self.attribute_name not in Model["columns"]:
             raise ModelAttributeException(
                 "the Model %r has not got attribute %r"
                 % (self.model_name, self.attribute_name)
@@ -315,15 +318,22 @@ class ModelAttribute:
 
     def is_declared(self, registry):
         Model = self.check_model_in_first_step(registry)
-        if self.attribute_name not in Model:
-            return False
+        if self.attribute_name in Model["columns"]:
+            return True
+        if self.attribute_name in Model["relationships"]:
+            return True
 
-        return True
+        return False
 
     def native_type(self, registry):
         Model = self.check_model_in_first_step(registry)
-        column_name = self.check_column_in_first_step(registry, Model)
-        return Model[column_name].native_type(registry)
+        alls = {}
+        alls.update(Model["columns"])
+        alls.update(Model["relationships"])
+        if self.attribute_name in alls:
+            self.check_column_in_first_step(registry, Model)
+
+        return alls[self.attribute_name].native_type(registry)
 
 
 class ModelRepr:
@@ -385,7 +395,7 @@ class ModelRepr:
 
         Model = self.check_model(registry)
         pks = []
-        for k, v in Model.items():
+        for k, v in Model["columns"].items():
             if isinstance(v, Column):
                 if v.kwargs.get("primary_key") is True:
                     pks.append(ModelAttribute(self.model_name, k))
@@ -402,7 +412,7 @@ class ModelRepr:
 
         Model = self.check_model(registry)
         fks = []
-        for k, v in Model.items():
+        for k, v in Model["columns"].items():
             if isinstance(v, Column):
                 if v.foreign_key:
                     if v.foreign_key.model_name == remote_model:
@@ -420,7 +430,7 @@ class ModelRepr:
 
         Model = self.check_model(registry)
         many2ones = []
-        for k, v in Model.items():
+        for k, v in Model["relationships"].items():
             if isinstance(v, Many2One):
                 if v.model.model_name == remote_model:
                     many2ones.append((k, v))
@@ -463,22 +473,6 @@ def ModelAdapter(Model):
 
 
 class ModelMapper:
-    sqlalchemy_known_events = [
-        "after_delete",
-        "after_insert",
-        "after_update",
-        "append_result",
-        "before_delete",
-        "before_insert",
-        "before_update",
-        "create_instance",
-        "expire",
-        "first_init",
-        "init",
-        "load",
-        "refresh",
-    ]
-
     def __init__(self, mapper, event, *args, **kwargs):
         if isinstance(mapper, str):
             self.model = ModelRepr(mapper)
@@ -501,15 +495,6 @@ class ModelMapper:
             return True
 
         return False
-
-    def listen(self, method):
-        if self.event in self.sqlalchemy_known_events:
-            method.is_an_sqlalchemy_event_listener = True
-            method.sqlalchemy_listener = self
-        else:
-            method.is_an_event_listener = True
-            method.model = self.model.model_name
-            method.event = self.event
 
     def mapper(self, registry, namespace, **kwargs):
         model = self.model
@@ -542,10 +527,6 @@ class ModelAttributeMapper:
             return True
 
         return False
-
-    def listen(self, method):
-        method.is_an_sqlalchemy_event_listener = True
-        method.sqlalchemy_listener = self
 
     def mapper(self, registry, namespace, usehybrid=True):
         attribute = self.attribute

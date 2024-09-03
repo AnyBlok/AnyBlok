@@ -17,12 +17,13 @@ from sqlalchemy.orm import declared_attr
 from texttable import Texttable
 
 from anyblok import Declarations
-from anyblok.column import Column
-from anyblok.common import TypeList, anyblok_column_prefix
-from anyblok.field import Field, FieldException
+from anyblok.common import (
+    BaseModelFirstStepList,
+    BaseModelSecondStepList,
+    anyblok_column_prefix,
+)
 from anyblok.mapper import ModelAttribute, format_schema
 from anyblok.registry import RegistryManager
-from anyblok.relationship import RelationShip
 
 from .exceptions import ModelException
 from .factory import ModelFactory, has_sql_fields
@@ -38,50 +39,6 @@ def has_sqlalchemy_fields(base):
     return False
 
 
-def is_in_mro(cls, attr):
-    return cls in attr.__class__.__mro__
-
-
-def get_fields(
-    base,
-    without_relationship=False,
-    only_relationship=False,
-    without_column=False,
-):
-    """Return the fields for a model
-
-    :param base: Model Class
-    :param without_relationship: Do not return the relationship field
-    :param only_relationship: return only the relationship field
-    :param without_column: Do not return the column field
-    :rtype: dict with name of the field in key and instance of Field in value
-    """
-    fields = {}
-    for p in base.__dict__:
-        if p.startswith("__"):
-            continue
-
-        try:
-            attr = getattr(base, p)
-            if hasattr(attr, "__class__"):
-                if without_relationship and is_in_mro(RelationShip, attr):
-                    continue
-
-                if without_column and is_in_mro(Column, attr):
-                    continue
-
-                if only_relationship and not is_in_mro(RelationShip, attr):
-                    continue
-
-                if is_in_mro(Field, attr):
-                    fields[p] = attr
-
-        except FieldException:  # pragma: no cover
-            pass
-
-    return fields
-
-
 def autodoc_fields(declaration_cls, model_cls):  # pragma: no cover
     """Produces autodocumentation table for the fields.
 
@@ -92,7 +49,11 @@ def autodoc_fields(declaration_cls, model_cls):  # pragma: no cover
         return ""
 
     rows = [["Fields", ""]]
-    rows.extend([x, y.autodoc()] for x, y in get_fields(model_cls).items())
+    fields = {}
+    fields.update(model_cls.__dict__.get("__declared_fields__", {}))
+    fields.update(model_cls.__dict__.get("__declared_columns__", {}))
+    fields.update(model_cls.__dict__.get("__declared_relationships__", {}))
+    rows.extend([x, y.autodoc()] for x, y in fields.items())
     table = Texttable(max_width=0)
     table.set_cols_valign(["m", "t"])
     table.add_rows(rows)
@@ -102,6 +63,27 @@ def autodoc_fields(declaration_cls, model_cls):  # pragma: no cover
 def update_factory(kwargs):
     if "factory" in kwargs:
         kwargs["__model_factory__"] = kwargs.pop("factory")
+
+
+def check_model_base(cls, registryname):
+    if has_sqlalchemy_fields(cls):
+        raise ModelException("the base %r have an SQLAlchemy attribute" % cls)
+
+    if hasattr(cls, "__table_args__"):
+        raise ModelException(
+            "'__table_args__' attribute is forbidden, on Model : %r (%r)."
+            "Use the class method 'define_table_args' to define the value "
+            "allow anyblok to fill his own '__table_args__' attribute"
+            % (registryname, cls.__table_args__)
+        )
+
+    if hasattr(cls, "__mapper_args__"):
+        raise ModelException(
+            "'__mapper_args__' attribute is forbidden, on Model : %r (%r)."
+            "Use the class method 'define_mapper_args' to define the "
+            "value allow anyblok to fill his own '__mapper_args__' "
+            "attribute" % (registryname, cls.__mapper_args__)
+        )
 
 
 @Declarations.add_declaration_type(
@@ -177,6 +159,8 @@ class Model:
         :param cls_: Class Interface to add in registry
         """
         _registryname = parent.__registry_name__ + "." + name
+        check_model_base(cls_, _registryname)
+
         if "tablename" in kwargs:
             tablename = kwargs.pop("tablename")
             if not isinstance(tablename, str):
@@ -285,84 +269,24 @@ class Model:
         properties[name].anyblok_registry_name = namespace
         properties[name].field_description = field_description
         properties[name].from_model = from_model
-
-        registry.call_plugins(
-            "declare_field",
-            name,
-            field,
-            namespace,
-            properties,
-            transformation_properties,
-        )
-
         properties["loaded_columns"].append(name)
         field.update_properties(registry, namespace, name, properties)
 
     @classmethod
-    def transform_base(cls, registry, namespace, base, properties):
+    def transform_base(
+        cls, registry, namespace, base, transformation_properties
+    ):
         """Detect specific declaration which must define by registry
 
         :param registry: the current registry
         :param namespace: the namespace of the model
         :param base: One of the base of the model
-        :param properties: the properties of the model
+        :param transformation_properties: the properties of the model
         :rtype: new base
         """
-        new_type_properties = {}
-        for attr, method in inspect.getmembers(base):
-            if attr in ("registry", "anyblok", "_sa_registry"):
-                continue
-
-            if attr.startswith("__"):
-                continue
-
-            registry.call_plugins(
-                "transform_base_attribute",
-                attr,
-                method,
-                namespace,
-                base,
-                properties,
-                new_type_properties,
-            )
-
         registry.call_plugins(
-            "transform_base", namespace, base, properties, new_type_properties
+            "transform_base", namespace, base, transformation_properties
         )
-
-        if new_type_properties:
-            return [type(namespace, (), new_type_properties), base]
-
-        return [base]
-
-    @classmethod
-    def insert_in_bases(
-        cls, registry, namespace, bases, transformation_properties, properties
-    ):
-        """Add in the declared namespaces new base.
-
-        :param registry: the current registry
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param properties: assembled attributes of the namespace
-        """
-        new_base = type(namespace, (), {})
-        bases.insert(0, new_base)
-        registry.call_plugins(
-            "insert_in_bases",
-            new_base,
-            namespace,
-            properties,
-            transformation_properties,
-        )
-
-    @classmethod
-    def raise_if_has_sqlalchemy(cls, base):
-        if has_sqlalchemy_fields(base):
-            raise ModelException(
-                "the base %r have an SQLAlchemy attribute" % base
-            )
 
     @classmethod
     def load_namespace_first_step(cls, registry, namespace):
@@ -377,36 +301,25 @@ class Model:
         if namespace in registry.loaded_namespaces_first_step:
             return registry.loaded_namespaces_first_step[namespace]
 
-        properties = {
-            "__depends__": set(),
-            "__db_schema__": format_schema(None, namespace),
-        }
         ns = registry.loaded_registries[namespace]
+        properties = {}
+        bases = BaseModelFirstStepList(cls, registry, properties)
+        db_schema = format_schema(None, namespace)
 
-        for b in ns["bases"]:
-            cls.raise_if_has_sqlalchemy(b)
-
+        for b in ns["bases"][::-1]:
             for b_ns in b.__anyblok_bases__:
-                if b_ns.__registry_name__.startswith("Model."):
-                    properties["__depends__"].add(b_ns.__registry_name__)
+                bases.insert(0, b_ns.__registry_name__)
 
-                ps = cls.load_namespace_first_step(
-                    registry, b_ns.__registry_name__
-                )
-                ps = ps.copy()
-                ps.update(properties)
-                properties.update(ps)
-
-            fields = get_fields(b)
-            for p, f in fields.items():
-                if p not in properties:
-                    properties[p] = f
-
+            bases.insert(0, b)
             if hasattr(b, "__db_schema__"):
-                properties["__db_schema__"] = format_schema(
-                    b.__db_schema__, namespace
-                )
+                db_schema = format_schema(b.__db_schema__, namespace)
 
+        properties.update(
+            {
+                "__db_schema__": db_schema,
+                "__bases__": bases,
+            }
+        )
         if "__tablename__" in ns["properties"]:
             properties["__tablename__"] = ns["properties"]["__tablename__"]
 
@@ -418,51 +331,38 @@ class Model:
         cls,
         registry,
         namespace,
-        ns,
+        first_step,
         bases,
         realregistryname,
         properties,
         transformation_properties,
     ):
-        # remove doublon
-        for b in ns["bases"]:
-            if b in bases:
-                continue
-
-            kwargs = {"namespace": realregistryname} if realregistryname else {}
-            bases.append(b, **kwargs)
-
-            if b.__doc__ and "__doc__" not in properties:
-                properties["__doc__"] = b.__doc__
-
-            for b_ns in b.__anyblok_bases__:
-                brn = b_ns.__registry_name__
-                if brn in registry.loaded_registries["Mixin_names"]:
-                    tp = transformation_properties
-                    if realregistryname:
-                        bs, ps = cls.load_namespace_second_step(
-                            registry,
-                            brn,
-                            realregistryname=realregistryname,
-                            transformation_properties=tp,
-                        )
-                    else:
-                        bs, ps = cls.load_namespace_second_step(
-                            registry,
-                            brn,
-                            realregistryname=namespace,
-                            transformation_properties=tp,
-                        )
-                elif brn in registry.loaded_registries["Model_names"]:
-                    bs, ps = cls.load_namespace_second_step(registry, brn)
+        kwargs = {"namespace": realregistryname} if realregistryname else {}
+        for base in first_step["__bases__"][::-1]:
+            if isinstance(base, str):
+                tp = transformation_properties
+                if base in registry.loaded_registries["Mixin_names"]:
+                    bs, _ = cls.load_namespace_second_step(
+                        registry,
+                        base,
+                        realregistryname=realregistryname or namespace,
+                        transformation_properties=tp,
+                    )
+                elif base in registry.loaded_registries["Model_names"]:
+                    bs, _ = cls.load_namespace_second_step(registry, base)
                 else:
                     raise ModelException(  # pragma: no cover
                         "You have not to inherit the %r "
                         "Only the 'Mixin' and %r types are allowed"
-                        % (brn, cls.__name__)
+                        % (base, cls.__name__)
                     )
 
-                bases += bs
+                for bs_ in bs[::-1]:
+                    bases.insert(0, bs_)
+            else:
+                bases.insert(0, base, **kwargs)
+                if base.__doc__:
+                    properties["__doc__"] = base.__doc__
 
     @classmethod
     def init_core_properties_and_bases(cls, registry, bases, properties):
@@ -473,26 +373,19 @@ class Model:
 
     @classmethod
     def declare_all_fields(
-        cls, registry, namespace, bases, properties, transformation_properties
+        cls, registry, namespace, properties, transformation_properties
     ):
         # do in the first time the fields and columns
         # because for the relationship on the same model
         # the primary keys must exist before the relationship
         # load all the base before do relationship because primary key
         # can be come from inherit
-        for b in bases:
-            for p, f in get_fields(b, without_relationship=True).items():
-                cls.declare_field(
-                    registry,
-                    p,
-                    f,
-                    namespace,
-                    properties,
-                    transformation_properties,
-                )
-
-        for b in bases:
-            for p, f in get_fields(b, only_relationship=True).items():
+        for key in (
+            "__declared_fields__",
+            "__declared_columns__",
+            "__declared_relationships__",
+        ):
+            for p, f in transformation_properties[key].items():
                 cls.declare_field(
                     registry,
                     p,
@@ -523,18 +416,15 @@ class Model:
                         properties["__table__"] = m.__table__
                         tablename = namespace.replace(".", "_").lower()
 
-        for b in bases:
-            for p, f in get_fields(
-                b, without_relationship=True, without_column=True
-            ).items():
-                cls.declare_field(
-                    registry,
-                    p,
-                    f,
-                    namespace,
-                    properties,
-                    transformation_properties,
-                )
+        for p, f in transformation_properties["__declared_fields__"].items():
+            cls.declare_field(
+                registry,
+                p,
+                f,
+                namespace,
+                properties,
+                transformation_properties,
+            )
 
     @classmethod
     def load_namespace_second_step(
@@ -559,11 +449,12 @@ class Model:
         if transformation_properties is None:
             transformation_properties = {}
 
-        bases = TypeList(cls, registry, namespace, transformation_properties)
         ns = registry.loaded_registries[namespace]
+        bases = BaseModelSecondStepList(
+            Model, registry, namespace, transformation_properties
+        )
         properties = ns["properties"].copy()
         first_step = registry.loaded_namespaces_first_step[namespace]
-        properties["__depends__"] = first_step["__depends__"]
         properties["__db_schema__"] = first_step.get("__db_schema__", None)
 
         registry.call_plugins(
@@ -579,13 +470,12 @@ class Model:
         cls.apply_inheritance_base(
             registry,
             namespace,
-            ns,
+            first_step,
             bases,
             realregistryname,
             properties,
             transformation_properties,
         )
-
         if namespace in registry.loaded_registries["Model_names"]:
             tablename = properties["__tablename__"]
             modelname = namespace.replace(".", "")
@@ -604,18 +494,18 @@ class Model:
                 cls.declare_all_fields(
                     registry,
                     namespace,
-                    bases,
                     properties,
                     transformation_properties,
                 )
 
             bases.append(registry.registry_base)
-            cls.insert_in_bases(
-                registry,
+
+            registry.call_plugins(
+                "before_model_construction",
                 namespace,
-                bases,
-                transformation_properties,
+                first_step,
                 properties,
+                transformation_properties,
             )
             bases = [
                 properties["__model_factory__"].build_model(

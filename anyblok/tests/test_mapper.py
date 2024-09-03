@@ -250,25 +250,6 @@ class TestModelMapper:
         assert isinstance(mm.model, ModelRepr)
         assert mm.model.model_name, "Model.System.Blok"
 
-    def test_listen_sqlalchemy(self):
-        def method():
-            pass
-
-        mm = ModelMapper(Model.System.Blok, "before_insert")
-        mm.listen(method)
-        assert method.is_an_sqlalchemy_event_listener
-        assert method.sqlalchemy_listener is mm
-
-    def test_listen_anyblok(self):
-        def method():
-            pass
-
-        mm = ModelMapper(Model.System.Blok, "event")
-        mm.listen(method)
-        assert method.is_an_event_listener
-        assert method.model == "Model.System.Blok"
-        assert method.event == "event"
-
 
 class TestModelAttributeMapper:
     def test_not_str_capable(self):
@@ -292,15 +273,6 @@ class TestModelAttributeMapper:
         mam = ModelAttributeMapper("Model.System.Blok=>name", "event")
         assert isinstance(mam.attribute, ModelAttribute)
         assert mam.attribute.model_name == "Model.System.Blok"
-
-    def test_listen(self):
-        def method():
-            pass
-
-        mam = ModelAttributeMapper(Model.System.Blok.use("name"), "set")
-        mam.listen(method)
-        assert method.is_an_sqlalchemy_event_listener
-        assert method.sqlalchemy_listener is mam
 
 
 class TestMapperAdapter:

@@ -10,7 +10,7 @@ from os.path import isfile, join
 
 from anyblok.blok import BlokManager, BlokManagerException, UndefinedBlok
 from anyblok.column import Integer, Selection, String
-from anyblok.declarations import Declarations, classmethod_cache, listen
+from anyblok.declarations import ClassMethodCache, Declarations, Listen
 from anyblok.field import Function
 from anyblok.version import parse_version
 
@@ -288,14 +288,14 @@ class Blok:
         for blok in query_res:
             blok.load()
 
-    @classmethod_cache()
+    @ClassMethodCache()
     def is_installed(cls, blok_name):
         return (
             cls.query().filter_by(name=blok_name, state="installed").count()
             != 0
         )
 
-    @listen("Model.System.Blok", "Update installed blok")
+    @Listen("Model.System.Blok", "Update installed blok")
     def listen_update_installed_blok(cls):
         cls.anyblok.System.Cache.invalidate(
             cls.__registry_name__, "is_installed"

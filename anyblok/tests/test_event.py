@@ -9,7 +9,7 @@
 import pytest
 
 from anyblok.column import Boolean, Integer, String
-from anyblok.declarations import Declarations, listen
+from anyblok.declarations import Declarations, Listen, listen
 from anyblok.model.event import ORMEventException
 
 from .conftest import init_registry
@@ -42,7 +42,7 @@ class TestEvent:
         registry.Event.fire("fireevent")
         assert registry.Test.x == 1
 
-    def test_simple_event_from_model(self):
+    def test_deprecated(self):
         def add_in_registry():
             @register(Model)
             class Event:
@@ -59,6 +59,23 @@ class TestEvent:
         registry = self.init_registry(add_in_registry)
         self.check_event(registry)
 
+    def test_simple_event_from_model(self):
+        def add_in_registry():
+            @register(Model)
+            class Event:
+                pass
+
+            @register(Model)
+            class Test:
+                x = 0
+
+                @Listen(Model.Event, "fireevent")
+                def my_event(cls, a=1, b=1):
+                    cls.x = a * b
+
+        registry = self.init_registry(add_in_registry)
+        self.check_event(registry)
+
     def test_simple_event_from_model_by_name(self):
         def add_in_registry():
             @register(Model)
@@ -69,7 +86,7 @@ class TestEvent:
             class Test:
                 x = 0
 
-                @listen("Model.Event", "fireevent")
+                @Listen("Model.Event", "fireevent")
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
@@ -87,7 +104,7 @@ class TestEvent:
             class MTest:
                 x = 0
 
-                @listen(Model.Event, "fireevent")
+                @Listen(Model.Event, "fireevent")
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
@@ -109,7 +126,7 @@ class TestEvent:
             class Base:
                 x = 0
 
-                @listen(Model.Event, "fireevent")
+                @Listen(Model.Event, "fireevent")
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
@@ -133,7 +150,7 @@ class TestEvent:
 
             if withcore:
 
-                @listen(Model.Event, "fireevent")
+                @Listen(Model.Event, "fireevent")
                 def my_event(cls, a=1, b=1):
                     pass
 
@@ -141,7 +158,7 @@ class TestEvent:
         class MTest:
             if withmixin:
 
-                @listen(Model.Event, "fireevent")
+                @Listen(Model.Event, "fireevent")
                 def my_event(cls, a=1, b=1):
                     pass
 
@@ -149,7 +166,7 @@ class TestEvent:
         class Test(Mixin.MTest):
             if withmodel:
 
-                @listen(Model.Event, "fireevent")
+                @Listen(Model.Event, "fireevent")
                 def my_event(cls, a=1, b=1):
                     cls.x = a * b
 
@@ -202,7 +219,7 @@ class TestEvent:
                 id = Integer(primary_key=True)
                 val = Boolean(default=False)
 
-                @listen("Model.Test", "before_insert")
+                @Listen("Model.Test", "before_insert")
                 def my_event(cls, mapper, connection, target):
                     target.val = True
 
@@ -217,7 +234,7 @@ class TestEvent:
                 id = Integer(primary_key=True)
                 val = String()
 
-                @listen("Model.Test=>val", "set", retval=True)
+                @Listen("Model.Test=>val", "set", retval=True)
                 def my_event(cls, target, value, oldvalue, initiator):
                     return "test_" + value
 

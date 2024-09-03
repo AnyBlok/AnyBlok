@@ -199,6 +199,12 @@ class Column(Field):
         self.encrypt_key = kwargs.pop("encrypt_key", None)
         super(Column, self).__init__(*args, **kwargs)
 
+    def __set_name__(self, owner, name):
+        if not hasattr(owner, "__declared_columns__"):
+            owner.__declared_columns__ = {}
+
+        owner.__declared_columns__[name] = self
+
     def autodoc_get_properties(self):
         """Return properties list for autodoc
 

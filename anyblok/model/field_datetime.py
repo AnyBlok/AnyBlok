@@ -23,15 +23,13 @@ class AutoUpdatePlugin(ModelPluginBase):
         :param namespace: the namespace of the model
         :param transformation_properties: the properties of the model
         """
-        namespaces = [namespace]
-        namespaces.extend(list(base.__depends__))
-        fields = []
-        for ns in namespaces:
-            for c in self.registry.get(ns).loaded_columns:
-                f = self.registry.loaded_namespaces_first_step[namespace].get(c)
-                if isinstance(f, DateTime) and f.auto_update:
-                    # TimeStamp inherit of DateTime so it works too
-                    fields.append(c)
+        fields = [
+            c
+            for c, f in self.registry.loaded_namespaces_first_step[namespace][
+                "columns"
+            ].items()
+            if isinstance(f, DateTime) and f.auto_update
+        ]
 
         if fields:
             e = ModelMapper(namespace, "after_update")

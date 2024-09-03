@@ -8,7 +8,7 @@
 import pytest
 
 from anyblok.column import Integer
-from anyblok.declarations import Declarations, hybrid_method
+from anyblok.declarations import Declarations, HybridMethod, hybrid_method
 
 from .conftest import init_registry
 
@@ -45,7 +45,7 @@ class TestHybridMethod:
         assert query.count() == 1
         assert query.first() is t2
 
-    def test_hybrid_method_model(self):
+    def test_hybrid_method_model_deprecated(self):
         def add_in_registry():
             @register(Model)
             class Test:
@@ -53,6 +53,20 @@ class TestHybridMethod:
                 val = Integer(nullable=False)
 
                 @hybrid_method
+                def val_is(self, val):
+                    return self.val == val
+
+        registry = self.init_registry(add_in_registry)
+        self.check_hybrid_method(registry.Test)
+
+    def test_hybrid_method_model(self):
+        def add_in_registry():
+            @register(Model)
+            class Test:
+                id = Integer(primary_key=True)
+                val = Integer(nullable=False)
+
+                @HybridMethod
                 def val_is(self, val):
                     return self.val == val
 
@@ -67,7 +81,7 @@ class TestHybridMethod:
                 val = Integer(nullable=False)
 
                 # check decorator with ()
-                @hybrid_method()
+                @HybridMethod()
                 def val_is(self, val):
                     return self.val == val
 
@@ -78,7 +92,7 @@ class TestHybridMethod:
         def add_in_registry():
             @register(Core)
             class SqlBase:
-                @hybrid_method
+                @HybridMethod
                 def val_is(self, val):
                     return self.val == val
 
@@ -97,7 +111,7 @@ class TestHybridMethod:
                 id = Integer(primary_key=True)
                 val = Integer(nullable=False)
 
-                @hybrid_method
+                @HybridMethod
                 def val_is(self, val):
                     return self.val == val
 
@@ -115,7 +129,7 @@ class TestHybridMethod:
                 id = Integer(primary_key=True)
                 val = Integer(nullable=False)
 
-                @hybrid_method
+                @HybridMethod
                 def val_is(self, val):
                     return self.val == val
 
@@ -134,7 +148,7 @@ class TestHybridMethod:
         class SqlBase:
             if withcore:
 
-                @hybrid_method
+                @HybridMethod
                 def val_is(self, val):
                     pass
 
@@ -145,7 +159,7 @@ class TestHybridMethod:
 
             if withmixin:
 
-                @hybrid_method
+                @HybridMethod
                 def val_is(self, val):
                     pass
 
@@ -153,7 +167,7 @@ class TestHybridMethod:
         class Test(Mixin.MTest):
             if withmodel:
 
-                @hybrid_method
+                @HybridMethod
                 def val_is(self, val):
                     pass
 

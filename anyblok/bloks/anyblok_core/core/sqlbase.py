@@ -15,12 +15,11 @@ from sqlalchemy.orm.base import LoaderCallableStatus
 from sqlalchemy.orm.session import object_state
 from sqlalchemy_utils.models import NOT_LOADED_REPR
 
-from anyblok.column import Column
 from anyblok.common import anyblok_column_prefix
-from anyblok.declarations import Declarations, classmethod_cache
+from anyblok.declarations import ClassMethodCache, Declarations
 from anyblok.field import FieldException
 from anyblok.mapper import FakeColumn, FakeRelationShip
-from anyblok.relationship import Many2Many, RelationShip
+from anyblok.relationship import Many2Many
 
 from ..exceptions import SqlBaseException
 
@@ -114,12 +113,6 @@ class SqlMixin:
     @classmethod
     def define_mapper_args(cls):
         return {}
-
-    @classmethod
-    def get_all_registry_names(cls):
-        models = list(cls.__depends__)
-        models.insert(0, cls.__registry_name__)
-        return models
 
     @classmethod
     def query(cls, *elements):
@@ -273,7 +266,7 @@ class SqlMixin:
         pks = self.get_primary_keys()
         return {x: getattr(self, x) for x in pks}
 
-    @classmethod_cache()
+    @ClassMethodCache()
     def get_primary_keys(cls):
         """return the name of the primary keys of the model
 
@@ -282,15 +275,18 @@ class SqlMixin:
         return list(
             {
                 column.key
-                for model in cls.get_all_registry_names()
-                for column in cls.anyblok.get(model).SQLAMapper.primary_key
+                for column in cls.anyblok.get(
+                    cls.__registry_name__
+                ).SQLAMapper.primary_key
             }
         )
 
     @classmethod
     def _fields_description_field(cls):
         res = {}
-        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
+        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__][
+            "fields"
+        ]
         for cname in cls.loaded_fields:
             ftype = fsp[cname].__class__.__name__
             res[cname] = dict(
@@ -310,7 +306,9 @@ class SqlMixin:
     @classmethod
     def _fields_description_column(cls):
         res = {}
-        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
+        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__][
+            "columns"
+        ]
         for field in cls.SQLAMapper.columns:
             if field.key not in fsp:
                 continue
@@ -333,7 +331,9 @@ class SqlMixin:
     @classmethod
     def _fields_description_relationship(cls):
         res = {}
-        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
+        fsp = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__][
+            "relationships"
+        ]
         for field in cls.SQLAMapper.relationships:
             key = (
                 field.key[len(anyblok_column_prefix) :]
@@ -383,14 +383,10 @@ class SqlMixin:
 
         return res
 
-    @classmethod_cache()
+    @ClassMethodCache()
     def _fields_description(cls):
         """Return the information of the Field, Column, RelationShip"""
         res = {}
-        for registry_name in cls.__depends__:
-            Depend = cls.anyblok.get(registry_name)
-            res.update(Depend._fields_description())
-
         res.update(cls._fields_description_field())
         res.update(cls._fields_description_column())
         res.update(cls._fields_description_relationship())
@@ -415,14 +411,10 @@ class SqlMixin:
             for field in cls.SQLAMapper.relationships
         ]
 
-    @classmethod_cache()
+    @ClassMethodCache()
     def fields_name(cls):
         """Return the name of the Field, Column, RelationShip"""
         res = []
-        for registry_name in cls.__depends__:
-            Depend = cls.anyblok.get(registry_name)
-            res.extend(Depend.fields_name())
-
         res.extend(cls._fields_name_field())
         res.extend(cls._fields_name_column())
         res.extend(cls._fields_name_relationship())
@@ -436,7 +428,7 @@ class SqlMixin:
 
         return res
 
-    @classmethod_cache()
+    @ClassMethodCache()
     def get_hybrid_property_columns(cls):
         """Return the hybrid properties columns name from the Model and the
         inherited model if they come from polymorphisme
@@ -567,7 +559,9 @@ class SqlMixin:
             if field_property is None:
                 # it is the case of field function (hyprid property)
                 result[field] = field_value
-            elif field_value is None or type(field_property) == ColumnProperty:
+            elif field_value is None or isinstance(
+                field_property, ColumnProperty
+            ):
                 # If value is None, then do not go any further whatever
                 # the column property tells you.
                 result[field] = field_value
@@ -588,7 +582,7 @@ class SqlMixin:
 
         return result
 
-    @classmethod_cache()
+    @ClassMethodCache()
     def getFieldType(cls, name):
         """Return the type of the column
 
@@ -603,62 +597,56 @@ class SqlMixin:
         """
         return cls.fields_description(name)[name]["type"]
 
-    @classmethod_cache()
+    @ClassMethodCache()
     def find_remote_attribute_to_expire(cls, *fields):
         res = uniquedict()
         _fields = []
         _fields.extend(fields)
-        model = get_model_information(cls.anyblok, cls.__registry_name__)
+        Model = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
         while _fields:
             field = _fields.pop()
             field = field if isinstance(field, str) else field.name
-            _field = model[field]
 
-            if isinstance(_field, (Column, FakeColumn)):
+            if field in Model["columns"]:
                 _fields.extend(
                     x
-                    for x, y in model.items()
-                    if (
-                        isinstance(y, RelationShip)
-                        and not isinstance(y, Many2Many)
-                    )
+                    for x, y in Model["relationships"].items()
+                    if not isinstance(y, Many2Many)
                     for mapper in y.column_names
                     if mapper.attribute_name == field
                 )
+                _field = Model["columns"][field]
                 if (
-                    isinstance(_field, Column) and _field.foreign_key
+                    not isinstance(_field, FakeColumn) and _field.foreign_key
                 ):  # pragma: no cover
                     rmodel = cls.anyblok.loaded_namespaces_first_step[
                         _field.foreign_key.model_name
                     ]
                     for rc in [
                         x
-                        for x, y in rmodel.items()
-                        if isinstance(y, RelationShip)
+                        for x, y in rmodel["relationships"].items()
                         for mapper in y.remote_columns
                         if mapper.attribute_name == field
                     ]:
-                        rfield = rmodel[rc]
+                        rfield = rmodel["relationships"][rc]
                         if isinstance(rfield, FakeRelationShip):
                             res.add_in_res(rfield.mapper.attribute_name, [rc])
-                        elif (
-                            isinstance(rfield, RelationShip)
-                            and "backref" in rfield.kwargs
-                        ):
+                        elif "backref" in rfield.kwargs:
                             res.add_in_res(rfield.kwargs["backref"][0], [rc])
 
-            elif (
-                isinstance(_field, RelationShip)
-                and not isinstance(_field, Many2Many)
-                and "backref" in _field.kwargs
-            ):
-                res.add_in_res(field, [_field.kwargs["backref"][0]])
-            elif isinstance(_field, FakeRelationShip):  # pragma: no cover
-                res.add_in_res(field, [_field.mapper.attribute_name])
+            elif field in Model["relationships"]:
+                _field = Model["relationships"][field]
+                if isinstance(_field, FakeRelationShip):  # pragma: no cover
+                    res.add_in_res(field, [_field.mapper.attribute_name])
+                elif (
+                    not isinstance(_field, Many2Many)
+                    and "backref" in _field.kwargs
+                ):
+                    res.add_in_res(field, [_field.kwargs["backref"][0]])
 
         return res
 
-    @classmethod_cache()
+    @ClassMethodCache()
     def find_relationship(cls, *fields):
         """Find column and relation ship link with the column or relationship
         passed in fields.
@@ -669,7 +657,7 @@ class SqlMixin:
         res = []
         _fields = []
         _fields.extend(fields)
-        model = get_model_information(cls.anyblok, cls.__registry_name__)
+        Model = cls.anyblok.loaded_namespaces_first_step[cls.__registry_name__]
         while _fields:
             field = _fields.pop()
             if not isinstance(field, str):
@@ -678,37 +666,22 @@ class SqlMixin:
             if field in res:
                 continue
 
-            _field = model[field]
             res.append(field)
-            if isinstance(_field, (Column, FakeColumn)):
+            if field in Model["columns"]:
                 _fields.extend(
                     x
-                    for x, y in model.items()
-                    if (
-                        isinstance(y, RelationShip)
-                        and not isinstance(y, Many2Many)
-                    )
+                    for x, y in Model["relationships"].items()
+                    if not isinstance(y, Many2Many)
                     for mapper in y.column_names
                     if mapper.attribute_name == field
                 )
-            elif isinstance(_field, RelationShip) and not isinstance(
-                _field, Many2Many
-            ):
-                for mapper in _field.column_names:
-                    _fields.append(mapper.attribute_name)
+            elif field in Model["relationships"]:
+                _field = Model["relationships"][field]
+                if not isinstance(_field, Many2Many):
+                    for mapper in _field.column_names:
+                        _fields.append(mapper.attribute_name)
 
         return res
-
-
-def get_model_information(anyblok, registry_name):
-    model = anyblok.loaded_namespaces_first_step[registry_name]
-    for depend in model["__depends__"]:
-        if depend != registry_name:
-            for x, y in get_model_information(anyblok, depend).items():
-                if x not in model:
-                    model[x] = y  # pragma: no cover
-
-    return model
 
 
 @Declarations.register(Declarations.Core)
@@ -810,7 +783,9 @@ class SqlBase(SqlMixin):
             model = self.anyblok.loaded_namespaces_first_step[
                 self.__registry_name__
             ]
-            fields = model.keys()
+            fields = []
+            fields.extend(x for x in model["columns"])
+            fields.extend(x for x in model["relationships"])
             mappers = self.__class__.find_remote_attribute_to_expire(*fields)
             self.expire_relationship_mapped(mappers)
             self.anyblok.session.delete(self)

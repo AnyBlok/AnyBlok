@@ -219,7 +219,7 @@ class TestCompleteOne2Many:
 
     def test_one2many_autodoc(self, registry_complete_one2many):
         registry = registry_complete_one2many
-        registry.loaded_namespaces_first_step["Model.Address"][
+        registry.loaded_namespaces_first_step["Model.Address"]["relationships"][
             "persons"
         ].autodoc_get_properties()
 

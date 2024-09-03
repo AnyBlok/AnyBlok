@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 from anyblok.column import Integer, String
-from anyblok.declarations import Declarations, cache
+from anyblok.declarations import Cache, Declarations
 
 register = Declarations.register
 Model = Declarations.Model
@@ -18,7 +18,7 @@ class Test:
     blok = String()
     mode = String()
 
-    @cache()
+    @Cache()
     def test_with_cache(self):
         pass
 

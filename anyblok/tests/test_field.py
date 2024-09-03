@@ -165,7 +165,7 @@ class TestJsonRelated:
 
     def test_field_json_related_autodoc(self, registry_json_related):
         registry = registry_json_related
-        registry.loaded_namespaces_first_step["Model.Test"][
+        registry.loaded_namespaces_first_step["Model.Test"]["fields"][
             "name"
         ].autodoc_get_properties()
 

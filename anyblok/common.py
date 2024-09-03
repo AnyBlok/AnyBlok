@@ -7,7 +7,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
 import sys
-from functools import lru_cache
 
 from sqlalchemy import text
 from sqlalchemy.exc import InvalidRequestError
@@ -98,11 +97,11 @@ def python_version():  # pragma: no cover
     return (vi.major, vi.minor)
 
 
-class TypeList(list):
+class BaseModelSecondStepList(list):
     def __init__(
         self, Model, registry, namespace, transformation_properties=None
     ):
-        super(TypeList, self).__init__()
+        super().__init__()
         self.Model = Model
         self.registry = registry
         self.namespace = namespace
@@ -121,62 +120,66 @@ class TypeList(list):
         if namespace is None:
             namespace = self.namespace
 
-        newbase = self.Model.transform_base(
+        self.Model.transform_base(
             self.registry, namespace, base, self.transformation_properties
         )
-        return newbase
+        return True
 
-    def append(self, base, **kwargs):
+    def append(self, base):
         """Add base
 
         :param base:
         :param kwargs:
         """
-        bases = self.transform_base(base, **kwargs) or []
-        for newbase in bases:
-            super(TypeList, self).append(newbase)
+        if self.transform_base(base):
+            super().append(base)
 
-    def extend(self, bases, **kwargs):
+    def extend(self, bases):
         """Extend bases
 
         :param bases:
         :param kwargs:
         """
-        newbases = []
+        realbases = []
         for base in bases:
-            _bases = self.transform_base(base, **kwargs)
-            if _bases:
-                newbases.extend(_bases)
+            if self.transform_base(base):
+                realbases.append(base)
 
-        if newbases:
-            super(TypeList, self).extend(newbases)
+        super().extend(realbases)
+
+    def insert(self, index, base, **kwargs):
+        if self.transform_base(base, **kwargs):
+            super().insert(index, base)
 
 
-def apply_cache(attr, method, registry, namespace, base, properties):
-    """Find the cached methods in the base to apply the real cache decorator.
+class BaseModelFirstStepList(list):
+    def __init__(self, Model, registry, properties):
+        super(BaseModelFirstStepList, self).__init__()
+        self.Model = Model
+        self.properties = properties
+        self.registry = registry
+        registry.call_plugins("initialize_properties", properties)
 
-    :param attr: name of the attribute
-    :param method: method pointer
-    :param registry: the current registry
-    :param namespace: the namespace of the model
-    :rtype: new base
-    """
-    if hasattr(method, "is_cache_method") and method.is_cache_method is True:
-        cmodel = registry.caches.setdefault(namespace, {attr: []})
-        cattr = cmodel.setdefault(attr, [])
+    def merge_properties(self, base):
+        self.registry.call_plugins("merge_properties", self.properties, base)
 
-        @lru_cache(maxsize=method.size)
-        def wrapper(*args, **kwargs):
-            return method(*args, **kwargs)
+    def insert(self, index, base):
+        """Add base
 
-        wrapper.indentify = (namespace, attr)
-        cattr.append(wrapper)
-        if method.is_cache_classmethod:
-            return {attr: classmethod(wrapper)}
+        :param base:
+        :param kwargs:
+        """
+        if base in self:  # Reload bloks overload bases
+            return
+
+        if isinstance(base, str):
+            self.merge_properties(
+                self.Model.load_namespace_first_step(self.registry, base)
+            )
         else:
-            return {attr: wrapper}
+            self.merge_properties(base.__dict__)
 
-    return {}
+        super(BaseModelFirstStepList, self).insert(index, base)
 
 
 DATABASES_CACHED = {}

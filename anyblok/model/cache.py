@@ -5,7 +5,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
-from anyblok.common import apply_cache
+from functools import lru_cache
 
 from .plugins import ModelPluginBase
 
@@ -17,54 +17,34 @@ class CachePlugin(ModelPluginBase):
 
         super(CachePlugin, self).__init__(registry)
 
-    def insert_in_bases(
-        self, new_base, namespace, properties, transformation_properties
+    def initialisation_tranformation_properties(
+        self, properties, transformation_properties
     ):
-        """Create overload to define the cache from __depends__.
+        if "caches" not in transformation_properties:
+            transformation_properties.update({"caches": {}})
 
-        Because the cache is defined on the depend models and this namespace
-        does not exist in caches dict
+    def transform_base(self, namespace, base, transformation_properties):
+        if hasattr(base, "__declared_caches__"):
+            transformation_properties["caches"].update(base.__declared_caches__)
 
-        :param new_base: the base to be put on front of all bases
-        :param namespace: the namespace of the model
-        :param properties: the properties declared in the model
-        :param transformation_properties: the properties of the model
-        """
-        for dep in properties["__depends__"]:
-            if dep in self.registry.caches:
-                cache = self.registry.caches.setdefault(namespace, {})
-                for method_name, methods in self.registry.caches[dep].items():
-                    entry = cache.setdefault(method_name, [])
-                    entry.extend(methods)
-
-        return {}
-
-    def transform_base_attribute(
-        self,
-        attr,
-        method,
-        namespace,
-        base,
-        transformation_properties,
-        new_type_properties,
+    def before_model_construction(
+        self, namespace, first_step, properties, transformation_properties
     ):
-        """Find the sqlalchemy hybrid methods in the base to save the
-        namespace and the method in the registry
+        for name, cache in transformation_properties["caches"].items():
+            properties[name] = self.add_cache_method(namespace, name, cache)
 
-        :param attr: attribute name
-        :param method: method pointer of the attribute
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param new_type_properties: param to add in a new base if need
-        """
-        new_type_properties.update(
-            apply_cache(
-                attr,
-                method,
-                self.registry,
-                namespace,
-                base,
-                transformation_properties,
-            )
-        )
+    def add_cache_method(self, namespace, name, cache):
+        cache_ = self.registry.caches.setdefault(namespace, {})
+        entry = cache_.setdefault(name, [])
+
+        @lru_cache(maxsize=cache.size)
+        def __func__(cls_or_self, *a, **kw):
+            Model = self.registry.get(namespace)
+            return getattr(super(Model, cls_or_self), name)(*a, **kw)
+
+        entry.append(__func__)
+
+        if cache.is_clasmethod:
+            return classmethod(__func__)
+
+        return __func__

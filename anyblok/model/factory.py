@@ -10,7 +10,6 @@ from sqlalchemy.orm import Query, relationship
 from sqlalchemy_views import CreateView, DropView
 
 from anyblok.common import anyblok_column_prefix
-from anyblok.field import Field, FieldException
 
 from .exceptions import ModelFactoryException, ViewException
 
@@ -22,14 +21,8 @@ def has_sql_fields(bases):
     :rtype: boolean
     """
     for base in bases:
-        for p in base.__dict__.keys():
-            try:
-                if hasattr(getattr(base, p), "__class__"):
-                    if Field in getattr(base, p).__class__.__mro__:
-                        return True
-            except FieldException:  # pragma: no cover
-                # field function case already computed
-                return True
+        if base.__dict__.get("__declared_columns__", []):
+            return True
 
     return False
 

@@ -20,65 +20,33 @@ class HybridMethodPlugin(ModelPluginBase):
         :param new_type_properties: param to add in a new base if need
         """
         if "hybrid_method" not in transformation_properties:
-            transformation_properties["hybrid_method"] = []
+            transformation_properties["hybrid_method"] = set()
 
-    def transform_base_attribute(
-        self,
-        attr,
-        method,
-        namespace,
-        base,
-        transformation_properties,
-        new_type_properties,
+    def transform_base(self, namespace, base, transformation_properties):
+        if hasattr(base, "__declared_hybrid_method__"):
+            s = transformation_properties["hybrid_method"].union(
+                base.__declared_hybrid_method__
+            )
+            transformation_properties["hybrid_method"] = s
+
+    def after_model_construction(
+        self, base, namespace, transformation_properties
     ):
-        """Find the sqlalchemy hybrid methods in the base to save the
-        namespace and the method in the registry
-
-        :param attr: attribute name
-        :param method: method pointer of the attribute
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param new_type_properties: param to add in a new base if need
-        """
-        if not hasattr(method, "is_an_hybrid_method"):
-            return
-        elif method.is_an_hybrid_method is True:
-            if attr not in transformation_properties["hybrid_method"]:
-                transformation_properties["hybrid_method"].append(attr)
-
-    def insert_in_bases(
-        self, new_base, namespace, properties, transformation_properties
-    ):
-        """Create overload to define the write declaration of sqlalchemy
-        hybrid method, add the overload in the declared bases of the
-        namespace
-
-        :param new_base: the base to be put on front of all bases
-        :param namespace: the namespace of the model
-        :param properties: the properties declared in the model
-        :param transformation_properties: the properties of the model
-        """
-        type_properties = {}
-
         def apply_wrapper(attr):
             def wrapper(self, *args, **kwargs):
-                self_ = self.anyblok.loaded_namespaces[self.__registry_name__]
-                if self is self_:
-                    return getattr(super(new_base, self), attr)(
+                if self is base:
+                    return getattr(super(base, self), attr)(
                         self, *args, **kwargs
                     )
                 elif hasattr(self, "_aliased_insp"):
                     return getattr(
-                        super(new_base, self._aliased_insp._target), attr
+                        super(base, self._aliased_insp._target), attr
                     )(self, *args, **kwargs)
                 else:
-                    return getattr(super(new_base, self), attr)(*args, **kwargs)
+                    return getattr(super(base, self), attr)(*args, **kwargs)
 
-            setattr(new_base, attr, hybrid_method(wrapper))
+            setattr(base, attr, hybrid_method(wrapper))
 
         if transformation_properties["hybrid_method"]:
             for attr in transformation_properties["hybrid_method"]:
                 apply_wrapper(attr)
-
-        return type_properties

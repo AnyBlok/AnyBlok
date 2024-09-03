@@ -40,6 +40,12 @@ class Field:
         self.args = args
         self.kwargs = kwargs
 
+    def __set_name__(self, owner, name):
+        if not hasattr(owner, "__declared_fields__"):
+            owner.__declared_fields__ = {}
+
+        owner.__declared_fields__[name] = self
+
     def forbid_instance(self, cls):
         """Raise an exception if the cls is an instance of this __class__
 

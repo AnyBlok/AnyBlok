@@ -33,39 +33,12 @@ class ModelPluginBase:
     #     :param new_type_properties: param to add in a new base if need
     #     """
 
-    # def declare_field(self, name, field, namespace, properties,
-    #                   transformation_properties):
-    #     """Declare a field in the model
-
-    #     :param name: field name
-    #     :param field: field instance
-    #     :param namespace: the namespace of the model
-    #     :param properties: the properties of the model
-    #     :param transformation_properties: the transformation properties
-    #     """
-
-    # def transform_base_attribute(self, attr, method, namespace, base,
-    #                              transformation_properties,
-    #                              new_type_properties):
-    #     """ transform the attribute for the final Model
-
-    #     :param attr: attribute name
-    #     :param method: method pointer of the attribute
-    #     :param namespace: the namespace of the model
-    #     :param base: One of the base of the model
-    #     :param transformation_properties: the properties of the model
-    #     :param new_type_properties: param to add in a new base if need
-    #     """
-
-    # def transform_base(self, namespace, base,
-    #                    transformation_properties,
-    #                    new_type_properties):
+    # def transform_base(self, namespace, base, transformation_properties)
     #     """ transform the base for the final Model
 
     #     :param namespace: the namespace of the model
     #     :param base: One of the base of the model
     #     :param transformation_properties: the properties of the model
-    #     :param new_type_properties: param to add in a new base if need
     #     """
 
     # def insert_in_bases(self, new_base, namespace, properties,

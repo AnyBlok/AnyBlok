@@ -5,8 +5,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file,You can
 # obtain one at http://mozilla.org/MPL/2.0/.
+from warnings import warn
+
 from .common import add_autodocs
-from .mapper import MapperAdapter
+from .mapper import MapperAdapter, ModelMapper
 
 
 class DeclarationsException(AttributeError):
@@ -151,72 +153,138 @@ class Declarations:
             return wrapper
 
 
+class MethodType:
+    "Emulate PyMethod_Type in Objects/classobject.c"
+
+    def __init__(self, func, obj):
+        self.__func__ = func
+        self.__self__ = obj
+
+    def __call__(self, *args, **kwargs):
+        func = self.__func__
+        obj = self.__self__
+        return func(obj, *args, **kwargs)
+
+
+class Cache:
+    def __init__(self, size=128):
+        self.size = size
+        self.autodoc = f"**Cached method** with size={size}"
+        self.is_clasmethod = False
+
+    def __call__(self, func):
+        add_autodocs(func, self.autodoc)
+        self.__func__ = func
+        return self
+
+    def __get__(self, obj, cls=None):
+        return MethodType(self.__func__, obj)
+
+    def __set_name__(self, owner, name):
+        if not hasattr(owner, "__declared_caches__"):
+            owner.__declared_caches__ = {}
+
+        owner.__declared_caches__[name] = self
+
+
 def cache(size=128):
-    autodoc = """
-    **Cached method** with size=%(size)s
-    """ % dict(
-        size=size
-    )
+    warn("cache decorator is deprecated use Cache")
+    return Cache(size=size)
 
-    def wrapper(method):
-        add_autodocs(method, autodoc)
-        method.is_cache_method = True
-        method.is_cache_classmethod = False
-        method.size = size
-        return method
 
-    return wrapper
+class ClassMethodCache(Cache):
+    def __init__(self, size=128):
+        super().__init__(size=size)
+        self.autodoc = f"**Cached classmethod** with size={size}"
+        self.is_clasmethod = True
+
+    def __get__(self, obj, cls=None):
+        return MethodType(self.__func__, cls or type(obj))
 
 
 def classmethod_cache(size=128):
-    autodoc = """
-    **Cached classmethod** with size=%(size)s
-    """ % dict(
-        size=size
-    )
-
-    def wrapper(method):
-        add_autodocs(method, autodoc)
-        method.is_cache_method = True
-        method.is_cache_classmethod = True
-        method.size = size
-        return method
-
-    return wrapper
+    warn("classmethod_cache decorator is deprecated use ClassMethodCache")
+    return ClassMethodCache(size=size)
 
 
-def hybrid_method(method=None):
-    autodoc = """
-    **Hybrid method**
-    """
+class HybridMethod:
+    def __init__(self, func=None):
+        self.autodoc = "**Hybrid method**"
+        if func:
+            self.__func__ = func
+            add_autodocs(func, self.autodoc)
 
-    if method:
-        add_autodocs(method, autodoc)
-        method.is_an_hybrid_method = True
-        return method
-    else:
+    def __call__(self, func):
+        add_autodocs(func, self.autodoc)
+        self.__func__ = func
+        return self
 
-        def wrapper(method):
-            add_autodocs(method, autodoc)
-            method.is_an_hybrid_method = True
-            return method
+    def __get__(self, obj, cls=None):
+        if obj is None:
+            return self.__func__
 
-        return wrapper
+        return MethodType(self.__func__, obj)
+
+    def __set_name__(self, owner, name):
+        if not hasattr(owner, "__declared_hybrid_method__"):
+            owner.__declared_hybrid_method__ = set()
+
+        owner.__declared_hybrid_method__.add(name)
+
+
+def hybrid_method(func=None):
+    warn("hybrid_method decorator is deprecated use HybridMethod")
+    return HybridMethod(func=func)
+
+
+class Listen:
+    sqlalchemy_known_events = [
+        "after_delete",
+        "after_insert",
+        "after_update",
+        "append_result",
+        "before_delete",
+        "before_insert",
+        "before_update",
+        "create_instance",
+        "expire",
+        "first_init",
+        "init",
+        "load",
+        "refresh",
+    ]
+
+    def __init__(self, *args, **kwargs):
+        self.autodoc = (
+            f"**listen** event call with the arguments {args} and the "
+            f"positionnal argument {kwargs}"
+        )
+        self.mapper = MapperAdapter(*args, **kwargs)
+
+    def __call__(self, func):
+        add_autodocs(func, self.autodoc)
+        self.__func__ = func
+        return self
+
+    def __get__(self, obj, cls=None):
+        return MethodType(self.__func__, cls or type(obj))
+
+    def __set_name__(self, owner, name):
+        if (
+            isinstance(self.mapper, ModelMapper)
+            and self.mapper.event not in self.sqlalchemy_known_events
+        ):
+            if not hasattr(owner, "__declared_events__"):
+                owner.__declared_events__ = set()
+
+            owner.__declared_events__.add((self.mapper, name))
+        else:
+            if not hasattr(owner, "__declared_sqlalchemy_event__"):
+                owner.__declared_sqlalchemy_events__ = set()
+
+            owner.__declared_sqlalchemy_events__.add((self.mapper, name))
 
 
 def listen(*args, **kwargs):
-    autodoc = """
-    **listen** event call with the arguments %(args)r and the positionnal
-    argument %(kwargs)r
-    """ % dict(
-        args=args, kwargs=kwargs
-    )
-
-    mapper = MapperAdapter(*args, **kwargs)
-
-    def wrapper(method):
-        add_autodocs(method, autodoc)
-        mapper.listen(method)
-        return classmethod(method)
-
-    return wrapper
+    warn("listen decorator is deprecated use Listen")
+    return Listen(*args, **kwargs)

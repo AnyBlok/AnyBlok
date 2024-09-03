@@ -21,71 +21,42 @@ class EventPlugin(ModelPluginBase):
 
         super(EventPlugin, self).__init__(registry)
 
-    def transform_base_attribute(
+    def transform_base(
         self,
-        attr,
-        method,
         namespace,
         base,
         transformation_properties,
-        new_type_properties,
     ):
-        """Find the event listener methods in the base to save the
-        namespace and the method in the registry
-
-        :param attr: attribute name
-        :param method: method pointer of the attribute
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param new_type_properties: param to add in a new base if need
-        """
-        if not hasattr(method, "is_an_event_listener"):
-            return
-        elif method.is_an_event_listener is True:
-            model = method.model
-            event = method.event
+        if hasattr(base, "__declared_events__"):
             events = self.registry.events
-            if model not in events:
-                events[model] = {event: []}
-            elif event not in events[model]:
-                events[model][event] = []  # pragma: no cover
+            for mapper, attr in base.__declared_events__:
+                model = mapper.model.model_name
+                event = mapper.event
 
-            val = (namespace, attr)
-            ev = events[model][event]
-            if val not in ev:
-                ev.append(val)
+                ev1 = events.setdefault(model, {})
+                ev2 = ev1.setdefault(event, [])
+
+                val = (namespace, attr)
+                if val not in ev2:
+                    ev2.append(val)
 
 
 class SQLAlchemyEventPlugin(ModelPluginBase):
-    def transform_base_attribute(
+    def transform_base(
         self,
-        attr,
-        method,
         namespace,
         base,
         transformation_properties,
-        new_type_properties,
     ):
-        """declare in the registry the sqlalchemy event
-
-        :param attr: attribute name
-        :param method: method pointer of the attribute
-        :param namespace: the namespace of the model
-        :param base: One of the base of the model
-        :param transformation_properties: the properties of the model
-        :param new_type_properties: param to add in a new base if need
-        """
-        if not hasattr(method, "is_an_sqlalchemy_event_listener"):
-            return
-        elif method.is_an_sqlalchemy_event_listener is True:
-            self.registry._sqlalchemy_known_events.append(
-                (
-                    method.sqlalchemy_listener,
-                    namespace,
-                    ModelAttribute(namespace, attr),
+        if hasattr(base, "__declared_sqlalchemy_events__"):
+            for mapper, attr in base.__declared_sqlalchemy_events__:
+                self.registry._sqlalchemy_known_events.append(
+                    (
+                        mapper,
+                        namespace,
+                        ModelAttribute(namespace, attr),
+                    )
                 )
-            )
 
 
 class AutoSQLAlchemyORMEventPlugin(ModelPluginBase):

@@ -436,7 +436,7 @@ class TestMany2One:
 
     def test_autodoc(self, registry_many2one):
         registry, _, _ = registry_many2one
-        registry.loaded_namespaces_first_step["Model.Person"][
+        registry.loaded_namespaces_first_step["Model.Person"]["relationships"][
             "address"
         ].autodoc_get_properties()
 
