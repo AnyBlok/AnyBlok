@@ -97,11 +97,11 @@ def python_version():  # pragma: no cover
     return (vi.major, vi.minor)
 
 
-class TypeList(list):
+class BaseModelSecondStepList(list):
     def __init__(
         self, Model, registry, namespace, transformation_properties=None
     ):
-        super(TypeList, self).__init__()
+        super().__init__()
         self.Model = Model
         self.registry = registry
         self.namespace = namespace
@@ -120,35 +120,66 @@ class TypeList(list):
         if namespace is None:
             namespace = self.namespace
 
-        newbase = self.Model.transform_base(
+        self.Model.transform_base(
             self.registry, namespace, base, self.transformation_properties
         )
-        return newbase
+        return True
 
-    def append(self, base, **kwargs):
+    def append(self, base):
         """Add base
 
         :param base:
         :param kwargs:
         """
-        bases = self.transform_base(base, **kwargs) or []
-        for newbase in bases:
-            super(TypeList, self).append(newbase)
+        if self.transform_base(base):
+            super().append(base)
 
-    def extend(self, bases, **kwargs):
+    def extend(self, bases):
         """Extend bases
 
         :param bases:
         :param kwargs:
         """
-        newbases = []
+        realbases = []
         for base in bases:
-            _bases = self.transform_base(base, **kwargs)
-            if _bases:
-                newbases.extend(_bases)
+            if self.transform_base(base):
+                realbases.append(base)
 
-        if newbases:
-            super(TypeList, self).extend(newbases)
+        super().extend(realbases)
+
+    def insert(self, index, base, **kwargs):
+        if self.transform_base(base, **kwargs):
+            super().insert(index, base)
+
+
+class BaseModelFirstStepList(list):
+    def __init__(self, Model, registry, properties):
+        super(BaseModelFirstStepList, self).__init__()
+        self.Model = Model
+        self.properties = properties
+        self.registry = registry
+        registry.call_plugins("initialize_properties", properties)
+
+    def merge_properties(self, base):
+        self.registry.call_plugins("merge_properties", self.properties, base)
+
+    def insert(self, index, base):
+        """Add base
+
+        :param base:
+        :param kwargs:
+        """
+        if base in self:  # Reload bloks overload bases
+            return
+
+        if isinstance(base, str):
+            self.merge_properties(
+                self.Model.load_namespace_first_step(self.registry, base)
+            )
+        else:
+            self.merge_properties(base.__dict__)
+
+        super(BaseModelFirstStepList, self).insert(index, base)
 
 
 DATABASES_CACHED = {}

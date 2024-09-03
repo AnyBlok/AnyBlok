@@ -170,11 +170,10 @@ class Cache:
     def __init__(self, size=128):
         self.size = size
         self.autodoc = f"**Cached method** with size={size}"
+        self.is_clasmethod = False
 
     def __call__(self, func):
         add_autodocs(func, self.autodoc)
-        func.is_clasmethod = False
-        func.size = self.size
         self.__func__ = func
         return self
 
@@ -185,7 +184,7 @@ class Cache:
         if not hasattr(owner, "__declared_caches__"):
             owner.__declared_caches__ = {}
 
-        owner.__declared_caches__[name] = self.__func__
+        owner.__declared_caches__[name] = self
 
 
 def cache(size=128):
@@ -197,14 +196,10 @@ class ClassMethodCache(Cache):
     def __init__(self, size=128):
         super().__init__(size=size)
         self.autodoc = f"**Cached classmethod** with size={size}"
+        self.is_clasmethod = True
 
     def __get__(self, obj, cls=None):
         return MethodType(self.__func__, cls or type(obj))
-
-    def __call__(self, func):
-        super().__call__(func)
-        func.is_clasmethod = True
-        return self
 
 
 def classmethod_cache(size=128):

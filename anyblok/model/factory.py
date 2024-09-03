@@ -21,7 +21,7 @@ def has_sql_fields(bases):
     :rtype: boolean
     """
     for base in bases:
-        if base.__dict__.get('__declared_columns__', []):
+        if base.__dict__.get("__declared_columns__", []):
             return True
 
     return False

@@ -293,9 +293,9 @@ class TestSimpleCache:
         )
         m = registry.Test()
         assert m.method_cached() == 6
-        assert m.method_cached() == 11
+        assert m.method_cached() == 6
         registry.System.Cache.invalidate("Model.Test", "method_cached")
-        assert m.method_cached() == 17
+        assert m.method_cached() == 12
 
     def test_model_mixin_core_only_mixin(self):
         registry = self.init_registry(
@@ -304,9 +304,9 @@ class TestSimpleCache:
         )
         m = registry.Test()
         assert m.method_cached() == 6
-        assert m.method_cached() == 9
+        assert m.method_cached() == 6
         registry.System.Cache.invalidate("Model.Test", "method_cached")
-        assert m.method_cached() == 15
+        assert m.method_cached() == 12
 
     def test_model_mixin_core_only_model(self):
         registry = self.init_registry(
@@ -327,9 +327,9 @@ class TestSimpleCache:
         )
         m = registry.Test()
         assert m.method_cached() == 6
-        assert m.method_cached() == 9
+        assert m.method_cached() == 6
         registry.System.Cache.invalidate("Model.Test", "method_cached")
-        assert m.method_cached() == 15
+        assert m.method_cached() == 12
 
     def test_invalidate_all_check_model(self):
         registry = self.init_registry(self.add_model_with_method_cached)
@@ -378,11 +378,11 @@ class TestSimpleCache:
         t2 = registry.Test2()
         assert t.method_cached() == 4
         assert t2.method_cached() == 4
-        assert t.method_cached() == 7
-        assert t2.method_cached() == 7
+        assert t.method_cached() == 4
+        assert t2.method_cached() == 4
         registry.System.Cache.invalidate("Model.Test", "method_cached")
-        assert t.method_cached() == 11
-        assert t2.method_cached() == 10
+        assert t.method_cached() == 8
+        assert t2.method_cached() == 4
 
 
 class TestClassMethodCache:
@@ -570,9 +570,9 @@ class TestClassMethodCache:
         )
         m = registry.Test
         assert m.method_cached() == 6
-        assert m.method_cached() == 11
+        assert m.method_cached() == 6
         registry.System.Cache.invalidate("Model.Test", "method_cached")
-        assert m.method_cached() == 17
+        assert m.method_cached() == 12
 
     def test_model_mixin_core_only_mixin(self):
         registry = self.init_registry(
@@ -581,9 +581,9 @@ class TestClassMethodCache:
         )
         m = registry.Test
         assert m.method_cached() == 6
-        assert m.method_cached() == 9
+        assert m.method_cached() == 6
         registry.System.Cache.invalidate("Model.Test", "method_cached")
-        assert m.method_cached() == 15
+        assert m.method_cached() == 12
 
     def test_model_mixin_core_only_model(self):
         registry = self.init_registry(
@@ -604,9 +604,9 @@ class TestClassMethodCache:
         )
         m = registry.Test
         assert m.method_cached() == 6
-        assert m.method_cached() == 9
+        assert m.method_cached() == 6
         registry.System.Cache.invalidate("Model.Test", "method_cached")
-        assert m.method_cached() == 15
+        assert m.method_cached() == 12
 
     def add_model_with_method_core_cached_with_two_model(self):
         @register(Core)
@@ -642,11 +642,11 @@ class TestClassMethodCache:
         )
         assert registry.Test.method_cached() == 4
         assert registry.Test2.method_cached() == 4
-        assert registry.Test.method_cached() == 7
-        assert registry.Test2.method_cached() == 7
+        assert registry.Test.method_cached() == 4
+        assert registry.Test2.method_cached() == 4
         registry.System.Cache.invalidate("Model.Test", "method_cached")
-        assert registry.Test.method_cached() == 11
-        assert registry.Test2.method_cached() == 10
+        assert registry.Test.method_cached() == 8
+        assert registry.Test2.method_cached() == 4
 
 
 class TestInheritedCache:
@@ -664,9 +664,9 @@ class TestInheritedCache:
     def check_method_cached(self, Model):
         m = Model()
         assert m.method_cached() == 3
-        assert m.method_cached() == 5
+        assert m.method_cached() == 3
         Model.anyblok.System.Cache.invalidate("Model.Test", "method_cached")
-        assert m.method_cached() == 8
+        assert m.method_cached() == 6
 
     def check_inherited_method_cached(self, Model):
         m = Model()
@@ -811,9 +811,9 @@ class TestInheritedClassMethodCache:
 
     def check_method_cached(self, Model):
         assert Model.method_cached() == 3
-        assert Model.method_cached() == 5
+        assert Model.method_cached() == 3
         Model.anyblok.System.Cache.invalidate("Model.Test", "method_cached")
-        assert Model.method_cached() == 8
+        assert Model.method_cached() == 6
 
     def check_inherited_method_cached(self, Model):
         assert Model.method_cached() == 3

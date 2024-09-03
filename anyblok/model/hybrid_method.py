@@ -22,9 +22,7 @@ class HybridMethodPlugin(ModelPluginBase):
         if "hybrid_method" not in transformation_properties:
             transformation_properties["hybrid_method"] = set()
 
-    def transform_base(
-        self, namespace, base, transformation_properties, new_type_properties
-    ):
+    def transform_base(self, namespace, base, transformation_properties):
         if hasattr(base, "__declared_hybrid_method__"):
             s = transformation_properties["hybrid_method"].union(
                 base.__declared_hybrid_method__

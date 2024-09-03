@@ -25,9 +25,9 @@ class AutoUpdatePlugin(ModelPluginBase):
         """
         fields = [
             c
-            for c, f in self.registry.loaded_namespaces_first_step[
-                namespace
-            ]['columns'].items()
+            for c, f in self.registry.loaded_namespaces_first_step[namespace][
+                "columns"
+            ].items()
             if isinstance(f, DateTime) and f.auto_update
         ]
 

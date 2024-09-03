@@ -17,26 +17,34 @@ class CachePlugin(ModelPluginBase):
 
         super(CachePlugin, self).__init__(registry)
 
-    def transform_base(
-        self, namespace, base, transformation_properties, new_type_properties
+    def initialisation_tranformation_properties(
+        self, properties, transformation_properties
     ):
-        cache = self.registry.caches.setdefault(namespace, {})
-        if hasattr(base, "__declared_caches__"):
-            for method_name, method in base.__declared_caches__.items():
-                entry = cache.setdefault(method_name, [])
-                wrapper = lru_cache(maxsize=method.size)(method)
-                entry.append(wrapper)
-                if method.is_clasmethod:
-                    new_type_properties[method_name] = classmethod(wrapper)
-                else:
-                    new_type_properties[method_name] = wrapper
+        if "caches" not in transformation_properties:
+            transformation_properties.update({"caches": {}})
 
-    def after_model_construction(
-        self, base, namespace, transformation_properties
+    def transform_base(self, namespace, base, transformation_properties):
+        if hasattr(base, "__declared_caches__"):
+            transformation_properties["caches"].update(base.__declared_caches__)
+
+    def before_model_construction(
+        self, namespace, first_step, properties, transformation_properties
     ):
-        for dep in base.__depends__:
-            if dep in self.registry.caches:
-                cache = self.registry.caches.setdefault(namespace, {})
-                for method_name, methods in self.registry.caches[dep].items():
-                    entry = cache.setdefault(method_name, [])
-                    entry.extend(methods)
+        for name, cache in transformation_properties["caches"].items():
+            properties[name] = self.add_cache_method(namespace, name, cache)
+
+    def add_cache_method(self, namespace, name, cache):
+        cache_ = self.registry.caches.setdefault(namespace, {})
+        entry = cache_.setdefault(name, [])
+
+        @lru_cache(maxsize=cache.size)
+        def __func__(cls_or_self, *a, **kw):
+            Model = self.registry.get(namespace)
+            return getattr(super(Model, cls_or_self), name)(*a, **kw)
+
+        entry.append(__func__)
+
+        if cache.is_clasmethod:
+            return classmethod(__func__)
+
+        return __func__
